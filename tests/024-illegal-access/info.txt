@@ -1,0 +1,2 @@
+Test that an attempt to access a private field results in a verification
+error.

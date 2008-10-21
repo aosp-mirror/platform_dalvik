@@ -1,0 +1,13 @@
+javac 1.7.0-internal_bootstrap
+
+  elements[0]:
+    name
+    value: string "grue"
+
+  elements[0]:
+    names
+    value: array {"gruesome"}
+
+  elements[0]:
+    names
+    value: array {"awful", "awesome"}

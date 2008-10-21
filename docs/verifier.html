@@ -1,0 +1,150 @@
+<html>
+<head>
+<title>Dalvik Bytecode Verifier Notes</title>
+</head>
+
+<body>
+<h1>Dalvik Bytecode Verifier Notes</h1>
+
+<p>
+The bytecode verifier in the Dalvik VM attempts to provide the same sorts
+of checks and guarantees that other popular virtual machines do.  We
+perform generally the same set of checks as are described in _The Java
+Virtual Machine Specification, Second Edition_, including the updates
+planned for the Third Edition.
+
+<p>
+Verification can be enabled for all classes, disabled for all, or enabled
+only for "remote" (non-bootstrap) classes.  It should be performed for any
+class that will be processed with the DEX optimizer, and in fact the
+default VM behavior is to only optimize verified classes.
+
+
+<h2>Why Verify?</h2>
+
+<p>
+The verification process adds additional time to the build and to
+the installation of new applications.  It's fairly quick for app-sized
+DEX files, but rather slow for the big "core" and "framework" files.
+Why do it all, when our system relies on UNIX processes for security?
+<p>
+<ol>
+    <li>Optimizations.  The interpreter can ignore a lot of potential
+    error cases because the verifier guarantees that they are impossible.
+    Also, we can optimize the DEX file more aggressively if we start
+    with a stronger set of assumptions about the bytecode.
+    <li>"Exact" GC.  The work peformed during verification has significant
+    overlap with the work required to compute register use maps for exact
+    GC.  Improper register use, caught by the verifier, could lead to
+    subtle problems with an "exact" GC.
+    <li>Intra-application security.  If an app wants to download bits
+    of interpreted code over the network and execute them, it can safely
+    do so using well-established security mechanisms.
+    <li>3rd party app failure analysis.  We have no way to control the
+    tools and post-processing utilities that external developers employ,
+    so when we get bug reports with a weird exception or native crash
+    it's very helpful to start with the assumption that the bytecode
+    is valid.
+</ol>
+
+
+<h2>Verifier Differences</h2>
+
+<p>
+There are a few checks that the Dalvik bytecode verifier does not perform,
+because they're not relevant.  For example:
+<ul>
+    <li>Type restrictions on constant pool references are not enforced,
+    because Dalvik does not have a pool of typed constants.  (Dalvik
+    uses a simple index into type-specific pools.)
+    <li>Verification of the operand stack size is not performed, because
+    Dalvik does not have an operand stack.
+    <li>Limitations on <code>jsr</code> and <code>ret</code> do not apply,
+    because Dalvik doesn't support subroutines.
+</ul>
+
+In some cases they are implemented differently, e.g.:
+<ul>
+    <li>In a conventional VM, backward branches are forbidden when the
+    stack has an uninitialized reference.  The restriction was changed to
+    disallow use of the <code>new-instance</code> instruction if a register
+    refers to an uninitialized instance created by that same instruction.
+    This solves the same problem without unduly limiting branches.
+</ul>
+
+There are also some new ones, such as:
+<ul>
+    <li>The <code>move-exception</code> instruction can only appear as
+    the first instruction in an exception handler.
+    <li>The <code>move-result*</code> instructions can only appear
+    immediately after an appropriate <code>invoke-*</code>
+    or <code>filled-new-array</code> instruction.
+</ul>
+
+<p>
+The Dalvik verifier is more restrictive than other VMs in one area:
+type safety on sub-32-bit integer widths.  These additional restrictions
+should make it impossible to, say, pass a value outside the range
+[-128, 127] to a function that takes a <code>byte</code> as an argument.
+
+
+<h2>Verification Failures</h2>
+
+<p>
+When the verifier rejects a class, it always throws a VerifyError.
+This is different in some cases from other implementations.  For example,
+if a class attempts to perform an illegal access on a field, the expected
+behavior is to receive an IllegalAccessError at runtime the first time
+the field is actually accessed.  The Dalvik verifier will reject the
+entire class immediately.
+
+<p>
+It's difficult to throw the error on first use in Dalvik.  Possible ways
+to implement this behavior include:
+
+<ol>
+<li>We could replace the invalid field access instruction with a special
+instruction that generates an illegal access error, and allow class
+verification to complete successfully.  This type of verification must
+often be deferred to first class load, rather than be performed ahead of time
+during DEX optimization, which means the bytecode instructions will be
+mapped read-only during verification.  So this won't work.
+</li>
+
+<li>We can perform the access checks when the field/method/class is
+resolved.  In a typical VM implementation we would do the check when the
+entry is resolved in the context of the current classfile, but our DEX
+files combine multiple classfiles together, merging the field/method/class
+resolution results into a single large table.  Once one class successfully
+resolves the field, every other class in the same DEX file would be able
+to access the field.  This is bad.
+</li>
+
+<li>Perform the access checks on every field/method/class access.
+This adds significant overhead.  This is mitigated somewhat by the DEX
+optimizer, which will convert many field/method/class accesses into a
+simpler form after performing the access check.  However, not all accesses
+can be optimized (e.g. accesses to classes unknown at dexopt time),
+and we don't currently have an optimized form of certain instructions
+(notably static field operations).
+</li>
+</ol>
+
+<p>
+Other implementations are possible, but they all involve allocating
+some amount of additional memory or spending additional cycles
+on non-DEX-optimized instructions.  We don't want to throw an
+IllegalAccessError at verification time, since that would indicate that
+access to the class being verified was illegal.
+
+<p>
+The VerifyError is accompanied by detailed, if somewhat cryptic,
+information in the log file.  From this it's possible to determine the
+exact instruction that failed, and the reason for the failure.  We can
+also constructor the VerifyError with an IllegalAccessError passed in as
+the cause.
+
+<address>Copyright &copy; 2008 The Android Open Source Project</address>
+
+</body>
+</html>

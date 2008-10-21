@@ -1,0 +1,52 @@
+Certificate:
+    Data:
+        Version: 1 (0x0)
+        Serial Number: 1 (0x1)
+        Signature Algorithm: sha1WithRSAEncryption
+        Issuer: L=ValiCert Validation Network, O=ValiCert, Inc., OU=ValiCert Class 3 Policy Validation Authority, CN=http://www.valicert.com//emailAddress=info@valicert.com
+        Validity
+            Not Before: Jun 26 00:22:33 1999 GMT
+            Not After : Jun 26 00:22:33 2019 GMT
+        Subject: L=ValiCert Validation Network, O=ValiCert, Inc., OU=ValiCert Class 3 Policy Validation Authority, CN=http://www.valicert.com//emailAddress=info@valicert.com
+        Subject Public Key Info:
+            Public Key Algorithm: rsaEncryption
+            RSA Public Key: (1024 bit)
+                Modulus (1024 bit):
+                    00:e3:98:51:96:1c:e8:d5:b1:06:81:6a:57:c3:72:
+                    75:93:ab:cf:9e:a6:fc:f3:16:52:d6:2d:4d:9f:35:
+                    44:a8:2e:04:4d:07:49:8a:38:29:f5:77:37:e7:b7:
+                    ab:5d:df:36:71:14:99:8f:dc:c2:92:f1:e7:60:92:
+                    97:ec:d8:48:dc:bf:c1:02:20:c6:24:a4:28:4c:30:
+                    5a:76:6d:b1:5c:f3:dd:de:9e:10:71:a1:88:c7:5b:
+                    9b:41:6d:ca:b0:b8:8e:15:ee:ad:33:2b:cf:47:04:
+                    5c:75:71:0a:98:24:98:29:a7:49:59:a5:dd:f8:b7:
+                    43:62:61:f3:d3:e2:d0:55:3f
+                Exponent: 65537 (0x10001)
+    Signature Algorithm: sha1WithRSAEncryption
+        56:bb:02:58:84:67:08:2c:df:1f:db:7b:49:33:f5:d3:67:9d:
+        f4:b4:0a:10:b3:c9:c5:2c:e2:92:6a:71:78:27:f2:70:83:42:
+        d3:3e:cf:a9:54:f4:f1:d8:92:16:8c:d1:04:cb:4b:ab:c9:9f:
+        45:ae:3c:8a:a9:b0:71:33:5d:c8:c5:57:df:af:a8:35:b3:7f:
+        89:87:e9:e8:25:92:b8:7f:85:7a:ae:d6:bc:1e:37:58:2a:67:
+        c9:91:cf:2a:81:3e:ed:c6:39:df:c0:3e:19:9c:19:cc:13:4d:
+        82:41:b5:8c:de:e0:3d:60:08:20:0f:45:7e:6b:a2:7f:a3:8c:
+        15:ee
+SHA1 Fingerprint=69:BD:8C:F4:9C:D3:00:FB:59:2E:17:93:CA:55:6A:F3:EC:AA:35:FB
+-----BEGIN CERTIFICATE-----
+MIIC5zCCAlACAQEwDQYJKoZIhvcNAQEFBQAwgbsxJDAiBgNVBAcTG1ZhbGlDZXJ0
+IFZhbGlkYXRpb24gTmV0d29yazEXMBUGA1UEChMOVmFsaUNlcnQsIEluYy4xNTAz
+BgNVBAsTLFZhbGlDZXJ0IENsYXNzIDMgUG9saWN5IFZhbGlkYXRpb24gQXV0aG9y
+aXR5MSEwHwYDVQQDExhodHRwOi8vd3d3LnZhbGljZXJ0LmNvbS8xIDAeBgkqhkiG
+9w0BCQEWEWluZm9AdmFsaWNlcnQuY29tMB4XDTk5MDYyNjAwMjIzM1oXDTE5MDYy
+NjAwMjIzM1owgbsxJDAiBgNVBAcTG1ZhbGlDZXJ0IFZhbGlkYXRpb24gTmV0d29y
+azEXMBUGA1UEChMOVmFsaUNlcnQsIEluYy4xNTAzBgNVBAsTLFZhbGlDZXJ0IENs
+YXNzIDMgUG9saWN5IFZhbGlkYXRpb24gQXV0aG9yaXR5MSEwHwYDVQQDExhodHRw
+Oi8vd3d3LnZhbGljZXJ0LmNvbS8xIDAeBgkqhkiG9w0BCQEWEWluZm9AdmFsaWNl
+cnQuY29tMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDjmFGWHOjVsQaBalfD
+cnWTq8+epvzzFlLWLU2fNUSoLgRNB0mKOCn1dzfnt6td3zZxFJmP3MKS8edgkpfs
+2Ejcv8ECIMYkpChMMFp2bbFc893enhBxoYjHW5tBbcqwuI4V7q0zK89HBFx1cQqY
+JJgpp0lZpd34t0NiYfPT4tBVPwIDAQABMA0GCSqGSIb3DQEBBQUAA4GBAFa7AliE
+Zwgs3x/be0kz9dNnnfS0ChCzycUs4pJqcXgn8nCDQtM+z6lU9PHYkhaM0QTLS6vJ
+n0WuPIqpsHEzXcjFV9+vqDWzf4mH6eglkrh/hXqu1rweN1gqZ8mRzyqBPu3GOd/A
+PhmcGcwTTYJBtYze4D1gCCAPRX5ron+jjBXu
+-----END CERTIFICATE-----

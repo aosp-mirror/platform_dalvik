@@ -1,0 +1,2 @@
+HANDLE_OP_X_LONG(OP_REM_LONG, "rem", %, true)
+OP_END

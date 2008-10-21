@@ -1,0 +1,89 @@
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number:
+            44:be:0c:8b:50:00:21:b4:11:d3:2a:68:06:a9:ad:69
+        Signature Algorithm: sha1WithRSAEncryption
+        Issuer: C=US, ST=UT, L=Salt Lake City, O=The USERTRUST Network, OU=http://www.usertrust.com, CN=UTN - DATACorp SGC
+        Validity
+            Not Before: Jun 24 18:57:21 1999 GMT
+            Not After : Jun 24 19:06:30 2019 GMT
+        Subject: C=US, ST=UT, L=Salt Lake City, O=The USERTRUST Network, OU=http://www.usertrust.com, CN=UTN - DATACorp SGC
+        Subject Public Key Info:
+            Public Key Algorithm: rsaEncryption
+            RSA Public Key: (2048 bit)
+                Modulus (2048 bit):
+                    00:df:ee:58:10:a2:2b:6e:55:c4:8e:bf:2e:46:09:
+                    e7:e0:08:0f:2e:2b:7a:13:94:1b:bd:f6:b6:80:8e:
+                    65:05:93:00:1e:bc:af:e2:0f:8e:19:0d:12:47:ec:
+                    ac:ad:a3:fa:2e:70:f8:de:6e:fb:56:42:15:9e:2e:
+                    5c:ef:23:de:21:b9:05:76:27:19:0f:4f:d6:c3:9c:
+                    b4:be:94:19:63:f2:a6:11:0a:eb:53:48:9c:be:f2:
+                    29:3b:16:e8:1a:a0:4c:a6:c9:f4:18:59:68:c0:70:
+                    f2:53:00:c0:5e:50:82:a5:56:6f:36:f9:4a:e0:44:
+                    86:a0:4d:4e:d6:47:6e:49:4a:cb:67:d7:a6:c4:05:
+                    b9:8e:1e:f4:fc:ff:cd:e7:36:e0:9c:05:6c:b2:33:
+                    22:15:d0:b4:e0:cc:17:c0:b2:c0:f4:fe:32:3f:29:
+                    2a:95:7b:d8:f2:a7:4e:0f:54:7c:a1:0d:80:b3:09:
+                    03:c1:ff:5c:dd:5e:9a:3e:bc:ae:bc:47:8a:6a:ae:
+                    71:ca:1f:b1:2a:b8:5f:42:05:0b:ec:46:30:d1:72:
+                    0b:ca:e9:56:6d:f5:ef:df:78:be:61:ba:b2:a5:ae:
+                    04:4c:bc:a8:ac:69:15:97:bd:ef:eb:b4:8c:bf:35:
+                    f8:d4:c3:d1:28:0e:5c:3a:9f:70:18:33:20:77:c4:
+                    a2:af
+                Exponent: 65537 (0x10001)
+        X509v3 extensions:
+            X509v3 Key Usage: 
+                Digital Signature, Non Repudiation, Certificate Sign, CRL Sign
+            X509v3 Basic Constraints: critical
+                CA:TRUE
+            X509v3 Subject Key Identifier: 
+                53:32:D1:B3:CF:7F:FA:E0:F1:A0:5D:85:4E:92:D2:9E:45:1D:B4:4F
+            X509v3 CRL Distribution Points: 
+                URI:http://crl.usertrust.com/UTN-DATACorpSGC.crl
+
+            X509v3 Extended Key Usage: 
+                TLS Web Server Authentication, Microsoft Server Gated Crypto, Netscape Server Gated Crypto
+    Signature Algorithm: sha1WithRSAEncryption
+        27:35:97:00:8a:8b:28:bd:c6:33:30:1e:29:fc:e2:f7:d5:98:
+        d4:40:bb:60:ca:bf:ab:17:2c:09:36:7f:50:fa:41:dc:ae:96:
+        3a:0a:23:3e:89:59:c9:a3:07:ed:1b:37:ad:fc:7c:be:51:49:
+        5a:de:3a:0a:54:08:16:45:c2:99:b1:87:cd:8c:68:e0:69:03:
+        e9:c4:4e:98:b2:3b:8c:16:b3:0e:a0:0c:98:50:9b:93:a9:70:
+        09:c8:2c:a3:8f:df:02:e4:e0:71:3a:f1:b4:23:72:a0:aa:01:
+        df:df:98:3e:14:50:a0:31:26:bd:28:e9:5a:30:26:75:f9:7b:
+        60:1c:8d:f3:cd:50:26:6d:04:27:9a:df:d5:0d:45:47:29:6b:
+        2c:e6:76:d9:a9:29:7d:32:dd:c9:36:3c:bd:ae:35:f1:11:9e:
+        1d:bb:90:3f:12:47:4e:8e:d7:7e:0f:62:73:1d:52:26:38:1c:
+        18:49:fd:30:74:9a:c4:e5:22:2f:d8:c0:8d:ed:91:7a:4c:00:
+        8f:72:7f:5d:da:dd:1b:8b:45:6b:e7:dd:69:97:a8:c5:56:4c:
+        0f:0c:f6:9f:7a:91:37:f6:97:82:e0:dd:71:69:ff:76:3f:60:
+        4d:3c:cf:f7:99:f9:c6:57:f4:c9:55:39:78:ba:2c:79:c9:a6:
+        88:2b:f4:08
+SHA1 Fingerprint=58:11:9F:0E:12:82:87:EA:50:FD:D9:87:45:6F:4F:78:DC:FA:D6:D4
+-----BEGIN CERTIFICATE-----
+MIIEXjCCA0agAwIBAgIQRL4Mi1AAIbQR0ypoBqmtaTANBgkqhkiG9w0BAQUFADCB
+kzELMAkGA1UEBhMCVVMxCzAJBgNVBAgTAlVUMRcwFQYDVQQHEw5TYWx0IExha2Ug
+Q2l0eTEeMBwGA1UEChMVVGhlIFVTRVJUUlVTVCBOZXR3b3JrMSEwHwYDVQQLExho
+dHRwOi8vd3d3LnVzZXJ0cnVzdC5jb20xGzAZBgNVBAMTElVUTiAtIERBVEFDb3Jw
+IFNHQzAeFw05OTA2MjQxODU3MjFaFw0xOTA2MjQxOTA2MzBaMIGTMQswCQYDVQQG
+EwJVUzELMAkGA1UECBMCVVQxFzAVBgNVBAcTDlNhbHQgTGFrZSBDaXR5MR4wHAYD
+VQQKExVUaGUgVVNFUlRSVVNUIE5ldHdvcmsxITAfBgNVBAsTGGh0dHA6Ly93d3cu
+dXNlcnRydXN0LmNvbTEbMBkGA1UEAxMSVVROIC0gREFUQUNvcnAgU0dDMIIBIjAN
+BgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA3+5YEKIrblXEjr8uRgnn4AgPLit6
+E5Qbvfa2gI5lBZMAHryv4g+OGQ0SR+ysraP6LnD43m77VkIVni5c7yPeIbkFdicZ
+D0/Ww5y0vpQZY/KmEQrrU0icvvIpOxboGqBMpsn0GFlowHDyUwDAXlCCpVZvNvlK
+4ESGoE1O1kduSUrLZ9emxAW5jh70/P/N5zbgnAVssjMiFdC04MwXwLLA9P4yPykq
+lXvY8qdOD1R8oQ2AswkDwf9c3V6aPryuvEeKaq5xyh+xKrhfQgUL7EYw0XILyulW
+bfXv33i+Ybqypa4ETLyorGkVl73v67SMvzX41MPRKA5cOp9wGDMgd8SirwIDAQAB
+o4GrMIGoMAsGA1UdDwQEAwIBxjAPBgNVHRMBAf8EBTADAQH/MB0GA1UdDgQWBBRT
+MtGzz3/64PGgXYVOktKeRR20TzA9BgNVHR8ENjA0MDKgMKAuhixodHRwOi8vY3Js
+LnVzZXJ0cnVzdC5jb20vVVROLURBVEFDb3JwU0dDLmNybDAqBgNVHSUEIzAhBggr
+BgEFBQcDAQYKKwYBBAGCNwoDAwYJYIZIAYb4QgQBMA0GCSqGSIb3DQEBBQUAA4IB
+AQAnNZcAiosovcYzMB4p/OL31ZjUQLtgyr+rFywJNn9Q+kHcrpY6CiM+iVnJowft
+Gzet/Hy+UUla3joKVAgWRcKZsYfNjGjgaQPpxE6YsjuMFrMOoAyYUJuTqXAJyCyj
+j98C5OBxOvG0I3KgqgHf35g+FFCgMSa9KOlaMCZ1+XtgHI3zzVAmbQQnmt/VDUVH
+KWss5nbZqSl9Mt3JNjy9rjXxEZ4du5A/EkdOjtd+D2JzHVImOBwYSf0wdJrE5SIv
+2MCN7ZF6TACPcn9d2t0bi0Vr591pl6jFVkwPDPafepE39peC4N1xaf92P2BNPM/3
+mfnGV/TJVTl4uix5yaaIK/QI
+-----END CERTIFICATE-----

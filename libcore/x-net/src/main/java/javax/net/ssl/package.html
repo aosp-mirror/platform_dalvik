@@ -1,0 +1,24 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=us-ascii">
+</head>
+<html>
+<body>
+<p>
+This package provides all the classes and interfaces needed to implemenet and program the Secure Socket
+abstraction based on the SSL protocol SSSLv3.0 or TLSv1.2
+All the details of the SSL handshake protocol ar card for, and the cipher set with which
+a client or a server work can be specified.
+
+X.509 certificates are verified and if desired either the client or the server can walk through
+the whole certificates' chain until the root CA is reached.
+
+Notice that the Android javax.net.ssl package uses the OpenSSL Library to implement the low level
+SSL functionality. All the relevant OpenSSl write(...) and read(...) functions are hidden within two
+JNI files. The signatures of all the Java SSL methods are compliant with that of the Java 5.0
+specification.
+
+The provider for all SSL cryptological tools is The Legion of Bouncy Castle (http://www.bouncycastle.org).
+</p>
+</body>
+</html>

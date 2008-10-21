@@ -1,0 +1,884 @@
+<html>
+  <head>
+  <!--
+    /*
+     * Copyright (C) 2007 The Android Open Source Project
+     *
+     * Licensed under the Apache License, Version 2.0 (the "License");
+     * you may not use this file except in compliance with the License.
+     * You may obtain a copy of the License at
+     *
+     *      http://www.apache.org/licenses/LICENSE-2.0
+     *
+     * Unless required by applicable law or agreed to in writing, software
+     * distributed under the License is distributed on an "AS IS" BASIS,
+     * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     * See the License for the specific language governing permissions and
+     * limitations under the License.
+     */
+  -->
+  </head>
+  <body>
+    Provides an implementation of regular expressions, which is useful for
+    matching, searching, and replacing strings based on patterns. The two
+    fundamental classes are {@link java.util.regex.Pattern} and
+    {@link java.util.regex.Matcher}. The former
+    takes a pattern described by means of a regular expression and compiles it
+    into a special internal representation. The latter matches the compiled
+    pattern against a given input.
+
+    <h2>Regular expressions</h2>
+    
+    A regular expression consists of literal text, meta characters, character
+    sets, and operators. The latter three have a special meaning when
+    encountered during the processing of a pattern.
+ 
+    <ul>
+      <li>
+        <a href="#metachars">Meta characters</a> are a special means to describe
+        single characters in the input text. A common example for a meta
+        character is the dot '.', which, when used in a regular expression,
+        matches any character.
+      </li>
+      <li>
+        <a href="#charsets">Character sets</a> are a convenient means to
+        describe different characters that match a single character in the
+        input. Character sets are enclosed in angular brackets '[' and ']'
+        and use the dash '-' for forming ranges. A typical example is
+        "[0-9a-fA-F]", which describes the set of all hexadecimal digits.
+      </li>
+      <li>
+        <a href="#operators">Operators</a> modify or combine whole regular
+        expressions, with the result being a regular expression again. An
+        example for an operator is the asterisk '*', which, together with the
+        regular expression preceding it, matches zero or more repetitions of
+        that regular expression. The plus sign '+' is similar, but requires at
+        least one occurrence.
+      </li>
+    </ul>
+ 
+    Meta characters, the '[' and ']' that form a character set, and operators
+    normally lose their special meaning when preceded by a backslash '\'. To get
+    a backslash by itself, use a double backslash. Note that when using regular
+    expressions in Java source code, some care has to be taken to get the
+    backslashes right (due to yet another level of escaping being necessary for
+    Java).
+    
+    <p>
+    
+    The following table gives some basic examples of regular expressions and
+    input strings that match them:
+    
+    <p>
+   
+    <table>
+      <tr>
+        <th>
+          Regular expression
+        </th>
+        <th>
+          Matched string(s)
+        </th>
+      </tr>
+      <tr>
+        <td>
+          "Hello, World!"
+        </td>
+        <td>
+          "Hello, World!"
+        </td>
+      </tr>
+      <tr>
+        <td>
+          "Hello, World."
+        </td>
+        <td>
+          "Hello, World!", "Hello, World?"
+        </td>
+      </tr>
+      <tr>
+        <td>
+          "Hello, .*d!"
+        </td>
+        <td>
+          "Hello, World!", "Hello, Android!", "Hello, Dad!"
+        </td>
+      </tr>
+      <tr>
+        <td>
+          "[0-9]+ green bottles"
+        </td>
+        <td>
+          "0 green bottles", "25 green bottles", "1234 green bottles"
+        </td>
+      </tr>
+    </table>
+
+    <p>
+
+    The following section describe the various features in detail. The are also
+    some <a href="#impnotes">implementation notes</a> at the end.
+    
+    <p>
+
+    <a name="metachars"></a>  
+    <h2>Meta characters</h2>
+    
+    The following two tables lists the meta characters understood in regular
+    expressions.
+
+    <p>
+    
+    <!-- ICU-copied documentation begins here -->
+  
+    <table>
+      <tr>
+        <th>
+          Meta character
+        </th>
+        <th>
+          Description
+        </th>
+      </tr>
+      <tr>
+        <td>
+          \a
+        </td>
+        <td>
+          Match a BELL, \u0007.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          \A
+        </td>
+        <td>
+          Match at the beginning of the input. Differs from ^ in that
+          \A will not match after a new line within the input.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          \b, outside of a <a href="#charsets">character set</a>
+        </td>
+        <td>
+          Match if the current position is a word boundary. Boundaries
+          occur at the transitions between word (\w) and non-word (\W)
+          characters, with combining marks ignored.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          \b, within a <a href="#charsets">character set</a>
+        </td>
+        <td>
+          Match a BACKSPACE, \u0008.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          \B
+        </td>
+        <td>
+          Match if the current position is not a word boundary.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          \cX
+        </td>
+        <td>
+          Match a control-X character (replace X with actual character).
+        </td>
+      </tr>
+      <tr>
+        <td>
+          \e
+        </td>
+        <td>
+          Match an ESCAPE, \u001B.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          \E
+        </td>
+        <td>
+          Ends quoting started by \Q. Meta characters, character classes, and
+          operators become active again. 
+        </td>
+      </tr>
+      <tr>
+        <td>
+          \f
+        </td>
+        <td>
+          Match a FORM FEED, \u000C.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          \G
+        </td>
+        <td>
+          Match if the current position is at the end of the previous
+          match.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          \n
+        </td>
+        <td>
+          Match a LINE FEED, \u000A.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          \N{UNICODE CHARACTER NAME}
+        </td>
+        <td>
+          Match the named Unicode character.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          \Q
+        </td>
+        <td>
+          Quotes all following characters until \E. The following text is
+          treated as literal.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          \r
+        </td>
+        <td>
+          Match a CARRIAGE RETURN, \u000D.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          \t
+        </td>
+        <td>
+          Match a HORIZONTAL TABULATION, \u0009.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          \uhhhh
+        </td>
+        <td>
+          Match the character with the hex value hhhh.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          \Uhhhhhhhh
+        </td>
+        <td>
+          Match the character with the hex value hhhhhhhh. Exactly
+          eight hex digits must be provided, even though the largest Unicode
+          code point is \U0010ffff.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          \x{hhhh}
+        </td>
+        <td>
+          Match the character with the hex value hhhh. From one to six hex
+          digits may be supplied.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          \xhh
+        </td>
+        <td>
+          Match the character with the hex value hh.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          \Z
+        </td>
+        <td>
+          Match if the current position is at the end of input, but
+          before the final line terminator, if one exists.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          \z
+        </td>
+        <td>
+          Match if the current position is at the end of input.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          \0n, \0nn, \0nnn
+        </td>
+        <td>
+          Match the character with the octal value n, nn, or nnn. Maximum
+          value is 0377.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          \n
+        </td>
+        <td>
+          Back Reference. Match whatever the nth capturing group
+          matched. n must be a number &gt; 1 and &lt; total number of capture
+          groups in the pattern. Note: Octal escapes, such as \012, are not
+          supported in ICU regular expressions
+        </td>
+      </tr>
+      <tr>
+        <td>
+          [character set]
+        </td>
+        <td>
+          Match any one character from the character set. See
+          <a href="#charsets">character sets</a> for a full description of what
+          may appear between the angular brackets.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          .
+        </td>
+        <td>
+          Match any character.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          ^
+        </td>
+        <td>
+          Match at the beginning of a line. 
+        </td>
+      </tr>
+      <tr>
+        <td>
+          $
+        </td>
+        <td>
+          Match at the end of a line. 
+        </td>
+      </tr>
+      <tr>
+        <td>
+          \
+        </td>
+        <td>
+          Quotes the following character, so that is loses any special
+          meaning it might have.
+        </td>
+      </tr>
+    </table>
+
+    <!-- ICU-copied documentation begins here -->
+
+    <p>
+    
+    <a name="charsets"></a>  
+    <h2>Character sets</h2>
+
+    The following table lists the syntax elements allowed inside a character
+    set:
+
+    <p>
+
+    <table>
+      <tr>
+        <th>
+          Element
+        </th>
+        <th>
+          Description
+        </th>
+      </tr>
+      <tr>
+        <td>
+          [a]
+        </td>
+        <td>
+          The character set consisting of the letter 'x' only.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          [xyz]
+        </td>
+        <td>
+          The character set consisting of the letters 'x', 'y', and 'z',
+          described by explicit enmeration.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          [x-z]
+        </td>
+        <td>
+          The character set consisting of the letters 'x', 'y', and 'z',
+          described by means of a range.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          [^xyz]
+        </td>
+        <td>
+          The character set consisting of everything but the letters 'x', 'y',
+          and 'z'.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          [[a-f][0-9]]
+        </td>
+        <td>
+          The character set formed by building the union of the two character
+          sets [a-f] and [0-9].
+        </td>
+      </tr>
+      <tr>
+        <td>
+          [[a-z]&amp;&amp;[jkl]]
+        </td>
+        <td>
+          The character set formed by building the intersection of the two
+          character sets [a-z] and [jkl]. You can also use a single '&amp;', but
+          this regular expression might not be <a href="#impnotes">portable</a>.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          [[a-z]--[jkl]]
+        </td>
+        <td>
+          The character set formed by building the difference of the two
+          character sets [a-z] and [jkl]. You can also use a single '-'. This
+          operator is generally not <a href="#impnotes">portable</a>.
+        </td>
+      </tr>
+    </table>
+
+    <p>
+    
+    A couple of frequently used character sets are predefined and named.
+    These can be referenced by their name, but behave otherwise similar to
+    explicit character sets. The following table lists them:
+    
+    <p>
+    
+    <table>
+      <tr>
+        <th>
+          Character set
+        </th>
+        <th>
+          Description
+        </th>
+      </tr>
+      <tr>
+        <td>
+          \d, \D
+        </td>
+        <td>
+          The set consisting of all digit characters (\d) or the opposite of
+          it (\D).
+        </td>
+      </tr>
+      <tr>
+        <td>
+          \s, \S
+        </td>
+        <td>
+          The set consisting of all space characters (\s) or the opposite of
+          it (\S).
+        </td>
+      </tr>
+      <tr>
+        <td>
+          \w, \W
+        </td>
+        <td>
+          The set consisting of all word characters (\w) or the opposite
+          of it (\W).
+        </td>
+      </tr>
+      <tr>
+        <td>
+          \X
+        </td>
+        <td>
+          The set of all grapheme clusters. 
+        </td>
+      </tr>
+      <tr>
+        <td>
+          \p{NAME}, \P{NAME}
+        </td>
+        <td>
+          The Posix set with the specified NAME (\p{}) or the opposite
+          of it (\P{})- Legal values for NAME are 'Alnum', 'Alpha', 'ASCII',
+          'Blank', 'Cntrl', 'Digit', 'Graph', 'Lower', 'Print', 'Prunct',
+          'Upper', 'XDigit' .
+        </td>
+      </tr>
+      <tr>
+        <td>
+          \p{inBLOCK}, \P{inBLOCK}
+        </td>
+        <td>
+          The character set equivalent to the given Unicode BLOCK (\p{}) or
+          the opposite of it (\P{}). An example for a legal BLOCK name is
+          'Hebrew', meaning, unsurprisingly, all Hebrew characters.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          \p{CATEGORY}, \P{CATEGORY}
+        </td>
+        <td>
+          The character set equivalent to the Unicode CATEGORY (\p{}) or the
+          opposite of it (\P{}). An example for a legal CATEGORY name is 'Lu', 
+          meaning all uppercase letters.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          \p{javaMETHOD}, \P{javaMETHOD}
+        </td>
+        <td>
+          The character set equivalent to the isMETHOD() operation of the
+          {@link java.lang.Character} class (\p{}) or the opposite of it (\P{}).
+        </td>
+      </tr>
+    </table>    
+    
+    <p>
+
+    <a name="operators"></a>  
+    <h2>Operators</h2>
+
+    The following table lists the operators understood inside regular
+    expressions:
+
+    <p>
+
+    <!-- ICU-copied documentation begins here -->
+   
+    <table>
+      <tr>
+        <th>
+          Operator
+        </th>
+        <th>
+          Description
+        </th>
+      </tr>
+      <tr>
+        <td>
+          |
+        </td>
+        <td>
+          Alternation. A|B matches either A or B.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          *
+        </td>
+        <td>
+          Match 0 or more times. Match as many times as possible.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          +
+        </td>
+        <td>
+          Match 1 or more times. Match as many times as possible.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          ?
+        </td>
+        <td>
+          Match zero or one times. Prefer one.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          {n}
+        </td>
+        <td>
+          Match exactly n times
+        </td>
+      </tr>
+      <tr>
+        <td>
+          {n,}
+        </td>
+        <td>
+          Match at least n times. Match as many times as possible.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          {n,m}
+        </td>
+        <td>
+          Match between n and m times. Match as many times as possible,
+        but not more than m.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          *?
+        </td>
+        <td>
+          Match 0 or more times. Match as few times as possible.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          +?
+        </td>
+        <td>
+          Match 1 or more times. Match as few times as possible.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          ??
+        </td>
+        <td>
+          Match zero or one times. Prefer zero. 
+        </td>
+      </tr>
+      <tr>
+        <td>
+          {n}?
+        </td>
+        <td>
+          Match exactly n times.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          {n,}?
+        </td>
+        <td>
+          Match at least n times, but no more than required for an
+        overall pattern match
+        </td>
+      </tr>
+      <tr>
+        <td>
+          {n,m}?
+        </td>
+        <td>
+          Match between n and m times. Match as few times as possible,
+        but not less than n.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          *+
+        </td>
+        <td>
+          Match 0 or more times. Match as many times as possible when
+        first encountered, do not retry with fewer even if overall match
+        fails (Possessive Match)
+        </td>
+      </tr>
+      <tr>
+        <td>
+          ++
+        </td>
+        <td>
+          Match 1 or more times. Possessive match.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          ?+
+        </td>
+        <td>
+          Match zero or one times. Possessive match.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          {n}+
+        </td>
+        <td>
+          Match exactly n times.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          {n,}+
+        </td>
+        <td>
+          Match at least n times. Possessive Match.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          {n,m}+
+        </td>
+        <td>
+          Match between n and m times. Possessive Match.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          ( ... )
+        </td>
+        <td>
+          Capturing parentheses. Range of input that matched the
+        parenthesized subexpression is available after the match.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          (?: ... )
+        </td>
+        <td>
+          Non-capturing parentheses. Groups the included pattern, but
+        does not provide capturing of matching text. Somewhat more efficient
+        than capturing parentheses.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          (?&gt; ... )
+        </td>
+        <td>
+          Atomic-match parentheses. First match of the parenthesized
+        subexpression is the only one tried; if it does not lead to an
+        overall pattern match, back up the search for a match to a position
+        before the "(?&gt;"
+        </td>
+      </tr>
+      <tr>
+        <td>
+          (?# ... )
+        </td>
+        <td>
+          Free-format comment (?# comment ).
+        </td>
+      </tr>
+      <tr>
+        <td>
+          (?= ... )
+        </td>
+        <td>
+          Look-ahead assertion. True if the parenthesized pattern
+        matches at the current input position, but does not advance the
+        input position. 
+        </td>
+      </tr>
+      <tr>
+        <td>
+          (?! ... )
+        </td>
+        <td>
+          Negative look-ahead assertion. True if the parenthesized
+        pattern does not match at the current input position. Does not
+        advance the input position. 
+        </td>
+      </tr>
+      <tr>
+        <td>
+          (?&lt;= ... )
+        </td>
+        <td>
+          Look-behind assertion. True if the parenthesized pattern
+        matches text preceding the current input position, with the last
+        character of the match being the input character just before the
+        current position. Does not alter the input position. The length of
+        possible strings matched by the look-behind pattern must not be
+        unbounded (no * or + operators.) 
+        </td>
+      </tr>
+      <tr>
+        <td>
+          (?&lt;! ... )
+        </td>
+        <td>
+          Negative Look-behind assertion. True if the parenthesized
+        pattern does not match text preceding the current input position,
+        with the last character of the match being the input character just
+        before the current position. Does not alter the input position. The
+        length of possible strings matched by the look-behind pattern must
+        not be unbounded (no * or + operators.) 
+        </td>
+      </tr>
+      <tr>
+        <td>
+          (?ismwx-ismwx: ... )
+        </td>
+        <td>
+          Flag settings. Evaluate the parenthesized expression with the
+        specified flags enabled or -disabled. 
+        </td>
+      </tr>
+      <tr>
+        <td>
+          (?ismwx-ismwx)
+        </td>
+        <td>
+          Flag settings. Change the flag settings. Changes apply to the
+        portion of the pattern following the setting. For example, (?i)
+        changes to a case insensitive match.
+        </td>
+      </tr>
+    </table>
+
+    <!-- ICU-copied documentation ends here -->
+ 
+    <p>
+    
+    <a name="impnotes"></a>
+    <h2>Implementation notes</h2>
+    
+    The regular expression implementation used in Android is provided by
+    <a href="http://www.icu-project.org">ICU</a>. The notation for the regular
+    expressions is mostly a superset of those used in other Java language
+    implementations. This means that existing applications will normally work as
+    expected, but in rare cases some regular expression content that is meant to
+    be literal might be interpreted with a special meaning. The most notable
+    examples are the single '&amp;', which can also be used as the intersection
+    operator for <a href="#charsets">character sets</a>, and the intersection
+    operators '-' and '--'. Also, some of the flags are handled in a
+    slightly different way:
+     
+    <ul>
+      <li>
+        The {@link java.util.regex.Pattern#CASE_INSENSITIVE} flag silently
+        assumes Unicode case-insensitivity. That is, the
+        {@link java.util.regex.Pattern#UNICODE_CASE} flag is effectively a
+        no-op. 
+      </li>
+      <li>
+        The {@link java.util.regex.Pattern#CANON_EQ} flag is not supported at
+        all (throws an exception).
+      </li>
+    </ul>
+    
+    @since Android 1.0
+    
+  </body>
+</html>

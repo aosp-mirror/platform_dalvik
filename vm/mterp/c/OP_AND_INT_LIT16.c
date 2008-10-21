@@ -1,0 +1,2 @@
+HANDLE_OP_X_INT_LIT16(OP_AND_INT_LIT16, "and", (s4), &, false)
+OP_END

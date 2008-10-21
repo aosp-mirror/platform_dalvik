@@ -1,0 +1,5 @@
+javac 1.7.0-internal_bootstrap
+Blort.test1:()I:
+    system-annotation dalvik.annotation.Throws {value: {java.lang.RuntimeException}}
+Blort.test2:()I:
+    system-annotation dalvik.annotation.Throws {value: {java.lang.Throwable, java.lang.IllegalArgumentException}}

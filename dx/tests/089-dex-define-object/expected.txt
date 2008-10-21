@@ -1,0 +1,2 @@
+javac 1.7.0-internal_bootstrap
+Good!

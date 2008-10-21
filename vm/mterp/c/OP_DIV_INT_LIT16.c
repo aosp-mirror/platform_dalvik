@@ -1,0 +1,2 @@
+HANDLE_OP_X_INT_LIT16(OP_DIV_INT_LIT16, "div", (s4), /, true)
+OP_END

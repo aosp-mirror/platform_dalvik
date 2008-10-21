@@ -1,0 +1,3 @@
+javac 1.7.0-internal_bootstrap
+java.lang.RuntimeException
+java.lang.Error, java.lang.UnsupportedOperationException

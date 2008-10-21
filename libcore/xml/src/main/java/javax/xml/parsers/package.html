@@ -1,0 +1,23 @@
+<html>
+  <body>
+    <p>
+      Provides facilities for parsing XML documents and building Document Object
+      Model (DOM) trees from them. The
+      {@link javax.xml.parsers.SAXParserFactory} class serves as an entry point
+      to event-based XML parsing. The
+      {@link javax.xml.parsers.DocumentBuilderFactory} class is an entry point
+      for dealing with DOM trees. Both factories are usually configured
+      before their factory methods are invoked. They then try to create a
+      {@link javax.xml.parsers.SAXParser} or a
+      {@link javax.xml.parsers.DocumentBuilder} (respectively) suiting the
+      application's needs. If none can be found, an Exception is thrown. 
+    </p>
+    <p>
+      Note that in order to cater for resource-constrained environments,
+      Android's XML packages currently only provide DOM Level 2 Core support
+      and a non-validating parser. This means that (a) the interface for the
+      various DOM classes might differ from other implementations and (b)
+      requesting a validating parser will always fail.
+    </p>
+  </body>
+</html>

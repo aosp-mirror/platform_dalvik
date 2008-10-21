@@ -1,0 +1,141 @@
+#!/bin/bash
+#
+# Copyright (C) 2007 The Android Open Source Project
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# opcode-gen <file>
+#
+# Use the file bytecodes.txt to generate code inside <file>, based on
+# the directives found in that file:
+#
+#     opcodes:   static final ints for each opcode
+#     dops:      static final objects for each opcode
+#     dops-init: initialization code for the "dops"
+
+file="$1"
+tmpfile="/tmp/$$.txt"
+
+if [ "x$1" = "x" ]; then
+    echo "must specify a file"
+    exit 1
+fi
+
+# Set up prog to be the path of this script, including following symlinks,
+# and set up progdir to be the fully-qualified pathname of its directory.
+prog="$0"
+while [ -h "${prog}" ]; do
+    newProg=`/bin/ls -ld "${prog}"`
+    newProg=`expr "${newProg}" : ".* -> \(.*\)$"`
+    if expr "x${newProg}" : 'x/' >/dev/null; then
+        prog="${newProg}"
+    else
+        progdir=`dirname "${prog}"`
+        prog="${progdir}/${newProg}"
+    fi
+done
+oldwd=`pwd`
+progdir=`dirname "${prog}"`
+cd "${progdir}"
+progdir=`pwd`
+prog="${progdir}"/`basename "${prog}"`
+cd "${oldwd}"
+
+bytecodeFile="$progdir/bytecode.txt"
+
+awk -v "bytecodeFile=$bytecodeFile" '
+
+BEGIN {
+    readBytecodes();
+    consumeUntil = "";
+}
+
+consumeUntil != "" {
+    if (index($0, consumeUntil) != 0) {
+        consumeUntil = "";
+    } else {
+        next;
+    }
+}
+
+/BEGIN\(opcodes\)/ {
+    consumeUntil = "END(opcodes)";
+    print;
+
+    for (i = 0; i < 256; i++) {
+        printf("    public static final int %s = 0x%s;\n",
+               uppername[i], hex[i]);
+    }
+
+    next;
+}
+
+/BEGIN\(dops\)/ {
+    consumeUntil = "END(dops)";
+    print;
+
+    for (i = 0; i < 256; i++) {
+        if (index(name[i], "unused") != 0) {
+            continue;
+        }
+        printf("    public static final Dop %s =\n" \
+               "        new Dop(DalvOps.%s, DalvOps.%s,\n" \
+               "            Form%s.THE_ONE, %s, \"%s\");\n\n",
+               uppername[i], uppername[i], family[i], format[i], hasres[i],
+               name[i]);
+    }
+
+    next;
+}
+
+/BEGIN\(dops-init\)/ {
+    consumeUntil = "END(dops-init)";
+    print;
+
+    for (i = 0; i < 256; i++) {
+        if (index(name[i], "unused") != 0) {
+            continue;
+        }
+        printf("        set(%s);\n", uppername[i]);
+    }
+
+    next;
+}
+
+{ print; }
+
+function readBytecodes(i, parts) {
+    for (i = 0; i < 256; i++) {
+        $0 = "";
+        while (($0 == "") || (index($0, "#") != 0)) {
+            if ((getline <bytecodeFile) != 1) {
+                print "trouble reading bytecode file";
+                exit 1;
+            }
+        }
+        split($0, parts);
+        hex[i] = parts[1];
+        format[i] = parts[2];
+        hasres[i] = (parts[3] == "n") ? "false" : "true";
+        name[i] = parts[4];
+        uppername[i] = toupper(parts[4]);
+        gsub("[---/]", "_", uppername[i]);
+        split(name[i], parts, "/");
+        family[i] = toupper(parts[1]);
+        gsub("-", "_", family[i]);
+    }
+}
+' "$file" > "$tmpfile"
+
+cp "$tmpfile" "$file"
+rm "$tmpfile"

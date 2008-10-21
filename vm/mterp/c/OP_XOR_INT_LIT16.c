@@ -1,0 +1,2 @@
+HANDLE_OP_X_INT_LIT16(OP_XOR_INT_LIT16, "xor", (s4), ^, false)
+OP_END

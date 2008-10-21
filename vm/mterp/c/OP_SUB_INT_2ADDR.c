@@ -1,0 +1,2 @@
+HANDLE_OP_X_INT_2ADDR(OP_SUB_INT_2ADDR, "sub", -, false)
+OP_END

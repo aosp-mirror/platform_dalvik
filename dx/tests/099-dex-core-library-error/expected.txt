@@ -1,0 +1,6 @@
+javac 1.7.0-internal_bootstrap
+exit code: 1
+exit code: 1
+exit code: 0
+Found zorch.dex
+Done
