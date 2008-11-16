@@ -388,6 +388,7 @@ static inline s4 s4FromSwitchData(const void* switchData) {
 static inline s4 s4FromSwitchData(const void* switchData) {
     u2* data = switchData;
     return data[0] | (((s4) data[1]) << 16);
+}
 #endif
 
 /*
