@@ -17,6 +17,12 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
+@TestTargetClass(StrictMath.class) 
 public class StrictMathTest extends junit.framework.TestCase {
 
     double HYP = StrictMath.sqrt(2.0);
@@ -31,6 +37,15 @@ public class StrictMathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.StrictMath#pow(double)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "pow",
+          methodArgs = {double.class, double.class}
+        )
+    })
     public void test_pow() {
         // tests changes in fdlibm5.3
         assertTrue(Double.longBitsToDouble(-4610068591539890326L) == StrictMath.pow(-1.0000000000000002e+00,4.5035996273704970e+15));
@@ -40,6 +55,15 @@ public class StrictMathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.StrictMath#tan(double)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "tan",
+          methodArgs = {double.class}
+        )
+    })
     public void test_tan(){
         // tests changes in fdlibm5.3
         assertTrue(Double.longBitsToDouble( 4850236541654588678L) == StrictMath.tan( 1.7765241907548024E+269));
@@ -51,6 +75,27 @@ public class StrictMathTest extends junit.framework.TestCase {
      * @tests java.lang.StrictMath#sinh(double)
      * @tests java.lang.StrictMath#expm1(double)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Checks one value.",
+      targets = {
+        @TestTarget(
+          methodName = "asin",
+          methodArgs = {double.class}
+        ),
+        @TestTarget(
+          methodName = "exp",
+          methodArgs = {double.class}
+        ),
+        @TestTarget(
+          methodName = "sinh",
+          methodArgs = {double.class}
+        ),
+        @TestTarget(
+          methodName = "expm1",
+          methodArgs = {double.class}
+        )
+    })
     public void test_inexact(){
         assertTrue( 4485585228743840298L == Double.doubleToRawLongBits(StrictMath.asin(7.4505805E-9)));
         assertTrue( 4607182418816794624L == Double.doubleToRawLongBits(StrictMath.exp(3.7252902E-9)));
@@ -61,6 +106,15 @@ public class StrictMathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.StrictMath#abs(double)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "abs",
+          methodArgs = {double.class}
+        )
+    })
     public void test_absD() {
         // Test for method double java.lang.StrictMath.abs(double)
 
@@ -73,6 +127,15 @@ public class StrictMathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.StrictMath#abs(float)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "abs",
+          methodArgs = {float.class}
+        )
+    })
     public void test_absF() {
         // Test for method float java.lang.StrictMath.abs(float)
         assertTrue("Incorrect float abs value",
@@ -84,6 +147,15 @@ public class StrictMathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.StrictMath#abs(int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "abs",
+          methodArgs = {int.class}
+        )
+    })
     public void test_absI() {
         // Test for method int java.lang.StrictMath.abs(int)
         assertTrue("Incorrect int abs value",
@@ -95,6 +167,15 @@ public class StrictMathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.StrictMath#abs(long)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "abs",
+          methodArgs = {long.class}
+        )
+    })
     public void test_absJ() {
         // Test for method long java.lang.StrictMath.abs(long)
         assertTrue("Incorrect long abs value", (StrictMath
@@ -106,6 +187,15 @@ public class StrictMathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.StrictMath#acos(double)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "acos",
+          methodArgs = {double.class}
+        )
+    })
     public void test_acosD() {
         // Test for method double java.lang.StrictMath.acos(double)
         assertTrue("Returned incorrect arc cosine", StrictMath.cos(StrictMath
@@ -115,6 +205,15 @@ public class StrictMathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.StrictMath#asin(double)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "asin",
+          methodArgs = {double.class}
+        )
+    })
     public void test_asinD() {
         // Test for method double java.lang.StrictMath.asin(double)
         assertTrue("Returned incorrect arc sine", StrictMath.sin(StrictMath
@@ -124,6 +223,15 @@ public class StrictMathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.StrictMath#atan(double)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "atan",
+          methodArgs = {double.class}
+        )
+    })
     public void test_atanD() {
         // Test for method double java.lang.StrictMath.atan(double)
         double answer = StrictMath.tan(StrictMath.atan(1.0));
@@ -134,6 +242,15 @@ public class StrictMathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.StrictMath#atan2(double, double)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "atan2",
+          methodArgs = {double.class, double.class}
+        )
+    })
     public void test_atan2DD() {
         // Test for method double java.lang.StrictMath.atan2(double, double)
         double answer = StrictMath.atan(StrictMath.tan(1.0));
@@ -144,6 +261,15 @@ public class StrictMathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.StrictMath#cbrt(double)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "cbrt",
+          methodArgs = {double.class}
+        )
+    })
     @SuppressWarnings("boxing")
     public void test_cbrt_D() {
         // Test for special situations
@@ -187,6 +313,15 @@ public class StrictMathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.StrictMath#ceil(double)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "ceil",
+          methodArgs = {double.class}
+        )
+    })
     public void test_ceilD() {
         // Test for method double java.lang.StrictMath.ceil(double)
                 assertEquals("Incorrect ceiling for double",
@@ -198,6 +333,15 @@ public class StrictMathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.StrictMath#cos(double)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "cos",
+          methodArgs = {double.class}
+        )
+    })
     public void test_cosD() {
         // Test for method double java.lang.StrictMath.cos(double)
 
@@ -208,6 +352,15 @@ public class StrictMathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.StrictMath#cosh(double)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "cosh",
+          methodArgs = {double.class}
+        )
+    })
     @SuppressWarnings("boxing")
     public void test_cosh_D() {
         // Test for special situations        
@@ -242,6 +395,15 @@ public class StrictMathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.StrictMath#exp(double)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "exp",
+          methodArgs = {double.class}
+        )
+    })
     public void test_expD() {
         // Test for method double java.lang.StrictMath.exp(double)
         assertTrue("Incorrect answer returned for simple power", StrictMath
@@ -254,6 +416,15 @@ public class StrictMathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.StrictMath#expm1(double)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "expm1",
+          methodArgs = {double.class}
+        )
+    })
     @SuppressWarnings("boxing")
     public void test_expm1_D() {
         //Test for special cases        
@@ -286,6 +457,15 @@ public class StrictMathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.StrictMath#floor(double)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "floor",
+          methodArgs = {double.class}
+        )
+    })
     public void test_floorD() {
         // Test for method double java.lang.StrictMath.floor(double)
                 assertEquals("Incorrect floor for double",
@@ -297,6 +477,15 @@ public class StrictMathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.StrictMath#hypot(double, double)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "hypot",
+          methodArgs = {double.class, double.class}
+        )
+    })
     @SuppressWarnings("boxing")
     public void test_hypot_DD() {
         // Test for special cases
@@ -337,6 +526,15 @@ public class StrictMathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.StrictMath#IEEEremainder(double, double)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "IEEEremainder",
+          methodArgs = {double.class, double.class}
+        )
+    })
     public void test_IEEEremainderDD() {
         // Test for method double java.lang.StrictMath.IEEEremainder(double,
         // double)
@@ -351,6 +549,15 @@ public class StrictMathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.StrictMath#log(double)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "log",
+          methodArgs = {double.class}
+        )
+    })
     public void test_logD() {
         // Test for method double java.lang.StrictMath.log(double)
         for (double d = 10; d >= -10; d -= 0.5) {
@@ -365,6 +572,15 @@ public class StrictMathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.StrictMath#log10(double)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "log10",
+          methodArgs = {double.class}
+        )
+    })
     @SuppressWarnings("boxing")
     public void test_log10_D() {
         // Test for special cases        
@@ -399,6 +615,15 @@ public class StrictMathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.StrictMath#log1p(double)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "log1p",
+          methodArgs = {double.class}
+        )
+    })
     @SuppressWarnings("boxing")
     public void test_log1p_D() {
         // Test for special cases
@@ -431,6 +656,15 @@ public class StrictMathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.StrictMath#max(double, double)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "max",
+          methodArgs = {double.class, double.class}
+        )
+    })
     public void test_maxDD() {
         // Test for method double java.lang.StrictMath.max(double, double)
         assertEquals("Incorrect double max value", 1908897.6000089, StrictMath.max(
@@ -445,6 +679,15 @@ public class StrictMathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.StrictMath#max(float, float)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "max",
+          methodArgs = {float.class, float.class}
+        )
+    })
     public void test_maxFF() {
         // Test for method float java.lang.StrictMath.max(float, float)
         assertTrue("Incorrect float max value", StrictMath.max(-1908897.600f,
@@ -458,6 +701,15 @@ public class StrictMathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.StrictMath#max(int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "max",
+          methodArgs = {int.class, int.class}
+        )
+    })
     public void test_maxII() {
         // Test for method int java.lang.StrictMath.max(int, int)
         assertEquals("Incorrect int max value", 19088976, StrictMath.max(-19088976,
@@ -471,6 +723,15 @@ public class StrictMathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.StrictMath#max(long, long)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "max",
+          methodArgs = {long.class, long.class}
+        )
+    })
     public void test_maxJJ() {
         // Test for method long java.lang.StrictMath.max(long, long)
         assertEquals("Incorrect long max value", 19088976000089L, StrictMath.max(-19088976000089L,
@@ -484,6 +745,15 @@ public class StrictMathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.StrictMath#min(double, double)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "min",
+          methodArgs = {double.class, double.class}
+        )
+    })
     public void test_minDD() {
         // Test for method double java.lang.StrictMath.min(double, double)
         assertEquals("Incorrect double min value", -1908897.6000089, StrictMath.min(
@@ -497,6 +767,15 @@ public class StrictMathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.StrictMath#min(float, float)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "min",
+          methodArgs = {float.class, float.class}
+        )
+    })
     public void test_minFF() {
         // Test for method float java.lang.StrictMath.min(float, float)
         assertTrue("Incorrect float min value", StrictMath.min(-1908897.600f,
@@ -510,6 +789,15 @@ public class StrictMathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.StrictMath#min(int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "min",
+          methodArgs = {int.class, int.class}
+        )
+    })
     public void test_minII() {
         // Test for method int java.lang.StrictMath.min(int, int)
         assertEquals("Incorrect int min value", -19088976, StrictMath.min(-19088976,
@@ -524,6 +812,15 @@ public class StrictMathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.StrictMath#min(long, long)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "min",
+          methodArgs = {long.class, long.class}
+        )
+    })
     public void test_minJJ() {
         // Test for method long java.lang.StrictMath.min(long, long)
         assertEquals("Incorrect long min value", -19088976000089L, StrictMath.min(-19088976000089L,
@@ -537,6 +834,15 @@ public class StrictMathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.StrictMath#pow(double, double)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "pow",
+          methodArgs = {double.class, double.class}
+        )
+    })
     public void test_powDD() {
         // Test for method double java.lang.StrictMath.pow(double, double)
         assertTrue("pow returned incorrect value",
@@ -548,6 +854,15 @@ public class StrictMathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.StrictMath#rint(double)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "rint",
+          methodArgs = {double.class}
+        )
+    })
     public void test_rintD() {
         // Test for method double java.lang.StrictMath.rint(double)
         assertEquals("Failed to round properly - up to odd",
@@ -563,6 +878,15 @@ public class StrictMathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.StrictMath#round(double)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "round",
+          methodArgs = {double.class}
+        )
+    })
     public void test_roundD() {
         // Test for method long java.lang.StrictMath.round(double)
         assertEquals("Incorrect rounding of a float",
@@ -572,6 +896,15 @@ public class StrictMathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.StrictMath#round(float)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "round",
+          methodArgs = {float.class}
+        )
+    })
     public void test_roundF() {
         // Test for method int java.lang.StrictMath.round(float)
         assertEquals("Incorrect rounding of a float",
@@ -581,6 +914,15 @@ public class StrictMathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.StrictMath#signum(double)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "signum",
+          methodArgs = {double.class}
+        )
+    })
     public void test_signum_D() {
         assertTrue(Double.isNaN(StrictMath.signum(Double.NaN)));
         assertEquals(Double.doubleToLongBits(0.0), Double
@@ -607,6 +949,15 @@ public class StrictMathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.StrictMath#signum(float)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "signum",
+          methodArgs = {float.class}
+        )
+    })
     public void test_signum_F() {
         assertTrue(Float.isNaN(StrictMath.signum(Float.NaN)));
         assertEquals(Float.floatToIntBits(0.0f), Float
@@ -632,6 +983,15 @@ public class StrictMathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.StrictMath#sin(double)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary value.",
+      targets = {
+        @TestTarget(
+          methodName = "sin",
+          methodArgs = {double.class}
+        )
+    })
     public void test_sinD() {
         // Test for method double java.lang.StrictMath.sin(double)
         assertTrue("Returned incorrect sine", StrictMath.sin(StrictMath
@@ -641,6 +1001,15 @@ public class StrictMathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.StrictMath#sinh(double)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "sinh",
+          methodArgs = {double.class}
+        )
+    })
     public void test_sinh_D() {
         // Test for special situations
         assertTrue(Double.isNaN(StrictMath.sinh(Double.NaN)));
@@ -676,6 +1045,15 @@ public class StrictMathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.StrictMath#sqrt(double)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "sqrt",
+          methodArgs = {double.class}
+        )
+    })
     public void test_sqrtD() {
         // Test for method double java.lang.StrictMath.sqrt(double)
         assertEquals("Incorrect root returned1",
@@ -686,6 +1064,15 @@ public class StrictMathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.StrictMath#tan(double)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "tan",
+          methodArgs = {double.class}
+        )
+    })
     public void test_tanD() {
         // Test for method double java.lang.StrictMath.tan(double)
         assertTrue(
@@ -697,6 +1084,15 @@ public class StrictMathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.StrictMath#tanh(double)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "tanh",
+          methodArgs = {double.class}
+        )
+    })
     public void test_tanh_D() {
         // Test for special situations
         assertTrue(Double.isNaN(StrictMath.tanh(Double.NaN)));
@@ -726,6 +1122,15 @@ public class StrictMathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.StrictMath#random()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "random",
+          methodArgs = {}
+        )
+    })
     public void test_random() {
         // There isn't a place for these tests so just stick them here
         assertEquals("Wrong value E",
@@ -743,6 +1148,15 @@ public class StrictMathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.StrictMath#toRadians(double)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toRadians",
+          methodArgs = {double.class}
+        )
+    })
     public void test_toRadiansD() {
         for (double d = 500; d >= 0; d -= 1.0) {
             double converted = StrictMath.toDegrees(StrictMath.toRadians(d));
@@ -754,6 +1168,15 @@ public class StrictMathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.StrictMath#toDegrees(double)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toDegrees",
+          methodArgs = {double.class}
+        )
+    })
     public void test_toDegreesD() {
         for (double d = 500; d >= 0; d -= 1.0) {
             double converted = StrictMath.toRadians(StrictMath.toDegrees(d));
@@ -765,6 +1188,15 @@ public class StrictMathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.StrictMath#ulp(double)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "ulp",
+          methodArgs = {double.class}
+        )
+    })
      @SuppressWarnings("boxing")
     public void test_ulp_D() {
         // Test for special cases
@@ -801,6 +1233,15 @@ public class StrictMathTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.StrictMath#ulp(float)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "ulp",
+          methodArgs = {float.class}
+        )
+    })
     @SuppressWarnings("boxing")
     public void test_ulp_f() {
         // Test for special cases

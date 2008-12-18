@@ -19,14 +19,27 @@ package javax.security.auth.login;
 
 import java.security.GeneralSecurityException;
 
+/**
+ * Base class for exceptions that are thrown when a login error occurs.
+ * 
+ * @since Android 1.0
+ */
 public class LoginException extends GeneralSecurityException {
 
     private static final long serialVersionUID = -4679091624035232488L;
 
+    /**
+     * Creates a new exception instance and initializes it with default values.
+     */
     public LoginException() {
         super();
     }
 
+    /**
+     * Creates a new exception instance and initializes it with a given message.
+     * 
+     * @param message the error message
+     */
     public LoginException(String message) {
         super(message);
     }

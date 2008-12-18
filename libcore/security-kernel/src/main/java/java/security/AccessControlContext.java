@@ -1,31 +1,44 @@
-/*
- *  Licensed to the Apache Software Foundation (ASF) under one or more
- *  contributor license agreements.  See the NOTICE file distributed with
- *  this work for additional information regarding copyright ownership.
- *  The ASF licenses this file to You under the Apache License, Version 2.0
- *  (the "License"); you may not use this file except in compliance with
- *  the License.  You may obtain a copy of the License at
- *
+/* 
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ * 
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
-/**
-* @author Alexander V. Astapchuk
-* @version $Revision: 1.1.2.2.4.3 $
-*/
+/*
+ * Copyright (C) 2008 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package java.security;
 
-import java.util.ArrayList;
 import org.apache.harmony.security.fortress.PolicyUtils;
 
+import java.util.ArrayList;
+
 /**
- * @com.intel.drl.spec_ref 
+ * {@code AccessControlContext} encapsulates the {@code ProtectionDomain}s on
+ * which access control decisions are based.
  */
 public final class AccessControlContext {
 
@@ -33,7 +46,7 @@ public final class AccessControlContext {
     // It has the following characteristics:
     //     - 'context' can not be null
     //     - never contains null(s)
-    //     - all elements are uniq (no dups)
+    //     - all elements are unique (no dups)
     ProtectionDomain[] context;
 
     DomainCombiner combiner;
@@ -42,7 +55,25 @@ public final class AccessControlContext {
     private AccessControlContext inherited;
 
     /**
-     * @com.intel.drl.spec_ref 
+     * Constructs a new instance of {@code AccessControlContext} with the
+     * specified {@code AccessControlContext} and {@code DomainCombiner}.
+     * <p>
+     * If a {@code SecurityManager} is installed, code calling this constructor
+     * need the {@code SecurityPermission} {@code createAccessControlContext} to
+     * be granted, otherwise a {@code SecurityException} will be thrown.
+     * 
+     * @param acc
+     *            the {@code AccessControlContext} related to the given {@code
+     *            DomainCombiner}
+     * @param combiner
+     *            the {@code DomainCombiner} related to the given {@code
+     *            AccessControlContext}
+     * @throws SecurityException
+     *             if a {@code SecurityManager} is installed and the caller does
+     *             not have permission to invoke this constructor
+     * @throws NullPointerException
+     *             if {@code acc} is {@code null}
+     * @since Android 1.0
      */
     public AccessControlContext(AccessControlContext acc,
             DomainCombiner combiner) {
@@ -57,7 +88,15 @@ public final class AccessControlContext {
     }
 
     /**
-     * @com.intel.drl.spec_ref 
+     * Constructs a new instance of {@code AccessControlContext} with the
+     * specified array of {@code ProtectionDomain}s.
+     * 
+     * @param context
+     *            the {@code ProtectionDomain}s that are used to perform access
+     *            checks in the context of this {@code AccessControlContext}
+     * @throws NullPointerException
+     *             if {@code context} is {@code null}
+     * @since Android 1.0
      */
     public AccessControlContext(ProtectionDomain[] context) {
         if (context == null) {
@@ -112,7 +151,7 @@ public final class AccessControlContext {
      * </li>
      *   
      * @param stack - array of ProtectionDomains
-     * @param inherited - inherited context, which may be null
+     * @param combiner - combiner
      */
     AccessControlContext(ProtectionDomain[] stack,
             DomainCombiner combiner) {
@@ -121,7 +160,32 @@ public final class AccessControlContext {
     }
 
     /**
-     * @com.intel.drl.spec_ref 
+     * Checks the specified permission against the vm's current security policy.
+     * The check is based on this {@code AccessControlContext} as opposed to the
+     * {@link AccessController#checkPermission(Permission)} method which
+     * performs access checks based on the context of the current thread. This
+     * method returns silently if the permission is granted, otherwise an
+     * {@code AccessControlException} is thrown.
+     * <p>
+     * A permission is considered granted if every {@link ProtectionDomain} in
+     * this context has been granted the specified permission.
+     * <p>
+     * If privileged operations are on the call stack, only the {@code
+     * ProtectionDomain}s from the last privileged operation are taken into
+     * account.
+     * <p>
+     * If inherited methods are on the call stack, the protection domains of the
+     * declaring classes are checked, not the protection domains of the classes
+     * on which the method is invoked.
+     * 
+     * @param perm
+     *            the permission to check against the policy
+     * @throws AccessControlException
+     *             if the specified permission is not granted
+     * @throws NullPointerException
+     *             if the specified permission is {@code null}
+     * @see AccessController#checkPermission(Permission)
+     * @since Android 1.0
      */
     public void checkPermission(Permission perm) throws AccessControlException {
         if (perm == null) {
@@ -138,9 +202,22 @@ public final class AccessControlContext {
         }
     }
 
+
     /**
-     * @com.intel.drl.spec_ref 
+     * Compares the specified object with this {@code AccessControlContext} for
+     * equality. Returns {@code true} if the specified object is also an
+     * instance of {@code AccessControlContext}, and the two contexts
+     * encapsulate the same {@code ProtectionDomain}s. The order of the {@code
+     * ProtectionDomain}s is ignored by this method.
+     * 
+     * @param obj
+     *            object to be compared for equality with this {@code
+     *            AccessControlContext}
+     * @return {@code true} if the specified object is equal to this {@code
+     *         AccessControlContext}, otherwise {@code false}
+     * @since Android 1.0
      */
+    @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -159,7 +236,19 @@ public final class AccessControlContext {
     }
 
     /**
-     * @com.intel.drl.spec_ref 
+     * Returns the {@code DomainCombiner} associated with this {@code
+     * AccessControlContext}.
+     * <p>
+     * If a {@code SecurityManager} is installed, code calling this method needs
+     * the {@code SecurityPermission} {@code getDomainCombiner} to be granted,
+     * otherwise a {@code SecurityException} will be thrown.
+     * 
+     * @return the {@code DomainCombiner} associated with this {@code
+     *         AccessControlContext}
+     * @throws SecurityException
+     *             if a {@code SecurityManager} is installed and the caller does
+     *             not have permission to invoke this method
+     * @since Android 1.0
      */
     public DomainCombiner getDomainCombiner() {
         SecurityManager sm = System.getSecurityManager();
@@ -169,8 +258,17 @@ public final class AccessControlContext {
         return combiner;
     }
 
+
     /**
-     * @com.intel.drl.spec_ref 
+     * Returns the hash code value for this {@code AccessControlContext}.
+     * Returns the same hash code for {@code AccessControlContext}s that are
+     * equal to each other as required by the general contract of
+     * {@link Object#hashCode}.
+     * 
+     * @return the hash code value for this {@code AccessControlContext}
+     * @see Object#equals(Object)
+     * @see AccessControlContext#equals(Object)
+     * @since Android 1.0
      */
     public int hashCode() {
         int hash = 0;

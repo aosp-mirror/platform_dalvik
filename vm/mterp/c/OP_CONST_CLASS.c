@@ -8,9 +8,9 @@ HANDLE_OPCODE(OP_CONST_CLASS /*vAA, class@BBBB*/)
         clazz = dvmDexGetResolvedClass(methodClassDex, ref);
         if (clazz == NULL) {
             EXPORT_PC();
-            clazz = dvmResolveClass(method->clazz, ref, true);
+            clazz = dvmResolveClass(curMethod->clazz, ref, true);
             if (clazz == NULL)
-                GOTO(exceptionThrown);
+                GOTO_exceptionThrown();
         }
         SET_REGISTER(vdst, (u4) clazz);
     }

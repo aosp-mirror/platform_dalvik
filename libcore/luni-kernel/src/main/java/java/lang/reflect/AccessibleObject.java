@@ -14,41 +14,55 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/*
+ * Copyright (C) 2008 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package java.lang.reflect;
-
-// BEGIN android-added
-import org.apache.harmony.kernel.vm.StringUtils;
-import org.apache.harmony.kernel.vm.ReflectionAccess;
-// END android-added
 
 import java.lang.annotation.Annotation;
 import java.util.Hashtable;
 
+import org.apache.harmony.kernel.vm.StringUtils;
+import org.apache.harmony.kernel.vm.ReflectionAccess;
+
 /**
- * This class must be implemented by the VM vendor. This class is the superclass
- * of all member reflect classes (Field, Constructor, Method). AccessibleObject
- * provides the ability to toggle access checks for these objects. By default
- * accessing a member (for example, setting a field or invoking a method) checks
- * the validity of the access (for example, invoking a private method from
- * outside the defining class is prohibited) and throws IllegalAccessException
- * if the operation is not permitted. If the accessible flag is set to true,
- * these checks are omitted. This allows privileged applications such as Java
- * Object Serialization, inspectors, and debuggers to have complete access to
+ * {@code AccessibleObject} is the superclass of all member reflection classes
+ * (Field, Constructor, Method). AccessibleObject provides the ability to toggle
+ * a flag controlling access checks for these objects. By default, accessing a
+ * member (for example, setting a field or invoking a method) checks the
+ * validity of the access (for example, invoking a private method from outside
+ * the defining class is prohibited) and throws IllegalAccessException if the
+ * operation is not permitted. If the accessible flag is set to true, these
+ * checks are omitted. This allows privileged code, such as Java object
+ * serialization, object inspectors, and debuggers to have complete access to
  * objects.
  * 
  * @see Field
  * @see Constructor
  * @see Method
  * @see ReflectPermission
+ * 
  * @since 1.2
+ * @since Android 1.0
  */
 public class AccessibleObject implements AnnotatedElement {
 
     // If true, object is accessible, bypassing normal security checks
     boolean flag = false;
 
-    // BEGIN android-added
     /**
      * one dimensional array
      */
@@ -63,7 +77,6 @@ public class AccessibleObject implements AnnotatedElement {
      * three dimensional array
      */
     private static final String DIMENSION_3 = "[][][]";
-    // END android-added
     
     // Holds a mapping from Java type names to native type codes.
     static Hashtable<String, String> trans;
@@ -80,19 +93,26 @@ public class AccessibleObject implements AnnotatedElement {
         trans.put("void", "V");
         trans.put("boolean", "Z");
     }
-    
+
     /**
      * Attempts to set the value of the accessible flag for all the objects in
      * the array provided. Only one security check is performed. Setting this
-     * flag to false will enable access checks, setting to true will disable
-     * them. If there is a security manager, checkPermission is called with a
-     * ReflectPermission("suppressAccessChecks").
+     * flag to {@code false} will enable access checks, setting to {@code true}
+     * will disable them. If there is a security manager, checkPermission is
+     * called with a {@code ReflectPermission("suppressAccessChecks")}.
      * 
-     * @param objects the accessible objects
-     * @param flag the new value for the accessible flag
+     * @param objects
+     *            the accessible objects
+     * @param flag
+     *            the new value for the accessible flag
+     *            
+     * @throws SecurityException
+     *             if the request is denied
+     *             
      * @see #setAccessible(boolean)
      * @see ReflectPermission
-     * @throws SecurityException if the request is denied
+     * 
+     * @since Android 1.0
      */
     public static void setAccessible(AccessibleObject[] objects, boolean flag)
             throws SecurityException {
@@ -109,18 +129,24 @@ public class AccessibleObject implements AnnotatedElement {
     }
 
     /**
-     * AccessibleObject constructor. AccessibleObjects can only be created by
-     * the Virtual Machine.
+     * Constructs a new {@code AccessibleObject} instance. {@code
+     * AccessibleObject} instances can only be constructed by the virtual
+     * machine.
+     * 
+     * @since Android 1.0
      */
     protected AccessibleObject() {
         super();
     }
 
     /**
-     * Returns the value of the accessible flag. This is false if access checks
-     * are performed, true if they are skipped.
+     * Indicates whether this object is accessible without security checks being
+     * performed. Returns the accessible flag.
      * 
-     * @return the value of the accessible flag
+     * @return {@code true} if this object is accessible without security
+     *         checks, {@code false} otherwise
+     *         
+     * @since Android 1.0
      */
     public boolean isAccessible() {
         return flag;
@@ -128,13 +154,19 @@ public class AccessibleObject implements AnnotatedElement {
 
     /**
      * Attempts to set the value of the accessible flag. Setting this flag to
-     * false will enable access checks, setting to true will disable them. If
-     * there is a security manager, checkPermission is called with a
-     * ReflectPermission("suppressAccessChecks").
+     * {@code false} will enable access checks, setting to {@code true} will
+     * disable them. If there is a security manager, checkPermission is called
+     * with a {@code ReflectPermission("suppressAccessChecks")}.
      * 
-     * @param flag the new value for the accessible flag
+     * @param flag
+     *            the new value for the accessible flag
+     *            
+     * @throws SecurityException
+     *             if the request is denied
+     *             
      * @see ReflectPermission
-     * @throws SecurityException if the request is denied
+     * 
+     * @since Android 1.0
      */
     public void setAccessible(boolean flag) throws SecurityException {
         SecurityManager smgr = System.getSecurityManager();
@@ -145,24 +177,16 @@ public class AccessibleObject implements AnnotatedElement {
         this.flag = flag;
     }
 
-    // BEGIN android-added
     /**
      * Sets the accessible flag on this instance without doing any checks.
      * 
-     * @param flag the new value for the accessible flag
+     * @param flag
+     *            the new value for the accessible flag
      */
     /*package*/ void setAccessibleNoCheck(boolean flag) {
         this.flag = flag;
     }
-    // END android-added
     
-    /**
-     * Queries whether a given Annotation is present on the AccessibleObject.
-     * 
-     * @param annotationType The type of Annotation to look for.
-     * 
-     * @return true if and only if the given Annotation is present.
-     */
     public boolean isAnnotationPresent(Class<? extends Annotation> annotationType) {
         return getAnnotation(annotationType) != null;
     }
@@ -178,13 +202,15 @@ public class AccessibleObject implements AnnotatedElement {
 
     /* slow, but works for all sub-classes */
     public <T extends Annotation> T getAnnotation(Class<T> annotationType) {
+        if (annotationType == null) {
+            throw new NullPointerException();
+        }
         Annotation[] annos = getAnnotations();
         for (int i = annos.length-1; i >= 0; --i) {
             if (annos[i].annotationType() == annotationType) {
                 return (T) annos[i];
             }
         }
-
         return null;
     }
 
@@ -192,10 +218,11 @@ public class AccessibleObject implements AnnotatedElement {
      * Returns the signature for a class. This is the kind of signature used
      * internally by the JVM, with one-character codes representing the basic
      * types. It is not suitable for printing.
+     *
+     * @param clazz
+     *            the class for which a signature is required
      * 
-     * @param clazz The class for which a signature is required.
-     * 
-     * @return The signature as a string.
+     * @return The signature as a string
      */
     String getSignature(Class<?> clazz) {
         String result = "";
@@ -216,12 +243,13 @@ public class AccessibleObject implements AnnotatedElement {
     /**
      * Returns a printable String consisting of the canonical names of the
      * classes contained in an array. The form is that used in parameter and
-     * exception lists, that is, the class or type names  are separated by
-     * commas. 
-     *  
-     * @param types The array of classes.
+     * exception lists, that is, the class or type names are separated by
+     * commas.
+     *
+     * @param types
+     *            the array of classes
      * 
-     * @return The String of names.
+     * @return The String of names
      */
     String toString(Class<?>[] types) {
         StringBuilder result = new StringBuilder();
@@ -237,11 +265,9 @@ public class AccessibleObject implements AnnotatedElement {
         return result.toString();
     }
 
-    // BEGIN android-changed
-    
     /**
-     * Gets the Signature attribute for this instance. Returns
-     * <code>null</code> if not found.
+     * Gets the Signature attribute for this instance. Returns {@code null}
+     * if not found.
      */
     /*package*/ String getSignatureAttribute() {
         /*
@@ -273,12 +299,9 @@ public class AccessibleObject implements AnnotatedElement {
      */
     private static native Object[] getClassSignatureAnnotation(Class clazz);
 
-    // END android-changed
-
-    // BEGIN android-added
     /**
      * Gets the unique instance of {@link ReflectionAccessImpl}.
-     * 
+     *
      * @return non-null; the unique instance
      */
     static /*package*/ ReflectionAccess getReflectionAccess() {
@@ -289,9 +312,10 @@ public class AccessibleObject implements AnnotatedElement {
     /**
      * Appends the specified class name to the buffer. The class may represent
      * a simple type, a reference type or an array type.
-     * 
+     *
      * @param sb buffer
      * @param obj the class which name should be appended to the buffer
+     * 
      * @throws NullPointerException if any of the arguments is null 
      */
     void appendArrayType(StringBuilder sb, Class<?> obj) {
@@ -328,9 +352,10 @@ public class AccessibleObject implements AnnotatedElement {
      * Appends names of the specified array classes to the buffer. The array
      * elements may represent a simple type, a reference type or an array type.
      * Output format: java.lang.Object[], java.io.File, void
-     * 
+     *
      * @param sb buffer
      * @param objs array of classes to print the names
+     * 
      * @throws NullPointerException if any of the arguments is null 
      */
     void appendArrayType(StringBuilder sb, Class[] objs) {
@@ -347,9 +372,10 @@ public class AccessibleObject implements AnnotatedElement {
      * Appends names of the specified array classes to the buffer. The array
      * elements may represent a simple type, a reference type or an array type.
      * Output format: java.lang.Object[], java.io.File, void
-     * 
+     *
      * @param sb buffer
      * @param objs array of classes to print the names
+     * 
      * @throws NullPointerException if any of the arguments is null 
      */
     void appendArrayGenericType(StringBuilder sb, Type[] objs) {
@@ -364,9 +390,10 @@ public class AccessibleObject implements AnnotatedElement {
 
     /**
      * Appends the generic type representation to the buffer.
-     * 
+     *
      * @param sb buffer
      * @param obj the generic type which representation should be appended to the buffer
+     * 
      * @throws NullPointerException if any of the arguments is null 
      */
     void appendGenericType(StringBuilder sb, Type obj) {
@@ -421,9 +448,10 @@ public class AccessibleObject implements AnnotatedElement {
      * In case if the specified array element represents an array type its
      * internal will be appended to the buffer.   
      * Output format: [Ljava.lang.Object;, java.io.File, void
-     * 
+     *
      * @param sb buffer
      * @param objs array of classes to print the names
+     * 
      * @throws NullPointerException if any of the arguments is null 
      */
     void appendSimpleType(StringBuilder sb, Class<?>[] objs) {
@@ -435,5 +463,4 @@ public class AccessibleObject implements AnnotatedElement {
             }
         }
     }
-    // END android-added
 }

@@ -17,18 +17,34 @@
 
 package org.apache.harmony.security.tests.java.security;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.security.AccessController;
 import java.security.AllPermission;
 import java.security.PrivilegedAction;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
 
+@TestTargetClass(AccessController.class)
 public class AccessController2Test extends junit.framework.TestCase {
 
     /**
      * @tests java.security.AccessController#doPrivileged(java.security.PrivilegedAction,
      *        java.security.AccessControlContext))
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "1. Need remove conversion (Boolean) before AccessController.doPrivileged method in the test." +
+                  "2. Exception NullPointerException if the action is null is not checked.",
+      targets = {
+        @TestTarget(
+          methodName = "doPrivileged",
+          methodArgs = {PrivilegedAction.class, java.security.AccessControlContext.class}
+        )
+    })
     public void testDoPrivilegedLjava_security_PrivilegedActionLjava_security_AccessControlContext() {
         Boolean pass;
 
@@ -66,6 +82,16 @@ public class AccessController2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.AccessController#doPrivileged(java.security.PrivilegedAction))
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "1. Need remove conversion (Boolean) before AccessController.doPrivileged method in the test." +
+                "2. Exception NullPointerException if the action is null is not checked.",
+      targets = {
+        @TestTarget(
+          methodName = "doPrivileged",
+          methodArgs = {PrivilegedAction.class}
+        )
+    })
     public void testDoPrivilegedLjava_security_PrivilegedAction() {
         Boolean pass;
 
@@ -90,6 +116,17 @@ public class AccessController2Test extends junit.framework.TestCase {
      * @tests java.security.AccessController#doPrivileged(java.security.PrivilegedExceptionAction,
      *        java.security.AccessControlContext))
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "1. Need remove conversion (Boolean) before AccessController.doPrivileged method in the test." +
+                "2. Exception NullPointerException if the action is null is not checked." +
+                "3. Exception PrivilegedActionException is not checked.",
+      targets = {
+        @TestTarget(
+          methodName = "doPrivileged",
+          methodArgs = {PrivilegedExceptionAction.class, java.security.AccessControlContext.class}
+        )
+    })
     public void testDoPrivilegedLjava_security_PrivilegedExceptionActionLjava_security_AccessControlContext() {
         Boolean pass;
         try {
@@ -130,6 +167,17 @@ public class AccessController2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.AccessController#doPrivileged(java.security.PrivilegedExceptionAction))
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "1. Need remove conversion (Boolean) before AccessController.doPrivileged method in the test." +
+                "2. Exception NullPointerException if the action is null is not checked." +
+                "3. Exception PrivilegedActionException is not checked.",
+      targets = {
+        @TestTarget(
+          methodName = "doPrivileged",
+          methodArgs = {PrivilegedExceptionAction.class}
+        )
+    })
     public void testDoPrivilegedLjava_security_PrivilegedExceptionAction() {
         Boolean pass;
         try {

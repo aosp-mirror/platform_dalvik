@@ -17,6 +17,11 @@
 
 package tests.api.java.util;
 
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass; 
+
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -46,6 +51,7 @@ import tests.support.Support_SetTest;
 import tests.support.Support_UnmodifiableCollectionTest;
 import tests.support.Support_UnmodifiableMapTest;
 
+@TestTargetClass(Collections.class) 
 public class CollectionsTest extends junit.framework.TestCase {
 
     LinkedList ll;
@@ -275,6 +281,15 @@ public class CollectionsTest extends junit.framework.TestCase {
      * @tests java.util.Collections#binarySearch(java.util.List,
      *        java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify ClassCastException.",
+      targets = {
+        @TestTarget(
+          methodName = "binarySearch",
+          methodArgs = {java.util.List.class, java.lang.Object.class}
+        )
+    })
     public void test_binarySearchLjava_util_ListLjava_lang_Object() {
         // Test for method int
         // java.util.Collections.binarySearch(java.util.List, java.lang.Object)
@@ -297,6 +312,16 @@ public class CollectionsTest extends junit.framework.TestCase {
      * @tests java.util.Collections#binarySearch(java.util.List,
      *        java.lang.Object, java.util.Comparator)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify ClassCastException.",
+      targets = {
+        @TestTarget(
+          methodName = "binarySearch",
+          methodArgs = {java.util.List.class, java.lang.Object.class, 
+                  java.util.Comparator.class}
+        )
+    })
     public void test_binarySearchLjava_util_ListLjava_lang_ObjectLjava_util_Comparator() {
         // Test for method int
         // java.util.Collections.binarySearch(java.util.List, java.lang.Object,
@@ -324,6 +349,15 @@ public class CollectionsTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Collections#copy(java.util.List, java.util.List)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies functionality and NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "copy",
+          methodArgs = {java.util.List.class, java.util.List.class}
+        )
+    })
     public void test_copyLjava_util_ListLjava_util_List() {
         // Test for method void java.util.Collections.copy(java.util.List,
         // java.util.List)
@@ -359,6 +393,16 @@ public class CollectionsTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Collections#copy(java.util.List, java.util.List)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies IndexOutOfBoundsException. Doesn't verify " +
+            "UnsupportedOperationException.",
+      targets = {
+        @TestTarget(
+          methodName = "copy",
+          methodArgs = {java.util.List.class, java.util.List.class}
+        )
+    })
     public void test_copy_check_index() {
         ArrayList a1 = new ArrayList();
         a1.add("one");
@@ -379,6 +423,15 @@ public class CollectionsTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Collections#enumeration(java.util.Collection)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "enumeration",
+          methodArgs = {java.util.Collection.class}
+        )
+    })
     public void test_enumerationLjava_util_Collection() {
         // Test for method java.util.Enumeration
         // java.util.Collections.enumeration(java.util.Collection)
@@ -396,6 +449,15 @@ public class CollectionsTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Collections#fill(java.util.List, java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verifies UnsupportedOperationException.",
+      targets = {
+        @TestTarget(
+          methodName = "fill",
+          methodArgs = {java.util.List.class, java.lang.Object.class}
+        )
+    })
     public void test_fillLjava_util_ListLjava_lang_Object() {
         // Test for method void java.util.Collections.fill(java.util.List,
         // java.lang.Object)
@@ -421,6 +483,15 @@ public class CollectionsTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Collections#max(java.util.Collection)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify ClassCastException, NoSuchElementException.",
+      targets = {
+        @TestTarget(
+          methodName = "max",
+          methodArgs = {java.util.Collection.class}
+        )
+    })
     public void test_maxLjava_util_Collection() {
         // Test for method java.lang.Object
         // java.util.Collections.max(java.util.Collection)
@@ -433,6 +504,15 @@ public class CollectionsTest extends junit.framework.TestCase {
      * @tests java.util.Collections#max(java.util.Collection,
      *        java.util.Comparator)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify ClassCastException, NoSuchElementException.",
+      targets = {
+        @TestTarget(
+          methodName = "max",
+          methodArgs = {java.util.Collection.class, java.util.Comparator.class}
+        )
+    })
     public void test_maxLjava_util_CollectionLjava_util_Comparator() {
         // Test for method java.lang.Object
         // java.util.Collections.max(java.util.Collection, java.util.Comparator)
@@ -448,6 +528,15 @@ public class CollectionsTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Collections#min(java.util.Collection)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify ClassCastException, NoSuchElementException.",
+      targets = {
+        @TestTarget(
+          methodName = "min",
+          methodArgs = {java.util.Collection.class}
+        )
+    })
     public void test_minLjava_util_Collection() {
         // Test for method java.lang.Object
         // java.util.Collections.min(java.util.Collection)
@@ -460,6 +549,15 @@ public class CollectionsTest extends junit.framework.TestCase {
      * @tests java.util.Collections#min(java.util.Collection,
      *        java.util.Comparator)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify ClassCastException, NoSuchElementException.",
+      targets = {
+        @TestTarget(
+          methodName = "min",
+          methodArgs = {java.util.Collection.class, java.util.Comparator.class}
+        )
+    })
     public void test_minLjava_util_CollectionLjava_util_Comparator() {
         // Test for method java.lang.Object
         // java.util.Collections.min(java.util.Collection, java.util.Comparator)
@@ -475,6 +573,15 @@ public class CollectionsTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Collections#nCopies(int, java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "nCopies",
+          methodArgs = {int.class, java.lang.Object.class}
+        )
+    })
     public void test_nCopiesILjava_lang_Object() {
         // Test for method java.util.List java.util.Collections.nCopies(int,
         // java.lang.Object)
@@ -514,6 +621,15 @@ public class CollectionsTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Collections#reverse(java.util.List)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify UnsupportedOperationException.",
+      targets = {
+        @TestTarget(
+          methodName = "reverse",
+          methodArgs = {java.util.List.class}
+        )
+    })
     public void test_reverseLjava_util_List() {
         // Test for method void java.util.Collections.reverse(java.util.List)
         try {
@@ -542,6 +658,15 @@ public class CollectionsTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Collections#reverseOrder()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "reverseOrder",
+          methodArgs = {}
+        )
+    })
     public void test_reverseOrder() {
         // Test for method java.util.Comparator
         // java.util.Collections.reverseOrder()
@@ -558,6 +683,15 @@ public class CollectionsTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Collections#shuffle(java.util.List)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies functionality, and NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "shuffle",
+          methodArgs = {java.util.List.class}
+        )
+    })
     public void test_shuffleLjava_util_List() {
         // Test for method void java.util.Collections.shuffle(java.util.List)
         // Assumes ll is sorted and has no duplicate keys and is large ( > 20
@@ -609,6 +743,15 @@ public class CollectionsTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Collections#shuffle(java.util.List, java.util.Random)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify UnsupportedOperationException.",
+      targets = {
+        @TestTarget(
+          methodName = "shuffle",
+          methodArgs = {java.util.List.class, java.util.Random.class}
+        )
+    })
     public void test_shuffleLjava_util_ListLjava_util_Random() {
         // Test for method void java.util.Collections.shuffle(java.util.List,
         // java.util.Random)
@@ -634,6 +777,15 @@ public class CollectionsTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Collections#singleton(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "singleton",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_singletonLjava_lang_Object() {
         // Test for method java.util.Set
         // java.util.Collections.singleton(java.lang.Object)
@@ -658,6 +810,16 @@ public class CollectionsTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Collections#sort(java.util.List)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify ClassCastException, " + 
+            "UnsupportedOperationException.",
+      targets = {
+        @TestTarget(
+          methodName = "sort",
+          methodArgs = {java.util.List.class}
+        )
+    })
     public void test_sortLjava_util_List() {
         // Test for method void java.util.Collections.sort(java.util.List)
         // assumes no duplicate keys in ll
@@ -687,6 +849,16 @@ public class CollectionsTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Collections#sort(java.util.List, java.util.Comparator)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify ClassCastException, " + 
+            "UnsupportedOperationException.",
+      targets = {
+        @TestTarget(
+          methodName = "sort",
+          methodArgs = {java.util.List.class, java.util.Comparator.class}
+        )
+    })
     public void test_sortLjava_util_ListLjava_util_Comparator() {
         // Test for method void java.util.Collections.sort(java.util.List,
         // java.util.Comparator)
@@ -711,6 +883,15 @@ public class CollectionsTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Collections#swap(java.util.List, int, int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "swap",
+          methodArgs = {java.util.List.class, int.class, int.class}
+        )
+    })
     public void test_swapLjava_util_ListII() {
         // Test for method swap(java.util.List, int, int)
 
@@ -770,6 +951,15 @@ public class CollectionsTest extends junit.framework.TestCase {
      * @tests java.util.Collections#replaceAll(java.util.List, java.lang.Object,
      *        java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify UnsupportedOperationException.",
+      targets = {
+        @TestTarget(
+          methodName = "replaceAll",
+          methodArgs = {java.util.List.class, java.lang.Object.class, java.lang.Object.class}
+        )
+    })
     public void test_replaceAllLjava_util_ListLjava_lang_ObjectLjava_lang_Object() {
         // Test for method replaceAll(java.util.List, java.lang.Object,
         // java.lang.Object)
@@ -857,6 +1047,15 @@ public class CollectionsTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Collections#rotate(java.util.List, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies functionality, and UnsupportedOperationException.",
+      targets = {
+        @TestTarget(
+          methodName = "rotate",
+          methodArgs = {java.util.List.class, int.class}
+        )
+    })
     public void test_rotateLjava_util_ListI() {
         // Test for method rotate(java.util.List, int)
 
@@ -939,6 +1138,15 @@ public class CollectionsTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Collections#rotate(java.util.List, int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "rotate",
+          methodArgs = {java.util.List.class, int.class}
+        )
+    })
     public void test_rotate2() {
         List list = new ArrayList();
         try {
@@ -971,6 +1179,15 @@ public class CollectionsTest extends junit.framework.TestCase {
      * @tests java.util.Collections#indexOfSubList(java.util.List,
      *        java.util.List)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies boundary conditions, and NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "indexOfSubList",
+          methodArgs = {java.util.List.class, java.util.List.class}
+        )
+    })
     public void test_indexOfSubListLjava_util_ListLjava_util_List() {
         // Test for method int indexOfSubList(java.util.List, java.util.List)
         List list = new ArrayList();
@@ -1003,6 +1220,15 @@ public class CollectionsTest extends junit.framework.TestCase {
      * @tests java.util.Collections#indexOfSubList(java.util.List,
      *        java.util.List)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "indexOfSubList",
+          methodArgs = {java.util.List.class, java.util.List.class}
+        )
+    })
     public void test_indexOfSubList2() {
         ArrayList sub = new ArrayList();
         sub.add(new Integer(1));
@@ -1090,6 +1316,15 @@ public class CollectionsTest extends junit.framework.TestCase {
      * @tests java.util.Collections#lastIndexOfSubList(java.util.List,
      *        java.util.List)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies NullPointerException, and boundary conditions.",
+      targets = {
+        @TestTarget(
+          methodName = "lastIndexOfSubList",
+          methodArgs = {java.util.List.class, java.util.List.class}
+        )
+    })
     public void test_lastIndexOfSubListLjava_util_ListLjava_util_List() {
         // Test for method int lastIndexOfSubList(java.util.List,
         // java.util.List)
@@ -1123,6 +1358,15 @@ public class CollectionsTest extends junit.framework.TestCase {
      * @tests java.util.Collections#lastIndexOfSubList(java.util.List,
      *        java.util.List)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "lastIndexOfSubList",
+          methodArgs = {java.util.List.class, java.util.List.class}
+        )
+    })
     public void test_lastIndexOfSubList2() {
         ArrayList sub = new ArrayList();
         sub.add(new Integer(1));
@@ -1195,6 +1439,15 @@ public class CollectionsTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Collections#list(java.util.Enumeration)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "list",
+          methodArgs = {java.util.Enumeration.class}
+        )
+    })
     public void test_listLjava_util_Enumeration() {
         // Test for method java.util.ArrayList list(java.util.Enumeration)
 
@@ -1213,6 +1466,15 @@ public class CollectionsTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Collections#synchronizedCollection(java.util.Collection)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "synchronizedCollection",
+          methodArgs = {java.util.Collection.class}
+        )
+    })
     public void test_synchronizedCollectionLjava_util_Collection() {
         // Test for method java.util.Collection
         // java.util.Collections.synchronizedCollection(java.util.Collection)
@@ -1268,6 +1530,15 @@ public class CollectionsTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Collections#synchronizedList(java.util.List)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "synchronizedList",
+          methodArgs = {java.util.List.class}
+        )
+    })
     public void test_synchronizedListLjava_util_List() {
         try {
             Collections.synchronizedList(null);
@@ -1351,6 +1622,15 @@ public class CollectionsTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Collections#synchronizedMap(java.util.Map)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "synchronizedMap",
+          methodArgs = {java.util.Map.class}
+        )
+    })
     public void test_synchronizedMapLjava_util_Map() {
         // Test for method java.util.Map
         // java.util.Collections.synchronizedMap(java.util.Map)
@@ -1416,6 +1696,15 @@ public class CollectionsTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Collections#synchronizedSet(java.util.Set)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "synchronizedSet",
+          methodArgs = {java.util.Set.class}
+        )
+    })
     public void test_synchronizedSetLjava_util_Set() {
         // Test for method java.util.Set
         // java.util.Collections.synchronizedSet(java.util.Set)
@@ -1470,6 +1759,15 @@ public class CollectionsTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Collections#synchronizedSortedMap(java.util.SortedMap)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "synchronizedSortedMap",
+          methodArgs = {java.util.SortedMap.class}
+        )
+    })
     public void test_synchronizedSortedMapLjava_util_SortedMap() {
         // Test for method java.util.SortedMap
         // java.util.Collections.synchronizedSortedMap(java.util.SortedMap)
@@ -1527,6 +1825,15 @@ public class CollectionsTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Collections#synchronizedSortedSet(java.util.SortedSet)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "synchronizedSortedSet",
+          methodArgs = {java.util.SortedSet.class}
+        )
+    })
     public void test_synchronizedSortedSetLjava_util_SortedSet() {
         // Test for method java.util.SortedSet
         // java.util.Collections.synchronizedSortedSet(java.util.SortedSet)
@@ -1570,6 +1877,15 @@ public class CollectionsTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Collections#unmodifiableCollection(java.util.Collection)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "unmodifiableCollection",
+          methodArgs = {java.util.Collection.class}
+        )
+    })
     public void test_unmodifiableCollectionLjava_util_Collection() {
         // Test for method java.util.Collection
         // java.util.Collections.unmodifiableCollection(java.util.Collection)
@@ -1616,6 +1932,15 @@ public class CollectionsTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Collections#unmodifiableList(java.util.List)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "unmodifiableList",
+          methodArgs = {java.util.List.class}
+        )
+    })
     public void test_unmodifiableListLjava_util_List() {
         // Test for method java.util.List
         // java.util.Collections.unmodifiableList(java.util.List)
@@ -1689,6 +2014,15 @@ public class CollectionsTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Collections#unmodifiableMap(java.util.Map)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "unmodifiableMap",
+          methodArgs = {java.util.Map.class}
+        )
+    })
     public void test_unmodifiableMapLjava_util_Map() {
         // Test for method java.util.Map
         // java.util.Collections.unmodifiableMap(java.util.Map)
@@ -1772,6 +2106,15 @@ public class CollectionsTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Collections#unmodifiableSet(java.util.Set)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "unmodifiableSet",
+          methodArgs = {java.util.Set.class}
+        )
+    })
     public void test_unmodifiableSetLjava_util_Set() {
         // Test for method java.util.Set
         // java.util.Collections.unmodifiableSet(java.util.Set)
@@ -1813,6 +2156,15 @@ public class CollectionsTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Collections#unmodifiableSortedMap(java.util.SortedMap)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "unmodifiableSortedMap",
+          methodArgs = {java.util.SortedMap.class}
+        )
+    })
     public void test_unmodifiableSortedMapLjava_util_SortedMap() {
         // Test for method java.util.SortedMap
         // java.util.Collections.unmodifiableSortedMap(java.util.SortedMap)
@@ -1848,6 +2200,15 @@ public class CollectionsTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Collections#unmodifiableSortedSet(java.util.SortedSet)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "unmodifiableSortedSet",
+          methodArgs = {java.util.SortedSet.class}
+        )
+    })
     public void test_unmodifiableSortedSetLjava_util_SortedSet() {
         // Test for method java.util.SortedSet
         // java.util.Collections.unmodifiableSortedSet(java.util.SortedSet)
@@ -1880,6 +2241,23 @@ public class CollectionsTest extends junit.framework.TestCase {
     /**
      * Test unmodifiable objects toString methods
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "unmodifiableCollection",
+          methodArgs = {java.util.Collection.class}
+        ),
+        @TestTarget(
+          methodName = "unmodifiableMap",
+          methodArgs = {java.util.Map.class}
+        )
+    })
     public void test_unmodifiable_toString_methods() {
         // Regression for HARMONY-552
         ArrayList al = new ArrayList();
@@ -1894,25 +2272,6 @@ public class CollectionsTest extends junit.framework.TestCase {
         assertEquals("{one=1, two=2}", um.toString());
     }
     
-    /**
-     * @tests java.util.Collections#checkType(Object, Class)
-     */
-    public void test_checkType_Ljava_lang_Object_Ljava_lang_Class() throws Exception {
-        Method m = Collections.class.getDeclaredMethod("checkType", Object.class, Class.class);
-           m.setAccessible(true);
-           m.invoke(null, new Object(), Object.class);
-            
-           try {
-               m.invoke(null, new Object(), int.class);
-               fail("should throw InvocationTargetException");
-           } catch (InvocationTargetException e) {
-            String errMsg = Messages.getString(
-                    "luni.05", Object.class, int.class);
-               assertEquals(errMsg, e.getCause().getMessage());
-           }
-    }
-
-
     /**
      * Sets up the fixture, for example, open a network connection. This method
      * is called before a test is executed.

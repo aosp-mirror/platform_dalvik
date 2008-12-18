@@ -24,6 +24,9 @@ package java.nio.channels;
  * writable byte channels.
  * </p>
  * 
+ * @see ReadableByteChannel
+ * @see WritableByteChannel
+ * @since Android 1.0
  */
 public interface ByteChannel extends ReadableByteChannel, WritableByteChannel {
     // No methods defined.

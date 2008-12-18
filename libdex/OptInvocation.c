@@ -40,14 +40,14 @@ static const char* kClassesDex = "classes.dex";
  * For a Jar, "subFileName" is the name of the entry (usually "classes.dex").
  * For a DEX, it may be NULL.
  *
- * Returns "false" if something goes wrong.
+ * Returns a newly-allocated string, or NULL on failure.
  */
-int dexOptGenerateCacheFileName(const char* fileName, const char* subFileName,
-                                char* nameBuf, unsigned int bufSize)
+char* dexOptGenerateCacheFileName(const char* fileName, const char* subFileName)
 {
+    char nameBuf[512];
     static const char kDexCachePath[] = "dalvik-cache";
-    char absoluteFile[bufSize];
-    const size_t kBufLen = bufSize - 1;
+    char absoluteFile[sizeof(nameBuf)];
+    const size_t kBufLen = sizeof(nameBuf) - 1;
     const char* dataRoot;
     char* cp;
 
@@ -63,7 +63,7 @@ int dexOptGenerateCacheFileName(const char* fileName, const char* subFileName,
          */
         if (getcwd(absoluteFile, kBufLen) == NULL) {
             LOGE("Can't get CWD while opening jar file\n");
-            return false;
+            return NULL;
         }
         strncat(absoluteFile, "/", kBufLen);
     }
@@ -102,7 +102,7 @@ int dexOptGenerateCacheFileName(const char* fileName, const char* subFileName,
     strncat(nameBuf, absoluteFile, kBufLen);
 
     LOGV("Cache file for '%s' '%s' is '%s'\n", fileName, subFileName, nameBuf);
-    return true;
+    return strdup(nameBuf);
 }
 
 /*

@@ -17,39 +17,59 @@
 
 package tests.api.java.io;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass; 
+
 import java.io.NotSerializableException;
 
+@TestTargetClass(NotSerializableException.class) 
 public class NotSerializableExceptionTest extends junit.framework.TestCase {
 
-	/**
-	 * @tests java.io.NotSerializableException#NotSerializableException()
-	 */
-	public void test_Constructor() {
+    /**
+     * @tests java.io.NotSerializableException#NotSerializableException()
+     */
+    @TestInfo(
+            level = TestLevel.COMPLETE,
+            purpose = "",
+            targets = { @TestTarget(methodName = "NotSerializableException", 
+                                    methodArgs = {})                                    
+            }
+        )        
+    public void test_Constructor() {
         NotSerializableException nse = new NotSerializableException();
         assertNull(nse.getMessage());
-	}
+    }
 
-	/**
-	 * @tests java.io.NotSerializableException#NotSerializableException(java.lang.String)
-	 */
-	public void test_ConstructorLjava_lang_String() {
-		// Test for method java.io.NotSerializableException(java.lang.String)
+    /**
+     * @tests java.io.NotSerializableException#NotSerializableException(java.lang.String)
+     */
+    @TestInfo(
+            level = TestLevel.COMPLETE,
+            purpose = "",
+            targets = { @TestTarget(methodName = "NotSerializableException", 
+                                    methodArgs = {java.lang.String.class})                                    
+            }
+        )        
+    public void test_ConstructorLjava_lang_String() {
+        // Test for method java.io.NotSerializableException(java.lang.String)
         String message = "Test message";
         NotSerializableException nse = new NotSerializableException(message);
         assertSame(message, nse.getMessage());
-	}
+    }
 
-	/**
-	 * Sets up the fixture, for example, open a network connection. This method
-	 * is called before a test is executed.
-	 */
-	protected void setUp() {
-	}
+    /**
+     * Sets up the fixture, for example, open a network connection. This method
+     * is called before a test is executed.
+     */
+    protected void setUp() {
+    }
 
-	/**
-	 * Tears down the fixture, for example, close a network connection. This
-	 * method is called after a test is executed.
-	 */
-	protected void tearDown() {
-	}
+    /**
+     * Tears down the fixture, for example, close a network connection. This
+     * method is called after a test is executed.
+     */
+    protected void tearDown() {
+    }
 }

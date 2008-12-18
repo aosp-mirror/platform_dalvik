@@ -22,6 +22,11 @@
 
 package org.apache.harmony.security.tests.java.security;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.security.AccessControlException;
 import java.security.AllPermission;
 import java.security.Permission;
@@ -32,7 +37,7 @@ import junit.framework.TestCase;
 /**
  * Unit test for AccessControlException.
  */
-
+@TestTargetClass(AccessControlException.class)
 public class AccessControlExceptionTest extends TestCase {
 
     /**
@@ -46,6 +51,15 @@ public class AccessControlExceptionTest extends TestCase {
     /**
      * Tests AccessControlException(String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "AccessControlException",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void testAccessControlExceptionString() {
         new AccessControlException(null);
         new AccessControlException("Failure");
@@ -54,6 +68,15 @@ public class AccessControlExceptionTest extends TestCase {
     /**
      * Tests AccessControlException(String, Permission)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies method with positive arguments only",
+      targets = {
+        @TestTarget(
+          methodName = "AccessControlException",
+          methodArgs = {java.lang.String.class, java.security.Permission.class}
+        )
+    })
     public void testAccessControlExceptionStringPermission() {
         Permission perm = new AllPermission();
         new AccessControlException("001", perm);
@@ -63,6 +86,15 @@ public class AccessControlExceptionTest extends TestCase {
      * 
      * Tests AccessControlException.getPermission()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getPermission",
+          methodArgs = {}
+        )
+    })
     public void testGetPermission() {
         Permission perm = new UnresolvedPermission("unresolvedType",
                 "unresolvedName", "unresolvedActions", null);

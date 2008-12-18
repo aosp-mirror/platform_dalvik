@@ -17,8 +17,14 @@
 
 package tests.api.java.util;
 
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass; 
+
 import java.util.EventObject;
 
+@TestTargetClass(EventObject.class) 
 public class EventObjectTest extends junit.framework.TestCase {
 
     Object myObject;
@@ -28,6 +34,16 @@ public class EventObjectTest extends junit.framework.TestCase {
     /**
      * @tests java.util.EventObject#EventObject(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test. SetUp method doesn't verify " +
+            "IllegalArgumentException.",
+      targets = {
+        @TestTarget(
+          methodName = "EventObject",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_ConstructorLjava_lang_Object() {
         // Test for method java.util.EventObject(java.lang.Object)
         assertTrue("Used to test", true);
@@ -36,6 +52,15 @@ public class EventObjectTest extends junit.framework.TestCase {
     /**
      * @tests java.util.EventObject#getSource()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getSource",
+          methodArgs = {}
+        )
+    })
     public void test_getSource() {
         // Test for method java.lang.Object java.util.EventObject.getSource()
         assertTrue("Wrong source returned",
@@ -45,6 +70,15 @@ public class EventObjectTest extends junit.framework.TestCase {
     /**
      * @tests java.util.EventObject#toString()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public void test_toString() {
         // Test for method java.lang.String java.util.EventObject.toString()
         assertTrue("Incorrect toString returned: " + myEventObject.toString(),

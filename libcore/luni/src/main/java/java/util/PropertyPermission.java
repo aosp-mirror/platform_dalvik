@@ -28,7 +28,19 @@ import java.security.PermissionCollection;
 import org.apache.harmony.luni.util.Util;
 
 /**
- * PropertyPermission objects represent permission to access system properties.
+ * {@code PropertyPermission} objects represent a permission to access system
+ * properties.
+ * <p>
+ * A permission is one of the possible permission strings like "user.name" or
+ * "java.version". It's also possible to use a wildcard to define the permission
+ * to several properties at once. For example "user.*" will define the
+ * permission for "user.home", "user.name", "user.dir", ... "*" defines the
+ * permission for all available properties.
+ * <p>
+ * There are two possible permission action types: read and write. Possible
+ * actions are "read", "write", or "read,write"/"write,read".
+ *  
+ * @since Android 1.0
  */
 public final class PropertyPermission extends BasicPermission {
     private static final long serialVersionUID = 885438825399942851L;
@@ -39,10 +51,12 @@ public final class PropertyPermission extends BasicPermission {
      * Constructs a new instance of this class.
      * 
      * @param name
-     *            java.lang.String the (possibly wildcarded) name of the
-     *            property.
+     *            the (possibly wildcarded) name of the property.
      * @param actions
-     *            java.lang.String the actions which are applicable to it.
+     *            the actions which are applicable to it. Possible actions are
+     *            "read", "write", or "read,write"/"write,read". Anything else
+     *            will result in an {@code IllegalArgumentException}.
+     * @since Android 1.0
      */
     public PropertyPermission(String name, String actions) {
         super(name);
@@ -70,14 +84,17 @@ public final class PropertyPermission extends BasicPermission {
     /**
      * Compares the argument to the receiver, and returns true if they represent
      * the <em>same</em> object using a class specific comparison. In this
-     * case, the receiver must be for the same property as the argument, and
-     * must have the same actions.
+     * case, the receiver must be a {@code PropertyPermission} for the same 
+     * property as the argument, and must have the same actions.
+     * If {@code o} is a permission that is not a {@code PropertyPermission},
+     * this method may throw a {@code ClassCastException}.     
      * 
      * @param o
-     *            the object to compare with this object
-     * @return <code>true</code> if the object is the same as this object
-     *         <code>false</code> if it is different from this object
+     *            the {@code Object} to compare with this {@code Object}.
+     * @return {@code true} if the {@code Object} is the same as this {@code Object},
+     *         {@code false} if it is different from this {@code Object}.
      * @see #hashCode
+     * @since Android 1.0
      */
     @Override
     public boolean equals(Object o) {
@@ -92,7 +109,8 @@ public final class PropertyPermission extends BasicPermission {
      * Returns the actions associated with the receiver. The result will be
      * either "read", "write", or "read,write".
      * 
-     * @return String the actions associated with the receiver.
+     * @return the actions associated with the receiver.
+     * @since Android 1.0
      */
     @Override
     public String getActions() {
@@ -101,12 +119,12 @@ public final class PropertyPermission extends BasicPermission {
 
     /**
      * Returns an integer hash code for the receiver. Any two objects which
-     * answer <code>true</code> when passed to <code>equals</code> must
-     * answer the same value for this method.
+     * return {@code true} when passed to {@code equals} must return the same
+     * value for this method.
      * 
-     * @return the receiver's hash
-     * 
+     * @return the receiver's hash.
      * @see #equals
+     * @since Android 1.0
      */
     @Override
     public int hashCode() {
@@ -116,10 +134,11 @@ public final class PropertyPermission extends BasicPermission {
     /**
      * Indicates whether the argument permission is implied by the receiver.
      * 
-     * @return boolean <code>true</code> if the argument permission is implied
-     *         by the receiver, and <code>false</code> if it is not.
+     * @return boolean {@code true} if the argument permission is implied by the
+     *         receiver, and {@code false} if it is not.
      * @param permission
-     *            java.security.Permission the permission to check
+     *            the permission to check.
+     * @since Android 1.0
      */
     @Override
     public boolean implies(Permission permission) {
@@ -131,12 +150,12 @@ public final class PropertyPermission extends BasicPermission {
     }
 
     /**
-     * Returns a new PermissionCollection for holding permissions of this class.
-     * Answer null if any permission collection can be used.
+     * Returns a new {@code PermissionCollection} for holding permissions of this class.
+     * Returns {@code null} if any {@code PermissionCollection} can be used.
      * 
-     * @return a new PermissionCollection or null
-     * 
-     * see java.security.BasicPermissionCollection
+     * @return a new {@code PermissionCollection} or {@code null}.
+     * @see java.security.PermissionCollection
+     * @since Android 1.0
      */
     @Override
     public PermissionCollection newPermissionCollection() {

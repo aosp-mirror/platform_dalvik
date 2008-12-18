@@ -20,41 +20,45 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 /**
- * CacheRequest provides channels for storing resource data in the
- * <code>ResponseCache</code>. Protocol handler calls the
- * <code>OutputStream</code> which is supplied by CachedRequest object, to
- * store the resource data into the cache. It also allows the user to interrupt
- * and abort the current store operation by calling method <code>abort</code>.
- * If IOException occurs while reading the response or writing data to the
- * cache, the current cache store operation will be abandoned.
+ * {@code CacheRequest} is a kind of channel for storing resource data in the
+ * {@code ResponseCache}. A protocol handler calls the {@code OutputStream}
+ * which is provided by the {@code CacheRequest} object, to store the resource
+ * data into the cache. It also allows the user to interrupt and abort the
+ * current store operation by calling the method {@code abort}. If an {@code
+ * IOException} occurs while reading the response or writing data to the cache,
+ * the current cache store operation is abandoned.
+ * 
+ * @see ResponseCache
+ * @since Android 1.0
  */
 public abstract class CacheRequest {
 
     /**
-     * Constructor method.
+     * This implementation does nothing.
+     * 
+     * @since Android 1.0
      */
     public CacheRequest() {
         super();
     }
 
     /**
-     * Aborts the current cache operation. If an IOException occurs while
-     * reading the response or writing resource data to the cache, the current
-     * cache store operation will be aborted.
+     * Aborts the current cache operation. If an {@code IOException} occurs
+     * while reading the response or writing resource data to the cache, the
+     * current cache store operation is aborted.
+     * 
+     * @since Android 1.0
      */
     public abstract void abort();
 
     /**
-     * <p>
-     * Returns an <code>OutputStream</code>, which is used to write the
-     * response body.
-     * </p>
+     * Returns an {@code OutputStream} which is used to write the response body.
      * 
-     * @return an <code>OutputStream</code> which is used to write the
-     *         response body.
+     * @return an {@code OutputStream} which is used to write the response body.
      * @throws IOException
      *             if an I/O error is encountered during writing response body
      *             operation.
+     * @since Android 1.0
      */
     public abstract OutputStream getBody() throws IOException;
 }

@@ -16,6 +16,11 @@
  */
 package org.apache.harmony.archive.tests.java.util.zip;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -23,6 +28,7 @@ import java.io.OutputStream;
 import java.util.zip.Checksum;
 import java.util.zip.GZIPOutputStream;
 
+@TestTargetClass(GZIPOutputStream.class) 
 public class GZIPOutputStreamTest extends junit.framework.TestCase {
 
     class TestGZIPOutputStream extends GZIPOutputStream {
@@ -42,6 +48,15 @@ public class GZIPOutputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.GZIPOutputStream#GZIPOutputStream(java.io.OutputStream)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "GZIPOutputStream",
+          methodArgs = {java.io.OutputStream.class}
+        )
+    })
     public void test_ConstructorLjava_io_OutputStream() {
         try {
             FileOutputStream outFile = new FileOutputStream("GZIPOutCon.txt");
@@ -61,6 +76,15 @@ public class GZIPOutputStreamTest extends junit.framework.TestCase {
      * @tests java.util.zip.GZIPOutputStream#GZIPOutputStream(java.io.OutputStream,
      *        int)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "GZIPOutputStream",
+          methodArgs = {java.io.OutputStream.class, int.class}
+        )
+    })
     public void test_ConstructorLjava_io_OutputStreamI() {
         try {
             FileOutputStream outFile = new FileOutputStream("GZIPOutCon.txt");
@@ -80,6 +104,15 @@ public class GZIPOutputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.GZIPOutputStream#finish()
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "finish",
+          methodArgs = {}
+        )
+    })
     public void test_finish() {
         // test method java.util.zip.GZIPOutputStream.finish()
         byte byteArray[] = { 3, 5, 2, 'r', 'g', 'e', 'f', 'd', 'e', 'w' };
@@ -107,6 +140,15 @@ public class GZIPOutputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.GZIPOutputStream#close()
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "close",
+          methodArgs = {}
+        )
+    })
     public void test_close() {
         // test method java.util.zip.GZIPOutputStream.close()
         byte byteArray[] = { 3, 5, 2, 'r', 'g', 'e', 'f', 'd', 'e', 'w' };
@@ -131,6 +173,15 @@ public class GZIPOutputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.GZIPOutputStream#write(byte[], int, int)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "write",
+          methodArgs = {byte[].class, int.class, int.class}
+        )
+    })
     public void test_write$BII() {
         // test method java.util.zip.GZIPOutputStream.writeBII
         byte byteArray[] = { 3, 5, 2, 'r', 'g', 'e', 'f', 'd', 'e', 'w' };

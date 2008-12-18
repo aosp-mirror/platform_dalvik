@@ -16,19 +16,24 @@
 
 package tests.security.permissions;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
+import junit.framework.TestCase;
+
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.security.Permission;
 import java.util.Properties;
 import java.util.PropertyPermission;
-
-import junit.framework.TestCase;
-
 /*
  * This class tests the secrity permissions which are documented in
  * http://java.sun.com/j2se/1.5.0/docs/guide/security/permissions.html#PermsAndMethods
  * for class java.lang.System
  */
+@TestTargetClass(java.lang.SecurityManager.class)
 public class JavaLangSystemTest extends TestCase {
     
     SecurityManager old;
@@ -44,7 +49,16 @@ public class JavaLangSystemTest extends TestCase {
         System.setSecurityManager(old);
         super.tearDown();
     }
-    
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies that getProperties calls checkPropertiesAccess " +
+            "method of security manager.",
+      targets = {
+        @TestTarget(
+          methodName = "checkPropertiesAccess",
+          methodArgs = {}
+        )
+    })
     public void test_Properties() {
         class TestSecurityManager extends SecurityManager {
             boolean called;
@@ -71,7 +85,16 @@ public class JavaLangSystemTest extends TestCase {
         System.setProperties(props);
         assertTrue("System.setProperties must call checkPropertiesAccess on security manager", s.called);
     }
-    
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies that System.getProperty calls checkPropertyAccess on " +
+            "security manager.",
+      targets = {
+        @TestTarget(
+          methodName = "checkPropertyAccess",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_getProperty() {
         class TestSecurityManager extends SecurityManager {
             boolean called;
@@ -103,7 +126,16 @@ public class JavaLangSystemTest extends TestCase {
         assertTrue("System.getProperty must call checkPropertyAccess on security manager", s.called);
         assertEquals("Argument of checkPropertyAccess is not correct", "key", s.key);
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies that System.setProperty method calls " +
+            "checkPermission of security manager.",
+      targets = {
+        @TestTarget(
+          methodName = "checkPermission",
+          methodArgs = {java.security.Permission.class}
+        )
+    })
     public void test_setProperty() {
         class TestSecurityManager extends SecurityManager {
             boolean called;
@@ -130,7 +162,16 @@ public class JavaLangSystemTest extends TestCase {
         assertTrue("System.setProperty must call checkPermission on security manager", s.called);
         assertEquals("Argument of checkPermission is not correct", new PropertyPermission("key", "write"), s.p);
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies that System.setSecurityManager method checks " +
+            "security permissions.",
+      targets = {
+        @TestTarget(
+          methodName = "checkPermission",
+          methodArgs = {java.security.Permission.class}
+        )
+    })
     public void test_setSecurityManager() {
         class TestSecurityManager extends SecurityManager {
             boolean called = false;
@@ -149,7 +190,16 @@ public class JavaLangSystemTest extends TestCase {
         System.setSecurityManager(s);
         assertTrue("System.setSecurityManager must check security permissions", s.called);
     }
-    
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies that setIn/Out/Err methods call checkPermission " +
+            "method of security manager.",
+      targets = {
+        @TestTarget(
+          methodName = "checkPermission",
+          methodArgs = {java.security.Permission.class}
+        )
+    })
     public void test_setInOutErr() {
         class TestSecurityManager extends SecurityManager {
             boolean called;

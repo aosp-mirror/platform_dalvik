@@ -25,39 +25,70 @@ package java.security;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 
-
 /**
- * @com.intel.drl.spec_ref
+ * {@code KeyFactorySpi} is the Service Provider Interface (SPI) definition for
+ * {@link KeyFactory}.
  * 
+ * @see KeyFactory
+ * @since Android 1.0
  */
-
 public abstract class KeyFactorySpi {
     
     /**
-     * @com.intel.drl.spec_ref
+     * Generates a instance of {@code PublicKey} from the given key
+     * specification.
      * 
+     * @param keySpec
+     *            the specification of the public key.
+     * @return the public key.
+     * @throws InvalidKeySpecException
+     *             if the specified {@code keySpec} is invalid.
+     * @since Android 1.0
      */
     protected abstract PublicKey engineGeneratePublic(KeySpec keySpec) 
                                     throws InvalidKeySpecException;
     
     /**
-     * @com.intel.drl.spec_ref
+     * Generates a instance of {@code PrivateKey} from the given key
+     * specification.
      * 
+     * @param keySpec
+     *            the specification of the private key.
+     * @return the private key.
+     * @throws InvalidKeySpecException
+     *             if the specified {@code keySpec} is invalid.
+     * @since Android 1.0
      */
     protected abstract PrivateKey engineGeneratePrivate(KeySpec keySpec)
                                     throws InvalidKeySpecException;
     
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the key specification for the specified key.
      * 
+     * @param key
+     *            the key from which the specification is requested.
+     * @param keySpec
+     *            the type of the requested {@code KeySpec}.
+     * @return the key specification for the specified key.
+     * @throws InvalidKeySpecException
+     *             if the key can not be processed, or the requested requested
+     *             {@code KeySpec} is inappropriate for the given key.
+     * @since Android 1.0
      */
     protected abstract <T extends KeySpec> T engineGetKeySpec(Key key, Class<T> keySpec)
                                     throws InvalidKeySpecException;
     //FIXME 1.5 signature: protected abstract <T extends KeySpec> T engineGetKeySpec(Key key, Class<T> keySpec) throws InvalidKeySpecException
     
     /**
-     * @com.intel.drl.spec_ref
+     * Translates the given key into a key from this key factory.
      * 
+     * @param key
+     *            the key to translate.
+     * @return the translated key.
+     * @throws InvalidKeyException
+     *             if the specified key can not be translated by this key
+     *             factory.
+     * @since Android 1.0
      */
     protected abstract Key engineTranslateKey(Key key) throws InvalidKeyException;
 

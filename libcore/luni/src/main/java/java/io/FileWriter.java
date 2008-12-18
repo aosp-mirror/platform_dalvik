@@ -18,81 +18,86 @@
 package java.io;
 
 /**
- * FileWriter is a class for writing characters out to a file. The default
- * character encoding, 8859_1 is currently used to convert characters to bytes
- * in the file.
+ * A specialized {@link Writer} that writes to a file in the file system.
+ * All write requests made by calling methods in this class are directly
+ * forwarded to the equivalent function of the underlying operating system.
+ * Since this may induce some performance penalty, in particular if many small
+ * write requests are made, a FileWriter is often wrapped by a
+ * BufferedWriter.
  * 
+ * @see BufferedWriter
  * @see FileReader
+ *
+ * @since Android 1.0
  */
 public class FileWriter extends OutputStreamWriter {
 
     /**
-     * Creates a FileWriter using the File <code>file</code>.
+     * Creates a FileWriter using the File {@code file}.
      * 
      * @param file
      *            the non-null File to write bytes to.
-     * 
      * @throws IOException
-     *             If the given file is not found
+     *             if {@code file} cannot be opened for writing.
+     * @since Android 1.0
      */
     public FileWriter(File file) throws IOException {
         super(new FileOutputStream(file));
     }
 
     /**
-     * Creates a FileWriter using the File <code>file</code>. The parameter
-     * <code>append</code> determines whether or not the file is opened and
-     * appended to or just opened empty.
+     * Creates a FileWriter using the File {@code file}. The parameter
+     * {@code append} determines whether or not the file is opened and appended
+     * to or just opened and overwritten.
      * 
      * @param file
      *            the non-null File to write bytes to.
      * @param append
-     *            should the file be appened to or opened empty.
-     * 
+     *            indicates whether or not to append to an existing file.
      * @throws IOException
-     *             If the given file is not found
+     *             if the {@code file} cannot be opened for writing.
+     * @since Android 1.0
      */
     public FileWriter(File file, boolean append) throws IOException {
         super(new FileOutputStream(file, append));
     }
 
     /**
-     * Creates a FileWriter using the existing FileDescriptor <code>fd</code>.
+     * Creates a FileWriter using the existing FileDescriptor {@code fd}.
      * 
      * @param fd
      *            the non-null FileDescriptor to write bytes to.
+     * @since Android 1.0
      */
     public FileWriter(FileDescriptor fd) {
         super(new FileOutputStream(fd));
     }
 
     /**
-     * Creates a FileWriter using the platform dependent <code>filename</code>.
-     * See the class description for how characters are converted to bytes.
+     * Creates a FileWriter using the platform dependent {@code filename}.
      * 
      * @param filename
      *            the non-null name of the file to write bytes to.
-     * 
      * @throws IOException
-     *             If the given file is not found
+     *             if the file cannot be opened for writing.
+     * @since Android 1.0
      */
     public FileWriter(String filename) throws IOException {
         super(new FileOutputStream(new File(filename)));
     }
 
     /**
-     * Creates a FileWriter using the platform dependent <code>filename</code>.
-     * See the class description for how characters are converted to bytes. The
-     * parameter <code>append</code> determines whether or not the file is
-     * opened and appended to or just opened empty.
+     * Creates a FileWriter using the platform dependent {@code filename}. The
+     * parameter {@code append} determines whether or not the file is opened and
+     * appended to or just opened and overwritten.
      * 
      * @param filename
      *            the non-null name of the file to write bytes to.
      * @param append
-     *            should the file be appened to or opened empty.
-     * 
+     *            indicates whether or not to append to an existing file.
      * @throws IOException
-     *             If the given file is not found
+     *             if the {@code file} cannot be opened for writing.
+     * @since Android 1.0
      */
     public FileWriter(String filename, boolean append) throws IOException {
         super(new FileOutputStream(filename, append));

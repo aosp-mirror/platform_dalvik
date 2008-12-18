@@ -17,6 +17,11 @@
 
 package org.apache.harmony.security.tests.java.security;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -31,7 +36,7 @@ import java.security.cert.X509Certificate;
 import org.apache.harmony.security.tests.java.security.IdentityScope2Test.IdentityScopeSubclass;;
 
 @SuppressWarnings("deprecation")
-
+@TestTargetClass(Identity.class)
 public class Identity2Test extends junit.framework.TestCase {
 
     static PublicKey pubKey;
@@ -140,6 +145,15 @@ public class Identity2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.Identity#Identity()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Identity",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         new IdentitySubclass();
     }
@@ -147,6 +161,15 @@ public class Identity2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.Identity#Identity(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Other string parameters (null, empty) are not checked",
+      targets = {
+        @TestTarget(
+          methodName = "Identity",
+          methodArgs = {String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() {
         new IdentitySubclass("test");
     }
@@ -155,7 +178,15 @@ public class Identity2Test extends junit.framework.TestCase {
      * @tests java.security.Identity#Identity(java.lang.String,
      *        java.security.IdentityScope)
      */
-    
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Other parameters (null, empty) are not checked",
+      targets = {
+        @TestTarget(
+          methodName = "Identity",
+          methodArgs = {String.class, IdentityScope.class}
+        )
+    })
     public void test_ConstructorLjava_lang_StringLjava_security_IdentityScope() throws Exception {
                new IdentitySubclass("test", new IdentityScopeSubclass());
     }
@@ -163,6 +194,15 @@ public class Identity2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.Identity#getScope()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getScope",
+          methodArgs = {}
+        )
+    })
     public void test_getScope() throws Exception {
                IdentityScope scope = new IdentityScopeSubclass();
                IdentitySubclass sub = new IdentitySubclass("test", scope);
@@ -173,6 +213,15 @@ public class Identity2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.Identity#getPublicKey()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getPublicKey",
+          methodArgs = {}
+        )
+    })
     public void test_getPublicKey() throws Exception {
                IdentitySubclass sub = new IdentitySubclass("test",
                        new IdentityScopeSubclass());
@@ -184,6 +233,15 @@ public class Identity2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.Identity#getName()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getName",
+          methodArgs = {}
+        )
+    })
     public void test_getName() throws Exception {
                String name = "test";
                IdentitySubclass sub = new IdentitySubclass(name,
@@ -194,6 +252,15 @@ public class Identity2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.Identity#getInfo()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getInfo",
+          methodArgs = {}
+        )
+    })
     public void test_getInfo() throws Exception {
                String info = "This is the general information.";
                IdentitySubclass sub = new IdentitySubclass("test",
@@ -205,6 +272,15 @@ public class Identity2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.Identity#certificates()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "certificates",
+          methodArgs = {}
+        )
+    })
     public void test_certificates() throws Exception {
                IdentitySubclass sub = new IdentitySubclass("test",
                        new IdentityScopeSubclass());
@@ -222,6 +298,15 @@ public class Identity2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.Identity#addCertificate(java.security.Certificate)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Invalid and null certificates are not checked, exceptions are not checked",
+      targets = {
+        @TestTarget(
+          methodName = "addCertificate",
+          methodArgs = {java.security.Certificate.class}
+        )
+    })
     public void test_addCertificateLjava_security_Certificate() throws Exception {
                IdentitySubclass sub = new IdentitySubclass("test",
                        new IdentityScopeSubclass());
@@ -236,6 +321,15 @@ public class Identity2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.Identity#removeCertificate(java.security.Certificate)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Invalid and null certificates are not checked, exceptions are not checked",
+      targets = {
+        @TestTarget(
+          methodName = "removeCertificate",
+          methodArgs = {java.security.Certificate.class}
+        )
+    })
     public void test_removeCertificateLjava_security_Certificate() throws Exception {
                IdentitySubclass sub = new IdentitySubclass("test",
                        new IdentityScopeSubclass());
@@ -253,6 +347,15 @@ public class Identity2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.Identity#equals(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Method equals(java.lang.Object) is not tested",
+      targets = {
+        @TestTarget(
+          methodName = "equals",
+          methodArgs = {Object.class}
+        )
+    })
     public void test_equalsLjava_lang_Object() throws Exception {
                IdentitySubclass sub = new IdentitySubclass("test",
                        new IdentityScopeSubclass());
@@ -270,6 +373,15 @@ public class Identity2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.Identity#identityEquals(java.security.Identity)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Method identityEquals(java.security.Identity) is not tested",
+      targets = {
+        @TestTarget(
+          methodName = "identityEquals",
+          methodArgs = {Identity.class}
+        )
+    })
     public void test_identityEqualsLjava_security_Identity() throws Exception {
                IdentitySubclass sub = new IdentitySubclass("test", null);
                CertificateFactory cf = CertificateFactory.getInstance("X.509");
@@ -287,6 +399,15 @@ public class Identity2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.Identity#toString()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public void test_toString() throws Exception {
                IdentitySubclass sub = new IdentitySubclass("test", null);
                assertNotNull(sub.toString());
@@ -299,6 +420,15 @@ public class Identity2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.Identity#toString(boolean)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {boolean.class}
+        )
+    })
     public void test_toStringZ() throws Exception {
                IdentitySubclass sub = new IdentitySubclass("test", null);
                assertNotNull(sub.toString(true));
@@ -309,6 +439,15 @@ public class Identity2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.Identity#hashCode()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "hashCode",
+          methodArgs = {}
+        )
+    })
     public void test_hashCode() throws Exception {
                IdentitySubclass sub = new IdentitySubclass("test", null);
                IdentitySubclass sub2 = new IdentitySubclass("test", null);
@@ -319,6 +458,15 @@ public class Identity2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.Identity#setInfo(String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Other parameters (empty, null) are not tested.",
+      targets = {
+        @TestTarget(
+          methodName = "setInfo",
+          methodArgs = {String.class}
+        )
+    })
     public void testSetInfo() throws Exception{
         String info = "This is the general information.";
            IdentitySubclass sub = new IdentitySubclass("test",
@@ -328,8 +476,17 @@ public class Identity2Test extends junit.framework.TestCase {
     }
     
     /**
-     * @tests java.security.Identity#hashCode()
+     * @tests java.security.Identity#setPublicKey(PublicKey key)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Other parameters (null, invalid) are not tested",
+      targets = {
+        @TestTarget(
+          methodName = "setPublicKey",
+          methodArgs = {PublicKey.class}
+        )
+    })
     public void testSetPublicKey() throws Exception{
         IdentitySubclass sub = new IdentitySubclass("test",
                    new IdentityScopeSubclass());

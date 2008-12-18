@@ -18,261 +18,359 @@
 package java.sql;
 
 /**
- * An interface which provides comprehensive information about the database.
+ * An interface which provides comprehensive information about the database
+ * management system and its supported features.
  * <p>
- * This interface is implemented by JDBC driver writers in order to provide
- * information about the underlying Database capabilities and the JDBC driver
- * capabilities taken together.
+ * This interface is implemented by JDBC driver vendors in order to provide
+ * information about the underlying database capabilities in association with
+ * the JDBC driver.
+ * </p>
  * <p>
- * Some of the methods in this interface take String parameters which are
- * Patterns. Within these string Patterns, '%' and '_' characters have special
- * meanings. '%' means "match any substring of 0 or more characters". '_' means
- * "match any one character". Only metadata entries that match the pattern are
- * returned. If such a search pattern string is set to <code>null</code>,
- * that argument's criteria are dropped from the search.
- * 
+ * Some of the methods in this interface take string parameters which are
+ * patterns. Within these string patterns, {@code '%'} and {@code '_'}
+ * characters have special meanings. {@code '%'} means
+ * "match any substring of 0 or more characters". {@code '_'} means
+ * "match any character". Only metadata entries that match the pattern are
+ * returned. If such a search pattern string is set to {@code null}, that
+ * argument's criteria are dropped from the search.
+ * </p>
+ *  
+ * @since Android 1.0
  */
 public interface DatabaseMetaData {
 
     /**
-     * States that it may not be permitted to store <code>NULL</code> values.
+     * States that it may not be permitted to store {@code NULL} values.
+     * 
+     * @since Android 1.0
      */
     public static final short attributeNoNulls = 0;
 
     /**
-     * States that <code>NULL</code> values are definitely permitted.
+     * States that {@code NULL} values are definitely permitted.
+     *
+     * @since Android 1.0
      */
     public static final short attributeNullable = 1;
 
     /**
-     * States that whether <code>NULL</code> values are permitted is unknown.
+     * States that whether {@code NULL} values are permitted is unknown.
+     * 
+     * @since Android 1.0
      */
     public static final short attributeNullableUnknown = 2;
 
     /**
      * States the best row identifier is <em>NOT</em> a pseudo column.
+     * 
+     * @since Android 1.0
      */
     public static final int bestRowNotPseudo = 1;
 
     /**
      * States that the best row identifier is a pseudo column.
+     * 
+     * @since Android 1.0
      */
     public static final int bestRowPseudo = 2;
 
     /**
      * States that the remainder of the current session is used as the scope for
      * the best row identifier.
+     * 
+     * @since Android 1.0
      */
     public static final int bestRowSession = 2;
 
     /**
      * States that best row identifier scope lasts only while the row is being
      * used.
+     * 
+     * @since Android 1.0
      */
     public static final int bestRowTemporary = 0;
 
     /**
      * States that the remainder of the current transaction is used as the scope
      * for the best row identifier.
+     * 
+     * @since Android 1.0
      */
     public static final int bestRowTransaction = 1;
 
     /**
      * States that the best row identifier may or may not be a pseudo column.
+     * 
+     * @since Android 1.0
      */
     public static final int bestRowUnknown = 0;
 
     /**
-     * States that the column might not allow <code>NULL</code> values.
+     * States that the column must not allow {@code NULL} values.
+     * 
+     * @since Android 1.0
      */
     public static final int columnNoNulls = 0;
 
     /**
-     * States that the column definitely allows <code>NULL</code> values.
+     * States that the column definitely allows {@code NULL} values.
+     * 
+     * @since Android 1.0
      */
     public static final int columnNullable = 1;
 
     /**
      * States that it is unknown whether the columns may be nulled.
+     * 
+     * @since Android 1.0
      */
     public static final int columnNullableUnknown = 2;
 
     /**
-     * For the column UPDATE_RULE, States that when the primary key is updated,
-     * the foreign key (imported key) is changed to agree with it.
+     * For the column {@code UPDATE_RULE}, states that when the primary key is
+     * updated, the foreign key (imported key) is changed accordingly.
+     * 
+     * @since Android 1.0
      */
     public static final int importedKeyCascade = 0;
 
     /**
-     * States deferrability.
+     * States that the evaluation of foreign key constraints is deferred (delayed
+     * until commit).
+     * 
+     * @since Android 1.0
      */
     public static final int importedKeyInitiallyDeferred = 5;
 
     /**
-     * States defer-ability.
+     * States that the evaluation of foreign key constraint is {@code IMMEDIATE}
+     * .
+     * 
+     * @since Android 1.0
      */
     public static final int importedKeyInitiallyImmediate = 6;
 
     /**
-     * For the columns UPDATE_RULE and DELETE_RULE, States that if the primary
-     * key has been imported, it cannot be updated or deleted.
+     * For the columns {@code UPDATE_RULE} and {@code DELETE_RULE}, states that
+     * if the primary key has been imported, it cannot be updated or deleted.
+     * 
+     * @since Android 1.0
      */
     public static final int importedKeyNoAction = 3;
 
     /**
-     * States defer-ability.
+     * States that the evaluation of foreign key constraint must not be {@code
+     * DEFERRED}.
+     * 
+     * @since Android 1.0
      */
     public static final int importedKeyNotDeferrable = 7;
 
     /**
      * States that a primary key must not be updated when imported as a foreign
-     * key by some other table. Used for the column UPDATE_RULE.
+     * key by some other table. Used for the column {@code UPDATE_RULE}.
+     * 
+     * @since Android 1.0
      */
     public static final int importedKeyRestrict = 1;
 
     /**
      * States that when the primary key is modified (updated or deleted) the
      * foreign (imported) key is changed to its default value. Applies to the
-     * UPDATE_RULE and DELETE_RULE columns.
+     * {@code UPDATE_RULE} and {@code DELETE_RULE} columns.
+     * 
+     * @since Android 1.0
      */
     public static final int importedKeySetDefault = 4;
 
     /**
      * States that when the primary key is modified (updated or deleted) the
-     * foreign (imported) key is changed to <code>NULL</code>. Applies to the
-     * UPDATE_RULE and DELETE_RULE columns.
+     * foreign (imported) key is changed to {@code NULL}. Applies to the {@code
+     * UPDATE_RULE} and {@code DELETE_RULE} columns.
+     * 
+     * @since Android 1.0
      */
     public static final int importedKeySetNull = 2;
 
     /**
-     * States that this column stores IN type parameters.
+     * States that the column stores {@code IN} type parameters.
+     * 
+     * @since Android 1.0
      */
     public static final int procedureColumnIn = 1;
 
     /**
-     * States that this column stores INOUT type parameters.
+     * States that this column stores {@code INOUT} type parameters.
+     * 
+     * @since Android 1.0
      */
     public static final int procedureColumnInOut = 2;
 
     /**
-     * States that this column stores OUT type parameters.
+     * States that this column stores {@code OUT} type parameters.
+     * 
+     * @since Android 1.0
      */
     public static final int procedureColumnOut = 4;
 
     /**
-     * States that the column stores results
+     * States that the column stores results.
+     * 
+     * @since Android 1.0
      */
     public static final int procedureColumnResult = 3;
 
     /**
      * States that the column stores return values.
+     * 
+     * @since Android 1.0
      */
     public static final int procedureColumnReturn = 5;
 
     /**
      * States that type of the column is unknown.
+     * 
+     * @since Android 1.0
      */
     public static final int procedureColumnUnknown = 0;
 
     /**
-     * States that <code>NULL</code> values are not permitted.
+     * States that {@code NULL} values are not permitted.
+     * 
+     * @since Android 1.0
      */
     public static final int procedureNoNulls = 0;
 
     /**
      * States that the procedure does not return a result.
+     * 
+     * @since Android 1.0
      */
     public static final int procedureNoResult = 1;
 
     /**
-     * States that <code>NULL</code> values are permitted.
+     * States that {@code NULL} values are permitted.
+     * 
+     * @since Android 1.0
      */
     public static final int procedureNullable = 1;
 
     /**
-     * States that whether <code>NULL</code> values are permitted is unknown.
+     * States that it is unknown whether {@code NULL} values are permitted.
+     * 
+     * @since Android 1.0
      */
     public static final int procedureNullableUnknown = 2;
 
     /**
      * States that it is unknown whether or not the procedure returns a result.
+     * 
+     * @since Android 1.0
      */
     public static final int procedureResultUnknown = 0;
 
     /**
      * States that the procedure returns a result.
+     * 
+     * @since Android 1.0
      */
     public static final int procedureReturnsResult = 2;
 
     /**
-     * States that the value is an SQL99 SQLSTATE value.
+     * States that the value is an SQL99 {@code SQLSTATE} value.
+     * 
+     * @since Android 1.0
      */
     public static final int sqlStateSQL99 = 2;
 
     /**
-     * States that the value is an SQL CLI SQLSTATE value as defined by X/Open
-     * (who are now know as Open Group) .
+     * States that the value is an SQL {@code CLI SQLSTATE} value as defined by
+     * the X/Open standard.
+     * 
+     * @since Android 1.0
      */
     public static final int sqlStateXOpen = 1;
 
     /**
      * States that this table index is a clustered index.
+     * 
+     * @since Android 1.0
      */
     public static final short tableIndexClustered = 1;
 
     /**
      * States that this table index is a hashed index.
+     * 
+     * @since Android 1.0
      */
     public static final short tableIndexHashed = 2;
 
     /**
      * States this table's index is neither a clustered index, not a hashed
      * index, and not a table statistics index; i.e. it is something else.
+     * 
+     * @since Android 1.0
      */
     public static final short tableIndexOther = 3;
 
     /**
      * States this column has the table's statistics, and that it is returned in
      * conjunction with the table's index description.
+     * 
+     * @since Android 1.0
      */
     public static final short tableIndexStatistic = 0;
 
     /**
-     * States that a <code>NULL</code> value is <em>NOT</em> permitted for
+     * States that a {@code NULL} value is <em>NOT</em> permitted for
      * this data type.
+     * 
+     * @since Android 1.0
      */
     public static final int typeNoNulls = 0;
 
     /**
-     * States that a <code>NULL</code> value is permitted for this data type.
+     * States that a {@code NULL} value is permitted for this data type.
+     * 
+     * @since Android 1.0
      */
     public static final int typeNullable = 1;
 
     /**
-     * States that it is unknown if a <code>NULL</code> value is permitted for
+     * States that it is unknown if a {@code NULL} value is permitted for
      * this data type.
+     * 
+     * @since Android 1.0
      */
     public static final int typeNullableUnknown = 2;
 
     /**
-     * States that one can base all WHERE search clauses except WHERE .
+     * States that this column shall not be used for {@code WHERE} statements
+     * with a {@code LIKE} clause.
+     * 
+     * @since Android 1.0
      */
     public static final int typePredBasic = 2;
 
     /**
-     * States that <code>WHERE</code> is the only WHERE search clause that may
-     * be based on this type.
+     * States that this column can only be used in a {@code WHERE...LIKE}
+     * statement.
+     * 
+     * @since Android 1.0
      */
     public static final int typePredChar = 1;
 
     /**
-     * States that this type does not support <code>WHERE</code> search
-     * clauses.
+     * States that this column does not support searches.
+     * 
+     * @since Android 1.0
      */
     public static final int typePredNone = 0;
 
     /**
-     * States that all WHERE search clauses may be based on this type.
+     * States that the column is searchable.
+     * 
+     * @since Android 1.0
      */
     public static final int typeSearchable = 3;
 
@@ -292,35 +390,38 @@ public interface DatabaseMetaData {
     public static final int versionColumnUnknown = 0;
 
     /**
-     * Returns whether all procedures returned by <code>getProcedures</code>
-     * can be called by the current user.
+     * Returns whether all procedures returned by {@link #getProcedures} can be
+     * called by the current user.
      * 
-     * @return <code>true</code> if all procedures can be called by the
-     *         current user, <code>false</code> otherwise.
+     * @return {@code true} if all procedures can be called by the current user,
+     *         {@code false} otherwise.
      * @throws SQLException
-     *             if there is a database error
+     *             if there is a database error.
+     * @since Android 1.0
      */
     public boolean allProceduresAreCallable() throws SQLException;
 
     /**
-     * Returns whether all the tables returned by <code>getTables</code> can
-     * be used by the current user in a SELECT statement.
+     * Returns whether all the tables returned by {@code getTables} can be used
+     * by the current user in a {@code SELECT} statement.
      * 
-     * @return <code>true</code> if all the tables can be used,<code>false</code>
-     *         otherwise
+     * @return {@code true} if all the tables can be used,{@code false}
+     *         otherwise.
      * @throws SQLException
-     *             if there is a database error
+     *             if there is a database error.
+     * @since Android 1.0
      */
     public boolean allTablesAreSelectable() throws SQLException;
 
     /**
-     * Returns if a data definition statement in a transaction forces a commit
-     * of the transaction.
+     * Returns whether a data definition statement in a transaction forces a {@code
+     * commit} of the transaction.
      * 
-     * @return <code>true</code> if the statement forces a commit,
-     *         <code>false</code> otherwise
+     * @return {@code true} if the statement forces a commit, {@code false}
+     *         otherwise.
      * @throws SQLException
-     *             if there is a database error
+     *             if there is a database error.
+     * @since Android 1.0
      */
     public boolean dataDefinitionCausesTransactionCommit() throws SQLException;
 
@@ -328,126 +429,129 @@ public interface DatabaseMetaData {
      * Returns whether the database ignores data definition statements within a
      * transaction.
      * 
-     * @return <code>true</code> if the database ignores a data definition
-     *         statement, <code>false</code> otherwise
+     * @return {@code true} if the database ignores a data definition statement,
+     *         {@code false} otherwise.
      * @throws SQLException
-     *             if there is a database error
+     *             if there is a database error.
+     * @since Android 1.0
      */
     public boolean dataDefinitionIgnoredInTransactions() throws SQLException;
 
     /**
      * Returns whether a visible row delete can be detected by calling
-     * <code>ResultSet.rowDeleted</code>.
+     * {@link ResultSet#rowDeleted}.
      * 
      * @param type
-     *            the type of the ResultSet involved:
-     *            <code>ResultSet.TYPE_FORWARD_ONLY</code>,
-     *            <code>ResultSet.TYPE_SCROLL_INSENSITIVE</code>, or
-     *            <code>ResultSet.TYPE_SCROLL_SENSITIVE</code>
-     * @return <code>true</code> if the visible row delete can be detected,
-     *         <code>false</code> otherwise
+     *            the type of the {@code ResultSet} involved: {@code
+     *            ResultSet.TYPE_FORWARD_ONLY}, {@code
+     *            ResultSet.TYPE_SCROLL_INSENSITIVE}, or {@code
+     *            ResultSet.TYPE_SCROLL_SENSITIVE}
+     * @return {@code true} if the visible row delete can be detected, {@code
+     *         false} otherwise.
      * @throws SQLException
-     *             if there is a database error
+     *             if there is a database error.
+     * @since Android 1.0
      */
     public boolean deletesAreDetected(int type) throws SQLException;
 
     /**
-     * Returns whether the return value of <code>getMaxRowSize</code> includes
-     * the SQL data types <code>LONGVARCHAR</code> and
-     * <code>LONGVARBINARY</code>.
+     * Returns whether the return value of {@code getMaxRowSize} includes the
+     * SQL data types {@code LONGVARCHAR} and {@code LONGVARBINARY}.
      * 
-     * @return <code>true</code> if the return value includes
-     *         <code>LONGVARBINARY</code> and <code>LONGVARCHAR</code>,
-     *         otherwise <code>false</code>.
+     * @return {@code true} if the return value includes {@code LONGVARBINARY}
+     *         and {@code LONGVARCHAR}, otherwise {@code false}.
      * @throws SQLException
-     *             if there is a database error
+     *             if there is a database error.
+     * @since Android 1.0
      */
     public boolean doesMaxRowSizeIncludeBlobs() throws SQLException;
 
     /**
-     * Returns a description of the specified attribute of the specified type
-     * for an SQL User Defined Type (UDT) for a specified schema and catalog.
-     * The descriptions returned are ordered by <code>TYPE_SCHEM</code>,
-     * <code>TYPE_NAME</code> and ORDINAL_POSITION. The descriptions do not
-     * contain inherited attributes.
+     * Returns a {@code ResultSet} describing a subset of the attributes of a 
+     * specified SQL User Defined Type (UDT) for a specified schema and catalog.
+     * The subset is determined by restricting to those attributes whose 
+     * name matches the {@code attributeNamePattern} and whose type name 
+     * matches the {@code typeNamePattern}. Each row of the {@code ResultSet}
+     * describes one attribute, and the rows are ordered by the columns {@code TYPE_SCHEM}, 
+     * {@code TYPE_NAME} and {@code ORDINAL_POSITION}. Inherited attributes
+     * are not included.
      * <p>
-     * The returned ResultSet object has rows with the following column names
-     * and meanings:
+     * The columns of the returned {@code ResultSet} object have the following
+     * names and meanings:
      * <ol>
-     * <li><code>TYPE_CAT</code> - String - the Type Catalog name (possibly
-     * <code>null</code>)</li>
-     * <li><code>TYPE_SCHEM</code> - String - the Type Schema name (possibly
-     * <code>null</code>)</li>
-     * <li><code>TYPE_NAME</code> - String - the Type name</li>
-     * <li><code>ATTR_NAME</code> - String - the Attribute name</li>
-     * <li><code>DATA_TYPE</code> - int - the Attribute type as defined in
-     * <code>java.sql.Types</code></li>
-     * <li><code>ATTR_TYPE_NAME</code> - String - the Attribute type name.
-     * This depends on the data source. For a <code>UDT</code> the name is
-     * fully qualified. For a <code>REF</code> it is both fully qualified and
-     * represents the target type of the reference.</li>
-     * <li><code>ATTR_SIZE</code> - int - the Column size. When referring to
-     * char and date types this value is the maximum number of characters. When
-     * referring to numeric types is is the precision.</li>
-     * <li><code>DECIMAL_DIGITS</code> - int - how many fractional digits are
+     * <li>{@code TYPE_CAT} - String - the type catalog name (possibly {@code
+     * null})</li>
+     * <li>{@code TYPE_SCHEM} - String - the type schema name (possibly {@code
+     * null})</li>
+     * <li>{@code TYPE_NAME} - String - the type name</li>
+     * <li>{@code ATTR_NAME} - String - the attribute name</li>
+     * <li>{@code DATA_TYPE} - int - the attribute type as defined in {@code
+     * java.sql.Types}</li>
+     * <li>{@code ATTR_TYPE_NAME} - String - the attribute type name. This
+     * depends on the data source. For a {@code UDT} the name is fully
+     * qualified. For a {@code REF} it is both fully qualified and represents
+     * the target type of the reference.</li>
+     * <li>{@code ATTR_SIZE} - int - the column size. When referring to char and
+     * date types this value is the maximum number of characters. When referring
+     * to numeric types is is the precision.</li>
+     * <li>{@code DECIMAL_DIGITS} - int - how many fractional digits are
      * supported</li>
-     * <li><code>NUM_PREC_RADIX</code> - int - numeric values radix</li>
-     * <li><code>NULLABLE</code> - int - whether <code>NULL</code> is
-     * permitted:
+     * <li>{@code NUM_PREC_RADIX} - int - numeric values radix</li>
+     * <li>{@code NULLABLE} - int - whether {@code NULL} is permitted:
      * <ul>
-     * <li>DatabaseMetaData.attributeNoNulls - might not allow
-     * <code>NULL</code>s</li>
-     * <li>DatabaseMetaData.attributeNullable - <code>NULL</code>s
-     * definitely permitted</li>
+     * <li>DatabaseMetaData.attributeNoNulls - {@code NULL} values not permitted</li>
+     * <li>DatabaseMetaData.attributeNullable - {@code NULL} values definitely
+     * permitted</li>
      * <li>DatabaseMetaData.attributeNullableUnknown - unknown</li>
      * </ul>
      * </li>
-     * <li><code>REMARKS</code> - String - A comment describing the attribute
-     * (possibly <code>null</code>)</li>
-     * <li>ATTR_DEF - String - Default value for the attribute (possibly
-     * <code>null</code>)</li>
-     * <li><code>SQL_DATA_TYPE</code> - int - not used</li>
+     * <li>{@code REMARKS} - String - a comment describing the attribute
+     * (possibly {@code null})</li>
+     * <li>ATTR_DEF - String - Default value for the attribute (possibly {@code
+     * null})</li>
+     * <li>{@code SQL_DATA_TYPE} - int - not used</li>
      * <li>SQL_DATETIME_SUB - int - not used</li>
-     * <li>CHAR_OCTET_LENGTH - int - For <code>CHAR</code> types, the max
-     * number of bytes in the column</li>
-     * <li>ORDINAL_POSITION - int - The Index of the column in the Table (based
-     * on 1)</li>
-     * <li>IS_NULLABLE - String - "NO" = column does not allow
-     * <code>NULL</code>s, "YES" = column allows <code>NULL</code>s "" =
-     * <code>NULL</code> status unknown</li>
-     * <li><code>SCOPE_CATALOG</code> - String - Catalog for table,
-     * <code>SCOPE</code> of Reference attribute. NULL if
-     * <code>DATA_TYPE</code> is not REF.</li>
-     * <li><code>SCOPE_SCHEMA</code> - String - Schema for table,
-     * <code>SCOPE</code> of Reference attribute. NULL if
-     * <code>DATA_TYPE</code> is not REF.</li>
-     * <li><code>SCOPE_TABLE</code> - String - Table name for
-     * <code>SCOPE</code> of Reference attribute. <code>NULL</code> if
-     * <code>DATA_TYPE</code> is not REF.</li>
-     * <li><code>SOURCE_DATA_TYPE</code> - String - The source type for user
-     * generated REF type or for a Distinct type. (<code>NULL</code> if
-     * <code>DATA_TYPE</code> is not DISTINCT or user generated REF)</li>
+     * <li>CHAR_OCTET_LENGTH - int - for {@code CHAR} types, the max number of
+     * bytes in the column</li>
+     * <li>ORDINAL_POSITION - int - The index of the column in the table (where
+     * the count starts from 1, not 0)</li>
+     * <li>IS_NULLABLE - String - {@code "NO"} = the column does not allow {@code
+     * NULL}s, {@code "YES"} = the column allows {@code NULL}s, "" = status unknown</li>
+     * <li>{@code SCOPE_CATALOG} - String - if the {@code DATA_TYPE} is {@code REF}, 
+     * this gives the catalog of the table corresponding to the attribute's scope. 
+     * NULL if the {@code DATA_TYPE} is not REF.</li>
+     * <li>{@code SCOPE_SCHEMA} - String - if the {@code DATA_TYPE} is {@code REF}, 
+     * this gives the schema of the table corresponding to the attribute's scope. 
+     * NULL if the {@code DATA_TYPE} is not REF.</li>
+     * <li>{@code SCOPE_TABLE} - String - if the {@code DATA_TYPE} is {@code REF}, 
+     * this gives the name of the table corresponding to the attribute's scope. 
+     * NULL if the {@code DATA_TYPE} is not REF.</li>
+     * <li>{@code SOURCE_DATA_TYPE} - String - The source type for a user
+     * generated REF type or for a Distinct type. ({@code NULL} if {@code
+     * DATA_TYPE} is not DISTINCT or a user generated REF)</li>
      * </ol>
+     * </p>
      * 
      * @param catalog
-     *            a Catalog Name. <code>null</code> is used to imply no
-     *            narrowing of the search using Catalog Name. Otherwise, the
-     *            name must match a Catalog Name held in the database, with ""
-     *            used to retrieve those without a Catalog Name.
+     *            a catalog name. {@code null} is used to imply no narrowing of
+     *            the search by catalog name. Otherwise, the name must match a
+     *            catalog name held in the database, with "" used to retrieve
+     *            those without a catalog name.
      * @param schemaPattern
-     *            a Schema Name Pattern. <code>null</code> is used to imply no
-     *            narrowing of the search using Schema Name. Otherwise, the name
-     *            must match a Schema name in the database, with "" used to
-     *            retrieve those without a Schema name.
+     *            a schema name pattern. {@code null} is used to imply no
+     *            narrowing of the search by a schema name. Otherwise, the name
+     *            must match a schema name in the database, with "" used to
+     *            retrieve those without a schema name.
      * @param typeNamePattern
-     *            a Type name. This pattern must match the type name stored in
+     *            a type name. This pattern must match the type name stored in
      *            the database.
      * @param attributeNamePattern
-     *            an Attribute name. Must match the attribute name as stored in
+     *            an Attribute name. This pattern must match the attribute name as stored in
      *            the database.
-     * @return a ResultSet, where each Row is an attribute description
+     * @return a {@code ResultSet}, where each row is an attribute description.
      * @throws SQLException
-     *             if there is a database error
+     *             if there is a database error.
+     * @since Android 1.0
      */
     public ResultSet getAttributes(String catalog, String schemaPattern,
             String typeNamePattern, String attributeNamePattern)
@@ -455,66 +559,64 @@ public interface DatabaseMetaData {
 
     /**
      * Returns a list of a table's optimal set of columns that uniquely
-     * identifies a row. The results are ordered by <code>SCOPE</code> (see
-     * below).
+     * identify the rows. The results are ordered by {@code SCOPE} (see below).
      * <p>
      * The results are returned as a table, with one entry for each column, as
      * follows:
      * <ol>
-     * <li><code>SCOPE</code> - short - the <code>SCOPE</code> of the
-     * result, as follows:
+     * <li>{@code SCOPE} - short - the {@code SCOPE} of the result, as follows:
      * <ul>
-     * <li>DatabaseMetaData.bestRowTemporary - very temporary, while using row
-     * </li>
-     * <li>DatabaseMetaData.bestRowTransaction - good for remainder of current
-     * transaction </li>
-     * <li>DatabaseMetaData.bestRowSession - good for remainder of database
-     * session </li>
+     * <li>{@code DatabaseMetaData.bestRowTemporary} - the result is very temporary, 
+     * only valid while on the current row</li>
+     * <li>{@code DatabaseMetaData.bestRowTransaction} - the result is good for remainder of
+     * current transaction</li>
+     * <li>{@code DatabaseMetaData.bestRowSession} - the result is good for remainder of
+     * database session</li>
      * </ul>
      * </li>
-     * <li><code>COLUMN_NAME</code> - String - the column name </li>
-     * <li><code>DATA_TYPE</code> - int - the Type of the data, as defined in
-     * <code>java.sql.Types</code> </li>
-     * <li><code>TYPE_NAME</code> - String - Name of the type - database
-     * dependent. For UDT types the name is fully qualified </li>
-     * <li><code>COLUMN_SIZE</code> - int - The precision of the data in the
-     * column </li>
-     * <li><code>BUFFER_LENGTH</code> - int - not used </li>
-     * <li><code>DECIMAL_DIGITS</code> - short - number of fractional digits
-     * </li>
-     * <li><code>PSEUDO_COLUMN</code> - short - whether this is a pseudo
-     * column eg. and Oracle ROWID:
+     * <li>{@code COLUMN_NAME} - String - the column name</li>
+     * <li>{@code DATA_TYPE} - int - the Type of the data, as defined in {@code
+     * java.sql.Types}</li>
+     * <li>{@code TYPE_NAME} - String - the Name of the type - database dependent.
+     * For UDT types the name is fully qualified</li>
+     * <li>{@code COLUMN_SIZE} - int - the precision of the data in the column</li>
+     * <li>{@code BUFFER_LENGTH} - int - not used</li>
+     * <li>{@code DECIMAL_DIGITS} - short - number of fractional digits</li>
+     * <li>{@code PSEUDO_COLUMN} - short - whether this is a pseudo column (e.g.
+     * an Oracle {@code ROWID}):
      * <ul>
-     * <li>DatabaseMetaData.bestRowUnknown - don't know whether this is a
-     * pseudo column</li>
-     * <li>DatabaseMetaData.bestRowNotPseudo - column is not pseudo</li>
-     * <li>DatabaseMetaData.bestRowPseudo - column is a pseudo column</li>
+     * <li>{@code DatabaseMetaData.bestRowUnknown} - it is not known whether this is
+     * a pseudo column</li>
+     * <li>{@code DatabaseMetaData.bestRowNotPseudo} - the column is not pseudo</li>
+     * <li>{@code DatabaseMetaData.bestRowPseudo} - the column is a pseudo column</li>
      * </ul>
      * </li>
      * </ol>
+     * </p>
      * 
      * @param catalog
-     *            a Catalog Name. <code>null</code> is used to imply no
-     *            narrowing of the search using Catalog Name. Otherwise, the
-     *            name must match a Catalog Name held in the database, with ""
-     *            used to retrieve those without a Catalog Name.
+     *            a catalog name. {@code null} is used to imply no narrowing of
+     *            the search by catalog name. Otherwise, the name must match a
+     *            catalog name held in the database, with "" used to retrieve
+     *            those without a catalog name.
      * @param schema
-     *            a Schema Name Pattern. <code>null</code> is used to imply no
-     *            narrowing of the search using Schema Name. Otherwise, the name
-     *            must match a Schema name in the database, with "" used to
-     *            retrieve those without a Schema name.
+     *            a schema name pattern. {@code null} is used to imply no
+     *            narrowing of the search by schema name. Otherwise, the name
+     *            must match a schema name in the database, with "" used to
+     *            retrieve those without a schema name.
      * @param table
      *            the table name. This must match the name of the table as
      *            declared in the database.
      * @param scope
-     *            the <code>SCOPE</code> of interest, values as defined above
+     *            the {@code SCOPE} of interest, values as defined above.
      * @param nullable
-     *            <code>true</code> = include columns that are nullable,
-     *            <code>false</code> = do not include
-     * @return a ResultSet where each row is a description of a column and the
-     *         complete set of rows is the optimal set for this table.
+     *            {@code true} = include columns that are nullable, {@code
+     *            false} = do not include nullable columns.
+     * @return a {@code ResultSet} where each row is a description of a column
+     *         and the complete set of rows is the optimal set for this table.
      * @throws SQLException
-     *             if there is a database error
+     *             if there is a database error.
+     * @since Android 1.0
      */
     public ResultSet getBestRowIdentifier(String catalog, String schema,
             String table, int scope, boolean nullable) throws SQLException;
@@ -523,11 +625,12 @@ public interface DatabaseMetaData {
      * Returns the set of catalog names available in this database. The set is
      * returned ordered by catalog name.
      * 
-     * @return a ResultSet containing the Catalog names, with each row
-     *         containing one Catalog name contained as a String in the single
-     *         column named <code>TABLE_CAT</code>.
+     * @return a {@code ResultSet} containing the catalog names, with each row
+     *         containing one catalog name (as a {@code String}) in the
+     *         single column named {@code TABLE_CAT}.
      * @throws SQLException
-     *             if there is a database error
+     *             if there is a database error.
+     * @since Android 1.0
      */
     public ResultSet getCatalogs() throws SQLException;
 
@@ -535,18 +638,20 @@ public interface DatabaseMetaData {
      * Returns the separator that this database uses between a catalog name and
      * table name.
      * 
-     * @return a String containing the separator
+     * @return a String containing the separator.
      * @throws SQLException
-     *             if there is a database error
+     *             if there is a database error.
+     * @since Android 1.0
      */
     public String getCatalogSeparator() throws SQLException;
 
     /**
      * Returns the term that the database vendor prefers term for "catalog".
      * 
-     * @return a String with the vendor's term for "catalog"
+     * @return a String with the vendor's term for "catalog".
      * @throws SQLException
-     *             if there is a database error
+     *             if there is a database error.
+     * @since Android 1.0
      */
     public String getCatalogTerm() throws SQLException;
 
@@ -554,128 +659,124 @@ public interface DatabaseMetaData {
      * Returns a description of access rights for a table's columns. Only access
      * rights matching the criteria for the column name are returned.
      * <p>
-     * The description is returned as a ResultSet with rows of data for each
-     * access right, with columns as follows:
+     * The description is returned as a {@code ResultSet} with rows of data for
+     * each access right, with columns as follows:
      * <ol>
-     * <li><code>TABLE_CAT</code> - String - Catalog name (possibly
-     * <code>null</code>)</li>
-     * <li><code>TABLE_SCHEM</code> - String - Schema name (possibly
-     * <code>null</code>) </li>
-     * <li><code>TABLE_NAME</code> - String - The Table name </li>
-     * <li><code>COLUMN_NAME</code> - String - The Column name</li>
-     * <li><code>GRANTOR</code> - String - The grantor of access (possibly
-     * <code>null</code>)</li>
-     * <li><code>PRIVILEGE</code> - String - Access right - one of SELECT,
-     * INSERT, UPDATE, REFERENCES,...</li>
-     * <li><code>IS_GRANTABLE</code> - String - "YES" implies that the
-     * receiver can grant access to others, "NO" if the receiver cannot grant
-     * access to others, <code>null</code> if unknown.</li>
+     * <li>{@code TABLE_CAT} - String - the catalog name (possibly {@code null})</li>
+     * <li>{@code TABLE_SCHEM} - String - the schema name (possibly {@code null})</li>
+     * <li>{@code TABLE_NAME} - String - the table name</li>
+     * <li>{@code COLUMN_NAME} - String - the Column name</li>
+     * <li>{@code GRANTOR} - String - the grantor of access (possibly {@code
+     * null})</li>
+     * <li>{@code PRIVILEGE} - String - Access right - one of SELECT, INSERT,
+     * UPDATE, REFERENCES,...</li>
+     * <li>{@code IS_GRANTABLE} - String - {@code "YES"} implies that the
+     * receiver can grant access to others, {@code "NO"} if the receiver cannot
+     * grant access to others, {@code null} if unknown.</li>
      * </ol>
+     * </p>
      * 
      * @param catalog
-     *            a Catalog Name. <code>null</code> is used to imply no
-     *            narrowing of the search using Catalog Name. Otherwise, the
-     *            name must match a Catalog Name held in the database, with ""
-     *            used to retrieve those without a Catalog Name.
+     *            a catalog name. {@code null} is used to imply no narrowing of
+     *            the search by catalog name. Otherwise, the name must match a
+     *            catalog name held in the database, with "" used to retrieve
+     *            those without a catalog name.
      * @param schema
-     *            a Schema Name Pattern. <code>null</code> is used to imply no
-     *            narrowing of the search using Schema Name. Otherwise, the name
-     *            must match a Schema name in the database, with "" used to
-     *            retrieve those without a Schema name.
+     *            a schema name pattern. {@code null} is used to imply no
+     *            narrowing of the search by schema name. Otherwise, the name
+     *            must match a schema name in the database, with "" used to
+     *            retrieve those without a schema name.
      * @param table
      *            the table name. This must match the name of the table as
      *            declared in the database.
      * @param columnNamePattern
      *            the column name. This must match the name of a column in the
      *            table in the database.
-     * @return a ResultSet containing the access rights, one row for each
-     *         privilege description
+     * @return a {@code ResultSet} containing the access rights, one row for
+     *         each privilege description.
      * @throws SQLException
-     *             if there is a database error
+     *             if there is a database error.
+     * @since Android 1.0
      */
     public ResultSet getColumnPrivileges(String catalog, String schema,
             String table, String columnNamePattern) throws SQLException;
 
     /**
      * Returns a description of table columns available in a specified catalog.
-     * Only descriptions meeting the specified Catalog, Schema, Table and Column
+     * Only descriptions meeting the specified catalog, schema, table, and column
      * names are returned.
      * <p>
-     * The descriptions are returned as a ResultSet conforming to the following
-     * data layout, with one row per table column:
+     * The descriptions are returned as a {@code ResultSet} conforming to the
+     * following data layout, with one row per table column:
      * <ol>
-     * <li><code>TABLE_CAT</code> - String - Catalog name (possibly
-     * <code>null</code>)</li>
-     * <li><code>TABLE_SCHEM</code> - String - Schema name (possibly
-     * <code>null</code>) </li>
-     * <li><code>TABLE_NAME</code> - String - The Table name </li>
-     * <li><code>COLUMN_NAME</code> - String - The Column name</li>
-     * <li><code>DATA_TYPE</code> - int - The SQL type as specified in
-     * <code>java.sql.Types</code></li>
-     * <li><code>TYPE_NAME</code> - String - Name for the data type, depends
-     * on database, UDT names are fully qualified</li>
-     * <li><code>COLUMN_SIZE</code> - int - Column size - the precision for
-     * numeric types, max characters for char and date types</li>
-     * <li><code>BUFFER_LENGTH</code> - int - Not used </li>
-     * <li><code>DECIMAL_DIGITS</code> - int - maximum number of fractional
-     * digits </li>
-     * <li><code>NUM_PREC_RADIX</code> - int - the Radix </li>
-     * <li><code>NULLABLE</code> - int - does the column allow
-     * <code>null</code>s:
+     * <li>{@code TABLE_CAT} - String - the catalog name (possibly {@code null})</li>
+     * <li>{@code TABLE_SCHEM} - String - the schema name (possibly {@code null})</li>
+     * <li>{@code TABLE_NAME} - String - the table name</li>
+     * <li>{@code COLUMN_NAME} - String - the column name</li>
+     * <li>{@code DATA_TYPE} - int - the SQL type as specified in {@code
+     * java.sql.Types}</li>
+     * <li>{@code TYPE_NAME} - String - the name of the data type, (database-dependent, 
+     * UDT names are fully qualified)</li>
+     * <li>{@code COLUMN_SIZE} - int - the column size (the precision for numeric
+     * types, max characters for {@code char} and {@code date} types)</li>
+     * <li>{@code BUFFER_LENGTH} - int - Not used</li>
+     * <li>{@code DECIMAL_DIGITS} - int - maximum number of fractional digits</li>
+     * <li>{@code NUM_PREC_RADIX} - int - the radix for numerical types</li>
+     * <li>{@code NULLABLE} - int - whether the column allows {@code null}s:
      * <ul>
-     * <li>DatabaseMetaData.columnNoNulls = may not allow <code>NULL</code>s</li>
-     * <li>DatabaseMetaData.columnNullable = does allow <code>NULL</code>s</li>
-     * <li>DatabaseMetaData.columnNullableUnknown = unknown <code>NULL</code>
-     * status</li>
+     * <li>DatabaseMetaData.columnNoNulls = may not allow {@code NULL}s</li>
+     * <li>DatabaseMetaData.columnNullable = does allow {@code NULL}s</li>
+     * <li>DatabaseMetaData.columnNullableUnknown = unknown {@code NULL} status</li>
      * </ul>
      * </li>
-     * <li><code>REMARKS</code> - String - A description of the column
-     * (possibly <code>null</code>) </li>
-     * <li><code>COLUMN_DEF</code> - String - Default value for the column
-     * (possibly <code>null</code>)</li>
-     * <li><code>SQL_DATA_TYPE</code> - int - not used </li>
-     * <li><code>SQL_DATETIME_SUB</code> - int - not used </li>
-     * <li><code>CHAR_OCTET_LENGTH</code> - int - maximum number of bytes in
-     * the char type columns </li>
-     * <li><code>ORDINAL_POSITION</code> - int - Column index in the table (1
-     * based) </li>
-     * <li><code>IS_NULLABLE</code> - String - "NO" = column does not allow
-     * NULLs, "YES" = column allows NULLs "" = <code>NULL</code> status
+     * <li>{@code REMARKS} - String - A description of the column (possibly
+     * {@code null})</li>
+     * <li>{@code COLUMN_DEF} - String - Default value for the column (possibly
+     * {@code null})</li>
+     * <li>{@code SQL_DATA_TYPE} - int - not used</li>
+     * <li>{@code SQL_DATETIME_SUB} - int - not used</li>
+     * <li>{@code CHAR_OCTET_LENGTH} - int - maximum number of bytes in the
+     * {@code char} type columns</li>
+     * <li>{@code ORDINAL_POSITION} - int - the column index in the table (1 based)</li>
+     * <li>{@code IS_NULLABLE} - String - {@code "NO"} = column does not allow
+     * NULLs, {@code "YES"} = column allows NULLs, "" = {@code NULL} status
      * unknown</li>
-     * <li><code>SCOPE</code>_CATALOG - String - Catalog for table,
-     * <code>SCOPE</code> of Reference attribute. NULL if
-     * <code>DATA_TYPE</code> is not REF.</li>
-     * <li><code>SCOPE_SCHEMA</code> - String - Schema for table, scope of
-     * Reference attribute. <code>NULL</code> if <code>DATA_TYPE</code> is
-     * not REF.</li>
-     * <li><code>SCOPE_TABLE</code> - String - Table name for scope of
-     * Reference attribute. <code>NULL</code> if <code>DATA_TYPE</code> is
-     * not REF.</li>
-     * <li><code>SOURCE_DATA_TYPE</code> - String - The source type for user
-     * generated REF type or for a Distinct type. (<code>NULL</code> if
-     * <code>DATA_TYPE</code> is not DISTINCT or user generated REF)</li>
+     * <li>{@code SCOPE_CATALOG} - String - if the {@code DATA_TYPE} is {@code REF}, 
+     * this gives the catalog of the table corresponding to the attribute's scope. 
+     * NULL if the {@code DATA_TYPE} is not REF.</li>
+     * <li>{@code SCOPE_SCHEMA} - String - if the {@code DATA_TYPE} is {@code REF}, 
+     * this gives the schema of the table corresponding to the attribute's scope. 
+     * NULL if the {@code DATA_TYPE} is not REF.</li>
+     * <li>{@code SCOPE_TABLE} - String - if the {@code DATA_TYPE} is {@code REF}, 
+     * this gives the name of the table corresponding to the attribute's scope. 
+     * NULL if the {@code DATA_TYPE} is not REF.</li>
+     * <li>{@code SOURCE_DATA_TYPE} - String - The source type for a user
+     * generated REF type or for a Distinct type. ({@code NULL} if {@code
+     * DATA_TYPE} is not DISTINCT or a user generated REF)</li>
      * </ol>
+     * </p>
      * 
      * @param catalog
-     *            a Catalog Name. <code>null</code> is used to imply no
-     *            narrowing of the search using Catalog Name. Otherwise, the
-     *            name must match a Catalog Name held in the database, with ""
-     *            used to retrieve those without a Catalog Name.
+     *            a catalog name. {@code null} is used to imply no narrowing of
+     *            the search by catalog name. Otherwise, the name must match a
+     *            catalog name held in the database, with "" used to retrieve
+     *            those without a catalog name.
      * @param schemaPattern
-     *            a Schema Name Pattern. <code>null</code> is used to imply no
-     *            narrowing of the search using Schema Name. Otherwise, the name
-     *            must match a Schema name in the database, with "" used to
-     *            retrieve those without a Schema name.
+     *            a schema name pattern. {@code null} is used to imply no
+     *            narrowing of the search by schema name. Otherwise, the name
+     *            must match a schema name in the database, with "" used to
+     *            retrieve those without a schema name.
      * @param tableNamePattern
      *            the table name. This must match the name of the table as
      *            declared in the database.
      * @param columnNamePattern
      *            the column name. This must match the name of a column in the
      *            table in the database.
-     * @return the descriptions as a ResultSet with rows in the form defined
-     *         above
+     * @return the descriptions as a {@code ResultSet} with rows in the form
+     *         defined above.
      * @throws SQLException
-     *             if there is a database error
+     *             if there is a database error.
+     * @since Android 1.0
      */
     public ResultSet getColumns(String catalog, String schemaPattern,
             String tableNamePattern, String columnNamePattern)
@@ -684,9 +785,10 @@ public interface DatabaseMetaData {
     /**
      * Returns the database connection that created this metadata.
      * 
-     * @return the connection
+     * @return the connection to the database.
      * @throws SQLException
-     *             if there is a database error
+     *             if there is a database error.
+     * @since Android 1.0
      */
     public Connection getConnection() throws SQLException;
 
@@ -696,96 +798,98 @@ public interface DatabaseMetaData {
      * describes how one table imports the key of another table. It would be
      * expected to return a single foreign key - primary key pair in most cases.
      * <p>
-     * The descriptions are returned as a ResultSet with one row for each
-     * Foreign key, with the following layout:
+     * The descriptions are returned as a {@code ResultSet} with one row for
+     * each foreign key, with the following layout:
      * <ol>
-     * <li><code>PKTABLE_CAT</code> - String - from the primary key table :
-     * Catalog (possibly <code>null</code>)</li>
-     * <li><code>PKTABLE_SCHEM</code> - String - from the primary key table :
-     * Schema (possibly <code>null</code>) </li>
-     * <li><code>PKTABLE_NAME</code> - String - primary key table : name
-     * </li>
-     * <li><code>PKCOLUMN_NAME</code> - String - primary key column : name</li>
-     * <li><code>FKTABLE_CAT</code> - String - from the foreign key table :
-     * the catalog name being exported (possibly <code>null</code>)</li>
-     * <li><code>FKTABLE_SCHEM</code> - String - foreign key table : Schema
-     * name being exported (possibly <code>null</code>) </li>
-     * <li><code>FKTABLE_NAME</code> - String - foreign key table : the name
-     * being exported</li>
-     * <li><code>FKCOLUMN_NAME</code> - String - foreign key column : the
-     * name being exported</li>
-     * <li><code>KEY_SEQ</code> - short - sequence number (in the foreign
-     * key)</li>
-     * <li><code>UPDATE_RULE</code> - short - how to treat foreign key when
-     * primary key is updated:
+     * <li>{@code PKTABLE_CAT} - String - from the primary key table : Catalog
+     * (possibly {@code null})</li>
+     * <li>{@code PKTABLE_SCHEM} - String - from the primary key table : Schema
+     * (possibly {@code null})</li>
+     * <li>{@code PKTABLE_NAME} - String - from the primary key table : name</li>
+     * <li>{@code PKCOLUMN_NAME} - String - from the primary key column : name</li>
+     * <li>{@code FKTABLE_CAT} - String - from the foreign key table : the
+     * catalog name being exported (possibly {@code null})</li>
+     * <li>{@code FKTABLE_SCHEM} - String - from the foreign key table : the schema name
+     * being exported (possibly {@code null})</li>
+     * <li>{@code FKTABLE_NAME} - String - from the foreign key table : the name being
+     * exported</li>
+     * <li>{@code FKCOLUMN_NAME} - String - from the foreign key column : the name being
+     * exported</li>
+     * <li>{@code KEY_SEQ} - short - the sequence number (in the foreign key)</li>
+     * <li>{@code UPDATE_RULE} - short - a value giving the rule for how to treat the corresponding foreign key when a primary
+     * key is updated:
      * <ul>
-     * <li>DatabaseMetaData.importedKeyNoAction - don't allow update of primary
-     * key if imported</li>
-     * <li>DatabaseMetaData.importedKeyCascade - change imported key to match
-     * the primary key update</li>
-     * <li>DatabaseMetaData.importedKeySetNull - set the imported key to
-     * <code>null</code></li>
-     * <li>DatabaseMetaData.importedKeySetDefault - set the imported key to
-     * default values</li>
-     * <li>DatabaseMetaData.importedKeyRestrict - same as importedKeyNoAction</li>
+     * <li>{@code DatabaseMetaData.importedKeyNoAction} - don't allow the
+     * primary key to be updated if it is imported as a foreign key</li>
+     * <li>{@code DatabaseMetaData.importedKeyCascade} - change the imported key to
+     * match the updated primary key</li>
+     * <li>{@code DatabaseMetaData.importedKeySetNull} - set the imported key to
+     * {@code null}</li>
+     * <li>{@code DatabaseMetaData.importedKeySetDefault} - set the imported key
+     * to its default value</li>
+     * <li>{@code DatabaseMetaData.importedKeyRestrict} - same as {@code
+     * importedKeyNoAction}</li>
      * </ul>
      * </li>
-     * <li><code>DELETE_RULE</code> - short - how to treat foreign key when
-     * primary key is deleted:
+     * <li>{@code DELETE_RULE} - short - a value giving the rule for how to treat the foreign key when the corresponding primary
+     * key is deleted:
      * <ul>
-     * <li>DatabaseMetaData.importedKeyNoAction - don't allow delete of primary
-     * key if imported</li>
-     * <li>DatabaseMetaData.importedKeyCascade - delete those rows that import
-     * a deleted key</li>
-     * <li>DatabaseMetaData.importedKeySetNull - set the imported key to
-     * <code>null</code></li>
-     * <li>DatabaseMetaData.importedKeySetDefault - set the imported key to
-     * default values</li>
-     * <li>DatabaseMetaData.importedKeyRestrict - same as importedKeyNoAction</li>
+     * <li>{@code DatabaseMetaData.importedKeyNoAction} - don't allow the
+     * primary key to be deleted if it is imported as a foreign key</li>
+     * <li>{@code DatabaseMetaData.importedKeyCascade} - delete those rows that
+     * import a deleted key</li>
+     * <li>{@code DatabaseMetaData.importedKeySetNull} - set the imported key to
+     * {@code null}</li>
+     * <li>{@code DatabaseMetaData.importedKeySetDefault} - set the imported key
+     * to its default value</li>
+     * <li>{@code DatabaseMetaData.importedKeyRestrict} - same as
+     * importedKeyNoAction</li>
      * </ul>
      * </li>
-     * <li>FK_NAME - String - foreign key name (possibly <code>null</code>)</li>
-     * <li>PK_NAME - String - primary key name (possibly <code>null</code>)</li>
-     * <li>DEFERRABILITY - short - can foreign key constraints be deferred
-     * until commit (see SQL92 specification for definitions)?:
+     * <li>{@code FK_NAME} - String - the foreign key name (possibly {@code null})</li>
+     * <li>{@code PK_NAME} - String - the primary key name (possibly {@code null})</li>
+     * <li>{@code DEFERRABILITY} - short - whether foreign key constraints can be
+     * deferred until commit (see the SQL92 specification for definitions):
      * <ul>
-     * <li>DatabaseMetaData.importedKeyInitiallyDeferred</li>
-     * <li>DatabaseMetaData.importedKeyInitiallyImmediate</li>
-     * <li>DatabaseMetaData.importedKeyNotDeferrable</li>
+     * <li>{@code DatabaseMetaData.importedKeyInitiallyDeferred}</li>
+     * <li>{@code DatabaseMetaData.importedKeyInitiallyImmediate}</li>
+     * <li>{@code DatabaseMetaData.importedKeyNotDeferrable}</li>
      * </ul>
      * </li>
      * </ol>
+     * </p>
      * 
      * @param primaryCatalog
-     *            a Catalog Name. <code>null</code> is used to imply no
-     *            narrowing of the search using Catalog Name. Otherwise, the
-     *            name must match a Catalog Name held in the database, with ""
-     *            used to retrieve those without a Catalog Name.
+     *            a catalog name for the primary key table. {@code null} is used to imply no narrowing of
+     *            the search by catalog name. Otherwise, the name must match a
+     *            catalog name held in the database, with "" used to retrieve
+     *            those without a catalog name.
      * @param primarySchema
-     *            a Schema Name. <code>null</code> is used to imply no
-     *            narrowing of the search using Schema Name. Otherwise, the name
-     *            must match a Schema name in the database, with "" used to
-     *            retrieve those without a Schema name.
+     *            a schema name for the primary key table. {@code null} is used to imply no narrowing of
+     *            the search by schema name. Otherwise, the name must match a
+     *            schema name in the database, with "" used to retrieve those
+     *            without a schema name.
      * @param primaryTable
      *            the name of the table which exports the key. It must match the
-     *            name of the table in the database
+     *            name of the table in the database.
      * @param foreignCatalog
-     *            a Catalog Name. <code>null</code> is used to imply no
-     *            narrowing of the search using Catalog Name. Otherwise, the
-     *            name must match a Catalog Name held in the database, with ""
-     *            used to retrieve those without a Catalog Name.
+     *            a catalog name for the foreign key table. {@code null} is used to imply no narrowing of
+     *            the search by catalog name. Otherwise, the name must match a
+     *            catalog name held in the database, with "" used to retrieve
+     *            those without a catalog name.
      * @param foreignSchema
-     *            a Schema Name. <code>null</code> is used to imply no
-     *            narrowing of the search using Schema Name. Otherwise, the name
-     *            must match a Schema name in the database, with "" used to
-     *            retrieve those without a Schema name.
+     *            a schema name for the foreign key table. {@code null} is used to imply no narrowing of
+     *            the search by schema name. Otherwise, the name must match a
+     *            schema name in the database, with "" used to retrieve those
+     *            without a schema name.
      * @param foreignTable
      *            the name of the table importing the key. It must match the
-     *            name of the table in the database
-     * @return a ResultSet containing rows with the descriptions of the foreign
-     *         keys laid out according to the format defined above.
+     *            name of the table in the database.
+     * @return a {@code ResultSet} containing rows with the descriptions of the
+     *         foreign keys laid out according to the format defined above.
      * @throws SQLException
-     *             if there is a database error
+     *             if there is a database error.
+     * @since Android 1.0
      */
     public ResultSet getCrossReference(String primaryCatalog,
             String primarySchema, String primaryTable, String foreignCatalog,
@@ -794,83 +898,95 @@ public interface DatabaseMetaData {
     /**
      * Returns the major version number of the database software.
      * 
-     * @return the Major version number of the database software.
+     * @return the major version number of the database software.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public int getDatabaseMajorVersion() throws SQLException;
 
     /**
      * Returns the minor version number of the database software.
      * 
-     * @return the Minor version number of the database software.
+     * @return the minor version number of the database software.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public int getDatabaseMinorVersion() throws SQLException;
 
     /**
      * Returns the name of the database software.
      * 
-     * @return a String with the name of the database software.
+     * @return a {@code String} with the name of the database software.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public String getDatabaseProductName() throws SQLException;
 
     /**
      * Returns the version number of this database software.
      * 
-     * @return a String with the version number of the database software.
+     * @return a {@code String} with the version number of the database
+     *         software.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public String getDatabaseProductVersion() throws SQLException;
 
     /**
      * Returns the default transaction isolation level for this database.
      * 
-     * @return the default transaction isolation level. One of
-     *         <code>TRANSACTION_NONE</code>,
-     *         <code>TRANSACTION_READ_COMMITTED</code>,
-     *         <code>TRANSACTION_READ_UNCOMMITTED</code>,
-     *         <code>TRANSACTION_REPEATABLE_READ</code> or
-     *         <code>TRANSACTION_SERIALIZABLE</code>.
+     * @return the default transaction isolation level. One of the following values:
+     *         <ul>
+     *         <li>{@code TRANSACTION_NONE}</li>
+     *         <li>{@code TRANSACTION_READ_COMMITTED}</li>
+     *         <li>{@code TRANSACTION_READ_UNCOMMITTED}</li>
+     *         <li>{@code TRANSACTION_REPEATABLE_READ}</li>
+     *         <li>{@code TRANSACTION_SERIALIZABLE}</li>
+     *         </ul>
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public int getDefaultTransactionIsolation() throws SQLException;
 
     /**
      * Returns the JDBC driver's major version number.
      * 
-     * @return the driver's major version number
+     * @return the driver's major version number.
+     * @since Android 1.0
      */
     public int getDriverMajorVersion();
 
     /**
      * Returns the JDBC driver's minor version number.
      * 
-     * @return the driver's minor version number
+     * @return the driver's minor version number.
+     * @since Android 1.0
      */
     public int getDriverMinorVersion();
 
     /**
      * Returns the name of this JDBC driver.
      * 
-     * @return a String containing the name of the JDBC driver
+     * @return a {@code String} containing the name of the JDBC driver
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public String getDriverName() throws SQLException;
 
     /**
      * Returns the version number of this JDBC driver.
      * 
-     * @return a String containing the complete version number of the JDBC
-     *         driver
+     * @return a {@code String} containing the complete version number of the
+     *         JDBC driver.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public String getDriverVersion() throws SQLException;
 
@@ -878,95 +994,101 @@ public interface DatabaseMetaData {
      * Returns a list of the foreign key columns that reference the primary key
      * columns of a specified table (the foreign keys exported by a table).
      * <p>
-     * The list is returned as a ResultSet with a row for each of the foreign
-     * key columns, ordered by <code>FKTABLE_CAT</code>,
-     * <code>FKTABLE_SCHEM</code>, <code>FKTABLE_NAME</code>, and
-     * <code>KEY_SEQ</code>, with the format for each row being:
+     * The list is returned as a {@code ResultSet} with a row for each of the
+     * foreign key columns, ordered by {@code FKTABLE_CAT}, {@code
+     * FKTABLE_SCHEM}, {@code FKTABLE_NAME}, and {@code KEY_SEQ}, with the
+     * format for each row being:
      * <ol>
-     * <li><code>PKTABLE_CAT</code> - String - primary key table : Catalog
-     * (possibly <code>null</code>)</li>
-     * <li><code>PKTABLE_SCHEM</code> - String - primary key table : Schema
-     * (possibly <code>null</code>) </li>
-     * <li><code>PKTABLE_NAME</code> - String - primary key table : name
-     * </li>
-     * <li><code>PKCOLUMN_NAME</code> - String - primary key column : name</li>
-     * <li><code>FKTABLE_CAT</code> - String - foreign key table : Catalog
-     * name being exported (possibly <code>null</code>)</li>
-     * <li><code>FKTABLE_SCHEM</code> - String - foreign key table : Schema
-     * name being exported (possibly <code>null</code>) </li>
-     * <li><code>FKTABLE_NAME</code> - String - foreign key table : name
-     * being exported</li>
-     * <li><code>FKCOLUMN_NAME</code> - String - foreign key column : name
-     * being exported</li>
-     * <li>KEY_SEQ - short - sequence number in the foreign key</li>
-     * <li>UPDATE_RULE - short - how to treat foreign key when primary key is
-     * updated:
+     * <li>{@code PKTABLE_CAT} - String - from the primary key table : the catalog (possibly
+     * {@code null})</li>
+     * <li>{@code PKTABLE_SCHEM} - String - from the primary key table : the schema (possibly
+     * {@code null})</li>
+     * <li>{@code PKTABLE_NAME} - String - from the primary key table : the name</li>
+     * <li>{@code PKCOLUMN_NAME} - String - from the primary key column : the name</li>
+     * <li>{@code FKTABLE_CAT} - String - from the foreign key table : the catalog name being
+     * exported (possibly {@code null})</li>
+     * <li>{@code FKTABLE_SCHEM} - String - from the foreign key table : the schema name
+     * being exported (possibly {@code null})</li>
+     * <li>{@code FKTABLE_NAME} - String - from the foreign key table : the name being
+     * exported</li>
+     * <li>{@code FKCOLUMN_NAME} - String - from the foreign key column : the name being
+     * exported</li>
+     * <li>{@code KEY_SEQ} - short - the sequence number (in the foreign key)</li>
+     * <li>{@code UPDATE_RULE} - short - a value giving the rule for how to treat the foreign key when the corresponding primary
+     * key is updated:
      * <ul>
-     * <li>DatabaseMetaData.importedKeyNoAction - don't allow update of primary
-     * key if imported</li>
-     * <li>DatabaseMetaData.importedKeyCascade - change imported key to match
-     * the primary key update</li>
-     * <li>DatabaseMetaData.importedKeySetNull - set the imported key to
-     * <code>null</code></li>
-     * <li>DatabaseMetaData.importedKeySetDefault - set the imported key to
-     * default values</li>
-     * <li>DatabaseMetaData.importedKeyRestrict - same as importedKeyNoAction</li>
+     * <li>{@code DatabaseMetaData.importedKeyNoAction} - don't allow the 
+     * primary key to be updated if it is imported as a foreign key</li>
+     * <li>{@code DatabaseMetaData.importedKeyCascade} - change the imported key to
+     * match the primary key update</li>
+     * <li>{@code DatabaseMetaData.importedKeySetNull} - set the imported key to
+     * {@code null}</li>
+     * <li>{@code DatabaseMetaData.importedKeySetDefault} - set the imported key
+     * to its default value</li>
+     * <li>{@code DatabaseMetaData.importedKeyRestrict} - same as
+     * importedKeyNoAction</li>
      * </ul>
      * </li>
-     * <li>DELETE_RULE - short - how to treat foreign key when primary key is
-     * deleted:
+     * <li>{@code DELETE_RULE} - short - how to treat the foreign key when the corresponding primary
+     * key is deleted:
      * <ul>
-     * <li>DatabaseMetaData.importedKeyNoAction - don't allow delete of primary
-     * key if imported</li>
-     * <li>DatabaseMetaData.importedKeyCascade - the deletion should also
-     * delete rows that import a deleted key</li>
-     * <li>DatabaseMetaData.importedKeySetNull - it should set the imported key
-     * to <code>null</code></li>
-     * <li>DatabaseMetaData.importedKeySetDefault - deletion sets the imported
-     * key to default values</li>
-     * <li>DatabaseMetaData.importedKeyRestrict - same as importedKeyNoAction</li>
+     * <li>{@code DatabaseMetaData.importedKeyNoAction} - don't allow the
+     * primary key to be deleted if it is imported as a foreign key</li>
+     * <li>{@code DatabaseMetaData.importedKeyCascade} - the deletion should
+     * also delete rows that import a deleted key</li>
+     * <li>{@code DatabaseMetaData.importedKeySetNull} - the deletion sets the
+     * imported key to {@code null}</li>
+     * <li>{@code DatabaseMetaData.importedKeySetDefault} - the deletion sets the
+     * imported key to its default value</li>
+     * <li>{@code DatabaseMetaData.importedKeyRestrict} - same as
+     * importedKeyNoAction</li>
      * </ul>
      * </li>
-     * <li>FK_NAME - String - foreign key name (possibly <code>null</code>)</li>
-     * <li>PK_NAME - String - primary key name (possibly <code>null</code>)</li>
-     * <li>DEFERRABILITY - short - defines whether foreign key constraints can
-     * be deferred until commit (see SQL92 specification for definitions):
+     * <li>{@code FK_NAME} - String - the foreign key name (possibly {@code null})</li>
+     * <li>{@code PK_NAME} - String - the primary key name (possibly {@code null})</li>
+     * <li>{@code DEFERRABILITY} - short - defines whether the foreign key
+     * constraints can be deferred until commit (see the SQL92 specification for
+     * definitions):
      * <ul>
-     * <li>DatabaseMetaData.importedKeyInitiallyDeferred</li>
-     * <li>DatabaseMetaData.importedKeyInitiallyImmediate</li>
-     * <li>DatabaseMetaData.importedKeyNotDeferrable</li>
+     * <li>{@code DatabaseMetaData.importedKeyInitiallyDeferred}</li>
+     * <li>{@code DatabaseMetaData.importedKeyInitiallyImmediate}</li>
+     * <li>{@code DatabaseMetaData.importedKeyNotDeferrable}</li>
      * </ul>
      * </li>
      * </ol>
+     * </p>
      * 
      * @param catalog
-     *            a Catalog Name. <code>null</code> is used to imply no
-     *            narrowing of the search using Catalog Name. Otherwise, the
-     *            name must match a Catalog Name held in the database, with ""
-     *            used to retrieve those without a Catalog Name.
+     *            a catalog name. {@code null} is used to imply no narrowing of
+     *            the search by catalog name. Otherwise, the name must match a
+     *            catalog name held in the database, with "" used to retrieve
+     *            those without a catalog name.
      * @param schema
-     *            a Schema Name. <code>null</code> is used to imply no
-     *            narrowing of the search using Schema Name. Otherwise, the name
-     *            must match a Schema name in the database, with "" used to
-     *            retrieve those without a Schema name.
+     *            a schema name. {@code null} is used to imply no narrowing of
+     *            the search by schema name. Otherwise, the name must match a
+     *            schema name in the database, with "" used to retrieve those
+     *            without a schema name.
      * @param table
      *            a table name, which must match the name of a table in the
      *            database
-     * @return a ResultSet containing a row for each of the foreign key columns,
-     *         as defined above
+     * @return a {@code ResultSet} containing a row for each of the foreign key
+     *         columns, as defined above
      * @throws SQLException
      *             a database error occurred
+     * @since Android 1.0
      */
     public ResultSet getExportedKeys(String catalog, String schema, String table)
             throws SQLException;
 
     /**
      * Returns a string of characters that may be used in unquoted identifier
-     * names. The characters a-z, A-Z, 0-9 and _ are always permitted.
+     * names. The characters {@code a-z}, {@code A-Z}, {@code 0-9} and {@code _}
+     * are always permitted.
      * 
-     * @return a String containing all the extra characters
+     * @return a String containing all the additional permitted characters.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public String getExtraNameCharacters() throws SQLException;
 
@@ -976,7 +1098,8 @@ public interface DatabaseMetaData {
      * 
      * @return the String used to quote SQL identifiers.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public String getIdentifierQuoteString() throws SQLException;
 
@@ -985,83 +1108,87 @@ public interface DatabaseMetaData {
      * referenced by the table's foreign key columns (that is, the primary keys
      * imported by a table).
      * <p>
-     * The list returned is a <code>ResultSet</code> with a row entry for each
-     * primary key column, ordered by <code>PKTABLE_CAT</code>,
-     * <code>PKTABLE_SCHEM</code>, <code>PKTABLE_NAME</code>, and
-     * <code>KEY_SEQ</code>, with the following format:
+     * The list returned is a {@code ResultSet} with a row entry for each
+     * primary key column, ordered by {@code PKTABLE_CAT}, {@code PKTABLE_SCHEM}, 
+     * {@code PKTABLE_NAME}, and {@code KEY_SEQ}, with the following format:
      * <ol>
-     * <li><code>PKTABLE_CAT</code> - String - primary key Catalog name being
-     * imported (possibly <code>null</code>)</li>
-     * <li><code>PKTABLE_SCHEM</code> - String - primary key Schema name
-     * being imported (possibly <code>null</code>) </li>
-     * <li><code>PKTABLE_NAME</code> - String - primary key Table name being
-     * imported </li>
-     * <li><code>PKCOLUMN_NAME</code> - String - primary key column name
-     * being imported</li>
-     * <li><code>FKTABLE_CAT</code> - String - foreign key table catalog name
-     * (possibly <code>null</code>)</li>
-     * <li><code>FKTABLE_SCHEM</code> - String - foreign key table Schema
-     * name (possibly <code>null</code>) </li>
-     * <li><code>FKTABLE_NAME</code> - String - foreign key table name</li>
-     * <li><code>FKCOLUMN_NAME</code> - String - foreign key column name</li>
-     * <li>KEY_SEQ - short - sequence number in the foreign key</li>
-     * <li>UPDATE_RULE - short - how to treat foreign key when primary key is
-     * updated:
+     * <li>{@code PKTABLE_CAT} - String - primary key catalog name being
+     * imported (possibly {@code null})</li>
+     * <li>{@code PKTABLE_SCHEM} - String - primary key schema name being
+     * imported (possibly {@code null})</li>
+     * <li>{@code PKTABLE_NAME} - String - primary key table name being imported
+     * </li>
+     * <li>{@code PKCOLUMN_NAME} - String - primary key column name being
+     * imported</li>
+     * <li>{@code FKTABLE_CAT} - String - foreign key table catalog name
+     * (possibly {@code null})</li>
+     * <li>{@code FKTABLE_SCHEM} - String - foreign key table schema name
+     * (possibly {@code null})</li>
+     * <li>{@code FKTABLE_NAME} - String - foreign key table name</li>
+     * <li>{@code FKCOLUMN_NAME} - String - foreign key column name</li>
+     * <li>{@code KEY_SEQ} - short - sequence number (in the foreign key)</li>
+     * <li>{@code UPDATE_RULE} - short - how to treat the foreign key when the corresponding primary
+     * key is updated:
      * <ul>
-     * <li>DatabaseMetaData.importedKeyNoAction - don't allow update of primary
-     * key if imported</li>
-     * <li>DatabaseMetaData.importedKeyCascade - change imported key to match
-     * the primary key update</li>
-     * <li>DatabaseMetaData.importedKeySetNull - set the imported key to
-     * <code>null</code></li>
-     * <li>DatabaseMetaData.importedKeySetDefault - set the imported key to
-     * default values</li>
-     * <li>DatabaseMetaData.importedKeyRestrict - same as importedKeyNoAction</li>
+     * <li>{@code DatabaseMetaData.importedKeyNoAction} - don't allow any update of
+     * the primary key if it is imported as a foreign key</li>
+     * <li>{@code DatabaseMetaData.importedKeyCascade} - change imported key to
+     * match the primary key update</li>
+     * <li>{@code DatabaseMetaData.importedKeySetNull} - set the imported key to
+     * {@code null}</li>
+     * <li>{@code DatabaseMetaData.importedKeySetDefault} - set the imported key
+     * to its default value</li>
+     * <li>{@code DatabaseMetaData.importedKeyRestrict} - same as
+     * importedKeyNoAction</li>
      * </ul>
      * </li>
-     * <li>DELETE_RULE - short - how to treat foreign key when primary key is
-     * deleted:
+     * <li>{@code DELETE_RULE} - short - how to treat the foreign key when the corresponding primary
+     * key is deleted:
      * <ul>
-     * <li>DatabaseMetaData.importedKeyNoAction - don't allow delete of primary
-     * key if imported</li>
-     * <li>DatabaseMetaData.importedKeyCascade - delete those rows that import
-     * a deleted key</li>
-     * <li>DatabaseMetaData.importedKeySetNull - set the imported key to
-     * <code>null</code></li>
-     * <li>DatabaseMetaData.importedKeySetDefault - set the imported key to
-     * default values</li>
-     * <li>DatabaseMetaData.importedKeyRestrict - same as importedKeyNoAction</li>
+     * <li>{@code DatabaseMetaData.importedKeyNoAction} - don't allow the primary key to be deleted
+     * if it is imported as a foreign key</li>
+     * <li>{@code DatabaseMetaData.importedKeyCascade} - delete those rows that
+     * import a deleted key</li>
+     * <li>{@code DatabaseMetaData.importedKeySetNull} - set the imported key to
+     * {@code null}</li>
+     * <li>{@code DatabaseMetaData.importedKeySetDefault} - set the imported key
+     * to its default value</li>
+     * <li>{@code DatabaseMetaData.importedKeyRestrict} - same as {@code
+     * importedKeyNoAction}</li>
      * </ul>
      * </li>
-     * <li>FK_NAME - String - foreign key name (possibly <code>null</code>)</li>
-     * <li>PK_NAME - String - primary key name (possibly <code>null</code>)</li>
-     * <li>DEFERRABILITY - short - defines whether foreign key constraints can
-     * be deferred until commit (see SQL92 specification for definitions):
+     * <li>{@code FK_NAME} - String - foreign key name (possibly {@code null})</li>
+     * <li>{@code PK_NAME} - String - primary key name (possibly {@code null})</li>
+     * <li>{@code DEFERRABILITY} - short - defines whether foreign key
+     * constraints can be deferred until commit (see SQL92 specification for
+     * definitions):
      * <ul>
-     * <li>DatabaseMetaData.importedKeyInitiallyDeferred</li>
-     * <li>DatabaseMetaData.importedKeyInitiallyImmediate</li>
-     * <li>DatabaseMetaData.importedKeyNotDeferrable</li>
+     * <li>{@code DatabaseMetaData.importedKeyInitiallyDeferred}</li>
+     * <li>{@code DatabaseMetaData.importedKeyInitiallyImmediate}</li>
+     * <li>{@code DatabaseMetaData.importedKeyNotDeferrable}</li>
      * </ul>
      * </li>
      * </ol>
+     * </p>
      * 
      * @param catalog
-     *            a Catalog Name. <code>null</code> is used to imply no
-     *            narrowing of the search using Catalog Name. Otherwise, the
-     *            name must match a Catalog Name held in the database, with ""
-     *            used to retrieve those without a Catalog Name.
+     *            a catalog name. {@code null} is used to imply no narrowing of
+     *            the search by catalog name. Otherwise, the name must match a
+     *            catalog name held in the database, with "" used to retrieve
+     *            those without a catalog name.
      * @param schema
-     *            a Schema Name. <code>null</code> is used to imply no
-     *            narrowing of the search using Schema Name. Otherwise, the name
-     *            must match a Schema name in the database, with "" used to
-     *            retrieve those without a Schema name.
+     *            a schema name. {@code null} is used to imply no narrowing of
+     *            the search by schema name. Otherwise, the name must match a
+     *            schema name in the database, with "" used to retrieve those
+     *            without a schema name.
      * @param table
      *            a table name, which must match the name of a table in the
-     *            database
-     * @return a ResultSet containing the list of primary key columns as rows in
-     *         the format defined above.
+     *            database.
+     * @return a {@code ResultSet} containing the list of primary key columns as
+     *         rows in the format defined above.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public ResultSet getImportedKeys(String catalog, String schema, String table)
             throws SQLException;
@@ -1069,70 +1196,73 @@ public interface DatabaseMetaData {
     /**
      * Returns a list of indices and statistics for a specified table.
      * <p>
-     * The list is returned as a ResultSet, with one row for each index or
-     * statistic. The list is ordered by NON_UNIQUE, TYPE, INDEX_NAME, and
-     * ORDINAL_POSITION. Each row has the following format:
+     * The list is returned as a {@code ResultSet}, with one row for each index
+     * or statistic. The list is ordered by {@code NON_UNIQUE}, {@code TYPE},
+     * {@code INDEX_NAME}, and {@code ORDINAL_POSITION}. Each row has the
+     * following format:
      * <ol>
-     * <li><code>TABLE_CAT</code> - String - table catalog name (possibly
-     * <code>null</code>)</li>
-     * <li><code>TABLE_SCHEM</code> - String - Table Schema name (possibly
-     * <code>null</code>) </li>
-     * <li><code>TABLE_NAME</code> - String - The Table name </li>
-     * <li><code>NON_UNIQUE</code> - boolean - <code>true</code> when index
-     * values can be non-unique. Must be <code>false</code> when TYPE is
-     * tableIndexStatistic</li>
-     * <li><code>INDEX_QUALIFIER</code> - String : index catalog name.
-     * <code>null</code> when TYPE is 'tableIndexStatistic'</li>
-     * <li><code>INDEX_NAME</code> - String : index name. <code>null</code>
-     * when TYPE is 'tableIndexStatistic'</li>
-     * <li>TYPE - short - the index type. One of:
+     * <li>{@code TABLE_CAT} - String - table catalog name (possibly {@code
+     * null})</li>
+     * <li>{@code TABLE_SCHEM} - String - table schema name (possibly {@code
+     * null})</li>
+     * <li>{@code TABLE_NAME} - String - The table name</li>
+     * <li>{@code NON_UNIQUE} - boolean - {@code true} when index values can be
+     * non-unique. Must be {@code false} when the TYPE is tableIndexStatistic</li>
+     * <li>{@code INDEX_QUALIFIER} - String : index catalog name. {@code null}
+     * when the TYPE is 'tableIndexStatistic'</li>
+     * <li>{@code INDEX_NAME} - String : index name. {@code null} when TYPE is
+     * 'tableIndexStatistic'</li>
+     * <li>{@code TYPE} - short - the index type. One of:
      * <ul>
-     * <li>DatabaseMetaData.tableIndexStatistic - table statistics returned
-     * with Index descriptions</li>
-     * <li>DatabaseMetaData.tableIndexClustered - a clustered Index</li>
-     * <li>DatabaseMetaData.tableIndexHashed - a hashed Index</li>
-     * <li>DatabaseMetaData.tableIndexOther - other style of Index</li>
+     * <li>{@code DatabaseMetaData.tableIndexStatistic} - table statistics
+     * returned with Index descriptions</li>
+     * <li>{@code DatabaseMetaData.tableIndexClustered} - a clustered Index</li>
+     * <li>{@code DatabaseMetaData.tableIndexHashed} - a hashed Index</li>
+     * <li>{@code DatabaseMetaData.tableIndexOther} - other style of Index</li>
      * </ul>
      * </li>
-     * <li>ORDINAL_POSITION - short - column sequence within Index. 0 when TYPE
-     * is tableIndexStatistic </li>
-     * <li><code>COLUMN_NAME</code> - String - the column name.
-     * <code>null</code> when TYPE is tableIndexStatistic</li>
-     * <li>ASC_OR_DESC - String - column sort sequence. <code>null</code> if
+     * <li>{@code ORDINAL_POSITION} - short - column sequence within Index. 0
+     * when TYPE is tableIndexStatistic</li>
+     * <li>{@code COLUMN_NAME} - String - the column name. {@code null} when
+     * TYPE is tableIndexStatistic</li>
+     * <li>{@code ASC_OR_DESC} - String - column sort sequence. {@code null} if
      * sequencing not supported or TYPE is tableIndexStatistic; otherwise "A"
-     * means sort ascending and "D" means sort descending. </li>
-     * <li>CARDINALITY - int - Number of unique values in the Index. If TYPE is
-     * tableIndexStatistic, this is number of rows in the table.</li>
-     * <li>PAGES - int - Number of pages for current Index. If TYPE is
+     * means sort ascending and "D" means sort descending.</li>
+     * <li>{@code CARDINALITY} - int - Number of unique values in the Index. If
+     * TYPE is tableIndexStatistic, this is number of rows in the table.</li>
+     * <li>{@code PAGES} - int - Number of pages for current Index. If TYPE is
      * tableIndexStatistic, this is number of pages used for the table.</li>
-     * <li>FILTER_CONDITION - String - Filter condition. (possibly null) </li>
+     * <li>{@code FILTER_CONDITION} - String - Filter condition. (possibly null)
+     * </li>
      * </ol>
+     * </p>
      * 
      * @param catalog
-     *            a Catalog Name. null is used to imply no narrowing of the
-     *            search using Catalog Name. Otherwise, the name must match a
-     *            Catalog Name held in the database, with "" used to retrieve
-     *            those without a Catalog Name.
+     *            a catalog name. {@code null} is used to imply no narrowing of
+     *            the search by catalog name. Otherwise, the name must match a
+     *            catalog name held in the database, with "" used to retrieve
+     *            those without a catalog name.
      * @param schema
-     *            a Schema Name. null is used to imply no narrowing of the
-     *            search using Schema Name. Otherwise, the name must match a
-     *            Schema name in the database, with "" used to retrieve those
-     *            without a Schema name.
+     *            a schema name. {@code null} is used to imply no narrowing of
+     *            the search by schema name. Otherwise, the name must match a
+     *            schema name in the database, with "" used to retrieve those
+     *            without a schema name.
      * @param table
      *            a table name, which must match the name of a table in the
-     *            database
+     *            database.
      * @param unique
-     *            <code>true</code> means only return indices for unique
-     *            values, <code>false</code> implies that they can be returned
-     *            even if not unique.
+     *            {@code true} means only return indices for unique values,
+     *            {@code false} implies that they can be returned even if not
+     *            unique.
      * @param approximate
-     *            <code>true</code> implies that the list can contain
-     *            approximate or "out of data" values, <code>false</code>
-     *            implies that all values must be precisely accurate
-     * @return a ResultSet containing the list of indices and statistics for the
-     *         table, in the format defined above.
+     *            {@code true} implies that the list can contain approximate or
+     *            "out of data" values, {@code false} implies that all values
+     *            must be precisely accurate
+     * @return a {@code ResultSet} containing the list of indices and statistics
+     *         for the table, in the format defined above.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public ResultSet getIndexInfo(String catalog, String schema, String table,
             boolean unique, boolean approximate) throws SQLException;
@@ -1140,18 +1270,20 @@ public interface DatabaseMetaData {
     /**
      * Returns this driver's major JDBC version number.
      * 
-     * @return the major JDBC version number
+     * @return the major JDBC version number.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public int getJDBCMajorVersion() throws SQLException;
 
     /**
      * Returns the minor JDBC version number for this driver.
      * 
-     * @return the Minor JDBC Version Number
+     * @return the Minor JDBC Version Number.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public int getJDBCMinorVersion() throws SQLException;
 
@@ -1162,17 +1294,19 @@ public interface DatabaseMetaData {
      * @return the maximum number of hex characters in an in-line binary
      *         literal. If the number is unlimited then the result is zero.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public int getMaxBinaryLiteralLength() throws SQLException;
 
     /**
-     * Returns the maximum size of a Catalog name in this database.
+     * Returns the maximum size of a catalog name in this database.
      * 
-     * @return the maximum size in characters for a Catalog name. If the limit
+     * @return the maximum size in characters for a catalog name. If the limit
      *         is unknown, or the value is unlimited, then the result is zero.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public int getMaxCatalogNameLength() throws SQLException;
 
@@ -1183,7 +1317,8 @@ public interface DatabaseMetaData {
      *         limit is unknown, or the value is unlimited, then the result is
      *         zero.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public int getMaxCharLiteralLength() throws SQLException;
 
@@ -1193,17 +1328,21 @@ public interface DatabaseMetaData {
      * @return the maximum number of characters for a Column name. If the limit
      *         is unknown, or the value is unlimited, then the result is zero.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public int getMaxColumnNameLength() throws SQLException;
 
     /**
-     * Get the maximum number of columns in a GROUP BY clause for this database.
+     * Get the maximum number of columns in a {@code GROUP BY} clause for this
+     * database.
      * 
-     * @return the maximum number of columns in a GROUP BY clause. If the limit
-     *         is unknown, or the value is unlimited, then the result is zero.
+     * @return the maximum number of columns in a {@code GROUP BY} clause. If
+     *         the limit is unknown, or the value is unlimited, then the result
+     *         is zero.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public int getMaxColumnsInGroupBy() throws SQLException;
 
@@ -1213,28 +1352,34 @@ public interface DatabaseMetaData {
      * @return the maximum number of columns in an Index. If the limit is
      *         unknown, or the value is unlimited, then the result is zero.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public int getMaxColumnsInIndex() throws SQLException;
 
     /**
-     * Returns the maximum number of columns in an ORDER BY clause for this
-     * database.
+     * Returns the maximum number of columns in an {@code ORDER BY} clause for
+     * this database.
      * 
-     * @return the maximum number of columns in an ORDER BY clause. If the limit
-     *         is unknown, or the value is unlimited, then the result is zero.
+     * @return the maximum number of columns in an {@code ORDER BY} clause. If
+     *         the limit is unknown, or the value is unlimited, then the result
+     *         is zero.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public int getMaxColumnsInOrderBy() throws SQLException;
 
     /**
-     * Returns the maximum number of columns in a SELECT list for this database.
+     * Returns the maximum number of columns in a {@code SELECT} list for this
+     * database.
      * 
-     * @return the maximum number of columns in a SELECT list. If the limit is
-     *         unknown, or the value is unlimited, then the result is zero.
+     * @return the maximum number of columns in a {@code SELECT} list. If the
+     *         limit is unknown, or the value is unlimited, then the result is
+     *         zero.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public int getMaxColumnsInSelect() throws SQLException;
 
@@ -1244,7 +1389,8 @@ public interface DatabaseMetaData {
      * @return the maximum number of columns in a table. If the limit is
      *         unknown, or the value is unlimited, then the result is zero.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public int getMaxColumnsInTable() throws SQLException;
 
@@ -1254,7 +1400,8 @@ public interface DatabaseMetaData {
      * @return the maximum number of connections. If the limit is unknown, or
      *         the value is unlimited, then the result is zero.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public int getMaxConnections() throws SQLException;
 
@@ -1264,7 +1411,8 @@ public interface DatabaseMetaData {
      * @return the maximum number of characters in a cursor name. If the limit
      *         is unknown, or the value is unlimited, then the result is zero.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public int getMaxCursorNameLength() throws SQLException;
 
@@ -1275,7 +1423,8 @@ public interface DatabaseMetaData {
      * @return the maximum length in bytes for an Index. If the limit is
      *         unknown, or the value is unlimited, then the result is zero.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public int getMaxIndexLength() throws SQLException;
 
@@ -1287,7 +1436,8 @@ public interface DatabaseMetaData {
      *         limit is unknown, or the value is unlimited, then the result is
      *         zero.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public int getMaxProcedureNameLength() throws SQLException;
 
@@ -1298,7 +1448,8 @@ public interface DatabaseMetaData {
      * @return the maximum number of bytes for a single row. If the limit is
      *         unknown, or the value is unlimited, then the result is zero.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public int getMaxRowSize() throws SQLException;
 
@@ -1306,10 +1457,11 @@ public interface DatabaseMetaData {
      * Returns the maximum number of characters in a schema name for this
      * database.
      * 
-     * @return the maximum number of characters in a Schema name. If the limit
+     * @return the maximum number of characters in a schema name. If the limit
      *         is unknown, or the value is unlimited, then the result is zero.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public int getMaxSchemaNameLength() throws SQLException;
 
@@ -1321,7 +1473,8 @@ public interface DatabaseMetaData {
      *         limit is unknown, or the value is unlimited, then the result is
      *         zero.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public int getMaxStatementLength() throws SQLException;
 
@@ -1332,7 +1485,8 @@ public interface DatabaseMetaData {
      * @return the maximum number of open active statements. If the limit is
      *         unknown, or the value is unlimited, then the result is zero.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public int getMaxStatements() throws SQLException;
 
@@ -1342,19 +1496,21 @@ public interface DatabaseMetaData {
      * @return the maximum size in characters for a table name. If the limit is
      *         unknown, or the value is unlimited, then the result is zero.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public int getMaxTableNameLength() throws SQLException;
 
     /**
-     * Returns the maximum number of tables permitted in a SELECT statement for
-     * the database.
+     * Returns the maximum number of tables permitted in a {@code SELECT}
+     * statement for the database.
      * 
-     * @return the maximum number of tables permitted in a SELECT statement. If
-     *         the limit is unknown, or the value is unlimited, then the result
-     *         is zero.
+     * @return the maximum number of tables permitted in a {@code SELECT}
+     *         statement. If the limit is unknown, or the value is unlimited,
+     *         then the result is zero.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public int getMaxTablesInSelect() throws SQLException;
 
@@ -1364,7 +1520,8 @@ public interface DatabaseMetaData {
      * @return the maximum number of characters in a user name. If the limit is
      *         unknown, or the value is unlimited, then the result is zero.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public int getMaxUserNameLength() throws SQLException;
 
@@ -1373,122 +1530,129 @@ public interface DatabaseMetaData {
      * are used in the JDBC function escape clause and are the Open Group CLI
      * math function names.
      * 
-     * @return a String which contains the list of Math functions as a comma
+     * @return a String which contains the list of math functions as a comma
      *         separated list.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public String getNumericFunctions() throws SQLException;
 
     /**
      * Returns a list of the primary key columns of a specified table.
      * <p>
-     * The list is returned as a ResultSet with one row for each primary key
-     * column, ordered by <code>COLUMN_NAME</code>, with each row having the
+     * The list is returned as a {@code ResultSet} with one row for each primary
+     * key column, ordered by {@code COLUMN_NAME}, with each row having the
      * structure as follows:
      * <ol>
-     * <li><code>TABLE_CAT</code> - String - table catalog name (possibly
-     * null)</li>
-     * <li><code>TABLE_SCHEM</code> - String - Table Schema name (possibly
-     * null) </li>
-     * <li><code>TABLE_NAME</code> - String - The Table name </li>
-     * <li><code>COLUMN_NAME</code> - String - The Column name </li>
-     * <li><code>KEY_SEQ</code> - short - the sequence number for this column
-     * in the primary key</li>
-     * <li><code>PK_NAME</code> - String - the primary key name (possibly
-     * null)</li>
+     * <li>{@code TABLE_CAT} - String - table catalog name (possibly null)</li>
+     * <li>{@code TABLE_SCHEM} - String - table schema name (possibly null)</li>
+     * <li>{@code TABLE_NAME} - String - The table name</li>
+     * <li>{@code COLUMN_NAME} - String - The column name</li>
+     * <li>{@code KEY_SEQ} - short - the sequence number for this column in the
+     * primary key</li>
+     * <li>{@code PK_NAME} - String - the primary key name (possibly null)</li>
      * </ol>
+     * </p>
      * 
      * @param catalog
-     *            a Catalog Name. <code>null</code> is used to imply no
-     *            narrowing of the search using Catalog Name. Otherwise, the
-     *            name must match a Catalog Name held in the database, with the
-     *            empty string used to retrieve those without a Catalog Name.
+     *            a catalog name. {@code null} is used to imply no narrowing of
+     *            the search by catalog name. Otherwise, the name must match a
+     *            catalog name held in the database, with the empty string used
+     *            to retrieve those without a catalog name.
      * @param schema
-     *            a Schema Name. <code>null</code> is used to imply no
-     *            narrowing of the search using Schema Name. Otherwise, the name
-     *            must match a Schema name in the database, with the empty
-     *            string used to retrieve those without a Schema name.
+     *            a schema name. {@code null} is used to imply no narrowing of
+     *            the search by schema name. Otherwise, the name must match a
+     *            schema name in the database, with the empty string used to
+     *            retrieve those without a schema name.
      * @param table
      *            the name of a table, which must match the name of a table in
-     *            the database
-     * @return a ResultSet containing the list of keys in the format defined
-     *         above
+     *            the database.
+     * @return a {@code ResultSet} containing the list of keys in the format
+     *         defined above.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public ResultSet getPrimaryKeys(String catalog, String schema, String table)
             throws SQLException;
 
     /**
      * Returns a list of parameter and result columns for the stored procedures
-     * belonging to a specified Catalog.
+     * belonging to a specified catalog.
      * <p>
-     * The list is returned as a ResultSet with one row for each parameter or
-     * result column. The data is ordered by PROCEDURE_SCHEM and PROCEDURE_NAME,
-     * while for each procedure, the return value (if any) is first, followed by
-     * the parameters in the order they appear in the stored procedure call,
-     * followed by ResultSet columns in column number order. Each row has the
-     * following structure:
+     * The list is returned as a {@code ResultSet} with one row for each
+     * parameter or result column. The data is ordered by {@code
+     * PROCEDURE_SCHEM} and {@code PROCEDURE_NAME}, while for each procedure,
+     * the return value (if any) is first, followed by the parameters in the
+     * order they appear in the stored procedure call, followed by {@code
+     * ResultSet} columns in column number order. Each row has the following
+     * structure:
      * <ol>
-     * <li>PROCEDURE_CAT - String - the procedure catalog name</li>
-     * <li>PROCEDURE_SCHEM - String - the procedure schema name (possibly null)
-     * </li>
-     * <li>PROCEDURE_NAME - String - the procedure name</li>
-     * <li><code>COLUMN_NAME</code> - String - the name of the column</li>
-     * <li>COLUMN_TYPE - short - the kind of column or parameter, as follows:
+     * <li>{@code PROCEDURE_CAT} - String - the procedure catalog name</li>
+     * <li>{@code PROCEDURE_SCHEM} - String - the procedure schema name
+     * (possibly null)</li>
+     * <li>{@code PROCEDURE_NAME} - String - the procedure name</li>
+     * <li>{@code COLUMN_NAME} - String - the name of the column</li>
+     * <li>{@code COLUMN_TYPE} - short - the kind of column or parameter, as
+     * follows:
      * <ul>
-     * <li>DatabaseMetaData.procedureColumnUnknown - type unknown</li>
-     * <li>DatabaseMetaData.procedureColumnIn - an IN parameter</li>
-     * <li>DatabaseMetaData.procedureColumnInOut - an INOUT parameter</li>
-     * <li>DatabaseMetaData.procedureColumnOut - an OUT parameter</li>
-     * <li>DatabaseMetaData.procedureColumnReturn - a return value</li>
-     * <li>DatabaseMetaData.procedureReturnsResult - a result column in a
-     * result set</li>
+     * <li>{@code DatabaseMetaData.procedureColumnUnknown} - type unknown</li>
+     * <li>{@code DatabaseMetaData.procedureColumnIn} - an {@code IN} parameter</li>
+     * <li>{@code DatabaseMetaData.procedureColumnInOut} - an {@code INOUT}
+     * parameter</li>
+     * <li>{@code DatabaseMetaData.procedureColumnOut} - an {@code OUT}
+     * parameter</li>
+     * <li>{@code DatabaseMetaData.procedureColumnReturn} - a return value</li>
+     * <li>{@code DatabaseMetaData.procedureReturnsResult} - a result column in
+     * a result set</li>
      * </ul>
      * </li>
-     * <li><code>DATA_TYPE</code> - int - the SQL type of the data, as in
-     * <code>java.sql.Types</code> </li>
-     * <li><code>TYPE_NAME</code> - String - the SQL type name, for a UDT it
-     * is fully qualified</li>
-     * <li>PRECISION - int - the precision</li>
-     * <li>LENGTH - int - the length of the data in bytes </li>
-     * <li>SCALE - short - the scale for numeric types</li>
-     * <li>RADIX - short - the Radix for numeric data (typically 2 or 10) </li>
-     * <li>NULLABLE - short - can the data contain null:
+     * <li>{@code DATA_TYPE} - int - the SQL type of the data, as in {@code
+     * java.sql.Types}</li>
+     * <li>{@code TYPE_NAME} - String - the SQL type name, for a UDT it is fully
+     * qualified</li>
+     * <li>{@code PRECISION} - int - the precision</li>
+     * <li>{@code LENGTH} - int - the length of the data in bytes</li>
+     * <li>{@code SCALE} - short - the scale for numeric types</li>
+     * <li>{@code RADIX} - short - the Radix for numeric data (typically 2 or
+     * 10)</li>
+     * <li>{@code NULLABLE} - short - can the data contain {@code null}:
      * <ul>
-     * <li>DatabaseMetaData.procedureNoNulls - <code>NULL</code>s not
+     * <li>{@code DatabaseMetaData.procedureNoNulls} - {@code NULL}s not
      * permitted</li>
-     * <li>DatabaseMetaData.procedureNullable - <code>NULL</code>s are
-     * permitted </li>
-     * <li>DatabaseMetaData.procedureNullableUnknown - <code>NULL</code>
-     * status unknown </li>
+     * <li>{@code DatabaseMetaData.procedureNullable} - {@code NULL}s are
+     * permitted</li>
+     * <li>{@code DatabaseMetaData.procedureNullableUnknown} - {@code NULL}
+     * status unknown</li>
      * </ul>
      * </li>
-     * <li><code>REMARKS</code> - String - an explanatory comment about the
-     * data item </li>
+     * <li>{@code REMARKS} - String - an explanatory comment about the data item
+     * </li>
      * </ol>
+     * </p>
      * 
      * @param catalog
-     *            a Catalog Name. null is used to imply no narrowing of the
-     *            search using Catalog Name. Otherwise, the name must match a
-     *            Catalog Name held in the database, with "" used to retrieve
-     *            those without a Catalog Name.
+     *            a catalog name. {@code null} is used to imply no narrowing of
+     *            the search by catalog name. Otherwise, the name must match a
+     *            catalog name held in the database, with "" used to retrieve
+     *            those without a catalog name.
      * @param schemaPattern
-     *            a Schema Name Pattern. null is used to imply no narrowing of
-     *            the search using Schema Name. Otherwise, the name must match a
-     *            Schema name in the database, with "" used to retrieve those
-     *            without a Schema name.
+     *            a schema name pattern. {@code null} is used to imply no
+     *            narrowing of the search by schema name. Otherwise, the name
+     *            must match a schema name in the database, with "" used to
+     *            retrieve those without a schema name.
      * @param procedureNamePattern
      *            a pattern that must match the name of the procedure stored in
-     *            the database
+     *            the database.
      * @param columnNamePattern
      *            a column name pattern. The name must match the column name
      *            stored in the database.
-     * @return a ResultSet with the list of parameter and result columns in the
-     *         format defined above
+     * @return a {@code ResultSet} with the list of parameter and result columns
+     *         in the format defined above.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public ResultSet getProcedureColumns(String catalog, String schemaPattern,
             String procedureNamePattern, String columnNamePattern)
@@ -1497,47 +1661,48 @@ public interface DatabaseMetaData {
     /**
      * Returns a list of the stored procedures available in a specified catalog.
      * <p>
-     * The list is returned as a ResultSet with one row for each stored
-     * procedure, ordered by PROCEDURE_SCHEME and PROCEDURE_NAME, with the data
+     * The list is returned as a {@code ResultSet} with one row for each stored
+     * procedure, ordered by PROCEDURE_SCHEM and PROCEDURE_NAME, with the data
      * in each row as follows:
      * <ol>
-     * <li><code>PROCEDURE_CAT</code> - String : the procedure catalog name</li>
-     * <li><code>PROCEDURE_SCHEM</code> - String : the procedure schema name
-     * (possibly <code>null</code>) </li>
-     * <li><code>PROCEDURE_NAME</code> - String : the procedure name</li>
-     * <li><code>Reserved</code></li>
-     * <li><code>Reserved</code></li>
-     * <li><code>Reserved</code></li>
-     * <li><code>REMARKS</code> - String - information about the procedure</li>
-     * <li><code>PROCEDURE_TYPE</code> - short : one of:
+     * <li>{@code PROCEDURE_CAT} - String : the procedure catalog name</li>
+     * <li>{@code PROCEDURE_SCHEM} - String : the procedure schema name
+     * (possibly {@code null})</li>
+     * <li>{@code PROCEDURE_NAME} - String : the procedure name</li>
+     * <li>{@code Reserved}</li>
+     * <li>{@code Reserved}</li>
+     * <li>{@code Reserved}</li>
+     * <li>{@code REMARKS} - String - information about the procedure</li>
+     * <li>{@code PROCEDURE_TYPE} - short : one of:
      * <ul>
-     * <li>DatabaseMetaData.procedureResultUnknown - procedure may return a
-     * result </li>
-     * <li>DatabaseMetaData.procedureNoResult - procedure does not return a
-     * result</li>
-     * <li>DatabaseMetaData.procedureReturnsResult - procedure definitely
-     * returns a result</li>
+     * <li>{@code DatabaseMetaData.procedureResultUnknown} - procedure may
+     * return a result</li>
+     * <li>{@code DatabaseMetaData.procedureNoResult} - procedure does not
+     * return a result</li>
+     * <li>{@code DatabaseMetaData.procedureReturnsResult} - procedure
+     * definitely returns a result</li>
      * </ul>
      * </li>
      * </ol>
      * 
      * @param catalog
-     *            a Catalog Name. null is used to imply no narrowing of the
-     *            search using Catalog Name. Otherwise, the name must match a
-     *            Catalog Name held in the database, with "" used to retrieve
-     *            those without a Catalog Name.
+     *            a catalog name. {@code null} is used to imply no narrowing of
+     *            the search by catalog name. Otherwise, the name must match a
+     *            catalog name held in the database, with "" used to retrieve
+     *            those without a catalog name.
      * @param schemaPattern
-     *            a Schema Name Pattern. null is used to imply no narrowing of
-     *            the search using Schema Name. Otherwise, the name must match a
-     *            Schema name in the database, with "" used to retrieve those
-     *            without a Schema name.
+     *            a schema name pattern. {@code null} is used to imply no
+     *            narrowing of the search by schema name. Otherwise, the name
+     *            must match a schema name in the database, with "" used to
+     *            retrieve those without a schema name.
      * @param procedureNamePattern
      *            a procedure name pattern, which must match the procedure name
-     *            stored in the database
-     * @return a ResultSet where each row is a description of a stored procedure
-     *         in the format defined above.
+     *            stored in the database.
+     * @return a {@code ResultSet} where each row is a description of a stored
+     *         procedure in the format defined above.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public ResultSet getProcedures(String catalog, String schemaPattern,
             String procedureNamePattern) throws SQLException;
@@ -1545,58 +1710,62 @@ public interface DatabaseMetaData {
     /**
      * Returns the database vendor's preferred name for "procedure".
      * 
-     * @return a String with the vendor's preferred name for "procedure"
+     * @return a String with the vendor's preferred name for "procedure".
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public String getProcedureTerm() throws SQLException;
 
     /**
-     * Returns the result set's default hold-ability.
+     * Returns the result set's default holdability.
      * 
-     * @return one of <code>ResultSet.HOLD_CURSORS_OVER_COMMIT</code> or
-     *         <code>ResultSet.CLOSE_CURSORS_AT_COMMIT</code>
+     * @return one of {@code ResultSet.HOLD_CURSORS_OVER_COMMIT} or {@code
+     *         ResultSet.CLOSE_CURSORS_AT_COMMIT}.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public int getResultSetHoldability() throws SQLException;
 
     /**
      * Returns a list of the schema names in the database. The list is returned
-     * as a ResultSet, ordered by the Schema name, with one row per Schema in
-     * the following format:
+     * as a {@code ResultSet}, ordered by the schema name, with one row per
+     * schema in the following format:
      * <ol>
-     * <li><code>TABLE_SCHEM</code> - String - the Schema name</li>
-     * <li><code>TABLE_CAT</code>ALOG - String - the Catalog name (possibly
-     * null) </li>
+     * <li>{@code TABLE_SCHEM} - String - the schema name</li> <li>{@code
+     * TABLE_CATALOG} - String - the catalog name (possibly {@code null}) </li>
      * </ol>
      * 
-     * @return a ResultSet with one row for each schema in the format defined
-     *         above.
+     * @return a {@code ResultSet} with one row for each schema in the format
+     *         defined above.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public ResultSet getSchemas() throws SQLException;
 
     /**
      * Returns the database vendor's preferred term for "schema".
      * 
-     * @return a String which is the vendor's preferred term for schema
+     * @return a String which is the vendor's preferred term for schema.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public String getSchemaTerm() throws SQLException;
 
     /**
      * Returns the string that is used to escape wildcard characters. This
-     * string is used to escape the '_' and '%' wildcard characters in catalog
-     * search strings which are a pattern and so which use the wildcard
-     * characters. '_' is used to represent any single character wile '%' is
-     * used for a sequence of zero or more characters.
+     * string is used to escape the {@code '_'} and {@code '%'} wildcard
+     * characters in catalog search pattern strings. {@code '_'} is used to represent any single
+     * character while {@code '%'} is used for a sequence of zero or more
+     * characters.
      * 
-     * @return a String used to escape the wildcard characters
+     * @return a String used to escape the wildcard characters.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public String getSearchStringEscape() throws SQLException;
 
@@ -1607,19 +1776,22 @@ public interface DatabaseMetaData {
      * @return a String containing the list of SQL keywords in a comma separated
      *         format.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public String getSQLKeywords() throws SQLException;
 
     /**
-     * States the type of SQLState value returned by SQLException.getSQLState.
-     * This can either be the X/Open (now known as Open Group) SQL CLI form or
-     * the SQL99 form.
+     * States the type of {@code SQLState} value returned by {@code
+     * SQLException.getSQLState}. This can either be the X/Open (now known as
+     * Open Group) SQL CLI form or the SQL99 form.
      * 
-     * @return an integer, which is either DatabaseMetaData.sqlStateSQL99 or
-     *         DatabaseMetaData.sqlStateXOpen.
+     * @return an integer, which is either {@code
+     *         DatabaseMetaData.sqlStateSQL99} or {@code
+     *         DatabaseMetaData.sqlStateXOpen}.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public int getSQLStateType() throws SQLException;
 
@@ -1631,7 +1803,8 @@ public interface DatabaseMetaData {
      * @return a String containing the list of string functions in comma
      *         separated format.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public String getStringFunctions() throws SQLException;
 
@@ -1640,39 +1813,40 @@ public interface DatabaseMetaData {
      * the database.
      * <p>
      * The listing only contains entries for tables that have a super table.
-     * Super and sub tables must be defined in the same Catalog and Schema. The
-     * list is returned as a ResultSet, with one row for each table that has a
-     * super table, in the following format:
+     * Super tables and corresponding subtables must be defined in the same catalog and schema. The
+     * list is returned as a {@code ResultSet}, with one row for each table that
+     * has a super table, in the following format:
      * <ol>
-     * <li><code>TABLE_CAT</code> - String - table catalog name (possibly
-     * null)</li>
-     * <li><code>TABLE_SCHEM</code> - String - Table Schema name (possibly
-     * null) </li>
-     * <li><code>TABLE_NAME</code> - String - The Table name </li>
-     * <li>SUPER<code>TABLE_NAME</code> - String - The Super Table name
-     * </li>
+     * <li>{@code TABLE_CAT} - String - table catalog name (possibly {@code
+     * null})</li>
+     * <li>{@code TABLE_SCHEM} - String - Table schema name (possibly {@code
+     * null})</li>
+     * <li>{@code TABLE_NAME} - String - The table name</li>
+     * <li>SUPER{@code TABLE_NAME} - String - The super table name</li>
      * </ol>
+     * </p>
      * 
      * @param catalog
-     *            a Catalog Name. null is used to imply no narrowing of the
-     *            search using Catalog Name. Otherwise, the name must match a
-     *            Catalog Name held in the database, with "" used to retrieve
-     *            those without a Catalog Name.
+     *            a catalog name. {@code null} is used to imply no narrowing of
+     *            the search by catalog name. Otherwise, the name must match a
+     *            catalog name held in the database, with "" used to retrieve
+     *            those without a catalog name.
      * @param schemaPattern
-     *            a Schema Name Pattern. null is used to imply no narrowing of
-     *            the search using Schema Name. Otherwise, the name must match a
-     *            Schema name in the database, with "" used to retrieve those
-     *            without a Schema name.
+     *            a schema name pattern. {@code null} is used to imply no
+     *            narrowing of the search by schema name. Otherwise, the name
+     *            must match a schema name in the database, with "" used to
+     *            retrieve those without a schema name.
      * @param tableNamePattern
-     *            a Table Name, which should match the Table name as stored in
+     *            a table name, which should match the table name as stored in
      *            the database. it may be a fully qualified name. If it is fully
-     *            qualified the Catalog Name and Schema Name parameters are
+     *            qualified the catalog name and schema name parameters are
      *            ignored.
-     * @return a ResultSet with one row for each table which has a super table,
-     *         in the format defined above. An empty ResultSet is returned if
-     *         the database does not support table hierarchies.
+     * @return a {@code ResultSet} with one row for each table which has a super
+     *         table, in the format defined above. An empty {@code ResultSet} is
+     *         returned if the database does not support table hierarchies.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public ResultSet getSuperTables(String catalog, String schemaPattern,
             String tableNamePattern) throws SQLException;
@@ -1682,38 +1856,40 @@ public interface DatabaseMetaData {
      * the immediate parent/child relationship is described. If a UDT does not
      * have a direct supertype, it is not listed.
      * <p>
-     * The listing is returned as a ResultSet where there is one row for a
-     * specific UDT which describes its supertype, with the data organized in
+     * The listing is returned as a {@code ResultSet} where there is one row for
+     * a specific UDT which describes its supertype, with the data organized in
      * columns as follows:
      * <ol>
-     * <li><code>TYPE_CAT</code> - String - the UDT Catalog name (possibly
-     * null)</li>
-     * <li><code>TYPE_SCHEM</code> - String - the UDT Schema name (possibly
-     * null) </li>
-     * <li><code>TYPE_NAME</code> - String - the UDT type name </li>
-     * <li>SUPER<code>TYPE_CAT</code> - String - direct supertype's Catalog
-     * name (possibly null)</li>
-     * <li>SUPER<code>TYPE_SCHEM</code> - String - direct supertype's Schema
-     * name (possibly null) </li>
-     * <li>SUPER<code>TYPE_NAME</code> - String - direct supertype's name
-     * </li>
+     * <li>{@code TYPE_CAT} - String - the UDT catalog name (possibly {@code
+     * null})</li>
+     * <li>{@code TYPE_SCHEM} - String - the UDT schema name (possibly {@code
+     * null})</li>
+     * <li>{@code TYPE_NAME} - String - the UDT type name</li>
+     * <li>SUPER{@code TYPE_CAT} - String - direct supertype's catalog name
+     * (possibly {@code null})</li>
+     * <li>SUPER{@code TYPE_SCHEM} - String - direct supertype's schema name
+     * (possibly {@code null})</li>
+     * <li>SUPER{@code TYPE_NAME} - String - direct supertype's name</li>
      * </ol>
+     * </p>
      * 
      * @param catalog
-     *            the Catalog name. "" means get the UDTs without a catalog.
-     *            null means don't use the catalog name to restrict the search.
+     *            the catalog name. "" means get the UDTs without a catalog.
+     *            {@code null} means don't use the catalog name to restrict the
+     *            search.
      * @param schemaPattern
      *            the Schema pattern name. "" means get the UDT's without a
      *            schema.
      * @param typeNamePattern
      *            the UDT name pattern. This may be a fully qualified name. When
-     *            a fully qualified name is specified, the Catalog name and
-     *            Schema name parameters are ignored.
-     * @return a ResultSet in which each row gives information about a
+     *            a fully qualified name is specified, the catalog name and
+     *            schema name parameters are ignored.
+     * @return a {@code ResultSet} in which each row gives information about a
      *         particular UDT in the format defined above. An empty ResultSet is
      *         returned for a database that does not support type hierarchies.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public ResultSet getSuperTypes(String catalog, String schemaPattern,
             String typeNamePattern) throws SQLException;
@@ -1724,9 +1900,10 @@ public interface DatabaseMetaData {
      * function names.
      * 
      * @return a String containing the list of system functions in a comma
-     *         separated format
+     *         separated format.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public String getSystemFunctions() throws SQLException;
 
@@ -1735,42 +1912,44 @@ public interface DatabaseMetaData {
      * catalog. Table privileges can apply to one or more columns in the table -
      * but are not guaranteed to apply to all columns.
      * <p>
-     * The privileges are returned as a ResultSet, with one row for each
-     * privilege, ordered by <code>TABLE_SCHEM</code>,
-     * <code>TABLE_NAME</code>, PRIVILEGE, and each row has data as defined
-     * in the following column definitions:
+     * The privileges are returned as a {@code ResultSet}, with one row for each
+     * privilege, ordered by {@code TABLE_SCHEM}, {@code TABLE_NAME}, {@code
+     * PRIVILEGE}, and each row has data as defined in the following column
+     * definitions:
      * <ol>
-     * <li><code>TABLE_CAT</code> - String - table catalog name (possibly
-     * null)</li>
-     * <li><code>TABLE_SCHEM</code> - String - Table Schema name (possibly
-     * null) </li>
-     * <li><code>TABLE_NAME</code> - String - The Table name </li>
+     * <li>{@code TABLE_CAT} - String - table catalog name (possibly {@code
+     * null})</li>
+     * <li>{@code TABLE_SCHEM} - String - Table schema name (possibly {@code
+     * null})</li>
+     * <li>{@code TABLE_NAME} - String - The table name</li>
      * <li>GRANTOR - String - who granted the access</li>
-     * <li>GRANTEE - String - who received the access grant </li>
+     * <li>GRANTEE - String - who received the access grant</li>
      * <li>PRIVILEGE - String - the type of access granted - one of SELECT,
-     * INSERT, UPDATE, REFERENCES,... </li>
-     * <li>IS_GRANTABLE - String - "YES" implies the grantee can grant access
-     * to others, "NO" implies guarantee cannot grant access to others, null
-     * means this status is unknown</li>
+     * INSERT, UPDATE, REFERENCES,...</li>
+     * <li>IS_GRANTABLE - String - {@code "YES"} implies the grantee can grant
+     * access to others, {@code "NO"} implies guarantee cannot grant access to
+     * others, {@code null} means this status is unknown</li>
      * </ol>
+     * </p>
      * 
      * @param catalog
-     *            a Catalog Name. null is used to imply no narrowing of the
-     *            search using Catalog Name. Otherwise, the name must match a
-     *            Catalog Name held in the database, with "" used to retrieve
-     *            those without a Catalog Name.
+     *            a catalog name. {@code null} is used to imply no narrowing of
+     *            the search by catalog name. Otherwise, the name must match a
+     *            catalog name held in the database, with "" used to retrieve
+     *            those without a catalog name.
      * @param schemaPattern
-     *            a Schema Name Pattern. null is used to imply no narrowing of
-     *            the search using Schema Name. Otherwise, the name must match a
-     *            Schema name in the database, with "" used to retrieve those
-     *            without a Schema name.
+     *            a schema name pattern. {@code null} is used to imply no
+     *            narrowing of the search by schema name. Otherwise, the name
+     *            must match a schema name in the database, with "" used to
+     *            retrieve those without a schema name.
      * @param tableNamePattern
-     *            a Table Name, which should match the Table name as stored in
+     *            a Table Name, which should match the table name as stored in
      *            the database.
-     * @return a ResultSet containing a list with one row for each table in the
-     *         format defined above.
+     * @return a {@code ResultSet} containing a list with one row for each table
+     *         in the format defined above.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public ResultSet getTablePrivileges(String catalog, String schemaPattern,
             String tableNamePattern) throws SQLException;
@@ -1778,53 +1957,54 @@ public interface DatabaseMetaData {
     /**
      * Returns a description of the tables in a specified catalog.
      * <p>
-     * The descriptions are returned as rows in a ResultSet, one row for each
-     * Table. The ResultSet is ordered by <code>TABLE_TYPE</code>,
-     * <code>TABLE_SCHEM</code> and <code>TABLE_NAME</code>. Each row in
-     * the ResultSet consists of a series of columns as follows:
+     * The descriptions are returned as rows in a {@code ResultSet}, one row for
+     * each Table. The ResultSet is ordered by {@code TABLE_TYPE}, {@code
+     * TABLE_SCHEM} and {@code TABLE_NAME}. Each row in the ResultSet consists
+     * of a series of columns as follows:
      * <ol>
-     * <li><code>TABLE_CAT</code> - String - table catalog name (possibly
-     * null)</li>
-     * <li><code>TABLE_SCHEM</code> - String - Table Schema name (possibly
-     * null) </li>
-     * <li><code>TABLE_NAME</code> - String - The Table name </li>
-     * <li><code>TABLE_TYPE</code> - String - Typical names include "TABLE",
-     * "VIEW", "SYSTEM TABLE", "ALIAS", "SYNONYM", "GLOBAL TEMPORARY"</li>
-     * <li><code>REMARKS</code> - String - A comment describing the table
+     * <li>{@code TABLE_CAT} - String - table catalog name (possibly {@code
+     * null})</li>
+     * <li>{@code TABLE_SCHEM} - String - Table schema name (possibly {@code
+     * null})</li>
+     * <li>{@code TABLE_NAME} - String - The table name</li>
+     * <li>{@code TABLE_TYPE} - String - Typical names include "TABLE", "VIEW",
+     * "SYSTEM TABLE", "ALIAS", "SYNONYM", "GLOBAL TEMPORARY"</li>
+     * <li>{@code REMARKS} - String - A comment describing the table</li>
+     * <li>{@code TYPE_CAT} - String - the 'Types' catalog(possibly {@code null}
+     * )</li>
+     * <li>{@code TYPE_SCHEM} - String - the 'Types' schema(possibly {@code
+     * null})</li>
+     * <li>{@code TYPE_NAME} - String - the 'Types' name (possibly {@code null})
      * </li>
-     * <li><code>TYPE_CAT</code> - String - the 'Types' catalog(possibly
-     * null)</li>
-     * <li><code>TYPE_SCHEM</code> - String - the 'Types' schema(possibly
-     * null) </li>
-     * <li><code>TYPE_NAME</code> - String - the 'Types' name (possibly null)
-     * </li>
-     * <li><code>SELF_REFERENCING_COL_NAME</code> - String - the name of a
-     * designated identifier column in a typed table (possibly null) </li>
+     * <li>{@code SELF_REFERENCING_COL_NAME} - String - the name of a designated
+     * identifier column in a typed table (possibly {@code null})</li>
      * <li>REF_GENERATION - String - one of the following values : "SYSTEM" |
-     * "USER" | "DERIVED" - specifies how values in the
-     * <code>SELF_REFERENCING_COL_NAME</code> are created (possibly null)
-     * </li>
+     * "USER" | "DERIVED" - specifies how values in the {@code
+     * SELF_REFERENCING_COL_NAME} are created (possibly {@code null})</li>
      * </ol>
+     * </p>
      * 
      * @param catalog
-     *            a Catalog Name. null is used to imply no narrowing of the
-     *            search using Catalog Name. Otherwise, the name must match a
-     *            Catalog Name held in the database, with "" used to retrieve
-     *            those without a Catalog Name.
+     *            a catalog name. {@code null} is used to imply no narrowing of
+     *            the search by catalog name. Otherwise, the name must match a
+     *            catalog name held in the database, with "" used to retrieve
+     *            those without a catalog name.
      * @param schemaPattern
-     *            a Schema Name Pattern. null is used to imply no narrowing of
-     *            the search using Schema Name. Otherwise, the name must match a
-     *            Schema name in the database, with "" used to retrieve those
-     *            without a Schema name.
+     *            a schema name pattern. {@code null} is used to imply no
+     *            narrowing of the search by schema name. Otherwise, the name
+     *            must match a schema name in the database, with "" used to
+     *            retrieve those without a schema name.
      * @param tableNamePattern
-     *            a Table Name, which should match the Table name as stored in
+     *            a table name, which should match the table name as stored in
      *            the database.
      * @param types
-     *            a list of table types to include in the list. null implies
-     *            list all types.
-     * @return a ResultSet with one row per table in the format defined above.
+     *            a list of table types to include in the list. {@code null}
+     *            implies list all types.
+     * @return a {@code ResultSet} with one row per table in the format defined
+     *         above.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public ResultSet getTables(String catalog, String schemaPattern,
             String tableNamePattern, String[] types) throws SQLException;
@@ -1832,131 +2012,141 @@ public interface DatabaseMetaData {
     /**
      * Returns a list of table types supported by the database.
      * <p>
-     * The list is returned as a ResultSet with one row per table type, ordered
-     * by the table type. The information in the ResultSet is structured into a
-     * single column per row, as follows:
+     * The list is returned as a {@code ResultSet} with one row per table type,
+     * ordered by the table type. The information in the {@code ResultSet} is
+     * structured into a single column per row, as follows:
      * <ol>
-     * <li><code>TABLE_TYPE</code> - String - the Table Type. Typical names
-     * include "TABLE", "VIEW", "SYSTEM TABLE", "ALIAS", "SYNONYM", "GLOBAL
-     * TEMPORARY" </li>
+     * <li>{@code TABLE_TYPE} - String - the table type. Typical names include
+     * {@code "TABLE"}, {@code "VIEW"}, "{@code SYSTEM TABLE"}, {@code "ALIAS"},
+     * {@code "SYNONYM"}, {@code "GLOBAL TEMPORARY"}</li>
      * </ol>
+     * </p>
      * 
-     * @return a ResultSet with one row per table type in the format defined
-     *         above.
+     * @return a {@code ResultSet} with one row per table type in the format
+     *         defined above.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public ResultSet getTableTypes() throws SQLException;
 
     /**
      * Returns a list of time and date functions available for the database.
      * 
-     * @return a String contain a comma separated list of the time and date
+     * @return a string containing a comma separated list of the time and date
      *         functions.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public String getTimeDateFunctions() throws SQLException;
 
     /**
-     * Get a list of the standard SQL Types supported by this database. The list
-     * is returned as a ResultSet, with one row for each type, ordered by the
-     * <code>DATA_TYPE</code> value, where the data in each row is structured
+     * Get a list of the standard SQL types supported by this database. The list
+     * is returned as a {@code ResultSet}, with one row for each type, ordered
+     * by the {@code DATA_TYPE} value, where the data in each row is structured
      * into the following columns:
      * <ol>
-     * <li><code>TYPE_NAMR</code> - String : the Type name</li>
-     * <li><code>DATA_TYPE</code> - int : the SQL data type value as defined
-     * in <code>java.sql.Types</code></li>
-     * <li><code>PRECISION</code> - int - the maximum precision of the type</li>
-     * <li><code>LITERAL_PREFIX</code> - String : the prefix to be used when
-     * quoting a literal value (possibly <code>null</code>)</li>
-     * <li><code>LITERAL_SUFFIX</code> - String : the suffix to be used when
-     * quoting a literal value (possibly <code>null</code>)</li>
-     * <li><code>CREATE_PARAMS</code> - String : params used when creating
-     * the type (possibly <code>null</code>)</li>
-     * <li><code>NULLABLE</code> - short : shows if the value is null-able:
+     * <li>{@code TYPE_NAME} - String : the type name</li>
+     * <li>{@code DATA_TYPE} - int : the SQL data type value as defined in
+     * {@code java.sql.Types}</li>
+     * <li>{@code PRECISION} - int - the maximum precision of the type</li>
+     * <li>{@code LITERAL_PREFIX} - String : the prefix to be used when quoting
+     * a literal value (possibly {@code null})</li>
+     * <li>{@code LITERAL_SUFFIX} - String : the suffix to be used when quoting
+     * a literal value (possibly {@code null})</li>
+     * <li>{@code CREATE_PARAMS} - String : params used when creating the type
+     * (possibly {@code null})</li>
+     * <li>{@code NULLABLE} - short : shows if the value is nullable:
      * <ul>
-     * <li>DatabaseMetaData.typeNoNulls : <code>NULL</code>s not permitted</li>
-     * <li>DatabaseMetaData.typeNullable : <code>NULL</code>s are permitted
-     * </li>
-     * <li>DatabaseMetaData.typeNullableUnknown : <code>NULL</code> status
-     * unknown </li>
+     * <li>{@code DatabaseMetaData.typeNoNulls} : {@code NULL}s not permitted</li>
+     * <li>{@code DatabaseMetaData.typeNullable} : {@code NULL}s are permitted</li>
+     * <li>{@code DatabaseMetaData.typeNullableUnknown} : {@code NULL} status
+     * unknown</li>
      * </ul>
      * </li>
-     * <li>CASE_SENSITIVE - boolean : true if the type is case sensitive</li>
-     * <li>SEARCHABLE - short : how this type can be used with WHERE clauses:
+     * <li>{@code CASE_SENSITIVE} - boolean : true if the type is case sensitive
+     * </li>
+     * <li>{@code SEARCHABLE} - short : how this type can be used with {@code WHERE}
+     * clauses:
      * <ul>
-     * <li>DatabaseMetaData.typePredNone - cannot be used </li>
-     * <li>DatabaseMetaData.typePredChar - support for WHERE...LIKE only</li>
-     * <li>DatabaseMetaData.typePredBasic - support except for WHERE...LIKE</li>
-     * <li>DatabaseMetaData.typeSearchable - support for all WHERE clauses</li>
+     * <li>{@code DatabaseMetaData.typePredNone} - {@code WHERE} clauses cannot be used</li>
+     * <li>{@code DatabaseMetaData.typePredChar} - support for {@code
+     * WHERE...LIKE} only</li>
+     * <li>{@code DatabaseMetaData.typePredBasic} - support except for {@code
+     * WHERE...LIKE}</li>
+     * <li>{@code DatabaseMetaData.typeSearchable} - support for all {@code
+     * WHERE} clauses</li>
      * </ul>
      * </li>
-     * <li>UNSIGNED_ATTRIBUTE - boolean - the type is unsigned or not </li>
-     * <li>FIXED_PREC_SCALE - boolean - fixed precision = it can be used as a
-     * money value </li>
-     * <li>AUTO_INCREMENT - boolean - can be used as an auto-increment value
-     * </li>
-     * <li>LOCAL_<code>TYPE_NAME</code> - String - a localized version of
-     * the type name (possibly null)</li>
-     * <li>MINIMUM_SCALE - short - the minimum scale supported </li>
-     * <li>MAXIMUM_SCALE - short - the maximum scale supported </li>
-     * <li>SQL_<code>DATA_TYPE</code> - int - not used </li>
-     * <li>SQL_DATETIME_SUB - int - not used </li>
-     * <li>NUM_PREC_RADIX - int - number radix (typically 2 or 10) </li>
+     * <li>{@code UNSIGNED_ATTRIBUTE} - boolean - the type is unsigned or not</li>
+     * <li>{@code FIXED_PREC_SCALE} - boolean - fixed precision = it can be used
+     * as a money value</li>
+     * <li>{@code AUTO_INCREMENT} - boolean - can be used as an auto-increment
+     * value</li>
+     * <li>{@code LOCAL_TYPE_NAME} - String - a localized version of the type
+     * name (possibly {@code null})</li>
+     * <li>{@code MINIMUM_SCALE} - short - the minimum scale supported</li>
+     * <li>{@code MAXIMUM_SCALE} - short - the maximum scale supported</li>
+     * <li>{@code SQL_DATA_TYPE} - int - not used</li>
+     * <li>{@code SQL_DATETIME_SUB} - int - not used</li>
+     * <li>{@code NUM_PREC_RADIX} - int - number radix (typically 2 or 10)</li>
      * </ol>
      * 
-     * @return a ResultSet which is structured as described above
+     * @return a {@code ResultSet} which is structured as described above.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public ResultSet getTypeInfo() throws SQLException;
 
     /**
      * Returns a description of the User Defined Types (UDTs) defined in a given
-     * schema, which includes the types DISTINCT, STRUCT and JAVA_OBJECT.
+     * schema, which includes the types {@code DISTINCT}, {@code STRUCT} and
+     * {@code JAVA_OBJECT}.
      * <p>
-     * The types matching the supplied the specified Catalog, Schema, Type Name
-     * and Type are returned as rows in a ResultSet with columns of information
-     * as follows:
+     * The types matching the supplied the specified catalog, schema, type name
+     * and type are returned as rows in a {@code ResultSet} with columns of
+     * information as follows:
      * <ol>
-     * <li><code>TABLE_CAT</code> - String - Catalog name (possibly null)</li>
-     * <li><code>TABLE_SCHEM</code> - String - Schema name (possibly null)
-     * </li>
-     * <li><code>TABLE_NAME</code> - String - The Table name </li>
-     * <li><code>CLASS_NAME</code> - String - The Java class name</li>
-     * <li><code>DATA_TYPE</code> - int - The SQL type as specified in
-     * <code>java.sql.Types</code>. One of DISTINCT, STRUCT and JAVA_OBJECT</li>
-     * <li><code>REMARKS</code> - String - A comment which describes the type
-     * </li>
-     * <li><code>BASE_TYPE</code> - short - A type code. For a DISTINCT type,
-     * the source type. For a structured type this is the type that implements
-     * the user generated reference type of the
-     * <code>SELF_REFERENCING_COLUMN</code>. This is defined in
-     * <code>java.sql.Types</code>, and will be <code>null</code> if the
-     * <code>DATA_TYPE</code> does not match these criteria.</li>
+     * <li>{@code TABLE_CAT} - String - catalog name (possibly {@code null})</li>
+     * <li>{@code TABLE_SCHEM} - String - schema name (possibly {@code null})</li>
+     * <li>{@code TABLE_NAME} - String - The table name</li>
+     * <li>{@code CLASS_NAME} - String - The Java class name</li>
+     * <li>{@code DATA_TYPE} - int - The SQL type as specified in {@code
+     * java.sql.Types}. One of DISTINCT, STRUCT, and JAVA_OBJECT</li>
+     * <li>{@code REMARKS} - String - A comment which describes the type</li>
+     * <li>{@code BASE_TYPE} - short - A type code. For a DISTINCT type, the
+     * source type. For a structured type this is the type that implements the
+     * user generated reference type of the {@code SELF_REFERENCING_COLUMN}.
+     * This is defined in {@code java.sql.Types}, and will be {@code null} if
+     * the {@code DATA_TYPE} does not match these criteria.</li>
      * </ol>
-     * If the driver does not support UDTs, the ResultSet will be empty.
+     * </p>
+     * <p>
+     * If the driver does not support UDTs, the {@code ResultSet} is empty.
+     * </p>
      * 
      * @param catalog
-     *            a Catalog Name. null is used to imply no narrowing of the
-     *            search using Catalog Name. Otherwise, the name must match a
-     *            Catalog Name held in the database, with "" used to retrieve
-     *            those without a Catalog Name.
+     *            a catalog name. {@code null} is used to imply no narrowing of
+     *            the search by catalog name. Otherwise, the name must match a
+     *            catalog name held in the database, with "" used to retrieve
+     *            those without a catalog name.
      * @param schemaPattern
-     *            a Schema Name Pattern. <code>null</code> is used to imply no
-     *            narrowing of the search using Schema Name. Otherwise, the name
-     *            must match a Schema name in the database, with "" used to
-     *            retrieve those without a Schema name.
+     *            a schema name pattern. {@code null} is used to imply no
+     *            narrowing of the search using schema name. Otherwise, the name
+     *            must match a schema name in the database, with "" used to
+     *            retrieve those without a schema name.
      * @param typeNamePattern
-     *            a Type Name, which should match a Type name as stored in the
+     *            a type name pattern, which should match a type name as stored in the
      *            database. It may be fully qualified.
      * @param types
      *            a list of the UDT types to include in the list - one of
-     *            DISTINCT, STRUCT or JAVA_OBJECT.
-     * @return a ResultSet in the format described above
+     *            {@code DISTINCT}, {@code STRUCT} or {@code JAVA_OBJECT}.
+     * @return a {@code ResultSet} in the format described above.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public ResultSet getUDTs(String catalog, String schemaPattern,
             String typeNamePattern, int[] types) throws SQLException;
@@ -1964,19 +2154,20 @@ public interface DatabaseMetaData {
     /**
      * Returns the URL for this database.
      * 
-     * @return the URL for the database. <code>null</code> if it cannot be
-     *         generated.
+     * @return the URL for the database. {@code null} if it cannot be generated.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public String getURL() throws SQLException;
 
     /**
      * Determine the user name as known by the database.
      * 
-     * @return the user name
+     * @return the user name.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public String getUserName() throws SQLException;
 
@@ -1986,62 +2177,65 @@ public interface DatabaseMetaData {
      * <p>
      * The result is laid-out in the following columns:
      * <ol>
-     * <li><code>SCOPE</code> - short - not used </li>
-     * <li><code>COLUMN_NAME</code> - String - Column name</li>
-     * <li><code>DATA_TYPE</code> - int - The SQL data type, as defined in
-     * <code>java.sql.Types</code> </li>
-     * <li><code>TYPE_NAME</code> - String - The SQL type name, data source
-     * dependent </li>
-     * <li><code>COLUMN_SIZE</code> - int - Precision for numeric types </li>
-     * <li><code>BUFFER_LENGTH</code> - int - Length of a column value in
-     * bytes </li>
-     * <li><code>DECIMAL_DIGITS</code> - short - Number of digits after the
-     * decimal point </li>
-     * <li><code>PSEUDO_COLUMN</code> - short - If this is a pseudo-column
-     * (for example, an Oracle ROWID):
+     * <li>{@code SCOPE} - short - not used</li>
+     * <li>{@code COLUMN_NAME} - String - Column name</li>
+     * <li>{@code DATA_TYPE} - int - The SQL data type, as defined in {@code
+     * java.sql.Types}</li>
+     * <li>{@code TYPE_NAME} - String - The SQL type name, data source dependent
+     * </li>
+     * <li>{@code COLUMN_SIZE} - int - Precision for numeric types</li>
+     * <li>{@code BUFFER_LENGTH} - int - Length of a column value in bytes</li>
+     * <li>{@code DECIMAL_DIGITS} - short - Number of digits after the decimal
+     * point</li>
+     * <li>{@code PSEUDO_COLUMN} - short - If this is a pseudo-column (for
+     * example, an Oracle {@code ROWID}):
      * <ul>
-     * <li>DatabaseMetaData.bestRowUnknown - don't know whether this is a
-     * pseudo column</li>
-     * <li>DatabaseMetaData.bestRowNotPseudo - column is not pseudo</li>
-     * <li>DatabaseMetaData.bestRowPseudo - column is a pseudo column</li>
+     * <li>{@code DatabaseMetaData.bestRowUnknown} - don't know whether this is
+     * a pseudo column</li>
+     * <li>{@code DatabaseMetaData.bestRowNotPseudo} - column is not pseudo</li>
+     * <li>{@code DatabaseMetaData.bestRowPseudo} - column is a pseudo column</li>
      * </ul>
      * </li>
      * </ol>
+     * </p>
      * 
      * @param catalog
-     *            a Catalog Name. <code>null</code> is used to imply no
-     *            narrowing of the search using Catalog Name. Otherwise, the
-     *            name must match a Catalog Name held in the database, with ""
-     *            used to retrieve those without a Catalog Name.
+     *            a catalog name. {@code null} is used to imply no narrowing of
+     *            the search using catalog name. Otherwise, the name must match
+     *            a catalog name held in the database, with "" used to retrieve
+     *            those without a catalog name.
      * @param schema
-     *            a Schema Name Pattern. <code>null</code> is used to imply no
-     *            narrowing of the search using Schema Name. Otherwise, the name
-     *            must match a Schema name in the database, with "" used to
-     *            retrieve those without a Schema name.
+     *            a schema name pattern. {@code null} is used to imply no
+     *            narrowing of the search using schema names. Otherwise, the
+     *            name must match a schema name in the database, with "" used to
+     *            retrieve those without a schema name.
      * @param table
      *            a table name. It must match the name of a table in the
      *            database.
-     * @return a ResultSet containing the descriptions, one row for each column,
-     *         in the format defined above.
+     * @return a {@code ResultSet} containing the descriptions, one row for each
+     *         column, in the format defined above.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public ResultSet getVersionColumns(String catalog, String schema,
             String table) throws SQLException;
 
     /**
-     * Determine if a visible row insert can be detected by calling
-     * ResultSet.rowInserted.
+     * Determines whether a visible row insert can be detected by calling {@code
+     * ResultSet.rowInserted}.
      * 
      * @param type
-     *            the ResultSet type. This may be one of
-     *            <code>ResultSet.TYPE_SCROLL_SENSITIVE</code> or
-     *            <code>ResultSet.TYPE_SCROLL_INSENSITIVE</code> or
-     *            <code>ResultSet.TYPE_FORWARD_ONLY</code>,
-     * @return <code>true</code> if ResultSet.rowInserted detects a visible
-     *         row insert otherwise <code>false</code>.
+     *            the {@code ResultSet} type. This may be one of {@code
+     *            ResultSet.TYPE_SCROLL_SENSITIVE} or {@code
+     *            ResultSet.TYPE_SCROLL_INSENSITIVE} or {@code
+     *            ResultSet.TYPE_FORWARD_ONLY},
+     * @return {@code true} if {@code ResultSet.rowInserted} detects a visible
+     *         row insert otherwise {@code false}.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @see ResultSet#rowInserted()
+     * @since Android 1.0
      */
     public boolean insertsAreDetected(int type) throws SQLException;
 
@@ -2049,1033 +2243,1114 @@ public interface DatabaseMetaData {
      * Determine whether a fully qualified table name is prefixed or suffixed to
      * a fully qualified table name.
      * 
-     * @return <code>true</code> if the catalog appears at the start of a
-     *         fully qualified table name, <code>false</code> otherwise.
+     * @return {@code true} if the catalog appears at the start of a fully
+     *         qualified table name, {@code false} otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean isCatalogAtStart() throws SQLException;
 
     /**
-     * Determine if the database is in read-only mode.
+     * Determines whether the database is in read-only mode.
      * 
-     * @return <code>true</code> if the database is in read-only mode,
-     *         <code>false</code> otherwise.
+     * @return {@code true} if the database is in read-only mode, {@code false}
+     *         otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean isReadOnly() throws SQLException;
 
     /**
-     * Determine if updates are made to a copy of, or directly on, Large Objects
-     * (LOBs).
+     * Determines whether updates are made to a copy of, or directly on, Large Objects
+     * ({@code LOB}s).
      * 
-     * @return <code>true</code> if updates are made to a copy of the Large
-     *         Object, <code>false</code> otherwise
+     * @return {@code true} if updates are made to a copy of the Large Object,
+     *         {@code false} otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean locatorsUpdateCopy() throws SQLException;
 
     /**
-     * Determine if the database handles concatenations between
-     * <code>NULL</code> and non-<code>NULL</code> values by producing a
-     * <code>NULL</code> output.
+     * Determines whether the database handles concatenations between {@code NULL} and
+     * non-{@code NULL} values by producing a {@code NULL} output.
      * 
-     * @return <code>true</code> if <code>NULL</code> to non-<code>NULL</code>
-     *         concatenations produce a <code>NULL</code> result,
-     *         <code>false</code> otherwise.
+     * @return {@code true} if {@code NULL} to non-{@code NULL} concatenations
+     *         produce a {@code NULL} result, {@code false} otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean nullPlusNonNullIsNull() throws SQLException;
 
     /**
-     * Determine if <code>NULL</code> values are always sorted to the end of
-     * sorted results regardless of requested sort order. This means that they
-     * will appear at the end of sorted lists whatever other non-<code>NULL</code>
-     * values may be present.
+     * Determines whether {@code NULL} values are always sorted to the end of sorted
+     * results regardless of requested sort order. This means that they will
+     * appear at the end of sorted lists whatever other non-{@code NULL} values
+     * may be present.
      * 
-     * @return <code>true</code> if <code>NULL</code> values are sorted at
-     *         the end, <code>false</code> otherwise
+     * @return {@code true} if {@code NULL} values are sorted at the end,
+     *         {@code false} otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean nullsAreSortedAtEnd() throws SQLException;
 
     /**
-     * Determine if <code>NULL</code> values are always sorted at the start of
-     * the sorted list, irrespective of the sort order. This means that they
-     * appear at the start of sorted lists, whatever other values may be
-     * present.
+     * Determines whether {@code NULL} values are always sorted at the start of the
+     * sorted list, irrespective of the sort order. This means that they appear
+     * at the start of sorted lists, whatever other values may be present.
      * 
-     * @return <code>true</code> if <code>NULL</code> values are sorted at
-     *         the start, <code>false</code> otherwise
+     * @return {@code true} if {@code NULL} values are sorted at the start,
+     *         {@code false} otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean nullsAreSortedAtStart() throws SQLException;
 
     /**
-     * Determine if <code>NULL</code> values are sorted high - i.e. they are
-     * sorted as if they are higher than any other values.
+     * Determines whether {@code NULL} values are sorted high - i.e. they are sorted
+     * as if they are higher than any other values.
      * 
-     * @return <code>true</code> if <code>NULL</code> values are sorted
-     *         high, <code>false</code> otherwise.
+     * @return {@code true} if {@code NULL} values are sorted high, {@code
+     *         false} otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean nullsAreSortedHigh() throws SQLException;
 
     /**
-     * Determine if <code>NULL</code> values are sorted low - ie they are
-     * sorted as if they are lower than any other values.
+     * Determines whether {@code NULL} values are sorted low - i.e. they are sorted as
+     * if they are lower than any other values.
      * 
-     * @return <code>true</code> if <code>NULL</code> values are sorted low,
-     *         <code>false</code> otherwise.
+     * @return {@code true} if {@code NULL} values are sorted low, {@code false}
+     *         otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean nullsAreSortedLow() throws SQLException;
 
     /**
-     * Determine if deletes made by others are visible, for a specified
-     * ResultSet type.
+     * Determines whether deletes made by others are visible, for a specified {@code
+     * ResultSet} type.
      * 
      * @param type
-     *            the type of the ResultSet. It may be either
-     *            <code>ResultSet.TYPE_FORWARD_ONLY</code> or
-     *            <code>ResultSet.TYPE_SCROLL_INSENSITIVE</code>, or
-     *            <code>ResultSet.TYPE_SCROLL_SENSITIVE</code>)
-     * @return <code>true</code> if others' deletes are visible,
-     *         <code>false</code> otherwise.
+     *            the type of the {@code ResultSet}. It may be either {@code
+     *            ResultSet.TYPE_FORWARD_ONLY} or {@code
+     *            ResultSet.TYPE_SCROLL_INSENSITIVE}, or {@code
+     *            ResultSet.TYPE_SCROLL_SENSITIVE})
+     * @return {@code true} if others' deletes are visible, {@code false}
+     *         otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean othersDeletesAreVisible(int type) throws SQLException;
 
     /**
-     * Determine if inserts made by others are visible, for a specified
-     * ResultSet type.
+     * Determines whether inserts made by others are visible, for a specified {@code
+     * ResultSet} type.
      * 
      * @param type
-     *            the type of the ResultSet. May be
-     *            <code>ResultSet.TYPE_FORWARD_ONLY</code>, or
-     *            <code>ResultSet.TYPE_SCROLL_INSENSITIVE</code>, or
-     *            <code>ResultSet.TYPE_SCROLL_SENSITIVE</code>
-     * @return <code>true</code> if others' inserts are visible otherwise
-     *         <code>false</code>.
+     *            the type of the {@code ResultSet}. May be {@code
+     *            ResultSet.TYPE_FORWARD_ONLY}, or {@code
+     *            ResultSet.TYPE_SCROLL_INSENSITIVE}, or {@code
+     *            ResultSet.TYPE_SCROLL_SENSITIVE}
+     * @return {@code true} if others' inserts are visible, otherwise {@code
+     *         false}.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean othersInsertsAreVisible(int type) throws SQLException;
 
     /**
-     * Determine if updates made by others are visible, for a specified
-     * ResultSet type.
+     * Determines whether updates made by others are visible, for a specified {@code
+     * ResultSet} type.
      * 
      * @param type
-     *            the type of the ResultSet. May be
-     *            <code>ResultSet.TYPE_FORWARD_ONLY</code>, or
-     *            <code>ResultSet.TYPE_SCROLL_INSENSITIVE</code>, or
-     *            <code>ResultSet.TYPE_SCROLL_SENSITIVE</code>
-     * @return <code>true</code> if others' inserts are visible otherwise
-     *         <code>false</code>.
+     *            the type of the {@code ResultSet}. May be {@code
+     *            ResultSet.TYPE_FORWARD_ONLY}, or {@code
+     *            ResultSet.TYPE_SCROLL_INSENSITIVE}, or {@code
+     *            ResultSet.TYPE_SCROLL_SENSITIVE}
+     * @return {@code true} if others' inserts are visible, otherwise {@code
+     *         false}.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean othersUpdatesAreVisible(int type) throws SQLException;
 
     /**
-     * Determine if a ResultSet's own deletes are visible, for a specified
-     * ResultSet type.
+     * Determines whether a {@code ResultSet} can see its own deletes, for a
+     * specified {@code ResultSet} type.
      * 
      * @param type
-     *            the type of the ResultSet:
-     *            <code>ResultSet.TYPE_FORWARD_ONLY</code>,
-     *            <code>ResultSet.TYPE_SCROLL_INSENSITIVE</code>, or
-     *            <code>ResultSet.TYPE_SCROLL_SENSITIVE</code>
-     * @return <code>true</code> if the delete's are seen by the own ResultSet
-     *         otherwise <code>false</code>.
+     *            the type of the {@code ResultSet}: {@code
+     *            ResultSet.TYPE_FORWARD_ONLY}, {@code
+     *            ResultSet.TYPE_SCROLL_INSENSITIVE}, or {@code
+     *            ResultSet.TYPE_SCROLL_SENSITIVE}
+     * @return {@code true} if the deletes are seen by the {@code
+     *         ResultSet} itself, otherwise {@code false}.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean ownDeletesAreVisible(int type) throws SQLException;
 
     /**
-     * Determine if its own inserts are visible to a given ResultSet type.
+     * Determines whether a {@code ResultSet} can see its own inserts, for a
+     * specified {@code ResultSet} type.
      * 
      * @param type
-     *            the type of the ResultSet:
-     *            <code>ResultSet.TYPE_FORWARD_ONLY</code>,
-     *            <code>ResultSet.TYPE_SCROLL_INSENSITIVE</code>, or
-     *            <code>ResultSet.TYPE_SCROLL_SENSITIVE</code>
-     * @return <code>true</code> if inserts are visible for this type
-     *         <code>false</code> otherwise.
+     *            the type of the {@code ResultSet}: {@code
+     *            ResultSet.TYPE_FORWARD_ONLY}, {@code
+     *            ResultSet.TYPE_SCROLL_INSENSITIVE}, or {@code
+     *            ResultSet.TYPE_SCROLL_SENSITIVE}
+     * @return {@code true} if the inserts are seen by the {@code
+     *         ResultSet} itself, otherwise {@code false}.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean ownInsertsAreVisible(int type) throws SQLException;
 
     /**
-     * Determine if for a supplied type of ResultSet, the ResultSet's own
-     * updates are visible.
+     * Determines whether a {@code ResultSet} can see its own updates, for a
+     * specified {@code ResultSet} type.
      * 
      * @param type
-     *            the type of the ResultSet:
-     *            <code>ResultSet.TYPE_FORWARD_ONLY</code>,
-     *            <code>ResultSet.TYPE_SCROLL_INSENSITIVE</code>, or
-     *            <code>ResultSet.TYPE_SCROLL_SENSITIVE</code>
-     * @return <code>true</code> if updates are visible to in this ResultSet
-     *         type otherwise <code>false</code>.
+     *            the type of the {@code ResultSet}: {@code
+     *            ResultSet.TYPE_FORWARD_ONLY}, {@code
+     *            ResultSet.TYPE_SCROLL_INSENSITIVE}, or {@code
+     *            ResultSet.TYPE_SCROLL_SENSITIVE}
+     * @return {@code true} if the updates are seen by the {@code
+     *         ResultSet} itself, otherwise {@code false}.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean ownUpdatesAreVisible(int type) throws SQLException;
 
     /**
-     * Determine whether the database treats SQL identifiers that are in mixed
-     * case (and unquoted) as case insensitive. If true then the database stores
-     * them in lower case.
+     * Determines whether the database treats SQL identifiers that are in mixed
+     * case (and unquoted) as case insensitive. If {@code true} then the
+     * database stores them in lower case.
      * 
-     * @return <code>true</code> if unquoted SQL identifiers are stored in
-     *         lower case, <code>false</code> otherwise.
+     * @return {@code true} if unquoted SQL identifiers are stored in lower
+     *         case, {@code false} otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean storesLowerCaseIdentifiers() throws SQLException;
 
     /**
-     * Determine whether the database considers mixed case quoted SQL
+     * Determines whether the database considers mixed case quoted SQL
      * identifiers as case insensitive and stores them in lower case.
      * 
-     * @return <code>true</code> if quoted SQL identifiers are stored in lower
-     *         case, <code>false</code> otherwise.
+     * @return {@code true} if quoted SQL identifiers are stored in lower case,
+     *         {@code false} otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean storesLowerCaseQuotedIdentifiers() throws SQLException;
 
     /**
-     * Determine whether the database considers mixed case unquoted SQL
+     * Determines whether the database considers mixed case unquoted SQL
      * identifiers as case insensitive and stores them in mixed case.
      * 
-     * @return <code>true</code> if unquoted SQL identifiers as stored in
-     *         mixed case, <code>false</code> otherwise.
+     * @return {@code true} if unquoted SQL identifiers as stored in mixed case,
+     *         {@code false} otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean storesMixedCaseIdentifiers() throws SQLException;
 
     /**
-     * Determine whether the database considers identifiers as case insensitive
+     * Determines whether the database considers identifiers as case insensitive
      * if they are mixed case quoted SQL. The database stores them in mixed
      * case.
      * 
-     * @return <code>true</code> if quoted SQL identifiers are stored in mixed
-     *         case, <code>false</code> otherwise.
+     * @return {@code true} if quoted SQL identifiers are stored in mixed case,
+     *         {@code false} otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean storesMixedCaseQuotedIdentifiers() throws SQLException;
 
     /**
-     * Determine whether the database considers mixed case unquoted SQL
+     * Determines whether the database considers mixed case unquoted SQL
      * identifiers as case insensitive and stores them in upper case.
      * 
-     * @return <code>true</code> if unquoted SQL identifiers are stored in
-     *         upper case, <code>false</code> otherwise.
+     * @return {@code true} if unquoted SQL identifiers are stored in upper
+     *         case, {@code false} otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean storesUpperCaseIdentifiers() throws SQLException;
 
     /**
-     * Determine whether the database considers mixed case quoted SQL
+     * Determines whether the database considers mixed case quoted SQL
      * identifiers as case insensitive and stores them in upper case.
      * 
-     * @return <code>true</code> if quoted SQL identifiers are stored in upper
-     *         case, <code>false</code> otherwise.
+     * @return {@code true} if quoted SQL identifiers are stored in upper case,
+     *         {@code false} otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean storesUpperCaseQuotedIdentifiers() throws SQLException;
 
     /**
-     * Determine if the database supports ALTER TABLE operation with add column.
+     * Determines whether the database supports {@code ALTER TABLE} operation with
+     * {@code ADD COLUMN}.
      * 
-     * @return <code>true</code> if ALTER TABLE with add column is supported,
-     *         <code>false</code> otherwise.
+     * @return {@code true} if {@code ALTER TABLE} with {@code ADD COLUMN} is
+     *         supported, {@code false} otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsAlterTableWithAddColumn() throws SQLException;
 
     /**
-     * Determine if the database supports ALTER TABLE operation with drop
-     * column.
+     * Determines whether the database supports {@code ALTER TABLE} operation with
+     * {@code DROP COLUMN}.
      * 
-     * @return <code>true</code> if ALTER TABLE with drop column is supported,
-     *         <code>false</code> otherwise.
+     * @return {@code true} if {@code ALTER TABLE} with {@code DROP COLUMN} is
+     *         supported, {@code false} otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsAlterTableWithDropColumn() throws SQLException;
 
     /**
-     * Determine if the database supports the ANSI92 entry level SQL grammar.
+     * Determines whether the database supports the ANSI92 entry level SQL grammar.
      * 
-     * @return <code>true</code> if the ANSI92 entry level SQL grammar is
-     *         supported, <code>false</code> otherwise.
+     * @return {@code true} if the ANSI92 entry level SQL grammar is supported,
+     *         {@code false} otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsANSI92EntryLevelSQL() throws SQLException;
 
     /**
-     * Determine if the database supports the ANSI92 full SQL grammar.
+     * Determines whether the database supports the ANSI92 full SQL grammar.
      * 
-     * @return <code>true</code> if the ANSI92 full SQL grammar is supported,
-     *         <code>false</code> otherwise.
+     * @return {@code true} if the ANSI92 full SQL grammar is supported, {@code
+     *         false} otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsANSI92FullSQL() throws SQLException;
 
     /**
-     * Determine if the database supports the ANSI92 intermediate SQL Grammar.
+     * Determines whether the database supports the ANSI92 intermediate SQL Grammar.
      * 
-     * @return <code>true</code> if the ANSI92 intermediate SQL grammar is
-     *         supported, <code>false</code> otherwise.
+     * @return {@code true} if the ANSI92 intermediate SQL grammar is supported,
+     *         {@code false} otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsANSI92IntermediateSQL() throws SQLException;
 
     /**
-     * Determine if the database supports Batch Updates.
+     * Determines whether the database supports batch updates.
      * 
-     * @return <code>true</code> if batch updates are supported,
-     *         <code>false</code> otherwise.
+     * @return {@code true} if batch updates are supported, {@code false}
+     *         otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsBatchUpdates() throws SQLException;
 
     /**
-     * Determine whether catalog names may be used in data manipulation
+     * Determines whether catalog names may be used in data manipulation
      * statements.
      * 
-     * @return <code>true</code> if catalog names can be used in data
-     *         manipulation statements, <code>false</code> otherwise.
+     * @return {@code true} if catalog names can be used in data manipulation
+     *         statements, {@code false} otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsCatalogsInDataManipulation() throws SQLException;
 
     /**
-     * Determine if catalog names can be used in Index Definition statements.
+     * Determines whether catalog names can be used in index definition statements.
      * 
-     * @return <code>true</code> if catalog names can be used in Index
-     *         Definition statements, <code>false</code> otherwise.
+     * @return {@code true} if catalog names can be used in index definition
+     *         statements, {@code false} otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsCatalogsInIndexDefinitions() throws SQLException;
 
     /**
-     * Determine if catalog names can be used in privilege definition
+     * Determines whether catalog names can be used in privilege definition
      * statements.
      * 
-     * @return <code>true</code> if catalog names can be used in privilege
-     *         definition statements, <code>false</code> otherwise.
+     * @return {@code true} if catalog names can be used in privilege definition
+     *         statements, {@code false} otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsCatalogsInPrivilegeDefinitions() throws SQLException;
 
     /**
-     * Determine if catalog names can be used in procedure call statements.
+     * Determines whether catalog names can be used in procedure call statements.
      * 
-     * @return <code>true</code> if catalog names can be used in procedure
-     *         call statements.
+     * @return {@code true} if catalog names can be used in procedure call
+     *         statements.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsCatalogsInProcedureCalls() throws SQLException;
 
     /**
-     * Determine if catalog names may be used in table definition statements.
+     * Determines whether catalog names may be used in table definition statements.
      * 
-     * @return <code>true</code> if catalog names can be used in definition
-     *         statements, <code>false</code> otherwise.
+     * @return {@code true} if catalog names can be used in definition
+     *         statements, {@code false} otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsCatalogsInTableDefinitions() throws SQLException;
 
     /**
-     * Determine if the database supports column aliasing.
+     * Determines whether the database supports column aliasing.
      * <p>
      * If aliasing is supported, then the SQL AS clause is used to provide names
      * for computed columns and provide alias names for columns.
+     * </p>
      * 
-     * @return <code>true</code> if column aliasing is supported,
-     *         <code>false</code> otherwise.
+     * @return {@code true} if column aliasing is supported, {@code false}
+     *         otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
      */
     public boolean supportsColumnAliasing() throws SQLException;
 
     /**
-     * Determine if the database supports the CONVERT operation between SQL
-     * types.
+     * Determines whether the database supports the {@code CONVERT} operation between
+     * SQL types.
      * 
-     * @return <code>true</code> if the CONVERT operation is supported,
-     *         <code>false</code> otherwise.
+     * @return {@code true} if the {@code CONVERT} operation is supported,
+     *         {@code false} otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsConvert() throws SQLException;
 
     /**
-     * Determine if the database supports CONVERT operation for two supplied SQL
-     * types.
+     * Determines whether the database supports {@code CONVERT} operation for two
+     * supplied SQL types.
      * 
      * @param fromType
-     *            the Type to convert from, as defined by
-     *            <code>java.sql.Types</code>
+     *            the Type to convert from, as defined by {@code java.sql.Types}
      * @param toType
-     *            the Type to convert to, as defined by
-     *            <code>java.sql.Types</code>
-     * @return <code>true</code> if the CONVERT operation is supported for
-     *         these types, <code>false</code> otherwise.
+     *            the Type to convert to, as defined by {@code java.sql.Types}
+     * @return {@code true} if the {@code CONVERT} operation is supported for
+     *         these types, {@code false} otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsConvert(int fromType, int toType)
             throws SQLException;
 
     /**
-     * Determine if the database supports the Core SQL Grammar for ODBC.
+     * Determines whether the database supports the Core SQL Grammar for ODBC.
      * 
-     * @return <code>true</code> if the Core SQL Grammar is supported,
-     *         <code>false</code> otherwise.
+     * @return {@code true} if the Core SQL Grammar is supported, {@code false}
+     *         otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsCoreSQLGrammar() throws SQLException;
 
     /**
-     * Determine if the database supports correlated sub-queries.
+     * Determines whether the database supports correlated sub-queries.
      * 
-     * @return <code>true</code> if the database does support correlated
-     *         sub-queries and <code>false</code> otherwise.
+     * @return {@code true} if the database does support correlated sub-queries
+     *         and {@code false} otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsCorrelatedSubqueries() throws SQLException;
 
     /**
-     * Determine if the database allows both data definition and data
+     * Determines whether the database allows both data definition and data
      * manipulation statements inside a transaction.
      * 
-     * @return <code>true</code> if both types of statement are permitted,
-     *         <code>false</code> otherwise.
+     * @return {@code true} if both types of statement are permitted, {@code
+     *         false} otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsDataDefinitionAndDataManipulationTransactions()
             throws SQLException;
 
     /**
-     * Determine if the database only allows data manipulation statements inside
+     * Determines whether the database only allows data manipulation statements inside
      * a transaction.
      * 
-     * @return <code>true</code> if only data manipulation statements are
-     *         permitted, <code>false</code> otherwise.
+     * @return {@code true} if data manipulation statements are permitted only within a transaction,
+     *         {@code false} otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsDataManipulationTransactionsOnly()
             throws SQLException;
 
     /**
-     * Determine if table correlation names are restricted to be different from
+     * Determines whether table correlation names are required to be different from
      * the names of the tables, when they are supported.
      * 
-     * @return <code>true</code> if correlation names must be different to
-     *         table names, <code>false</code> otherwise.
+     * @return {@code true} if correlation names must be different from table
+     *         names, {@code false} otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsDifferentTableCorrelationNames() throws SQLException;
 
     /**
-     * Determine whether expressions in ORDER BY lists are supported.
+     * Determines whether expressions in {@code ORDER BY} lists are supported.
      * 
-     * @return <code>true</code> if expressions in ORDER BY lists are
+     * @return {@code true} if expressions in {@code ORDER BY} lists are
      *         supported.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsExpressionsInOrderBy() throws SQLException;
 
     /**
-     * Determine whether the Extended SQL Grammar for ODBC is supported.
+     * Determines whether the Extended SQL Grammar for ODBC is supported.
      * 
-     * @return <code>true</code> if the Extended SQL Grammar is supported,
-     *         <code>false</code> otherwise.
+     * @return {@code true} if the Extended SQL Grammar is supported, {@code
+     *         false} otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsExtendedSQLGrammar() throws SQLException;
 
     /**
-     * Determine if the database supports full nested outer joins.
+     * Determines whether the database supports full nested outer joins.
      * 
-     * @return <code>true</code> if full nested outer joins are supported,
-     *         <code>false</code> otherwise.
+     * @return {@code true} if full nested outer joins are supported, {@code
+     *         false} otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsFullOuterJoins() throws SQLException;
 
     /**
-     * Determine if auto generated keys can be returned when a statement
+     * Determines whether auto generated keys can be returned when a statement
      * executes.
      * 
-     * @return <code>true</code> if auto generated keys can be returned,
-     *         <code>false</code> otherwise.
+     * @return {@code true} if auto generated keys can be returned, {@code
+     *         false} otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsGetGeneratedKeys() throws SQLException;
 
     /**
-     * Determine if the database supports a form of GROUP BY clause.
+     * Determines whether the database supports {@code GROUP BY} clauses.
      * 
-     * @return <code>true</code> if a form of GROUP BY clause is supported,
-     *         <code>false</code> otherwise.
+     * @return {@code true} if the {@code GROUP BY} clause is supported, {@code
+     *         false} otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsGroupBy() throws SQLException;
 
     /**
-     * Determine if the database supports using a column name in a GROUP BY
-     * clause not included in the SELECT statement as long as all of the columns
-     * in the SELECT statement are used in the GROUP BY clause.
+     * Determines whether the database supports using a column name in a {@code GROUP
+     * BY} clause not included in the {@code SELECT} statement as long as all of
+     * the columns in the {@code SELECT} statement are used in the {@code GROUP
+     * BY} clause.
      * 
-     * @return <code>true</code> if GROUP BY clauses can use column names in
-     *         this way, <code>false</code> otherwise.
+     * @return {@code true} if {@code GROUP BY} clauses can use column names in
+     *         this way, {@code false} otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsGroupByBeyondSelect() throws SQLException;
 
     /**
-     * Determine if the database supports using a column name in a GROUP BY
-     * clause that is not in the SELECT statement.
+     * Determines whether the database supports using a column name in a {@code GROUP
+     * BY} clause that is not in the {@code SELECT} statement.
      * 
-     * @return <code>true</code> if GROUP BY clause can use a column name not
-     *         in the SELECT statement, <code>false</code> otherwise.
+     * @return {@code true} if {@code GROUP BY} clause can use a column name not
+     *         in the {@code SELECT} statement, {@code false} otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsGroupByUnrelated() throws SQLException;
 
     /**
-     * Determine whether the database supports SQL Integrity Enhancement
+     * Determines whether the database supports SQL Integrity Enhancement
      * Facility.
      * 
-     * @return <code>true</code> if the Integrity Enhancement Facility is
-     *         supported, <code>false</code> otherwise.
+     * @return {@code true} if the Integrity Enhancement Facility is supported,
+     *         {@code false} otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsIntegrityEnhancementFacility() throws SQLException;
 
     /**
-     * Determine if the database supports using a LIKE escape clause.
+     * Determines whether the database supports a {@code LIKE} escape clause.
      * 
-     * @return <code>true</code> if LIKE escape clause is supported,
-     *         <code>false</code> otherwise
+     * @return {@code true} if LIKE escape clause is supported, {@code false}
+     *         otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsLikeEscapeClause() throws SQLException;
 
     /**
-     * Determine if the database provides limited support for outer Join
+     * Determines whether the database provides limited support for outer join
      * operations.
      * 
-     * @return <code>true</code> if there is limited support for outer Join
-     *         operations, <code>false</code> otherwise. This will be
-     *         <code>true</code> if <code>supportsFullOuterJoins</code>
-     *         returns <code>true</code>.
+     * @return {@code true} if there is limited support for outer join
+     *         operations, {@code false} otherwise. This will be {@code true} if
+     *         {@code supportsFullOuterJoins} returns {@code true}.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsLimitedOuterJoins() throws SQLException;
 
     /**
-     * Determine if the database supports Minimum SQL Grammar for ODBC.
+     * Determines whether the database supports Minimum SQL Grammar for ODBC.
      * 
-     * @return <code>true</code> if the Minimum SQL Grammar is supported,
-     *         <code>false</code> otherwise.
+     * @return {@code true} if the Minimum SQL Grammar is supported, {@code
+     *         false} otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsMinimumSQLGrammar() throws SQLException;
 
     /**
-     * Determine if the database treats mixed case unquoted SQL identifiers as
+     * Determines whether the database treats mixed case unquoted SQL identifiers as
      * case sensitive storing them in mixed case.
      * 
-     * @return <code>true</code> if unquoted SQL identifiers are stored in
-     *         mixed case, <code>false</code> otherwise.
+     * @return {@code true} if unquoted SQL identifiers are stored in mixed
+     *         case, {@code false} otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsMixedCaseIdentifiers() throws SQLException;
 
     /**
-     * Determine whether the database considers mixed case quoted SQL
+     * Determines whether the database considers mixed case quoted SQL
      * identifiers as case sensitive, storing them in mixed case.
      * 
-     * @return <code>true</code> if quoted SQL identifiers are stored in mixed
-     *         case, <code>false</code> otherwise.
+     * @return {@code true} if quoted SQL identifiers are stored in mixed case,
+     *         {@code false} otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsMixedCaseQuotedIdentifiers() throws SQLException;
 
     /**
-     * Determine if it is possible for a single CallableStatement to return
-     * multiple ResultSets simultaneously.
+     * Determines whether it is possible for a single {@code CallableStatement} to
+     * return multiple {@code ResultSet}s simultaneously.
      * 
-     * @return <code>true</code> if a single CallableStatement can return
-     *         multiple ResultSets simultaneously, <code>false</code>
+     * @return {@code true} if a single {@code CallableStatement} can return
+     *         multiple {@code ResultSet}s simultaneously, {@code false}
      *         otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsMultipleOpenResults() throws SQLException;
 
     /**
-     * Determine whether retrieving multiple ResultSets from a single call to
-     * the <code>execute</code> method is supported.
+     * Determines whether retrieving multiple {@code ResultSet}s from a single
+     * call to the {@code execute} method is supported.
      * 
-     * @return <code>true</code> if multiple ResultSets can be retrieved,
-     *         <code>false</code> otherwise.
+     * @return {@code true} if multiple {@code ResultSet}s can be retrieved,
+     *         {@code false} otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsMultipleResultSets() throws SQLException;
 
     /**
-     * Determine whether multiple transactions in progress at at time on
+     * Determines whether multiple simultaneous transactions on
      * different connections are supported.
      * 
-     * @return <code>true</code> if multiple open transactions are supported,
-     *         <code>false</code> otherwise.
+     * @return {@code true} if multiple open transactions are supported, {@code
+     *         false} otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsMultipleTransactions() throws SQLException;
 
     /**
-     * Determine whether call-able statements with named parameters is
-     * supported.
+     * Determines whether callable statements with named parameters is supported.
      * 
-     * @return <code>true</code> if named parameters can be used with
-     *         call-able statements, <code>false</code> otherwise.
+     * @return {@code true} if named parameters can be used with callable
+     *         statements, {@code false} otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsNamedParameters() throws SQLException;
 
     /**
-     * Determine if columns in the database can be defined as non-nullable.
+     * Determines whether columns in the database can be defined as non-nullable.
      * 
-     * @return <code>true</code> if Columns can be defined non-nullable,
-     *         <code>false</code> otherwise.
+     * @return {@code true} if columns can be defined non-nullable, {@code
+     *         false} otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsNonNullableColumns() throws SQLException;
 
     /**
-     * Determine whether keeping Cursors open across Commit operations is
+     * Determines whether keeping cursors open across commit operations is
      * supported.
      * 
-     * @return <code>true</code> if Cursors can be kept open across Commit
-     *         operations, <code>false</code> if they might get closed.
+     * @return {@code true} if cursors can be kept open across commit
+     *         operations, {@code false} if they might get closed.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
      */
     public boolean supportsOpenCursorsAcrossCommit() throws SQLException;
 
     /**
-     * Determine if the database can keep Cursors open across Rollback
+     * Determines whether the database can keep cursors open across rollback
      * operations.
      * 
-     * @return <code>true</code> if Cursors can be kept open across Rollback
-     *         operations, <code>false</code> if they might get closed.
+     * @return {@code true} if cursors can be kept open across rollback
+     *         operations, {@code false} if they might get closed.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsOpenCursorsAcrossRollback() throws SQLException;
 
     /**
-     * Determine whether keeping Statements open across Commit operations is
+     * Determines whether keeping statements open across commit operations is
      * supported.
      * 
-     * @return <code>true</code> if Statements can be kept open,
-     *         <code>false</code> if they might not.
+     * @return {@code true} if statements can be kept open, {@code false} if
+     *         they might not.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsOpenStatementsAcrossCommit() throws SQLException;
 
     /**
-     * Determine whether keeping Statements open across Rollback operations is
+     * Determines whether keeping statements open across rollback operations is
      * supported.
      * 
-     * @return <code>true</code> if Statements can be kept open,
-     *         <code>false</code> if they might not.
+     * @return {@code true} if statements can be kept open, {@code false} if
+     *         they might not.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsOpenStatementsAcrossRollback() throws SQLException;
 
     /**
-     * Determine whether using a column in an ORDER BY clause that is not in the
-     * SELECT statement is supported.
+     * Determines whether using a column in an {@code ORDER BY} clause that is
+     * not in the {@code SELECT} statement is supported.
      * 
-     * @return <code>true</code> if it is possible to ORDER using a column not
-     *         in the SELECT, <code>false</code> otherwise.
+     * @return {@code true} if it is possible to {@code ORDER} using a column
+     *         not in the {@code SELECT}, {@code false} otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsOrderByUnrelated() throws SQLException;
 
     /**
-     * Determine whether outer join operations are supported.
+     * Determines whether outer join operations are supported.
      * 
-     * @return <code>true</code> if outer join operations are supported,
-     *         <code>false</code> otherwise.
+     * @return {@code true} if outer join operations are supported, {@code
+     *         false} otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsOuterJoins() throws SQLException;
 
     /**
-     * Determine whether positioned DELETE statements are supported.
+     * Determines whether positioned {@code DELETE} statements are supported.
      * 
-     * @return <code>true</code> if the database supports positioned DELETE
+     * @return {@code true} if the database supports positioned {@code DELETE}
      *         statements.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsPositionedDelete() throws SQLException;
 
     /**
-     * Determine whether positioned UPDATE statements are supported.
+     * Determines whether positioned {@code UPDATE} statements are supported.
      * 
-     * @return <code>true</code> if the database supports positioned UPDATE
-     *         statements, <code>false</code> otherwise.
+     * @return {@code true} if the database supports positioned {@code UPDATE}
+     *         statements, {@code false} otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsPositionedUpdate() throws SQLException;
 
     /**
-     * Determine whether there is support for a given concurrency style for the
-     * given ResultSet.
+     * Determines whether there is support for a given concurrency style for the
+     * given {@code ResultSet}.
      * 
      * @param type
-     *            the ResultSet type, as defined in
-     *            <code>java.sql.ResultSet</code>:
-     *            <code>ResultSet.TYPE_FORWARD_ONLY</code>,
-     *            <code>ResultSet.TYPE_SCROLL_INSENSITIVE</code>, or
-     *            <code>ResultSet.TYPE_SCROLL_SENSITIVE</code>
+     *            the {@code ResultSet} type, as defined in {@code
+     *            java.sql.ResultSet}:
+     *            <ul>
+     *            <li>{@code ResultSet.TYPE_FORWARD_ONLY}</li>
+     *            <li>{@code ResultSet.TYPE_SCROLL_INSENSITIVE}</li>
+     *            <li>{@code ResultSet.TYPE_SCROLL_SENSITIVE}</li>
+     *            </ul>
      * @param concurrency
-     *            a concurrency type, which may be one of
-     *            <code>ResultSet.CONCUR_READ_ONLY</code> or
-     *            <code>ResultSet.CONCUR_UPDATABLE</code>.
-     * @return <code>true</code> if that concurrency and ResultSet type
-     *         pairing is supported otherwise <code>false</code>.
+     *            a concurrency type, which may be one of {@code
+     *            ResultSet.CONCUR_READ_ONLY} or {@code
+     *            ResultSet.CONCUR_UPDATABLE}.
+     * @return {@code true} if that concurrency and {@code ResultSet} type
+     *         pairing is supported otherwise {@code false}.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsResultSetConcurrency(int type, int concurrency)
             throws SQLException;
 
     /**
-     * Determine whether the supplied ResultSet holdability is supported.
+     * Determines whether the supplied {@code ResultSet} holdability mode is
+     * supported.
      * 
      * @param holdability
-     *            as specified in java.sql.ResultSet:
-     *            ResultSet.HOLD_CURSORS_OVER_COMMIT or
-     *            ResultSet.CLOSE_CURSORS_AT_COMMIT
-     * @return <code>true</code> if the given ResultSet holdability is
-     *         supported and if it isn't then <code>false</code>.
+     *            as specified in {@code java.sql.ResultSet}: {@code
+     *            ResultSet.HOLD_CURSORS_OVER_COMMIT} or {@code
+     *            ResultSet.CLOSE_CURSORS_AT_COMMIT}
+     * @return {@code true} if the given ResultSet holdability is supported and
+     *         if it isn't then {@code false}.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsResultSetHoldability(int holdability)
             throws SQLException;
 
     /**
-     * Determine whether the supplied ResultSet type is supported.
+     * Determines whether the supplied {@code ResultSet} type is supported.
      * 
      * @param type
-     *            the ResultSet type as defined in java.sql.ResultSet:
-     *            <code>ResultSet.TYPE_FORWARD_ONLY</code>,
-     *            <code>ResultSet.TYPE_SCROLL_INSENSITIVE</code>, or
-     *            <code>ResultSet.TYPE_SCROLL_SENSITIVE</code>
-     * @return <code>true</code> if the ResultSet type is supported,
-     *         <code>false</code> otherwise.
+     *            the {@code ResultSet} type as defined in {@code
+     *            java.sql.ResultSet}: {@code ResultSet.TYPE_FORWARD_ONLY},
+     *            {@code ResultSet.TYPE_SCROLL_INSENSITIVE}, or {@code
+     *            ResultSet.TYPE_SCROLL_SENSITIVE}
+     * @return {@code true} if the {@code ResultSet} type is supported, {@code
+     *         false} otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsResultSetType(int type) throws SQLException;
 
     /**
-     * Determine whether Savepoints for transactions are supported.
+     * Determines whether savepoints for transactions are supported.
      * 
-     * @return <code>true</code> if Savepoints are supported,
-     *         <code>false</code> otherwise.
+     * @return {@code true} if savepoints are supported, {@code false}
+     *         otherwise.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsSavepoints() throws SQLException;
 
     /**
-     * Determine whether a schema name may be used in a data manipulation
+     * Determines whether a schema name may be used in a data manipulation
      * statement.
      * 
-     * @return <code>true</code> if a schema name can be used in a data
-     *         manipulation otherwise <code>false</code>.
+     * @return {@code true} if a schema name can be used in a data manipulation,
+     *         otherwise {@code false}.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsSchemasInDataManipulation() throws SQLException;
 
     /**
-     * Determine whether a schema name may be used in an index definition
+     * Determines whether a schema name may be used in an index definition
      * statement.
      * 
-     * @return <code>true</code> if a schema name can be used in an index
-     *         definition otherwise <code>false</code>.
+     * @return {@code true} if a schema name can be used in an index definition,
+     *         otherwise {@code false}.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsSchemasInIndexDefinitions() throws SQLException;
 
     /**
-     * Determine whether a database schema name can be used in a privilege
+     * Determines whether a database schema name can be used in a privilege
      * definition statement.
      * 
-     * @return <code>true</code> if a database schema name may be used in a
-     *         privilege definition otherwise <code>false</code>
+     * @return {@code true} if a database schema name may be used in a privilege
+     *         definition, otherwise {@code false}
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsSchemasInPrivilegeDefinitions() throws SQLException;
 
     /**
-     * Determine if a procedure call statement may be contain in a schema name.
+     * Determines whether a procedure call statement may be contain in a schema name.
      * 
-     * @return <code>true</code> if a schema name can be used in a procedure
-     *         call otherwise <code>false</code>.
+     * @return {@code true} if a schema name can be used in a procedure call,
+     *         otherwise {@code false}.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsSchemasInProcedureCalls() throws SQLException;
 
     /**
-     * Determine if a schema name can be used in a table definition statement.
+     * Determines whether a schema name can be used in a table definition statement.
      * 
-     * @return <code>true</code> if a schema name can be used in a table
-     *         definition otherwise <code>false</code>.
+     * @return {@code true} if a schema name can be used in a table definition,
+     *         otherwise {@code false}.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsSchemasInTableDefinitions() throws SQLException;
 
     /**
-     * Determine if this <code>SELECT FOR UPDATE</code> statements ar
-     * supported.
+     * Determines whether the {@code SELECT FOR UPDATE} statement is supported.
      * 
-     * @return <code>true</code> if <code>SELECT FOR UPDATE</code>
-     *         statements are supported otherwise <code>false</code>.
+     * @return {@code true} if {@code SELECT FOR UPDATE} statements are
+     *         supported, otherwise {@code false}.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsSelectForUpdate() throws SQLException;
 
     /**
-     * Determine whether statement pooling is supported.
+     * Determines whether statement pooling is supported.
      * 
-     * @return <code>true</code> of the database does support statement
-     *         pooling otherwise <code>false</code>.
+     * @return {@code true} of the database does support statement pooling,
+     *         otherwise {@code false}.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsStatementPooling() throws SQLException;
 
     /**
-     * Determine whether stored procedure calls using the stored procedure
+     * Determines whether stored procedure calls using the stored procedure
      * escape syntax is supported.
      * 
-     * @return <code>true</code> if stored procedure calls using the stored
-     *         procedure escape syntax are supported otherwise
-     *         <code>false</code>.
+     * @return {@code true} if stored procedure calls using the stored procedure
+     *         escape syntax are supported, otherwise {@code false}.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsStoredProcedures() throws SQLException;
 
     /**
-     * Determine whether subqueries in comparison expressions are supported.
+     * Determines whether subqueries in comparison expressions are supported.
      * 
-     * @return <code>true</code> if subqueries are supported in comparison
+     * @return {@code true} if subqueries are supported in comparison
      *         expressions.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsSubqueriesInComparisons() throws SQLException;
 
     /**
-     * Determine whether subqueries in EXISTS expressions are supported.
+     * Determines whether subqueries in {@code EXISTS} expressions are supported.
      * 
-     * @return <code>true</code> if subqueries are supported in EXISTS
-     *         expressions otherwise <code>false</code>.
+     * @return {@code true} if subqueries are supported in {@code EXISTS}
+     *         expressions, otherwise {@code false}.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsSubqueriesInExists() throws SQLException;
 
     /**
-     * Determine whether subqueries in <code>IN</code> statements are
-     * supported.
+     * Determines whether subqueries in {@code IN} statements are supported.
      * 
-     * @return <code>true</code> if subqueries are supported in IN statements
-     *         otherwise <code>false</code>.
+     * @return {@code true} if subqueries are supported in {@code IN} statements,
+     *         otherwise {@code false}.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsSubqueriesInIns() throws SQLException;
 
     /**
-     * Determine whether subqueries in quantified expressions are supported.
+     * Determines whether subqueries in quantified expressions are supported.
      * 
-     * @return <code>true</code> if subqueries are supported otherwise
-     *         <code>false</code>.
+     * @return {@code true} if subqueries are supported, otherwise {@code false}.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsSubqueriesInQuantifieds() throws SQLException;
 
     /**
-     * Determine whether the database has table correlation names support.
+     * Determines whether the database has table correlation names support.
      * 
-     * @return <code>true</code> if table correlation names are supported
-     *         otherwise <code>false</code>.
+     * @return {@code true} if table correlation names are supported, otherwise
+     *         {@code false}.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsTableCorrelationNames() throws SQLException;
 
     /**
-     * Determine whether a specified transaction isolation level is supported.
+     * Determines whether a specified transaction isolation level is supported.
      * 
      * @param level
-     *            the transaction isolation level, as specified in
-     *            <code>java.sql.Connection</code>:
-     *            <code>TRANSACTION_NONE</code>,
-     *            <code>TRANSACTION_READ_COMMITTED</code>,
-     *            <code>TRANSACTION_READ_UNCOMMITTED</code>,
-     *            <code>TRANSACTION_REPEATABLE_READ</code>,
-     *            <code>TRANSACTION_SERIALIZABLE</code>
-     * @return <code>true</code> if the specific isolation level is supported
-     *         otherwise <code>false</code>.
+     *            the transaction isolation level, as specified in {@code
+     *            java.sql.Connection}: {@code TRANSACTION_NONE}, {@code
+     *            TRANSACTION_READ_COMMITTED}, {@code
+     *            TRANSACTION_READ_UNCOMMITTED}, {@code
+     *            TRANSACTION_REPEATABLE_READ}, {@code TRANSACTION_SERIALIZABLE}
+     * @return {@code true} if the specific isolation level is supported,
+     *         otherwise {@code false}.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsTransactionIsolationLevel(int level)
             throws SQLException;
 
     /**
-     * Determine whether transactions are supported.
+     * Determines whether transactions are supported.
      * <p>
-     * If transactions are not supported, then the <code>commit</code> method
-     * does nothing and the transaction isolation level is always
-     * <code>TRANSACTION_NONE</code>.
+     * If transactions are not supported, then the {@code commit} method does
+     * nothing and the transaction isolation level is always {@code
+     * TRANSACTION_NONE}.
+     * </p>
      * 
-     * @return <code>true</code> if transactions are supported otherwise
-     *         <code>false</code>.
+     * @return {@code true} if transactions are supported, otherwise {@code
+     *         false}.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsTransactions() throws SQLException;
 
     /**
-     * Determine whether the <code>SQL UNION</code> operation is supported.
+     * Determines whether the {@code SQL UNION} operation is supported.
      * 
-     * @return <code>true</code> of the database does support
-     *         <code>UNION</code> otherwise <code>false</code>.
+     * @return {@code true} of the database does support {@code UNION}, otherwise
+     *         {@code false}.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsUnion() throws SQLException;
 
     /**
-     * Determine whether the <code>SQL UNION ALL</code> operation is
-     * supported.
+     * Determines whether the {@code SQL UNION ALL} operation is supported.
      * 
-     * @return <code>true</code> if the database does support UNION ALL
-     *         otherwise <code>false</code>.
+     * @return {@code true} if the database does support {@code UNION ALL},
+     *         otherwise {@code false}.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean supportsUnionAll() throws SQLException;
 
     /**
-     * Determine if the method <code>ResultSet.rowUpdated</code> can detect a
-     * visible row update.
+     * Determines whether the method {@code ResultSet.rowUpdated} can detect a visible
+     * row update for the specified {@code ResultSet} type.
      * 
      * @param type
-     *            ResultSet type: <code>ResultSet.TYPE_FORWARD_ONLY</code>,
-     *            <code>ResultSet.TYPE_SCROLL_INSENSITIVE</code>, or
-     *            <code>ResultSet.TYPE_SCROLL_SENSITIVE</code>
-     * @return <code>true</code> detecting changes is possible otherwise
-     *         <code>false</code>.
+     *            {@code ResultSet} type: {@code ResultSet.TYPE_FORWARD_ONLY},
+     *            {@code ResultSet.TYPE_SCROLL_INSENSITIVE}, or {@code
+     *            ResultSet.TYPE_SCROLL_SENSITIVE}
+     * @return {@code true} detecting changes is possible, otherwise {@code
+     *         false}.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean updatesAreDetected(int type) throws SQLException;
 
     /**
-     * Determine if this database uses a file for each table.
+     * Determines whether this database uses a file for each table.
      * 
-     * @return <code>true</code> if the database uses one file for each table
-     *         otherwise <code>false</code>.
+     * @return {@code true} if the database uses one file for each table,
+     *         otherwise {@code false}.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean usesLocalFilePerTable() throws SQLException;
 
     /**
-     * Determine whether this database uses a local file to store tables.
+     * Determines whether this database uses a local file to store tables.
      * 
-     * @return <code>true</code> of the database does store tables in a local
-     *         file otherwise <code>false</code>.
+     * @return {@code true} if the database stores tables in a local file,
+     *         otherwise {@code false}.
      * @throws SQLException
-     *             a database error occurred
+     *             a database error occurred.
+     * @since Android 1.0
      */
     public boolean usesLocalFiles() throws SQLException;
 }

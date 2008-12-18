@@ -33,22 +33,22 @@ import org.apache.harmony.logging.internal.nls.Messages;
  * etc. They use various handlers to actually do the output-dependent
  * operations.
  * <p>
- * Client applications can get named loggers by calling the methods
- * <code>getLogger</code>. They can also get anonymous loggers by calling the
- * methods <code>getAnonymousLogger</code>. Named loggers are organized in a
+ * Client applications can get named loggers by calling the {@code getLogger}
+ * methods. They can also get anonymous loggers by calling the
+ * {@code getAnonymousLogger} methods. Named loggers are organized in a
  * namespace hierarchy managed by a log manager. The naming convention is
- * usually the same as java package's naming convention, i.e., using
+ * usually the same as java package's naming convention, that is using
  * dot-separated strings. Anonymous loggers do not belong to any namespace.
  * </p>
  * <p>
- * Loggers "inherit" log level setting from their parent if its own level is set
- * to <code>null</code>. This is also true for the resource bundle. The
- * logger's resource bundle is used to localize the log messages if no resource
- * bundle name is given when a log method is called. If
- * <code>getUseParentHandlers</code> is <code>true</code>, loggers also
- * inherit their parent's handlers. Here "inherit" only means the "behaviors"
- * are inherited. The internal fields value will not change, for example,
- * <code>getLevel()</code> still returns <code>null</code>.
+ * Loggers "inherit" log level setting from their parent if their own level is
+ * set to {@code null}. This is also true for the resource bundle. The logger's
+ * resource bundle is used to localize the log messages if no resource bundle
+ * name is given when a log method is called. If {@code getUseParentHandlers()}
+ * returns {@code true}, loggers also inherit their parent's handlers. In this
+ * context, "inherit" only means that "behavior" is inherited. The internal
+ * field values will not change, for example, {@code getLevel()} still returns
+ * {@code null}.
  * </p>
  * <p>
  * When loading a given resource bundle, the logger first tries to use the
@@ -59,23 +59,26 @@ import org.apache.harmony.logging.internal.nls.Messages;
  * <p>
  * Some log methods accept log requests that do not specify the source class and
  * source method. In these cases, the logging framework will automatically infer
- * the calling class and method, but not guaranteed to be accurate.
+ * the calling class and method, but this is not guaranteed to be accurate.
  * </p>
  * <p>
- * Once a <code>LogRecord</code> object has been passed into the logging
- * framework, it is owned by the logging framework and the client applications
- * should not use it any longer.
+ * Once a {@code LogRecord} object has been passed into the logging framework,
+ * it is owned by the logging framework and the client applications should not
+ * use it any longer.
  * </p>
  * <p>
  * All methods of this class are thread-safe.
  * </p>
  * 
  * @see LogManager
+ * @since Android 1.0
  */
 public class Logger {
 
     /**
      * The global logger is provided as convenience for casual use.
+     * 
+     * @since Android 1.0
      */
     public final static Logger global = new Logger("global", null); //$NON-NLS-1$
 
@@ -116,7 +119,9 @@ public class Logger {
     
     private LogManager manager;
 
+    // BEGIN android-changed
     private volatile boolean handlerInited;
+    // END android-changed
 
 
     /*
@@ -126,16 +131,21 @@ public class Logger {
      */
 
     /**
-     * Constructs a <code>Logger</code> object with the supplied name and
-     * resource bundle name.
+     * Constructs a {@code Logger} object with the supplied name and resource
+     * bundle name; {@code notifiyParentHandlers} is set to {@code true}.
+     * <p>
+     * Notice : Loggers use a naming hierarchy. Thus "z.x.y" is a child of "z.x". 
+     * </p>
      * 
      * @param name
-     *            the name of this logger, may be null for anonymous loggers
+     *            the name of this logger, may be {@code null} for anonymous
+     *            loggers.
      * @param resourceBundleName
      *            the name of the resource bundle used to localize logging
-     *            messages, may be null
+     *            messages, may be {@code null}.
      * @throws MissingResourceException
-     *             If the specified resource bundle can not be loaded.
+     *             if the specified resource bundle can not be loaded.
+     * @since Android 1.0
      */
     protected Logger(String name, String resourceBundleName) {
         // try to load the specified resource bundle first
@@ -199,10 +209,10 @@ public class Logger {
      * Load the specified resource bundle, use privileged code.
      * 
      * @param resourceBundleName
-     *            the name of the resource bundle to load, cannot be null
+     *            the name of the resource bundle to load, cannot be {@code null}.
      * @return the loaded resource bundle.
      * @throws MissingResourceException
-     *             If the specified resource bundle can not be loaded.
+     *             if the specified resource bundle can not be loaded.
      */
     static ResourceBundle loadResourceBundle(String resourceBundleName) {
         // try context class loader to load the resource
@@ -270,14 +280,14 @@ public class Logger {
     /**
      * Gets an anonymous logger to use internally in a thread. Anonymous loggers
      * are not registered in the log manager's namespace. No security checks
-     * will be performed when updating an anonymous logger's control settings
-     * so that they can be used in applets.
+     * will be performed when updating an anonymous logger's control settings.
      * <p>
-     * Anonymous loggers' parent is set to be the root logger. This enables
-     * them to inherit default logging level and handlers from the root logger.
+     * The anonymous loggers' parent is set to be the root logger. This way it
+     * inherits the default logging level and handlers from the root logger.
      * </p>
      * 
-     * @return a new instance of anonymous logger
+     * @return a new instance of anonymous logger.
+     * @since Android 1.0
      */
     public static Logger getAnonymousLogger() {
         return getAnonymousLogger(null);
@@ -286,18 +296,18 @@ public class Logger {
     /**
      * Gets an anonymous logger to use internally in a thread. Anonymous loggers
      * are not registered in the log manager's namespace. No security checks
-     * will be performed when updating an anonymous logger's control settings
-     * so that they can be used in applets.
+     * will be performed when updating an anonymous logger's control settings.
      * <p>
-     * Anonymous loggers' parent is set to be the root logger. This enables
-     * them to inherit default logging level and handlers from the root logger.
+     * The anonymous loggers' parent is set to be the root logger. This way it
+     * inherits default logging level and handlers from the root logger.
      * </p>
      * 
      * @param resourceBundleName
-     *            the name of the resource bundle used to localize log messages
-     * @return a new instance of anonymous logger
+     *            the name of the resource bundle used to localize log messages.
+     * @return a new instance of anonymous logger.
      * @throws MissingResourceException
-     *             If the specified resource bundle can not be loaded.
+     *             if the specified resource bundle can not be loaded.
+     * @since Android 1.0
      */
     public static Logger getAnonymousLogger(String resourceBundleName) {
         final Logger l = new Logger(null, resourceBundleName);
@@ -365,15 +375,14 @@ public class Logger {
     }
 
     /**
-     * Gets a named logger. The returned logger may already exist, or may be
-     * newly created. If the latter, its level will be set to the configured
-     * level according to the <code>LogManager</code>'s properties if any.
+     * Gets a named logger. The returned logger may already exist or may be
+     * newly created. In the latter case, its level will be set to the
+     * configured level according to the {@code LogManager}'s properties.
      * 
      * @param name
-     *            the name of the logger to get, cannot be null
-     * @return a named logger
-     * @throws MissingResourceException
-     *             If the specified resource bundle can not be loaded.
+     *            the name of the logger to get, cannot be {@code null}.
+     * @return a named logger.
+     * @since Android 1.0
      */
     public static Logger getLogger(String name) {
         return getLoggerWithRes(name, null, false);
@@ -384,24 +393,32 @@ public class Logger {
      * resource bundle will be used to localize logging messages.
      * 
      * @param name
-     *            the name of the logger to get, cannot be null
+     *            the name of the logger to get, cannot be {@code null}.
      * @param resourceBundleName
-     *            the name of the resource bundle, may be null
-     * @return a named logger
+     *            the name of the resource bundle, may be {@code null}.
+     * @throws IllegalArgumentException
+     *             if the logger identified by {@code name} is associated with a
+     *             resource bundle and its name is not equal to
+     *             {@code resourceBundleName}.
+     * @throws MissingResourceException
+     *             if the name of the resource bundle cannot be found.
+     * @return a named logger.
+     * @since Android 1.0
      */
     public static Logger getLogger(String name, String resourceBundleName) {
         return getLoggerWithRes(name, resourceBundleName, true);
     }
 
     /**
-     * Adds a handler to this logger. The handler will be fed with log records
-     * received by this logger.
+     * Adds a handler to this logger. The {@code name} will be fed with log
+     * records received by this logger.
      * 
      * @param handler
-     *            the handler object to add, cannot be null
+     *            the handler object to add, cannot be {@code null}.
      * @throws SecurityException
-     *             If a security manager determines that the caller does not
+     *             if a security manager determines that the caller does not
      *             have the required permission.
+     * @since Android 1.0
      */
     public void addHandler(Handler handler) {
         if (null == handler) {
@@ -434,7 +451,6 @@ public class Logger {
                      */ 
                     LogManager.getLogManager();
                     // END android-added
-
                     if (handlers == null) {
                         handlers = new ArrayList<Handler>();
                     }
@@ -450,8 +466,8 @@ public class Logger {
                     StringTokenizer st = new StringTokenizer(handlerStr, " "); //$NON-NLS-1$
                     while (st.hasMoreTokens()) {
                         String handlerName = st.nextToken();
-                        
-                        // BEGIN android-changed: deal with non-existing handler
+                        // BEGIN android-changed
+                        // deal with non-existing handler
                         try {
                             Handler handler = (Handler) LogManager
                                     .getInstanceByClass(handlerName);
@@ -465,7 +481,6 @@ public class Logger {
                             ex.printStackTrace();
                         }
                         // END android-changed
-                        
                     }
                     handlerInited = true;
                 }
@@ -476,7 +491,8 @@ public class Logger {
     /**
      * Gets all the handlers associated with this logger.
      * 
-     * @return an array of all the handlers associated with this logger
+     * @return an array of all the handlers associated with this logger.
+     * @since Android 1.0
      */
     public Handler[] getHandlers() {
         initHandler();
@@ -486,14 +502,15 @@ public class Logger {
     }
 
     /**
-     * Removes a handler for this logger. If the specified handler does not
-     * exist, this method has no effect.
+     * Removes a handler from this logger. If the specified handler does not
+     * exist then this method has no effect.
      * 
      * @param handler
-     *            the handler to be removed, cannot be null
+     *            the handler to be removed.
      * @throws SecurityException
-     *             If a security manager determines that the caller does not
+     *             if a security manager determines that the caller does not
      *             have the required permission.
+     * @since Android 1.0
      */
     public void removeHandler(Handler handler) {
         // Anonymous loggers can always remove handlers
@@ -512,7 +529,8 @@ public class Logger {
     /**
      * Gets the filter used by this logger.
      * 
-     * @return the filter used by this logger
+     * @return the filter used by this logger, may be {@code null}.
+     * @since Android 1.0
      */
     public Filter getFilter() {
         return this.filter;
@@ -522,10 +540,11 @@ public class Logger {
      * Sets the filter used by this logger.
      * 
      * @param newFilter
-     *            the filter to set
+     *            the filter to set, may be {@code null}.
      * @throws SecurityException
-     *             If a security manager determines that the caller does not
+     *             if a security manager determines that the caller does not
      *             have the required permission.
+     * @since Android 1.0
      */
     public void setFilter(Filter newFilter) {
         // Anonymous loggers can always set the filter
@@ -536,23 +555,26 @@ public class Logger {
     }
 
     /**
-     * Gets the logging level of this logger.
+     * Gets the logging level of this logger. A {@code null} level indicates
+     * that this logger inherits its parent's level.
      * 
-     * @return the logging level of this logger
+     * @return the logging level of this logger.
+     * @since Android 1.0
      */
     public Level getLevel() {
         return levelObjVal;
     }
 
     /**
-     * Sets the logging level for this logger. A <code>null</code> level
-     * indicates this logger will inherit its parent's level.
+     * Sets the logging level for this logger. A {@code null} level indicates
+     * that this logger will inherit its parent's level.
      * 
      * @param newLevel
-     *            the logging level to set
+     *            the logging level to set.
      * @throws SecurityException
-     *             If a security manager determines that the caller does not
+     *             if a security manager determines that the caller does not
      *             have the required permission.
+     * @since Android 1.0
      */
     public void setLevel(Level newLevel) {
         // Anonymous loggers can always set the level
@@ -565,25 +587,28 @@ public class Logger {
     }
 
     /**
-     * Gets the flag which indicates whether to use parent's handlers to publish
-     * incoming log records, potentially recursively up the namespace.
+     * Gets the flag which indicates whether to use the handlers of this
+     * logger's parent to publish incoming log records, potentially recursively
+     * up the namespace.
      * 
-     * @return <code>true</code> if set to use parent's handlers, otherwise
-     *         <code>false</code>
+     * @return {@code true} if set to use parent's handlers, {@code false}
+     *         otherwise.
+     * @since Android 1.0
      */
     public boolean getUseParentHandlers() {
         return this.notifyParentHandlers;
     }
 
     /**
-     * Sets the flag which indicates whether to use parent's handlers to publish
-     * incoming log records, potentially recursively up the namespace.
+     * Sets the flag which indicates whether to use the handlers of this
+     * logger's parent, potentially recursively up the namespace.
      * 
      * @param notifyParentHandlers
-     *            the flag whether to use parent's handlers
+     *            the new flag indicating whether to use the parent's handlers.
      * @throws SecurityException
-     *             If a security manager determines that the caller does not
+     *             if a security manager determines that the caller does not
      *             have the required permission.
+     * @since Android 1.0
      */
     public void setUseParentHandlers(boolean notifyParentHandlers) {
         // Anonymous loggers can always set the useParentHandlers flag
@@ -594,9 +619,11 @@ public class Logger {
     }
 
     /**
-     * Gets the parent of this logger in the namespace.
+     * Gets the nearest parent of this logger in the namespace, a {@code null}
+     * value will be returned if called on the root logger.
      * 
-     * @return the parent of this logger in the namespace
+     * @return the parent of this logger in the namespace.
+     * @since Android 1.0
      */
     public Logger getParent() {
         return parent;
@@ -604,11 +631,12 @@ public class Logger {
 
     /**
      * Sets the parent of this logger in the namespace. This method should
-     * usually be used by the <code>LogManager</code> object only. This
-     * method does not check security.
+     * usually be used by the {@code LogManager} object only. This method does
+     * not check security.
      * 
      * @param newParent
-     *            the parent logger to set
+     *            the parent logger to set.
+     * @since Android 1.0
      */
     void internalSetParent(Logger newParent) {
         //All hierarchy related modifications should get LogManager lock at first
@@ -624,14 +652,15 @@ public class Logger {
     }
 
     /**
-     * Sets the parent of this logger in the namespace. This method should
-     * usually be used by the <code>LogManager</code> object only.
+     * Sets the parent of this logger in the namespace. This method should be
+     * used by the {@code LogManager} object only.
      * 
      * @param parent
-     *            the parent logger to set
+     *            the parent logger to set.
      * @throws SecurityException
-     *             If a security manager determines that the caller does not
+     *             if a security manager determines that the caller does not
      *             have the required permission.
+     * @since Android 1.0            
      */
     public void setParent(Logger parent) {
         if (null == parent) {
@@ -653,9 +682,10 @@ public class Logger {
 
 
     /**
-     * Gets the name of this logger.
+     * Gets the name of this logger, {@code null} for anonymous loggers.
      * 
-     * @return the name of this logger
+     * @return the name of this logger.
+     * @since Android 1.0
      */
     public String getName() {
         return this.name;
@@ -663,9 +693,11 @@ public class Logger {
 
     /**
      * Gets the loaded resource bundle used by this logger to localize logging
-     * messages. If it's null, the parent's resource bundle will be inherited.
+     * messages. If the value is {@code null}, the parent's resource bundle will be
+     * inherited.
      * 
-     * @return the loaded resource bundle used by this logger
+     * @return the loaded resource bundle used by this logger.
+     * @since Android 1.0
      */
     public ResourceBundle getResourceBundle() {
         return this.resBundle;
@@ -673,19 +705,20 @@ public class Logger {
 
     /**
      * Gets the name of the loaded resource bundle used by this logger to
-     * localize logging messages. If it's null, the parent's resource bundle
-     * name will be inherited.
+     * localize logging messages. If the value is {@code null}, the parent's resource
+     * bundle name will be inherited.
      * 
-     * @return the name of the loaded resource bundle used by this logger
+     * @return the name of the loaded resource bundle used by this logger.
+     * @since Android 1.0
      */
     public String getResourceBundleName() {
         return this.resBundleName;
     }
 
     /**
-     * This method is for compatibility. Tests written to the reference 
-     * implementation API imply that the isLoggable() method is not called 
-     * directly. This behavior is important because subclass may override 
+     * This method is for compatibility. Tests written to the reference
+     * implementation API imply that the isLoggable() method is not called
+     * directly. This behavior is important because subclass may override
      * isLoggable() method, so that affect the result of log methods.
      */
     private boolean internalIsLoggable(Level l) {
@@ -700,12 +733,13 @@ public class Logger {
     /**
      * Determines whether this logger will actually log messages of the
      * specified level. The effective level used to do the determination may be
-     * inherited from its parent. The default level is <code>Level.INFO</code>.
+     * inherited from its parent. The default level is {@code Level.INFO}.
      * 
      * @param l
-     *            the level to check
-     * @return <code>true</code> if this logger will actually log this level,
-     *         otherwise <code>false</code>
+     *            the level to check.
+     * @return {@code true} if this logger will actually log this level,
+     *         otherwise {@code false}.
+     * @since Android 1.0
      */
     public boolean isLoggable(Level l) {
         return internalIsLoggable(l);
@@ -738,14 +772,15 @@ public class Logger {
     }
 
     /**
-     * Logs a message indicating entering a method. A log record with log level
-     * <code>Level.FINER</code>, log message "ENTRY", and the specified
+     * Logs a message indicating that a method has been entered. A log record
+     * with log level {@code Level.FINER}, log message "ENTRY", the specified
      * source class name and source method name is submitted for logging.
      * 
      * @param sourceClass
-     *            the calling class name
+     *            the calling class name.
      * @param sourceMethod
-     *            the method name
+     *            the method name.
+     * @since Android 1.0
      */
     public void entering(String sourceClass, String sourceMethod) {
         if (internalIsLoggable(Level.FINER)) {
@@ -759,17 +794,18 @@ public class Logger {
     }
 
     /**
-     * Logs a message indicating entering a method. A log record with log level
-     * <code>Level.FINER</code>, log message "ENTRY", and the specified
-     * source class name and source method name and one parameter is submitted
-     * for logging.
+     * Logs a message indicating that a method has been entered. A log record
+     * with log level {@code Level.FINER}, log message "ENTRY", the specified
+     * source class name, source method name and one parameter is submitted for
+     * logging.
      * 
      * @param sourceClass
-     *            the source class name
+     *            the source class name.
      * @param sourceMethod
-     *            the source method name
+     *            the source method name.
      * @param param
-     *            the parameter for the method call
+     *            the parameter for the method call.
+     * @since Android 1.0
      */
     public void entering(String sourceClass, String sourceMethod, Object param) {
         if (internalIsLoggable(Level.FINER)) {
@@ -784,17 +820,18 @@ public class Logger {
     }
 
     /**
-     * Logs a message indicating entering a method. A log record with log level
-     * <code>Level.FINER</code>, log message "ENTRY", and the specified
-     * source class name and source method name and parameters is submitted for
-     * logging.
+     * Logs a message indicating that a method has been entered. A log record
+     * with log level {@code Level.FINER}, log message "ENTRY", the specified
+     * source class name, source method name and array of parameters is
+     * submitted for logging.
      * 
      * @param sourceClass
-     *            the source class name
+     *            the source class name.
      * @param sourceMethod
-     *            the source method name
+     *            the source method name.
      * @param params
-     *            an array of parameters for the method call
+     *            an array of parameters for the method call.
+     * @since Android 1.0
      */
     public void entering(String sourceClass, String sourceMethod,
             Object[] params) {
@@ -818,14 +855,15 @@ public class Logger {
     }
 
     /**
-     * Logs a message indicating existing a method. A log record with log level
-     * <code>Level.FINER</code>, log message "RETURN", and the specified
-     * source class name and source method name is submitted for logging.
+     * Logs a message indicating that a method is exited. A log record with log
+     * level {@code Level.FINER}, log message "RETURN", the specified source
+     * class name and source method name is submitted for logging.
      * 
      * @param sourceClass
-     *            the calling class name
+     *            the calling class name.
      * @param sourceMethod
-     *            the method name
+     *            the method name.
+     * @since Android 1.0
      */
     public void exiting(String sourceClass, String sourceMethod) {
         if (internalIsLoggable(Level.FINER)) {
@@ -839,17 +877,17 @@ public class Logger {
     }
 
     /**
-     * Logs a message indicating exiting a method. A log record with log level
-     * <code>Level.FINER</code>, log message "RETURN", and the specified
-     * source class name and source method name and return value is submitted
-     * for logging.
+     * Logs a message indicating that a method is exited. A log record with log
+     * level {@code Level.FINER}, log message "RETURN", the specified source
+     * class name, source method name and return value is submitted for logging.
      * 
      * @param sourceClass
-     *            the source class name
+     *            the source class name.
      * @param sourceMethod
-     *            the source method name
+     *            the source method name.
      * @param result
-     *            the return value of the method call
+     *            the return value of the method call.
+     * @since Android 1.0
      */
     public void exiting(String sourceClass, String sourceMethod, Object result) {
         if (internalIsLoggable(Level.FINER)) {
@@ -864,17 +902,18 @@ public class Logger {
     }
 
     /**
-     * Logs a message indicating throwing an exception. A log record with log
-     * level <code>Level.FINER</code>, log message "THROW", and the specified
-     * source class name and source method name and <code>Throwable</code>
-     * object is submitted for logging.
+     * Logs a message indicating that an exception is thrown. A log record with
+     * log level {@code Level.FINER}, log message "THROW", the specified source
+     * class name, source method name and the {@code Throwable} object is
+     * submitted for logging.
      * 
      * @param sourceClass
-     *            the source class name
+     *            the source class name.
      * @param sourceMethod
-     *            the source method name
+     *            the source method name.
      * @param thrown
-     *            the <code>Throwable</code> object
+     *            the {@code Throwable} object.
+     * @since Android 1.0
      */
     public void throwing(String sourceClass, String sourceMethod,
             Throwable thrown) {
@@ -890,10 +929,12 @@ public class Logger {
     }
 
     /**
-     * Logs a message of level <code>Level.SEVERE</code>.
+     * Logs a message of level {@code Level.SEVERE}; the message is transmitted
+     * to all subscribed handlers.
      * 
      * @param msg
-     *            the message to log
+     *            the message to log.
+     * @since Android 1.0
      */
     public void severe(String msg) {
         if (internalIsLoggable(Level.SEVERE)) {
@@ -905,10 +946,12 @@ public class Logger {
     }
 
     /**
-     * Logs a message of level <code>Level.WARNING</code>.
+     * Logs a message of level {@code Level.WARNING}; the message is
+     * transmitted to all subscribed handlers.
      * 
      * @param msg
-     *            the message to log
+     *            the message to log.
+     * @since Android 1.0           
      */
     public void warning(String msg) {
         if (internalIsLoggable(Level.WARNING)) {
@@ -920,10 +963,12 @@ public class Logger {
     }
 
     /**
-     * Logs a message of level <code>Level.INFO</code>.
+     * Logs a message of level {@code Level.INFO}; the message is transmitted
+     * to all subscribed handlers.
      * 
      * @param msg
-     *            the message to log
+     *            the message to log.
+     * @since Android 1.0           
      */
     public void info(String msg) {
         if (internalIsLoggable(Level.INFO)) {
@@ -935,10 +980,12 @@ public class Logger {
     }
 
     /**
-     * Logs a message of level <code>Level.CONFIG</code>.
+     * Logs a message of level {@code Level.CONFIG}; the message is transmitted
+     * to all subscribed handlers.
      * 
      * @param msg
-     *            the message to log
+     *            the message to log.
+     * @since Android 1.0           
      */
     public void config(String msg) {
         if (internalIsLoggable(Level.CONFIG)) {
@@ -950,10 +997,12 @@ public class Logger {
     }
 
     /**
-     * Logs a message of level <code>Level.FINE</code>.
+     * Logs a message of level {@code Level.FINE}; the message is transmitted
+     * to all subscribed handlers.
      * 
      * @param msg
-     *            the message to log
+     *            the message to log.
+     * @since Android 1.0           
      */
     public void fine(String msg) {
         if (internalIsLoggable(Level.FINE)) {
@@ -965,10 +1014,12 @@ public class Logger {
     }
 
     /**
-     * Logs a message of level <code>Level.FINER</code>.
+     * Logs a message of level {@code Level.FINER}; the message is transmitted
+     * to all subscribed handlers.
      * 
      * @param msg
-     *            the message to log
+     *            the message to log.
+     * @since Android 1.0           
      */
     public void finer(String msg) {
         if (internalIsLoggable(Level.FINER)) {
@@ -980,10 +1031,12 @@ public class Logger {
     }
 
     /**
-     * Logs a message of level <code>Level.FINEST</code>.
+     * Logs a message of level {@code Level.FINEST}; the message is transmitted
+     * to all subscribed handlers.
      * 
      * @param msg
-     *            the message to log
+     *            the message to log.
+     * @since Android 1.0
      */
     public void finest(String msg) {
         if (internalIsLoggable(Level.FINEST)) {
@@ -995,12 +1048,14 @@ public class Logger {
     }
 
     /**
-     * Logs a message of the specified level.
+     * Logs a message of the specified level. The message is transmitted to all
+     * subscribed handlers.
      * 
      * @param logLevel
-     *            the level of the given message
+     *            the level of the specified message.
      * @param msg
-     *            the message to log
+     *            the message to log.
+     * @since Android 1.0
      */
     public void log(Level logLevel, String msg) {
         if (internalIsLoggable(logLevel)) {
@@ -1012,14 +1067,16 @@ public class Logger {
     }
 
     /**
-     * Logs a message of the specified level with the supplied parameter.
+     * Logs a message of the specified level with the supplied parameter. The
+     * message is then transmitted to all subscribed handlers.
      * 
      * @param logLevel
-     *            the level of the given message
+     *            the level of the given message.
      * @param msg
-     *            the message to log
+     *            the message to log.
      * @param param
-     *            the parameter associated with the event that need to be logged
+     *            the parameter associated with the event that is logged.
+     * @since Android 1.0
      */
     public void log(Level logLevel, String msg, Object param) {
         if (internalIsLoggable(logLevel)) {
@@ -1033,14 +1090,15 @@ public class Logger {
 
     /**
      * Logs a message of the specified level with the supplied parameter array.
+     * The message is then transmitted to all subscribed handlers.
      * 
      * @param logLevel
      *            the level of the given message
      * @param msg
-     *            the message to log
+     *            the message to log.
      * @param params
-     *            the parameter array associated with the event that need to be
-     *            logged
+     *            the parameter array associated with the event that is logged.
+     * @since Android 1.0
      */
     public void log(Level logLevel, String msg, Object[] params) {
         if (internalIsLoggable(logLevel)) {
@@ -1053,16 +1111,17 @@ public class Logger {
     }
 
     /**
-     * Logs a message of the specified level with the supplied
-     * <code>Throwable</code> object.
+     * Logs a message of the specified level with the supplied {@code Throwable}
+     * object. The message is then transmitted to all subscribed handlers.
      * 
      * @param logLevel
-     *            the level of the given message
+     *            the level of the given message.
      * @param msg
-     *            the message to log
+     *            the message to log.
      * @param thrown
-     *            the <code>Throwable</code> object associated with the event
-     *            that need to be logged
+     *            the {@code Throwable} object associated with the event that is
+     *            logged.
+     * @since Android 1.0
      */
     public void log(Level logLevel, String msg, Throwable thrown) {
         if (internalIsLoggable(logLevel)) {
@@ -1075,11 +1134,11 @@ public class Logger {
     }
 
     /**
-     * Logs a given log record. Only those with a logging level no lower than
-     * this logger's level will be submitted to this logger's handlers for
-     * logging. If <code>getUseParentHandlers()</code> is <code>true</code>,
-     * the log record will also be submitted to the parent logger's handlers,
-     * potentially recursively up the namespace.
+     * Logs a given log record. Only records with a logging level that is equal
+     * or greater than this logger's level will be submitted to this logger's
+     * handlers for logging. If {@code getUseParentHandlers()} returns {@code
+     * true}, the log record will also be submitted to the handlers of this
+     * logger's parent, potentially recursively up the namespace.
      * <p>
      * Since all other log methods call this method to actually perform the
      * logging action, subclasses of this class can override this method to
@@ -1087,7 +1146,8 @@ public class Logger {
      * </p>
      * 
      * @param record
-     *            the log record to be logged
+     *            the log record to be logged.
+     * @since Android 1.0
      */
     public void log(LogRecord record) {
         if (internalIsLoggable(record.getLevel())) {
@@ -1124,13 +1184,14 @@ public class Logger {
      * and source method name.
      * 
      * @param logLevel
-     *            the level of the given message
+     *            the level of the given message.
      * @param sourceClass
-     *            the source class name
+     *            the source class name.
      * @param sourceMethod
-     *            the source method name
+     *            the source method name.
      * @param msg
-     *            the message to be logged
+     *            the message to be logged.
+     * @since Android 1.0
      */
     public void logp(Level logLevel, String sourceClass, String sourceMethod,
             String msg) {
@@ -1145,8 +1206,8 @@ public class Logger {
     }
 
     /**
-     * Logs a message of the given level with the specified source class name
-     * and source method name and parameter.
+     * Logs a message of the given level with the specified source class name,
+     * source method name and parameter.
      * 
      * @param logLevel
      *            the level of the given message
@@ -1157,7 +1218,8 @@ public class Logger {
      * @param msg
      *            the message to be logged
      * @param param
-     *            the parameter associated with the event that need to be logged
+     *            the parameter associated with the event that is logged.
+     * @since Android 1.0
      */
     public void logp(Level logLevel, String sourceClass, String sourceMethod,
             String msg, Object param) {
@@ -1173,20 +1235,20 @@ public class Logger {
     }
 
     /**
-     * Logs a message of the given level with the specified source class name
-     * and source method name and parameter array.
+     * Logs a message of the given level with the specified source class name,
+     * source method name and parameter array.
      * 
      * @param logLevel
-     *            the level of the given message
+     *            the level of the given message.
      * @param sourceClass
-     *            the source class name
+     *            the source class name.
      * @param sourceMethod
-     *            the source method name
+     *            the source method name.
      * @param msg
-     *            the message to be logged
+     *            the message to be logged.
      * @param params
-     *            the parameter array associated with the event that need to be
-     *            logged
+     *            the parameter array associated with the event that is logged.
+     * @since Android 1.0
      */
     public void logp(Level logLevel, String sourceClass, String sourceMethod,
             String msg, Object[] params) {
@@ -1202,19 +1264,20 @@ public class Logger {
     }
 
     /**
-     * Logs a message of the given level with the specified source class name
-     * and source method name and <code>Throwable</code> object.
+     * Logs a message of the given level with the specified source class name,
+     * source method name and {@code Throwable} object.
      * 
      * @param logLevel
-     *            the level of the given message
+     *            the level of the given message.
      * @param sourceClass
-     *            the source class name
+     *            the source class name.
      * @param sourceMethod
-     *            the source method name
+     *            the source method name.
      * @param msg
-     *            the message to be logged
+     *            the message to be logged.
      * @param thrown
-     *            the <code>Throwable</code> object
+     *            the {@code Throwable} object.
+     * @since Android 1.0
      */
     public void logp(Level logLevel, String sourceClass, String sourceMethod,
             String msg, Throwable thrown) {
@@ -1232,18 +1295,20 @@ public class Logger {
     /**
      * Logs a message of the given level with the specified source class name
      * and source method name, using the given resource bundle to localize the
-     * message.
+     * message. If {@code bundleName} is null, the empty string or not valid then
+     * the message is not localized.
      * 
      * @param logLevel
-     *            the level of the given message
+     *            the level of the given message.
      * @param sourceClass
-     *            the source class name
+     *            the source class name.
      * @param sourceMethod
-     *            the source method name
+     *            the source method name.
      * @param bundleName
-     *            the name of the resource bundle, used to localize the message
+     *            the name of the resource bundle used to localize the message.
      * @param msg
-     *            the message to be logged
+     *            the message to be logged.
+     * @since Android 1.0
      */
     public void logrb(Level logLevel, String sourceClass, String sourceMethod,
             String bundleName, String msg) {
@@ -1265,22 +1330,24 @@ public class Logger {
     }
 
     /**
-     * Logs a message of the given level with the specified source class name
-     * and source method name and parameter, using the given resource bundle to
-     * localize the message.
+     * Logs a message of the given level with the specified source class name,
+     * source method name and parameter, using the given resource bundle to
+     * localize the message. If {@code bundleName} is null, the empty string
+     * or not valid then the message is not localized.
      * 
      * @param logLevel
-     *            the level of the given message
+     *            the level of the given message.
      * @param sourceClass
-     *            the source class name
+     *            the source class name.
      * @param sourceMethod
-     *            the source method name
+     *            the source method name.
      * @param bundleName
-     *            the name of the resource bundle, used to localize the message
+     *            the name of the resource bundle used to localize the message.
      * @param msg
-     *            the message to be logged
+     *            the message to be logged.
      * @param param
-     *            the parameter associated with the event that need to be logged
+     *            the parameter associated with the event that is logged.
+     * @since Android 1.0
      */
     public void logrb(Level logLevel, String sourceClass, String sourceMethod,
             String bundleName, String msg, Object param) {
@@ -1303,23 +1370,24 @@ public class Logger {
     }
 
     /**
-     * Logs a message of the given level with the specified source class name
-     * and source method name and parameter array, using the given resource
-     * bundle to localize the message.
+     * Logs a message of the given level with the specified source class name,
+     * source method name and parameter array, using the given resource bundle
+     * to localize the message. If {@code bundleName} is null, the empty string
+     * or not valid then the message is not localized.
      * 
      * @param logLevel
-     *            the level of the given message
+     *            the level of the given message.
      * @param sourceClass
-     *            the source class name
+     *            the source class name.
      * @param sourceMethod
-     *            the source method name
+     *            the source method name.
      * @param bundleName
-     *            the name of the resource bundle, used to localize the message
+     *            the name of the resource bundle used to localize the message.
      * @param msg
-     *            the message to be logged
+     *            the message to be logged.
      * @param params
-     *            the parameter array associated with the event that need to be
-     *            logged
+     *            the parameter array associated with the event that is logged.
+     * @since Android 1.0
      */
     public void logrb(Level logLevel, String sourceClass, String sourceMethod,
             String bundleName, String msg, Object[] params) {
@@ -1342,9 +1410,10 @@ public class Logger {
     }
 
     /**
-     * Logs a message of the given level with the specified source class name
-     * and source method name and <code>Throwable</code> object, using the
-     * given resource bundle to localize the message.
+     * Logs a message of the given level with the specified source class name,
+     * source method name and {@code Throwable} object, using the given resource
+     * bundle to localize the message. If {@code bundleName} is null, the empty
+     * string or not valid then the message is not localized.
      * 
      * @param logLevel
      *            the level of the given message
@@ -1353,11 +1422,12 @@ public class Logger {
      * @param sourceMethod
      *            the source method name
      * @param bundleName
-     *            the name of the resource bundle, used to localize the message
+     *            the name of the resource bundle used to localize the message.
      * @param msg
-     *            the message to be logged
+     *            the message to be logged.
      * @param thrown
-     *            the <code>Throwable</code> object
+     *            the {@code Throwable} object.
+     * @since Android 1.0
      */
     public void logrb(Level logLevel, String sourceClass, String sourceMethod,
             String bundleName, String msg, Throwable thrown) {

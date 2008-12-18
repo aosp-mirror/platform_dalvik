@@ -18,7 +18,8 @@
 package java.net;
 
 /**
- * This class represents permission to access network resources.
+ * This class represents permissions to configure the access to network
+ * resources.
  * <p>
  * There are three valid target names:
  * <dl>
@@ -30,9 +31,11 @@ package java.net;
  * <dd>Allows a stream (protocol) handler to be set when constructing an URL
  * object</dd>
  * </dl>
+ * </p>
  * 
  * @see java.security.BasicPermission
  * @see SecurityManager
+ * @since Android 1.0
  */
 public final class NetPermission extends java.security.BasicPermission {
 
@@ -42,20 +45,22 @@ public final class NetPermission extends java.security.BasicPermission {
      * Creates an instance of this class with the given name.
      * 
      * @param name
-     *            String the name of the new permission.
+     *            the name of the new NetPermission instance.
+     * @since Android 1.0
      */
     public NetPermission(String name) {
         super(name);
     }
 
     /**
-     * Creates an instance of this class with the given name and action list.
-     * The action list is ignored.
+     * Creates an instance of this class with the given name and an action list.
+     * The action list is ignored and should be {@code null}.
      * 
      * @param name
-     *            String the name of the new permission.
+     *            the name of the new {@code NetPermission} instance.
      * @param actions
-     *            String ignored.
+     *            the ignored action string.
+     * @since Android 1.0
      */
     public NetPermission(String name, String actions) {
         super(name, actions);

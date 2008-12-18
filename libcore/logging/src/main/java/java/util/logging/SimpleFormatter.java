@@ -24,19 +24,29 @@ import java.text.MessageFormat;
 import java.util.Date;
 
 /**
- * <code>SimpleFormatter</code> can be used to print a summary of the
- * information contained in a <code>LogRecord</code> object in a human
- * readable format.
- * 
+ * {@code SimpleFormatter} can be used to print a summary of the information
+ * contained in a {@code LogRecord} object in a human readable format.
+ * @since Android 1.0
  */
 public class SimpleFormatter extends Formatter {
     /**
-     * Constructs a <code>SimpleFormatter</code> object.
+     * Constructs a new {@code SimpleFormatter}.
+     * 
+     * @since Android 1.0
      */
     public SimpleFormatter() {
         super();
     }
 
+    /**
+     * Converts a {@link LogRecord} object into a human readable string
+     * representation.
+     * 
+     * @param r
+     *            the log record to be formatted into a string.
+     * @return the formatted string.
+     * @since Android 1.0
+     */
     @Override
     public String format(LogRecord r) {
         StringBuilder sb = new StringBuilder();

@@ -17,6 +17,7 @@
 package org.apache.harmony.kernel.vm;
 
 import java.lang.reflect.AccessibleObject;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 /**
@@ -33,6 +34,14 @@ public interface ReflectionAccess {
      * @return non-null; the clone
      */
     public Method clone(Method method);
+
+    /**
+     * Gets a clone of the given field.
+     * 
+     * @param field non-null; the field to clone
+     * @return non-null; the clone
+     */
+    public Field clone(Field field);
 
     /**
      * Gets a clone of the given method, where the clone has

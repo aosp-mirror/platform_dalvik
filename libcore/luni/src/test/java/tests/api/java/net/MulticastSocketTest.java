@@ -17,6 +17,11 @@
 
 package tests.api.java.net;
 
+import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.IOException;
 import java.net.BindException;
 import java.net.DatagramPacket;
@@ -34,183 +39,220 @@ import java.util.Enumeration;
 import tests.support.Support_NetworkInterface;
 import tests.support.Support_PortManager;
 
+@TestTargetClass(MulticastSocket.class) 
 public class MulticastSocketTest extends SocketTestCase {
 
-	Thread t;
+    Thread t;
 
-	MulticastSocket mss;
+    MulticastSocket mss;
 
-	MulticastServer server;
+    MulticastServer server;
 
-	// private member variables used for tests
-	boolean atLeastOneInterface = false;
+    // private member variables used for tests
+    boolean atLeastOneInterface = false;
 
-	boolean atLeastTwoInterfaces = false;
+    boolean atLeastTwoInterfaces = false;
 
-	private NetworkInterface networkInterface1 = null;
+    private NetworkInterface networkInterface1 = null;
 
-	private NetworkInterface networkInterface2 = null;
+    private NetworkInterface networkInterface2 = null;
 
-	private NetworkInterface IPV6networkInterface1 = null;
+    private NetworkInterface IPV6networkInterface1 = null;
 
-	static class MulticastServer extends Thread {
+    static class MulticastServer extends Thread {
 
-		public MulticastSocket ms;
+        public MulticastSocket ms;
 
-		boolean running = true;
+        boolean running = true;
 
-		volatile public byte[] rbuf = new byte[512];
+        volatile public byte[] rbuf = new byte[512];
 
-		volatile DatagramPacket rdp = null;
+        volatile DatagramPacket rdp = null;
 
-		public void run() {
-			try {
-				while (running) {
-					try {
-						ms.receive(rdp);
-					} catch (java.io.InterruptedIOException e) {
-						Thread.yield();
-					}
-					;
-				}
-				;
-			} catch (java.io.IOException e) {
-				System.out.println("Multicast server failed: " + e);
-			} finally {
-				ms.close();
-			}
-		}
+        public void run() {
+            try {
+                while (running) {
+                    try {
+                        ms.receive(rdp);
+                    } catch (java.io.InterruptedIOException e) {
+                        Thread.yield();
+                    }
+                    ;
+                }
+                ;
+            } catch (java.io.IOException e) {
+                System.out.println("Multicast server failed: " + e);
+            } finally {
+                ms.close();
+            }
+        }
 
-		public synchronized void leaveGroup(InetAddress aGroup)
-				throws java.io.IOException {
-			ms.leaveGroup(aGroup);
-		}
+        public synchronized void leaveGroup(InetAddress aGroup)
+                throws java.io.IOException {
+            ms.leaveGroup(aGroup);
+        }
 
-		public void stopServer() {
-			running = false;
-		}
+        public void stopServer() {
+            running = false;
+        }
 
-		public MulticastServer(InetAddress anAddress, int aPort)
-				throws java.io.IOException {
-			rbuf = new byte[512];
-			rbuf[0] = -1;
-			rdp = new DatagramPacket(rbuf, rbuf.length);
-			ms = new MulticastSocket(aPort);
-			ms.setSoTimeout(2000);
-			ms.joinGroup(anAddress);
-		}
+        public MulticastServer(InetAddress anAddress, int aPort)
+                throws java.io.IOException {
+            rbuf = new byte[512];
+            rbuf[0] = -1;
+            rdp = new DatagramPacket(rbuf, rbuf.length);
+            ms = new MulticastSocket(aPort);
+            ms.setSoTimeout(2000);
+            ms.joinGroup(anAddress);
+        }
 
-		public MulticastServer(SocketAddress anAddress, int aPort,
-				NetworkInterface netInterface) throws java.io.IOException {
-			rbuf = new byte[512];
-			rbuf[0] = -1;
-			rdp = new DatagramPacket(rbuf, rbuf.length);
-			ms = new MulticastSocket(aPort);
-			ms.setSoTimeout(2000);
-			ms.joinGroup(anAddress, netInterface);
-		}
-	}
+        public MulticastServer(SocketAddress anAddress, int aPort,
+                NetworkInterface netInterface) throws java.io.IOException {
+            rbuf = new byte[512];
+            rbuf[0] = -1;
+            rdp = new DatagramPacket(rbuf, rbuf.length);
+            ms = new MulticastSocket(aPort);
+            ms.setSoTimeout(2000);
+            ms.joinGroup(anAddress, netInterface);
+        }
+    }
 
-	/**
-	 * @tests java.net.MulticastSocket#MulticastSocket()
-	 */
-	public void test_Constructor() throws IOException {
-		// regression test for 497
+    /**
+     * @tests java.net.MulticastSocket#MulticastSocket()
+     */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "MulticastSocket",
+          methodArgs = {}
+        )
+    })
+    public void test_Constructor() throws IOException {
+        // regression test for 497
         MulticastSocket s = new MulticastSocket();
         // regression test for Harmony-1162
         assertTrue(s.getReuseAddress());
-	}
+    }
 
-	/**
-	 * @tests java.net.MulticastSocket#MulticastSocket(int)
-	 */
-	public void test_ConstructorI() {
-		// Test for method java.net.MulticastSocket(int)
-		// Used in tests
-		MulticastSocket dup = null;
-		try {
-			mss = new MulticastSocket();
-			int port = mss.getLocalPort();
-			dup = new MulticastSocket(port);
+    /**
+     * @tests java.net.MulticastSocket#MulticastSocket(int)
+     */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "MulticastSocket",
+          methodArgs = {int.class}
+        )
+    })
+    public void test_ConstructorI() {
+        // Test for method java.net.MulticastSocket(int)
+        // Used in tests
+        MulticastSocket dup = null;
+        try {
+            mss = new MulticastSocket();
+            int port = mss.getLocalPort();
+            dup = new MulticastSocket(port);
             // regression test for Harmony-1162
             assertTrue(dup.getReuseAddress());
-		} catch (IOException e) {
-			fail("duplicate binding not allowed: " + e);
-		}
-		if (dup != null)
-			dup.close();
-	}
+        } catch (IOException e) {
+            fail("duplicate binding not allowed: " + e);
+        }
+        if (dup != null)
+            dup.close();
+    }
 
-	/**
-	 * @tests java.net.MulticastSocket#getInterface()
-	 */
-	public void test_getInterface() {
-		// Test for method java.net.InetAddress
-		// java.net.MulticastSocket.getInterface()
-		assertTrue("Used for testing.", true);
+    /**
+     * @tests java.net.MulticastSocket#getInterface()
+     */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SocketException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "getInterface",
+          methodArgs = {}
+        )
+    })
+    public void _test_getInterface() {
+        // Test for method java.net.InetAddress
+        // java.net.MulticastSocket.getInterface()
+        assertTrue("Used for testing.", true);
 
-		int groupPort = Support_PortManager.getNextPortForUDP();
-		try {
-			if (atLeastOneInterface) {
-				// validate that we get the expected response when one was not
-				// set
-				mss = new MulticastSocket(groupPort);
-				String preferIPv4StackValue = System
-						.getProperty("java.net.preferIPv4Stack");
-				String preferIPv6AddressesValue = System
-						.getProperty("java.net.preferIPv6Addresses");
-				if (((preferIPv4StackValue == null) || preferIPv4StackValue
-						.equalsIgnoreCase("false"))
-						&& (preferIPv6AddressesValue != null)
-						&& (preferIPv6AddressesValue.equals("true"))) {
-					// we expect an IPv6 ANY in this case
-					assertTrue("inet Address returned when not set:"
-							+ mss.getInterface().toString(), InetAddress
-							.getByName("::0").equals(mss.getInterface()));
-				} else {
-					// we expect an IPv4 ANY in this case
-					assertTrue("inet Address returned when not set:"
-							+ mss.getInterface().toString(), InetAddress
-							.getByName("0.0.0.0").equals(mss.getInterface()));
-				}
+        int groupPort = Support_PortManager.getNextPortForUDP();
+        try {
+            if (atLeastOneInterface) {
+                // validate that we get the expected response when one was not
+                // set
+                mss = new MulticastSocket(groupPort);
+                String preferIPv4StackValue = System
+                        .getProperty("java.net.preferIPv4Stack");
+                String preferIPv6AddressesValue = System
+                        .getProperty("java.net.preferIPv6Addresses");
+                if (((preferIPv4StackValue == null) || preferIPv4StackValue
+                        .equalsIgnoreCase("false"))
+                        && (preferIPv6AddressesValue != null)
+                        && (preferIPv6AddressesValue.equals("true"))) {
+                    // we expect an IPv6 ANY in this case
+                    assertTrue("inet Address returned when not set:"
+                            + mss.getInterface().toString(), InetAddress
+                            .getByName("::0").equals(mss.getInterface()));
+                } else {
+                    // we expect an IPv4 ANY in this case
+                    assertTrue("inet Address returned when not set:"
+                            + mss.getInterface().toString(), InetAddress
+                            .getByName("0.0.0.0").equals(mss.getInterface()));
+                }
 
-				// validate that we get the expected response when we set via
-				// setInterface
-				Enumeration addresses = networkInterface1.getInetAddresses();
-				if (addresses != null) {
-					InetAddress firstAddress = (InetAddress) addresses
-							.nextElement();
-					mss.setInterface(firstAddress);
-					assertTrue(
-							"getNetworkInterface did not return interface set by setInterface.  Expected:"
-									+ firstAddress + " Got:"
-									+ mss.getInterface(), firstAddress
-									.equals(mss.getInterface()));
+                // validate that we get the expected response when we set via
+                // setInterface
+                Enumeration addresses = networkInterface1.getInetAddresses();
+                if (addresses != null) {
+                    InetAddress firstAddress = (InetAddress) addresses
+                            .nextElement();
+                    mss.setInterface(firstAddress);
+                    assertTrue(
+                            "getNetworkInterface did not return interface set by setInterface.  Expected:"
+                                    + firstAddress + " Got:"
+                                    + mss.getInterface(), firstAddress
+                                    .equals(mss.getInterface()));
 
-					groupPort = Support_PortManager.getNextPortForUDP();
-					mss = new MulticastSocket(groupPort);
-					mss.setNetworkInterface(networkInterface1);
-					assertTrue(
-							"getInterface did not return interface set by setNeworkInterface Expected: "
-									+ firstAddress + "Got:"
-									+ mss.getInterface(), NetworkInterface
-									.getByInetAddress(mss.getInterface())
-									.equals(networkInterface1));
-				}
+                    groupPort = Support_PortManager.getNextPortForUDP();
+                    mss = new MulticastSocket(groupPort);
+                    mss.setNetworkInterface(networkInterface1);
+                    assertTrue(
+                            "getInterface did not return interface set by setNeworkInterface Expected: "
+                                    + firstAddress + "Got:"
+                                    + mss.getInterface(), NetworkInterface
+                                    .getByInetAddress(mss.getInterface())
+                                    .equals(networkInterface1));
+                }
 
-			}
-		} catch (Exception e) {
-			fail("Exception during getInterface test: " + e.toString());
-		}
-	}
+            }
+        } catch (Exception e) {
+            fail("Exception during getInterface test: " + e.toString());
+        }
+    }
 
-	/**
-	 * @throws IOException 
-	 * @tests java.net.MulticastSocket#getNetworkInterface()
-	 */
-	public void test_getNetworkInterface() throws IOException {
-		int groupPort = Support_PortManager.getNextPortForUDP();
-		if (atLeastOneInterface) {
+    /**
+     * @throws IOException 
+     * @tests java.net.MulticastSocket#getNetworkInterface()
+     */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SocketException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "getNetworkInterface",
+          methodArgs = {}
+        )
+    })
+    public void _test_getNetworkInterface() throws IOException {
+        int groupPort = Support_PortManager.getNextPortForUDP();
+        if (atLeastOneInterface) {
             // validate that we get the expected response when one was not
             // set
             mss = new MulticastSocket(groupPort);
@@ -276,95 +318,131 @@ public class MulticastSocketTest extends SocketTestCase {
                         networkInterface1.equals(mss.getNetworkInterface()));
             }
         }
-	}
+    }
 
-	/**
-	 * @tests java.net.MulticastSocket#getTimeToLive()
-	 */
-	public void test_getTimeToLive() {
-		try {
-			mss = new MulticastSocket();
-			mss.setTimeToLive(120);
-			assertTrue("Returned incorrect 1st TTL: " + mss.getTimeToLive(),
-					mss.getTimeToLive() == 120);
-			mss.setTimeToLive(220);
-			assertTrue("Returned incorrect 2nd TTL: " + mss.getTimeToLive(),
-					mss.getTimeToLive() == 220);
-			ensureExceptionThrownIfOptionIsUnsupportedOnOS(SO_MULTICAST);
-		} catch (Exception e) {
-			handleException(e, SO_MULTICAST);
-		}
-	}
+    /**
+     * @tests java.net.MulticastSocket#getTimeToLive()
+     */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "getTimeToLive",
+          methodArgs = {}
+        )
+    })
+    public void test_getTimeToLive() {
+        try {
+            mss = new MulticastSocket();
+            mss.setTimeToLive(120);
+            assertTrue("Returned incorrect 1st TTL: " + mss.getTimeToLive(),
+                    mss.getTimeToLive() == 120);
+            mss.setTimeToLive(220);
+            assertTrue("Returned incorrect 2nd TTL: " + mss.getTimeToLive(),
+                    mss.getTimeToLive() == 220);
+            ensureExceptionThrownIfOptionIsUnsupportedOnOS(SO_MULTICAST);
+        } catch (Exception e) {
+            handleException(e, SO_MULTICAST);
+        }
+    }
 
-	/**
-	 * @tests java.net.MulticastSocket#getTTL()
-	 */
-	public void test_getTTL() {
-		// Test for method byte java.net.MulticastSocket.getTTL()
+    /**
+     * @tests java.net.MulticastSocket#getTTL()
+     */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "getTTL",
+          methodArgs = {}
+        )
+    })
+    public void test_getTTL() {
+        // Test for method byte java.net.MulticastSocket.getTTL()
 
-		try {
-			mss = new MulticastSocket();
-			mss.setTTL((byte) 120);
-			assertTrue("Returned incorrect TTL: " + mss.getTTL(),
-					mss.getTTL() == 120);
-			ensureExceptionThrownIfOptionIsUnsupportedOnOS(SO_MULTICAST);
-		} catch (Exception e) {
-			handleException(e, SO_MULTICAST);
-		}
-	}
+        try {
+            mss = new MulticastSocket();
+            mss.setTTL((byte) 120);
+            assertTrue("Returned incorrect TTL: " + mss.getTTL(),
+                    mss.getTTL() == 120);
+            ensureExceptionThrownIfOptionIsUnsupportedOnOS(SO_MULTICAST);
+        } catch (Exception e) {
+            handleException(e, SO_MULTICAST);
+        }
+    }
 
-	/**
-	 * @tests java.net.MulticastSocket#joinGroup(java.net.InetAddress)
-	 */
-	public void test_joinGroupLjava_net_InetAddress() {
-		// Test for method void
-		// java.net.MulticastSocket.joinGroup(java.net.InetAddress)
-		String msg = null;
-		InetAddress group = null;
-		int[] ports = Support_PortManager.getNextPortsForUDP(2);
-		int groupPort = ports[0];
-		try {
-			group = InetAddress.getByName("224.0.0.3");
-			server = new MulticastServer(group, groupPort);
-			server.start();
-			Thread.sleep(1000);
-			msg = "Hello World";
-			mss = new MulticastSocket(ports[1]);
-			DatagramPacket sdp = new DatagramPacket(msg.getBytes(), msg
-					.length(), group, groupPort);
-			mss.send(sdp, (byte) 10);
-			Thread.sleep(1000);
-		} catch (Exception e) {
-			fail("Exception during joinGroup test: " + e.toString());
-		}
-		assertTrue("Group member did not recv data: ", new String(server.rdp
-				.getData(), 0, server.rdp.getLength()).equals(msg));
+    /**
+     * @tests java.net.MulticastSocket#joinGroup(java.net.InetAddress)
+     */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "joinGroup",
+          methodArgs = {InetAddress.class}
+        )
+    })
+    public void test_joinGroupLjava_net_InetAddress() {
+        // Test for method void
+        // java.net.MulticastSocket.joinGroup(java.net.InetAddress)
+        String msg = null;
+        InetAddress group = null;
+        int[] ports = Support_PortManager.getNextPortsForUDP(2);
+        int groupPort = ports[0];
+        try {
+            group = InetAddress.getByName("224.0.0.3");
+            server = new MulticastServer(group, groupPort);
+            server.start();
+            Thread.sleep(1000);
+            msg = "Hello World";
+            mss = new MulticastSocket(ports[1]);
+            DatagramPacket sdp = new DatagramPacket(msg.getBytes(), msg
+                    .length(), group, groupPort);
+            mss.send(sdp, (byte) 10);
+            Thread.sleep(1000);
+        } catch (Exception e) {
+            fail("Exception during joinGroup test: " + e.toString());
+        }
+        assertTrue("Group member did not recv data: ", new String(server.rdp
+                .getData(), 0, server.rdp.getLength()).equals(msg));
 
-	}
+    }
 
-	/**
-	 * @throws IOException 
-	 * @throws InterruptedException 
-	 * @tests java.net.MulticastSocket#joinGroup(java.net.SocketAddress,java.net.NetworkInterface)
-	 */
-	public void test_joinGroupLjava_net_SocketAddressLjava_net_NetworkInterface() throws IOException, InterruptedException {
-		// security manager that allows us to check that we only return the
-		// addresses that we should
-		class mySecurityManager extends SecurityManager {
+    /**
+     * @throws IOException 
+     * @throws InterruptedException 
+     * @tests java.net.MulticastSocket#joinGroup(java.net.SocketAddress,java.net.NetworkInterface)
+     */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "joinGroup",
+          methodArgs = {SocketAddress.class, NetworkInterface.class}
+        )
+    })
+    public void _test_joinGroupLjava_net_SocketAddressLjava_net_NetworkInterface() throws IOException, InterruptedException {
+        // security manager that allows us to check that we only return the
+        // addresses that we should
+        class mySecurityManager extends SecurityManager {
 
-			public void checkMulticast(InetAddress address) {
-				throw new SecurityException("not allowed");
-			}
-		}
+            public void checkMulticast(InetAddress address) {
+                throw new SecurityException("not allowed");
+            }
+        }
 
-		String msg = null;
-		InetAddress group = null;
-		SocketAddress groupSockAddr = null;
-		int[] ports = Support_PortManager.getNextPortsForUDP(2);
-		int groupPort = ports[0];
-		int serverPort = ports[1];
+        String msg = null;
+        InetAddress group = null;
+        SocketAddress groupSockAddr = null;
+        int[] ports = Support_PortManager.getNextPortsForUDP(2);
+        int groupPort = ports[0];
+        int serverPort = ports[1];
 
-			Enumeration theInterfaces = NetworkInterface.getNetworkInterfaces();
+            Enumeration theInterfaces = NetworkInterface.getNetworkInterfaces();
 
         // first validate that we handle a null group ok
         mss = new MulticastSocket(groupPort);
@@ -559,247 +637,292 @@ public class MulticastSocketTest extends SocketTestCase {
                 }
             }
         }
-		System.setSecurityManager(null);
-	}
+        System.setSecurityManager(null);
+    }
 
-	/**
-	 * @tests java.net.MulticastSocket#leaveGroup(java.net.InetAddress)
-	 */
-	public void test_leaveGroupLjava_net_InetAddress() {
-		// Test for method void
-		// java.net.MulticastSocket.leaveGroup(java.net.InetAddress)
-		String msg = null;
-		boolean except = false;
-		InetAddress group = null;
-		int[] ports = Support_PortManager.getNextPortsForUDP(2);
-		int groupPort = ports[0];
+    /**
+     * @tests java.net.MulticastSocket#leaveGroup(java.net.InetAddress)
+     */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SecurityException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "leaveGroup",
+          methodArgs = {InetAddress.class}
+        )
+    })
+    public void test_leaveGroupLjava_net_InetAddress() {
+        // Test for method void
+        // java.net.MulticastSocket.leaveGroup(java.net.InetAddress)
+        String msg = null;
+        boolean except = false;
+        InetAddress group = null;
+        int[] ports = Support_PortManager.getNextPortsForUDP(2);
+        int groupPort = ports[0];
 
-		try {
-			group = InetAddress.getByName("224.0.0.3");
-			msg = "Hello World";
-			mss = new MulticastSocket(ports[1]);
-			DatagramPacket sdp = new DatagramPacket(msg.getBytes(), msg
-					.length(), group, groupPort);
-			mss.send(sdp, (byte) 10);
-			ensureExceptionThrownIfOptionIsUnsupportedOnOS(SO_MULTICAST);
-		} catch (Exception e) {
-			handleException(e, SO_MULTICAST);
-		}
-		try {
-			// Try to leave s group that mss is not a member of
-			mss.leaveGroup(group);
-		} catch (java.io.IOException e) {
-			// Correct
-			except = true;
-		}
-		assertTrue("Failed to throw exception leaving non-member group", except);
-	}
+        try {
+            group = InetAddress.getByName("224.0.0.3");
+            msg = "Hello World";
+            mss = new MulticastSocket(ports[1]);
+            DatagramPacket sdp = new DatagramPacket(msg.getBytes(), msg
+                    .length(), group, groupPort);
+            mss.send(sdp, (byte) 10);
+            ensureExceptionThrownIfOptionIsUnsupportedOnOS(SO_MULTICAST);
+        } catch (Exception e) {
+            handleException(e, SO_MULTICAST);
+        }
+        try {
+            // Try to leave s group that mss is not a member of
+            mss.leaveGroup(group);
+        } catch (java.io.IOException e) {
+            // Correct
+            except = true;
+        }
+        assertTrue("Failed to throw exception leaving non-member group", except);
+    }
 
-	/**
-	 * @tests java.net.MulticastSocket#leaveGroup(java.net.SocketAddress,java.net.NetworkInterface)
-	 */
-	public void test_leaveGroupLjava_net_SocketAddressLjava_net_NetworkInterface() {
-		// security manager that allows us to check that we only return the
-		// addresses that we should
-		class mySecurityManager extends SecurityManager {
+    /**
+     * @tests java.net.MulticastSocket#leaveGroup(java.net.SocketAddress,java.net.NetworkInterface)
+     */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "leaveGroup",
+          methodArgs = {SocketAddress.class, NetworkInterface.class}
+        )
+    })
+    public void test_leaveGroupLjava_net_SocketAddressLjava_net_NetworkInterface() {
+        // security manager that allows us to check that we only return the
+        // addresses that we should
+        class mySecurityManager extends SecurityManager {
 
-			public void checkMulticast(InetAddress address) {
-				throw new SecurityException("not allowed");
-			}
-		}
+            public void checkMulticast(InetAddress address) {
+                throw new SecurityException("not allowed");
+            }
+        }
 
-		String msg = null;
-		InetAddress group = null;
-		int groupPort = Support_PortManager.getNextPortForUDP();
-		SocketAddress groupSockAddr = null;
-		SocketAddress groupSockAddr2 = null;
+        String msg = null;
+        InetAddress group = null;
+        int groupPort = Support_PortManager.getNextPortForUDP();
+        SocketAddress groupSockAddr = null;
+        SocketAddress groupSockAddr2 = null;
 
-		try {
-			Enumeration theInterfaces = NetworkInterface.getNetworkInterfaces();
+        try {
+            Enumeration theInterfaces = NetworkInterface.getNetworkInterfaces();
 
-			// first validate that we handle a null group ok
-			mss = new MulticastSocket(groupPort);
-			try {
-				mss.leaveGroup(null, null);
-				fail("Did not get exception when group was null");
-			} catch (IllegalArgumentException e) {
-			}
+            // first validate that we handle a null group ok
+            mss = new MulticastSocket(groupPort);
+            try {
+                mss.leaveGroup(null, null);
+                fail("Did not get exception when group was null");
+            } catch (IllegalArgumentException e) {
+            }
 
-			// now validate we get the expected error if the address specified
-			// is not a multicast group
-			try {
-				group = InetAddress.getByName("255.255.255.255");
-				groupSockAddr = new InetSocketAddress(group, groupPort);
-				mss.leaveGroup(groupSockAddr, null);
-				fail("Did not get exception when group is not a multicast address");
-			} catch (IOException e) {
-			}
+            // now validate we get the expected error if the address specified
+            // is not a multicast group
+            try {
+                group = InetAddress.getByName("255.255.255.255");
+                groupSockAddr = new InetSocketAddress(group, groupPort);
+                mss.leaveGroup(groupSockAddr, null);
+                fail("Did not get exception when group is not a multicast address");
+            } catch (IOException e) {
+            }
 
-			// now try to leave a group if we are not authorized
-			// set the security manager that will make the first address not
-			// visible
-			System.setSecurityManager(new mySecurityManager());
-			try {
-				group = InetAddress.getByName("224.0.0.3");
-				groupSockAddr = new InetSocketAddress(group, groupPort);
-				mss.leaveGroup(groupSockAddr, null);
-				fail("Did not get exception when joining group is not allowed");
-			} catch (SecurityException e) {
-			}
-			System.setSecurityManager(null);
+            // now try to leave a group if we are not authorized
+            // set the security manager that will make the first address not
+            // visible
+            System.setSecurityManager(new mySecurityManager());
+            try {
+                group = InetAddress.getByName("224.0.0.3");
+                groupSockAddr = new InetSocketAddress(group, groupPort);
+                mss.leaveGroup(groupSockAddr, null);
+                fail("Did not get exception when joining group is not allowed");
+            } catch (SecurityException e) {
+            }
+            System.setSecurityManager(null);
 
-			if (atLeastOneInterface) {
+            if (atLeastOneInterface) {
 
-				// now test that we can join and leave a group successfully
-				groupPort = Support_PortManager.getNextPortForUDP();
-				mss = new MulticastSocket(groupPort);
-				groupSockAddr = new InetSocketAddress(group, groupPort);
-				mss.joinGroup(groupSockAddr, null);
-				mss.leaveGroup(groupSockAddr, null);
-				try {
-					mss.leaveGroup(groupSockAddr, null);
-					fail(
-							"Did not get exception when trying to leave group that was allready left");
-				} catch (IOException e) {
-				}
+                // now test that we can join and leave a group successfully
+                groupPort = Support_PortManager.getNextPortForUDP();
+                mss = new MulticastSocket(groupPort);
+                groupSockAddr = new InetSocketAddress(group, groupPort);
+                mss.joinGroup(groupSockAddr, null);
+                mss.leaveGroup(groupSockAddr, null);
+                try {
+                    mss.leaveGroup(groupSockAddr, null);
+                    fail(
+                            "Did not get exception when trying to leave group that was allready left");
+                } catch (IOException e) {
+                }
 
-				InetAddress group2 = InetAddress.getByName("224.0.0.4");
-				groupSockAddr2 = new InetSocketAddress(group2, groupPort);
-				mss.joinGroup(groupSockAddr, networkInterface1);
-				try {
-					mss.leaveGroup(groupSockAddr2, networkInterface1);
-					fail(
-							"Did not get exception when trying to leave group that was never joined");
-				} catch (IOException e) {
-				}
+                InetAddress group2 = InetAddress.getByName("224.0.0.4");
+                groupSockAddr2 = new InetSocketAddress(group2, groupPort);
+                mss.joinGroup(groupSockAddr, networkInterface1);
+                try {
+                    mss.leaveGroup(groupSockAddr2, networkInterface1);
+                    fail(
+                            "Did not get exception when trying to leave group that was never joined");
+                } catch (IOException e) {
+                }
 
-				mss.leaveGroup(groupSockAddr, networkInterface1);
-				if (atLeastTwoInterfaces) {
-					mss.joinGroup(groupSockAddr, networkInterface1);
-					try {
-						mss.leaveGroup(groupSockAddr, networkInterface2);
-						fail(
-								"Did not get exception when trying to leave group on wrong interface joined on ["
-										+ networkInterface1
-										+ "] left on ["
-										+ networkInterface2 + "]");
-					} catch (IOException e) {
-					}
-				}
-			}
-		} catch (Exception e) {
-			fail("Exception during leaveGroup test: " + e.toString());
-		}
-		System.setSecurityManager(null);
-	}
+                mss.leaveGroup(groupSockAddr, networkInterface1);
+                if (atLeastTwoInterfaces) {
+                    mss.joinGroup(groupSockAddr, networkInterface1);
+                    try {
+                        mss.leaveGroup(groupSockAddr, networkInterface2);
+                        fail(
+                                "Did not get exception when trying to leave group on wrong interface joined on ["
+                                        + networkInterface1
+                                        + "] left on ["
+                                        + networkInterface2 + "]");
+                    } catch (IOException e) {
+                    }
+                }
+            }
+        } catch (Exception e) {
+            fail("Exception during leaveGroup test: " + e.toString());
+        }
+        System.setSecurityManager(null);
+    }
 
-	/**
-	 * @tests java.net.MulticastSocket#send(java.net.DatagramPacket, byte)
-	 */
-	public void test_sendLjava_net_DatagramPacketB() {
-		// Test for method void
-		// java.net.MulticastSocket.send(java.net.DatagramPacket, byte)
+    /**
+     * @tests java.net.MulticastSocket#send(java.net.DatagramPacket, byte)
+     */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "send",
+          methodArgs = {DatagramPacket.class, byte.class}
+        )
+    })
+    public void test_sendLjava_net_DatagramPacketB() {
+        // Test for method void
+        // java.net.MulticastSocket.send(java.net.DatagramPacket, byte)
 
-		String msg = "Hello World";
-		InetAddress group = null;
-		int[] ports = Support_PortManager.getNextPortsForUDP(2);
-		int groupPort = ports[0];
+        String msg = "Hello World";
+        InetAddress group = null;
+        int[] ports = Support_PortManager.getNextPortsForUDP(2);
+        int groupPort = ports[0];
 
-		try {
-			group = InetAddress.getByName("224.0.0.3");
-			mss = new MulticastSocket(ports[1]);
-			server = new MulticastServer(group, groupPort);
-			server.start();
-			Thread.sleep(200);
-			DatagramPacket sdp = new DatagramPacket(msg.getBytes(), msg
-					.length(), group, groupPort);
-			mss.send(sdp, (byte) 10);
-			Thread.sleep(1000);
-			ensureExceptionThrownIfOptionIsUnsupportedOnOS(SO_MULTICAST);
-		} catch (Exception e) {
-			handleException(e, SO_MULTICAST);
-			try {
-				mss.close();
-			} catch (Exception ex) {
-			}
-			;
-			return;
-		}
-		mss.close();
-		byte[] data = server.rdp.getData();
-		int length = server.rdp.getLength();
-		assertTrue("Failed to send data. Received " + length, new String(data,
-				0, length).equals(msg));
-	}
+        try {
+            group = InetAddress.getByName("224.0.0.3");
+            mss = new MulticastSocket(ports[1]);
+            server = new MulticastServer(group, groupPort);
+            server.start();
+            Thread.sleep(200);
+            DatagramPacket sdp = new DatagramPacket(msg.getBytes(), msg
+                    .length(), group, groupPort);
+            mss.send(sdp, (byte) 10);
+            Thread.sleep(1000);
+            ensureExceptionThrownIfOptionIsUnsupportedOnOS(SO_MULTICAST);
+        } catch (Exception e) {
+            handleException(e, SO_MULTICAST);
+            try {
+                mss.close();
+            } catch (Exception ex) {
+            }
+            ;
+            return;
+        }
+        mss.close();
+        byte[] data = server.rdp.getData();
+        int length = server.rdp.getLength();
+        assertTrue("Failed to send data. Received " + length, new String(data,
+                0, length).equals(msg));
+    }
 
-	/**
-	 * @tests java.net.MulticastSocket#setInterface(java.net.InetAddress)
-	 */
-	public void test_setInterfaceLjava_net_InetAddress() {
-		// Test for method void
-		// java.net.MulticastSocket.setInterface(java.net.InetAddress)
-		// Note that the machine is not multi-homed
+    /**
+     * @tests java.net.MulticastSocket#setInterface(java.net.InetAddress)
+     */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setInterface",
+          methodArgs = {InetAddress.class}
+        )
+    })
+    public void _test_setInterfaceLjava_net_InetAddress() {
+        // Test for method void
+        // java.net.MulticastSocket.setInterface(java.net.InetAddress)
+        // Note that the machine is not multi-homed
 
-		try {
-			mss = new MulticastSocket();
-			mss.setInterface(InetAddress.getLocalHost());
-			ensureExceptionThrownIfOptionIsUnsupportedOnOS(SO_MULTICAST_INTERFACE);
-		} catch (Exception e) {
-			handleException(e, SO_MULTICAST_INTERFACE);
-			return;
-		}
-		try {
-			InetAddress theInterface = mss.getInterface();
-			// under IPV6 we are not guarrenteed to get the same address back as
-			// the address, all we should be guaranteed is that we get an
-			// address on the same interface
-			if (theInterface instanceof Inet6Address) {
-				assertTrue(
-						"Failed to return correct interface IPV6",
-						NetworkInterface
-								.getByInetAddress(mss.getInterface())
-								.equals(
-										NetworkInterface
-												.getByInetAddress(theInterface)));
-			} else {
-				assertTrue("Failed to return correct interface IPV4 got:"
-						+ mss.getInterface() + " excpeted: "
-						+ InetAddress.getLocalHost(), mss.getInterface()
-						.equals(InetAddress.getLocalHost()));
-			}
-			ensureExceptionThrownIfOptionIsUnsupportedOnOS(SO_MULTICAST);
-		} catch (SocketException e) {
-			handleException(e, SO_MULTICAST);
-		} catch (UnknownHostException e) {
-			fail("Exception during setInterface test: " + e.toString());
-		}
+        try {
+            mss = new MulticastSocket();
+            mss.setInterface(InetAddress.getLocalHost());
+            ensureExceptionThrownIfOptionIsUnsupportedOnOS(SO_MULTICAST_INTERFACE);
+        } catch (Exception e) {
+            handleException(e, SO_MULTICAST_INTERFACE);
+            return;
+        }
+        try {
+            InetAddress theInterface = mss.getInterface();
+            // under IPV6 we are not guarrenteed to get the same address back as
+            // the address, all we should be guaranteed is that we get an
+            // address on the same interface
+            if (theInterface instanceof Inet6Address) {
+                assertTrue(
+                        "Failed to return correct interface IPV6",
+                        NetworkInterface
+                                .getByInetAddress(mss.getInterface())
+                                .equals(
+                                        NetworkInterface
+                                                .getByInetAddress(theInterface)));
+            } else {
+                assertTrue("Failed to return correct interface IPV4 got:"
+                        + mss.getInterface() + " excpeted: "
+                        + InetAddress.getLocalHost(), mss.getInterface()
+                        .equals(InetAddress.getLocalHost()));
+            }
+            ensureExceptionThrownIfOptionIsUnsupportedOnOS(SO_MULTICAST);
+        } catch (SocketException e) {
+            handleException(e, SO_MULTICAST);
+        } catch (UnknownHostException e) {
+            fail("Exception during setInterface test: " + e.toString());
+        }
 
-		// Regression test for Harmony-2410
-		try {
-			mss = new MulticastSocket();
-			mss.setInterface(InetAddress.getByName("224.0.0.5"));
-		} catch (UnknownHostException uhe) {
-			fail("Unable to get InetAddress by name from '224.0.0.5' addr: " + uhe.toString());
-		} catch (SocketException se) {
-			// expected
-		} catch (IOException ioe) {
-			handleException(ioe, SO_MULTICAST_INTERFACE);
-			return;
-		}
-	}
+        // Regression test for Harmony-2410
+        try {
+            mss = new MulticastSocket();
+            mss.setInterface(InetAddress.getByName("224.0.0.5"));
+        } catch (UnknownHostException uhe) {
+            fail("Unable to get InetAddress by name from '224.0.0.5' addr: " + uhe.toString());
+        } catch (SocketException se) {
+            // expected
+        } catch (IOException ioe) {
+            handleException(ioe, SO_MULTICAST_INTERFACE);
+            return;
+        }
+    }
 
-	/**
-	 * @throws IOException 
-	 * @throws InterruptedException 
-	 * @tests java.net.MulticastSocket#setNetworkInterface(java.net.NetworkInterface)
-	 */
-	public void test_setNetworkInterfaceLjava_net_NetworkInterface() throws IOException, InterruptedException {
-		String msg = null;
-		InetAddress group = null;
-		int[] ports = Support_PortManager.getNextPortsForUDP(2);
-		int groupPort = ports[0];
-		int serverPort = ports[1];
-		if (atLeastOneInterface) {
+    /**
+     * @throws IOException 
+     * @throws InterruptedException 
+     * @tests java.net.MulticastSocket#setNetworkInterface(java.net.NetworkInterface)
+     */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setNetworkInterface",
+          methodArgs = {NetworkInterface.class}
+        )
+    })
+    public void _test_setNetworkInterfaceLjava_net_NetworkInterface() throws IOException, InterruptedException {
+        String msg = null;
+        InetAddress group = null;
+        int[] ports = Support_PortManager.getNextPortsForUDP(2);
+        int groupPort = ports[0];
+        int serverPort = ports[1];
+        if (atLeastOneInterface) {
             // validate that null interface is handled ok
             mss = new MulticastSocket(groupPort);
 
@@ -878,47 +1001,74 @@ public class MulticastSocketTest extends SocketTestCase {
                 }
             }
         }
-	}
+    }
 
-	/**
-	 * @tests java.net.MulticastSocket#setTimeToLive(int)
-	 */
-	public void test_setTimeToLiveI() {
-		try {
-			mss = new MulticastSocket();
-			mss.setTimeToLive(120);
-			assertTrue("Returned incorrect 1st TTL: " + mss.getTimeToLive(),
-					mss.getTimeToLive() == 120);
-			mss.setTimeToLive(220);
-			assertTrue("Returned incorrect 2nd TTL: " + mss.getTimeToLive(),
-					mss.getTimeToLive() == 220);
-			ensureExceptionThrownIfOptionIsUnsupportedOnOS(SO_MULTICAST);
-		} catch (Exception e) {
-			handleException(e, SO_MULTICAST);
-		}
-	}
+    /**
+     * @tests java.net.MulticastSocket#setTimeToLive(int)
+     */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "setTimeToLive",
+          methodArgs = {int.class}
+        )
+    })
+    public void test_setTimeToLiveI() {
+        try {
+            mss = new MulticastSocket();
+            mss.setTimeToLive(120);
+            assertTrue("Returned incorrect 1st TTL: " + mss.getTimeToLive(),
+                    mss.getTimeToLive() == 120);
+            mss.setTimeToLive(220);
+            assertTrue("Returned incorrect 2nd TTL: " + mss.getTimeToLive(),
+                    mss.getTimeToLive() == 220);
+            ensureExceptionThrownIfOptionIsUnsupportedOnOS(SO_MULTICAST);
+        } catch (Exception e) {
+            handleException(e, SO_MULTICAST);
+        }
+    }
 
-	/**
-	 * @tests java.net.MulticastSocket#setTTL(byte)
-	 */
-	public void test_setTTLB() {
-		// Test for method void java.net.MulticastSocket.setTTL(byte)
-		try {
-			mss = new MulticastSocket();
-			mss.setTTL((byte) 120);
-			assertTrue("Failed to set TTL: " + mss.getTTL(),
-					mss.getTTL() == 120);
-			ensureExceptionThrownIfOptionIsUnsupportedOnOS(SO_MULTICAST);
-		} catch (Exception e) {
-			handleException(e, SO_MULTICAST);
-		}
-	}
+    /**
+     * @tests java.net.MulticastSocket#setTTL(byte)
+     */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "setTTL",
+          methodArgs = {byte.class}
+        )
+    })
+    public void test_setTTLB() {
+        // Test for method void java.net.MulticastSocket.setTTL(byte)
+        try {
+            mss = new MulticastSocket();
+            mss.setTTL((byte) 120);
+            assertTrue("Failed to set TTL: " + mss.getTTL(),
+                    mss.getTTL() == 120);
+            ensureExceptionThrownIfOptionIsUnsupportedOnOS(SO_MULTICAST);
+        } catch (Exception e) {
+            handleException(e, SO_MULTICAST);
+        }
+    }
 
-	/**
-	 * @tests java.net.MulticastSocket#MulticastSocket(java.net.SocketAddress)
-	 */
-	public void test_ConstructorLjava_net_SocketAddress() throws Exception {	
-		MulticastSocket ms = new MulticastSocket((SocketAddress) null);
+    /**
+     * @tests java.net.MulticastSocket#MulticastSocket(java.net.SocketAddress)
+     */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SecurityException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "MulticastSocket",
+          methodArgs = {SocketAddress.class}
+        )
+    })
+    public void test_ConstructorLjava_net_SocketAddress() throws Exception {    
+        MulticastSocket ms = new MulticastSocket((SocketAddress) null);
         assertTrue("should not be bound", !ms.isBound() && !ms.isClosed()
                 && !ms.isConnected());
         ms.bind(new InetSocketAddress(InetAddress.getLocalHost(),
@@ -952,48 +1102,75 @@ public class MulticastSocketTest extends SocketTestCase {
         InetSocketAddress addr = new InetSocketAddress("0.0.0.0", 0);
         MulticastSocket s = new MulticastSocket(addr);
         assertTrue(s.getReuseAddress()); 
-	}
+    }
 
-	/**
-	 * @tests java.net.MulticastSocket#getLoopbackMode()
-	 */
-	public void test_getLoopbackMode() {
-		try {
-			MulticastSocket ms = new MulticastSocket((SocketAddress) null);
-			assertTrue("should not be bound", !ms.isBound() && !ms.isClosed()
-					&& !ms.isConnected());
-			ms.getLoopbackMode();
-			assertTrue("should not be bound", !ms.isBound() && !ms.isClosed()
-					&& !ms.isConnected());
-			ms.close();
-			assertTrue("should be closed", ms.isClosed());
-			ensureExceptionThrownIfOptionIsUnsupportedOnOS(SO_USELOOPBACK);
-		} catch (IOException e) {
-			handleException(e, SO_USELOOPBACK);
-		}
-	}
+    /**
+     * @tests java.net.MulticastSocket#getLoopbackMode()
+     */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SocketException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getLoopbackMode",
+          methodArgs = {}
+        )
+    })
+    public void test_getLoopbackMode() {
+        try {
+            MulticastSocket ms = new MulticastSocket((SocketAddress) null);
+            assertTrue("should not be bound", !ms.isBound() && !ms.isClosed()
+                    && !ms.isConnected());
+            ms.getLoopbackMode();
+            assertTrue("should not be bound", !ms.isBound() && !ms.isClosed()
+                    && !ms.isConnected());
+            ms.close();
+            assertTrue("should be closed", ms.isClosed());
+            ensureExceptionThrownIfOptionIsUnsupportedOnOS(SO_USELOOPBACK);
+        } catch (IOException e) {
+            handleException(e, SO_USELOOPBACK);
+        }
+    }
 
-	/**
-	 * @tests java.net.MulticastSocket#setLoopbackMode(boolean)
-	 */
-	public void test_setLoopbackModeZ() {
-		try {
-			MulticastSocket ms = new MulticastSocket();
-			ms.setLoopbackMode(true);
-			assertTrue("loopback should be true", ms.getLoopbackMode());
-			ms.setLoopbackMode(false);
-			assertTrue("loopback should be false", !ms.getLoopbackMode());
-			ms.close();
-			assertTrue("should be closed", ms.isClosed());
-			ensureExceptionThrownIfOptionIsUnsupportedOnOS(SO_USELOOPBACK);
-		} catch (IOException e) {
-			handleException(e, SO_USELOOPBACK);
-		}
-	}
+    /**
+     * @tests java.net.MulticastSocket#setLoopbackMode(boolean)
+     */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SocketException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "setLoopbackMode",
+          methodArgs = {boolean.class}
+        )
+    })
+    public void test_setLoopbackModeZ() {
+        try {
+            MulticastSocket ms = new MulticastSocket();
+            ms.setLoopbackMode(true);
+            assertTrue("loopback should be true", ms.getLoopbackMode());
+            ms.setLoopbackMode(false);
+            assertTrue("loopback should be false", !ms.getLoopbackMode());
+            ms.close();
+            assertTrue("should be closed", ms.isClosed());
+            ensureExceptionThrownIfOptionIsUnsupportedOnOS(SO_USELOOPBACK);
+        } catch (IOException e) {
+            handleException(e, SO_USELOOPBACK);
+        }
+    }
     
     /**
      * @tests java.net.MulticastSocket#setLoopbackMode(boolean)
      */
+@TestInfo(
+          level = TestLevel.PARTIAL,
+          purpose = "SocketException checking missed",
+          targets = {
+            @TestTarget(
+              methodName = "setLoopbackMode",
+              methodArgs = {boolean.class}
+            )
+        })
     public void test_setLoopbackModeSendReceive() throws IOException{
         final String ADDRESS = "224.1.2.3";
         final int PORT = Support_PortManager.getNextPortForUDP();
@@ -1031,96 +1208,105 @@ public class MulticastSocketTest extends SocketTestCase {
     }
     
     
-	/**
-	 * @tests java.net.MulticastSocket#setReuseAddress(boolean)
-	 */
-	public void test_setReuseAddressZ() {
-		try {
-			// test case were we set it to false
-			MulticastSocket theSocket1 = null;
-			MulticastSocket theSocket2 = null;
-			try {
-				InetSocketAddress theAddress = new InetSocketAddress(
-						InetAddress.getLocalHost(), Support_PortManager
-								.getNextPortForUDP());
-				theSocket1 = new MulticastSocket(null);
-				theSocket2 = new MulticastSocket(null);
-				theSocket1.setReuseAddress(false);
-				theSocket2.setReuseAddress(false);
-				theSocket1.bind(theAddress);
-				theSocket2.bind(theAddress);
-				fail(
-						"No exception when trying to connect to do duplicate socket bind with re-useaddr set to false");
-			} catch (BindException e) {
+    /**
+     * @tests java.net.MulticastSocket#setReuseAddress(boolean)
+     */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SocketException checking missesd. Method inherited from class java.net.DatagramSocket",
+      targets = {
+        @TestTarget(
+          methodName = "setReuseAddress",
+          methodArgs = {boolean.class}
+        )
+    })
+    public void test_setReuseAddressZ() {
+        try {
+            // test case were we set it to false
+            MulticastSocket theSocket1 = null;
+            MulticastSocket theSocket2 = null;
+            try {
+                InetSocketAddress theAddress = new InetSocketAddress(
+                        InetAddress.getLocalHost(), Support_PortManager
+                                .getNextPortForUDP());
+                theSocket1 = new MulticastSocket(null);
+                theSocket2 = new MulticastSocket(null);
+                theSocket1.setReuseAddress(false);
+                theSocket2.setReuseAddress(false);
+                theSocket1.bind(theAddress);
+                theSocket2.bind(theAddress);
+                fail(
+                        "No exception when trying to connect to do duplicate socket bind with re-useaddr set to false");
+            } catch (BindException e) {
 
-			}
-			if (theSocket1 != null)
-				theSocket1.close();
-			if (theSocket2 != null)
-				theSocket2.close();
+            }
+            if (theSocket1 != null)
+                theSocket1.close();
+            if (theSocket2 != null)
+                theSocket2.close();
 
-			// test case were we set it to true
-			try {
-				InetSocketAddress theAddress = new InetSocketAddress(
-						InetAddress.getLocalHost(), Support_PortManager
-								.getNextPortForUDP());
-				theSocket1 = new MulticastSocket(null);
-				theSocket2 = new MulticastSocket(null);
-				theSocket1.setReuseAddress(true);
-				theSocket2.setReuseAddress(true);
-				theSocket1.bind(theAddress);
-				theSocket2.bind(theAddress);
-			} catch (Exception e) {
-				fail(
-						"unexpected exception when trying to connect to do duplicate socket bind with re-useaddr set to true");
-			}
-			if (theSocket1 != null)
-				theSocket1.close();
-			if (theSocket2 != null)
-				theSocket2.close();
+            // test case were we set it to true
+            try {
+                InetSocketAddress theAddress = new InetSocketAddress(
+                        InetAddress.getLocalHost(), Support_PortManager
+                                .getNextPortForUDP());
+                theSocket1 = new MulticastSocket(null);
+                theSocket2 = new MulticastSocket(null);
+                theSocket1.setReuseAddress(true);
+                theSocket2.setReuseAddress(true);
+                theSocket1.bind(theAddress);
+                theSocket2.bind(theAddress);
+            } catch (Exception e) {
+                fail(
+                        "unexpected exception when trying to connect to do duplicate socket bind with re-useaddr set to true");
+            }
+            if (theSocket1 != null)
+                theSocket1.close();
+            if (theSocket2 != null)
+                theSocket2.close();
 
-			// test the default case which we expect to be the same on all
-			// platforms
-			try {
-				InetSocketAddress theAddress = new InetSocketAddress(
-						InetAddress.getLocalHost(), Support_PortManager
-								.getNextPortForUDP());
-				theSocket1 = new MulticastSocket(null);
-				theSocket2 = new MulticastSocket(null);
-				theSocket1.bind(theAddress);
-				theSocket2.bind(theAddress);
-			} catch (BindException e) {
-				fail(
-						"unexpected exception when trying to connect to do duplicate socket bind with re-useaddr left as default");
-			}
-			if (theSocket1 != null)
-				theSocket1.close();
-			if (theSocket2 != null)
-				theSocket2.close();
-			ensureExceptionThrownIfOptionIsUnsupportedOnOS(SO_REUSEADDR);
-		} catch (Exception e) {
-			handleException(e, SO_REUSEADDR);
-		}
-	}
+            // test the default case which we expect to be the same on all
+            // platforms
+            try {
+                InetSocketAddress theAddress = new InetSocketAddress(
+                        InetAddress.getLocalHost(), Support_PortManager
+                                .getNextPortForUDP());
+                theSocket1 = new MulticastSocket(null);
+                theSocket2 = new MulticastSocket(null);
+                theSocket1.bind(theAddress);
+                theSocket2.bind(theAddress);
+            } catch (BindException e) {
+                fail(
+                        "unexpected exception when trying to connect to do duplicate socket bind with re-useaddr left as default");
+            }
+            if (theSocket1 != null)
+                theSocket1.close();
+            if (theSocket2 != null)
+                theSocket2.close();
+            ensureExceptionThrownIfOptionIsUnsupportedOnOS(SO_REUSEADDR);
+        } catch (Exception e) {
+            handleException(e, SO_REUSEADDR);
+        }
+    }
 
-	/**
-	 * Sets up the fixture, for example, open a network connection. This method
-	 * is called before a test is executed.
-	 */
-	protected void setUp() {
+    /**
+     * Sets up the fixture, for example, open a network connection. This method
+     * is called before a test is executed.
+     */
+    protected void setUp() {
 
-		Enumeration theInterfaces = null;
-		try {
-			theInterfaces = NetworkInterface.getNetworkInterfaces();
-		} catch (Exception e) {
-		}
+        Enumeration theInterfaces = null;
+        try {
+            theInterfaces = NetworkInterface.getNetworkInterfaces();
+        } catch (Exception e) {
+        }
 
-		// only consider interfaces that have addresses associated with them.
-		// Otherwise tests don't work so well
-		if (theInterfaces != null) {
+        // only consider interfaces that have addresses associated with them.
+        // Otherwise tests don't work so well
+        if (theInterfaces != null) {
 
-			atLeastOneInterface = false;
-			while (theInterfaces.hasMoreElements()
+            atLeastOneInterface = false;
+            while (theInterfaces.hasMoreElements()
                     && (atLeastOneInterface == false)) {
                 networkInterface1 = (NetworkInterface) theInterfaces
                         .nextElement();
@@ -1134,8 +1320,8 @@ public class MulticastSocketTest extends SocketTestCase {
                 }
             }
 
-			atLeastTwoInterfaces = false;
-			if (theInterfaces.hasMoreElements()) {
+            atLeastTwoInterfaces = false;
+            if (theInterfaces.hasMoreElements()) {
                 while (theInterfaces.hasMoreElements()
                         && (atLeastTwoInterfaces == false)) {
                     networkInterface2 = (NetworkInterface) theInterfaces
@@ -1151,44 +1337,44 @@ public class MulticastSocketTest extends SocketTestCase {
                 }
             }
 
-			Enumeration addresses;
+            Enumeration addresses;
 
-			// first the first interface that supports IPV6 if one exists
-			try {
-				theInterfaces = NetworkInterface.getNetworkInterfaces();
-			} catch (Exception e) {
-			}
-			boolean found = false;
-			while (theInterfaces.hasMoreElements() && !found) {
-				NetworkInterface nextInterface = (NetworkInterface) theInterfaces
-						.nextElement();
-				addresses = nextInterface.getInetAddresses();
-				if (addresses != null) {
-					while (addresses.hasMoreElements()) {
-						InetAddress nextAddress = (InetAddress) addresses
-								.nextElement();
-						if (nextAddress instanceof Inet6Address) {
-							IPV6networkInterface1 = nextInterface;
-							found = true;
-							break;
-						}
-					}
-				}
-			}
-		}
-	}
+            // first the first interface that supports IPV6 if one exists
+            try {
+                theInterfaces = NetworkInterface.getNetworkInterfaces();
+            } catch (Exception e) {
+            }
+            boolean found = false;
+            while (theInterfaces.hasMoreElements() && !found) {
+                NetworkInterface nextInterface = (NetworkInterface) theInterfaces
+                        .nextElement();
+                addresses = nextInterface.getInetAddresses();
+                if (addresses != null) {
+                    while (addresses.hasMoreElements()) {
+                        InetAddress nextAddress = (InetAddress) addresses
+                                .nextElement();
+                        if (nextAddress instanceof Inet6Address) {
+                            IPV6networkInterface1 = nextInterface;
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
 
-	/**
-	 * Tears down the fixture, for example, close a network connection. This
-	 * method is called after a test is executed.
-	 */
-	protected void tearDown() {
+    /**
+     * Tears down the fixture, for example, close a network connection. This
+     * method is called after a test is executed.
+     */
+    protected void tearDown() {
 
-		if (t != null)
-			t.interrupt();
-		if (mss != null)
-			mss.close();
-		if (server != null)
-			server.stopServer();
-	}
+        if (t != null)
+            t.interrupt();
+        if (mss != null)
+            mss.close();
+        if (server != null)
+            server.stopServer();
+    }
 }

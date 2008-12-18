@@ -14,6 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/*
+ * Copyright (C) 2008 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package java.lang;
 
@@ -23,10 +38,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-
 import java.nio.channels.Channel;
 import java.nio.channels.spi.SelectorProvider;
-
 import java.security.SecurityPermission;
 import java.util.Collection;
 import java.util.HashMap;
@@ -35,39 +48,48 @@ import java.util.Properties;
 import java.util.PropertyPermission;
 import java.util.Set;
 
-// BEGIN android-added
 import dalvik.system.VMStack;
-// END android-added
 
 /**
- * Class System provides a standard place for programs to find system related
- * information. All System API is static.
+ * Provides access to system-related information and resources including
+ * standard input and output. Enables clients to dynamically load native
+ * libraries. All methods of this class are accessed in a static way and the
+ * class itself can not be instantiated.
  * 
+ * @see Runtime
+ * 
+ * @since Android 1.0
  */
 public final class System {
 
     /**
-     * Default input stream
+     * Default input stream.
+     * 
+     * @since Android 1.0
      */
     public static final InputStream in;
 
     /**
-     * Default output stream
+     * Default output stream.
+     * 
+     * @since Android 1.0
      */
     public static final PrintStream out;
 
     /**
-     * Default error output stream
+     * Default error output stream.
+     * 
+     * @since Android 1.0
      */
     public static final PrintStream err;
 
     /**
-     * The System Properties table
+     * The System Properties table.
      */
     private static Properties systemProperties;
 
     /**
-     * The System default SecurityManager
+     * The System default SecurityManager.
      */
     private static SecurityManager securityManager;
 
@@ -76,10 +98,9 @@ public final class System {
      */
     static {
         /*
-         * Set up standard in, out, and err.
-         * 
-         * TODO err and out are String.ConsolePrintStream. All three are
-         * buffered in Harmony. Check and possibly change this later.
+         * Set up standard in, out, and err. TODO err and out are
+         * String.ConsolePrintStream. All three are buffered in Harmony. Check
+         * and possibly change this later.
          */
         err = new PrintStream(new FileOutputStream(FileDescriptor.err));
         out = new PrintStream(new FileOutputStream(FileDescriptor.out));
@@ -87,38 +108,63 @@ public final class System {
     }
 
     /**
-     * Sets the value of the static slot "in" in the receiver to the passed in
-     * argument.
+     * Sets the standard input stream to the given user defined input stream.
      * 
-     * @param newIn the new value for in.
+     * @param newIn
+     *            the user defined input stream to set as the standard input
+     *            stream.
+     * @throws SecurityException
+     *             if a {@link SecurityManager} is installed and its {@code
+     *             checkPermission()} method does not allow the change of the
+     *             stream.
+     * @since Android 1.0
      */
-    @SuppressWarnings("unused")
     public static void setIn(InputStream newIn) {
         SecurityManager secMgr = System.getSecurityManager();
+        if(secMgr != null) {
+            secMgr.checkPermission(RuntimePermission.permissionToSetIO);
+        }
         setFieldImpl("in", "Ljava/io/InputStream;", newIn);
     }
 
     /**
-     * Sets the value of the static slot "out" in the receiver to the passed in
-     * argument.
+     * Sets the standard output stream to the given user defined output stream.
      * 
-     * @param newOut the new value for out.
+     * @param newOut
+     *            the user defined output stream to set as the standard output
+     *            stream.
+     * @throws SecurityException
+     *             if a {@link SecurityManager} is installed and its {@code
+     *             checkPermission()} method does not allow the change of the
+     *             stream.
+     * @since Android 1.0
      */
-    @SuppressWarnings("unused")
     public static void setOut(java.io.PrintStream newOut) {
         SecurityManager secMgr = System.getSecurityManager();
+        if(secMgr != null) {
+            secMgr.checkPermission(RuntimePermission.permissionToSetIO);
+        }
         setFieldImpl("out", "Ljava/io/PrintStream;", newOut);
     }
 
     /**
-     * Sets the value of the static slot "err" in the receiver to the passed in
-     * argument.
+     * Sets the standard error output stream to the given user defined output
+     * stream.
      * 
-     * @param newErr the new value for err.
+     * @param newErr
+     *            the user defined output stream to set as the standard error
+     *            output stream.
+     * @throws SecurityException
+     *             if a {@link SecurityManager} is installed and its {@code
+     *             checkPermission()} method does not allow the change of the
+     *             stream.
+     * @since Android 1.0
      */
-    @SuppressWarnings("unused")
     public static void setErr(java.io.PrintStream newErr) {
         SecurityManager secMgr = System.getSecurityManager();
+        if(secMgr != null) {
+            secMgr.checkPermission(RuntimePermission.permissionToSetIO);
+        }
         setFieldImpl("err", "Ljava/io/PrintStream;", newErr);
     }
 
@@ -129,93 +175,120 @@ public final class System {
     }
 
     /**
-     * Copies the contents of <code>array1</code> starting at offset
-     * <code>start1</code> into <code>array2</code> starting at offset
-     * <code>start2</code> for <code>length</code> elements.
+     * Copies the number of {@code length} elements of the Array {@code src}
+     * starting at the offset {@code srcPos} into the Array {@code dest} at
+     * the position {@code destPos}.
      * 
-     * @param array1 the array to copy out of
-     * @param start1 the starting index in array1
-     * @param array2 the array to copy into
-     * @param start2 the starting index in array2
-     * @param length the number of elements in the array to copy
+     * @param src
+     *            the source array to copy the content.
+     * @param srcPos
+     *            the starting index of the content in {@code src}.
+     * @param dest
+     *            the destination array to copy the data into.
+     * @param destPos
+     *            the starting index for the copied content in {@code dest}.
+     * @param length
+     *            the number of elements of the {@code array1} content they have
+     *            to be copied.
+     * @since Android 1.0
      */
-    public static native void arraycopy(Object array1, int start1, Object array2, int start2, int length);
+    public static native void arraycopy(Object src, int srcPos, Object dest,
+            int destPos, int length);
 
     /**
-     * Returns the current time expressed as milliseconds since the time
-     * 00:00:00 UTC on January 1, 1970.
+     * Returns the current system time in milliseconds since January 1, 1970
+     * 00:00:00 UTC. This method shouldn't be used for measuring timeouts or
+     * other elapsed time measurements, as changing the system time can affect
+     * the results.
      * 
-     * @return the time in milliseconds.
+     * @return the local system time in milliseconds.
+     * @since Android 1.0
      */
     public static native long currentTimeMillis();
 
     /**
-     * <p>
-     * Returns the most precise time measurement in nanoseconds that's
-     * available.
-     * </p>
+     * Returns the current timestamp of the most precise timer available on the
+     * local system. This timestamp can only be used to measure an elapsed
+     * period by comparing it against another timestamp. It cannot be used as a
+     * very exact system time expression.
      * 
-     * @return The current time in nanoseconds.
+     * @return the current timestamp in nanoseconds.
+     * @since Android 1.0
      */
     public static native long nanoTime();
 
     /**
-     * Causes the virtual machine to stop running, and the program to exit. If
-     * runFinalizersOnExit(true) has been invoked, then all finalizers will be
-     * run first.
+     * Causes the virtual machine to stop running and the program to exit. If
+     * {@link #runFinalizersOnExit(boolean)} has been previously invoked with a
+     * {@code true} argument, then all all objects will be properly
+     * garbage-collected and finalized first.
      * 
-     * @param code the return code.
-     * 
-     * @throws SecurityException if the running thread is not allowed to cause
-     *         the vm to exit.
-     * 
+     * @param code
+     *            the return code.
+     * @throws SecurityException
+     *             if the running thread has not enough permission to exit the
+     *             virtual machine.
      * @see SecurityManager#checkExit
+     * @since Android 1.0
      */
     public static void exit(int code) {
         Runtime.getRuntime().exit(code);
     }
 
     /**
-     * Indicate to the virtual machine that it would be a good time to collect
-     * available memory. Note that, this is a hint only.
+     * Indicates to the virtual machine that it would be a good time to run the
+     * garbage collector. Note that this is a hint only. There is no guarantee
+     * that the garbage collector will actually be run.
+     * 
+     * @since Android 1.0
      */
     public static void gc() {
         Runtime.getRuntime().gc();
     }
 
     /**
-     * Returns an environment variable.
+     * Returns the value of the environment variable with the given name {@code
+     * var}.
      * 
-     * @param var the name of the environment variable
-     * @return the value of the specified environment variable
+     * @param name
+     *            the name of the environment variable.
+     * @return the value of the specified environment variable or {@code null}
+     *         if no variable exists with the given name.
+     * @throws SecurityException
+     *             if a {@link SecurityManager} is installed and its {@code
+     *             checkPermission()} method does not allow the querying of
+     *             single environment variables.
+     * 
+     * @since Android 1.0
      */
-    public static String getenv(String var) {
-        if (var == null) {
+    public static String getenv(String name) {
+        if (name == null) {
             throw new NullPointerException();
         }
         SecurityManager secMgr = System.getSecurityManager();
         if (secMgr != null) {
-            secMgr.checkPermission(new RuntimePermission("getenv." + var));
+            secMgr.checkPermission(new RuntimePermission("getenv." + name));
         }
 
-        return getEnvByName(var);
+        return getEnvByName(name);
     }
 
     /*
-     * Returns an environment variable. No security checks are
-     * performed.
-     * 
+     * Returns an environment variable. No security checks are performed.
      * @param var the name of the environment variable
      * @return the value of the specified environment variable
      */
-    private static native String getEnvByName(String var);
-    
+    private static native String getEnvByName(String name);
+
     /**
-     * <p>
-     * Returns all environment variables.
-     * </p>
+     * Returns an unmodifiable map of all available environment variables.
      * 
-     * @return A Map of all environment variables.
+     * @return the map representing all environment variables.
+     * @throws SecurityException
+     *             if a {@link SecurityManager} is installed and its {@code
+     *             checkPermission()} method does not allow the querying of
+     *             all environment variables.
+     * @since Android 1.0
      */
     public static Map<String, String> getenv() {
         SecurityManager secMgr = System.getSecurityManager();
@@ -224,15 +297,15 @@ public final class System {
         }
 
         Map<String, String> map = new HashMap<String, String>();
-        
+
         int index = 0;
         String entry = getEnvByIndex(index++);
-        while(entry != null) {
+        while (entry != null) {
             int pos = entry.indexOf('=');
             if (pos != -1) {
                 map.put(entry.substring(0, pos), entry.substring(pos + 1));
             }
-            
+
             entry = getEnvByIndex(index++);
         }
 
@@ -240,26 +313,25 @@ public final class System {
     }
 
     /*
-     * Returns an environment variable. No security checks are
-     * performed. The safe way of traversing the environment is
-     * to start at index zero and count upwards until a null
-     * pointer is encountered. This marks the end of the Unix
-     * environment.
-     * 
+     * Returns an environment variable. No security checks are performed. The
+     * safe way of traversing the environment is to start at index zero and
+     * count upwards until a null pointer is encountered. This marks the end of
+     * the Unix environment.
      * @param index the index of the environment variable
      * @return the value of the specified environment variable
      */
     private static native String getEnvByIndex(int index);
-    
+
     /**
-     * <p>
-     * Returns the inherited channel from the system-wide provider.
-     * </p>
+     * Returns the inherited channel from the creator of the current virtual
+     * machine.
      * 
-     * @return A {@link Channel} or <code>null</code>.
+     * @return the inherited {@link Channel} or {@code null} if none exists.
      * @throws IOException
+     *             if an I/O error occurred.
      * @see SelectorProvider
      * @see SelectorProvider#inheritedChannel()
+     * @since Android 1.0
      */
     public static Channel inheritedChannel() throws IOException {
         return SelectorProvider.provider().inheritedChannel();
@@ -269,17 +341,19 @@ public final class System {
      * Returns the system properties. Note that this is not a copy, so that
      * changes made to the returned Properties object will be reflected in
      * subsequent calls to getProperty and getProperties.
-     * <p>
-     * Security managers should restrict access to this API if possible.
      * 
-     * @return the system properties
+     * @return the system properties.
+     * @throws SecurityException
+     *             if a {@link SecurityManager} is installed and its {@code
+     *             checkPropertiesAccess()} method does not allow the operation.
+     * @since Android 1.0
      */
     public static Properties getProperties() {
         SecurityManager secMgr = System.getSecurityManager();
         if (secMgr != null) {
             secMgr.checkPropertiesAccess();
         }
-        
+
         return internalGetProperties();
     }
 
@@ -296,13 +370,13 @@ public final class System {
             props.postInit();
             System.systemProperties = props;
         }
-        
+
         return systemProperties;
     }
 
     /**
-     * Returns the value of a particular system property. Returns null if no
-     * such property exists,
+     * Returns the value of a particular system property or {@code null} if no
+     * such property exists.
      * <p>
      * The properties currently provided by the virtual machine are:
      * 
@@ -325,22 +399,34 @@ public final class System {
      *        java.home
      * </pre>
      * 
-     * @param prop the system property to look up
-     * @return the value of the specified system property, or null if the
-     *         property doesn't exist
+     * @param prop
+     *            the name of the system property to look up.
+     * @return the value of the specified system property or {@code null} if the
+     *         property doesn't exist.
+     * @throws SecurityException
+     *             if a {@link SecurityManager} is installed and its {@code
+     *             checkPropertyAccess()} method does not allow the operation.
+     * @since Android 1.0
      */
     public static String getProperty(String prop) {
         return getProperty(prop, null);
     }
 
     /**
-     * Returns the value of a particular system property. If no such property is
-     * found, returns the defaultValue.
+     * Returns the value of a particular system property. The {@code
+     * defaultValue} will be returned if no such property has been found.
      * 
-     * @param prop the system property to look up
-     * @param defaultValue return value if system property is not found
-     * @return the value of the specified system property, or defaultValue if
-     *         the property doesn't exist
+     * @param prop
+     *            the name of the system property to look up.
+     * @param defaultValue
+     *            the return value if the system property with the given name
+     *            does not exist.
+     * @return the value of the specified system property or the {@code
+     *         defaultValue} if the property does not exist.
+     * @throws SecurityException
+     *             if a {@link SecurityManager} is installed and its {@code
+     *             checkPropertyAccess()} method does not allow the operation.
+     * @since Android 1.0
      */
     public static String getProperty(String prop, String defaultValue) {
         if (prop.length() == 0) {
@@ -350,16 +436,23 @@ public final class System {
         if (secMgr != null) {
             secMgr.checkPropertyAccess(prop);
         }
-        
+
         return internalGetProperties().getProperty(prop, defaultValue);
     }
 
     /**
      * Sets the value of a particular system property.
      * 
-     * @param prop the system property to change
-     * @param value the value to associate with prop
-     * @return the old value of the property, or null
+     * @param prop
+     *            the name of the system property to be changed.
+     * @param value
+     *            the value to associate with the given property {@code prop}.
+     * @return the old value of the property or {@code null} if the property
+     *         didn't exist.
+     * @throws SecurityException
+     *             if a security manager exists and write access to the
+     *             specified property is not allowed.
+     * @since Android 1.0
      */
     public static String setProperty(String prop, String value) {
         if (prop.length() == 0) {
@@ -369,29 +462,23 @@ public final class System {
         if (secMgr != null) {
             secMgr.checkPermission(new PropertyPermission(prop, "write"));
         }
-        return (String) internalGetProperties().setProperty(prop, value);
+        return (String)internalGetProperties().setProperty(prop, value);
     }
 
     /**
-     * <p>
-     * Removes the system property for the specified key.
-     * </p>
+     * Removes a specific system property.
      * 
-     * <p>
-     * Please see the Java SE API documentation for further
-     * information on this method.
-     * <p>
-     * 
-     * @param key the system property to be removed.
-     * @return previous value or null if no value existed
-     * 
-     * @throws NullPointerException if the <code>key</code> argument is
-     *         <code>null</code>.
-     * @throws IllegalArgumentException if the <code>key</code> argument is
-     *         empty.
-     * @throws SecurityException if a security manager exists and write access
-     *         to the specified property is not allowed.
-     * @since 1.5
+     * @param key
+     *            the name of the system property to be removed.
+     * @return the property value or {@code null} if the property didn't exist.
+     * @throws NullPointerException
+     *             if the argument {@code key} is {@code null}.
+     * @throws IllegalArgumentException
+     *             if the argument {@code key} is empty.
+     * @throws SecurityException
+     *             if a security manager exists and write access to the
+     *             specified property is not allowed.
+     * @since Android 1.0
      */
     public static String clearProperty(String key) {
         if (key == null) {
@@ -405,13 +492,14 @@ public final class System {
         if (secMgr != null) {
             secMgr.checkPermission(new PropertyPermission(key, "write"));
         }
-        return (String) internalGetProperties().remove(key);
+        return (String)internalGetProperties().remove(key);
     }
 
     /**
      * Returns the active security manager.
      * 
      * @return the system security manager object.
+     * @since Android 1.0
      */
     public static SecurityManager getSecurityManager() {
         return securityManager;
@@ -419,63 +507,75 @@ public final class System {
 
     /**
      * Returns an integer hash code for the parameter. The hash code returned is
-     * the same one that would be returned by java.lang.Object.hashCode(),
-     * whether or not the object's class has overridden hashCode(). The hash
-     * code for null is 0.
+     * the same one that would be returned by the method {@code
+     * java.lang.Object.hashCode()}, whether or not the object's class has
+     * overridden hashCode(). The hash code for {@code null} is {@code 0}.
      * 
-     * @param anObject the object
-     * @return the hash code for the object
-     * 
+     * @param anObject
+     *            the object to calculate the hash code.
+     * @return the hash code for the given object.
      * @see java.lang.Object#hashCode
+     * @since Android 1.0
      */
     public static native int identityHashCode(Object anObject);
 
     /**
      * Loads the specified file as a dynamic library.
      * 
-     * @param pathName the path of the file to be loaded
+     * @param pathName
+     *            the path of the file to be loaded.
+     * @throws SecurityException
+     *             if the library was not allowed to be loaded.
+     * @since Android 1.0
      */
     public static void load(String pathName) {
         SecurityManager smngr = System.getSecurityManager();
         if (smngr != null) {
             smngr.checkLink(pathName);
         }
-        // BEGIN android-changed
         Runtime.getRuntime().load(pathName, VMStack.getCallingClassLoader());
-        // END android-changed
     }
 
     /**
-     * Loads and links the library specified by the argument.
+     * Loads and links the shared library with the given name {@code libName}.
+     * The file will be searched in the default directory for shared libraries
+     * of the local system.
      * 
-     * @param libName the name of the library to load
-     * 
-     * @throws UnsatisfiedLinkError if the library could not be loaded
-     * @throws SecurityException if the library was not allowed to be loaded
+     * @param libName
+     *            the name of the library to load.
+     * @throws UnsatisfiedLinkError
+     *             if the library could not be loaded.
+     * @throws SecurityException
+     *             if the library was not allowed to be loaded.
+     * @since Android 1.0
      */
     public static void loadLibrary(String libName) {
-        // BEGIN android-changed
+        SecurityManager smngr = System.getSecurityManager();
+        if (smngr != null) {
+            smngr.checkLink(libName);
+        }
         Runtime.getRuntime().loadLibrary(libName, VMStack.getCallingClassLoader());
-        // END android-changed
     }
 
     /**
      * Provides a hint to the virtual machine that it would be useful to attempt
      * to perform any outstanding object finalizations.
+     * 
+     * @since Android 1.0
      */
     public static void runFinalization() {
         Runtime.getRuntime().runFinalization();
     }
 
     /**
-     * Ensure that, when the virtual machine is about to exit, all objects are
+     * Ensures that, when the virtual machine is about to exit, all objects are
      * finalized. Note that all finalization which occurs when the system is
      * exiting is performed after all running threads have been terminated.
      * 
      * @param flag
-     *            true means finalize all on exit.
-     * 
-     * @deprecated This method is unsafe.
+     *            the flag determines if finalization on exit is enabled.
+     * @deprecated this method is unsafe.
+     * @since Android 1.0
      */
     @SuppressWarnings("deprecation")
     @Deprecated
@@ -484,14 +584,14 @@ public final class System {
     }
 
     /**
-     * Returns the system properties. Note that the object which is passed in
-     * not copied, so that subsequent changes made to the object will be
-     * reflected in calls to getProperty and getProperties.
-     * <p>
-     * Security managers should restrict access to this API if possible.
+     * Sets all system properties.
      * 
      * @param p
-     *            the property to set
+     *            the new system property.
+     * @throws SecurityException
+     *             if a {@link SecurityManager} is installed and its {@code
+     *             checkPropertiesAccess()} method does not allow the operation.
+     * @since Android 1.0
      */
     public static void setProperties(Properties p) {
         SecurityManager secMgr = System.getSecurityManager();
@@ -504,35 +604,36 @@ public final class System {
 
     /**
      * Sets the active security manager. Note that once the security manager has
-     * been set, it can not be changed. Attempts to do so will cause a security
-     * exception.
+     * been set, it can not be changed. Attempts to do that will cause a
+     * security exception.
      * 
      * @param sm
-     *            the new security manager
-     * 
+     *            the new security manager.
      * @throws SecurityException
      *             if the security manager has already been set and if its
      *             checkPermission method does not allow to redefine the
-     *             security manager. 
+     *             security manager.
+     * @since Android 1.0
      */
     public static void setSecurityManager(final SecurityManager sm) {
         if (securityManager != null) {
-            securityManager
-                  .checkPermission(new java.lang.RuntimePermission("setSecurityManager"));
+            securityManager.checkPermission(new java.lang.RuntimePermission("setSecurityManager"));
         }
 
         if (sm != null) {
-            // before the new manager assumed office, make a pass through 
+            // before the new manager assumed office, make a pass through
             // the common operations and let it load needed classes (if any),
-            // to avoid infinite recursion later on 
+            // to avoid infinite recursion later on
             try {
-                sm.checkPermission(new SecurityPermission("getProperty.package.access")); 
-            } catch (Exception ignore) {}
+                sm.checkPermission(new SecurityPermission("getProperty.package.access"));
+            } catch (Exception ignore) {
+            }
             try {
-                sm.checkPackageAccess("java.lang"); 
-            } catch (Exception ignore) {}
+                sm.checkPackageAccess("java.lang");
+            } catch (Exception ignore) {
+            }
         }
-        
+
         securityManager = sm;
     }
 
@@ -542,7 +643,8 @@ public final class System {
      * 
      * @param userLibName
      *            the name of the library to look up.
-     * @return the platform specific filename for the library
+     * @return the platform specific filename for the library.
+     * @since Android 1.0
      */
     public static native String mapLibraryName(String userLibName);
 
@@ -560,13 +662,13 @@ public final class System {
 }
 
 /**
- * Internal class holding the System properties. Needed by the Dalvik VM for
- * the two native methods. Must not be a local class, since we don't have a
- * System instance. 
+ * Internal class holding the System properties. Needed by the Dalvik VM for the
+ * two native methods. Must not be a local class, since we don't have a System
+ * instance.
  */
 class SystemProperties extends Properties {
     // Dummy, just to make the compiler happy.
-    
+
     native void preInit();
 
     native void postInit();
@@ -582,13 +684,13 @@ class SystemProperties extends Properties {
 class SystemEnvironment implements Map {
 
     private Map<String, String> map;
-    
+
     public SystemEnvironment(Map<String, String> map) {
         this.map = map;
     }
-    
+
     public void clear() {
-        throw new UnsupportedOperationException("Can't modify environment");        
+        throw new UnsupportedOperationException("Can't modify environment");
     }
 
     @SuppressWarnings("cast")
@@ -631,15 +733,15 @@ class SystemEnvironment implements Map {
     }
 
     public String put(Object key, Object value) {
-        throw new UnsupportedOperationException("Can't modify environment");        
+        throw new UnsupportedOperationException("Can't modify environment");
     }
 
     public void putAll(Map map) {
-        throw new UnsupportedOperationException("Can't modify environment");        
+        throw new UnsupportedOperationException("Can't modify environment");
     }
 
     public String remove(Object key) {
-        throw new UnsupportedOperationException("Can't modify environment");        
+        throw new UnsupportedOperationException("Can't modify environment");
     }
 
     public int size() {
@@ -649,5 +751,5 @@ class SystemEnvironment implements Map {
     public Collection values() {
         return map.values();
     }
-    
+
 }

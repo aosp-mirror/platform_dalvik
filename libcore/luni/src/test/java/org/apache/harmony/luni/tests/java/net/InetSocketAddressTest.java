@@ -15,6 +15,11 @@
  */
 package org.apache.harmony.luni.tests.java.net;
 
+import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.Serializable;
 import java.net.InetSocketAddress;
 
@@ -23,11 +28,21 @@ import junit.framework.TestCase;
 import org.apache.harmony.testframework.serialization.SerializationTest;
 import org.apache.harmony.testframework.serialization.SerializationTest.SerializableAssert;
 
+@TestTargetClass(InetSocketAddress.class) 
 public class InetSocketAddressTest extends TestCase {
 
     /**
      * @tests java.net.InetSocketAddress#InetSocketAddress(String, int)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "InetSocketAddress",
+          methodArgs = {String.class, int.class}
+        )
+    })
     public void test_ConstructorLjava_lang_StringI() throws Exception {
         // regression test for Harmony-1042
         InetSocketAddress address = new InetSocketAddress("127.0.0.1", 0);
@@ -37,6 +52,15 @@ public class InetSocketAddressTest extends TestCase {
     /**
      * @tests java.net.InetSocketAddress#createUnresolved(String, int)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "This is the complete subset of tests for createUnresolved method.",
+      targets = {
+        @TestTarget(
+          methodName = "createUnresolved",
+          methodArgs = {String.class, int.class}
+        )
+    })
     public void test_createUnresolvedLjava_lang_StringI() {
         HostPortPair[] legalHostPortPairs = { new HostPortPair("127.0.0.1", 1234),
                 new HostPortPair("192.168.0.1", 10000), new HostPortPair("127.0.0", 0),
@@ -55,6 +79,15 @@ public class InetSocketAddressTest extends TestCase {
     /**
      * @tests java.net.InetSocketAddress#createUnresolved(String, int)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "This is the complete subset of tests for createUnresolved method.",
+      targets = {
+        @TestTarget(
+          methodName = "createUnresolved",
+          methodArgs = {String.class, int.class}
+        )
+    })
     public void test_createUnresolvedLjava_lang_StringI_IllegalArgumentException() {
         HostPortPair[] illegalHostPortPairs = { new HostPortPair(null, 1),
                 new HostPortPair("host", -1), new HostPortPair("host", 65536) };
@@ -103,6 +136,15 @@ public class InetSocketAddressTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility.
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Checks serialization",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationSelf",
+          methodArgs = {}
+        )
+    })
     public void testSerializationSelf() throws Exception {
 
         Object[] testCases = {
@@ -115,7 +157,16 @@ public class InetSocketAddressTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
-    public void testSerializationCompatibility() throws Exception {
+@TestInfo(
+          level = TestLevel.COMPLETE,
+          purpose = "Checks serialization",
+          targets = {
+            @TestTarget(
+              methodName = "!SerializationGolden",
+              methodArgs = {}
+            )
+        })
+    public void _testSerializationCompatibility() throws Exception {
 
         Object[] testCases = {
                 InetSocketAddress.createUnresolved("badhost", 1000), // unresolved

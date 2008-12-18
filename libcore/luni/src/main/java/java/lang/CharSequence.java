@@ -19,15 +19,18 @@ package java.lang;
 
 
 /**
- * The CharSequence interface represents an ordered set of characters and the
- * functions to probe them.
+ * This interface represents an ordered set of characters and defines the
+ * methods to probe them.
+ * 
+ * @since Android 1.0
  */
 public interface CharSequence {
 
     /**
-     * Returns the number of characters in the sequence.
+     * Returns the number of characters in this sequence.
      * 
-     * @return the number of characters in the sequence
+     * @return the number of characters.
+     * @since Android 1.0
      */
     public int length();
 
@@ -35,35 +38,43 @@ public interface CharSequence {
      * Returns the character at the specified index, with the first character
      * having index zero.
      * 
-     * @param index The index of the character to return
-     * @return The requested character
+     * @param index
+     *            the index of the character to return.
+     * @return the requested character.
      * @throws IndexOutOfBoundsException
-     *             when <code>index &lt; 0</code> or
-     *             <code>index</code> &gt;= the length of the <code>CharSequence</code>
+     *             if {@code index < 0} or {@code index} is greater than the
+     *             length of this sequence.
+     * @since Android 1.0
      */
     public char charAt(int index);
 
     /**
-     * Returns a CharSequence from the <code>start</code> index (inclusive) to
-     * the <code>end</code> index (exclusive) of this sequence.
-     *
-     * @param       start The starting offset of the sub-sequence, that is, the
-     *              index of the first character that goes into the sub-sequence
-     * @param       end The ending offset of the sub-sequence, that is, the
-     *              index of the first character after those that go into the
-     *              sub-sequence
-     * @return      The requested sub-sequence
-     * @throws      IndexOutOfBoundsException when 1. either index is below 0
-     *              2. either index &gt;= <code>this.length()</code>
-     *              3. <code>start &gt; end </code>
+     * Returns a {@code CharSequence} from the {@code start} index (inclusive)
+     * to the {@code end} index (exclusive) of this sequence.
+     * 
+     * @param start
+     *            the start offset of the sub-sequence. It is inclusive, that
+     *            is, the index of the first character that is included in the
+     *            sub-sequence.
+     * @param end
+     *            the end offset of the sub-sequence. It is exclusive, that is,
+     *            the index of the first character after those that are included
+     *            in the sub-sequence
+     * @return the requested sub-sequence.
+     * @throws IndexOutOfBoundsException
+     *             if {@code start < 0}, {@code end < 0}, {@code start > end},
+     *             or if {@code start} or {@code end} are greater than the
+     *             length of this sequence.
+     * @since Android 1.0
      */
     public CharSequence subSequence(int start, int end);
 
     /**
-     * Returns a String with the same characters and ordering of this
-     * CharSequence
+     * Returns a string with the same characters in the same order as in this
+     * sequence.
      * 
-     * @return a String based on the CharSequence
+     * @return a string based on this sequence.
+     * @since Android 1.0
      */
     public String toString();
 }

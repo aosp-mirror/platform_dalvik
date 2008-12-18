@@ -21,6 +21,12 @@
 */
 
 package org.apache.harmony.security.tests.java.security;
+
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.security.IdentityScope;
 import java.security.Permission;
 import java.security.Permissions;
@@ -30,8 +36,7 @@ import java.security.SecurityPermission;
 import org.apache.harmony.security.tests.support.IdentityScopeStub;
 
 import junit.framework.TestCase;
-
-
+@TestTargetClass(IdentityScope.class)
 /**
  * Tests for <code>IdentityScope</code>
  * 
@@ -63,6 +68,15 @@ public class IdentityScopeTest extends TestCase {
     /**
      * Class under test for String toString()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public final void testToString() {
         assertNotNull(new IdentityScopeStub("Aleksei Semenov").toString());
     }
@@ -70,6 +84,15 @@ public class IdentityScopeTest extends TestCase {
     /**
      * test default constructor void IdentityScope()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "IdentityScope",
+          methodArgs = {}
+        )
+    })
     public final void testIdentityScope() {
         assertNotNull(new IdentityScopeStub());
     }
@@ -77,6 +100,15 @@ public class IdentityScopeTest extends TestCase {
     /**
      * check that void IdentityScope(String) creates instance with given name
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies just positive case with non null parameter",
+      targets = {
+        @TestTarget(
+          methodName = "IdentityScope",
+          methodArgs = {String.class}
+        )
+    })
     public final void testIdentityScopeString() {
         is = new IdentityScopeStub("Aleksei Semenov");
         assertNotNull(is);
@@ -86,6 +118,15 @@ public class IdentityScopeTest extends TestCase {
     /**
      * check that void IdentityScope(String, IdentityScope) creates instance with given name and within given scope
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies just positive test with both non null parameters",
+      targets = {
+        @TestTarget(
+          methodName = "IdentityScope",
+          methodArgs = {String.class, IdentityScope.class}
+        )
+    })
     public final void testIdentityScopeStringIdentityScope() throws Exception {
         IdentityScope scope = new IdentityScopeStub("my scope");
         is = new IdentityScopeStub("Aleksei Semenov", scope);
@@ -97,6 +138,15 @@ public class IdentityScopeTest extends TestCase {
     /**
      * just call IdentityScope.getSystemScope()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getSystemScope",
+          methodArgs = {}
+        )
+    })
     public final void testGetSystemScope() {
         String name = Security.getProperty("system.scope");
         assertNotNull(name);
@@ -110,7 +160,20 @@ public class IdentityScopeTest extends TestCase {
      * if permission is denied than SecurityException is thrown
      *
      */
-    
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setSystemScope",
+          methodArgs = {IdentityScope.class}
+        ),
+        @TestTarget(
+          methodName = "getSystemScope",
+          methodArgs = {}
+        )
+
+    })
     public final void testSetSystemScope() {
 //      default implementation is specified by security property system.scope
         IdentityScope systemScope = IdentityScope.getSystemScope();
@@ -149,6 +212,15 @@ public class IdentityScopeTest extends TestCase {
     /**
      * Class under test for Identity getIdentity(Principal)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getIdentity",
+          methodArgs = {java.security.Principal.class}
+        )
+    })
     public final void testGetIdentityPrincipal() {
         is = new IdentityScopeStub("Aleksei Semenov");
         IdentityScope sc2 = new IdentityScopeStub("aaa");

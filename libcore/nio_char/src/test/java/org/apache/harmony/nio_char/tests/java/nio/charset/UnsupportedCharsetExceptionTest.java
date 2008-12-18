@@ -16,6 +16,11 @@
 
 package org.apache.harmony.nio_char.tests.java.nio.charset;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestLevel;
+
 import java.io.Serializable;
 import java.nio.charset.UnsupportedCharsetException;
 
@@ -24,11 +29,25 @@ import junit.framework.TestCase;
 import org.apache.harmony.testframework.serialization.SerializationTest;
 import org.apache.harmony.testframework.serialization.SerializationTest.SerializableAssert;
 
+@TestTargetClass(UnsupportedCharsetException.class)
 /**
  * Test class UnsupportedCharsetException.
  */
 public class UnsupportedCharsetExceptionTest extends TestCase {
 
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "UnsupportedCharsetException",
+          methodArgs = {java.lang.String.class}
+        ),@TestTarget(
+          methodName = "getCharsetName",
+          methodArgs = {}
+        )
+
+    })
     public void testConstructor() {
         UnsupportedCharsetException ex = new UnsupportedCharsetException(
                 "impossible");
@@ -76,6 +95,15 @@ public class UnsupportedCharsetExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility.
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Verifies serialization.",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationSelf",
+          methodArgs = {}
+        )
+    })
     public void testSerializationSelf() throws Exception {
 
         SerializationTest.verifySelf(new UnsupportedCharsetException(
@@ -85,6 +113,15 @@ public class UnsupportedCharsetExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
+@TestInfo(
+          level = TestLevel.COMPLETE,
+          purpose = "Verifies serialization.",
+          targets = {
+            @TestTarget(
+              methodName = "!SerializationGolden",
+              methodArgs = {}
+            )
+        })
     public void testSerializationCompatibility() throws Exception {
 
         SerializationTest.verifyGolden(this, new UnsupportedCharsetException(

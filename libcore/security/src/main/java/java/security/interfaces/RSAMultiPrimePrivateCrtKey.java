@@ -15,58 +15,81 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package java.security.interfaces;
 
 import java.math.BigInteger;
 import java.security.spec.RSAOtherPrimeInfo;
 
 /**
- * @com.intel.drl.spec_ref
+ * The interface for a Multi-Prime RSA private key. Specified by <a
+ * href="http://www.rsa.com/rsalabs/node.asp?id=2125">PKCS #1 v2.0 Amendment 1:
+ * Multi-Prime RSA</a>.
  * 
+ * @since Android 1.0
  */
 public interface RSAMultiPrimePrivateCrtKey extends RSAPrivateKey {
+
     /**
-     * @com.intel.drl.spec_ref
+     * the serial version identifier.
+     * 
+     * @since Android 1.0
      */
     public static final long serialVersionUID = 618058533534628008L;
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the CRT coefficient, {@code q^-1 mod p}.
+     * 
+     * @return the CRT coefficient.
+     * @since Android 1.0
      */
     public BigInteger getCrtCoefficient();
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the information for the additional primes.
+     * 
+     * @return the information for the additional primes, or {@code null} if
+     *         there are only the two primes ({@code p, q}),
+     * @since Android 1.0
      */
     public RSAOtherPrimeInfo[] getOtherPrimeInfo();
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the prime factor {@code p} of {@code n}.
+     * 
+     * @return the prime factor {@code p} of {@code n}.
+     * @since Android 1.0
      */
     public BigInteger getPrimeP();
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the prime factor {@code q} of {@code n}.
+     * 
+     * @return the prime factor {@code q} of {@code n}.
+     * @since Android 1.0
      */
     public BigInteger getPrimeQ();
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the CRT exponent of the prime {@code p}.
+     * 
+     * @return the CRT exponent of the prime {@code p}.
+     * @since Android 1.0
      */
     public BigInteger getPrimeExponentP();
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the CRT exponent of the prime {@code q}.
+     * 
+     * @return the CRT exponent of the prime {@code q}.
+     * @since Android 1.0
      */
     public BigInteger getPrimeExponentQ();
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the public exponent {@code e}.
+     * 
+     * @return the public exponent {@code e}.
+     * @since Android 1.0
      */
     public BigInteger getPublicExponent();
 }

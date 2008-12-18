@@ -16,8 +16,14 @@
 
 package org.apache.harmony.nio.tests.java.nio;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.nio.CharBuffer;
 
+@TestTargetClass(java.nio.CharBuffer.class)
 public class WrappedCharBufferTest1 extends CharBufferTest {
 
     protected void setUp() throws Exception {
@@ -37,6 +43,15 @@ public class WrappedCharBufferTest1 extends CharBufferTest {
      * @tests java.nio.CharBuffer#allocate(char[],int,int)
      * 
      */
+    @TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "Verifies IndexOutOfBoundsException, NullPointerException.",
+          targets = {
+            @TestTarget(
+              methodName = "wrap",
+              methodArgs = {java.lang.CharSequence.class, int.class, int.class}
+            )
+        })
     public void testWrappedCharBuffer_IllegalArg() {
         char array[] = new char[BUFFER_LENGTH];
         try {

@@ -28,12 +28,13 @@ import java.util.Hashtable;
 import org.apache.harmony.security.internal.nls.Messages;
 
 /**
- * A default PermissionCollection implementation that uses a hashtable. Each
- * hashtable entry stores a Permission object as both the key and the value.
- * <br>
- * This PermissionCollection is intended for storing &quot;neutral&quot;
- * permissions which do not require special collection.
+ * A default {@code PermissionCollection} implementation that uses a hashtable.
+ * Each hashtable entry stores a Permission object as both the key and the
+ * value. <br>
+ * This {@code PermissionCollection} is intended for storing &quot;neutral&quot;
+ * permissions which do not require special collection. </br>
  * 
+ * @since Android 1.0
  */
 
 final class PermissionsHash extends PermissionCollection {
@@ -51,10 +52,8 @@ final class PermissionsHash extends PermissionCollection {
     /**
      * Adds the argument to the collection.
      * 
-     * 
      * @param permission
-     *            java.security.Permission the permission to add to the
-     *            collection
+     *            the permission to add to the collection.
      */
     public void add(Permission permission) {
         perms.put(permission, permission);

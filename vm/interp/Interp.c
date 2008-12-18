@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Main interpreter entry point and support functions.
  *
@@ -518,15 +519,16 @@ s4 dvmInterpHandleSparseSwitch(const u2* switchData, s4 testVal)
  * Returns true if job is completed, otherwise false to indicate that
  * an exception has been thrown.
  */
-bool dvmInterpHandleFillArrayData(ArrayObject* arrayObj, 
-                                  const u2* arrayData)
+bool dvmInterpHandleFillArrayData(ArrayObject* arrayObj, const u2* arrayData)
 {
     u2 width;
     u4 size;
 
-    if (!checkForNull((Object*) arrayObj)) {
+    if (arrayObj == NULL) {
+        dvmThrowException("Ljava/lang/NullPointerException;", NULL);
         return false;
     }
+
     /*
      * Array data table format:
      *  ushort ident = 0x0300   magic value
@@ -713,3 +715,4 @@ void dvmInterpret(Thread* self, const Method* method, JValue* pResult)
 
     *pResult = interpState.retval;
 }
+

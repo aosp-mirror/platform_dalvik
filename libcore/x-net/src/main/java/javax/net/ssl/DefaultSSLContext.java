@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
- * @author Boris V. Kuznetsov
- * @version $Revision$
- */
-
 package javax.net.ssl;
 
 import java.io.FileInputStream;
@@ -35,7 +30,8 @@ import org.apache.harmony.security.fortress.Services;
 
 /**
  * Support class for this package.
- *  
+ * 
+ * @since Android 1.0
  */
 
 class DefaultSSLContext {

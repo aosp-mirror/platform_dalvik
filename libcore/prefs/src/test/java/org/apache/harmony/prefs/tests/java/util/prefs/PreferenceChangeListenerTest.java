@@ -16,6 +16,11 @@
 
 package org.apache.harmony.prefs.tests.java.util.prefs;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.util.prefs.PreferenceChangeEvent;
 import java.util.prefs.PreferenceChangeListener;
 import java.util.prefs.Preferences;
@@ -25,28 +30,38 @@ import junit.framework.TestCase;
 /**
  * 
  */
+@TestTargetClass(PreferenceChangeListener.class)
 public class PreferenceChangeListenerTest extends TestCase {
 
-	PreferenceChangeListener l;
+    PreferenceChangeListener l;
 
-	/*
-	 * @see TestCase#setUp()
-	 */
-	protected void setUp() throws Exception {
-		super.setUp();
-		l = new PreferenceChangeListenerImpl();
-	}
+    /*
+     * @see TestCase#setUp()
+     */
+    protected void setUp() throws Exception {
+        super.setUp();
+        l = new PreferenceChangeListenerImpl();
+    }
 
-	public void testPreferenceChange() {
-		l.preferenceChange(new PreferenceChangeEvent(Preferences.userRoot(),
-				"", ""));
-	}
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Testing Interface",
+      targets = {
+        @TestTarget(
+          methodName = "preferenceChange",
+          methodArgs = {java.util.prefs.PreferenceChangeEvent.class}
+        )
+    })
+    public void testPreferenceChange() {
+        l.preferenceChange(new PreferenceChangeEvent(Preferences.userRoot(),
+                "", ""));
+    }
 
-	public static class PreferenceChangeListenerImpl implements
-			PreferenceChangeListener {
-		public void preferenceChange(PreferenceChangeEvent pce) {
-		}
+    public static class PreferenceChangeListenerImpl implements
+            PreferenceChangeListener {
+        public void preferenceChange(PreferenceChangeEvent pce) {
+        }
 
-	}
+    }
 
 }

@@ -18,16 +18,20 @@
 package org.apache.harmony.luni.util;
 
 
-import java.lang.ref.SoftReference;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
+// BEGIN android-added
+import java.lang.ref.SoftReference;
+import java.util.HashMap;
 import java.util.logging.Logger;
+// END android-added
 
-import org.apache.harmony.kernel.vm.VM;
+// BEGIN android-changed
+import dalvik.system.VMStack;
+// END android-changed
 
 /**
  * This class contains helper methods for loading resource bundles and
@@ -35,34 +39,10 @@ import org.apache.harmony.kernel.vm.VM;
  */
 
 public final class MsgHelp {
-    
+    // BEGIN android-added
     // A HashMap mapping a resource name to a SoftReference to a ResourceBundle
     // holding the messages for that resource.
     private static HashMap<String, SoftReference<ResourceBundle>> sRefMap = null;
-    
-    /**
-     * Changes the locale of the messages.
-     * 
-     * @param locale
-     *            Locale the locale to change to.
-     * @param resource
-     *            the name of the bundle resource
-     */
-    static public ResourceBundle setLocale(final Locale locale,
-            final String resource) {
-        try {
-            final ClassLoader loader = VM.bootCallerClassLoader();
-            return (ResourceBundle) AccessController
-                    .doPrivileged(new PrivilegedAction<Object>() {
-                        public Object run() {
-                            return ResourceBundle.getBundle(resource, locale,
-                                    loader != null ? loader : ClassLoader.getSystemClassLoader());
-                        }
-                    });
-        } catch (MissingResourceException e) {
-        }
-        return null;
-    }
     
     public synchronized static ResourceBundle loadBundle(String resource) {
         if (sRefMap == null) {
@@ -111,6 +91,7 @@ public final class MsgHelp {
 
         return format(format, args);
     }
+    // END android-added
 
     /**
      * Generates a formatted text string given a source string containing
@@ -175,5 +156,33 @@ public final class MsgHelp {
         if (lastI < format.length())
             answer.append(format.substring(lastI, format.length()));
         return answer.toString();
+    }
+
+    /**
+     * Changes the locale of the messages.
+     * 
+     * @param locale
+     *            Locale the locale to change to.
+     * @param resource
+     *            the name of the bundle resource
+     */
+    static public ResourceBundle setLocale(final Locale locale,
+            final String resource) {
+        try {
+            // BEGIN android-removed
+            // final ClassLoader loader = VM.bootCallerClassLoader();
+            // END android-removed
+            return (ResourceBundle) AccessController
+                    .doPrivileged(new PrivilegedAction<Object>() {
+                        public Object run() {
+                            // BEGIN android-changed
+                            return ResourceBundle.getBundle(resource, locale,
+                                    ClassLoader.getSystemClassLoader());
+                            // END android-changed
+                        }
+                    });
+        } catch (MissingResourceException e) {
+        }
+        return null;
     }
 }

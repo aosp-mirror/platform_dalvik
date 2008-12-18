@@ -649,6 +649,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
         return a;
     }
 
+
     public int drainTo(Collection<? super E> c) {
         if (c == null)
             throw new NullPointerException();

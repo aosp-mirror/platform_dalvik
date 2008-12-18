@@ -22,6 +22,11 @@
 
 package org.apache.harmony.security.tests.java.security;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.AlgorithmParameters;
@@ -34,7 +39,7 @@ import java.security.spec.InvalidParameterSpecException;
 import java.util.Arrays;
 
 import junit.framework.TestCase;
-
+@TestTargetClass(AlgorithmParameters.class)
 /**
  * Tests for <code>AlgorithmParameters</code> class constructors and
  * methods.
@@ -67,6 +72,15 @@ public class AlgorithmParametersTest extends TestCase {
     /**
      * @tests java.security.AlgorithmParameters#getAlgorithm()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getAlgorithm",
+          methodArgs = {}
+        )
+    })
     public void test_getAlgorithm() throws Exception {
 
         // test: null value
@@ -81,6 +95,15 @@ public class AlgorithmParametersTest extends TestCase {
     /**
      * @tests java.security.AlgorithmParameters#getEncoded()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getEncoded",
+          methodArgs = {}
+        )
+    })
     public void test_getEncoded() throws Exception {
 
         final byte[] enc = new byte[] { 0x02, 0x01, 0x03 };
@@ -114,6 +137,15 @@ public class AlgorithmParametersTest extends TestCase {
     /**
      * @tests java.security.AlgorithmParameters#getEncoded(String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getEncoded",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_getEncodedLjava_lang_String() throws Exception {
 
         final byte[] enc = new byte[] { 0x02, 0x01, 0x03 };
@@ -165,6 +197,15 @@ public class AlgorithmParametersTest extends TestCase {
     /**
      * @tests java.security.AlgorithmParameters#getInstance(String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exception NoSuchAlgorithmException wasn't checked",
+      targets = {
+        @TestTarget(
+          methodName = "getInstance",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_getInstanceLjava_lang_String() throws Exception {
 
         AlgorithmParameters ap = AlgorithmParameters.getInstance("ABC");
@@ -179,6 +220,16 @@ public class AlgorithmParametersTest extends TestCase {
     /**
      * @tests java.security.AlgorithmParameters#getInstance(String, String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions NoSuchAlgorithmException, NoSuchProviderException," +
+                  " IllegalArgumentException weren't checked",
+      targets = {
+        @TestTarget(
+          methodName = "getInstance",
+          methodArgs = {String.class, String.class}
+        )
+    })
     public void test_getInstanceLjava_lang_StringLjava_lang_String()
             throws Exception {
 
@@ -195,6 +246,15 @@ public class AlgorithmParametersTest extends TestCase {
     /**
      * @tests java.security.AlgorithmParameters#getParameterSpec(Class)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getParameterSpec",
+          methodArgs = {java.lang.Class.class}
+        )
+    })
     public void test_getParameterSpecLjava_lang_Class() throws Exception {
 
         final MyAlgorithmParameterSpec myParamSpec = new MyAlgorithmParameterSpec();
@@ -253,6 +313,16 @@ public class AlgorithmParametersTest extends TestCase {
     /**
      * @tests java.security.AlgorithmParameters#getInstance(String, Provider)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions NoSuchAlgorithmException, IllegalArgumentException" +
+                  " weren't checked",
+      targets = {
+        @TestTarget(
+          methodName = "getInstance",
+          methodArgs = {String.class, Provider.class}
+        )
+    })
     public void test_getInstanceLjava_lang_StringLjava_security_Provider()
             throws Exception {
 
@@ -268,6 +338,15 @@ public class AlgorithmParametersTest extends TestCase {
     /**
      * @tests java.security.AlgorithmParameters#getProvider()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getProvider",
+          methodArgs = {}
+        )
+    })
     public void test_getProvider() throws Exception {
         // test: null value
         AlgorithmParameters ap = new DummyAlgorithmParameters(null, null, "AAA");
@@ -281,6 +360,15 @@ public class AlgorithmParametersTest extends TestCase {
     /**
      * @tests java.security.AlgorithmParameters#init(java.security.spec.AlgorithmParameterSpec)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "init",
+          methodArgs = {AlgorithmParameterSpec.class}
+        )
+    })
     public void test_initLjava_security_spec_AlgorithmParameterSpec()
             throws Exception {
 
@@ -351,6 +439,15 @@ public class AlgorithmParametersTest extends TestCase {
     /**
      * @tests java.security.AlgorithmParameters#init(byte[])
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "init",
+          methodArgs = {byte[].class}
+        )
+    })
     public void test_init$B() throws Exception {
 
         //
@@ -418,6 +515,15 @@ public class AlgorithmParametersTest extends TestCase {
     /**
      * @tests java.security.AlgorithmParameters#init(byte[],String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "init",
+          methodArgs = {byte[].class, String.class}
+        )
+    })
     public void test_init$BLjava_lang_String() throws Exception {
 
         //
@@ -495,6 +601,15 @@ public class AlgorithmParametersTest extends TestCase {
     /**
      * @tests java.security.AlgorithmParameters#toString()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public void test_toString() throws Exception {
 
         final String str = "AlgorithmParameters";
@@ -518,6 +633,15 @@ public class AlgorithmParametersTest extends TestCase {
     /**
      * Tests DSA AlgorithmParameters provider
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Just DSA parameter checked",
+      targets = {
+        @TestTarget(
+          methodName = "getInstance",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void testDSAProvider() throws Exception {
         AlgorithmParameters params = AlgorithmParameters.getInstance("DSA");
 
@@ -566,6 +690,15 @@ public class AlgorithmParametersTest extends TestCase {
     /**
      * Tests OAEP AlgorithmParameters provider
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Just OAEP parameter tested",
+      targets = {
+        @TestTarget(
+          methodName = "getInstance",
+          methodArgs = {String.class}
+        )
+    })
     public void testOAEPProvider() throws Exception {
         AlgorithmParameters params = AlgorithmParameters.getInstance("OAEP");
 

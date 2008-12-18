@@ -21,9 +21,15 @@
 
 package org.apache.harmony.tests.java.math;
 
-import junit.framework.TestCase;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.math.*;
 
+import junit.framework.TestCase;
+@TestTargetClass(BigDecimal.class)
 /**
  * Class:  java.math.BigDecimal
  * Methods: movePointLeft, movePointRight, scale, setScale, unscaledValue * 
@@ -32,6 +38,15 @@ public class BigDecimalScaleOperationsTest extends TestCase {
     /**
      * Check the default scale
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "This is a complete subset of tests for scale method.",
+      targets = {
+        @TestTarget(
+          methodName = "scale",
+          methodArgs = {}
+        )
+    })
     public void testScaleDefault() {
         String a = "1231212478987482988429808779810457634781384756794987";
         int cScale = 0;
@@ -42,6 +57,15 @@ public class BigDecimalScaleOperationsTest extends TestCase {
     /**
      * Check a negative scale
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for scale method.",
+          targets = {
+            @TestTarget(
+              methodName = "scale",
+              methodArgs = {}
+            )
+        })
     public void testScaleNeg() {
         String a = "1231212478987482988429808779810457634781384756794987";
         int aScale = -10;
@@ -53,6 +77,15 @@ public class BigDecimalScaleOperationsTest extends TestCase {
     /**
      * Check a positive scale
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for scale method.",
+          targets = {
+            @TestTarget(
+              methodName = "scale",
+              methodArgs = {}
+            )
+        })
     public void testScalePos() {
         String a = "1231212478987482988429808779810457634781384756794987";
         int aScale = 10;
@@ -64,6 +97,15 @@ public class BigDecimalScaleOperationsTest extends TestCase {
     /**
      * Check the zero scale
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for scale method.",
+          targets = {
+            @TestTarget(
+              methodName = "scale",
+              methodArgs = {}
+            )
+        })
     public void testScaleZero() {
         String a = "1231212478987482988429808779810457634781384756794987";
         int aScale = 0;
@@ -75,6 +117,15 @@ public class BigDecimalScaleOperationsTest extends TestCase {
     /**
      * Check the unscaled value
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "unscaledValue",
+          methodArgs = {}
+        )
+    })
     public void testUnscaledValue() {
         String a = "1231212478987482988429808779810457634781384756794987";
         int aScale = 100;
@@ -86,6 +137,15 @@ public class BigDecimalScaleOperationsTest extends TestCase {
     /**
      * Set a greater new scale
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "This is a complete subset of tests for setScale method.",
+      targets = {
+        @TestTarget(
+          methodName = "setScale",
+          methodArgs = {int.class}
+        )
+    })
     public void testSetScaleGreater() {
         String a = "1231212478987482988429808779810457634781384756794987";
         int aScale = 18;
@@ -99,6 +159,15 @@ public class BigDecimalScaleOperationsTest extends TestCase {
     /**
      * Set a less new scale; this.scale == 8; newScale == 5.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for setScale method.",
+          targets = {
+            @TestTarget(
+              methodName = "setScale",
+              methodArgs = {int.class}
+            )
+        })
     public void testSetScaleLess() {
         String a = "2.345726458768760000E+10";
         int newScale = 5;
@@ -111,6 +180,15 @@ public class BigDecimalScaleOperationsTest extends TestCase {
     /**
      * Verify an exception when setting a new scale
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for setScale method.",
+          targets = {
+            @TestTarget(
+              methodName = "setScale",
+              methodArgs = {int.class}
+            )
+        })
     public void testSetScaleException() {
         String a = "1231212478987482988429808779810457634781384756794987";
         int aScale = 28;
@@ -127,6 +205,15 @@ public class BigDecimalScaleOperationsTest extends TestCase {
     /**
      * Set the same new scale
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for setScale method.",
+          targets = {
+            @TestTarget(
+              methodName = "setScale",
+              methodArgs = {int.class}
+            )
+        })
     public void testSetScaleSame() {
         String a = "1231212478987482988429808779810457634781384756794987";
         int aScale = 18;
@@ -140,6 +227,15 @@ public class BigDecimalScaleOperationsTest extends TestCase {
     /**
      * Set a new scale
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exception checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "setScale",
+          methodArgs = {int.class, int.class}
+        )
+    })
     public void testSetScaleRoundUp() {
         String a = "1231212478987482988429808779810457634781384756794987";
         String b = "123121247898748298842980877981045763478139";
@@ -154,6 +250,15 @@ public class BigDecimalScaleOperationsTest extends TestCase {
     /**
      * Set a new scale
      */
+@TestInfo(
+          level = TestLevel.PARTIAL,
+          purpose = "Exception checking missed.",
+          targets = {
+            @TestTarget(
+              methodName = "setScale",
+              methodArgs = {int.class, int.class}
+            )
+        })
     public void testSetScaleRoundDown() {
         String a = "1231212478987482988429808779810457634781384756794987";
         String b = "123121247898748298842980877981045763478138";
@@ -168,6 +273,15 @@ public class BigDecimalScaleOperationsTest extends TestCase {
     /**
      * Set a new scale
      */
+@TestInfo(
+          level = TestLevel.PARTIAL,
+          purpose = "Exception checking missed.",
+          targets = {
+            @TestTarget(
+              methodName = "setScale",
+              methodArgs = {int.class, int.class}
+            )
+        })
     public void testSetScaleRoundCeiling() {
         String a = "1231212478987482988429808779810457634781384756794987";
         String b = "123121247898748298842980877981045763478139";
@@ -182,6 +296,15 @@ public class BigDecimalScaleOperationsTest extends TestCase {
     /**
      * Set a new scale
      */
+@TestInfo(
+          level = TestLevel.PARTIAL,
+          purpose = "Exception checking missed.",
+          targets = {
+            @TestTarget(
+              methodName = "setScale",
+              methodArgs = {int.class, int.class}
+            )
+        })
     public void testSetScaleRoundFloor() {
         String a = "1231212478987482988429808779810457634781384756794987";
         String b = "123121247898748298842980877981045763478138";
@@ -196,6 +319,15 @@ public class BigDecimalScaleOperationsTest extends TestCase {
     /**
      * Set a new scale
      */
+@TestInfo(
+          level = TestLevel.PARTIAL,
+          purpose = "Exception checking missed.",
+          targets = {
+            @TestTarget(
+              methodName = "setScale",
+              methodArgs = {int.class, int.class}
+            )
+        })
     public void testSetScaleRoundHalfUp() {
         String a = "1231212478987482988429808779810457634781384756794987";
         String b = "123121247898748298842980877981045763478138";
@@ -210,6 +342,15 @@ public class BigDecimalScaleOperationsTest extends TestCase {
     /**
      * Set a new scale
      */
+@TestInfo(
+          level = TestLevel.PARTIAL,
+          purpose = "Exception checking missed.",
+          targets = {
+            @TestTarget(
+              methodName = "setScale",
+              methodArgs = {int.class, int.class}
+            )
+        })
     public void testSetScaleRoundHalfDown() {
         String a = "1231212478987482988429808779810457634781384756794987";
         String b = "123121247898748298842980877981045763478138";
@@ -224,6 +365,15 @@ public class BigDecimalScaleOperationsTest extends TestCase {
     /**
      * Set a new scale
      */
+@TestInfo(
+          level = TestLevel.PARTIAL,
+          purpose = "Exception checking missed.",
+          targets = {
+            @TestTarget(
+              methodName = "setScale",
+              methodArgs = {int.class, int.class}
+            )
+        })
     public void testSetScaleRoundHalfEven() {
         String a = "1231212478987482988429808779810457634781384756794987";
         String b = "123121247898748298842980877981045763478138";
@@ -238,6 +388,15 @@ public class BigDecimalScaleOperationsTest extends TestCase {
     /**
      * SetScale(int, RoundingMode)
      */
+@TestInfo(
+          level = TestLevel.PARTIAL,
+          purpose = "Exception checking missed.",
+          targets = {
+            @TestTarget(
+              methodName = "setScale",
+              methodArgs = {int.class, int.class}
+            )
+        })
     public void testSetScaleIntRoundingMode() {
         String a = "1231212478987482988429808779810457634781384756794987";
         int aScale = 28;
@@ -253,6 +412,15 @@ public class BigDecimalScaleOperationsTest extends TestCase {
     /**
      * Move the decimal point to the left; the shift value is positive
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "ArithmeticException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "movePointLeft",
+          methodArgs = {int.class}
+        )
+    })
     public void testMovePointLeftPos() {
         String a = "1231212478987482988429808779810457634781384756794987";
         int aScale = 28;
@@ -267,6 +435,15 @@ public class BigDecimalScaleOperationsTest extends TestCase {
     /**
      * Move the decimal point to the left; the shift value is positive
      */
+@TestInfo(
+          level = TestLevel.PARTIAL,
+          purpose = "ArithmeticException checking missed",
+          targets = {
+            @TestTarget(
+              methodName = "movePointLeft",
+              methodArgs = {int.class}
+            )
+        })
     public void testMovePointLeftNeg() {
         String a = "1231212478987482988429808779810457634781384756794987";
         int aScale = 28;
@@ -281,6 +458,15 @@ public class BigDecimalScaleOperationsTest extends TestCase {
     /**
      * Move the decimal point to the right; the shift value is positive
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "This is a complete subset of tests for movePointRight method.",
+      targets = {
+        @TestTarget(
+          methodName = "movePointRight",
+          methodArgs = {int.class}
+        )
+    })
     public void testMovePointRightPosGreater() {
         String a = "1231212478987482988429808779810457634781384756794987";
         int aScale = 28;
@@ -295,6 +481,15 @@ public class BigDecimalScaleOperationsTest extends TestCase {
     /**
      * Move the decimal point to the right; the shift value is positive
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for movePointRight method.",
+          targets = {
+            @TestTarget(
+              methodName = "movePointRight",
+              methodArgs = {int.class}
+            )
+        })
     public void testMovePointRightPosLess() {
         String a = "1231212478987482988429808779810457634781384756794987";
         String b = "123121247898748298842980877981045763478138475679498700";
@@ -310,6 +505,15 @@ public class BigDecimalScaleOperationsTest extends TestCase {
     /**
      * Move the decimal point to the right; the shift value is positive
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for movePointRight method.",
+          targets = {
+            @TestTarget(
+              methodName = "movePointRight",
+              methodArgs = {int.class}
+            )
+        })
     public void testMovePointRightNeg() {
         String a = "1231212478987482988429808779810457634781384756794987";
         int aScale = 28;
@@ -324,6 +528,15 @@ public class BigDecimalScaleOperationsTest extends TestCase {
     /**
      * Move the decimal point to the right when the scale overflows
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for movePointRight method.",
+          targets = {
+            @TestTarget(
+              methodName = "movePointRight",
+              methodArgs = {int.class}
+            )
+        })
     public void testMovePointRightException() {
         String a = "12312124789874829887348723648726347429808779810457634781384756794987";
         int aScale = Integer.MAX_VALUE; //2147483647
@@ -340,6 +553,15 @@ public class BigDecimalScaleOperationsTest extends TestCase {
     /**
      * precision()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "precision",
+          methodArgs = {}
+        )
+    })
     public void testPrecision() {
         String a = "12312124789874829887348723648726347429808779810457634781384756794987";
         int aScale = 14;
@@ -354,6 +576,15 @@ public class BigDecimalScaleOperationsTest extends TestCase {
      * check that setScale with a scale greater to the existing scale does not
      * change the value.
      */
+@TestInfo(
+          level = TestLevel.COMPLETE,
+          purpose = "",
+          targets = {
+            @TestTarget(
+              methodName = "precision",
+              methodArgs = {}
+            )
+        })
     public void testSetScale() {
         BigDecimal x1 = new BigDecimal(1.23400);
         BigDecimal x2 = x1.setScale(75);

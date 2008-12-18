@@ -17,13 +17,28 @@
 
 package org.apache.harmony.security.tests.java.security;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.security.KeyManagementException;
 
+@TestTargetClass(KeyManagementException.class)
 public class KeyManagementException2Test extends junit.framework.TestCase {
 
     /**
      * @tests java.security.KeyManagementException#KeyManagementException()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "KeyManagementException",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         // Test for method java.security.KeyManagementException()
         KeyManagementException e = new KeyManagementException();
@@ -34,6 +49,15 @@ public class KeyManagementException2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.KeyManagementException#KeyManagementException(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Checking with null and empty string parameter missed",
+      targets = {
+        @TestTarget(
+          methodName = "KeyManagementException",
+          methodArgs = {String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() {
         // Test for method
         // java.security.KeyManagementException(java.lang.String)

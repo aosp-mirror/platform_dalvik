@@ -16,25 +16,51 @@
 
 package org.apache.harmony.luni.tests.java.util;
 
-import java.util.Formatter.BigDecimalLayoutForm;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
 
+import java.util.Formatter.BigDecimalLayoutForm;
+
+@TestTargetClass(java.util.    Formatter.BigDecimalLayoutForm.class) 
 public class FormatterTest extends TestCase {
 
     /**
      * @tests java.util.Formatter.BigDecimalLayoutForm#values()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "values",
+          methodArgs = {}
+        )
+    })
     public void test_values() {
         BigDecimalLayoutForm[] vals = BigDecimalLayoutForm.values();
         assertEquals("Invalid length of enum values", 2, vals.length);
-        assertEquals("Wrong scientific value in enum", BigDecimalLayoutForm.SCIENTIFIC, vals[0]);
-        assertEquals("Wrong dec float value in enum", BigDecimalLayoutForm.DECIMAL_FLOAT, vals[1]);
+        assertEquals("Wrong scientific value in enum", 
+                                      BigDecimalLayoutForm.SCIENTIFIC, vals[0]);
+        assertEquals("Wrong dec float value in enum", 
+                                   BigDecimalLayoutForm.DECIMAL_FLOAT, vals[1]);
     }
     
     /**
      * @tests java.util.Formatter.BigDecimalLayoutForm#valueOf(String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify IllegalArgumentException.",
+      targets = {
+        @TestTarget(
+          methodName = "valueOf",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_valueOfLjava_lang_String() {
         BigDecimalLayoutForm sci = BigDecimalLayoutForm.valueOf("SCIENTIFIC");
         assertEquals("Wrong scientific value in enum", BigDecimalLayoutForm.SCIENTIFIC, sci);

@@ -218,12 +218,10 @@ static int javaAddressToStructIn(
     memset(address, 0, sizeof(address));
 
     if (java_address == NULL) {
-        throwNullPointerException(env);
         return -1;
     }
 
     if (env->GetArrayLength(java_address) != sizeof(address->s_addr)) {
-        throwIOExceptionStr(env, "in_addr incorrect size");
         return -1;
     }
 
@@ -248,12 +246,10 @@ static int structInToJavaAddress(
         JNIEnv *env, struct in_addr *address, jbyteArray java_address) {
 
     if (java_address == NULL) {
-        throwNullPointerException(env);
         return -1;
     }
 
     if (env->GetArrayLength(java_address) != sizeof(address->s_addr)) {
-        jniThrowIOException(env, errno);
         return -1;
     }
 
@@ -562,7 +558,7 @@ static const char * netLookupErrorString(int anErrorNum) {
         case SOCKERR_EPIPE:
             return "Broken pipe";
         case SOCKERR_EACCES:
-            return "Permissions do not allow action on socket";
+            return "Permission denied (maybe missing INTERNET permission)";
 
         default:
             LOGE("unknown socket error %d", anErrorNum);
@@ -612,6 +608,12 @@ static int convertError(int errorCode) {
             return SOCKERR_EPIPE;
         case EHOSTUNREACH:
             return SOCKERR_EHOSTUNREACH;
+        case EADDRINUSE:
+            return SOCKERR_ADDRINUSE;
+        case EADDRNOTAVAIL:
+            return SOCKERR_ADDRNOTAVAIL;
+        case EMSGSIZE:
+            return SOCKERR_MSGSIZE;
         default:
             LOGE("unclassified errno %d (%s)", errorCode, strerror(errorCode));
             return SOCKERR_OPFAILED;
@@ -1344,7 +1346,8 @@ static void osNetworkSystem_createSocketImpl(JNIEnv* env, jclass clazz,
     int ret = socket(PF_INET, SOCK_STREAM, 0);
 
     if (ret < 0) {
-        throwSocketException(env, ret);
+        int err = convertError(errno);
+        throwSocketException(env, err);
         return;
     }
 
@@ -1360,7 +1363,8 @@ static void osNetworkSystem_createDatagramSocketImpl(JNIEnv* env, jclass clazz,
     int ret = socket(PF_INET, SOCK_DGRAM, 0);
 
     if (ret < 0) {
-        throwSocketException(env, ret);
+        int err = convertError(errno);
+        throwSocketException(env, err);
         return;
     }
 
@@ -1398,7 +1402,7 @@ static jint osNetworkSystem_readSocketDirectImpl(JNIEnv* env, jclass clazz,
     } while (ret < 0 && errno == EINTR);
 
     if (0 == ret) {
-        return - 1;
+        return -1;
     } else if (ret == -1) {
         int err = convertError(errno);
         log_socket_close(handle, err);
@@ -1597,20 +1601,13 @@ static jint osNetworkSystem_connectWithTimeoutSocketImpl(JNIEnv* env,
         sockConnectWithTimeout(handle, address, 0, SOCKET_STEP_DONE, NULL);
     } else if (result != SOCKERR_NOTCONNECTED) {
         /* can not connect... */
-        if ((SOCKERR_CONNRESET == result) ||
-           (SOCKERR_CONNECTION_REFUSED == result) ||
-           (SOCKERR_ADDRNOTAVAIL == result) ||
-           (SOCKERR_ADDRINUSE == result) ||
-           (SOCKERR_ENETUNREACH == result) ||
-           (SOCKERR_EACCES == result)) {
-            sockConnectWithTimeout(handle, address, 0, SOCKET_STEP_DONE, NULL);
-            jniThrowException(env, "java/net/ConnectException",
-                    netLookupErrorString(result));
-
+        sockConnectWithTimeout(handle, address, 0, SOCKET_STEP_DONE, NULL);
+        if (result == SOCKERR_EACCES) {
+            jniThrowException(env, "java/lang/SecurityException",
+                              netLookupErrorString(result));
         } else {
-            sockConnectWithTimeout(handle, address, 0, SOCKET_STEP_DONE, NULL);
             jniThrowException(env, "java/net/ConnectException",
-                    netLookupErrorString(result));
+                              netLookupErrorString(result));
         }
     }
 
@@ -1680,23 +1677,16 @@ static void osNetworkSystem_connectStreamWithTimeoutSocketImpl(JNIEnv* env,
             goto bail;
         } else if (result != SOCKERR_NOTCONNECTED) {
             log_socket_close(handle, result);
+            sockConnectWithTimeout(handle, address, 0, SOCKET_STEP_DONE,
+                                   context);
             /* we got an error other than NOTCONNECTED so we cannot continue */
-            if ((SOCKERR_CONNRESET == result) ||
-               (SOCKERR_CONNECTION_REFUSED == result) ||
-               (SOCKERR_ADDRNOTAVAIL == result) ||
-               (SOCKERR_ADDRINUSE == result) ||
-               (SOCKERR_ENETUNREACH == result) ||
-               (SOCKERR_EACCES == result)) {
-                sockConnectWithTimeout(handle, address, remainingTimeout,
-                        SOCKET_STEP_DONE, context);
-                throwSocketException(env, result);
-                goto bail;
+            if (SOCKERR_EACCES == result) {
+                jniThrowException(env, "java/lang/SecurityException",
+                                  netLookupErrorString(result));
             } else {
-                sockConnectWithTimeout(handle, address, 0,
-                        SOCKET_STEP_DONE, context);
                 throwSocketException(env, result);
-                goto bail;
             }
+            goto bail;
         }
 
         while (SOCKERR_NOTCONNECTED == result) {
@@ -1755,23 +1745,22 @@ static void osNetworkSystem_connectStreamWithTimeoutSocketImpl(JNIEnv* env,
                 }
             } else {
                 log_socket_close(handle, result);
+                sockConnectWithTimeout(handle, address, remainingTimeout,
+                                       SOCKET_STEP_DONE, context);
                 if ((SOCKERR_CONNRESET == result) ||
-                   (SOCKERR_CONNECTION_REFUSED == result) ||
-                   (SOCKERR_ADDRNOTAVAIL == result) ||
-                   (SOCKERR_ADDRINUSE == result) ||
-                   (SOCKERR_ENETUNREACH == result) ||
-                   (SOCKERR_EACCES == result)) {
-                    sockConnectWithTimeout(handle, address, remainingTimeout,
-                            SOCKET_STEP_DONE, context);
+                    (SOCKERR_CONNECTION_REFUSED == result) ||
+                    (SOCKERR_ADDRNOTAVAIL == result) ||
+                    (SOCKERR_ADDRINUSE == result) ||
+                    (SOCKERR_ENETUNREACH == result)) {
                     jniThrowException(env, "java/net/ConnectException",
-                            netLookupErrorString(result));
-                    goto bail;
+                                      netLookupErrorString(result));
+                } else if (SOCKERR_EACCES == result) {
+                    jniThrowException(env, "java/lang/SecurityException",
+                                      netLookupErrorString(result));
                 } else {
-                    sockConnectWithTimeout(handle, address, remainingTimeout,
-                            SOCKET_STEP_DONE, context);
                     throwSocketException(env, result);
-                    goto bail;
                 }
+                goto bail;
             }
         }
     }
@@ -1933,8 +1922,9 @@ static jint osNetworkSystem_availableStreamImpl(JNIEnv* env, jclass clazz,
     result = recv(handle, (jbyte *) message, BUFFERSIZE, MSG_PEEK);
 
     if (0 > result) {
-        log_socket_close(handle, result);
-        throwSocketException(env, convertError(errno));
+        int err = convertError(errno);
+        log_socket_close(handle, err);
+        throwSocketException(env, err);
         return 0;
     }
     add_recv_stats(handle, result);
@@ -2206,7 +2196,11 @@ static jint osNetworkSystem_receiveDatagramDirectImpl(JNIEnv* env, jclass clazz,
     if (packet != NULL) {
         int port = ntohs(sockAddr.sin_port);
         jbyteArray addr = env->NewByteArray(sizeof(struct in_addr));
-        structInToJavaAddress(env, &sockAddr.sin_addr, addr);
+        if ((structInToJavaAddress(env, &sockAddr.sin_addr, addr)) < 0) {
+            jniThrowException(env, "java/net/SocketException",
+                    "Could not set address of packet.");
+            return 0;
+        }
         jobject sender = env->CallStaticObjectMethod(
                 gCachedFields.iaddr_class, gCachedFields.iaddr_getbyaddress,
                 addr);
@@ -2327,13 +2321,13 @@ static jint osNetworkSystem_sendDatagramDirectImpl(JNIEnv* env, jclass clazz,
             (struct sockaddr*)&receiver, sizeof(receiver));
 
     if (result < 0) {
-        result = convertError(errno);
-        if ((SOCKERR_CONNRESET == result)
-                || (SOCKERR_CONNECTION_REFUSED == result)) {
+        int err = convertError(errno);
+        if ((SOCKERR_CONNRESET == err)
+                || (SOCKERR_CONNECTION_REFUSED == err)) {
             return 0;
         } else {
-            log_socket_close(handle, result);
-            throwSocketException(env, result);
+            log_socket_close(handle, err);
+            throwSocketException(env, err);
             return 0;
         }
     }
@@ -2370,13 +2364,12 @@ static jint osNetworkSystem_sendConnectedDatagramDirectImpl(JNIEnv* env,
     int result = send(handle, (char*)(address + offset), length, 0);
 
     if (result < 0) {
-        result = errno;
         int err = convertError(errno);
         if ((SOCKERR_CONNRESET == err) || (SOCKERR_CONNECTION_REFUSED == err)) {
             return 0;
         } else {
-            log_socket_close(handle, result);
-            throwSocketException(env, result);
+            log_socket_close(handle, err);
+            throwSocketException(env, err);
             return 0;
         }
     }
@@ -2409,7 +2402,8 @@ static void osNetworkSystem_createServerStreamSocketImpl(JNIEnv* env,
     int handle = socket(PF_INET, SOCK_STREAM, 0);
 
     if (handle < 0) {
-        throwSocketException(env, handle);
+        int err = convertError(errno);
+        throwSocketException(env, err);
         return;
     }
 
@@ -2427,7 +2421,8 @@ static void osNetworkSystem_createMulticastSocketImpl(JNIEnv* env,
     int handle = socket(PF_INET, SOCK_DGRAM, 0);
 
     if (handle < 0) {
-        throwSocketException(env, handle);
+        int err = convertError(errno);
+        throwSocketException(env, err);
         return;
     }
 
@@ -2471,7 +2466,7 @@ static jint osNetworkSystem_receiveStreamImpl(JNIEnv* env, jclass clazz,
 
     do {
         result = recv(handle, body + offset, localCount, SOCKET_NOFLAGS);
-    } while (result < 0 && result == EINTR);
+    } while (result < 0 && errno == EINTR);
 
     env->ReleaseByteArrayElements(data, body, 0);
 
@@ -2490,9 +2485,9 @@ static jint osNetworkSystem_receiveStreamImpl(JNIEnv* env, jclass clazz,
             jniThrowException(env, "java/net/SocketTimeoutException",
                               netLookupErrorString(SOCKERR_TIMEOUT));
         } else {
-            int errcode = convertError(errno);
-            log_socket_close(handle, errcode);
-            throwSocketException(env, errcode);
+            int err = convertError(errno);
+            log_socket_close(handle, err);
+            throwSocketException(env, err);
         }
         return 0;
     }
@@ -2533,10 +2528,10 @@ static jint osNetworkSystem_sendStreamImpl(JNIEnv* env, jclass clazz,
                 // LOGD("write blocked %d", sent);
                 continue;
             }
+            env->ReleaseByteArrayElements(data, message, 0);
             int err = convertError(result);
             log_socket_close(handle, err);
             throwSocketException(env, err);
-            env->ReleaseByteArrayElements(data, message, 0);
             return 0;
         }
         sent += result;
@@ -2604,7 +2599,7 @@ static jint osNetworkSystem_sendDatagramImpl2(JNIEnv* env, jclass clazz,
     unsigned short nPort;
     int result = 0, sent = 0;
     int handle = 0;
-    struct sockaddr_in *sockaddrP;
+    struct sockaddr_in sockaddrP;
 
     if (inetAddress != NULL) {
 
@@ -2645,7 +2640,7 @@ static jint osNetworkSystem_sendDatagramImpl2(JNIEnv* env, jclass clazz,
 
         result = sendto(handle, (char *) (message + sent),
                 (int) (length - sent), SOCKET_NOFLAGS,
-                (struct sockaddr *) sockaddrP, sizeof(sockaddrP));
+                (struct sockaddr *) &sockaddrP, sizeof(sockaddrP));
 
         if (result < 0) {
             int err = convertError(errno);
@@ -2678,7 +2673,7 @@ static jint osNetworkSystem_selectImpl(JNIEnv* env, jclass clazz,
     jint *flagArray;
     int val;
     unsigned int time_sec = (unsigned int)timeout/1000;
-    unsigned int time_msec = (unsigned int)(timeout%1000)*1000;
+    unsigned int time_msec = (unsigned int)(timeout%1000);
 
     fdset_read = (fd_set *)malloc(sizeof(fd_set));
     fdset_write = (fd_set *)malloc(sizeof(fd_set));

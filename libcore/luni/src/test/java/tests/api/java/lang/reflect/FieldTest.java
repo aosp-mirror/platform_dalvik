@@ -17,11 +17,17 @@
 
 package tests.api.java.lang.reflect;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
 import tests.support.Support_Field;
 
+@TestTargetClass(Field.class) 
 public class FieldTest extends junit.framework.TestCase {
 
     // BEGIN android-note
@@ -90,6 +96,15 @@ public class FieldTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Field#equals(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "equals",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_equalsLjava_lang_Object() {
         // Test for method boolean
         // java.lang.reflect.Field.equals(java.lang.Object)
@@ -114,6 +129,15 @@ public class FieldTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Field#get(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "need to improve try/catch code. Doesn't check all exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "get",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_getLjava_lang_Object() throws Throwable {
         // Test for method java.lang.Object
         // java.lang.reflect.Field.get(java.lang.Object)
@@ -271,6 +295,79 @@ public class FieldTest extends junit.framework.TestCase {
      * @tests java.lang.reflect.Field#setDouble(java.lang.Object, double)
      * @tests java.lang.reflect.Field#setChar(java.lang.Object, char)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Stress test.",
+      targets = {
+        @TestTarget(
+          methodName = "get",
+          methodArgs = {java.lang.Object.class}
+        ),
+        @TestTarget(
+          methodName = "getByte",
+          methodArgs = {java.lang.Object.class}
+        ),
+        @TestTarget(
+          methodName = "getBoolean",
+          methodArgs = {java.lang.Object.class}
+        ),
+        @TestTarget(
+          methodName = "getShort",
+          methodArgs = {java.lang.Object.class}
+        ),
+        @TestTarget(
+          methodName = "getInt",
+          methodArgs = {java.lang.Object.class}
+        ),
+        @TestTarget(
+          methodName = "getFloat",
+          methodArgs = {java.lang.Object.class}
+        ),
+        @TestTarget(
+          methodName = "getDouble",
+          methodArgs = {java.lang.Object.class}
+        ),
+        @TestTarget(
+          methodName = "getChar",
+          methodArgs = {java.lang.Object.class}
+        ),
+        @TestTarget(
+          methodName = "set",
+          methodArgs = {java.lang.Object.class, java.lang.Object.class}
+        ),
+        @TestTarget(
+          methodName = "setBoolean",
+          methodArgs = {java.lang.Object.class, boolean.class}
+        ),
+        @TestTarget(
+          methodName = "setByte",
+          methodArgs = {java.lang.Object.class, byte.class}
+        ),
+        @TestTarget(
+          methodName = "setShort",
+          methodArgs = {java.lang.Object.class, short.class}
+        ),
+        @TestTarget(
+          methodName = "setInt",
+          methodArgs = {java.lang.Object.class, int.class}
+        ),
+        @TestTarget(
+          methodName = "setLong",
+          methodArgs = {java.lang.Object.class, long.class}
+        ),
+        @TestTarget(
+          methodName = "setFloat",
+          methodArgs = {java.lang.Object.class, float.class}
+        ),
+        @TestTarget(
+          methodName = "setDouble",
+          methodArgs = {java.lang.Object.class, double.class}
+        ),
+        @TestTarget(
+          methodName = "setChar",
+          methodArgs = {java.lang.Object.class, char.class}
+        )
+    })
     public void testProtectedFieldAccess() {
         Class fieldClass = new Support_Field().getClass();
         String fieldName = null;
@@ -473,6 +570,15 @@ public class FieldTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Field#getBoolean(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "need to improve try/catch code. Doesn't check all exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "getBoolean",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_getBooleanLjava_lang_Object() {
         // Test for method boolean
         // java.lang.reflect.Field.getBoolean(java.lang.Object)
@@ -506,6 +612,15 @@ public class FieldTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Field#getByte(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "need to improve try/catch code. Doesn't check all exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "getByte",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_getByteLjava_lang_Object() {
         // Test for method byte
         // java.lang.reflect.Field.getByte(java.lang.Object)
@@ -537,6 +652,15 @@ public class FieldTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Field#getChar(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "need to improve try/catch code. Doesn't check all exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "getChar",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_getCharLjava_lang_Object() {
         // Test for method char
         // java.lang.reflect.Field.getChar(java.lang.Object)
@@ -568,6 +692,15 @@ public class FieldTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Field#getDeclaringClass()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getDeclaringClass",
+          methodArgs = {}
+        )
+    })
     public void test_getDeclaringClass() {
         // Test for method java.lang.Class
         // java.lang.reflect.Field.getDeclaringClass()
@@ -591,6 +724,15 @@ public class FieldTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Field#getDouble(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "need to improve try/catch code. Doesn't check all exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "getDouble",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_getDoubleLjava_lang_Object() {
         // Test for method double
         // java.lang.reflect.Field.getDouble(java.lang.Object)
@@ -623,6 +765,15 @@ public class FieldTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Field#getFloat(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "need to improve try/catch code. Doesn't check all exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "getFloat",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_getFloatLjava_lang_Object() {
         // Test for method float
         // java.lang.reflect.Field.getFloat(java.lang.Object)
@@ -655,6 +806,15 @@ public class FieldTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Field#getInt(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "need to improve try/catch code. Doesn't check all exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "getInt",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_getIntLjava_lang_Object() {
         // Test for method int java.lang.reflect.Field.getInt(java.lang.Object)
         TestField x = new TestField();
@@ -686,6 +846,15 @@ public class FieldTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Field#getLong(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "need to improve try/catch code. Doesn't check all exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "getLong",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_getLongLjava_lang_Object() {
         // Test for method long
         // java.lang.reflect.Field.getLong(java.lang.Object)
@@ -717,6 +886,15 @@ public class FieldTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Field#getModifiers()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getModifiers",
+          methodArgs = {}
+        )
+    })
     public void test_getModifiers() {
         // Test for method int java.lang.reflect.Field.getModifiers()
         TestField x = new TestField();
@@ -737,6 +915,15 @@ public class FieldTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Field#getName()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getName",
+          methodArgs = {}
+        )
+    })
     public void test_getName() {
         // Test for method java.lang.String java.lang.reflect.Field.getName()
         TestField x = new TestField();
@@ -753,6 +940,15 @@ public class FieldTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Field#getShort(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "need to improve try/catch code. Doesn't check all exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "setShort",
+          methodArgs = {java.lang.Object.class, short.class}
+        )
+    })
     public void test_getShortLjava_lang_Object() {
         // Test for method short
         // java.lang.reflect.Field.getShort(java.lang.Object)
@@ -786,6 +982,15 @@ public class FieldTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Field#getType()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getType",
+          methodArgs = {}
+        )
+    })
     public void test_getType() {
         // Test for method java.lang.Class java.lang.reflect.Field.getType()
         TestField x = new TestField();
@@ -802,6 +1007,15 @@ public class FieldTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Field#set(java.lang.Object, java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check all exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "set",
+          methodArgs = {java.lang.Object.class, java.lang.Object.class}
+        )
+    })
     public void test_setLjava_lang_ObjectLjava_lang_Object() {
         // Test for method void java.lang.reflect.Field.set(java.lang.Object,
         // java.lang.Object)
@@ -846,6 +1060,15 @@ public class FieldTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Field#setBoolean(java.lang.Object, boolean)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check all exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "setBoolean",
+          methodArgs = {java.lang.Object.class, boolean.class}
+        )
+    })
     public void test_setBooleanLjava_lang_ObjectZ() {
         // Test for method void
         // java.lang.reflect.Field.setBoolean(java.lang.Object, boolean)
@@ -886,6 +1109,15 @@ public class FieldTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Field#setByte(java.lang.Object, byte)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check all exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "setByte",
+          methodArgs = {java.lang.Object.class, byte.class}
+        )
+    })
     public void test_setByteLjava_lang_ObjectB() {
         // Test for method void
         // java.lang.reflect.Field.setByte(java.lang.Object, byte)
@@ -926,6 +1158,15 @@ public class FieldTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Field#setChar(java.lang.Object, char)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check all exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "setChar",
+          methodArgs = {java.lang.Object.class, char.class}
+        )
+    })
     public void test_setCharLjava_lang_ObjectC() {
         // Test for method void
         // java.lang.reflect.Field.setChar(java.lang.Object, char)
@@ -966,6 +1207,15 @@ public class FieldTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Field#setDouble(java.lang.Object, double)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check all exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "setDouble",
+          methodArgs = {java.lang.Object.class, double.class}
+        )
+    })
     public void test_setDoubleLjava_lang_ObjectD() {
         // Test for method void
         // java.lang.reflect.Field.setDouble(java.lang.Object, double)
@@ -1006,6 +1256,15 @@ public class FieldTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Field#setFloat(java.lang.Object, float)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check all exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "setFloat",
+          methodArgs = {java.lang.Object.class, float.class}
+        )
+    })
     public void test_setFloatLjava_lang_ObjectF() {
         // Test for method void
         // java.lang.reflect.Field.setFloat(java.lang.Object, float)
@@ -1045,6 +1304,15 @@ public class FieldTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Field#setInt(java.lang.Object, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check all exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "setInt",
+          methodArgs = {java.lang.Object.class, int.class}
+        )
+    })
     public void test_setIntLjava_lang_ObjectI() {
         // Test for method void java.lang.reflect.Field.setInt(java.lang.Object,
         // int)
@@ -1084,6 +1352,15 @@ public class FieldTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Field#setLong(java.lang.Object, long)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check all exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "setLong",
+          methodArgs = {java.lang.Object.class, long.class}
+        )
+    })
     public void test_setLongLjava_lang_ObjectJ() {
         // Test for method void
         // java.lang.reflect.Field.setLong(java.lang.Object, long)
@@ -1123,6 +1400,15 @@ public class FieldTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Field#setShort(java.lang.Object, short)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check all exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "setShort",
+          methodArgs = {java.lang.Object.class, short.class}
+        )
+    })
     public void test_setShortLjava_lang_ObjectS() {
         // Test for method void
         // java.lang.reflect.Field.setShort(java.lang.Object, short)
@@ -1162,6 +1448,15 @@ public class FieldTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Field#toString()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public void test_toString() {
         // Test for method java.lang.String java.lang.reflect.Field.toString()
         Field f = null;

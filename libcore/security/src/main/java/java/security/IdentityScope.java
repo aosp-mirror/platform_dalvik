@@ -20,6 +20,10 @@
 * @version $Revision$
 */
 
+// BEGIN android-note
+// Added Deprecated annotation.
+// END android-note
+
 package java.security;
 
 import java.util.Enumeration;
@@ -28,35 +32,53 @@ import org.apache.harmony.security.SystemScope;
 
 
 /**
- * @com.intel.drl.spec_ref 
- * @deprecated
+ * {@code IdentityScope} represents a scope for {@link Identity} objects.
+ * 
+ * @deprecated The functionality of this class has been replace by
+ *             {@link Principal}, {@link KeyStore} and the {@code
+ *             java.security.cert} package.
+ * @since Android 1.0
  */
+@Deprecated
 public abstract class IdentityScope extends Identity {
 
-    /**
-     * @com.intel.drl.spec_ref
-     */
     private static final long serialVersionUID = -2337346281189773310L;
 
     // systemScope holds reference to the current system scope
     private static IdentityScope systemScope;
 
     /**
-     * @com.intel.drl.spec_ref 
+     * Constructs a new instance of {@code IdentityScope}.
+     * 
+     * @since Android 1.0
      */
     protected IdentityScope() {
         super();
     }
 
     /**
-     * @com.intel.drl.spec_ref 
+     * Constructs a new instance of {@code IdentityScope} with the specified
+     * name.
+     * 
+     * @param name
+     *            the name of this {@code IdentityScope}.
+     * @since Android 1.0
      */
     public IdentityScope(String name) {
         super(name);
     }
 
     /**
-     * @com.intel.drl.spec_ref 
+     * Constructs a new instance of {@code IdentityScope} with the specified
+     * name and the specified scope.
+     * 
+     * @param name
+     *            the name of this {@code IdentityScope}.
+     * @param scope
+     *            the scope of this {@code IdentityScope}.
+     * @throws KeyManagementException
+     *             if an identity with the same key already exists.
+     * @since Android 1.0
      */
     public IdentityScope(String name, IdentityScope scope)
             throws KeyManagementException {
@@ -64,7 +86,10 @@ public abstract class IdentityScope extends Identity {
     }
 
     /**
-     * @com.intel.drl.spec_ref 
+     * Returns the system's scope.
+     * 
+     * @return the system's scope.
+     * @since Android 1.0
      */
     public static IdentityScope getSystemScope() {
         /* 
@@ -90,7 +115,11 @@ public abstract class IdentityScope extends Identity {
     }
 
     /**
-     * @com.intel.drl.spec_ref 
+     * Sets the system's scope.
+     * 
+     * @param scope
+     *            the scope to set.
+     * @since Android 1.0
      */
     protected static void setSystemScope(IdentityScope scope) {
         SecurityManager sm = System.getSecurityManager();
@@ -101,46 +130,95 @@ public abstract class IdentityScope extends Identity {
     }
 
     /**
-     * @com.intel.drl.spec_ref 
+     * Returns the number of {@code Identity} objects in this scope.
+     * 
+     * @return the number of {@code Identity} objects in this scope.
+     * @since Android 1.0
      */
     public abstract int size();
 
     /**
-     * @com.intel.drl.spec_ref 
+     * Returns the {@code Identity} with the specified name or {@code null} if
+     * no {@code Identity} with the specified name is present in this scope.
+     * 
+     * @param name
+     *            the name of the {@code Identity} to be returned.
+     * @return the {@code Identity} with the specified name or {@code null} if
+     *         not present.
+     * @since Android 1.0
      */
     public abstract Identity getIdentity(String name);
 
     /**
-     * @com.intel.drl.spec_ref 
+     * Returns the {@code Identity} with the name of the specified principal or
+     * {@code null} if no {@code Identity} with the name of the specified
+     * principal is present in this scope.
+     * 
+     * @param principal
+     *            the {@code Principal} whose name is used to lookup the {@code
+     *            Identity} to be returned.
+     * @return the {@code Identity} with the specified name or {@code null} if
+     *         not present.
+     * @since Android 1.0
      */
     public Identity getIdentity(Principal principal) {
         return getIdentity(principal.getName());
     }
 
     /**
-     * @com.intel.drl.spec_ref 
+     * Returns the {@code Identity} which is associated with the specified key
+     * or {@code null} if no {@code Identity} associated with the specified key
+     * is present in this scope.
+     * 
+     * @param key
+     *            the {@code PublicKey} of the {@code Identity} to be returned.
+     * @return the {@code Identity} associated with the specified key or {@code
+     *         null} if not present.
+     * @since Android 1.0
      */
     public abstract Identity getIdentity(PublicKey key);
 
     /**
-     * @com.intel.drl.spec_ref 
+     * Adds an {@code Identity} to this {@code IdentityScope}.
+     * 
+     * @param identity
+     *            the {@code Identity} to be added.
+     * @throws KeyManagementException
+     *             if the specified {@code Identity} is invalid or an identity
+     *             with the same key already exists.
+     * @since Android 1.0
      */
     public abstract void addIdentity(Identity identity)
             throws KeyManagementException;
 
     /**
-     * @com.intel.drl.spec_ref 
+     * Removes an {@code Identity} from this {@code IdentityScope}.
+     * 
+     * @param identity
+     *            the {@code Identity} to be removed.
+     * @throws KeyManagementException
+     *             if the {@code Identity} is not present in this scope.
+     * @since Android 1.0
      */
     public abstract void removeIdentity(Identity identity)
             throws KeyManagementException;
 
     /**
-     * @com.intel.drl.spec_ref 
+     * Returns an {@code Enumeration} over the {@code Identity} objects in this
+     * {@code IdentityScope}.
+     * 
+     * @return an {@code Enumeration} over the {@code Identity} objects in this
+     *         {@code IdentityScope}.
+     * @since Android 1.0
      */
     public abstract Enumeration<Identity> identities();
 
     /**
-     * @com.intel.drl.spec_ref 
+     * Returns a string containing a concise, human-readable description of this
+     * {@code IdentityScope}.
+     * 
+     * @return a printable representation for this {@code IdentityScope}.
+     * @since Android 1.0
      */
     public String toString() {
         return new StringBuffer(super.toString())

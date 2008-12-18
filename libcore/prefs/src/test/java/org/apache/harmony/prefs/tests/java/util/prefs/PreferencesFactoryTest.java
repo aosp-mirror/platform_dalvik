@@ -16,6 +16,11 @@
 
 package org.apache.harmony.prefs.tests.java.util.prefs;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.util.prefs.Preferences;
 import java.util.prefs.PreferencesFactory;
 
@@ -24,36 +29,55 @@ import junit.framework.TestCase;
 /**
  * 
  */
+@TestTargetClass(PreferencesFactory.class)
 public class PreferencesFactoryTest extends TestCase {
 
-	PreferencesFactory f;
+    PreferencesFactory f;
 
-	/*
-	 * @see TestCase#setUp()
-	 */
-	protected void setUp() throws Exception {
-		super.setUp();
-		f = new PreferencesFactoryImpl();
-	}
+    /*
+     * @see TestCase#setUp()
+     */
+    protected void setUp() throws Exception {
+        super.setUp();
+        f = new PreferencesFactoryImpl();
+    }
 
-	public void testUserRoot() {
-		f.userRoot();
-	}
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Testing Interface",
+      targets = {
+        @TestTarget(
+          methodName = "userRoot",
+          methodArgs = {}
+        )
+    })
+    public void testUserRoot() {
+        f.userRoot();
+    }
 
-	public void testSystemRoot() {
-		f.systemRoot();
-	}
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Testing Interface",
+      targets = {
+        @TestTarget(
+          methodName = "userRoot",
+          methodArgs = {}
+        )
+    })
+    public void testSystemRoot() {
+        f.systemRoot();
+    }
 
-	public static class PreferencesFactoryImpl implements PreferencesFactory {
+    public static class PreferencesFactoryImpl implements PreferencesFactory {
 
-		public Preferences userRoot() {
-			return null;
-		}
+        public Preferences userRoot() {
+            return null;
+        }
 
-		public Preferences systemRoot() {
-			return null;
-		}
+        public Preferences systemRoot() {
+            return null;
+        }
 
-	}
+    }
 
 }

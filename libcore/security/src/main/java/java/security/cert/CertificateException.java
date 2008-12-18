@@ -15,54 +15,58 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package java.security.cert;
 
 import java.security.GeneralSecurityException;
 
 /**
- * This class represents a general certificate exception.
+ * The base class for all {@code Certificate} related exceptions.
+ * 
+ * @since Android 1.0
  */
 public class CertificateException extends GeneralSecurityException {
 
-    /**
-     * @com.intel.drl.spec_ref
-     *  
-     */
     private static final long serialVersionUID = 3192535253797119798L;
 
     /**
-     * Constructs a new instance of this class with its walkback and message
-     * filled in.
+     * Creates a new {@code CertificateException} with the specified message.
      * 
      * @param msg
-     *            String The detail message for the exception.
+     *            the detail message for the exception.
+     * @since Android 1.0
      */
     public CertificateException(String msg) {
         super(msg);
     }
 
     /**
-     * Constructs a new instance of this class with its walkback filled in.
+     * Creates a new {@code CertificateException}.
+     * 
+     * @since Android 1.0
      */
     public CertificateException() {
     }
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Creates a new {@code CertificateException} with the specified message and
+     * cause.
+     * 
+     * @param message
+     *            the detail message for the exception.
+     * @param cause
+     *            the cause.
+     * @since Android 1.0
      */
     public CertificateException(String message, Throwable cause) {
         super(message, cause);
     }
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Creates a new {@code CertificateException} with the specified cause.
+     * 
+     * @param cause
+     *            the cause
+     * @since Android 1.0
      */
     public CertificateException(Throwable cause) {
         super(cause);

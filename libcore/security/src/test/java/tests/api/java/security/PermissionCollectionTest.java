@@ -17,6 +17,11 @@
 
 package tests.api.java.security;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -29,6 +34,7 @@ import tests.support.Support_Exec;
 import tests.support.Support_GetLocal;
 import tests.support.resource.Support_Resources;
 
+@TestTargetClass(PermissionCollection.class)
 public class PermissionCollectionTest extends junit.framework.TestCase {
 
     // The below test is known to fail. Haven't got to the bottom of
@@ -53,7 +59,16 @@ public class PermissionCollectionTest extends junit.framework.TestCase {
     /**
      * @tests java.security.PermissionCollection#implies(java.security.Permission)
      */
-    public void test_impliesLjava_security_Permission() throws Exception{
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Method implies is not call in this test",
+      targets = {
+        @TestTarget(
+          methodName = "implies",
+          methodArgs = {java.security.Permission.class}
+        )
+    })
+    public void _test_impliesLjava_security_Permission() throws Exception{
 
         // Look for the tests classpath
         URL classURL = this.getClass().getProtectionDomain().getCodeSource()
@@ -174,6 +189,15 @@ public class PermissionCollectionTest extends junit.framework.TestCase {
     /**
      * @tests java.security.PermissionCollection#PermissionCollection()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "PermissionCollection",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         // test java.security.permissionCollection.PermissionCollection()
         SecurityPermission permi = new SecurityPermission(
@@ -186,6 +210,15 @@ public class PermissionCollectionTest extends junit.framework.TestCase {
     /**
      * @tests java.security.PermissionCollection#isReadOnly()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isReadOnly",
+          methodArgs = {}
+        )
+    })
     public void test_isReadOnly() {
         // test java.security.permissionCollection.isReadOnly()
         SecurityPermission permi = new SecurityPermission(
@@ -201,6 +234,15 @@ public class PermissionCollectionTest extends junit.framework.TestCase {
     /**
      * @tests java.security.PermissionCollection#setReadOnly()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setReadOnly",
+          methodArgs = {}
+        )
+    })
     public void test_setReadOnly() {
         // test java.security.permissionCollection.setReadOnly()
         SecurityPermission permi = new SecurityPermission(
@@ -216,7 +258,16 @@ public class PermissionCollectionTest extends junit.framework.TestCase {
     /**
      * @tests java.security.PermissionCollection#toString()
      */
-    public void test_toString() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
+    public void _test_toString() {
         // test java.security.permissionCollection.toString()
         SecurityPermission permi = new SecurityPermission(
                 "testing permissionCollection-isREadOnly");

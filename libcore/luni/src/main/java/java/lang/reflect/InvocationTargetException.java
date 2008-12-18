@@ -18,11 +18,13 @@
 package java.lang.reflect;
 
 /**
- * This class provides a wrapper for an exception thrown by a Method or
- * Constructor invocation.
+ * This class provides a wrapper for an exception thrown by a {@code Method} or
+ * {@code Constructor} invocation.
  * 
  * @see Method#invoke
  * @see Constructor#newInstance
+ * 
+ * @since Android 1.0
  */
 public class InvocationTargetException extends Exception {
 
@@ -31,19 +33,24 @@ public class InvocationTargetException extends Exception {
     private Throwable target;
 
     /**
-     * Constructs a new instance of this class with its walkback filled in.
+     * Constructs a new {@code InvocationTargetException} instance with a
+     * {@code null} cause / target exception.
+     * 
+     * @since Android 1.0
      */
     protected InvocationTargetException() {
         super((Throwable) null);
     }
 
     /**
-     * Constructs a new instance of this class with its walkback and target
-     * exception filled in.
+     * Constructs a new {@code InvocationTargetException} instance with its
+     * cause / target exception filled in.
      * 
      * @param exception
-     *            Throwable The exception which occurred while running the
-     *            Method or Constructor.
+     *            the exception which occurred while running the Method or
+     *            Constructor
+     *            
+     * @since Android 1.0
      */
     public InvocationTargetException(Throwable exception) {
         super(null, exception);
@@ -51,14 +58,16 @@ public class InvocationTargetException extends Exception {
     }
 
     /**
-     * Constructs a new instance of this class with its walkback, target
-     * exception and message filled in.
+     * Constructs a new {@code InvocationTargetException} instance with its
+     * cause / target exception and message filled in.
      * 
      * @param detailMessage
-     *            String The detail message for the exception.
+     *            the detail message for the exception
      * @param exception
-     *            Throwable The exception which occurred while running the
-     *            Method or Constructor.
+     *            the exception which occurred while running the Method or
+     *            Constructor
+     *            
+     * @since Android 1.0
      */
     public InvocationTargetException(Throwable exception, String detailMessage) {
         super(detailMessage, exception);
@@ -66,16 +75,22 @@ public class InvocationTargetException extends Exception {
     }
 
     /**
-     * Returns the exception which caused the receiver to be thrown.
+     * Returns the target exception, which may be {@code null}.
+     * 
+     * @return the target exception
+     * 
+     * @since Android 1.0
      */
     public Throwable getTargetException() {
         return target;
     }
 
     /**
-     * Returns the cause of this Throwable, or null if there is no cause.
+     * Returns the cause of this exception, which may be {@code null}.
      * 
-     * @return Throwable The receiver's cause.
+     * @return the cause of this exception
+     * 
+     * @since Android 1.0
      */
     @Override
     public Throwable getCause() {

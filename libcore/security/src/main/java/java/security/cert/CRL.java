@@ -15,25 +15,26 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vladimir N. Molotkov
-* @version $Revision$
-*/
-
 package java.security.cert;
 
 /**
- * This class represents Certificate Revocation Lists (CRLs). They are used to
- * indicate that a given Certificate has expired already.
+ * This class represents Certificate Revocation Lists (CRLs) maintained by a
+ * certificate authority. They are used to indicate that a given Certificate has
+ * expired and consequently has become invalid.
  * 
  * @see CertificateFactory
+ * @since Android 1.0
  */
 public abstract class CRL {
     // The CRL type
     private final String type;
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new certificate revocation list of the specified type.
+     * 
+     * @param type
+     *            the type for the CRL.
+     * @since Android 1.0
      */
     protected CRL(String type) {
         this.type = type;
@@ -42,28 +43,29 @@ public abstract class CRL {
     /**
      * Returns the type of this CRL.
      * 
-     * @return String the type of this CRL.
+     * @return the type of this CRL.
+     * @since Android 1.0
      */
     public final String getType() {
         return type;
     }
 
     /**
-     * Returns if a given Certificate has been revoked or not.
+     * Returns whether the specified certificate is revoked by this CRL.
      * 
      * @param cert
-     *            Certificate The Certificate to test
-     * 
-     * @return true if the certificate has been revoked false if the certificate
-     *         has not been revoked yet
+     *            the certificate to check.
+     * @return {@code true} if the certificate is revoked by this CRL, otherwise
+     *         {@code false}.
+     * @since Android 1.0
      */
     public abstract boolean isRevoked(Certificate cert);
 
     /**
-     * Returns a string containing a concise, human-readable description of the
-     * receiver.
+     * Returns the string representation of this instance.
      * 
-     * @return a printable representation for the receiver.
+     * @return the string representation of this instance.
+     * @since Android 1.0
      */
     public abstract String toString();
 }

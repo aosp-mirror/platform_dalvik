@@ -16,6 +16,11 @@
  */
 package tests.api.java.util;
 
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass; 
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -28,6 +33,7 @@ import java.util.Vector;
 
 import tests.support.Support_ListTest;
 
+@TestTargetClass(ArrayList.class) 
 public class ArrayListTest extends junit.framework.TestCase {
 
     List alist;
@@ -42,6 +48,15 @@ public class ArrayListTest extends junit.framework.TestCase {
     /**
      * @tests java.util.ArrayList#ArrayList()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "ArrayList",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         // Test for method java.util.ArrayList()
         new Support_ListTest("", alist).runTest();
@@ -55,6 +70,15 @@ public class ArrayListTest extends junit.framework.TestCase {
     /**
      * @tests java.util.ArrayList#ArrayList(int)
      */
+    @TestInfo(
+          level = TestLevel.PARTIAL,
+          purpose = "Doesn't verify IllegalArgumentException.",
+          targets = {
+            @TestTarget(
+              methodName = "ArrayList",
+              methodArgs = {int.class}
+            )
+        })
     public void test_ConstructorI() {
         // Test for method java.util.ArrayList(int)
         ArrayList al = new ArrayList(5);
@@ -64,6 +88,15 @@ public class ArrayListTest extends junit.framework.TestCase {
     /**
      * @tests java.util.ArrayList#ArrayList(java.util.Collection)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "ArrayList",
+          methodArgs = {java.util.Collection.class}
+        )
+    })
     public void test_ConstructorLjava_util_Collection() {
         // Test for method java.util.ArrayList(java.util.Collection)
         ArrayList al = new ArrayList(Arrays.asList(objArray));
@@ -79,6 +112,15 @@ public class ArrayListTest extends junit.framework.TestCase {
     /**
      * @tests java.util.ArrayList#add(int, java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify IndexOutOfBoundsException.",
+      targets = {
+        @TestTarget(
+          methodName = "add",
+          methodArgs = {int.class, Object.class}
+        )
+    })
     public void test_addILjava_lang_Object() {
         // Test for method void java.util.ArrayList.add(int, java.lang.Object)
         Object o;
@@ -97,6 +139,15 @@ public class ArrayListTest extends junit.framework.TestCase {
     /**
      * @tests java.util.ArrayList#add(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "add",
+          methodArgs = {Object.class}
+        )
+    })
     public void test_addLjava_lang_Object() {
         // Test for method boolean java.util.ArrayList.add(java.lang.Object)
         Object o = new Object();
@@ -109,6 +160,15 @@ public class ArrayListTest extends junit.framework.TestCase {
     /**
      * @tests java.util.ArrayList#addAll(int, java.util.Collection)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "addAll",
+          methodArgs = {int.class, java.util.Collection.class}
+        )
+    })
     public void test_addAllILjava_util_Collection() {
         // Test for method boolean java.util.ArrayList.addAll(int,
         // java.util.Collection)
@@ -146,6 +206,15 @@ public class ArrayListTest extends junit.framework.TestCase {
     /**
      * @tests java.util.ArrayList#addAll(int, java.util.Collection)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies IndexOutOfBoundsException.",
+      targets = {
+        @TestTarget(
+          methodName = "addAll",
+          methodArgs = {int.class, java.util.Collection.class}
+        )
+    })
     public void test_addAllILjava_util_Collection_2() {
         // Regression for HARMONY-467
         ArrayList obj = new ArrayList();
@@ -159,6 +228,15 @@ public class ArrayListTest extends junit.framework.TestCase {
     /**
      * @tests java.util.ArrayList#addAll(java.util.Collection)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "addAll",
+          methodArgs = {java.util.Collection.class}
+        )
+    })
     public void test_addAllLjava_util_Collection() {
         // Test for method boolean
         // java.util.ArrayList.addAll(java.util.Collection)
@@ -213,6 +291,15 @@ public class ArrayListTest extends junit.framework.TestCase {
     /**
      * @tests java.util.ArrayList#clear()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "clear",
+          methodArgs = {}
+        )
+    })
     public void test_clear() {
         // Test for method void java.util.ArrayList.clear()
         alist.clear();
@@ -233,6 +320,15 @@ public class ArrayListTest extends junit.framework.TestCase {
     /**
      * @tests java.util.ArrayList#clone()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "clone",
+          methodArgs = {}
+        )
+    })
     public void test_clone() {
         // Test for method java.lang.Object java.util.ArrayList.clone()
         ArrayList x = (ArrayList) (((ArrayList) (alist)).clone());
@@ -255,6 +351,15 @@ public class ArrayListTest extends junit.framework.TestCase {
     /**
      * @tests java.util.ArrayList#contains(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "contains",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_containsLjava_lang_Object() {
         // Test for method boolean
         // java.util.ArrayList.contains(java.lang.Object)
@@ -274,6 +379,15 @@ public class ArrayListTest extends junit.framework.TestCase {
     /**
      * @tests java.util.ArrayList#ensureCapacity(int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "ensureCapacity",
+          methodArgs = {int.class}
+        )
+    })
     public void test_ensureCapacityI() {
         // Test for method void java.util.ArrayList.ensureCapacity(int)
         // TODO : There is no good way to test this as it only really impacts on
@@ -307,6 +421,15 @@ public class ArrayListTest extends junit.framework.TestCase {
     /**
      * @tests java.util.ArrayList#get(int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "get",
+          methodArgs = {int.class}
+        )
+    })
     public void test_getI() {
         // Test for method java.lang.Object java.util.ArrayList.get(int)
         assertTrue("Returned incorrect element", alist.get(22) == objArray[22]);
@@ -320,6 +443,15 @@ public class ArrayListTest extends junit.framework.TestCase {
     /**
      * @tests java.util.ArrayList#indexOf(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "indexOf",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_indexOfLjava_lang_Object() {
         // Test for method int java.util.ArrayList.indexOf(java.lang.Object)
         assertEquals("Returned incorrect index",
@@ -335,6 +467,15 @@ public class ArrayListTest extends junit.framework.TestCase {
     /**
      * @tests java.util.ArrayList#isEmpty()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isEmpty",
+          methodArgs = {}
+        )
+    })
     public void test_isEmpty() {
         // Test for method boolean java.util.ArrayList.isEmpty()
         assertTrue("isEmpty returned false for new list", new ArrayList()
@@ -346,6 +487,15 @@ public class ArrayListTest extends junit.framework.TestCase {
     /**
      * @tests java.util.ArrayList#lastIndexOf(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "lastIndexOf",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_lastIndexOfLjava_lang_Object() {
         // Test for method int java.util.ArrayList.lastIndexOf(java.lang.Object)
         alist.add(new Integer(99));
@@ -362,6 +512,15 @@ public class ArrayListTest extends junit.framework.TestCase {
     /**
      * @tests java.util.ArrayList#remove(int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify IndexOutOfBoundsException.",
+      targets = {
+        @TestTarget(
+          methodName = "remove",
+          methodArgs = {int.class}
+        )
+    })
     public void test_removeI() {
         // Test for method java.lang.Object java.util.ArrayList.remove(int)
         alist.remove(10);
@@ -409,6 +568,15 @@ public class ArrayListTest extends junit.framework.TestCase {
     /**
      * @tests java.util.ArrayList#set(int, java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify IndexOutOfBoundsException.",
+      targets = {
+        @TestTarget(
+          methodName = "set",
+          methodArgs = {int.class, Object.class}
+        )
+    })
     public void test_setILjava_lang_Object() {
         // Test for method java.lang.Object java.util.ArrayList.set(int,
         // java.lang.Object)
@@ -424,6 +592,15 @@ public class ArrayListTest extends junit.framework.TestCase {
     /**
      * @tests java.util.ArrayList#size()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "size",
+          methodArgs = {}
+        )
+    })
     public void test_size() {
         // Test for method int java.util.ArrayList.size()
         assertEquals("Returned incorrect size for exiting list",
@@ -435,6 +612,15 @@ public class ArrayListTest extends junit.framework.TestCase {
     /**
      * @tests java.util.ArrayList#toArray()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toArray",
+          methodArgs = {}
+        )
+    })
     public void test_toArray() {
         // Test for method java.lang.Object [] java.util.ArrayList.toArray()
         alist.set(25, null);
@@ -457,6 +643,15 @@ public class ArrayListTest extends junit.framework.TestCase {
     /**
      * @tests java.util.ArrayList#toArray(java.lang.Object[])
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify ArrayStoreException.",
+      targets = {
+        @TestTarget(
+          methodName = "toArray",
+          methodArgs = {Object[].class}
+        )
+    })
     public void test_toArray$Ljava_lang_Object() {
         // Test for method java.lang.Object []
         // java.util.ArrayList.toArray(java.lang.Object [])
@@ -482,7 +677,16 @@ public class ArrayListTest extends junit.framework.TestCase {
     /**
      * @tests java.util.ArrayList#trimToSize()
      */
-    public void test_trimToSize() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "trimToSize",
+          methodArgs = {}
+        )
+    })
+    public void _test_trimToSize() {
         // Test for method void java.util.ArrayList.trimToSize()
         for (int i = 99; i > 24; i--)
             alist.remove(i);
@@ -507,6 +711,15 @@ public class ArrayListTest extends junit.framework.TestCase {
     /**
      * @test java.util.ArrayList#addAll(int, Collection)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "addAll",
+          methodArgs = {int.class, java.util.Collection.class}
+        )
+    })
     public void test_addAll() {
         ArrayList list = new ArrayList();
         list.add("one");

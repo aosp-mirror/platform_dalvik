@@ -27,12 +27,14 @@ import java.nio.ByteBuffer;
 import org.apache.harmony.security.fortress.Engine;
 import org.apache.harmony.security.internal.nls.Messages;
 
-
 /**
- * @com.intel.drl.spec_ref
+ * {@code MessageDigest} is an engine class which is capable of generating one
+ * way hash values for arbitrary input, utilizing the algorithm it was
+ * initialized with.
  * 
+ * @see MessageDigestSpi
+ * @since Android 1.0
  */
-
 public abstract class MessageDigest extends MessageDigestSpi {
     
     // The service name
@@ -48,16 +50,30 @@ public abstract class MessageDigest extends MessageDigestSpi {
     private String algorithm;
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Constructs a new instance of {@code MessageDigest} with the name of
+     * the algorithm to use.
+     * 
+     * @param algorithm
+     *            the name of algorithm to use
+     * @since Android 1.0
      */
     protected MessageDigest(String algorithm) {
         this.algorithm = algorithm;
     }
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Returns a new instance of {@code MessageDigest} that utilizes the
+     * specified algorithm.
+     * 
+     * @param algorithm
+     *            the name of the algorithm to use
+     * @return a new instance of {@code MessageDigest} that utilizes the
+     *         specified algorithm
+     * @throws NoSuchAlgorithmException
+     *             if the specified algorithm is not available
+     * @throws NullPointerException
+     *             if {@code algorithm} is {@code null}
+     * @since Android 1.0
      */
     public static MessageDigest getInstance(String algorithm)
             throws NoSuchAlgorithmException {
@@ -81,8 +97,22 @@ public abstract class MessageDigest extends MessageDigestSpi {
     }
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Returns a new instance of {@code MessageDigest} that utilizes the
+     * specified algorithm from the specified provider.
+     * 
+     * @param algorithm
+     *            the name of the algorithm to use
+     * @param provider
+     *            the name of the provider
+     * @return a new instance of {@code MessageDigest} that utilizes the
+     *         specified algorithm from the specified provider
+     * @throws NoSuchAlgorithmException
+     *             if the specified algorithm is not available
+     * @throws NoSuchProviderException
+     *             if the specified provider is not available
+     * @throws NullPointerException
+     *             if {@code algorithm} is {@code null}
+     * @since Android 1.0
      */
     public static MessageDigest getInstance(String algorithm, String provider)
             throws NoSuchAlgorithmException, NoSuchProviderException {
@@ -97,20 +127,20 @@ public abstract class MessageDigest extends MessageDigestSpi {
     }
 
     /**
-     * Returns a new MessageDigest which is capable of running the algorithm
-     * described by the argument. The result will be an instance of a subclass
-     * of MessageDigest which implements that algorithm.
-     * 
+     * Returns a new instance of {@code MessageDigest} that utilizes the
+     * specified algorithm from the specified provider.
      * 
      * @param algorithm
-     *            java.lang.String Name of the algorithm desired
+     *            the name of the algorithm to use
      * @param provider
-     *            Provider Provider which has to implement the algorithm
-     * @return MessageDigest a concrete implementation for the algorithm
-     *         desired.
-     * 
-     * @exception NoSuchAlgorithmException
-     *                If the algorithm cannot be found
+     *            the provider
+     * @return a new instance of {@code MessageDigest} that utilizes the
+     *         specified algorithm from the specified provider
+     * @throws NoSuchAlgorithmException
+     *             if the specified algorithm is not available
+     * @throws NullPointerException
+     *             if {@code algorithm} is {@code null}
+     * @since Android 1.0
      */
     public static MessageDigest getInstance(String algorithm, Provider provider)
             throws NoSuchAlgorithmException {
@@ -136,34 +166,41 @@ public abstract class MessageDigest extends MessageDigestSpi {
         }
     }
 
-    // BEGIN android-note
-    // Removed @see tag that didn't seem to actually refer to anything.
-    // END android-note
-    
     /**
-     * Puts the receiver back in an initial state, such that it is ready to
-     * compute a new hash.
+     * Puts this {@code MessageDigest} back in an initial state, such that it is
+     * ready to compute a one way hash value.
+     * 
+     * @since Android 1.0
      */
     public void reset() {
         engineReset();
     }
 
     /**
-     * Includes the argument in the hash value computed
-     * by the receiver.
-     *
-     * @param arg0 byte
-     *             the byte to feed to the hash algorithm
-     *
+     * Updates this {@code MessageDigest} using the given {@code byte}.
+     * 
+     * @param arg0
+     *            the {@code byte} to update this {@code MessageDigest} with
      * @see #reset()
+     * @since Android 1.0
      */
     public void update(byte arg0) {
         engineUpdate(arg0);
     }
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Updates this {@code MessageDigest} using the given {@code byte[]}.
+     * 
+     * @param input
+     *            the {@code byte} array
+     * @param offset
+     *            the index of the first byte in {@code input} to update from
+     * @param len
+     *            the number of bytes in {@code input} to update from
+     * @throws IllegalArgumentException
+     *             if {@code offset} or {@code len} are not valid in respect to
+     *             {@code input}
+     * @since Android 1.0
      */
     public void update(byte[] input, int offset, int len) {
         if (input == null ||
@@ -178,8 +215,13 @@ public abstract class MessageDigest extends MessageDigestSpi {
     }
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Updates this {@code MessageDigest} using the given {@code byte[]}.
+     * 
+     * @param input
+     *            the {@code byte} array
+     * @throws NullPointerException
+     *             if {@code input} is {@code null}
+     * @since Android 1.0
      */
     public void update(byte[] input) {
         if (input == null) {
@@ -189,20 +231,35 @@ public abstract class MessageDigest extends MessageDigestSpi {
     }
 
     /**
-     * Computes and returns the final hash value that the receiver represents.
+     * Computes and returns the final hash value for this {@link MessageDigest}.
      * After the digest is computed the receiver is reset.
      * 
-     * @return the hash the receiver computed
-     * 
+     * @return the computed one way hash value
      * @see #reset
+     * @since Android 1.0
      */
     public byte[] digest() {
         return engineDigest();
     }
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Computes and stores the final hash value for this {@link MessageDigest}.
+     * After the digest is computed the receiver is reset.
+     * 
+     * @param buf
+     *            the buffer to store the result
+     * @param offset
+     *            the index of the first byte in {@code buf} to store
+     * @param len
+     *            the number of bytes allocated for the digest
+     * @return the number of bytes written to {@code buf}
+     * @throws DigestException
+     *             if an error occures
+     * @throws IllegalArgumentException
+     *             if {@code offset} or {@code len} are not valid in respect to
+     *             {@code buf}
+     * @see #reset()
+     * @since Android 1.0
      */
     public int digest(byte[] buf, int offset, int len) throws DigestException {
         if (buf == null ||
@@ -217,8 +274,15 @@ public abstract class MessageDigest extends MessageDigestSpi {
     }
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Performs the final update and then computes and returns the final hash
+     * value for this {@link MessageDigest}. After the digest is computed the
+     * receiver is reset.
+     * 
+     * @param input
+     *            the {@code byte} array
+     * @return the computed one way hash value
+     * @see #reset()
+     * @since Android 1.0
      */
     public byte[] digest(byte[] input) {
         update(input);
@@ -226,25 +290,26 @@ public abstract class MessageDigest extends MessageDigestSpi {
     }
 
     /**
-     * Returns a string containing a concise, human-readable description of the
-     * receiver.
+     * Returns a string containing a concise, human-readable description of this
+     * {@code MessageDigest} including the name of its algorithm.
      * 
-     * @return a printable representation for the receiver.
+     * @return a printable representation for this {@code MessageDigest}
+     * @since Android 1.0
      */
     public String toString() {
         return "MESSAGE DIGEST " + algorithm; //$NON-NLS-1$
     }
 
     /**
-     * Does a simply byte-per-byte compare of the two digests.
+     * Indicates whether to digest are equal by performing a simply
+     * byte-per-byte compare of the two digests.
      * 
      * @param digesta
-     *            One of the digests to compare
+     *            the first digest to be compared
      * @param digestb
-     *            The digest to compare to
-     * 
-     * @return <code>true</code> if the two hashes are equal
-     *         <code>false</code> if the two hashes are not equal
+     *            the second digest to be compared
+     * @return {@code true} if the two hashes are equal, {@code false} otherwise
+     * @since Android 1.0
      */
     public static boolean isEqual(byte[] digesta, byte[] digestb) {
         if (digesta.length != digestb.length) {
@@ -259,29 +324,32 @@ public abstract class MessageDigest extends MessageDigestSpi {
     }
 
     /**
-     * Returns the standard Java Security name for the algorithm being used by
-     * the receiver.
+     * Returns the name of the algorithm of this {@code MessageDigest}.
      * 
-     * @return String the name of the algorithm
+     * @return the name of the algorithm of this {@code MessageDigest}
+     * @since Android 1.0
      */
     public final String getAlgorithm() {
         return algorithm;
     }
 
     /**
-     * Returns the Provider of the digest represented by the receiver.
+     * Returns the provider associated with this {@code MessageDigest}.
      * 
-     * @return Provider an instance of a subclass of java.security.Provider
+     * @return the provider associated with this {@code MessageDigest}
+     * @since Android 1.0
      */
     public final Provider getProvider() {
         return provider;
     }
 
     /**
-     * Return the engine digest length in bytes. Default is 0.
+     * Returns the engine digest length in bytes. If the implementation does not
+     * implement this function or is not an instance of {@code Cloneable},
+     * {@code 0} is returned.
      * 
-     * @return int the engine digest length in bytes
-     * 
+     * @return the digest length in bytes, or {@code 0}
+     * @since Android 1.0
      */
     public final int getDigestLength() {
         int l = engineGetDigestLength();
@@ -299,10 +367,6 @@ public abstract class MessageDigest extends MessageDigestSpi {
         }
     }
 
-    /**
-     * @com.intel.drl.spec_ref
-     *  
-     */
     public Object clone() throws CloneNotSupportedException {
         if (this instanceof Cloneable) {
             return super.clone();
@@ -312,8 +376,11 @@ public abstract class MessageDigest extends MessageDigestSpi {
     }
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Updates this {@code MessageDigest} using the given {@code input}.
+     * 
+     * @param input
+     *            the {@code ByteBuffer}
+     * @since Android 1.0
      */
     public final void update(ByteBuffer input) {
         engineUpdate(input);

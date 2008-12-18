@@ -73,11 +73,22 @@ PointerSet* dvmPointerSetAlloc(int initialSize)
  */
 void dvmPointerSetFree(PointerSet* pSet)
 {
+    if (pSet == NULL)
+        return;
+
     if (pSet->list != NULL) {
         free(pSet->list);
         pSet->list = NULL;
     }
     free(pSet);
+}
+
+/*
+ * Clear the contents of a pointer set.
+ */
+void dvmPointerSetClear(PointerSet* pSet)
+{
+    pSet->count = 0;
 }
 
 /*
@@ -179,7 +190,7 @@ bool dvmPointerSetRemoveEntry(PointerSet* pSet, const void* ptr)
     }
 
     pSet->count--;
-    pSet->list[pSet->count] = (const void*) 0xdecadead;
+    pSet->list[pSet->count] = (const void*) 0xdecadead;     // debug
     return true;
 }
 
@@ -213,6 +224,38 @@ bool dvmPointerSetHas(const PointerSet* pSet, const void* ptr, int* pIndex)
     if (pIndex != NULL)
         *pIndex = mid;
     return false;
+}
+
+/*
+ * Compute the intersection of the set and the array of pointers passed in.
+ *
+ * Any pointer in "pSet" that does not appear in "ptrArray" is removed.
+ */
+void dvmPointerSetIntersect(PointerSet* pSet, const void** ptrArray, int count)
+{
+    int i, j;
+
+    for (i = 0; i < pSet->count; i++) {
+        for (j = 0; j < count; j++) {
+            if (pSet->list[i] == ptrArray[j]) {
+                /* match, keep this one */
+                break;
+            }
+        }
+
+        if (j == count) {
+            /* no match, remove entry */
+            if (i != pSet->count-1) {
+                /* shift down */
+                memmove(&pSet->list[i], &pSet->list[i+1],
+                    (pSet->count-1 - i) * sizeof(pSet->list[0]));
+            }
+
+            pSet->count--;
+            pSet->list[pSet->count] = (const void*) 0xdecadead;     // debug
+            i--;        /* adjust loop counter */
+        }
+    }
 }
 
 /*

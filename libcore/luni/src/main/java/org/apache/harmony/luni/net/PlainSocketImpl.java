@@ -76,10 +76,8 @@ class PlainSocketImpl extends SocketImpl {
 
     protected INetworkSystem netImpl = Platform.getNetworkSystem();
 
-    // BEGIN android-delete, delete reason: SocketImpl has receiveTimeout,
-    // public int receiveTimeout = 0;
-    // END andorid-delete
-    
+    public int receiveTimeout = 0;
+
     public boolean streaming = true;
 
     public boolean shutdownInput;
@@ -306,12 +304,12 @@ class PlainSocketImpl extends SocketImpl {
         }
         netImpl.listenStreamSocket(fd, backlog);
     }
-    
+
     @Override
     public void setOption(int optID, Object val) throws SocketException {
         if (optID == SocketOptions.SO_TIMEOUT) {
             receiveTimeout = ((Integer) val).intValue();
-        } else {            
+        } else {
             try {
                 netImpl.setSocketOption(fd, optID, val);
                 if (optID == SocketOptions.TCP_NODELAY
@@ -325,7 +323,7 @@ class PlainSocketImpl extends SocketImpl {
                     throw e;
                 }
             }
-    
+
             /*
              * save this value as it is actually used differently for IPv4 and
              * IPv6 so we cannot get the value using the getOption. The option
@@ -548,9 +546,9 @@ class PlainSocketImpl extends SocketImpl {
         if (shutdownInput) {
             return -1;
         }
-        try {            
-            int read = netImpl.receiveStream(fd, buffer, offset, count, receiveTimeout);
-            
+        try {
+            int read = netImpl.receiveStream(fd, buffer, offset, count,
+                    receiveTimeout);
             if (read == -1) {
                 shutdownInput = true;
             }

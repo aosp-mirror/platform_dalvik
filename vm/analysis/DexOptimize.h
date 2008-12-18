@@ -39,9 +39,8 @@ typedef enum DexOptimizerMode {
  *
  * Returns the file descriptor, locked and seeked past the "opt" header.
  */
-int dvmOpenCachedDexFile(const char* fileName, const char* subFileName,
-    u4 modWhen, u4 crc, bool isBootstrap, char** pCachedName, bool* pNewFile,
-    bool createIfMissing);
+int dvmOpenCachedDexFile(const char* fileName, const char* cachedFile,
+    u4 modWhen, u4 crc, bool isBootstrap, bool* pNewFile, bool createIfMissing);
 
 /*
  * Unlock the specified file descriptor.  Use in conjunction with

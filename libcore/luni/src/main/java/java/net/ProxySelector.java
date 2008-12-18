@@ -19,20 +19,13 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * <p>
- * Selects applicable proxies when connecting to network resouce represented by
- * a <code>URI</code>. An implementation of <code>ProxySelector</code>
- * should be a concrete subclass of <code>ProxySelector</code>. Method
- * <code>select</code> returns a list of proxies according to the
- * <code>uri</code>. If a connection can't be established, the caller should
- * notify proxy selector by invoking <code>connectFailed</code> method.
- * </p>
- * <p>
- * A proxy selector can be registered/unregistered by calling
- * <code>setDefault</code> method and retrieved by calling
- * <code>getDefault</code> method.
- * </p>
+ * Selects an applicable proxy server when connecting to a resource specified by
+ * a URL. Proxy selectors are concrete subclasses of {@code ProxySelector} and
+ * can be set as default by calling the {@code setDefault()} method. If a
+ * connection can't be established, the caller should notify the proxy selector
+ * by invoking the {@code connectFailed()} method.
  * 
+ * @since Android 1.0
  */
 public abstract class ProxySelector {
 
@@ -53,19 +46,22 @@ public abstract class ProxySelector {
             "setProxySelector"); //$NON-NLS-1$
 
     /**
-     * Constructor method.
+     * Creates a new {@code ProxySelector} instance.
+     * 
+     * @since Android 1.0
      */
     public ProxySelector() {
         super();
     }
 
     /**
-     * Gets system default <code>ProxySelector</code>.
+     * Gets the default {@code ProxySelector} of the system.
      * 
-     * @return system default <code>ProxySelector</code>.
-     * @throws SecurtiyException
-     *             If a security manager is installed and it doesn't have
-     *             <code>NetPermission("getProxySelector")</code>.
+     * @return the currently set default {@code ProxySelector}.
+     * @throws SecurityException
+     *             if a security manager is installed but it doesn't have the
+     *             NetPermission("getProxySelector").
+     * @since Android 1.0
      */
     public static ProxySelector getDefault() {
         SecurityManager sm = System.getSecurityManager();
@@ -76,12 +72,18 @@ public abstract class ProxySelector {
     }
 
     /**
-     * Sets system default <code>ProxySelector</code>. Unsets system default
-     * <code>ProxySelector</code> if <code>selector</code> is null.
+     * Sets the default {@code ProxySelector} of the system. Removes the system
+     * default {@code ProxySelector} if the parameter {@code selector} is set to
+     * {@code null}.
      * 
-     * @throws SecurtiyException
-     *             If a security manager is installed and it doesn't have
-     *             <code>NetPermission("setProxySelector")</code>.
+     * @param selector
+     *            the {@code ProxySelector} instance to set as default or
+     *            {@code null} to remove the current default {@code
+     *            ProxySelector}.
+     * @throws SecurityException
+     *             if a security manager is installed but it doesn't have the
+     *             NetPermission("setProxySelector").
+     * @since Android 1.0
      */
     public static void setDefault(ProxySelector selector) {
         SecurityManager sm = System.getSecurityManager();
@@ -92,38 +94,39 @@ public abstract class ProxySelector {
     }
 
     /**
-     * Gets applicable proxies based on the accessing protocol of
-     * <code>uri</code>. The format of URI is defined as below:
+     * Gets all applicable proxies based on the accessing protocol of {@code
+     * uri}. The format of URI is defined as below:
+     * <p>
      * <li>http URI stands for http connection.</li>
      * <li>https URI stands for https connection.</li>
      * <li>ftp URI stands for ftp connection.</li>
      * <li>socket:://ip:port URI stands for tcp client sockets connection.</li>
+     * </p>
      * 
      * @param uri
-     *            the destination <code>URI</code> object.
-     * @return a list contains all applicable proxies. If no proxy is available,
-     *         returns a list only contains one element
-     *         <code>Proxy.NO_PROXY</code>.
-     * @throws IllegalArgumentException
-     *             If any argument is null.
+     *            the target URI object.
+     * @return a list containing all applicable proxies. If no proxy is
+     *         available, the list contains only the {@code Proxy.NO_PROXY}
+     *         element.
+     * @since Android 1.0
      */
     public abstract List<Proxy> select(URI uri);
 
     /**
-     * If the connection can not be established to the proxy server, this method
-     * will be called. An implementation may adjust proxy the sequence of
-     * proxies returned by <code>select(String, String)</code>.
+     * Notifies the {@code ProxySelector} that a connection to the proxy server
+     * could not be established. A concrete implementation should upon this
+     * notification maintain the list of available proxies, since an updated
+     * version should be provided by {@code select()}.
      * 
      * @param uri
-     *            the <code>URI</code> that the connection fails to connect
-     *            to.
+     *            the URI to which the connection could not be established.
      * @param sa
-     *            <code>SocketAddress</code> of the proxy.
+     *            the address of the proxy.
      * @param ioe
-     *            The <code>IOException</code> which is thrown during
-     *            connection establishment.
-     * @throws IllegalArgumentException
-     *             If any argument is null.
+     *            the exception which was thrown during connection
+     *            establishment.
+     * @see #select(URI)
+     * @since Android 1.0
      */
     public abstract void connectFailed(URI uri, SocketAddress sa,
             IOException ioe);

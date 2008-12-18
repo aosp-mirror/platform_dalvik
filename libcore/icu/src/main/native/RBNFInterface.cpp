@@ -72,7 +72,7 @@ static jint openRBNFImpl1(JNIEnv* env, jclass clazz,
     } else if(type == 3) {
         style = URBNF_COUNT;
     } else {
-        printf("error");
+        icuError(env, U_ILLEGAL_ARGUMENT_ERROR);
     }
     
     Locale loc = Locale::createFromName(localeChars);

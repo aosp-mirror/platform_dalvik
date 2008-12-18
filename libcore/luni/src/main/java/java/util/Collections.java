@@ -25,9 +25,10 @@ import java.lang.reflect.Array;
 import org.apache.harmony.luni.internal.nls.Messages;
 
 /**
- * Collections contains static methods which operate on Collection classes.
+ * {@code Collections} contains static methods which operate on
+ * {@code Collection} classes.
  * 
- * @since 1.2
+ * @since Android 1.0
  */
 public class Collections {
 
@@ -168,12 +169,27 @@ public class Collections {
         }
     }
 
+    /**
+     * An empty immutable instance of {@link List}.
+     * 
+     * @since Android 1.0
+     */
     @SuppressWarnings("unchecked")
     public static final List EMPTY_LIST = new EmptyList();
 
+    /**
+     * An empty immutable instance of {@link Set}.
+     * 
+     * @since Android 1.0
+     */
     @SuppressWarnings("unchecked")
     public static final Set EMPTY_SET = new EmptySet();
 
+    /**
+     * An empty immutable instance of {@link Map}.
+     * 
+     * @since Android 1.0
+     */
     @SuppressWarnings("unchecked")
     public static final Map EMPTY_MAP = new EmptyMap();
 
@@ -1413,18 +1429,21 @@ public class Collections {
 
     /**
      * Performs a binary search for the specified element in the specified
-     * sorted List.
+     * sorted List. The List needs to be already sorted in natural sorting
+     * order. Searching in an unsorted array has an undefined result. It's also
+     * undefined which element is found if there are multiple occurrences of the
+     * same element.
      * 
      * @param list
-     *            the sorted List to search
+     *            the sorted List to search.
      * @param object
-     *            the element to find
+     *            the element to find.
      * @return the non-negative index of the element, or a negative index which
-     *         is the -index - 1 where the element would be inserted
-     * 
+     *         is the {@code -index - 1} where the element would be inserted
      * @throws ClassCastException
-     *             when an element in the List or the search element does not
-     *             implement Comparable, or cannot be compared to each other
+     *             if an element in the List or the search element does not
+     *             implement Comparable, or cannot be compared to each other.
+     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     public static <T> int binarySearch(
@@ -1467,21 +1486,24 @@ public class Collections {
 
     /**
      * Performs a binary search for the specified element in the specified
-     * sorted List using the specified Comparator.
+     * sorted List using the specified Comparator. The List needs to be already
+     * sorted according to the comparator passed. Searching in an unsorted array
+     * has an undefined result. It's also undefined which element is found if
+     * there are multiple occurrences of the same element.
      * 
      * @param list
-     *            the sorted List to search
+     *            the sorted List to search.
      * @param object
-     *            the element to find
+     *            the element to find.
      * @param comparator
-     *            the Comparator. If the comparator is <code>null</code> then
-     *            the search uses the objects' natural ordering.
+     *            the Comparator. If the comparator is {@code null} then the
+     *            search uses the objects' natural ordering.
      * @return the non-negative index of the element, or a negative index which
-     *         is the -index - 1 where the element would be inserted
-     * 
+     *         is the {@code -index - 1} where the element would be inserted.
      * @throws ClassCastException
      *             when an element in the list and the searched element cannot
-     *             be compared to each other using the Comparator
+     *             be compared to each other using the Comparator.
+     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     public static <T> int binarySearch(List<? extends T> list, T object,
@@ -1519,16 +1541,21 @@ public class Collections {
     }
 
     /**
-     * Copies the elements from the source list to the destination list.
+     * Copies the elements from the source list to the destination list. At the
+     * end both lists will have the same objects at the same index. If the
+     * destination array is larger than the source list, the elements in the
+     * destination list with {@code index >= source.size()} will be unchanged.
      * 
      * @param destination
+     *            the list whose elements are set from the source list.
      * @param source
-     * 
+     *            the list with the elements to be copied into the destination.
      * @throws IndexOutOfBoundsException
-     *             when the destination List is smaller than the source List
+     *             when the destination List is smaller than the source List.
      * @throws UnsupportedOperationException
      *             when replacing an element in the destination list is not
-     *             supported
+     *             supported.
+     * @since Android 1.0
      */
     public static <T> void copy(List<? super T> destination,
             List<? extends T> source) {
@@ -1548,11 +1575,12 @@ public class Collections {
     }
 
     /**
-     * Returns an Enumeration on the specified Collection.
+     * Returns an {@code Enumeration} on the specified collection.
      * 
      * @param collection
-     *            the Collection to enumerate
-     * @return an Enumeration
+     *            the collection to enumerate.
+     * @return an Enumeration.
+     * @since Android 1.0
      */
     public static <T> Enumeration<T> enumeration(Collection<T> collection) {
         final Collection<T> c = collection;
@@ -1573,12 +1601,12 @@ public class Collections {
      * Fills the specified List with the specified element.
      * 
      * @param list
-     *            the List to fill
+     *            the List to fill.
      * @param object
-     *            the fill element
-     * 
+     *            the element to fill the list with.
      * @throws UnsupportedOperationException
-     *             when replacing an element in the List is not supported
+     *             when replacing an element in the List is not supported.
+     * @since Android 1.0
      */
     public static <T> void fill(List<? super T> list, T object) {
         ListIterator<? super T> it = list.listIterator();
@@ -1592,12 +1620,13 @@ public class Collections {
      * Searches the specified Collection for the maximum element.
      * 
      * @param collection
-     *            the Collection to search
-     * @return the maximum element in the Collection
-     * 
+     *            the Collection to search.
+     * @return the maximum element in the Collection.
      * @throws ClassCastException
      *             when an element in the Collection does not implement
-     *             Comparable or elements cannot be compared to each other
+     *             {@code Comparable} or elements cannot be compared to each
+     *             other.
+     * @since Android 1.0
      */
     public static <T extends Object & Comparable<? super T>> T max(
             Collection<? extends T> collection) {
@@ -1617,14 +1646,14 @@ public class Collections {
      * specified Comparator.
      * 
      * @param collection
-     *            the Collection to search
+     *            the Collection to search.
      * @param comparator
-     *            the Comparator
-     * @return the maximum element in the Collection
-     * 
+     *            the Comparator.
+     * @return the maximum element in the Collection.
      * @throws ClassCastException
      *             when elements in the Collection cannot be compared to each
-     *             other using the Comparator
+     *             other using the {@code Comparator}.
+     * @since Android 1.0
      */
     public static <T> T max(Collection<? extends T> collection,
             Comparator<? super T> comparator) {
@@ -1643,12 +1672,13 @@ public class Collections {
      * Searches the specified Collection for the minimum element.
      * 
      * @param collection
-     *            the Collection to search
-     * @return the minimum element in the Collection
-     * 
+     *            the Collection to search.
+     * @return the minimum element in the Collection.
      * @throws ClassCastException
      *             when an element in the Collection does not implement
-     *             Comparable or elements cannot be compared to each other
+     *             {@code Comparable} or elements cannot be compared to each
+     *             other.
+     * @since Android 1.0
      */
     public static <T extends Object & Comparable<? super T>> T min(
             Collection<? extends T> collection) {
@@ -1668,14 +1698,14 @@ public class Collections {
      * specified Comparator.
      * 
      * @param collection
-     *            the Collection to search
+     *            the Collection to search.
      * @param comparator
-     *            the Comparator
-     * @return the minimum element in the Collection
-     * 
+     *            the Comparator.
+     * @return the minimum element in the Collection.
      * @throws ClassCastException
      *             when elements in the Collection cannot be compared to each
-     *             other using the Comparator
+     *             other using the {@code Comparator}.
+     * @since Android 1.0
      */
     public static <T> T min(Collection<? extends T> collection,
             Comparator<? super T> comparator) {
@@ -1692,30 +1722,30 @@ public class Collections {
 
     /**
      * Returns a List containing the specified number of the specified element.
-     * The list cannot be modified.
+     * The list cannot be modified. The list is serializable.
      * 
      * @param length
-     *            the size of the returned List
+     *            the size of the returned list.
      * @param object
-     *            the element
-     * @return a List containing <code>length</code> copies of the element
-     * 
+     *            the element to be added {@code length} times to a list.
+     * @return a List containing {@code length} copies of the element.
      * @throws IllegalArgumentException
-     *             when <code>length < 0</code>
+     *             when {@code length < 0}.
+     * @since Android 1.0
      */
     public static <T> List<T> nCopies(final int length, T object) {
         return new CopiesList<T>(length, object);
     }
 
     /**
-     * Returns the supplied <code>List</code> with the order of its contained
-     * elements reversed.
+     * Modifies the specified {@code List} by reversing the order of the
+     * elements.
      * 
      * @param list
-     *            the List to reverse
-     * 
+     *            the List to reverse.
      * @throws UnsupportedOperationException
-     *             when replacing an element in the List is not supported
+     *             when replacing an element in the List is not supported.
+     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     public static void reverse(List<?> list) {
@@ -1732,39 +1762,33 @@ public class Collections {
     }
 
     /**
-     * <p>
      * A Comparator which reverses the natural order of the elements. The
-     * <code>Comparator</code> that's returned is {@link Serializable}.
-     * </p>
+     * {@code Comparator} that's returned is {@link Serializable}.
      * 
-     * @return A <code>Comparator</code> instance.
-     * 
+     * @return a {@code Comparator} instance.
      * @see Comparator
      * @see Comparable
      * @see Serializable
+     * @since Android 1.0
      */
     public static <T> Comparator<T> reverseOrder() {
         return new ReverseComparator<T>();
     }
 
     /**
-     * <p>
      * Returns a {@link Comparator} that reverses the order of the
-     * <code>Comparator</code> passed. If the <code>Comparator</code> passed
-     * is <code>null</code>, then this method is equivalent to
-     * {@link #reverseOrder()}.
-     * </p>
-     * 
+     * {@code Comparator} passed. If the {@code Comparator} passed is
+     * {@code null}, then this method is equivalent to {@link #reverseOrder()}.
      * <p>
-     * The <code>Comparator</code> that's returned is {@link Serializable} if
-     * the <code>Comparator</code> passed is serializable or <code>null</code>.
+     * The {@code Comparator} that's returned is {@link Serializable} if the
+     * {@code Comparator} passed is serializable or {@code null}.
      * </p>
      * 
      * @param c
-     *            The <code>Comparator</code> to reverse or <code>null</code>.
-     * @return A <code>Comparator</code> instance.
+     *            the {@code Comparator} to reverse or {@code null}.
+     * @return a {@code Comparator} instance.
      * @see Comparator
-     * @since 1.5
+     * @since Android 1.0
      */
     public static <T> Comparator<T> reverseOrder(Comparator<T> c) {
         if (c == null) {
@@ -1777,10 +1801,11 @@ public class Collections {
      * Moves every element of the List to a random new position in the list.
      * 
      * @param list
-     *            the List to shuffle
+     *            the List to shuffle.
      * 
      * @throws UnsupportedOperationException
-     *             when replacing an element in the List is not supported
+     *             when replacing an element in the List is not supported.
+     * @since Android 1.0
      */
     public static void shuffle(List<?> list) {
         shuffle(list, new Random());
@@ -1791,12 +1816,13 @@ public class Collections {
      * using the specified random number generator.
      * 
      * @param list
-     *            the List to shuffle
+     *            the List to shuffle.
      * @param random
-     *            the random number generator
+     *            the random number generator.
      * 
      * @throws UnsupportedOperationException
-     *             when replacing an element in the List is not supported
+     *             when replacing an element in the List is not supported.
+     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     public static void shuffle(List<?> list, Random random) {
@@ -1833,11 +1859,12 @@ public class Collections {
 
     /**
      * Returns a Set containing the specified element. The set cannot be
-     * modified.
+     * modified. The set is serializable.
      * 
      * @param object
-     *            the element
-     * @return a Set containing the element
+     *            the element.
+     * @return a Set containing the element.
+     * @since Android 1.0
      */
     public static <E> Set<E> singleton(E object) {
         return new SingletonSet<E>(object);
@@ -1845,11 +1872,12 @@ public class Collections {
 
     /**
      * Returns a List containing the specified element. The list cannot be
-     * modified.
+     * modified. The list is serializable.
      * 
      * @param object
-     *            the element
-     * @return a List containing the element
+     *            the element.
+     * @return a List containing the element.
+     * @since Android 1.0
      */
     public static <E> List<E> singletonList(E object) {
         return new SingletonList<E>(object);
@@ -1857,27 +1885,29 @@ public class Collections {
 
     /**
      * Returns a Map containing the specified key and value. The map cannot be
-     * modified.
+     * modified. The map is serializable.
      * 
      * @param key
-     *            the key
+     *            the key.
      * @param value
-     *            the value
-     * @return a Map containing the key and value
+     *            the value.
+     * @return a Map containing the key and value.
+     * @since Android 1.0
      */
     public static <K, V> Map<K, V> singletonMap(K key, V value) {
         return new SingletonMap<K, V>(key, value);
     }
 
     /**
-     * Sorts the specified List in ascending order.
+     * Sorts the specified List in ascending natural order. The algorithm is
+     * stable which means equal elements don't get reordered.
      * 
      * @param list
-     *            the List to be sorted
-     * 
+     *            the List to be sorted.
      * @throws ClassCastException
      *             when an element in the List does not implement Comparable or
-     *             elements cannot be compared to each other
+     *             elements cannot be compared to each other.
+     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     public static <T extends Comparable<? super T>> void sort(List<T> list) {
@@ -1892,16 +1922,17 @@ public class Collections {
     }
 
     /**
-     * Sorts the specified List using the specified Comparator.
+     * Sorts the specified List using the specified Comparator. The algorithm is
+     * stable which means equal elements don't get reordered.
      * 
      * @param list
-     *            the List to be sorted
+     *            the List to be sorted.
      * @param comparator
-     *            the Comparator
-     * 
+     *            the Comparator.
      * @throws ClassCastException
      *             when elements in the List cannot be compared to each other
-     *             using the Comparator
+     *             using the Comparator.
+     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     public static <T> void sort(List<T> list, Comparator<? super T> comparator) {
@@ -1916,19 +1947,20 @@ public class Collections {
     }
 
     /**
-     * Swaps the elements of List <code>list</code> at indices
-     * <code>index1</code> and <code>index2</code>
+     * Swaps the elements of List {@code list} at indices {@code index1} and
+     * {@code index2}.
      * 
      * @param list
-     *            the List to manipulate on
+     *            the List to manipulate.
      * @param index1
-     *            int position of the first element to swap with the element in
-     *            index2
+     *            position of the first element to swap with the element in
+     *            index2.
      * @param index2
-     *            int position of the other element
+     *            position of the other element.
      * 
      * @throws IndexOutOfBoundsException
-     *             if index1 or index2 is out of range of this list
+     *             if index1 or index2 is out of range of this list.
+     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     public static void swap(List<?> list, int index1, int index2) {
@@ -1943,23 +1975,23 @@ public class Collections {
     }
 
     /**
-     * Replaces all occurrences of Object <code>obj</code> in
-     * <code>list</code> with <code>newObj</code>. If the <code>obj</code>
-     * is <code>null</code>, then all occurrences of <code>null</code> is
-     * replaced with <code>newObj</code>.
+     * Replaces all occurrences of Object {@code obj} in {@code list} with
+     * {@code newObj}. If the {@code obj} is {@code null}, then all
+     * occurrences of {@code null} are replaced with {@code newObj}.
      * 
      * @param list
-     *            the List to modify
+     *            the List to modify.
      * @param obj
      *            the Object to find and replace occurrences of.
      * @param obj2
-     *            the Object to replace all occurrences of <code>obj</code> in
-     *            <code>list</code>
-     * @return true, if at least one occurrence of <code>obj</code> has been
-     *         found in <code>list</code>
+     *            the Object to replace all occurrences of {@code obj} in
+     *            {@code list}.
+     * @return true, if at least one occurrence of {@code obj} has been found in
+     *         {@code list}.
      * 
      * @throws UnsupportedOperationException
-     *             if the list does not support setting elements
+     *             if the list does not support setting elements.
+     * @since Android 1.0
      */
     public static <T> boolean replaceAll(List<T> list, T obj, T obj2) {
         int index;
@@ -1973,17 +2005,19 @@ public class Collections {
     }
 
     /**
-     * Rotates the elements in List <code>list</code> by the distance
-     * <code>dist</code>
+     * Rotates the elements in List {@code list} by the distance {@code dist}
      * <p>
      * e.g. for a given list with elements [1, 2, 3, 4, 5, 6, 7, 8, 9, 0],
      * calling rotate(list, 3) or rotate(list, -7) would modify the list to look
      * like this: [8, 9, 0, 1, 2, 3, 4, 5, 6, 7]
+     * </p>
      * 
      * @param lst
+     *            the list whose elements are to be rotated.
      * @param dist
-     *            It can be any integer: 0, positive, negative, larger than the
-     *            list size
+     *            is the distance the list is rotated. This can be any valid
+     *            integer. Negative values rotate the list backwards.
+     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     public static void rotate(List<?> lst, int dist) {
@@ -2031,18 +2065,18 @@ public class Collections {
     }
 
     /**
-     * Searches the <code>list</code> for <code>sublist</code> and returns
-     * the beginning index of the first occurrence.
+     * Searches the {@code list} for {@code sublist} and returns the beginning
+     * index of the first occurrence.
      * <p>
-     * -1 is returned if the <code>sublist</code> does not exist in
-     * <code>list</code>
+     * -1 is returned if the {@code sublist} does not exist in {@code list}.
      * 
      * @param list
-     *            the List to search <code>sublist</code> in
+     *            the List to search {@code sublist} in.
      * @param sublist
-     *            the List to search in <code>list</code>
-     * @return the beginning index of the first occurrence of
-     *         <code>sublist</code> in <code>list</code>, or -1
+     *            the List to search in {@code list}.
+     * @return the beginning index of the first occurrence of {@code sublist} in
+     *         {@code list}, or -1.
+     * @since Android 1.0
      */
     public static int indexOfSubList(List<?> list, List<?> sublist) {
         int size = list.size();
@@ -2099,18 +2133,18 @@ public class Collections {
     }
 
     /**
-     * Searches the <code>list</code> for <code>sublist</code> and returns
-     * the beginning index of the last occurrence.
+     * Searches the {@code list} for {@code sublist} and returns the beginning
+     * index of the last occurrence.
      * <p>
-     * -1 is returned if the <code>sublist</code> does not exist in
-     * <code>list</code>
+     * -1 is returned if the {@code sublist} does not exist in {@code list}.
      * 
      * @param list
-     *            the List to search <code>sublist</code> in
+     *            the List to search {@code sublist} in.
      * @param sublist
-     *            the List to search in <code>list</code>
-     * @return the beginning index of the last occurrence of
-     *         <code>sublist</code> in <code>list</code>, or -1
+     *            the List to search in {@code list}.
+     * @return the beginning index of the last occurrence of {@code sublist} in
+     *         {@code list}, or -1.
+     * @since Android 1.0
      */
     public static int lastIndexOfSubList(List<?> list, List<?> sublist) {
         int sublistSize = sublist.size();
@@ -2164,13 +2198,14 @@ public class Collections {
     }
 
     /**
-     * Returns an ArrayList with all the elements in the
-     * <code>enumeration</code>. The elements in the returned ArrayList are
-     * in the same order as in the <code>enumeration</code>.
+     * Returns an {@code ArrayList} with all the elements in the
+     * {@code enumeration}. The elements in the returned ArrayList are in the
+     * same order as in the {@code enumeration}.
      * 
      * @param enumeration
-     *            Enumeration
-     * @return and ArrayList
+     *            the source {@link Enumeration}.
+     * @return an {@code ArrayList} from {@code enumeration}.
+     * @since Android 1.0
      */
     public static <T> ArrayList<T> list(Enumeration<T> enumeration) {
         ArrayList<T> list = new ArrayList<T>();
@@ -2185,8 +2220,9 @@ public class Collections {
      * access to the Collection.
      * 
      * @param collection
-     *            the Collection
-     * @return a synchronized Collection
+     *            the Collection to wrap in a synchronized collection.
+     * @return a synchronized Collection.
+     * @since Android 1.0
      */
     public static <T> Collection<T> synchronizedCollection(
             Collection<T> collection) {
@@ -2201,8 +2237,9 @@ public class Collections {
      * the List.
      * 
      * @param list
-     *            the List
-     * @return a synchronized List
+     *            the List to wrap in a synchronized list.
+     * @return a synchronized List.
+     * @since Android 1.0
      */
     public static <T> List<T> synchronizedList(List<T> list) {
         if (list == null) {
@@ -2219,8 +2256,9 @@ public class Collections {
      * the Map.
      * 
      * @param map
-     *            the Map
-     * @return a synchronized Map
+     *            the Map to wrap in a synchronized map.
+     * @return a synchronized Map.
+     * @since Android 1.0
      */
     public static <K, V> Map<K, V> synchronizedMap(Map<K, V> map) {
         if (map == null) {
@@ -2234,8 +2272,9 @@ public class Collections {
      * the Set.
      * 
      * @param set
-     *            the Set
-     * @return a synchronized Set
+     *            the Set to wrap in a synchronized set.
+     * @return a synchronized Set.
+     * @since Android 1.0
      */
     public static <E> Set<E> synchronizedSet(Set<E> set) {
         if (set == null) {
@@ -2249,8 +2288,9 @@ public class Collections {
      * access to the SortedMap.
      * 
      * @param map
-     *            the SortedMap
-     * @return a synchronized SortedMap
+     *            the SortedMap to wrap in a synchronized sorted map.
+     * @return a synchronized SortedMap.
+     * @since Android 1.0
      */
     public static <K, V> SortedMap<K, V> synchronizedSortedMap(
             SortedMap<K, V> map) {
@@ -2265,8 +2305,9 @@ public class Collections {
      * access to the SortedSet.
      * 
      * @param set
-     *            the SortedSet
-     * @return a synchronized SortedSet
+     *            the SortedSet to wrap in a synchronized sorted set.
+     * @return a synchronized SortedSet.
+     * @since Android 1.0
      */
     public static <E> SortedSet<E> synchronizedSortedSet(SortedSet<E> set) {
         if (set == null) {
@@ -2277,12 +2318,13 @@ public class Collections {
 
     /**
      * Returns a wrapper on the specified Collection which throws an
-     * <code>UnsupportedOperationException</code> whenever an attempt is made
-     * to modify the Collection.
+     * {@code UnsupportedOperationException} whenever an attempt is made to
+     * modify the Collection.
      * 
      * @param collection
-     *            the Collection
-     * @return an unmodifiable Collection
+     *            the Collection to wrap in an unmodifiable collection.
+     * @return an unmodifiable Collection.
+     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     public static <E> Collection<E> unmodifiableCollection(
@@ -2295,12 +2337,13 @@ public class Collections {
 
     /**
      * Returns a wrapper on the specified List which throws an
-     * <code>UnsupportedOperationException</code> whenever an attempt is made
-     * to modify the List.
+     * {@code UnsupportedOperationException} whenever an attempt is made to
+     * modify the List.
      * 
      * @param list
-     *            the List
-     * @return an unmodifiable List
+     *            the List to wrap in an unmodifiable list.
+     * @return an unmodifiable List.
+     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     public static <E> List<E> unmodifiableList(List<? extends E> list) {
@@ -2315,12 +2358,13 @@ public class Collections {
 
     /**
      * Returns a wrapper on the specified Map which throws an
-     * <code>UnsupportedOperationException</code> whenever an attempt is made
-     * to modify the Map.
+     * {@code UnsupportedOperationException} whenever an attempt is made to
+     * modify the Map.
      * 
      * @param map
-     *            the Map
-     * @return a unmodifiable Map
+     *            the Map to wrap in an unmodifiable map.
+     * @return a unmodifiable Map.
+     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     public static <K, V> Map<K, V> unmodifiableMap(
@@ -2333,12 +2377,13 @@ public class Collections {
 
     /**
      * Returns a wrapper on the specified Set which throws an
-     * <code>UnsupportedOperationException</code> whenever an attempt is made
-     * to modify the Set.
+     * {@code UnsupportedOperationException} whenever an attempt is made to
+     * modify the Set.
      * 
      * @param set
-     *            the Set
-     * @return a unmodifiable Set
+     *            the Set to wrap in an unmodifiable set.
+     * @return a unmodifiable Set.
+     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     public static <E> Set<E> unmodifiableSet(Set<? extends E> set) {
@@ -2350,12 +2395,13 @@ public class Collections {
 
     /**
      * Returns a wrapper on the specified SortedMap which throws an
-     * <code>UnsupportedOperationException</code> whenever an attempt is made
-     * to modify the SortedMap.
+     * {@code UnsupportedOperationException} whenever an attempt is made to
+     * modify the SortedMap.
      * 
      * @param map
-     *            the SortedMap
-     * @return a unmodifiable SortedMap
+     *            the SortedMap to wrap in an unmodifiable sorted map.
+     * @return a unmodifiable SortedMap.
+     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     public static <K, V> SortedMap<K, V> unmodifiableSortedMap(
@@ -2368,12 +2414,13 @@ public class Collections {
 
     /**
      * Returns a wrapper on the specified SortedSet which throws an
-     * <code>UnsupportedOperationException</code> whenever an attempt is made
-     * to modify the SortedSet.
+     * {@code UnsupportedOperationException} whenever an attempt is made to
+     * modify the SortedSet.
      * 
      * @param set
-     *            the SortedSet
-     * @return a unmodifiable SortedSet
+     *            the SortedSet to wrap in an unmodifiable sorted set.
+     * @return a unmodifiable SortedSet.
+     * @since Android 1.0
      */
     public static <E> SortedSet<E> unmodifiableSortedSet(SortedSet<E> set) {
         if (set == null) {
@@ -2383,23 +2430,19 @@ public class Collections {
     }
 
     /**
-     * <p>
-     * Returns the number of elements in the <code>Collection</code> that
-     * match the <code>Object</code> passed. If the <code>Object</code> is
-     * <code>null</code>, then the number of <code>null</code> elements is
-     * returned.
+     * Returns the number of elements in the {@code Collection} that match the
+     * {@code Object} passed. If the {@code Object} is {@code null}, then the
+     * number of {@code null} elements is returned.
      * </p>
      * 
      * @param c
-     *            The <code>Collection</code> to search.
+     *            the {@code Collection} to search.
      * @param o
-     *            The <code>Object</code> to search for.
-     * @return The number of matching elements.
+     *            the {@code Object} to search for.
+     * @return the number of matching elements.
      * @throws NullPointerException
-     *             if the <code>Collection</code> parameter is
-     *             <code>null</code>.
-     * 
-     * @since 1.5
+     *             if the {@code Collection} parameter is {@code null}.
+     * @since Android 1.0
      */
     public static int frequency(Collection<?> c, Object o) {
         if (c == null) {
@@ -2422,9 +2465,9 @@ public class Collections {
     /**
      * Returns a type-safe empty, immutable {@link List}.
      * 
-     * @return An empty {@link List}.
-     * @since 1.5
+     * @return an empty {@link List}.
      * @see #EMPTY_LIST
+     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     public static final <T> List<T> emptyList() {
@@ -2434,9 +2477,9 @@ public class Collections {
     /**
      * Returns a type-safe empty, immutable {@link Set}.
      * 
-     * @return An empty {@link Set}.
-     * @since 1.5
+     * @return an empty {@link Set}.
      * @see #EMPTY_SET
+     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     public static final <T> Set<T> emptySet() {
@@ -2446,9 +2489,9 @@ public class Collections {
     /**
      * Returns a type-safe empty, immutable {@link Map}.
      * 
-     * @return An empty {@link Map}.
-     * @since 1.5
+     * @return an empty {@link Map}.
      * @see #EMPTY_MAP
+     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     public static final <K, V> Map<K, V> emptyMap() {
@@ -2456,14 +2499,17 @@ public class Collections {
     }
 
     /**
-     * Returns a dynamically typesafe view of the specified collection.
+     * Returns a dynamically typesafe view of the specified collection. Trying
+     * to insert an element of the wrong type into this collection throws a
+     * {@code ClassCastException}. At creation time the types in {@code c} are
+     * not checked for correct type.
      * 
      * @param c
-     *            the collection
+     *            the collection to be wrapped in a typesafe collection.
      * @param type
-     *            the type of the elements permitted to insert
-     * 
-     * @return a typesafe collection
+     *            the type of the elements permitted to insert.
+     * @return a typesafe collection.
+     * @since Android 1.0
      */
     public static <E> Collection<E> checkedCollection(Collection<E> c,
             Class<E> type) {
@@ -2471,16 +2517,19 @@ public class Collections {
     }
 
     /**
-     * Returns a dynamically typesafe view of the specified map.
+     * Returns a dynamically typesafe view of the specified map. Trying to
+     * insert an element of the wrong type into this map throws a
+     * {@code ClassCastException}. At creation time the types in {@code m} are
+     * not checked for correct type.
      * 
      * @param m
-     *            the map
+     *            the map to be wrapped in a typesafe map.
      * @param keyType
-     *            the type of the keys permitted to insert
+     *            the type of the keys permitted to insert.
      * @param valueType
-     *            the type of the values permitted to insert
-     * 
-     * @return a typesafe map
+     *            the type of the values permitted to insert.
+     * @return a typesafe map.
+     * @since Android 1.0
      */
     public static <K, V> Map<K, V> checkedMap(Map<K, V> m, Class<K> keyType,
             Class<V> valueType) {
@@ -2488,14 +2537,17 @@ public class Collections {
     }
 
     /**
-     * Returns a dynamically typesafe view of the specified list.
+     * Returns a dynamically typesafe view of the specified list. Trying to
+     * insert an element of the wrong type into this list throws a
+     * {@code ClassCastException}. At creation time the types in {@code list}
+     * are not checked for correct type.
      * 
      * @param list
-     *            the list
+     *            the list to be wrapped in a typesafe list.
      * @param type
-     *            the type of the elements permitted to insert
-     * 
-     * @return a typesafe list
+     *            the type of the elements permitted to insert.
+     * @return a typesafe list.
+     * @since Android 1.0
      */
     public static <E> List<E> checkedList(List<E> list, Class<E> type) {
         if (list instanceof RandomAccess) {
@@ -2505,30 +2557,36 @@ public class Collections {
     }
 
     /**
-     * Returns a dynamically typesafe view of the specified set.
+     * Returns a dynamically typesafe view of the specified set. Trying to
+     * insert an element of the wrong type into this set throws a
+     * {@code ClassCastException}. At creation time the types in {@code s} are
+     * not checked for correct type.
      * 
      * @param s
-     *            the set
+     *            the set to be wrapped in a typesafe set.
      * @param type
-     *            the type of the elements permitted to insert
-     * 
-     * @return a typesafe set
+     *            the type of the elements permitted to insert.
+     * @return a typesafe set.
+     * @since Android 1.0
      */
     public static <E> Set<E> checkedSet(Set<E> s, Class<E> type) {
         return new CheckedSet<E>(s, type);
     }
 
     /**
-     * Returns a dynamically typesafe view of the specified sorted map.
+     * Returns a dynamically typesafe view of the specified sorted map. Trying
+     * to insert an element of the wrong type into this sorted map throws a
+     * {@code ClassCastException}. At creation time the types in {@code m} are
+     * not checked for correct type.
      * 
      * @param m
-     *            the sorted map
+     *            the sorted map to be wrapped in a typesafe sorted map.
      * @param keyType
-     *            the type of the keys permitted to insert
+     *            the type of the keys permitted to insert.
      * @param valueType
-     *            the type of the values permitted to insert
-     * 
-     * @return a typesafe sorted map
+     *            the type of the values permitted to insert.
+     * @return a typesafe sorted map.
+     * @since Android 1.0
      */
     public static <K, V> SortedMap<K, V> checkedSortedMap(SortedMap<K, V> m,
             Class<K> keyType, Class<V> valueType) {
@@ -2536,14 +2594,17 @@ public class Collections {
     }
 
     /**
-     * Returns a dynamically typesafe view of the specified sorted set.
+     * Returns a dynamically typesafe view of the specified sorted set. Trying
+     * to insert an element of the wrong type into this sorted set throws a
+     * {@code ClassCastException}. At creation time the types in {@code s} are
+     * not checked for correct type.
      * 
      * @param s
-     *            the sorted set
+     *            the sorted set to be wrapped in a typesafe sorted set.
      * @param type
-     *            the type of the elements permitted to insert
-     * 
-     * @return a typesafe sorted set
+     *            the type of the elements permitted to insert.
+     * @return a typesafe sorted set.
+     * @since Android 1.0
      */
     public static <E> SortedSet<E> checkedSortedSet(SortedSet<E> s,
             Class<E> type) {
@@ -2551,20 +2612,23 @@ public class Collections {
     }
 
     /**
-     * Adds all the specified elements to the specified collection
+     * Adds all the specified elements to the specified collection.
      * 
      * @param c
-     *            the collection the elements are to be inserted into
+     *            the collection the elements are to be inserted into.
      * @param a
-     *            the elements to insert
-     * 
-     * @return true if the collection changed during insertion
-     * 
+     *            the elements to insert.
+     * @return true if the collection changed during insertion.
      * @throws UnsupportedOperationException
-     *             when the method is not supported
+     *             when the method is not supported.
      * @throws NullPointerException
-     *             when c or elements is null, or elements contains one or more
-     *             null elements and c doesn't support null elements
+     *             when {@code c} or {@code a} is {@code null}, or {@code a}
+     *             contains one or more {@code null} elements and {@code c}
+     *             doesn't support {@code null} elements.
+     * @throws IllegalArgumentException
+     *             if at least one of the elements can't be inserted into the
+     *             collection.
+     * @since Android 1.0
      */
     public static <T> boolean addAll(Collection<? super T> c, T... a) {
         boolean modified = false;
@@ -2575,17 +2639,17 @@ public class Collections {
     }
 
     /**
-     * Returns true if the collections have no elements in common
+     * Returns whether the specified collections have no elements in common.
      * 
      * @param c1
-     *            the first collection
+     *            the first collection.
      * @param c2
-     *            the second collection
-     * 
-     * @return true if the collections have no elements in common
-     * 
+     *            the second collection.
+     * @return {@code true} if the collections have no elements in common,
+     *         {@code false} otherwise.
      * @throws NullPointerException
-     *             if one of the collections is null
+     *             if one of the collections is {@code null}.
+     * @since Android 1.0
      */
     public static boolean disjoint(Collection<?> c1, Collection<?> c2) {
         if ((c1 instanceof Set) && !(c2 instanceof Set)

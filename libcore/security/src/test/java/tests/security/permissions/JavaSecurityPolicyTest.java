@@ -16,17 +16,22 @@
 
 package tests.security.permissions;
 
-import java.security.Permission;
-import java.security.Policy;
-import java.security.SecurityPermission;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
 
+import java.security.Permission;
+import java.security.Policy;
+import java.security.SecurityPermission;
 /*
  * This class tests the secrity permissions which are documented in
  * http://java.sun.com/j2se/1.5.0/docs/guide/security/permissions.html#PermsAndMethods
  * for class java.security.Policy
  */
+@TestTargetClass(SecurityManager.class)
 public class JavaSecurityPolicyTest extends TestCase {
     
     SecurityManager old;
@@ -42,7 +47,16 @@ public class JavaSecurityPolicyTest extends TestCase {
         System.setSecurityManager(old);
         super.tearDown();
     }
-    
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies that java.security.Policy.getPolicy() method calls " +
+            "checkPermission of security permissions.",
+      targets = {
+        @TestTarget(
+          methodName = "checkPermission",
+          methodArgs = {java.security.Permission.class}
+        )
+    })
     public void test_getPolicy() {
         class TestSecurityManager extends SecurityManager {
             boolean called = false;
@@ -65,7 +79,16 @@ public class JavaSecurityPolicyTest extends TestCase {
         Policy.getPolicy();
         assertTrue("java.security.Policy.getPolicy() must call checkPermission on security permissions", s.called);
     }
-    
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies that java.security.Policy.setPolicy() method calls " +
+            "checkPermission on security permissions.",
+      targets = {
+        @TestTarget(
+          methodName = "checkPermission",
+          methodArgs = {java.security.Permission.class}
+        )
+    })
     public void test_setPolicy() {
         class TestSecurityManager extends SecurityManager {
             boolean called = false;

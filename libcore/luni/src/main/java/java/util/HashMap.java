@@ -23,8 +23,10 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
 /**
- * HashMap is an implementation of Map. All optional operations are supported,
- * adding and removing. Keys and values can be any objects.
+ * HashMap is an implementation of Map. All optional operations (adding and
+ * removing) are supported. Keys and values can be any objects.
+ * 
+ * @since Android 1.0
  */
 public class HashMap<K, V> extends AbstractMap<K, V> implements Map<K, V>,
         Cloneable, Serializable {
@@ -93,7 +95,6 @@ public class HashMap<K, V> extends AbstractMap<K, V> implements Map<K, V>,
             if (entry != null) {
                 return true;
             }
-
             // BEGIN android-changed
             Entry<KT, VT>[] elementData = associatedMap.elementData;
             int length = elementData.length;
@@ -227,33 +228,28 @@ public class HashMap<K, V> extends AbstractMap<K, V> implements Map<K, V>,
         }
     }
 
-    /**
-     * Create a new element array
-     *
-     * @param s
-     * @return Reference to the element array
-     */
     @SuppressWarnings("unchecked")
     Entry<K, V>[] newElementArray(int s) {
         return new Entry[s];
     }
 
     /**
-     * Constructs a new empty instance of HashMap.
-     *
+     * Constructs a new empty {@code HashMap} instance.
+     * 
+     * @since Android 1.0
      */
     public HashMap() {
         this(DEFAULT_SIZE);
     }
 
     /**
-     * Constructs a new instance of HashMap with the specified capacity.
-     *
+     * Constructs a new {@code HashMap} instance with the specified capacity.
+     * 
      * @param capacity
-     *            the initial capacity of this HashMap
-     *
-     * @exception IllegalArgumentException
-     *                when the capacity is less than zero
+     *            the initial capacity of this hash map.
+     * @throws IllegalArgumentException
+     *                when the capacity is less than zero.
+     * @since Android 1.0
      */
     public HashMap(int capacity) {
         if (capacity >= 0) {
@@ -267,18 +263,17 @@ public class HashMap<K, V> extends AbstractMap<K, V> implements Map<K, V>,
     }
 
     /**
-     * Constructs a new instance of HashMap with the specified capacity and load
-     * factor.
-     *
-     *
+     * Constructs a new {@code HashMap} instance with the specified capacity and
+     * load factor.
+     * 
      * @param capacity
-     *            the initial capacity
+     *            the initial capacity of this hash map.
      * @param loadFactor
-     *            the initial load factor
-     *
-     * @exception IllegalArgumentException
+     *            the initial load factor.
+     * @throws IllegalArgumentException
      *                when the capacity is less than zero or the load factor is
-     *                less or equal to zero
+     *                less or equal to zero.
+     * @since Android 1.0
      */
     public HashMap(int capacity, float loadFactor) {
         if (capacity >= 0 && loadFactor > 0) {
@@ -292,11 +287,12 @@ public class HashMap<K, V> extends AbstractMap<K, V> implements Map<K, V>,
     }
 
     /**
-     * Constructs a new instance of HashMap containing the mappings from the
-     * specified Map.
-     *
+     * Constructs a new {@code HashMap} instance containing the mappings from
+     * the specified map.
+     * 
      * @param map
-     *            the mappings to add
+     *            the mappings to add.
+     * @since Android 1.0
      */
     public HashMap(Map<? extends K, ? extends V> map) {
         this(map.size() < 6 ? 11 : map.size() * 2);
@@ -304,10 +300,11 @@ public class HashMap<K, V> extends AbstractMap<K, V> implements Map<K, V>,
     }
 
     /**
-     * Removes all mappings from this HashMap, leaving it empty.
-     *
+     * Removes all mappings from this hash map, leaving it empty.
+     * 
      * @see #isEmpty
      * @see #size
+     * @since Android 1.0
      */
     @Override
     public void clear() {
@@ -319,16 +316,16 @@ public class HashMap<K, V> extends AbstractMap<K, V> implements Map<K, V>,
     }
 
     /**
-     * Returns a new HashMap with the same mappings and size as this HashMap.
-     *
-     * @return a shallow copy of this HashMap
-     *
-     * @see java.lang.Cloneable
+     * Returns a shallow copy of this map.
+     * 
+     * @return a shallow copy of this map.
+     * @since Android 1.0
      */
     @Override
     @SuppressWarnings("unchecked")
     public Object clone() {
         try {
+            // BEGIN android-changed
             HashMap<K, V> map = (HashMap<K, V>) super.clone();
             map.elementCount = 0;
             map.elementData = newElementArray(elementData.length);
@@ -341,6 +338,7 @@ public class HashMap<K, V> extends AbstractMap<K, V> implements Map<K, V>,
                         map.putImpl(entry.getKey(), entry.getValue());
                     }
                 }
+            // END android-changed
             }
             return map;
         } catch (CloneNotSupportedException e) {
@@ -353,12 +351,13 @@ public class HashMap<K, V> extends AbstractMap<K, V> implements Map<K, V>,
     }
 
     /**
-     * Searches this HashMap for the specified key.
-     *
+     * Returns whether this map contains the specified key.
+     * 
      * @param key
-     *            the object to search for
-     * @return true if <code>key</code> is a key of this HashMap, false
-     *         otherwise
+     *            the key to search for.
+     * @return {@code true} if this map contains the specified key,
+     *         {@code false} otherwise.
+     * @since Android 1.0
      */
     @Override
     public boolean containsKey(Object key) {
@@ -374,12 +373,13 @@ public class HashMap<K, V> extends AbstractMap<K, V> implements Map<K, V>,
     }
 
     /**
-     * Searches this HashMap for the specified value.
-     *
+     * Returns whether this map contains the specified value.
+     * 
      * @param value
-     *            the object to search for
-     * @return true if <code>value</code> is a value of this HashMap, false
-     *         otherwise
+     *            the value to search for.
+     * @return {@code true} if this map contains the specified value,
+     *         {@code false} otherwise.
+     * @since Android 1.0
      */
     @Override
     public boolean containsValue(Object value) {
@@ -408,11 +408,12 @@ public class HashMap<K, V> extends AbstractMap<K, V> implements Map<K, V>,
     }
 
     /**
-     * Returns a Set of the mappings contained in this HashMap. Each element in
-     * the set is a Map.Entry. The set is backed by this HashMap so changes to
-     * one are reflected by the other. The set does not support adding.
-     *
-     * @return a Set of the mappings
+     * Returns a set containing all of the mappings in this map. Each mapping is
+     * an instance of {@link Map.Entry}. As the set is backed by this map,
+     * changes in one will be reflected in the other.
+     * 
+     * @return a set of the mappings.
+     * @since Android 1.0
      */
     @Override
     public Set<Map.Entry<K, V>> entrySet() {
@@ -420,12 +421,13 @@ public class HashMap<K, V> extends AbstractMap<K, V> implements Map<K, V>,
     }
 
     /**
-     * Returns the value of the mapping with the specified key. If no entry is
-     * found null is returned.
-     *
-     * @param key the key
-     * @return the value of the mapping with the specified key, or null if the
-     *         entry doesn't exist.
+     * Returns the value of the mapping with the specified key.
+     * 
+     * @param key
+     *            the key.
+     * @return the value of the mapping with the specified key, or {@code null}
+     *         if no mapping for the specified key is found.
+     * @since Android 1.0
      */
     @Override
     public V get(Object key) {
@@ -446,9 +448,6 @@ public class HashMap<K, V> extends AbstractMap<K, V> implements Map<K, V>,
     final Entry<K,V> findNonNullKeyEntry(Object key, int index, int keyHash) {
         Entry<K,V> m = elementData[index];
         // BEGIN android-changed
-//        while (m != null && (m.origKeyHash != keyHash || !key.equals(m.key))) {
-//            m = m.next;
-//        }
         while (m != null) {
             if (m.origKeyHash == keyHash) {
                 if (key instanceof String) {
@@ -476,11 +475,12 @@ public class HashMap<K, V> extends AbstractMap<K, V> implements Map<K, V>,
     }
 
     /**
-     * Returns if this HashMap has no elements, a size of zero.
-     *
-     * @return true if this HashMap has no elements, false otherwise
-     *
-     * @see #size
+     * Returns whether this map is empty.
+     * 
+     * @return {@code true} if this map has no elements, {@code false}
+     *         otherwise.
+     * @see #size()
+     * @since Android 1.0
      */
     @Override
     public boolean isEmpty() {
@@ -488,11 +488,12 @@ public class HashMap<K, V> extends AbstractMap<K, V> implements Map<K, V>,
     }
 
     /**
-     * Returns a Set of the keys contained in this HashMap. The set is backed by
-     * this HashMap so changes to one are reflected by the other. The set does
-     * not support adding.
-     *
-     * @return a Set of the keys
+     * Returns a set of the keys contained in this map. The set is backed by
+     * this map so changes to one are reflected by the other. The set does not
+     * support adding.
+     * 
+     * @return a set of the keys.
+     * @since Android 1.0
      */
     @Override
     public Set<K> keySet() {
@@ -535,20 +536,21 @@ public class HashMap<K, V> extends AbstractMap<K, V> implements Map<K, V>,
 
     /**
      * Maps the specified key to the specified value.
-     *
+     * 
      * @param key
-     *            the key
+     *            the key.
      * @param value
-     *            the value
-     * @return the value of any previous mapping with the specified key or null
-     *         if there was no mapping
+     *            the value.
+     * @return the value of any previous mapping with the specified key or
+     *         {@code null} if there was no such mapping.
+     * @since Android 1.0
      */
     @Override
     public V put(K key, V value) {
         return putImpl(key, value);
     }
 
-    V putImpl(K key, V value) {
+    private V putImpl(K key, V value) {
         Entry<K,V> entry;
         if(key == null) {
             entry = findNullKeyEntry();
@@ -593,14 +595,13 @@ public class HashMap<K, V> extends AbstractMap<K, V> implements Map<K, V>,
     }
 
     /**
-     * Copies all the mappings in the given map to this map. These mappings will
-     * replace all mappings that this map had for any of the keys currently in
-     * the given map.
-     *
+     * Copies all the mappings in the specified map to this map. These mappings
+     * will replace all mappings that this map had for any of the keys currently
+     * in the given map.
+     * 
      * @param map
-     *            the Map to copy mappings from
-     * @throws NullPointerException
-     *             if the given map is null
+     *            the map to copy mappings from.
+     * @since Android 1.0
      */
     @Override
     public void putAll(Map<? extends K, ? extends V> map) {
@@ -642,12 +643,13 @@ public class HashMap<K, V> extends AbstractMap<K, V> implements Map<K, V>,
     }
 
     /**
-     * Removes a mapping with the specified key from this HashMap.
-     *
+     * Removes the mapping with the specified key from this map.
+     * 
      * @param key
-     *            the key of the mapping to remove
-     * @return the value of the removed mapping or null if key is not a key in
-     *         this HashMap
+     *            the key of the mapping to remove.
+     * @return the value of the removed mapping or {@code null} if no mapping
+     *         for the specified key was found.
+     * @since Android 1.0
      */
     @Override
     public V remove(Object key) {
@@ -691,9 +693,10 @@ public class HashMap<K, V> extends AbstractMap<K, V> implements Map<K, V>,
     }
 
     /**
-     * Returns the number of mappings in this HashMap.
-     *
-     * @return the number of mappings in this HashMap
+     * Returns the number of elements in this map.
+     * 
+     * @return the number of elements in this map.
+     * @since Android 1.0
      */
     @Override
     public int size() {
@@ -701,11 +704,26 @@ public class HashMap<K, V> extends AbstractMap<K, V> implements Map<K, V>,
     }
 
     /**
-     * Returns a Collection of the values contained in this HashMap. The
-     * collection is backed by this HashMap so changes to one are reflected by
-     * the other. The collection does not support adding.
-     *
-     * @return a Collection of the values
+     * Returns a collection of the values contained in this map. The collection
+     * is backed by this map so changes to one are reflected by the other. The
+     * collection supports remove, removeAll, retainAll and clear operations,
+     * and it does not support add or addAll operations.
+     * <p>
+     * This method returns a collection which is the subclass of
+     * AbstractCollection. The iterator method of this subclass returns a
+     * "wrapper object" over the iterator of map's entrySet(). The {@code size}
+     * method wraps the map's size method and the {@code contains} method wraps
+     * the map's containsValue method.
+     * </p>
+     * <p>
+     * The collection is created when this method is called for the first time
+     * and returned in response to all subsequent calls. This method may return
+     * different collections when multiple concurrent calls occur, since no
+     * synchronization is performed.
+     * </p>
+     * 
+     * @return a collection of the values contained in this map.
+     * @since Android 1.0
      */
     @Override
     public Collection<V> values() {

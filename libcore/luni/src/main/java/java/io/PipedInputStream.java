@@ -20,11 +20,13 @@ package java.io;
 import org.apache.harmony.luni.util.Msg;
 
 /**
- * PipedInputStream is a class which receives information on a communications
- * pipe. When two threads want to pass data back and forth, one creates a piped
- * output stream and the other creates a piped input stream.
+ * Receives information from a communications pipe. When two threads want to
+ * pass data back and forth, one creates a piped output stream and the other one
+ * creates a piped input stream.
  * 
  * @see PipedOutputStream
+ * 
+ * @since Android 1.0
  */
 public class PipedInputStream extends InputStream {
 
@@ -34,62 +36,72 @@ public class PipedInputStream extends InputStream {
 
     /**
      * The circular buffer through which data is passed.
+     * 
+     * @since Android 1.0
      */
     protected byte buffer[];
 
     /**
-     * The index in <code>buffer</code> where the next byte will be written.
+     * The index in {@code buffer} where the next byte will be written.
+     * 
+     * @since Android 1.0
      */
     protected int in = -1;
 
     /**
-     * The index in <code>buffer</code> where the next byte will be read.
+     * The index in {@code buffer} where the next byte will be read.
+     * 
+     * @since Android 1.0
      */
     protected int out = 0;
 
     /**
-     * The size of the default pipe in bytes
+     * The size of the default pipe in bytes.
+     * 
+     * @since Android 1.0
      */
     protected static final int PIPE_SIZE = 1024;
 
     /**
-     * Indicates if this pipe is connected
+     * Indicates if this pipe is connected.
      */
     boolean isConnected = false;
 
     /**
-     * Constructs a new unconnected PipedInputStream. The resulting Stream must
-     * be connected to a PipedOutputStream before data may be read from it.
+     * Constructs a new unconnected {@code PipedInputStream}. The resulting
+     * stream must be connected to a {@link PipedOutputStream} before data may
+     * be read from it.
      * 
+     * @since Android 1.0
      */
     public PipedInputStream() {
         /* empty */
     }
 
     /**
-     * Constructs a new PipedInputStream connected to the PipedOutputStream
-     * <code>out</code>. Any data written to the output stream can be read
-     * from the this input stream.
+     * Constructs a new {@code PipedInputStream} connected to the
+     * {@link PipedOutputStream} {@code out}. Any data written to the output
+     * stream can be read from the this input stream.
      * 
      * @param out
-     *            the PipedOutputStream to connect to.
-     * 
+     *            the piped output stream to connect to.
      * @throws IOException
-     *             if this or <code>out</code> are already connected.
+     *             if this stream or {@code out} are already connected.
+     * @since Android 1.0
      */
     public PipedInputStream(PipedOutputStream out) throws IOException {
         connect(out);
     }
 
     /**
-     * Returns a int representing the number of bytes that are available before
-     * this PipedInputStream will block. This method returns the number of bytes
-     * written to the pipe but not read yet up to the size of the pipe.
+     * Returns the number of bytes that are available before this stream will
+     * block. This implementation returns the number of bytes written to this
+     * pipe that have not been read yet.
      * 
-     * @return int the number of bytes available before blocking.
-     * 
+     * @return the number of bytes available before blocking.
      * @throws IOException
-     *             If an error occurs in this stream.
+     *             if an error occurs in this stream.
+     * @since Android 1.0
      */
     @Override
     public synchronized int available() throws IOException {
@@ -100,11 +112,12 @@ public class PipedInputStream extends InputStream {
     }
 
     /**
-     * Close this PipedInputStream. This implementation releases the buffer used
-     * for the pipe and notifies all threads waiting to read or write.
+     * Closes this stream. This implementation releases the buffer used for the
+     * pipe and notifies all threads waiting to read or write.
      * 
      * @throws IOException
-     *             If an error occurs attempting to close this stream.
+     *             if an error occurs while closing this stream.
+     * @since Android 1.0
      */
     @Override
     public void close() throws IOException {
@@ -118,33 +131,39 @@ public class PipedInputStream extends InputStream {
     }
 
     /**
-     * Connects this PipedInputStream to a PipedOutputStream. Any data written
-     * to the OutputStream becomes readable in this InputStream.
+     * Connects this {@code PipedInputStream} to a {@link PipedOutputStream}.
+     * Any data written to the output stream becomes readable in this input
+     * stream.
      * 
      * @param src
-     *            the source PipedOutputStream.
-     * 
+     *            the source output stream.
      * @throws IOException
-     *             If either stream is already connected.
+     *             if either stream is already connected.
+     * @since Android 1.0
      */
     public void connect(PipedOutputStream src) throws IOException {
         src.connect(this);
     }
 
     /**
-     * Reads a single byte from this PipedInputStream and returns the result as
-     * an int. The low-order byte is returned or -1 of the end of stream was
-     * encountered. If there is no data in the pipe, this method blocks until
-     * there is data available. Separate threads should be used for the reader
-     * of the PipedInputStream and the PipedOutputStream. There may be
-     * undesirable results if more than one Thread interacts a input or output
-     * pipe.
+     * Reads a single byte from this stream and returns it as an integer in the
+     * range from 0 to 255. Returns -1 if the end of this stream has been
+     * reached. If there is no data in the pipe, this method blocks until data
+     * is available, the end of the stream is detected or an exception is
+     * thrown.
+     * <p>
+     * Separate threads should be used to read from a {@code PipedInputStream}
+     * and to write to the connected {@link PipedOutputStream}. If the same
+     * thread is used, a deadlock may occur.
+     * </p>
      * 
-     * @return int The byte read or -1 if end of stream.
-     * 
+     * @return the byte read or -1 if the end of the source stream has been
+     *         reached.
      * @throws IOException
-     *             If the stream is already closed or another IOException
-     *             occurs.
+     *             if this stream is closed or not connected to an output
+     *             stream, or if the thread writing to the connected output
+     *             stream is no longer alive.
+     * @since Android 1.0
      */
     @Override
     public synchronized int read() throws IOException {
@@ -192,37 +211,53 @@ public class PipedInputStream extends InputStream {
     }
 
     /**
-     * Reads at most <code>count</code> bytes from this PipedInputStream and
-     * stores them in byte array <code>buffer</code> starting at
-     * <code>offset</code>. Answer the number of bytes actually read or -1 if
-     * no bytes were read and end of stream was encountered. Separate threads
-     * should be used for the reader of the PipedInputStream and the
-     * PipedOutputStream. There may be undesirable results if more than one
-     * Thread interacts a input or output pipe.
+     * Reads at most {@code count} bytes from this stream and stores them in the
+     * byte array {@code bytes} starting at {@code offset}. Blocks until at
+     * least one byte has been read, the end of the stream is detected or an
+     * exception is thrown.
+     * <p>
+     * Separate threads should be used to read from a {@code PipedInputStream}
+     * and to write to the connected {@link PipedOutputStream}. If the same
+     * thread is used, a deadlock may occur.
+     * </p>
      * 
      * @param bytes
-     *            the byte array in which to store the read bytes.
+     *            the array in which to store the bytes read.
      * @param offset
-     *            the offset in <code>buffer</code> to store the read bytes.
+     *            the initial position in {@code bytes} to store the bytes
+     *            read from this stream.
      * @param count
-     *            the maximum number of bytes to store in <code>buffer</code>.
-     * @return the number of bytes actually read or -1 if end of stream.
-     * 
+     *            the maximum number of bytes to store in {@code bytes}.
+     * @return the number of bytes actually read or -1 if the end of the stream
+     *         has been reached.
+     * @throws IndexOutOfBoundsException
+     *             if {@code offset < 0} or {@code count < 0}, or if {@code
+     *             offset + count} is greater than the size of {@code bytes}.
+     * @throws InterruptedIOException
+     *             if the thread reading from this stream is interrupted.
      * @throws IOException
-     *             If the stream is already closed or another IOException
-     *             occurs.
+     *             if this stream is closed or not connected to an output
+     *             stream, or if the thread writing to the connected output
+     *             stream is no longer alive.
+     * @throws NullPointerException
+     *             if {@code bytes} is {@code null}.
      */
     @Override
     public synchronized int read(byte[] bytes, int offset, int count)
             throws IOException {
+        // BEGIN android-changed
         if (bytes == null) {
-            throw new NullPointerException();
+            throw new NullPointerException(Msg.getString("K0047")); //$NON-NLS-1$
         }
 
-        if (offset < 0 || offset > bytes.length || count < 0
-                || count > bytes.length - offset) {
-            throw new IndexOutOfBoundsException();
+        // Exception priorities (in case of multiple errors) differ from
+        // RI, but are spec-compliant.
+        // removed redundant check, used (offset | count) < 0
+        // instead of (offset < 0) || (count < 0) to safe one operation
+        if ((offset | count) < 0 || count > bytes.length - offset) {
+            throw new IndexOutOfBoundsException(Msg.getString("K002f")); //$NON-NLS-1$
         }
+        // END android-changed
 
         if (count == 0) {
             return 0;
@@ -301,19 +336,22 @@ public class PipedInputStream extends InputStream {
     }
 
     /**
-     * Receives a byte and stores it into the PipedInputStream. This called by
-     * PipedOutputStream.write() when writes occur. The lowest-order byte is
-     * stored at index <code>in</code> in the <code>buffer</code>.
-     * <P>
-     * If the buffer is full and the thread sending #receive is interrupted, the
-     * InterruptedIOException will be thrown.
+     * Receives a byte and stores it in this stream's {@code buffer}. This
+     * method is called by {@link PipedOutputStream#write(int)}. The least
+     * significant byte of the integer {@code oneByte} is stored at index
+     * {@code in} in the {@code buffer}.
+     * <p>
+     * This method blocks as long as {@code buffer} is full.
+     * </p>
      * 
      * @param oneByte
-     *            the byte to store into the pipe.
-     * 
+     *            the byte to store in this pipe.
+     * @throws InterruptedIOException
+     *             if the {@code buffer} is full and the thread that has called
+     *             this method is interrupted.
      * @throws IOException
-     *             If the stream is already closed or another IOException
-     *             occurs.
+     *             if this stream is closed or the thread that has last read
+     *             from this stream is no longer alive.
      */
     protected synchronized void receive(int oneByte) throws IOException {
         if (buffer == null || isClosed) {

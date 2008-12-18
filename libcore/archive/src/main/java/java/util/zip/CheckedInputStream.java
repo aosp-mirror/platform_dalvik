@@ -22,21 +22,27 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
- * The CheckedInputStream class is used to maintain a running Checksum of all
- * data read from a stream.
+ * The {@code CheckedInputStream} class is used to maintain a checksum at the
+ * same time as the data, on which the checksum is computed, is read from a
+ * stream. The purpose of this checksum is to establish data integrity,
+ * comparing the computed checksum against a published checksum value.
+ * 
+ * @since Android 1.0
  */
 public class CheckedInputStream extends java.io.FilterInputStream {
 
     private final Checksum check;
 
     /**
-     * Constructs a new CheckedInputStream on InputStream is. The Checksum will
-     * be calculated using the algorithm implemented by csum.
+     * Constructs a new {@code CheckedInputStream} on {@code InputStream}
+     * {@code is}. The checksum will be calculated using the algorithm
+     * implemented by {@code csum}.
      * 
      * @param is
-     *            InputStream to calculate checksum from
+     *            the input stream to calculate checksum from.
      * @param csum
-     *            Type of Checksum to calculate
+     *            an entity implementing the checksum algorithm.
+     * @since Android 1.0
      */
     public CheckedInputStream(InputStream is, Checksum csum) {
         super(is);
@@ -44,10 +50,14 @@ public class CheckedInputStream extends java.io.FilterInputStream {
     }
 
     /**
-     * Reads a byte of data from the underlying stream and recomputes the
-     * Checksum with the byte data.
+     * Reads one byte of data from the underlying input stream and updates the
+     * checksum with the byte data.
      * 
-     * @return -1 if end of stream, a single byte value otherwise
+     * @return {@code -1} at the end of the stream, a single byte value
+     *         otherwise.
+     * @throws IOException
+     *             if an {@code IOException} occurs.
+     * @since Android 1.0
      */
     @Override
     public int read() throws IOException {
@@ -59,10 +69,22 @@ public class CheckedInputStream extends java.io.FilterInputStream {
     }
 
     /**
-     * Reads up to nbytes of data from the underlying stream, storing it in buf,
-     * starting at offset off. The Checksum is updated with the bytes read.
+     * Reads up to n bytes of data from the underlying input stream, storing it
+     * into {@code buf}, starting at offset {@code off}. The checksum is
+     * updated with the bytes read.
      * 
-     * @return Number of bytes read, -1 if end of stream
+     * @param buf
+     *            the byte array in which to store the bytes read.
+     * @param off
+     *            the initial position in {@code buf} to store the bytes read
+     *            from this stream.
+     * @param nbytes
+     *            the maximum number of bytes to store in {@code buf}.
+     * @return the number of bytes actually read or {@code -1} if arrived at the
+     *         end of the filtered stream while reading the data.
+     * @throws IOException
+     *             if this stream is closed or some I/O error occurs.
+     * @since Android 1.0
      */
     @Override
     public int read(byte[] buf, int off, int nbytes) throws IOException {
@@ -74,21 +96,25 @@ public class CheckedInputStream extends java.io.FilterInputStream {
     }
 
     /**
-     * Returns the Checksum calculated on the stream thus far.
+     * Returns the checksum calculated on the stream read so far.
      * 
-     * @return A java.util.zip.Checksum
+     * @return the updated checksum.
+     * @since Android 1.0
      */
     public Checksum getChecksum() {
         return check;
     }
 
     /**
-     * Skip upto nbytes of data on the underlying stream. Any skipped bytes are
-     * added to the running Checksum value.
+     * Skip up to n bytes of data on the underlying input stream. Any skipped
+     * bytes are added to the running checksum value.
      * 
      * @param nbytes
-     *            long Number of bytes to skip
-     * @return Number of bytes skipped
+     *            the number of bytes to skip.
+     * @throws IOException
+     *             if this stream is closed or another I/O error occurs.
+     * @return the number of bytes skipped.
+     * @since Android 1.0
      */
     @Override
     public long skip(long nbytes) throws IOException {

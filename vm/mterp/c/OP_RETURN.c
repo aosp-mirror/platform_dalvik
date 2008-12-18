@@ -3,5 +3,5 @@ HANDLE_OPCODE($opcode /*vAA*/)
     ILOGV("|return%s v%d",
         (INST_INST(inst) == OP_RETURN) ? "" : "-object", vsrc1);
     retval.i = GET_REGISTER(vsrc1);
-    GOTO(returnFromMethod);
+    GOTO_returnFromMethod();
 OP_END

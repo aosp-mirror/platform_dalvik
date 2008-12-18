@@ -15,12 +15,9 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package javax.net.ssl;
+
+import org.apache.harmony.security.fortress.Engine;
 
 import java.security.AccessController;
 import java.security.InvalidAlgorithmParameterException;
@@ -32,14 +29,12 @@ import java.security.Provider;
 import java.security.Security;
 import java.security.UnrecoverableKeyException;
 
-import org.apache.harmony.security.fortress.Engine;
-
 
 /**
- * @com.intel.drl.spec_ref
+ * The public API for {@code KeyManagerFactory} implementations.
  * 
+ * @since Android 1.0
  */
-
 public class KeyManagerFactory {
     // Store KeyManagerFactory service name
     private static final String SERVICE = "KeyManagerFactory";
@@ -60,8 +55,15 @@ public class KeyManagerFactory {
     private final String algorithm;
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Creates a new {@code KeyManagerFactory}.
+     * 
+     * @param factorySpi
+     *            the implementation delegate.
+     * @param provider
+     *            the provider.
+     * @param algorithm
+     *            the key management algorithm name.
+     * @since Android 1.0
      */
     protected KeyManagerFactory(KeyManagerFactorySpi factorySpi,
             Provider provider, String algorithm) {
@@ -71,18 +73,28 @@ public class KeyManagerFactory {
     }
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Returns the name of the key management algorithm.
+     * 
+     * @return the name of the key management algorithm.
+     * @since Android 1.0
      */
     public final String getAlgorithm() {
         return algorithm;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code KeyManagerFactory} instance for the specified key
+     * management algorithm.
      * 
-     * throws NullPointerException if algorithm is null (instead of
-     * NoSuchAlgorithmException as in 1.4 release)
+     * @param algorithm
+     *            the name of the requested key management algorithm.
+     * @return a key manager factory for the requested algorithm.
+     * @throws NoSuchAlgorithmException
+     *             if no installed provider can provide the requested algorithm.
+     * @throws NullPointerException
+     *             if {@code algorithm} is {@code null} (instead of
+     *             NoSuchAlgorithmException as in 1.4 release)
+     * @since Android 1.0
      */
     public static final KeyManagerFactory getInstance(String algorithm)
             throws NoSuchAlgorithmException {
@@ -97,10 +109,24 @@ public class KeyManagerFactory {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code KeyManagerFactory} instance for the specified key
+     * management algorithm from the specified provider.
      * 
-     * throws NullPointerException if algorithm is null (instead of
-     * NoSuchAlgorithmException as in 1.4 release)
+     * @param algorithm
+     *            the name of the requested key management algorithm name.
+     * @param provider
+     *            the name of the provider that provides the requested
+     *            algorithm.
+     * @return a key manager factory for the requested algorithm.
+     * @throws NoSuchAlgorithmException
+     *             if the specified provider cannot provide the requested
+     *             algorithm.
+     * @throws NoSuchProviderException
+     *             if the specified provider does not exist.
+     * @throws NullPointerException
+     *             if {@code algorithm} is {@code null} (instead of
+     *             NoSuchAlgorithmException as in 1.4 release)
+     * @since Android 1.0
      */
     public static final KeyManagerFactory getInstance(String algorithm,
             String provider) throws NoSuchAlgorithmException,
@@ -116,10 +142,21 @@ public class KeyManagerFactory {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code KeyManagerFactory} instance for the specified key
+     * management algorithm from the specified provider.
      * 
-     * throws NullPointerException if algorithm is null (instead of
-     * NoSuchAlgorithmException as in 1.4 release)
+     * @param algorithm
+     *            the name of the requested key management algorithm name.
+     * @param provider
+     *            the provider that provides the requested algorithm.
+     * @return a key manager factory for the requested algorithm.
+     * @throws NoSuchAlgorithmException
+     *             if the specified provider cannot provide the requested
+     *             algorithm.
+     * @throws NullPointerException
+     *             if {@code algorithm} is {@code null} (instead of
+     *             NoSuchAlgorithmException as in 1.4 release)
+     * @since Android 1.0
      */
     public static final KeyManagerFactory getInstance(String algorithm,
             Provider provider) throws NoSuchAlgorithmException {
@@ -137,16 +174,30 @@ public class KeyManagerFactory {
     }
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Returns the provider for this {@code KeyManagerFactory} instance.
+     * 
+     * @return the provider for this {@code KeyManagerFactory} instance.
+     * @since Android 1.0
      */
     public final Provider getProvider() {
         return provider;
     }
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Initializes this instance with the specified key store and password.
+     * 
+     * @param ks
+     *            the key store or {@code null} to use the default key store.
+     * @param password
+     *            the password for the specified key store or {@code null} if no
+     *            key store is provided.
+     * @throws KeyStoreException
+     *             if initializing this key manager factory fails.
+     * @throws NoSuchAlgorithmException
+     *             if a required algorithm is not available.
+     * @throws UnrecoverableKeyException
+     *             if a key cannot be recovered.
+     * @since Android 1.0
      */
     public final void init(KeyStore ks, char[] password)
             throws KeyStoreException, NoSuchAlgorithmException,
@@ -155,8 +206,13 @@ public class KeyManagerFactory {
     }
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Initializes this instance with the specified factory parameters.
+     * 
+     * @param spec
+     *            the factory parameters.
+     * @throws InvalidAlgorithmParameterException
+     *             if an error occurs.
+     * @since Android 1.0
      */
     public final void init(ManagerFactoryParameters spec)
             throws InvalidAlgorithmParameterException {
@@ -164,16 +220,25 @@ public class KeyManagerFactory {
     }
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Returns a list of key managers, one instance for each type of key in the
+     * key store.
+     * 
+     * @return a list of key managers.
+     * @since Android 1.0
      */
     public final KeyManager[] getKeyManagers() {
         return spiImpl.engineGetKeyManagers();
     }
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Returns the default key manager factory algorithm name.
+     * <p>
+     * The default algorithm name is specified by the security property:
+     *  {@code 'ssl.KeyManagerFactory.algorithm'}.
+     * </p>
+     * 
+     * @return the default algorithm name.
+     * @since Android 1.0
      */
     public static final String getDefaultAlgorithm() {
         return AccessController

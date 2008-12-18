@@ -21,9 +21,11 @@ import java.io.Serializable;
 
 /**
  * An exception which is thrown when a JDBC driver unexpectedly truncates a data
- * value either when reading or when writing data.
- * 
- * The SQLState value for a <code>DataTruncation</code> is <code>01004</code>.
+ * value either when reading (resulting in warning), or when writing data
+ * (resulting in an error). The {@code SQLState} error code for truncated data
+ * is {@code 01004}.
+ *  
+ * @since Android 1.0
  */
 public class DataTruncation extends SQLWarning implements Serializable {
 
@@ -46,23 +48,25 @@ public class DataTruncation extends SQLWarning implements Serializable {
     private static final int THE_ERROR_CODE = 0;
 
     /**
-     * Creates a DataTruncation. The Reason is set to "Data truncation", the
-     * ErrorCode is set to the SQLException default value and other fields are
-     * set to the values supplied on this method.
+     * Creates the {@code DataTruncation} object. The reason is set to {@code
+     * "Data truncation"}, the {@code ErrorCode} is set to the {@code
+     * SQLException} default value, and the other fields are set to the values
+     * supplied as arguments.
      * 
      * @param index
      *            the Index value of the column value or parameter that was
-     *            truncated
+     *            truncated.
      * @param parameter
-     *            true if it was a Parameter value that was truncated, false
-     *            otherwise
+     *            {@code true} if it was a parameter value that was truncated,
+     *            {@code false} otherwise.
      * @param read
-     *            true if the truncation occurred on a read operation, false
-     *            otherwise
+     *            {@code true} if the truncation occurred on a read operation,
+     *            {@code false} otherwise.
      * @param dataSize
-     *            the original size of the truncated data
+     *            the original size of the truncated data.
      * @param transferSize
-     *            the size of the data after truncation
+     *            the size of the data after truncation.
+     * @since Android 1.0
      */
     public DataTruncation(int index, boolean parameter, boolean read,
             int dataSize, int transferSize) {
@@ -78,7 +82,8 @@ public class DataTruncation extends SQLWarning implements Serializable {
      * Gets the number of bytes of data that should have been read/written.
      * 
      * @return the number of bytes that should have been read or written. The
-     *         value may be set to -1 if the size is unknown.
+     *         value is set to {@code -1} if the size is unknown.
+     * @since Android 1.0
      */
     public int getDataSize() {
         return dataSize;
@@ -88,6 +93,7 @@ public class DataTruncation extends SQLWarning implements Serializable {
      * Gets the index of the column or of the parameter that was truncated.
      * 
      * @return the index number of the column or of the parameter.
+     * @since Android 1.0
      */
     public int getIndex() {
         return index;
@@ -96,8 +102,9 @@ public class DataTruncation extends SQLWarning implements Serializable {
     /**
      * Gets whether the value truncated was a parameter value or a column value.
      * 
-     * @return true if the value truncated was a Parameter value, false if it
-     *         was a column value
+     * @return {@code true} if the value truncated was a parameter value,
+     *         {@code false} if it was a column value.
+     * @since Android 1.0
      */
     public boolean getParameter() {
         return parameter;
@@ -107,18 +114,20 @@ public class DataTruncation extends SQLWarning implements Serializable {
      * Gets whether the value was truncated on a read operation or a write
      * operation
      * 
-     * @return true if the value was truncated on a read operation, false
-     *         otherwise.
+     * @return {@code true} if the value was truncated on a read operation,
+     *         {@code false} otherwise.
+     * @since Android 1.0
      */
     public boolean getRead() {
         return read;
     }
 
     /**
-     * Gets the number of bytes of data that was actually read or written
+     * Gets the number of bytes of data that was actually read or written.
      * 
      * @return the number of bytes actually read/written. The value may be set
-     *         to -1 if the size is unknown.
+     *         to {@code -1} if the size is unknown.
+     * @since Android 1.0
      */
     public int getTransferSize() {
         return transferSize;

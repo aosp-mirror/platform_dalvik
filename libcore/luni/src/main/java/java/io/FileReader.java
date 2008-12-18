@@ -18,52 +18,54 @@
 package java.io;
 
 /**
- * FileReader is class for turning a file into a character Stream. Data read
- * from the source is converted into characters. The encoding is assumed to
- * 8859_1. The FileReader contains a buffer of bytes read from the source and
- * converts these into characters as needed. The buffer size is 8K.
+ * A specialized {@link Reader} that reads from a file in the file system.
+ * All read requests made by calling methods in this class are directly
+ * forwarded to the equivalent function of the underlying operating system.
+ * Since this may induce some performance penalty, in particular if many small
+ * read requests are made, a FileReader is often wrapped by a
+ * BufferedReader.
  * 
+ * @see BufferedReader
  * @see FileWriter
+ *
+ * @since Android 1.0
  */
 public class FileReader extends InputStreamReader {
 
     /**
-     * Construct a new FileReader on the given File <code>file</code>. If the
-     * <code>file</code> specified cannot be found, throw a
-     * FileNotFoundException.
+     * Constructs a new FileReader on the given {@code file}.
      * 
      * @param file
      *            a File to be opened for reading characters from.
-     * 
      * @throws FileNotFoundException
-     *             if the file cannot be opened for reading.
+     *             if {@code file} does not exist.
+     * @since Android 1.0             
      */
     public FileReader(File file) throws FileNotFoundException {
         super(new FileInputStream(file));
     }
 
     /**
-     * Construct a new FileReader on the given FileDescriptor <code>fd</code>.
-     * Since a previously opened FileDescriptor is passed as an argument, no
-     * FileNotFoundException is thrown.
+     * Construct a new FileReader on the given FileDescriptor {@code fd}. Since
+     * a previously opened FileDescriptor is passed as an argument, no
+     * FileNotFoundException can be thrown.
      * 
      * @param fd
      *            the previously opened file descriptor.
+     * @since Android 1.0
      */
     public FileReader(FileDescriptor fd) {
         super(new FileInputStream(fd));
     }
 
     /**
-     * Construct a new FileReader on the given file named <code>filename</code>.
-     * If the <code>filename</code> specified cannot be found, throw a
-     * FileNotFoundException.
+     * Construct a new FileReader on the given file named {@code filename}.
      * 
      * @param filename
      *            an absolute or relative path specifying the file to open.
-     * 
      * @throws FileNotFoundException
-     *             if the filename cannot be opened for reading.
+     *             if there is no file named {@code filename}.
+     * @since Android 1.0
      */
     public FileReader(String filename) throws FileNotFoundException {
         super(new FileInputStream(filename));

@@ -16,6 +16,11 @@
 
 package tests.api.java.lang.reflect;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -23,11 +28,29 @@ import java.lang.reflect.Type;
 /**
  * Tests parameterized types and their properties.
  */
+@TestTargetClass(ParameterizedType.class) 
 public class ParameterizedTypeTest extends GenericReflectionTestsBase {
     
     static class A<T>{}
     static class B extends A<String>{}
     
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Doesn't check exceptions.",
+            targets = {
+              @TestTarget(
+                methodName = "getActualTypeArguments",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "getOwnerType",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "getRawType",
+                methodArgs = {}
+              )
+          })
     public void testStringParameterizedSuperClass() {
         Class<? extends B> clazz = B.class;
         Type genericSuperclass = clazz.getGenericSuperclass();
@@ -44,6 +67,23 @@ public class ParameterizedTypeTest extends GenericReflectionTestsBase {
     static class C<T>{}
     static class D<T> extends C<T>{}
     
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Doesn't check exceptions.",
+            targets = {
+              @TestTarget(
+                methodName = "getActualTypeArguments",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "getOwnerType",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "getRawType",
+                methodArgs = {}
+              )
+          })
     public void testTypeParameterizedSuperClass() {
         Class<? extends D> clazz = D.class;
         Type genericSuperclass = clazz.getGenericSuperclass();
@@ -62,6 +102,23 @@ public class ParameterizedTypeTest extends GenericReflectionTestsBase {
         E<T> e;
     }
     
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "getActualTypeArguments",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "getOwnerType",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "getRawType",
+          methodArgs = {}
+        )
+    })
     public void testParameterizedMemeber() throws Exception{
         Class<? extends F> clazz = F.class;
         Field field = clazz.getDeclaredField("e");

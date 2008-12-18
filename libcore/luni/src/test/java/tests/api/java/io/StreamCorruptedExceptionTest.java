@@ -17,64 +17,88 @@
 
 package tests.api.java.io;
 
+import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestLevel;
+
 import java.io.ByteArrayInputStream;
 import java.io.ObjectInputStream;
 import java.io.StreamCorruptedException;
 
+@TestTargetClass(StreamCorruptedException.class) 
 public class StreamCorruptedExceptionTest extends junit.framework.TestCase {
 
-	/**
-	 * @tests java.io.StreamCorruptedException#StreamCorruptedException()
-	 */
-	public void test_Constructor() {
-		// Test for method java.io.StreamCorruptedException()
+    /**
+     * @tests java.io.StreamCorruptedException#StreamCorruptedException()
+     */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Test does not checks constructor functionality (doing this indirectly and which constructor used non obvious)",
+      targets = {
+        @TestTarget(
+          methodName = "StreamCorruptedException",
+          methodArgs = {}
+        )
+    })
+    public void test_Constructor() {
+        // Test for method java.io.StreamCorruptedException()
 
-		try {
-			ObjectInputStream ois = new ObjectInputStream(
-					new ByteArrayInputStream(
-							"kLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLl"
-									.getBytes()));
-			ois.readObject();
-		} catch (StreamCorruptedException e) {
-			// Correct
-			return;
-		} catch (Exception e) {
-			fail("Exception during test : " + e.getMessage());
-		}
-		fail("Failed to throw exception for non serialized stream");
-	}
+        try {
+            ObjectInputStream ois = new ObjectInputStream(
+                    new ByteArrayInputStream(
+                            "kLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLl"
+                                    .getBytes()));
+            ois.readObject();
+        } catch (StreamCorruptedException e) {
+            // Correct
+            return;
+        } catch (Exception e) {
+            fail("Exception during test : " + e.getMessage());
+        }
+        fail("Failed to throw exception for non serialized stream");
+    }
 
-	/**
-	 * @tests java.io.StreamCorruptedException#StreamCorruptedException(java.lang.String)
-	 */
-	public void test_ConstructorLjava_lang_String() {
-		// Test for method java.io.StreamCorruptedException(java.lang.String)
-		try {
-			ObjectInputStream ois = new ObjectInputStream(
-					new ByteArrayInputStream(
-							"kLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLl"
-									.getBytes()));
-			ois.readObject();
-		} catch (StreamCorruptedException e) {
-			// Correct
-			return;
-		} catch (Exception e) {
-			fail("Exception during test : " + e.getMessage());
-		}
-		fail("Failed to throw exception for non serialized stream");
-	}
+    /**
+     * @tests java.io.StreamCorruptedException#StreamCorruptedException(java.lang.String)
+     */
+@TestInfo(
+      level = TestLevel.PARTIAL, 
+      purpose = "Test does not checks constructor functionality (doing this indirectly and which constructor used non obvious)",
+      targets = {
+        @TestTarget(
+          methodName = "StreamCorruptedException",
+          methodArgs = {java.lang.String.class}
+        )
+    })
+    public void test_ConstructorLjava_lang_String() {
+        // Test for method java.io.StreamCorruptedException(java.lang.String)
+        try {
+            ObjectInputStream ois = new ObjectInputStream(
+                    new ByteArrayInputStream(
+                            "kLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLl"
+                                    .getBytes()));
+            ois.readObject();
+        } catch (StreamCorruptedException e) {
+            // Correct
+            return;
+        } catch (Exception e) {
+            fail("Exception during test : " + e.getMessage());
+        }
+        fail("Failed to throw exception for non serialized stream");
+    }
 
-	/**
-	 * Sets up the fixture, for example, open a network connection. This method
-	 * is called before a test is executed.
-	 */
-	protected void setUp() {
-	}
+    /**
+     * Sets up the fixture, for example, open a network connection. This method
+     * is called before a test is executed.
+     */
+    protected void setUp() {
+    }
 
-	/**
-	 * Tears down the fixture, for example, close a network connection. This
-	 * method is called after a test is executed.
-	 */
-	protected void tearDown() {
-	}
+    /**
+     * Tears down the fixture, for example, close a network connection. This
+     * method is called after a test is executed.
+     */
+    protected void tearDown() {
+    }
 }

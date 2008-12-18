@@ -211,7 +211,6 @@ public abstract class  AtomicLongFieldUpdater<T>  {
         // BEGIN android-changed
         private static final Unsafe unsafe = UnsafeAccess.THE_ONE;
         // END android-changed
-
         private final long offset;
         private final Class<T> tclass;
 
@@ -264,7 +263,6 @@ public abstract class  AtomicLongFieldUpdater<T>  {
         // BEGIN android-changed
         private static final Unsafe unsafe = UnsafeAccess.THE_ONE;
         // END android-changed
-
         private final long offset;
         private final Class<T> tclass;
 
@@ -292,7 +290,7 @@ public abstract class  AtomicLongFieldUpdater<T>  {
                 throw new ClassCastException();
             synchronized(this) {
                 long v = unsafe.getLong(obj, offset);
-                if (v != expect)
+                if (v != expect) 
                     return false;
                 unsafe.putLong(obj, offset, update);
                 return true;

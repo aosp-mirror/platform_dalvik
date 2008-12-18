@@ -21,9 +21,10 @@ package java.nio;
 import org.apache.harmony.luni.platform.Endianness;
 
 /**
- * A buffer of <code>byte</code>s.
+ * A buffer for bytes.
  * <p>
- * A byte buffer can be created in either of the following ways:
+ * A byte buffer can be created in either one of the following ways:
+ * </p>
  * <ul>
  * <li>{@link #allocate(int) Allocate} a new byte array and create a buffer
  * based on it;</li>
@@ -32,19 +33,19 @@ import org.apache.harmony.luni.platform.Endianness;
  * <li>{@link #wrap(byte[]) Wrap} an existing byte array to create a new
  * buffer.</li>
  * </ul>
- * </p>
- *
+ * @since Android 1.0
  */
 public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer> {
 
     /**
-     * Creates a byte buffer based on a new allocated byte array.
-     *
+     * Creates a byte buffer based on a newly allocated byte array.
+     * 
      * @param capacity
-     *            The capacity of the new buffer
-     * @return The created byte buffer
+     *            the capacity of the new buffer
+     * @return the created byte buffer.
      * @throws IllegalArgumentException
-     *             If <code>capacity</code> is less than zero
+     *             if {@code capacity < 0}.
+     * @since Android 1.0
      */
     public static ByteBuffer allocate(int capacity) {
         if (capacity < 0) {
@@ -54,13 +55,14 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
     }
 
     /**
-     * Creates a direct byte buffer based on a new allocated memory block.
-     *
+     * Creates a direct byte buffer based on a newly allocated memory block.
+     * 
      * @param capacity
-     *            The capacity of the new buffer
-     * @return The created byte buffer
+     *            the capacity of the new buffer
+     * @return the created byte buffer.
      * @throws IllegalArgumentException
-     *             If <code>capacity</code> is less than zero
+     *             if {@code capacity < 0}.
+     * @since Android 1.0
      */
     public static ByteBuffer allocateDirect(int capacity) {
         if (capacity < 0) {
@@ -73,34 +75,37 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
      * Creates a new byte buffer by wrapping the given byte array.
      * <p>
      * Calling this method has the same effect as
-     * <code>wrap(array, 0, array.length)</code>.</p>
-     *
-     * @param array     The byte array which the new buffer will be based on
-     * @return The created byte buffer
+     * {@code wrap(array, 0, array.length)}.
+     * </p>
+     * 
+     * @param array
+     *            the byte array which the new buffer will be based on
+     * @return the created byte buffer.
+     * @since Android 1.0
      */
     public static ByteBuffer wrap(byte[] array) {
         return BufferFactory.newByteBuffer(array);
     }
 
     /**
-     * Creates new a byte buffer by wrapping the given byte array.
+     * Creates a new byte buffer by wrapping the given byte array.
      * <p>
-     * The new buffer's position will be <code>start</code>, limit will be
-     * <code>start + len</code>, capacity will be the length of the array.
+     * The new buffer's position will be {@code start}, limit will be
+     * {@code start + len}, capacity will be the length of the array.
      * </p>
-     *
+     * 
      * @param array
-     *            The byte array which the new buffer will be based on
+     *            the byte array which the new buffer will be based on.
      * @param start
-     *            The start index, must be no less than zero and no greater than
-     *            <code>array.length</code>
+     *            the start index, must not be negative and not greater than
+     *            {@code array.length}.
      * @param len
-     *            The length, must be no less than zero and no greater than
-     *            <code>array.length - start</code>
-     * @return The created byte buffer
+     *            the length, must not be negative and not greater than
+     *            {@code array.length - start}.
+     * @return the created byte buffer.
      * @exception IndexOutOfBoundsException
-     *                If either <code>start</code> or <code>len</code> is
-     *                invalid
+     *                if either {@code start} or {@code len} is invalid.
+     * @since Android 1.0
      */
     public static ByteBuffer wrap(byte[] array, int start, int len) {
         int length = array.length;
@@ -116,14 +121,16 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
     }
 
     /**
-     * The byte order of this buffer, default is <code>BIG_ENDIAN</code>.
+     * The byte order of this buffer, default is {@code BIG_ENDIAN}.
      */
     Endianness order = Endianness.BIG_ENDIAN;
 
     /**
-     * Constructs a <code>ByteBuffer</code> with given capacity.
-     *
-     * @param capacity  The capacity of the buffer
+     * Constructs a {@code ByteBuffer} with given capacity.
+     * 
+     * @param capacity
+     *            the capacity of the buffer.
+     * @since Android 1.0
      */
     ByteBuffer(int capacity) {
         super(capacity);
@@ -133,13 +140,14 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
     }
 
     /**
-     * Returns the byte array which this buffer is based on, if there's one.
-     *
-     * @return The byte array which this buffer is based on
+     * Returns the byte array which this buffer is based on, if there is one.
+     * 
+     * @return the byte array which this buffer is based on.
      * @exception ReadOnlyBufferException
-     *                If this buffer is based on a readonly array
+     *                if this buffer is based on a read-only array.
      * @exception UnsupportedOperationException
-     *                If this buffer is not based on an array
+     *                if this buffer is not based on an array.
+     * @since Android 1.0
      */
     public final byte[] array() {
         return protectedArray();
@@ -147,31 +155,34 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
 
     /**
      * Returns the offset of the byte array which this buffer is based on, if
-     * there's one.
+     * there is one.
      * <p>
-     * The offset is the index of the array corresponds to the zero position of
-     * the buffer.
+     * The offset is the index of the array which corresponds to the zero
+     * position of the buffer.
      * </p>
-     *
-     * @return The offset of the byte array which this buffer is based on
+     * 
+     * @return the offset of the byte array which this buffer is based on.
      * @exception ReadOnlyBufferException
-     *                If this buffer is based on a readonly array
+     *                if this buffer is based on a read-only array.
      * @exception UnsupportedOperationException
-     *                If this buffer is not based on an array
+     *                if this buffer is not based on an array.
+     * @since Android 1.0
      */
     public final int arrayOffset() {
         return protectedArrayOffset();
     }
 
     // BEGIN android-added
-    @Override Object _array() {
+    @Override 
+    Object _array() {
         if (hasArray()) {
             return array();
         }
         return null;
     }
 
-    @Override int _arrayOffset() {
+    @Override 
+    int _arrayOffset() {
         if (hasArray()) {
             return arrayOffset();
         }
@@ -180,154 +191,172 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
     // END android-added
 
     /**
-     * Returns a char buffer which is based on the remaining content of
-     * this byte buffer.
+     * Returns a char buffer which is based on the remaining content of this
+     * byte buffer.
      * <p>
-     * The new buffer's position is zero, its limit and capacity is
-     * the number of remaining bytes divided by two, and its mark is not set.
-     * The new buffer's readonly property and byte order are same as this
-     * buffer. The new buffer is direct, if this byte buffer is direct.</p>
+     * The new buffer's position is zero, its limit and capacity is the number
+     * of remaining bytes divided by two, and its mark is not set. The new
+     * buffer's read-only property and byte order are the same as this buffer's.
+     * The new buffer is direct if this byte buffer is direct.
+     * </p>
      * <p>
-     * The new buffer shares content with this buffer, which means
-     * either buffer's change of content will be visible to the other.
-     * The two buffer's position, limit and mark are independent.</p>
-     *
-     * @return A char buffer which is based on the content of
-     * this byte buffer.
+     * The new buffer shares its content with this buffer, which means either
+     * buffer's change of content will be visible to the other. The two buffer's
+     * position, limit and mark are independent.
+     * </p>
+     * 
+     * @return a char buffer which is based on the content of this byte buffer.
+     * @since Android 1.0
      */
     public abstract CharBuffer asCharBuffer();
 
     /**
-     * Returns a double buffer which is based on the remaining content of
-     * this byte buffer.
+     * Returns a double buffer which is based on the remaining content of this
+     * byte buffer.
      * <p>
-     * The new buffer's position is zero, its limit and capacity is
-     * the number of remaining bytes divided by two, and its mark is not set.
-     * The new buffer's readonly property and byte order are same as this
-     * buffer. The new buffer is direct, if this byte buffer is direct.</p>
+     * The new buffer's position is zero, its limit and capacity is the number
+     * of remaining bytes divided by eight, and its mark is not set. The new
+     * buffer's read-only property and byte order are the same as this buffer's.
+     * The new buffer is direct if this byte buffer is direct.
+     * </p>
      * <p>
-     * The new buffer shares content with this buffer, which means
-     * either buffer's change of content will be visible to the other.
-     * The two buffer's position, limit and mark are independent.</p>
-     *
-     * @return A double buffer which is based on the content of
-     * this byte buffer.
+     * The new buffer shares its content with this buffer, which means either
+     * buffer's change of content will be visible to the other. The two buffer's
+     * position, limit and mark are independent.
+     * </p>
+     * 
+     * @return a double buffer which is based on the content of this byte
+     *         buffer.
+     * @since Android 1.0
      */
     public abstract DoubleBuffer asDoubleBuffer();
 
     /**
-     * Returns a float buffer which is based on the remaining content of
-     * this byte buffer.
+     * Returns a float buffer which is based on the remaining content of this
+     * byte buffer.
      * <p>
-     * The new buffer's position is zero, its limit and capacity is
-     * the number of remaining bytes divided by two, and its mark is not set.
-     * The new buffer's readonly property and byte order are same as this
-     * buffer. The new buffer is direct, if this byte buffer is direct.</p>
+     * The new buffer's position is zero, its limit and capacity is the number
+     * of remaining bytes divided by four, and its mark is not set. The new
+     * buffer's read-only property and byte order are the same as this buffer's.
+     * The new buffer is direct if this byte buffer is direct.
+     * </p>
      * <p>
-     * The new buffer shares content with this buffer, which means
-     * either buffer's change of content will be visible to the other.
-     * The two buffer's position, limit and mark are independent.</p>
-     *
-     * @return A float buffer which is based on the content of
-     * this byte buffer.
+     * The new buffer shares its content with this buffer, which means either
+     * buffer's change of content will be visible to the other. The two buffer's
+     * position, limit and mark are independent.
+     * </p>
+     * 
+     * @return a float buffer which is based on the content of this byte buffer.
+     * @since Android 1.0
      */
     public abstract FloatBuffer asFloatBuffer();
 
     /**
-     * Returns a int buffer which is based on the remaining content of
-     * this byte buffer.
+     * Returns a int buffer which is based on the remaining content of this byte
+     * buffer.
      * <p>
-     * The new buffer's position is zero, its limit and capacity is
-     * the number of remaining bytes divided by two, and its mark is not set.
-     * The new buffer's readonly property and byte order are same as this
-     * buffer. The new buffer is direct, if this byte buffer is direct.</p>
+     * The new buffer's position is zero, its limit and capacity is the number
+     * of remaining bytes divided by four, and its mark is not set. The new
+     * buffer's read-only property and byte order are the same as this buffer's.
+     * The new buffer is direct if this byte buffer is direct.
+     * </p>
      * <p>
-     * The new buffer shares content with this buffer, which means
-     * either buffer's change of content will be visible to the other.
-     * The two buffer's position, limit and mark are independent.</p>
-     *
-     * @return A int buffer which is based on the content of
-     * this byte buffer.
+     * The new buffer shares its content with this buffer, which means either
+     * buffer's change of content will be visible to the other. The two buffer's
+     * position, limit and mark are independent.
+     * </p>
+     * 
+     * @return a int buffer which is based on the content of this byte buffer.
+     * @since Android 1.0
      */
     public abstract IntBuffer asIntBuffer();
 
     /**
-     * Returns a long buffer which is based on the remaining content of
-     * this byte buffer.
+     * Returns a long buffer which is based on the remaining content of this
+     * byte buffer.
      * <p>
-     * The new buffer's position is zero, its limit and capacity is
-     * the number of remaining bytes divided by two, and its mark is not set.
-     * The new buffer's readonly property and byte order are same as this
-     * buffer. The new buffer is direct, if this byte buffer is direct.</p>
+     * The new buffer's position is zero, its limit and capacity is the number
+     * of remaining bytes divided by eight, and its mark is not set. The new
+     * buffer's read-only property and byte order are the same as this buffer's.
+     * The new buffer is direct if this byte buffer is direct.
+     * </p>
      * <p>
-     * The new buffer shares content with this buffer, which means
-     * either buffer's change of content will be visible to the other.
-     * The two buffer's position, limit and mark are independent.</p>
-     *
-     * @return A long buffer which is based on the content of
-     * this byte buffer.
+     * The new buffer shares its content with this buffer, which means either
+     * buffer's change of content will be visible to the other. The two buffer's
+     * position, limit and mark are independent.
+     * </p>
+     * 
+     * @return a long buffer which is based on the content of this byte buffer.
+     * @since Android 1.0
      */
     public abstract LongBuffer asLongBuffer();
 
     /**
-     * Returns a readonly buffer that shares content with this buffer.
+     * Returns a read-only buffer that shares its content with this buffer.
      * <p>
-     * The returned buffer is guaranteed to be a new instance, even this
-     * buffer is readonly itself. The new buffer's position, limit, capacity
-     * and mark are the same as this buffer.</p>
+     * The returned buffer is guaranteed to be a new instance, even if this
+     * buffer is read-only itself. The new buffer's position, limit, capacity
+     * and mark are the same as this buffer.
+     * </p>
      * <p>
-     * The new buffer shares content with this buffer, which means
-     * this buffer's change of content will be visible to the new buffer.
-     * The two buffer's position, limit and mark are independent.</p>
-     *
-     * @return A readonly version of this buffer.
+     * The new buffer shares its content with this buffer, which means this
+     * buffer's change of content will be visible to the new buffer. The two
+     * buffer's position, limit and mark are independent.
+     * </p>
+     * 
+     * @return a read-only version of this buffer.
+     * @since Android 1.0
      */
     public abstract ByteBuffer asReadOnlyBuffer();
 
     /**
-     * Returns a short buffer which is based on the remaining content of
-     * this byte buffer.
+     * Returns a short buffer which is based on the remaining content of this
+     * byte buffer.
      * <p>
-     * The new buffer's position is zero, its limit and capacity is
-     * the number of remaining bytes divided by two, and its mark is not set.
-     * The new buffer's readonly property and byte order are same as this
-     * buffer. The new buffer is direct, if this byte buffer is direct.</p>
+     * The new buffer's position is zero, its limit and capacity is the number
+     * of remaining bytes divided by two, and its mark is not set. The new
+     * buffer's read-only property and byte order are the same as this buffer's.
+     * The new buffer is direct if this byte buffer is direct.
+     * </p>
      * <p>
-     * The new buffer shares content with this buffer, which means
-     * either buffer's change of content will be visible to the other.
-     * The two buffer's position, limit and mark are independent.</p>
-     *
-     * @return A short buffer which is based on the content of
-     * this byte buffer.
+     * The new buffer shares its content with this buffer, which means either
+     * buffer's change of content will be visible to the other. The two buffer's
+     * position, limit and mark are independent.
+     * </p>
+     * 
+     * @return a short buffer which is based on the content of this byte buffer.
+     * @since Android 1.0
      */
     public abstract ShortBuffer asShortBuffer();
 
     /**
      * Compacts this byte buffer.
      * <p>
-     * The remaining <code>byte</code>s will be moved to the head of the
-     * buffer, staring from position zero. Then the position is set to
-     * <code>remaining()</code>; the limit is set to capacity; the mark is
+     * The remaining bytes will be moved to the head of the
+     * buffer, starting from position zero. Then the position is set to
+     * {@code remaining()}; the limit is set to capacity; the mark is
      * cleared.
      * </p>
-     *
-     * @return This buffer
+     * 
+     * @return this buffer.
      * @exception ReadOnlyBufferException
-     *                If no changes may be made to the contents of this buffer
+     *                if no changes may be made to the contents of this buffer.
+     * @since Android 1.0
      */
     public abstract ByteBuffer compact();
 
     /**
-     * Compare the remaining <code>byte</code>s of this buffer to another
-     * byte buffer's remaining <code>byte</code>s.
-     *
+     * Compares the remaining bytes of this buffer to another byte buffer's
+     * remaining bytes.
+     * 
      * @param otherBuffer
-     *            Another byte buffer
-     * @return a negative value if this is less than <code>other</code>; 0 if
-     *         this equals to <code>other</code>; a positive value if this is
-     *         greater than <code>other</code>
+     *            another byte buffer.
+     * @return a negative value if this is less than {@code other}; 0 if this
+     *         equals to {@code other}; a positive value if this is greater
+     *         than {@code other}.
      * @exception ClassCastException
-     *                If <code>other</code> is not a byte buffer
+     *                if {@code other} is not a byte buffer.
+     * @since Android 1.0
      */
     public int compareTo(ByteBuffer otherBuffer) {
         int compareRemaining = (remaining() < otherBuffer.remaining()) ? remaining()
@@ -349,31 +378,36 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
     }
 
     /**
-     * Returns a duplicated buffer that shares content with this buffer.
+     * Returns a duplicated buffer that shares its content with this buffer.
      * <p>
-     * The duplicated buffer's position, limit, capacity and mark are the
-     * same as this buffer. The duplicated buffer's readonly property and
-     * byte order are same as this buffer too.</p>
+     * The duplicated buffer's position, limit, capacity and mark are the same
+     * as this buffer's. The duplicated buffer's read-only property and byte
+     * order are the same as this buffer's too.
+     * </p>
      * <p>
-     * The new buffer shares content with this buffer, which means
-     * either buffer's change of content will be visible to the other.
-     * The two buffer's position, limit and mark are independent.</p>
-     *
-     * @return A duplicated buffer that shares content with this buffer.
+     * The new buffer shares its content with this buffer, which means either
+     * buffer's change of content will be visible to the other. The two buffer's
+     * position, limit and mark are independent.
+     * </p>
+     * 
+     * @return a duplicated buffer that shares its content with this buffer.
+     * @since Android 1.0
      */
     public abstract ByteBuffer duplicate();
 
     /**
-     * Tests whether this byte buffer equals to another object.
+     * Checks whether this byte buffer is equal to another object.
      * <p>
-     * If <code>other</code> is not a byte buffer, then false is returned.</p>
-     * <p>
-     * Two byte buffers are equals if, and only if, their remaining
-     * <code>byte</code>s are exactly the same. Position, limit, capacity and
-     * mark are not considered.</p>
-     *
-     * @param other the object to compare against
-     * @return Whether this byte buffer equals to another object.
+     * If {@code other} is not a byte buffer then {@code false} is returned. Two
+     * byte buffers are equal if and only if their remaining bytes are exactly
+     * the same. Position, limit, capacity and mark are not considered.
+     * </p>
+     * 
+     * @param other
+     *            the object to compare with this byte buffer.
+     * @return {@code true} if this byte buffer is equal to {@code other},
+     *         {@code false} otherwise.
+     * @since Android 1.0
      */
     public boolean equals(Object other) {
         if (!(other instanceof ByteBuffer)) {
@@ -396,54 +430,53 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
     }
 
     /**
-     * Returns the byte at the current position and increase the position by 1.
-     *
-     * @return The byte at the current position.
+     * Returns the byte at the current position and increases the position by 1.
+     * 
+     * @return the byte at the current position.
      * @exception BufferUnderflowException
-     *                If the position is equal or greater than limit
+     *                if the position is equal or greater than limit.
+     * @since Android 1.0
      */
     public abstract byte get();
 
     /**
-     * Reads <code>byte</code>s from the current position into the specified
-     * byte array and increase the position by the number of <code>byte</code>s
-     * read.
+     * Reads bytes from the current position into the specified byte array and
+     * increases the position by the number of bytes read.
      * <p>
      * Calling this method has the same effect as
-     * <code>get(dest, 0, dest.length)</code>.
+     * {@code get(dest, 0, dest.length)}.
      * </p>
-     *
+     * 
      * @param dest
-     *            The destination byte array
-     * @return This buffer
+     *            the destination byte array.
+     * @return this buffer.
      * @exception BufferUnderflowException
-     *                if <code>dest.length</code> is greater than
-     *                <code>remaining()</code>
+     *                if {@code dest.length} is greater than {@code remaining()}.
+     * @since Android 1.0
      */
     public ByteBuffer get(byte[] dest) {
         return get(dest, 0, dest.length);
     }
 
     /**
-     * Reads <code>byte</code>s from the current position into the specified
-     * byte array, starting from the specified offset, and increase the position
-     * by the number of <code>byte</code>s read.
-     *
+     * Reads bytes from the current position into the specified byte array,
+     * starting at the specified offset, and increases the position by the
+     * number of bytes read.
+     * 
      * @param dest
-     *            The target byte array
+     *            the target byte array.
      * @param off
-     *            The offset of the byte array, must be no less than zero and no
-     *            greater than <code>dest.length</code>
+     *            the offset of the byte array, must not be negative and
+     *            not greater than {@code dest.length}.
      * @param len
-     *            The number of <code>byte</code>s to read, must be no less
-     *            than zero and no greater than <code>dest.length - off</code>
-     * @return This buffer
+     *            the number of bytes to read, must not be negative and not
+     *            greater than {@code dest.length - off}
+     * @return this buffer.
      * @exception IndexOutOfBoundsException
-     *                If either <code>off</code> or <code>len</code> is
-     *                invalid
+     *                if either {@code off} or {@code len} is invalid.
      * @exception BufferUnderflowException
-     *                If <code>len</code> is greater than
-     *                <code>remaining()</code>
+     *                if {@code len} is greater than {@code remaining()}.
+     * @since Android 1.0
      */
     public ByteBuffer get(byte[] dest, int off, int len) {
         int length = dest.length;
@@ -461,214 +494,229 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
     }
 
     /**
-     * Returns a byte at the specified index, and the position is not changed.
-     *
-     * @param index     The index, must be no less than zero and less than limit
-     * @return A byte at the specified index.
-     * @exception IndexOutOfBoundsException If index is invalid
+     * Returns the byte at the specified index and does not change the position.
+     * 
+     * @param index
+     *            the index, must not be negative and less than limit.
+     * @return the byte at the specified index.
+     * @exception IndexOutOfBoundsException
+     *                if index is invalid.
+     * @since Android 1.0
      */
     public abstract byte get(int index);
 
     /**
-     * Returns the char at the current position and increase the position by 2.
+     * Returns the char at the current position and increases the position by 2.
      * <p>
-     * The 2 bytes start from the current position are composed into a char
-     * according to current byte order and returned. The position increases by
-     * 2.
+     * The 2 bytes starting at the current position are composed into a char
+     * according to the current byte order and returned.
      * </p>
-     *
-     * @return The char at the current position.
+     * 
+     * @return the char at the current position.
      * @exception BufferUnderflowException
-     *                If the position is greater than <code>limit - 2</code>
+     *                if the position is greater than {@code limit - 2}.
+     * @since Android 1.0
      */
     public abstract char getChar();
 
     /**
      * Returns the char at the specified index.
      * <p>
-     * The 2 bytes start from the specified index are composed into a char
-     * according to current byte order and returned. The position is not
+     * The 2 bytes starting from the specified index are composed into a char
+     * according to the current byte order and returned. The position is not
      * changed.
      * </p>
-     *
+     * 
      * @param index
-     *            The index, must be no less than zero and equal or less than
-     *            <code>limit - 2</code>
-     * @return The char at the specified index.
+     *            the index, must not be negative and equal or less than
+     *            {@code limit - 2}.
+     * @return the char at the specified index.
      * @exception IndexOutOfBoundsException
-     *                If <code>index</code> is invalid
+     *                if {@code index} is invalid.
+     * @since Android 1.0
      */
     public abstract char getChar(int index);
 
     /**
-     * Returns the double at the current position and increase the position by
+     * Returns the double at the current position and increases the position by
      * 8.
      * <p>
-     * The 8 bytes start from the current position are composed into a double
-     * according to current byte order and returned. The position increases by
-     * 8.
+     * The 8 bytes starting from the current position are composed into a double
+     * according to the current byte order and returned. 
      * </p>
-     *
-     * @return The double at the current position.
+     * 
+     * @return the double at the current position.
      * @exception BufferUnderflowException
-     *                If the position is greater than <code>limit - 8</code>
+     *                if the position is greater than {@code limit - 8}.
+     * @since Android 1.0
      */
     public abstract double getDouble();
 
     /**
      * Returns the double at the specified index.
      * <p>
-     * The 8 bytes start from the specified index are composed into a double
-     * according to current byte order and returned. The position is not
+     * The 8 bytes starting at the specified index are composed into a double
+     * according to the current byte order and returned. The position is not
      * changed.
      * </p>
-     *
+     * 
      * @param index
-     *            The index, must be no less than zero and equal or less than
-     *            <code>limit - 8</code>
-     * @return The double at the specified index.
+     *            the index, must not be negative and equal or less than
+     *            {@code limit - 8}.
+     * @return the double at the specified index.
      * @exception IndexOutOfBoundsException
-     *                If <code>index</code> is invalid
+     *                if {@code index} is invalid.
+     * @since Android 1.0
      */
     public abstract double getDouble(int index);
 
     /**
-     * Returns the float at the current position and increase the position by 4.
-     * <p>
-     * The 4 bytes start from the current position are composed into a float
-     * according to current byte order and returned. The position increases by
+     * Returns the float at the current position and increases the position by
      * 4.
+     * <p>
+     * The 4 bytes starting at the current position are composed into a float
+     * according to the current byte order and returned.
      * </p>
-     *
-     * @return The float at the current position.
+     * 
+     * @return the float at the current position.
      * @exception BufferUnderflowException
-     *                If the position is greater than <code>limit - 4</code>
+     *                if the position is greater than {@code limit - 4}.
+     * @since Android 1.0
      */
     public abstract float getFloat();
 
     /**
      * Returns the float at the specified index.
      * <p>
-     * The 4 bytes start from the specified index are composed into a float
-     * according to current byte order and returned. The position is not
+     * The 4 bytes starting at the specified index are composed into a float
+     * according to the current byte order and returned. The position is not
      * changed.
      * </p>
-     *
+     * 
      * @param index
-     *            The index, must be no less than zero and equal or less than
-     *            <code>limit - 4</code>
-     * @return The float at the specified index.
+     *            the index, must not be negative and equal or less than
+     *            {@code limit - 4}.
+     * @return the float at the specified index.
      * @exception IndexOutOfBoundsException
-     *                If <code>index</code> is invalid
+     *                if {@code index} is invalid.
+     * @since Android 1.0
      */
     public abstract float getFloat(int index);
 
     /**
-     * Returns the int at the current position and increase the position by 4.
+     * Returns the int at the current position and increases the position by 4.
      * <p>
-     * The 4 bytes start from the current position are composed into a int
-     * according to current byte order and returned.
-     * The position increases by 4.</p>
-     *
-     * @return The int at the current position.
-     * @exception BufferUnderflowException If the position is greater than <code>limit - 4</code>
+     * The 4 bytes starting at the current position are composed into a int
+     * according to the current byte order and returned.
+     * </p>
+     * 
+     * @return the int at the current position.
+     * @exception BufferUnderflowException
+     *                if the position is greater than {@code limit - 4}.
+     * @since Android 1.0
      */
     public abstract int getInt();
 
     /**
      * Returns the int at the specified index.
      * <p>
-     * The 4 bytes start from the specified index are composed into a int
-     * according to current byte order and returned. The position is not
+     * The 4 bytes starting at the specified index are composed into a int
+     * according to the current byte order and returned. The position is not
      * changed.
      * </p>
-     *
+     * 
      * @param index
-     *            The index, must be no less than zero and equal or less than
-     *            <code>limit - 4</code>
-     * @return The int at the specified index.
+     *            the index, must not be negative and equal or less than
+     *            {@code limit - 4}.
+     * @return the int at the specified index.
      * @exception IndexOutOfBoundsException
-     *                If <code>index</code> is invalid
+     *                if {@code index} is invalid.
+     * @since Android 1.0
      */
     public abstract int getInt(int index);
 
     /**
-     * Returns the long at the current position and increase the position by 8.
+     * Returns the long at the current position and increases the position by 8.
      * <p>
-     * The 8 bytes start from the current position are composed into a long
-     * according to current byte order and returned. The position increases by
-     * 8.
+     * The 8 bytes starting at the current position are composed into a long
+     * according to the current byte order and returned.
      * </p>
-     *
-     * @return The long at the current position.
+     * 
+     * @return the long at the current position.
      * @exception BufferUnderflowException
-     *                If the position is greater than <code>limit - 8</code>
+     *                if the position is greater than {@code limit - 8}.
+     * @since Android 1.0
      */
     public abstract long getLong();
 
     /**
      * Returns the long at the specified index.
      * <p>
-     * The 8 bytes start from the specified index are composed into a long
-     * according to current byte order and returned. The position is not
+     * The 8 bytes starting at the specified index are composed into a long
+     * according to the current byte order and returned. The position is not
      * changed.
      * </p>
      *
      * @param index
-     *            The index, must be no less than zero and equal or less than
-     *            <code>limit - 8</code>
-     * @return The long at the specified index.
+     *            the index, must not be negative and equal or less than
+     *            {@code limit - 8}.
+     * @return the long at the specified index.
      * @exception IndexOutOfBoundsException
-     *                If <code>index</code> is invalid
+     *                if {@code index} is invalid.
+     * @since Android 1.0
      */
     public abstract long getLong(int index);
 
     /**
-     * Returns the short at the current position and increase the position by 2.
+     * Returns the short at the current position and increases the position by 2.
      * <p>
-     * The 2 bytes start from the current position are composed into a short
-     * according to current byte order and returned.
-     * The position increases by 2.</p>
-     *
-     * @return The short at the current position.
-     * @exception BufferUnderflowException If the position is greater than <code>limit - 2</code>
+     * The 2 bytes starting at the current position are composed into a short
+     * according to the current byte order and returned.
+     * </p>
+     * 
+     * @return the short at the current position.
+     * @exception BufferUnderflowException
+     *                if the position is greater than {@code limit - 2}.
+     * @since Android 1.0
      */
     public abstract short getShort();
 
     /**
      * Returns the short at the specified index.
      * <p>
-     * The 2 bytes start from the specified index are composed into a short
-     * according to current byte order and returned. The position is not
+     * The 2 bytes starting at the specified index are composed into a short
+     * according to the current byte order and returned. The position is not
      * changed.
      * </p>
-     *
+     * 
      * @param index
-     *            The index, must be no less than zero and equal or less than
-     *            <code>limit - 2</code>
-     * @return The short at the specified index.
+     *            the index, must not be negative and equal or less than
+     *            {@code limit - 2}.
+     * @return the short at the specified index.
      * @exception IndexOutOfBoundsException
-     *                If <code>index</code> is invalid
+     *                if {@code index} is invalid.
+     * @since Android 1.0
      */
     public abstract short getShort(int index);
 
     /**
-     * Returns whether this buffer is based on a byte array and is read/write.
-     * <p>
-     * If this buffer is readonly, then false is returned.</p>
-     *
-     * @return Whether this buffer is based on a byte array and is read/write.
+     * Indicates whether this buffer is based on a byte array and provides
+     * read/write access.
+     * 
+     * @return {@code true} if this buffer is based on a byte array and provides
+     *         read/write access, {@code false} otherwise.
+     * @since Android 1.0
      */
     public final boolean hasArray() {
         return protectedHasArray();
     }
 
     /**
-     * Hash code is calculated from the remaining <code>byte</code>s.
-     * <p>
-     * Position, limit, capacity and mark don't affect the hash code.</p>
-     *
-     * @return The hash code calculated from the remaining <code>byte</code>s.
+     * Calculates this buffer's hash code from the remaining chars. The
+     * position, limit, capacity and mark don't affect the hash code.
+     * 
+     * @return the hash code calculated from the remaining bytes.
+     * @since Android 1.0
      */
     public int hashCode() {
         int myPosition = position;
@@ -680,24 +728,24 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
     }
 
     /**
-     * Returns true if this buffer is direct.
-     * <p>
-     * A byte buffer is direct, if it is based on a byte buffer and the byte
-     * buffer is direct.
-     * </p>
-     *
-     * @return True if this buffer is direct.
+     * Indicates whether this buffer is direct.
+     * 
+     * @return {@code true} if this buffer is direct, {@code false} otherwise.
+     * @since Android 1.0
      */
     public abstract boolean isDirect();
 
     /**
-     * Returns the byte order used by this buffer when converting
-     * <code>byte</code>s from/to other primitive types.
+     * Returns the byte order used by this buffer when converting bytes from/to
+     * other primitive types.
      * <p>
-     * The default byte order of byte buffer is always BIG_ENDIAN.</p>
-     *
-     * @return The byte order used by this buffer when converting
-     * <code>byte</code>s from/to other primitive types.
+     * The default byte order of byte buffer is always
+     * {@link ByteOrder#BIG_ENDIAN BIG_ENDIAN}
+     * </p>
+     * 
+     * @return the byte order used by this buffer when converting bytes from/to
+     *         other primitive types.
+     * @since Android 1.0
      */
     public final ByteOrder order() {
         return order == Endianness.BIG_ENDIAN ? ByteOrder.BIG_ENDIAN
@@ -706,12 +754,13 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
 
     /**
      * Sets the byte order of this buffer.
-     *
+     * 
      * @param byteOrder
-     *            The byte order to set. If <code>null</code> then the order
+     *            the byte order to set. If {@code null} then the order
      *            will be {@link ByteOrder#LITTLE_ENDIAN LITTLE_ENDIAN}.
-     * @return This buffer
+     * @return this buffer.
      * @see ByteOrder
+     * @since Android 1.0
      */
     public final ByteBuffer order(ByteOrder byteOrder) {
         return orderImpl(byteOrder);
@@ -724,84 +773,86 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
     }
 
     /**
-     * Child class implements this method to realize <code>array()</code>.
-     *
-     * @return see <code>array()</code>
+     * Child class implements this method to realize {@code array()}.
+     * 
+     * @see #array()
+     * @since Android 1.0
      */
     abstract byte[] protectedArray();
 
     /**
-     * Child class implements this method to realize <code>arrayOffset()</code>.
-     *
-     * @return see <code>arrayOffset()</code>
+     * Child class implements this method to realize {@code arrayOffset()}.
+     * 
+     * @see #arrayOffset()
+     * @since Android 1.0
      */
     abstract int protectedArrayOffset();
 
     /**
-     * Child class implements this method to realize <code>hasArray()</code>.
-     *
-     * @return see <code>hasArray()</code>
+     * Child class implements this method to realize {@code hasArray()}.
+     * 
+     * @see #hasArray()
+     * @since Android 1.0
      */
     abstract boolean protectedHasArray();
 
     /**
-     * Writes the given byte to the current position and increase the position
+     * Writes the given byte to the current position and increases the position
      * by 1.
-     *
+     * 
      * @param b
-     *            The byte to write
-     * @return This buffer
+     *            the byte to write.
+     * @return this buffer.
      * @exception BufferOverflowException
-     *                If position is equal or greater than limit
+     *                if position is equal or greater than limit.
      * @exception ReadOnlyBufferException
-     *                If no changes may be made to the contents of this buffer
+     *                if no changes may be made to the contents of this buffer.
+     * @since Android 1.0
      */
     public abstract ByteBuffer put(byte b);
 
     /**
-     * Writes <code>byte</code>s in the given byte array to the current
-     * position and increase the position by the number of <code>byte</code>s
-     * written.
+     * Writes bytes in the given byte array to the current position and
+     * increases the position by the number of bytes written.
      * <p>
      * Calling this method has the same effect as
-     * <code>put(src, 0, src.length)</code>.
+     * {@code put(src, 0, src.length)}.
      * </p>
-     *
+     * 
      * @param src
-     *            The source byte array
-     * @return This buffer
+     *            the source byte array.
+     * @return this buffer.
      * @exception BufferOverflowException
-     *                If <code>remaining()</code> is less than
-     *                <code>src.length</code>
+     *                if {@code remaining()} is less than {@code src.length}.
      * @exception ReadOnlyBufferException
-     *                If no changes may be made to the contents of this buffer
+     *                if no changes may be made to the contents of this buffer.
+     * @since Android 1.0
      */
     public final ByteBuffer put(byte[] src) {
         return put(src, 0, src.length);
     }
 
     /**
-     * Writes <code>byte</code>s in the given byte array, starting from the
-     * specified offset, to the current position and increase the position by
-     * the number of <code>byte</code>s written.
-     *
+     * Writes bytes in the given byte array, starting from the specified offset,
+     * to the current position and increases the position by the number of bytes
+     * written.
+     * 
      * @param src
-     *            The source byte array
+     *            the source byte array.
      * @param off
-     *            The offset of byte array, must be no less than zero and no
-     *            greater than <code>src.length</code>
+     *            the offset of byte array, must not be negative and not greater
+     *            than {@code src.length}.
      * @param len
-     *            The number of <code>byte</code>s to write, must be no less
-     *            than zero and no greater than <code>src.length - off</code>
-     * @return This buffer
+     *            the number of bytes to write, must not be negative and not
+     *            greater than {@code src.length - off}.
+     * @return this buffer.
      * @exception BufferOverflowException
-     *                If <code>remaining()</code> is less than
-     *                <code>len</code>
+     *                if {@code remaining()} is less than {@code len}.
      * @exception IndexOutOfBoundsException
-     *                If either <code>off</code> or <code>len</code> is
-     *                invalid
+     *                if either {@code off} or {@code len} is invalid.
      * @exception ReadOnlyBufferException
-     *                If no changes may be made to the contents of this buffer
+     *                if no changes may be made to the contents of this buffer.
+     * @since Android 1.0
      */
     public ByteBuffer put(byte[] src, int off, int len) {
         int length = src.length;
@@ -819,20 +870,21 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
     }
 
     /**
-     * Writes all the remaining <code>byte</code>s of the <code>src</code>
-     * byte buffer to this buffer's current position, and increase both buffers'
-     * position by the number of <code>byte</code>s copied.
-     *
+     * Writes all the remaining bytes of the {@code src} byte buffer to this
+     * buffer's current position, and increases both buffers' position by the
+     * number of bytes copied.
+     * 
      * @param src
-     *            The source byte buffer
-     * @return This buffer
+     *            the source byte buffer.
+     * @return this buffer.
      * @exception BufferOverflowException
-     *                If <code>src.remaining()</code> is greater than this
-     *                buffer's <code>remaining()</code>
+     *                if {@code src.remaining()} is greater than this buffer's
+     *                {@code remaining()}.
      * @exception IllegalArgumentException
-     *                If <code>src</code> is this buffer
+     *                if {@code src} is this buffer.
      * @exception ReadOnlyBufferException
-     *                If no changes may be made to the contents of this buffer
+     *                if no changes may be made to the contents of this buffer.
+     * @since Android 1.0
      */
     public ByteBuffer put(ByteBuffer src) {
         if (src == this) {
@@ -848,264 +900,281 @@ public abstract class ByteBuffer extends Buffer implements Comparable<ByteBuffer
     }
 
     /**
-     * Write a byte to the specified index of this buffer and the position is
-     * not changed.
-     *
+     * Write a byte to the specified index of this buffer without changing the
+     * position.
+     * 
      * @param index
-     *            The index, must be no less than zero and less than the limit
+     *            the index, must not be negative and less than the limit.
      * @param b
-     *            The byte to write
-     * @return This buffer
+     *            the byte to write.
+     * @return this buffer.
      * @exception IndexOutOfBoundsException
-     *                If <code>index</code> is invalid
+     *                if {@code index} is invalid.
      * @exception ReadOnlyBufferException
-     *                If no changes may be made to the contents of this buffer
+     *                if no changes may be made to the contents of this buffer.
+     * @since Android 1.0
      */
     public abstract ByteBuffer put(int index, byte b);
 
     /**
-     * Writes the given char to the current position and increase the position
+     * Writes the given char to the current position and increases the position
      * by 2.
      * <p>
      * The char is converted to bytes using the current byte order.
      * </p>
-     *
+     * 
      * @param value
-     *            The char to write
-     * @return This buffer
+     *            the char to write.
+     * @return this buffer.
      * @exception BufferOverflowException
-     *                If position is greater than <code>limit - 2</code>
+     *                if position is greater than {@code limit - 2}.
      * @exception ReadOnlyBufferException
-     *                If no changes may be made to the contents of this buffer
+     *                if no changes may be made to the contents of this buffer.
+     * @since Android 1.0
      */
     public abstract ByteBuffer putChar(char value);
 
     /**
-     * Write a char to the specified index of this buffer.
+     * Writes the given char to the specified index of this buffer.
      * <p>
      * The char is converted to bytes using the current byte order. The position
      * is not changed.
      * </p>
-     *
+     * 
      * @param index
-     *            The index, must be no less than zero and equal or less than
-     *            <code>limit - 2</code>
+     *            the index, must not be negative and equal or less than
+     *            {@code limit - 2}.
      * @param value
-     *            The char to write
-     * @return This buffer
+     *            the char to write.
+     * @return this buffer.
      * @exception IndexOutOfBoundsException
-     *                If <code>index</code> is invalid
+     *                if {@code index} is invalid.
      * @exception ReadOnlyBufferException
-     *                If no changes may be made to the contents of this buffer
+     *                if no changes may be made to the contents of this buffer.
+     * @since Android 1.0
      */
     public abstract ByteBuffer putChar(int index, char value);
 
     /**
-     * Writes the given double to the current position and increase the position
+     * Writes the given double to the current position and increases the position
      * by 8.
      * <p>
      * The double is converted to bytes using the current byte order.
      * </p>
-     *
+     * 
      * @param value
-     *            The double to write
-     * @return This buffer
+     *            the double to write.
+     * @return this buffer.
      * @exception BufferOverflowException
-     *                If position is greater than <code>limit - 8</code>
+     *                if position is greater than {@code limit - 8}.
      * @exception ReadOnlyBufferException
-     *                If no changes may be made to the contents of this buffer
+     *                if no changes may be made to the contents of this buffer.
+     * @since Android 1.0
      */
     public abstract ByteBuffer putDouble(double value);
 
     /**
-     * Write a double to the specified index of this buffer.
+     * Writes the given double to the specified index of this buffer.
      * <p>
      * The double is converted to bytes using the current byte order. The
      * position is not changed.
      * </p>
-     *
+     * 
      * @param index
-     *            The index, must be no less than zero and equal or less than
-     *            <code>limit - 8</code>
+     *            the index, must not be negative and equal or less than
+     *            {@code limit - 8}.
      * @param value
-     *            The double to write
-     * @return This buffer
+     *            the double to write.
+     * @return this buffer.
      * @exception IndexOutOfBoundsException
-     *                If <code>index</code> is invalid
+     *                if {@code index} is invalid.
      * @exception ReadOnlyBufferException
-     *                If no changes may be made to the contents of this buffer
+     *                if no changes may be made to the contents of this buffer.
+     * @since Android 1.0
      */
     public abstract ByteBuffer putDouble(int index, double value);
 
     /**
-     * Writes the given float to the current position and increase the position
+     * Writes the given float to the current position and increases the position
      * by 4.
      * <p>
      * The float is converted to bytes using the current byte order.
      * </p>
-     *
+     * 
      * @param value
-     *            The float to write
-     * @return This buffer
+     *            the float to write.
+     * @return this buffer.
      * @exception BufferOverflowException
-     *                If position is greater than <code>limit - 4</code>
+     *                if position is greater than {@code limit - 4}.
      * @exception ReadOnlyBufferException
-     *                If no changes may be made to the contents of this buffer
+     *                if no changes may be made to the contents of this buffer.
+     * @since Android 1.0
      */
     public abstract ByteBuffer putFloat(float value);
 
     /**
-     * Write a float to the specified index of this buffer.
+     * Writes the given float to the specified index of this buffer.
      * <p>
      * The float is converted to bytes using the current byte order. The
      * position is not changed.
      * </p>
-     *
+     * 
      * @param index
-     *            The index, must be no less than zero and equal or less than
-     *            <code>limit - 4</code>
+     *            the index, must not be negative and equal or less than
+     *            {@code limit - 4}.
      * @param value
-     *            The float to write
-     * @return This buffer
+     *            the float to write.
+     * @return this buffer.
      * @exception IndexOutOfBoundsException
-     *                If <code>index</code> is invalid
+     *                if {@code index} is invalid.
      * @exception ReadOnlyBufferException
-     *                If no changes may be made to the contents of this buffer
+     *                if no changes may be made to the contents of this buffer.
+     * @since Android 1.0
      */
     public abstract ByteBuffer putFloat(int index, float value);
 
     /**
-     * Writes the given int to the current position and increase the position by
+     * Writes the given int to the current position and increases the position by
      * 4.
      * <p>
      * The int is converted to bytes using the current byte order.
      * </p>
-     *
+     * 
      * @param value
-     *            The int to write
-     * @return This buffer
+     *            the int to write.
+     * @return this buffer.
      * @exception BufferOverflowException
-     *                If position is greater than <code>limit - 4</code>
+     *                if position is greater than {@code limit - 4}.
      * @exception ReadOnlyBufferException
-     *                If no changes may be made to the contents of this buffer
+     *                if no changes may be made to the contents of this buffer.
+     * @since Android 1.0
      */
     public abstract ByteBuffer putInt(int value);
 
     /**
-     * Write a int to the specified index of this buffer.
+     * Writes the given int to the specified index of this buffer.
      * <p>
      * The int is converted to bytes using the current byte order. The position
      * is not changed.
      * </p>
-     *
+     * 
      * @param index
-     *            The index, must be no less than zero and equal or less than
-     *            <code>limit - 4</code>
+     *            the index, must not be negative and equal or less than
+     *            {@code limit - 4}.
      * @param value
-     *            The int to write
-     * @return This buffer
+     *            the int to write.
+     * @return this buffer.
      * @exception IndexOutOfBoundsException
-     *                If <code>index</code> is invalid
+     *                if {@code index} is invalid.
      * @exception ReadOnlyBufferException
-     *                If no changes may be made to the contents of this buffer
+     *                if no changes may be made to the contents of this buffer.
+     * @since Android 1.0
      */
     public abstract ByteBuffer putInt(int index, int value);
 
     /**
-     * Writes the given long to the current position and increase the position
+     * Writes the given long to the current position and increases the position
      * by 8.
      * <p>
      * The long is converted to bytes using the current byte order.
      * </p>
-     *
+     * 
      * @param value
-     *            The long to write
-     * @return This buffer
+     *            the long to write.
+     * @return this buffer.
      * @exception BufferOverflowException
-     *                If position is greater than <code>limit - 8</code>
+     *                if position is greater than {@code limit - 8}.
      * @exception ReadOnlyBufferException
-     *                If no changes may be made to the contents of this buffer
+     *                if no changes may be made to the contents of this buffer.
+     * @since Android 1.0
      */
     public abstract ByteBuffer putLong(long value);
 
     /**
-     * Write a long to the specified index of this buffer.
+     * Writes the given long to the specified index of this buffer.
      * <p>
      * The long is converted to bytes using the current byte order. The position
      * is not changed.
      * </p>
-     *
+     * 
      * @param index
-     *            The index, must be no less than zero and equal or less than
-     *            <code>limit - 8</code>
+     *            the index, must not be negative and equal or less than
+     *            {@code limit - 8}.
      * @param value
-     *            The long to write
-     * @return This buffer
+     *            the long to write.
+     * @return this buffer.
      * @exception IndexOutOfBoundsException
-     *                If <code>index</code> is invalid
+     *                if {@code index} is invalid.
      * @exception ReadOnlyBufferException
-     *                If no changes may be made to the contents of this buffer
+     *                if no changes may be made to the contents of this buffer.
+     * @since Android 1.0
      */
     public abstract ByteBuffer putLong(int index, long value);
 
     /**
-     * Writes the given short to the current position and increase the position
+     * Writes the given short to the current position and increases the position
      * by 2.
      * <p>
      * The short is converted to bytes using the current byte order.
      * </p>
-     *
+     * 
      * @param value
-     *            The short to write
-     * @return This buffer
+     *            the short to write.
+     * @return this buffer.
      * @exception BufferOverflowException
-     *                If position is greater than <code>limit - 2</code>
+     *                if position is greater than {@code limit - 2}.
      * @exception ReadOnlyBufferException
-     *                If no changes may be made to the contents of this buffer
+     *                if no changes may be made to the contents of this buffer.
+     * @since Android 1.0
      */
     public abstract ByteBuffer putShort(short value);
 
     /**
-     * Write a short to the specified index of this buffer.
+     * Writes the given short to the specified index of this buffer.
      * <p>
      * The short is converted to bytes using the current byte order. The
      * position is not changed.
      * </p>
-     *
+     * 
      * @param index
-     *            The index, must be no less than zero and equal or less than
-     *            <code>limit - 2</code>
+     *            the index, must not be negative and equal or less than
+     *            {@code limit - 2}.
      * @param value
-     *            The short to write
-     * @return This buffer
+     *            the short to write.
+     * @return this buffer.
      * @exception IndexOutOfBoundsException
-     *                If <code>index</code> is invalid
+     *                if {@code index} is invalid.
      * @exception ReadOnlyBufferException
-     *                If no changes may be made to the contents of this buffer
+     *                if no changes may be made to the contents of this buffer.
+     * @since Android 1.0
      */
     public abstract ByteBuffer putShort(int index, short value);
 
     /**
-     * Returns a sliced buffer that shares content with this buffer.
+     * Returns a sliced buffer that shares its content with this buffer.
      * <p>
      * The sliced buffer's capacity will be this buffer's
-     * <code>remaining()</code>, and its zero position will correspond to
-     * this buffer's current position. The new buffer's position will be
-     * 0, limit will be its capacity, and its mark is unset. The new buffer's
-     * readonly property and byte order are same as this buffer.</p>
+     * {@code remaining()}, and it's zero position will correspond to
+     * this buffer's current position. The new buffer's position will be 0,
+     * limit will be its capacity, and its mark is cleared. The new buffer's
+     * read-only property and byte order are the same as this buffer's.
+     * </p>
      * <p>
-     * The new buffer shares content with this buffer, which means
-     * either buffer's change of content will be visible to the other.
-     * The two buffer's position, limit and mark are independent.</p>
-     *
-     * @return A sliced buffer that shares content with this buffer.
+     * The new buffer shares its content with this buffer, which means either
+     * buffer's change of content will be visible to the other. The two buffer's
+     * position, limit and mark are independent.
+     * </p>
+     * 
+     * @return a sliced buffer that shares its content with this buffer.
+     * @since Android 1.0
      */
     public abstract ByteBuffer slice();
 
     /**
-     * Returns a string represents the state of this byte buffer.
-     *
-     * @return A string represents the state of this byte buffer.
+     * Returns a string representing the state of this byte buffer.
+     * 
+     * @return a string representing the state of this byte buffer.
+     * @since Android 1.0
      */
     public String toString() {
         StringBuffer buf = new StringBuffer();

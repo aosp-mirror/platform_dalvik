@@ -89,7 +89,6 @@ struct DvmGlobals {
     void        (*abortHook)(void);
 
     int         jniGrefLimit;       // 0 means no limit
-    bool        jniWarnError;       // treat JNI warnings as fatal errors?
     bool        reduceSignals;
     bool        noQuitHandler;
     char*       stackTraceFile;     // for SIGQUIT-inspired output
@@ -143,8 +142,10 @@ struct DvmGlobals {
     ClassObject* unlinkedJavaLangClass;    // see unlinkedJavaLangClassObject
     ClassObject* classJavaLangClass;
     ClassObject* classJavaLangClassArray;
+    ClassObject* classJavaLangError;
     ClassObject* classJavaLangObject;
     ClassObject* classJavaLangObjectArray;
+    ClassObject* classJavaLangRuntimeException;
     ClassObject* classJavaLangString;
     ClassObject* classJavaLangThread;
     ClassObject* classJavaLangVMThread;
@@ -263,6 +264,9 @@ struct DvmGlobals {
 
     /* direct method pointers - java.lang.reflect.Proxy */
     Method*     methJavaLangReflectProxy_constructorPrototype;
+
+    /* field offsets - java.lang.reflect.Proxy */
+    int         offJavaLangReflectProxy_h;
 
     /* fake native entry point method */
     Method*     methFakeNativeEntry;

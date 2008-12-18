@@ -17,10 +17,16 @@
 
 package org.apache.harmony.logging.tests.java.util.logging;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestLevel;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.security.Permission;
+import java.util.EmptyStackException;
 import java.util.Properties;
 import java.util.logging.ErrorManager;
 import java.util.logging.Filter;
@@ -40,6 +46,7 @@ import tests.util.CallVerificationStack;
  * Test suite for the class java.util.logging.Handler.
  * 
  */
+@TestTargetClass(Handler.class) 
 public class HandlerTest extends TestCase {
     private static String className = HandlerTest.class.getName();
 
@@ -70,6 +77,15 @@ public class HandlerTest extends TestCase {
     /*
      * Test the constructor.
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Handler",
+          methodArgs = {}
+        )
+    })
     public void testConstructor() {
         MockHandler h = new MockHandler();
         assertSame(h.getLevel(), Level.ALL);
@@ -82,12 +98,20 @@ public class HandlerTest extends TestCase {
     /*
      * Test the constructor, with properties set
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Handler",
+          methodArgs = {}
+        )
+    })
     public void testConstructor_Properties() throws Exception {
         Properties p = new Properties();
         p.put("java.util.logging.MockHandler.level", "FINE");
-        p
-                .put("java.util.logging.MockHandler.filter", className
-                        + "$MockFilter");
+        p.put("java.util.logging.MockHandler.filter", className
+                + "$MockFilter");
         p.put("java.util.logging.Handler.formatter", className
                 + "$MockFormatter");
         p.put("java.util.logging.MockHandler.encoding", "utf-8");
@@ -95,9 +119,9 @@ public class HandlerTest extends TestCase {
                 EnvironmentHelper.PropertiesToInputStream(p));
 
         assertEquals(LogManager.getLogManager().getProperty(
-                "java.util.logging.MockHandler.level"), "FINE");
+        "java.util.logging.MockHandler.level"), "FINE");
         assertEquals(LogManager.getLogManager().getProperty(
-                "java.util.logging.MockHandler.encoding"), "utf-8");
+        "java.util.logging.MockHandler.encoding"), "utf-8");
         MockHandler h = new MockHandler();
         assertSame(h.getLevel(), Level.ALL);
         assertNull(h.getFormatter());
@@ -110,6 +134,15 @@ public class HandlerTest extends TestCase {
     /*
      * Abstract method, no test needed.
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Abstract method.",
+      targets = {
+        @TestTarget(
+          methodName = "close",
+          methodArgs = {}
+        )
+    })
     public void testClose() {
         MockHandler h = new MockHandler();
         h.close();
@@ -118,6 +151,15 @@ public class HandlerTest extends TestCase {
     /*
      * Abstract method, no test needed.
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Abstract method.",
+      targets = {
+        @TestTarget(
+          methodName = "flush",
+          methodArgs = {}
+        )
+    })
     public void testFlush() {
         MockHandler h = new MockHandler();
         h.flush();
@@ -126,6 +168,15 @@ public class HandlerTest extends TestCase {
     /*
      * Abstract method, no test needed.
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Abstract method.",
+      targets = {
+        @TestTarget(
+          methodName = "publish",
+          methodArgs = {java.util.logging.LogRecord.class}
+        )
+    })
     public void testPublish() {
         MockHandler h = new MockHandler();
         h.publish(null);
@@ -134,6 +185,19 @@ public class HandlerTest extends TestCase {
     /*
      * Test getEncoding & setEncoding methods with supported encoding.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "getEncoding",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "setEncoding",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void testGetSetEncoding_Normal() throws Exception {
         MockHandler h = new MockHandler();
         h.setEncoding("iso-8859-1");
@@ -143,6 +207,15 @@ public class HandlerTest extends TestCase {
     /*
      * Test getEncoding & setEncoding methods with null.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies null as a parameter.",
+      targets = {
+        @TestTarget(
+          methodName = "getEncoding",
+          methodArgs = {}
+        )
+    })
     public void testGetSetEncoding_Null() throws Exception {
         MockHandler h = new MockHandler();
         h.setEncoding(null);
@@ -152,6 +225,15 @@ public class HandlerTest extends TestCase {
     /*
      * Test getEncoding & setEncoding methods with unsupported encoding.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies UnsupportedEncodingException.",
+      targets = {
+        @TestTarget(
+          methodName = "setEncoding",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void testGetSetEncoding_Unsupported() {
         MockHandler h = new MockHandler();
         try {
@@ -165,6 +247,15 @@ public class HandlerTest extends TestCase {
     /*
      * Test setEncoding with insufficient privilege.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify UnsupportedEncodingException.",
+      targets = {
+        @TestTarget(
+          methodName = "setEncoding",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void testSetEncoding_InsufficientPrivilege() throws Exception {
         MockHandler h = new MockHandler();
         SecurityManager oldMan = System.getSecurityManager();
@@ -194,6 +285,19 @@ public class HandlerTest extends TestCase {
     /*
      * Test getErrorManager & setErrorManager methods with non-null value.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setErrorManager",
+          methodArgs = {java.util.logging.ErrorManager.class}
+        ),
+        @TestTarget(
+          methodName = "getErrorManager",
+          methodArgs = {}
+        )
+    })
     public void testGetSetErrorManager_Normal() throws Exception {
         MockHandler h = new MockHandler();
         ErrorManager man = new ErrorManager();
@@ -204,6 +308,19 @@ public class HandlerTest extends TestCase {
     /*
      * Test getErrorManager & setErrorManager methods with null.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies null as a parameter.",
+      targets = {
+        @TestTarget(
+          methodName = "getErrorManager",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "setErrorManager",
+          methodArgs = {java.util.logging.ErrorManager.class}
+        )
+    })
     public void testGetSetErrorManager_Null() throws Exception {
         MockHandler h = new MockHandler();
         // test set null
@@ -225,6 +342,15 @@ public class HandlerTest extends TestCase {
     /*
      * Test getErrorManager with insufficient privilege.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies SecurityException.",
+      targets = {
+        @TestTarget(
+          methodName = "getErrorManager",
+          methodArgs = {}
+        )
+    })
     public void testGetErrorManager_InsufficientPrivilege() throws Exception {
         MockHandler h = new MockHandler();
         SecurityManager oldMan = System.getSecurityManager();
@@ -242,6 +368,15 @@ public class HandlerTest extends TestCase {
     /*
      * Test setErrorManager with insufficient privilege.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies setErrorManager with insufficient privilege.",
+      targets = {
+        @TestTarget(
+          methodName = "setErrorManager",
+          methodArgs = {java.util.logging.ErrorManager.class}
+        )
+    })
     public void testSetErrorManager_InsufficientPrivilege() throws Exception {
         MockHandler h = new MockHandler();
         SecurityManager oldMan = System.getSecurityManager();
@@ -271,6 +406,19 @@ public class HandlerTest extends TestCase {
     /*
      * Test getFilter & setFilter methods with non-null value.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify SecurityException.",
+      targets = {
+        @TestTarget(
+          methodName = "setFilter",
+          methodArgs = {java.util.logging.Filter.class}
+        ),
+        @TestTarget(
+          methodName = "getFilter",
+          methodArgs = {}
+        )
+    })
     public void testGetSetFilter_Normal() throws Exception {
         MockHandler h = new MockHandler();
         Filter f = new MockFilter();
@@ -281,6 +429,19 @@ public class HandlerTest extends TestCase {
     /*
      * Test getFilter & setFilter methods with null.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies null as a parameter.",
+      targets = {
+        @TestTarget(
+          methodName = "getFilter",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "setFilter",
+          methodArgs = {java.util.logging.Filter.class}
+        )
+    })
     public void testGetSetFilter_Null() throws Exception {
         MockHandler h = new MockHandler();
         // test set null
@@ -294,6 +455,15 @@ public class HandlerTest extends TestCase {
     /*
      * Test setFilter with insufficient privilege.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies SecurityException.",
+      targets = {
+        @TestTarget(
+          methodName = "setFilter",
+          methodArgs = {java.util.logging.Filter.class}
+        )
+    })
     public void testSetFilter_InsufficientPrivilege() throws Exception {
         MockHandler h = new MockHandler();
         SecurityManager oldMan = System.getSecurityManager();
@@ -323,6 +493,19 @@ public class HandlerTest extends TestCase {
     /*
      * Test getFormatter & setFormatter methods with non-null value.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify SecurityException.",
+      targets = {
+        @TestTarget(
+          methodName = "getFormatter",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "setFormatter",
+          methodArgs = {java.util.logging.Formatter.class}
+        )
+    })
     public void testGetSetFormatter_Normal() throws Exception {
         MockHandler h = new MockHandler();
         Formatter f = new SimpleFormatter();
@@ -333,6 +516,19 @@ public class HandlerTest extends TestCase {
     /*
      * Test getFormatter & setFormatter methods with null.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies null as a parameter.",
+      targets = {
+        @TestTarget(
+          methodName = "getFormatter",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "setFormatter",
+          methodArgs = {java.util.logging.Formatter.class}
+        )
+    })
     public void testGetSetFormatter_Null() throws Exception {
         MockHandler h = new MockHandler();
         // test set null
@@ -354,6 +550,15 @@ public class HandlerTest extends TestCase {
     /*
      * Test setFormatter with insufficient privilege.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies SecurityException.",
+      targets = {
+        @TestTarget(
+          methodName = "getFormatter",
+          methodArgs = {}
+        )
+    })
     public void testSetFormatter_InsufficientPrivilege() throws Exception {
         MockHandler h = new MockHandler();
         SecurityManager oldMan = System.getSecurityManager();
@@ -383,6 +588,19 @@ public class HandlerTest extends TestCase {
     /*
      * Test getLevel & setLevel methods with non-null value.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify SecurityException.",
+      targets = {
+        @TestTarget(
+          methodName = "getLevel",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "setLevel",
+          methodArgs = {java.util.logging.Level.class}
+        )
+    })
     public void testGetSetLevel_Normal() throws Exception {
         MockHandler h = new MockHandler();
         Level f = Level.CONFIG;
@@ -393,6 +611,19 @@ public class HandlerTest extends TestCase {
     /*
      * Test getLevel & setLevel methods with null.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies getLevel & setLevel methods with null.",
+      targets = {
+        @TestTarget(
+          methodName = "getLevel",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "setLevel",
+          methodArgs = {java.util.logging.Level.class}
+        )
+    })
     public void testGetSetLevel_Null() throws Exception {
         MockHandler h = new MockHandler();
         // test set null
@@ -414,6 +645,15 @@ public class HandlerTest extends TestCase {
     /*
      * Test setLevel with insufficient privilege.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies  NullPointerException, SecurityException.",
+      targets = {
+        @TestTarget(
+          methodName = "setLevel",
+          methodArgs = {java.util.logging.Level.class}
+        )
+    })
     public void testSetLevel_InsufficientPrivilege() throws Exception {
         MockHandler h = new MockHandler();
         SecurityManager oldMan = System.getSecurityManager();
@@ -443,6 +683,15 @@ public class HandlerTest extends TestCase {
     /*
      * Use no filter
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isLoggable",
+          methodArgs = {java.util.logging.LogRecord.class}
+        )
+    })
     public void testIsLoggable_NoFilter() {
         MockHandler h = new MockHandler();
         LogRecord r = new LogRecord(Level.CONFIG, null);
@@ -462,24 +711,51 @@ public class HandlerTest extends TestCase {
     /*
      * Use a filter
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Verifies isLoggable method with filter.",
+      targets = {
+        @TestTarget(
+          methodName = "isLoggable",
+          methodArgs = {java.util.logging.LogRecord.class}
+        )
+    })
     public void testIsLoggable_WithFilter() {
         MockHandler h = new MockHandler();
         LogRecord r = new LogRecord(Level.CONFIG, null);
+        LogRecord r1 = new LogRecord(Level.CONFIG, null);
+        LogRecord r2 = new LogRecord(Level.CONFIG, null);
+        
         h.setFilter(new MockFilter());
         assertFalse(h.isLoggable(r));
-
+        assertSame(r,CallVerificationStack.getInstance().pop());
+        
         h.setLevel(Level.CONFIG);
-        assertFalse(h.isLoggable(r));
-        assertSame(r, CallVerificationStack.getInstance().pop());
+        assertFalse(h.isLoggable(r1));
+        assertSame(r1, CallVerificationStack.getInstance().pop());
 
         h.setLevel(Level.SEVERE);
-        assertFalse(h.isLoggable(r));
-        assertSame(r, CallVerificationStack.getInstance().pop());
+        assertFalse(h.isLoggable(r2));
+       
+        try{
+            CallVerificationStack.getInstance().pop();
+        }catch(EmptyStackException e){
+            //normal
+        }
     }
 
     /**
      * @tests java.util.logging.Handler#isLoggable(LogRecord)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies null as a parameter.",
+      targets = {
+        @TestTarget(
+          methodName = "isLoggable",
+          methodArgs = {java.util.logging.LogRecord.class}
+        )
+    })
     public void testIsLoggable_Null() {
         MockHandler h = new MockHandler();
         try {
@@ -494,6 +770,15 @@ public class HandlerTest extends TestCase {
      * Test whether the error manager is actually called with expected
      * parameters.
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "reportError",
+          methodArgs = {java.lang.String.class, java.lang.Exception.class, int.class}
+        )
+    })
     public void testReportError() {
         MockHandler h = new MockHandler();
         h.setErrorManager(new MockErrorManager());

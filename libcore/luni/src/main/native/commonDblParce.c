@@ -18,7 +18,6 @@
 #include <math.h>
 
 #include "commonDblParce.h"
-#include "exceptions.h"
 #include "cbigint.h"
 
 
@@ -102,9 +101,6 @@
         } \
     }
 
-//??? Util: don't want portablility layer.
-//#define allocateU64(x, n) if (!((x) = (U_64*) hymem_allocate_memory((n) * sizeof(U_64)))) goto OutOfMemory;
-//#define release(r) if ((r)) hymem_free_memory((r));
 #define allocateU64(x, n) if (!((x) = (U_64*) malloc((n) * sizeof(U_64)))) goto OutOfMemory;
 #define release(r) if ((r)) free((r));
 
@@ -291,9 +287,14 @@ createDouble1 (JNIEnv * env, U_64 * f, IDATA length, jint e)
          first and let it fall to zero if need be. */
 
       if (result == 0.0)
-        DOUBLE_TO_LONGBITS (result) = MINIMUM_LONGBITS;
+        {
+          DOUBLE_TO_LONGBITS (result) = MINIMUM_LONGBITS;
+        }
       else
-        DOUBLE_TO_LONGBITS (result) = INFINITE_LONGBITS;
+        {
+          DOUBLE_TO_LONGBITS (result) = INFINITE_LONGBITS;
+          return result;
+        }
     }
   else if (e > APPROX_MIN_MAGNITUDE)
     {
@@ -428,8 +429,6 @@ doubleAlgorithm (JNIEnv * env, U_64 * f, IDATA length, jint e, jdouble z)
   IDATA k, comparison, comparison2;
   U_64 *x, *y, *D, *D2;
   IDATA xLength, yLength, DLength, D2Length, decApproxCount, incApproxCount;
-  //??? Util: portability layer: out.
-  //PORT_ACCESS_FROM_ENV (env);
 
   x = y = D = D2 = 0;
   xLength = yLength = DLength = D2Length = 0;
@@ -441,8 +440,6 @@ doubleAlgorithm (JNIEnv * env, U_64 * f, IDATA length, jint e, jdouble z)
       k = doubleExponent (z);
 
       if (x && x != f)
-//??? Util: not using portability layer
-//        jclmem_free_memory (env, x);
           free(x);
 
       release (y);
@@ -589,8 +586,6 @@ doubleAlgorithm (JNIEnv * env, U_64 * f, IDATA length, jint e, jdouble z)
   while (1);
 
   if (x && x != f)
-//??? Util: not using portability layer
-//    jclmem_free_memory (env, x);
      free(x);
   release (y);
   release (D);
@@ -599,8 +594,6 @@ doubleAlgorithm (JNIEnv * env, U_64 * f, IDATA length, jint e, jdouble z)
 
 OutOfMemory:
   if (x && x != f)
-//??? Util: not using portability layer
-//    jclmem_free_memory (env, x);
       free(x);
   release (y);
   release (y);

@@ -20,6 +20,8 @@ package dalvik.system;
  * Provides an interface to VM-global, Dalvik-specific features.
  * An application cannot create its own Runtime instance, and must obtain
  * one from the getRuntime method.
+ * 
+ * @since Android 1.0
  */
 public final class VMRuntime {
 
@@ -173,6 +175,8 @@ public final class VMRuntime {
     /**
      * Returns the number of externally-allocated bytes being tracked by
      * trackExternalAllocation/Free().
+     * 
+     * @return the number of bytes
      */
     public native long getExternalBytesAllocated();
 }

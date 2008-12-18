@@ -26,35 +26,29 @@ import java.io.IOException;
 import java.io.Serializable;
 
 /**
- * GuardedObject controls access to an object, by checking all requests for the
- * object with a Guard.
+ * {@code GuardedObject} controls access to an object, by checking all requests
+ * for the object with a {@code Guard}.
  * 
+ * @since Android 1.0
  */
 public class GuardedObject implements Serializable {
 
-    /**
-     * @com.intel.drl.spec_ref
-     */
     private static final long serialVersionUID = -5240450096227834308L;
 
-    /**
-     * @com.intel.drl.spec_ref
-     */
     private final Object object;
 
-    /**
-     * @com.intel.drl.spec_ref
-     */
     private final Guard guard;
 
     /**
-     * Constructs a GuardedObject to protect access to the specified Object
-     * using the specified Guard.
+     * Constructs a new instance of {@code GuardedObject} which protects access
+     * to the specified {@code Object} using the specified {@code Guard}.
      * 
      * @param object
-     *            the Object to guard
+     *            the {@code Object} to protect.
      * @param guard
-     *            the Guard
+     *            the {@code Guard} which protects the specified {@code Object},
+     *            maybe {@code null}.
+     * @since Android 1.0
      */
     public GuardedObject(Object object, Guard guard) {
         this.object = object;
@@ -62,15 +56,14 @@ public class GuardedObject implements Serializable {
     }
 
     /**
-     * Checks whether access should be granted to the object. If access is
-     * granted, this method returns the object. If it is not granted, then a
-     * <code>SecurityException</code> is thrown.
+     * Returns the guarded {@code Object} if the associated {@code Guard}
+     * permits access. If access is not granted, then a {@code
+     * SecurityException} is thrown.
      * 
-     * 
-     * @return the guarded object
-     * 
-     * @exception java.lang.SecurityException
-     *                If access is not granted to the object
+     * @return the guarded object.
+     * @exception SecurityException
+     *                if access is not granted to the guarded object.
+     * @since Android 1.0
      */
     public Object getObject() throws SecurityException {
         if (guard != null) {
@@ -79,8 +72,9 @@ public class GuardedObject implements Serializable {
         return object;
     }
 
-    /** 
-     * Checks guard (if there is one) before performing a default serialization. 
+    /**
+     * Checks the guard (if there is one) before performing a default
+     * serialization.
      */
     private void writeObject(java.io.ObjectOutputStream out) throws IOException {
         if (guard != null) {

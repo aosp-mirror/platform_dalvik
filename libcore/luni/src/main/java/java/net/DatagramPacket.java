@@ -20,12 +20,12 @@ package java.net;
 import org.apache.harmony.luni.util.Msg;
 
 /**
- * This class models a datagram packet to be sent or received. The
- * DatagramPacket(byte[], int, InetAddress, int) constructor is used for packets
- * to be sent, while the DatagramPacket(byte[], int) constructor is used for
- * received packets.
+ * This class represents a datagram packet which contains data either to be sent
+ * or received through a {@code DatagramSocket}. It holds additional information
+ * such as its source or destination host.
  * 
  * @see DatagramSocket
+ * @since Android 1.0
  */
 public final class DatagramPacket {
 
@@ -40,29 +40,30 @@ public final class DatagramPacket {
     int offset = 0;
 
     /**
-     * Constructs a new <code>DatagramPacket</code> suitable for receiving
-     * datagram packets of length up to <code>length</code>.
+     * Constructs a new {@code DatagramPacket} object to receive data up to
+     * {@code length} bytes.
      * 
      * @param data
-     *            byte array to store the read characters
+     *            a byte array to store the read characters.
      * @param length
-     *            length of the data buffer
+     *            the length of the data buffer.
+     * @since Android 1.0
      */
     public DatagramPacket(byte[] data, int length) {
         this(data, 0, length);
     }
 
     /**
-     * Constructs a new <code>DatagramPacket</code> suitable for receiving
-     * datagram packets of length up to <code>length</code>, with an offset
-     * into the buffer <code>offset</code>.
+     * Constructs a new {@code DatagramPacket} object to receive data up to
+     * {@code length} bytes with a specified buffer offset.
      * 
      * @param data
-     *            byte array to store the read characters
+     *            a byte array to store the read characters.
      * @param offset
-     *            the offset into the byte array
+     *            the offset of the byte array where the bytes is written.
      * @param length
-     *            length of the data buffer
+     *            the length of the data.
+     * @since Android 1.0
      */
     public DatagramPacket(byte[] data, int offset, int length) {
         super();
@@ -70,22 +71,23 @@ public final class DatagramPacket {
     }
 
     /**
-     * Constructs a new <code>DatagramPacket</code> suitable for sending
-     * packets to the nominated host/port. The <code>length</code> must be
-     * less than or equal to the size of <code>data</code>.
+     * Constructs a new {@code DatagramPacket} object to send data to the port
+     * {@code aPort} of the address {@code host}. The {@code length} must be
+     * lesser than or equal to the size of {@code data}. The first {@code
+     * length} bytes from the byte array position {@code offset} are sent.
      * 
      * @param data
-     *            byte array to store the read characters
+     *            a byte array which stores the characters to be sent.
      * @param offset
-     *            the offset in to read/write from
+     *            the offset of {@code data} where to read from.
      * @param length
-     *            length of the data buffer
+     *            the length of data.
      * @param host
-     *            address of the target host
+     *            the address of the target host.
      * @param aPort
-     *            target host port
+     *            the port of the target host.
+     * @since Android 1.0
      */
-
     public DatagramPacket(byte[] data, int offset, int length,
             InetAddress host, int aPort) {
         this(data, offset, length);
@@ -94,89 +96,99 @@ public final class DatagramPacket {
     }
 
     /**
-     * Constructs a new <code>DatagramPacket</code> suitable for sending
-     * packets to the nominated host/port. The <code>length</code> must be
-     * less than or equal to the size of <code>data</code>.
+     * Constructs a new {@code DatagramPacket} object to send data to the port
+     * {@code aPort} of the address {@code host}. The {@code length} must be
+     * lesser than or equal to the size of {@code data}. The first {@code
+     * length} bytes are sent.
      * 
      * @param data
-     *            byte array to store the read characters
+     *            a byte array which stores the characters to be sent.
      * @param length
-     *            length of the data buffer
+     *            the length of data.
      * @param host
-     *            address of the target host
+     *            the address of the target host.
      * @param port
-     *            target host port
+     *            the port of the target host.
+     * @since Android 1.0
      */
     public DatagramPacket(byte[] data, int length, InetAddress host, int port) {
         this(data, 0, length, host, port);
     }
 
     /**
-     * Answer the IP address of the machine that is the target or sender of this
-     * datagram.
+     * Gets the sender or destination IP address of this datagram packet.
      * 
-     * @return InetAddress the target host address
+     * @return the address from where the datagram was received or to which it
+     *         is sent.
+     * @since Android 1.0
      */
     public synchronized InetAddress getAddress() {
         return address;
     }
 
     /**
-     * Answer the data sent or received in this datagram.
+     * Gets the data of this datagram packet.
      * 
-     * @return byte[] the data sent/received
+     * @return the received data or the data to be sent.
+     * @since Android 1.0
      */
     public synchronized byte[] getData() {
         return data;
     }
 
     /**
-     * Answer the length of the data sent or received in this datagram.
+     * Gets the length of the data stored in this datagram packet.
      * 
-     * @return int the length of the sent/received data
+     * @return the length of the received data or the data to be sent.
+     * @since Android 1.0
      */
     public synchronized int getLength() {
         return length;
     }
 
     /**
-     * Answer the offset of the data sent or received in this datagram buffer.
+     * Gets the offset of the data stored in this datagram packet.
      * 
-     * @return int the offset of the start of the sent/received data
+     * @return the position of the received data or the data to be sent.
+     * @since Android 1.0
      */
     public synchronized int getOffset() {
         return offset;
     }
 
     /**
-     * Answer the port number of the target or sender machine of this datagram.
+     * Gets the port number of the target or sender host of this datagram
+     * packet.
      * 
-     * @return int for received packets, the sender address and for sent
-     *         packets, the target host
+     * @return the port number of the origin or target host.
+     * @since Android 1.0
      */
     public synchronized int getPort() {
         return port;
     }
 
     /**
-     * Set the IP address of the machine that is the target of this datagram.
+     * Sets the IP address of the target host.
      * 
      * @param addr
-     *            the target host address
+     *            the target host address.
+     * @since Android 1.0
      */
     public synchronized void setAddress(InetAddress addr) {
         address = addr;
     }
 
     /**
-     * Set the data buffer for this datagram.
+     * Sets the data buffer for this datagram packet.
      * 
      * @param buf
-     *            the data to be sent
+     *            the buffer to store the data.
      * @param anOffset
-     *            the offset into the data
+     *            the buffer offset where the data is stored.
      * @param aLength
-     *            the length of the data to be sent
+     *            the length of the data to be sent or the length of buffer to
+     *            store the received data.
+     * @since Android 1.0
      */
     public synchronized void setData(byte[] buf, int anOffset, int aLength) {
         if (0 > anOffset || anOffset > buf.length || 0 > aLength
@@ -189,10 +201,12 @@ public final class DatagramPacket {
     }
 
     /**
-     * Set the data sent in this datagram.
+     * Sets the data buffer for this datagram packet. The length of the datagram
+     * packet is set to the buffer length.
      * 
      * @param buf
-     *            the data to be sent
+     *            the buffer to store the data.
+     * @since Android 1.0
      */
     public synchronized void setData(byte[] buf) {
         length = buf.length; // This will check for null
@@ -201,10 +215,12 @@ public final class DatagramPacket {
     }
 
     /**
-     * Set the length of the data sent in this datagram.
+     * Sets the length of the datagram packet. This length plus the offset must
+     * be lesser than or equal to the buffer size.
      * 
      * @param len
-     *            the length of the data to be sent
+     *            the length of this datagram packet.
+     * @since Android 1.0
      */
     public synchronized void setLength(int len) {
         if (0 > len || offset + len > data.length) {
@@ -214,10 +230,11 @@ public final class DatagramPacket {
     }
 
     /**
-     * Set the port number of the target machine of this datagram.
+     * Sets the port number of the target host of this datagram packet.
      * 
      * @param aPort
-     *            the target host port
+     *            the target host port number.
+     * @since Android 1.0
      */
     public synchronized void setPort(int aPort) {
         if (aPort < 0 || aPort > 65535) {
@@ -227,36 +244,43 @@ public final class DatagramPacket {
     }
 
     /**
-     * Constructs a new <code>DatagramPacket</code> suitable for sending
-     * packets to the nominated host/port. The <code>length</code> must be
-     * less than or equal to the size of <code>data</code>.
+     * Constructs a new {@code DatagramPacket} object to send data to the
+     * address {@code sockAddr}. The {@code length} must be lesser than or equal
+     * to the size of {@code data}. The first {@code length} bytes of the data
+     * are sent.
      * 
      * @param data
-     *            byte array to store the read characters
+     *            the byte array to store the data.
      * @param length
-     *            length of the data buffer
+     *            the length of the data.
      * @param sockAddr
-     *            the machine address and port
+     *            the target host address and port.
+     * @throws SocketException
+     *             if an error in the underlying protocol occurs.
+     * @since Android 1.0
      */
-    public DatagramPacket(byte[] data, int length, SocketAddress sockAddr)
-            throws SocketException {
+    public DatagramPacket(byte[] data, int length, SocketAddress sockAddr) throws SocketException {
         this(data, 0, length);
         setSocketAddress(sockAddr);
     }
 
     /**
-     * Constructs a new <code>DatagramPacket</code> suitable for sending
-     * packets to the nominated host/port. The <code>length</code> must be
-     * less than or equal to the size of <code>data</code>.
+     * Constructs a new {@code DatagramPacket} object to send data to the
+     * address {@code sockAddr}. The {@code length} must be lesser than or equal
+     * to the size of {@code data}. The first {@code length} bytes of the data
+     * are sent.
      * 
      * @param data
-     *            byte array to store the read characters
+     *            the byte array to store the data.
      * @param offset
-     *            the offset in to read/write from
+     *            the offset of the data.
      * @param length
-     *            length of the data buffer
+     *            the length of the data.
      * @param sockAddr
-     *            the machine address and port
+     *            the target host address and port.
+     * @throws SocketException
+     *             if an error in the underlying protocol occurs.
+     * @since Android 1.0
      */
     public DatagramPacket(byte[] data, int offset, int length,
             SocketAddress sockAddr) throws SocketException {
@@ -265,17 +289,22 @@ public final class DatagramPacket {
     }
 
     /**
-     * Answer the SocketAddress for this packet.
+     * Gets the host address and the port to which this datagram packet is sent
+     * as a {@code SocketAddress} object.
+     * 
+     * @return the SocketAddress of the target host.
+     * @since Android 1.0
      */
     public synchronized SocketAddress getSocketAddress() {
         return new InetSocketAddress(getAddress(), getPort());
     }
 
     /**
-     * Set the SocketAddress for this packet.
+     * Sets the {@code SocketAddress} for this datagram packet.
      * 
      * @param sockAddr
-     *            the machine address and port
+     *            the SocketAddress of the target host.
+     * @since Android 1.0
      */
     public synchronized void setSocketAddress(SocketAddress sockAddr) {
         if (!(sockAddr instanceof InetSocketAddress)) {

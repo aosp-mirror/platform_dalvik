@@ -16,6 +16,13 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
+import junit.framework.TestCase;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,14 +31,29 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import junit.framework.TestCase;
-
+@TestTargetClass(ProcessBuilder.class) 
 public class ProcessBuilderTest extends TestCase {
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "ProcessBuilder",
+          methodArgs = {java.lang.String[].class}
+        )
+    })
     public void testProcessBuilderStringArray() {
 
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Checks only NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "ProcessBuilder",
+          methodArgs = {java.util.List.class}
+        )
+    })
     public void testProcessBuilderListOfString() {
         try {
             new ProcessBuilder((List<String>) null);
@@ -39,7 +61,15 @@ public class ProcessBuilderTest extends TestCase {
         } catch (NullPointerException e) {
         }
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "command",
+          methodArgs = {}
+        )
+    })
     public void testCommand() {
         ProcessBuilder pb = new ProcessBuilder("command");
         assertEquals(1, pb.command().size());
@@ -54,7 +84,15 @@ public class ProcessBuilderTest extends TestCase {
         list.toArray(command);
         assertTrue(Arrays.equals(new String[]{"BBB","CCC","DDD"}, command));
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "command",
+          methodArgs = {java.lang.String[].class}
+        )
+    })
     public void testCommandStringArray() {
         ProcessBuilder pb = new ProcessBuilder("command");
         ProcessBuilder pbReturn = pb.command("cmd");
@@ -62,7 +100,15 @@ public class ProcessBuilderTest extends TestCase {
         assertEquals(1, pb.command().size());
         assertEquals("cmd", pb.command().get(0));
     }
-    
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "command",
+          methodArgs = {java.util.List.class}
+        )
+    })
     public void testCommandListOfString() {
         ProcessBuilder pb = new ProcessBuilder("command");
         List<String> newCmd = new ArrayList<String>();
@@ -77,12 +123,28 @@ public class ProcessBuilderTest extends TestCase {
         assertEquals("cmd", pb.command().get(0));
         assertEquals("arg", pb.command().get(1));
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "directory",
+          methodArgs = {}
+        )
+    })
     public void testDirectory() {
         ProcessBuilder pb = new ProcessBuilder("command");
         assertNull(pb.directory());
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "directory",
+          methodArgs = {java.io.File.class}
+        )
+    })
     public void testDirectoryFile() {
         ProcessBuilder pb = new ProcessBuilder("command");
         File dir = new File(System.getProperty("java.io.tmpdir"));
@@ -94,8 +156,16 @@ public class ProcessBuilderTest extends TestCase {
         assertSame(pb, pbReturn);
         assertNull(pb.directory());
     }
-
-    public void testEnvironment() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "environment",
+          methodArgs = {}
+        )
+    })
+    public void _testEnvironment() {
         ProcessBuilder pb = new ProcessBuilder("command");
         Map<String, String> env = pb.environment();
         assertEquals(System.getenv(), env);
@@ -127,12 +197,28 @@ public class ProcessBuilderTest extends TestCase {
             // expected;
         }
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "redirectErrorStream",
+          methodArgs = {}
+        )
+    })
     public void testRedirectErrorStream() {
         ProcessBuilder pb = new ProcessBuilder("command");
         assertFalse(pb.redirectErrorStream());
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Doesn't check false.",
+      targets = {
+        @TestTarget(
+          methodName = "redirectErrorStream",
+          methodArgs = {boolean.class}
+        )
+    })
     public void testRedirectErrorStreamBoolean() {
         ProcessBuilder pb = new ProcessBuilder("command");
         ProcessBuilder pbReturn = pb.redirectErrorStream(true);
@@ -144,6 +230,15 @@ public class ProcessBuilderTest extends TestCase {
      * @throws IOException
      * @tests {@link java.lang.ProcessBuilder#start()}
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "start",
+          methodArgs = {}
+        )
+    })
     @SuppressWarnings("nls")
     public void testStart() throws IOException {
         ProcessBuilder pb = new ProcessBuilder("java", "-version");

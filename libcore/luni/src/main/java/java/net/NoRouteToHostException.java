@@ -18,27 +18,32 @@
 package java.net;
 
 /**
- * The NoRouteToHostException may be thrown when attempting to connect to a
- * remote machine and because of network fault or firewall, no route can be
- * established.
+ * The {@code NoRouteToHostException} will be thrown while attempting to connect
+ * to a remote host but the host cannot be reached for instance because of a
+ * badly configured router or a blocking firewall.
+ * 
+ * @since Android 1.0
  */
 public class NoRouteToHostException extends SocketException {
 
     private static final long serialVersionUID = -1897550894873493790L;
 
     /**
-     * Constructs a new instance of this class with its walkback filled in.
+     * Constructs a new instance of this exception with its walkback filled in.
+     * 
+     * @since Android 1.0
      */
     public NoRouteToHostException() {
         super();
     }
 
     /**
-     * Constructs a new instance of this class with its walkback and message
+     * Constructs a new instance of this exception with its walkback and message
      * filled in.
      * 
      * @param detailMessage
-     *            String The detail message for the exception.
+     *            the detail message for this exception.
+     * @since Android 1.0
      */
     public NoRouteToHostException(String detailMessage) {
         super(detailMessage);

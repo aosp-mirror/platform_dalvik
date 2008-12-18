@@ -10,13 +10,13 @@ HANDLE_OPCODE(OP_NEW_INSTANCE /*vAA, class@BBBB*/)
         ILOGV("|new-instance v%d,class@0x%04x", vdst, ref);
         clazz = dvmDexGetResolvedClass(methodClassDex, ref);
         if (clazz == NULL) {
-            clazz = dvmResolveClass(method->clazz, ref, false);
+            clazz = dvmResolveClass(curMethod->clazz, ref, false);
             if (clazz == NULL)
-                GOTO(exceptionThrown);
+                GOTO_exceptionThrown();
         }
 
         if (!dvmIsClassInitialized(clazz) && !dvmInitClass(clazz))
-            GOTO(exceptionThrown);
+            GOTO_exceptionThrown();
 
         /*
          * Note: the verifier can ensure that this never happens, allowing us
@@ -32,11 +32,11 @@ HANDLE_OPCODE(OP_NEW_INSTANCE /*vAA, class@BBBB*/)
         if (dvmIsInterfaceClass(clazz) || dvmIsAbstractClass(clazz)) {
             dvmThrowExceptionWithClassMessage("Ljava/lang/InstantiationError;",
                 clazz->descriptor);
-            GOTO(exceptionThrown);
+            GOTO_exceptionThrown();
         }
         newObj = dvmAllocObject(clazz, ALLOC_DONT_TRACK);
         if (newObj == NULL)
-            GOTO(exceptionThrown);
+            GOTO_exceptionThrown();
         SET_REGISTER(vdst, (u4) newObj);
     }
     FINISH(2);

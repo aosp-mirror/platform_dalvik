@@ -16,38 +16,84 @@
 
 package tests.java.lang.String;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import junit.framework.TestCase;
 
 /**
  * Tests for the class {@link String}.
  */
+@TestTargetClass(String.class) 
 public class Tests extends TestCase {
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "contains",
+          methodArgs = {java.lang.CharSequence.class}
+        )
+    })
     public void test_contains() {
         assertTrue("aabc".contains("abc"));
         assertTrue("abcd".contains("abc"));
         assertFalse("abcd".contains("cba"));
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies positive functionality.",
+      targets = {
+        @TestTarget(
+          methodName = "charAt",
+          methodArgs = {int.class}
+        )
+    })
     public void test_charAt() {
         assertTrue("abcd".charAt(0) == 'a');
         assertTrue("abcd".charAt(3) == 'd');
     }
-    
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check specific cases.",
+      targets = {
+        @TestTarget(
+          methodName = "startsWith",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_StartsWith() {
         assertTrue("abcd".startsWith("abc"));
         assertFalse("abcd".startsWith("aabc"));
     }
-    
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check specific cases.",
+      targets = {
+        @TestTarget(
+          methodName = "endsWith",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_EndsWith() {
         assertTrue("abcd".endsWith("bcd"));
         assertFalse("abcd".endsWith("bcde"));
     }
-    
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Verifies nothing.",
+      targets = {
+        @TestTarget(
+          methodName = "!Constants",
+          methodArgs = {}
+        )
+    })
     public void test_CASE_INSENSITIVE_ORDER() {
         String  s1 = "ABCDEFG";
         String  s2 = "abcdefg";
         
-        //???NIO doesn't compile
-        //assertTrue(String.CASE_INSENSITIVE_ORDER.compare(s1, s2) == 0);
+        assertTrue(String.CASE_INSENSITIVE_ORDER.compare(s1, s2) == 0);
     }
 }

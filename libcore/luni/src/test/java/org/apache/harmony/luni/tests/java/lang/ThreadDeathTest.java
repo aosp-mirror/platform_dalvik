@@ -17,11 +17,26 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
+@TestTargetClass(ThreadDeath.class) 
 public class ThreadDeathTest extends junit.framework.TestCase {
 
     /**
      * @tests java.lang.ThreadDeath#ThreadDeath()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "ThreadDeath",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         ThreadDeath td = new ThreadDeath();
         assertNull(td.getCause());

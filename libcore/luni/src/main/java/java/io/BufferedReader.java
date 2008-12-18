@@ -24,22 +24,22 @@ import java.util.logging.Logger;
 // END android-added
 
 /**
- * BufferedReader is a buffered character input reader. Buffering allows reading
- * from character streams more efficiently. If the default size of the buffer is
- * not practical, another size may be specified. Reading a character from a
- * Reader class usually involves reading a character from its Stream or
- * subsequent Reader. It is advisable to wrap a BufferedReader around those
- * Readers whose read operations may have high latency. For example, the
- * following code
+ * Wraps an existing {@link Reader} and <em>buffers</em> the input. Expensive
+ * interaction with the underlying reader is minimized, since most (smaller)
+ * requests can be satisfied by accessing the buffer alone. The drawback is that
+ * some extra space is required to hold the buffer and that copying takes place
+ * when filling that buffer, but this is usually outweighed by the performance
+ * benefits.
+ * 
+ * <p/>A typical application pattern for the class looks like this:<p/>
  * 
  * <pre>
- * BufferedReader inReader = new BufferedReader(new FileReader(&quot;file.java&quot;));
+ * BufferedReader buf = new BufferedReader(new FileReader(&quot;file.java&quot;));
  * </pre>
  * 
- * will buffer input for the file <code>file.java</code>.
- * 
  * @see BufferedWriter
- * @since 1.1
+ * 
+ * @since Android 1.0
  */
 public class BufferedReader extends Reader {
 
@@ -56,12 +56,12 @@ public class BufferedReader extends Reader {
     private int pos;
 
     /**
-     * Constructs a new BufferedReader on the Reader <code>in</code>. The
-     * default buffer size (8K) is allocated and all reads can now be filtered
-     * through this BufferedReader.
+     * Constructs a new BufferedReader on the Reader {@code in}. The
+     * buffer gets the default size (8 KB).
      * 
      * @param in
-     *            the Reader to buffer reads on.
+     *            the Reader that is buffered.
+     * @since Android 1.0
      */
     public BufferedReader(Reader in) {
         super(in);
@@ -85,16 +85,16 @@ public class BufferedReader extends Reader {
     }
 
     /**
-     * Constructs a new BufferedReader on the Reader <code>in</code>. The
-     * buffer size is specified by the parameter <code>size</code> and all
-     * reads can now be filtered through this BufferedReader.
+     * Constructs a new BufferedReader on the Reader {@code in}. The buffer
+     * size is specified by the parameter {@code size}.
      * 
      * @param in
-     *            the Reader to buffer reads on.
+     *            the Reader that is buffered.
      * @param size
-     *            the size of buffer to allocate.
+     *            the size of the buffer to allocate.
      * @throws IllegalArgumentException
-     *             if the size is <= 0
+     *             if {@code size <= 0}.
+     * @since Android 1.0
      */
     public BufferedReader(Reader in, int size) {
         super(in);
@@ -106,12 +106,13 @@ public class BufferedReader extends Reader {
     }
 
     /**
-     * Close the Reader. This implementation closes the Reader being filtered
-     * and releases the buffer used by this reader. If this BufferedReader has
-     * already been closed, nothing is done.
+     * Closes this reader. This implementation closes the buffered source reader
+     * and releases the buffer. Nothing is done if this reader has already been
+     * closed.
      * 
      * @throws IOException
-     *             If an error occurs attempting to close this BufferedReader.
+     *             if an error occurs while closing this reader.
+     * @since Android 1.0
      */
     @Override
     public void close() throws IOException {
@@ -156,30 +157,31 @@ public class BufferedReader extends Reader {
     }
 
     /**
-     * Answer a boolean indicating whether or not this BufferedReader is closed.
+     * Indicates whether or not this reader is closed.
      * 
-     * @return <code>true</code> if this reader is closed, <code>false</code>
-     *         otherwise
+     * @return {@code true} if this reader is closed, {@code false}
+     *         otherwise.
      */
     private boolean isClosed() {
         return buf == null;
     }
 
     /**
-     * Set a Mark position in this BufferedReader. The parameter
-     * <code>readLimit</code> indicates how many characters can be read before
-     * a mark is invalidated. Sending reset() will reposition the reader back to
-     * the marked position provided <code>readLimit</code> has not been
-     * surpassed.
+     * Sets a mark position in this reader. The parameter {@code readlimit}
+     * indicates how many characters can be read before the mark is invalidated.
+     * Calling {@code reset()} will reposition the reader back to the marked
+     * position if {@code readlimit} has not been surpassed.
      * 
      * @param readlimit
-     *            an int representing how many characters must be read before
-     *            invalidating the mark.
-     * 
-     * @throws IOException
-     *             If an error occurs attempting mark this BufferedReader.
+     *            the number of characters that can be read before the mark is
+     *            invalidated.
      * @throws IllegalArgumentException
-     *             If readlimit is < 0
+     *             if {@code readlimit < 0}.
+     * @throws IOException
+     *             if an error occurs while setting a mark in this reader.
+     * @see #markSupported()
+     * @see #reset()
+     * @since Android 1.0
      */
     @Override
     public void mark(int readlimit) throws IOException {
@@ -196,11 +198,13 @@ public class BufferedReader extends Reader {
     }
 
     /**
-     * Returns a boolean indicating whether or not this Reader supports mark()
-     * and reset(). This implementation returns <code>true</code>.
+     * Indicates whether this reader supports the {@code mark()} and
+     * {@code reset()} methods. This implementation returns {@code true}.
      * 
-     * @return <code>true</code> if mark() and reset() are supported,
-     *         <code>false</code> otherwise
+     * @return {@code true} for {@code BufferedReader}.
+     * @see #mark(int)
+     * @see #reset()
+     * @since Android 1.0
      */
     @Override
     public boolean markSupported() {
@@ -208,17 +212,17 @@ public class BufferedReader extends Reader {
     }
 
     /**
-     * Reads a single character from this reader and returns the result as an
-     * int. The 2 higher-order characters are set to 0. If the end of reader was
-     * encountered then return -1. This implementation either returns a
-     * character from the buffer or if there are no characters available, fill
-     * the buffer then return a character or -1.
+     * Reads a single character from this reader and returns it with the two
+     * higher-order bytes set to 0. If possible, BufferedReader returns a
+     * character from the buffer. If there are no characters available in the
+     * buffer, it fills the buffer and then returns a character. It returns -1
+     * if there are no more characters in the source reader.
      * 
-     * @return the character read or -1 if end of reader.
-     * 
+     * @return the character read or -1 if the end of the source reader has been
+     *         reached.
      * @throws IOException
-     *             If the BufferedReader is already closed or some other IO
-     *             error occurs.
+     *             if this reader is closed or some other I/O error occurs.
+     * @since Android 1.0
      */
     @Override
     public int read() throws IOException {
@@ -235,26 +239,31 @@ public class BufferedReader extends Reader {
     }
 
     /**
-     * Reads at most <code>length</code> characters from this BufferedReader
-     * and stores them at <code>offset</code> in the character array
-     * <code>buffer</code>. Returns the number of characters actually read or
-     * -1 if the end of reader was encountered. If all the buffered characters
-     * have been used, a mark has not been set, and the requested number of
-     * characters is larger than this Readers buffer size, this implementation
-     * bypasses the buffer and simply places the results directly into
-     * <code>buffer</code>.
+     * Reads at most {@code length} characters from this reader and stores them
+     * at {@code offset} in the character array {@code buffer}. Returns the
+     * number of characters actually read or -1 if the end of the source reader
+     * has been reached. If all the buffered characters have been used, a mark
+     * has not been set and the requested number of characters is larger than
+     * this readers buffer size, BufferedReader bypasses the buffer and simply
+     * places the results directly into {@code buffer}.
      * 
      * @param buffer
-     *            character array to store the read characters
+     *            the character array to store the characters read.
      * @param offset
-     *            offset in buf to store the read characters
+     *            the initial position in {@code buffer} to store the bytes read
+     *            from this reader.
      * @param length
-     *            maximum number of characters to read
-     * @return number of characters read or -1 if end of reader.
-     * 
+     *            the maximum number of characters to read, must be
+     *            non-negative.
+     * @return number of characters read or -1 if the end of the source reader
+     *         has been reached.
+     * @throws IndexOutOfBoundsException
+     *             if {@code offset < 0} or {@code length < 0}, or if
+     *             {@code offset + length} is greater than the size of
+     *             {@code buffer}.
      * @throws IOException
-     *             If the BufferedReader is already closed or some other IO
-     *             error occurs.
+     *             if this reader is closed or some other I/O error occurs.
+     * @since Android 1.0
      */
     @Override
     public int read(char[] buffer, int offset, int length) throws IOException {
@@ -262,9 +271,18 @@ public class BufferedReader extends Reader {
             if (isClosed()) {
                 throw new IOException(Msg.getString("K005b")); //$NON-NLS-1$
             }
-            if (offset < 0 || offset > buffer.length - length || length < 0) {
-                throw new IndexOutOfBoundsException();
+            // BEGIN android-changed
+            // Exception priorities (in case of multiple errors) differ from
+            // RI, but are spec-compliant.
+            // made implicit null check explicit, used (offset | length) < 0
+            // instead of (offset < 0) || (length < 0) to safe one operation
+            if (buffer == null) {
+                throw new NullPointerException(Msg.getString("K0047")); //$NON-NLS-1$
             }
+            if ((offset | length) < 0 || offset > buffer.length - length) {
+                throw new IndexOutOfBoundsException(Msg.getString("K002f")); //$NON-NLS-1$
+            }
+            // END android-changed
             if (length == 0) {
                 return 0;
             }
@@ -315,18 +333,16 @@ public class BufferedReader extends Reader {
     }
 
     /**
-     * Returns a <code>String</code> representing the next line of text
-     * available in this BufferedReader. A line is represented by 0 or more
-     * characters followed by <code>'\n'</code>, <code>'\r'</code>,
-     * <code>'\r\n'</code> or end of stream. The <code>String</code> does
+     * Returns the next line of text available from this reader. A line is
+     * represented by zero or more characters followed by {@code '\n'},
+     * {@code '\r'}, {@code "\r\n"} or the end of the reader. The string does
      * not include the newline sequence.
      * 
-     * @return the contents of the line or null if no characters were read
-     *         before end of stream.
-     * 
+     * @return the contents of the line or {@code null} if no characters were
+     *         read before the end of the reader has been reached.
      * @throws IOException
-     *             If the BufferedReader is already closed or some other IO
-     *             error occurs.
+     *             if this reader is closed or some other I/O error occurs.
+     * @since Android 1.0
      */
     public String readLine() throws IOException {
         synchronized (lock) {
@@ -407,19 +423,16 @@ public class BufferedReader extends Reader {
     }
 
     /**
-     * Returns a <code>boolean</code> indicating whether or not this Reader is
-     * ready to be read without blocking. If the result is <code>true</code>,
-     * the next <code>read()</code> will not block. If the result is
-     * <code>false</code> this Reader may or may not block when
-     * <code>read()</code> is sent.
+     * Indicates whether this reader is ready to be read without blocking.
      * 
-     * @return <code>true</code> if the receiver will not block when
-     *         <code>read()</code> is called, <code>false</code> if unknown
-     *         or blocking will occur.
-     * 
+     * @return {@code true} if this reader will not block when {@code read} is
+     *         called, {@code false} if unknown or blocking will occur.
      * @throws IOException
-     *             If the BufferedReader is already closed or some other IO
-     *             error occurs.
+     *             if this reader is closed or some other I/O error occurs.
+     * @see #read()
+     * @see #read(char[], int, int)
+     * @see #readLine()
+     * @since Android 1.0
      */
     @Override
     public boolean ready() throws IOException {
@@ -432,13 +445,15 @@ public class BufferedReader extends Reader {
     }
 
     /**
-     * Reset this BufferedReader's position to the last <code>mark()</code>
-     * location. Invocations of <code>read()/skip()</code> will occur from
-     * this new location. If this Reader was not marked, throw IOException.
+     * Resets this reader's position to the last {@code mark()} location.
+     * Invocations of {@code read()} and {@code skip()} will occur from this new
+     * location.
      * 
      * @throws IOException
-     *             If a problem occurred, the receiver does not support
-     *             <code>mark()/reset()</code>, or no mark has been set.
+     *             if this reader is closed or no mark has been set.
+     * @see #mark(int)
+     * @see #markSupported()
+     * @since Android 1.0
      */
     @Override
     public void reset() throws IOException {
@@ -454,20 +469,22 @@ public class BufferedReader extends Reader {
     }
 
     /**
-     * Skips <code>amount</code> number of characters in this Reader.
-     * Subsequent <code>read()</code>'s will not return these characters
-     * unless <code>reset()</code> is used. Skipping characters may invalidate
-     * a mark if marklimit is surpassed.
+     * Skips {@code amount} characters in this reader. Subsequent
+     * {@code read()}s will not return these characters unless {@code reset()}
+     * is used. Skipping characters may invalidate a mark if {@code readlimit}
+     * is surpassed.
      * 
      * @param amount
      *            the maximum number of characters to skip.
      * @return the number of characters actually skipped.
-     * 
-     * @throws IOException
-     *             If the BufferedReader is already closed or some other IO
-     *             error occurs.
      * @throws IllegalArgumentException
-     *             If amount is negative
+     *             if {@code amount < 0}.
+     * @throws IOException
+     *             if this reader is closed or some other I/O error occurs.
+     * @see #mark(int)
+     * @see #markSupported()
+     * @see #reset()
+     * @since Android 1.0
      */
     @Override
     public long skip(long amount) throws IOException {

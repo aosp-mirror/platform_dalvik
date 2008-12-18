@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package javax.net.ssl;
 
 import java.security.InvalidAlgorithmParameterException;
@@ -29,36 +24,59 @@ import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 
 /**
- * @com.intel.drl.spec_ref
+ * The <i>Service Provider Interface</i> (SPI) for the
+ * {@code KeyManagerFactory} class.
  * 
+ * @since Android 1.0
  */
 
 public abstract class KeyManagerFactorySpi {
+
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Creates a new {@code KeyManagerFactorySpi} instance.
+     * 
+     * @since Android 1.0
      */
     public KeyManagerFactorySpi() {
     }
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Initializes this instance with the specified key store and password.
+     * 
+     * @param ks
+     *            the key store or {@code null} to use the default key store.
+     * @param password
+     *            the key store password.
+     * @throws KeyStoreException
+     *             if initializing this instance fails.
+     * @throws NoSuchAlgorithmException
+     *             if a required algorithm is not available.
+     * @throws UnrecoverableKeyException
+     *             if a key cannot be recovered.
+     * @since Android 1.0
      */
     protected abstract void engineInit(KeyStore ks, char[] password)
             throws KeyStoreException, NoSuchAlgorithmException,
             UnrecoverableKeyException;
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Initializes this instance with the specified factory parameters.
+     * 
+     * @param spec
+     *            the factory parameters.
+     * @throws InvalidAlgorithmParameterException
+     *             if an error occurs.
+     * @since Android 1.0
      */
     protected abstract void engineInit(ManagerFactoryParameters spec)
             throws InvalidAlgorithmParameterException;
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Returns a list of key managers, one instance for each type of key in the
+     * key store.
+     * 
+     * @return a list of key managers.
+     * @since Android 1.0
      */
     protected abstract KeyManager[] engineGetKeyManagers();
 }

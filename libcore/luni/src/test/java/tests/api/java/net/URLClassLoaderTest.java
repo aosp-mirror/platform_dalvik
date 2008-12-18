@@ -17,6 +17,11 @@
 
 package tests.api.java.net;
 
+import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -36,6 +41,7 @@ import org.apache.harmony.luni.util.InvalidJarIndexException;
 import tests.support.Support_Configuration;
 import tests.support.resource.Support_Resources;
 
+@TestTargetClass(URLClassLoader.class) 
 public class URLClassLoaderTest extends junit.framework.TestCase {
 
     class BogusClassLoader extends ClassLoader {
@@ -64,6 +70,15 @@ public class URLClassLoaderTest extends junit.framework.TestCase {
     /**
      * @tests java.net.URLClassLoader#URLClassLoader(java.net.URL[])
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SecurityException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "URLClassLoader",
+          methodArgs = {java.net.URL[].class}
+        )
+    })
     public void test_Constructor$Ljava_net_URL() {
         URL[] u = new URL[0];
         ucl = new URLClassLoader(u);
@@ -84,6 +99,15 @@ public class URLClassLoaderTest extends junit.framework.TestCase {
      * @tests java.net.URLClassLoader#URLClassLoader(java.net.URL[],
      *        java.lang.ClassLoader)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SecurityException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "URLClassLoader",
+          methodArgs = {java.net.URL[].class, java.lang.ClassLoader.class}
+        )
+    })
     public void test_Constructor$Ljava_net_URLLjava_lang_ClassLoader() {
         ClassLoader cl = new BogusClassLoader();
         URL[] u = new URL[0];
@@ -96,7 +120,16 @@ public class URLClassLoaderTest extends junit.framework.TestCase {
     /**
      * @tests java.net.URLClassLoader#findResources(java.lang.String)
      */
-    public void test_findResourcesLjava_lang_String() throws IOException {
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "findResources",
+          methodArgs = {java.lang.String.class}
+        )
+    })
+    public void _test_findResourcesLjava_lang_String() throws IOException {
         Enumeration res = null;
         String[] resValues = { "This is a test resource file.",
                 "This is a resource from a subdir" };
@@ -125,6 +158,15 @@ public class URLClassLoaderTest extends junit.framework.TestCase {
     /**
      * @tests java.net.URLClassLoader#getURLs()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getURLs",
+          methodArgs = {}
+        )
+    })
     public void test_getURLs() throws MalformedURLException {
         URL[] urls = new URL[4];
         urls[0] = new URL("http://" + Support_Configuration.HomeAddress);
@@ -142,7 +184,16 @@ public class URLClassLoaderTest extends junit.framework.TestCase {
     /**
      * @tests java.net.URLClassLoader#newInstance(java.net.URL[])
      */
-    public void test_newInstance$Ljava_net_URL() throws MalformedURLException,
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "newInstance",
+          methodArgs = {java.net.URL[].class}
+        )
+    })
+    public void _test_newInstance$Ljava_net_URL() throws MalformedURLException,
             ClassNotFoundException {
         // Verify that loaded class' have correct permissions
         Class cl = null;
@@ -170,6 +221,15 @@ public class URLClassLoaderTest extends junit.framework.TestCase {
      * @tests java.net.URLClassLoader#newInstance(java.net.URL[],
      *        java.lang.ClassLoader)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "newInstance",
+          methodArgs = {java.net.URL[].class, java.lang.ClassLoader.class}
+        )
+    })
     public void test_newInstance$Ljava_net_URLLjava_lang_ClassLoader() {
         ClassLoader cl = new BogusClassLoader();
         URL[] u = new URL[0];
@@ -183,6 +243,15 @@ public class URLClassLoaderTest extends junit.framework.TestCase {
      * @tests java.net.URLClassLoader#URLClassLoader(java.net.URL[],
      *        java.lang.ClassLoader, java.net.URLStreamHandlerFactory)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SecurityException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "URLClassLoader",
+          methodArgs = {java.net.URL[].class, java.lang.ClassLoader.class, java.net.URLStreamHandlerFactory.class}
+        )
+    })
     public void test_Constructor$Ljava_net_URLLjava_lang_ClassLoaderLjava_net_URLStreamHandlerFactory() {
         class TestFactory implements URLStreamHandlerFactory {
             public URLStreamHandler createURLStreamHandler(String protocol) {
@@ -202,7 +271,16 @@ public class URLClassLoaderTest extends junit.framework.TestCase {
      * @throws IOException
      * @tests java.net.URLClassLoader#findClass(java.lang.String)
      */
-    public void test_findClassLjava_lang_String()
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "findClass",
+          methodArgs = {java.lang.String.class}
+        )
+    })
+    public void _test_findClassLjava_lang_String()
             throws ClassNotFoundException, IOException {
         File resources = Support_Resources.createTempFolder();
         String resPath = resources.toString();
@@ -335,7 +413,16 @@ public class URLClassLoaderTest extends junit.framework.TestCase {
     /**
      * @tests java.net.URLClassLoader#findResource(java.lang.String)
      */
-    public void test_findResourceLjava_lang_String()
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "findResource",
+          methodArgs = {java.lang.String.class}
+        )
+    })
+    public void _test_findResourceLjava_lang_String()
             throws MalformedURLException {
         URL res = null;
 
@@ -361,6 +448,19 @@ public class URLClassLoaderTest extends junit.framework.TestCase {
                 "This is a test resource file"));
     }
     
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Checks getResource, indirectly checks findResource",
+      targets = {
+        @TestTarget(
+          methodName = "getResource",
+          methodArgs = {java.lang.String.class}
+        ),
+        @TestTarget(
+                methodName = "findResource",
+                methodArgs = {java.lang.String.class}
+              )
+    })
     public void testFindResource_H3461() throws Exception {
         File userDir = new File(System.getProperty("user.dir"));
         File dir = new File(userDir, "encode#me");
@@ -413,15 +513,24 @@ public class URLClassLoaderTest extends junit.framework.TestCase {
     }
     
     /**
-	 * Regression for Harmony-2237 
-	 */
-	public void test_getResource() throws Exception {		
-		URLClassLoader urlLoader = getURLClassLoader();
-		assertNull(urlLoader.findResource("XXX")); //$NON-NLS-1$
-	}
+     * Regression for Harmony-2237 
+     */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Regression test",
+      targets = {
+        @TestTarget(
+          methodName = "findResource",
+          methodArgs = {java.lang.String.class}
+        )
+    })
+    public void test_getResource() throws Exception {        
+        URLClassLoader urlLoader = getURLClassLoader();
+        assertNull(urlLoader.findResource("XXX")); //$NON-NLS-1$
+    }
 
-	private static URLClassLoader getURLClassLoader() {
-		String classPath = System.getProperty("java.class.path");
+    private static URLClassLoader getURLClassLoader() {
+        String classPath = System.getProperty("java.class.path");
         StringTokenizer tok = new StringTokenizer(classPath, File.pathSeparator);
         Vector<URL> urlVec = new Vector<URL>();
         String resPackage = Support_Resources.RESOURCE_PACKAGE;
@@ -436,13 +545,13 @@ public class URLClassLoaderTest extends junit.framework.TestCase {
                 urlVec.addElement(new URL(url));
             }
         } catch (MalformedURLException e) {
-        	// do nothing
+            // do nothing
         }
         URL[] urls = new URL[urlVec.size()];
         for (int i = 0; i < urlVec.size(); i++) {
-        	urls[i] = urlVec.elementAt(i);
+            urls[i] = urlVec.elementAt(i);
         }            
         URLClassLoader loader = new URLClassLoader(urls, null);
-		return loader;
-	}
+        return loader;
+    }
 }

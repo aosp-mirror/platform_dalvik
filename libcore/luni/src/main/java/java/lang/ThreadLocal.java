@@ -21,18 +21,22 @@ import java.lang.ref.Reference;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * A variable for which each thread has its own value. Supports {@code null}
- * values.
+ * Implements a thread-local storage, that is, a variable for which each thread
+ * has its own value. All threads share the same {@code ThreadLocal} object,
+ * but each sees a different value when accessing it, and changes made by one
+ * thread do not affect the other threads. The implementation supports
+ * {@code null} values.
  * 
  * @see java.lang.Thread
  * @author Bob Lee
+ * @since Android 1.0
  */
 public class ThreadLocal<T> {
 
     /* Thanks to Josh Bloch and Doug Lea for code reviews and impl advice. */
 
     /**
-     * Creates a new thread local variable.
+     * Creates a new thread-local variable.
      */
     public ThreadLocal() {}
 
@@ -41,6 +45,8 @@ public class ThreadLocal<T> {
      * doesn't yet exist for this variable on this thread, this method will
      * create an entry, populating the value with the result of
      * {@link #initialValue()}.
+     * 
+     * @return the current value of the variable for the calling thread.
      */
     @SuppressWarnings("unchecked")
     public T get() {
@@ -63,6 +69,8 @@ public class ThreadLocal<T> {
     /**
      * Provides the initial value of this variable for the current thread.
      * The default implementation returns {@code null}.
+     * 
+     * @return the initial value of the variable.
      */
     protected T initialValue() {
         return null;
@@ -70,8 +78,10 @@ public class ThreadLocal<T> {
 
     /**
      * Sets the value of this variable for the current thread. If set to
-     * null, the value will be set to null and the underlying entry will still
-     * be present.
+     * {@code null}, the value will be set to null and the underlying entry will
+     * still be present.
+     * 
+     * @param value the new value of the variable for the caller thread.
      */
     public void set(T value) {
         Thread currentThread = Thread.currentThread();
@@ -84,7 +94,7 @@ public class ThreadLocal<T> {
 
     /**
      * Removes the entry for this variable in the current thread. If this call
-     * is followed by a {@link #get()} before a {@link #set(T)},
+     * is followed by a {@link #get()} before a {@link #set},
      * {@code #get()} will call {@link #initialValue()} and create a new
      * entry with the resulting value.
      */

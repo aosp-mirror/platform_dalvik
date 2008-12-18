@@ -20,38 +20,45 @@ package java.lang;
 import org.apache.harmony.luni.util.Msg;
 
 /**
- * This runtime exception is thrown when the an array is indexed with a value
- * less than zero, or greater than or equal to the size of the array.
+ * Thrown when the an array is indexed with a value less than zero, or greater
+ * than or equal to the size of the array.
+ * 
+ * @since Android 1.0
  */
 public class ArrayIndexOutOfBoundsException extends IndexOutOfBoundsException {
 
     private static final long serialVersionUID = -5116101128118950844L;
 
     /**
-     * Constructs a new instance of this class with its walkback filled in.
+     * Constructs a new {@code ArrayIndexOutOfBoundsException} that includes the
+     * current stack trace.
+     * 
+     * @since Android 1.0
      */
     public ArrayIndexOutOfBoundsException() {
         super();
     }
 
     /**
-     * Constructs a new instance of this class with its walkback and message
-     * (which is based on the argument which is the index which failed) filled
-     * in.
+     * Constructs a new {@code ArrayIndexOutOfBoundsException} with the current
+     * stack trace and a detail message that is based on the specified invalid
+     * {@code index}.
      * 
      * @param index
-     *            int the offending index.
+     *            the invalid index.
+     * @since Android 1.0
      */
     public ArrayIndexOutOfBoundsException(int index) {
         super(Msg.getString("K0052", index)); //$NON-NLS-1$
     }
 
     /**
-     * Constructs a new instance of this class with its walkback and message
-     * filled in.
+     * Constructs a new {@code ArrayIndexOutOfBoundsException} with the current
+     * stack trace and the specified detail message.
      * 
      * @param detailMessage
-     *            String The detail message for the exception.
+     *            the detail message for this exception.
+     * @since Android 1.0
      */
     public ArrayIndexOutOfBoundsException(String detailMessage) {
         super(detailMessage);

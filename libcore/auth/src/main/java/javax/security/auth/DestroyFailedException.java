@@ -17,14 +17,28 @@
 
 package javax.security.auth;
 
+/**
+ * Signals that the {@link Destroyable#destroy()} method failed.
+ * 
+ * @since Android 1.0
+ */
 public class DestroyFailedException extends Exception {
 
     private static final long serialVersionUID = -7790152857282749162L;
 
+    /**
+     * Creates an exception of type {@code DestroyFailedException}.
+     */
     public DestroyFailedException() {
         super();
     }
 
+    /**
+     * Creates an exception of type {@code DestroyFailedException}.
+     * 
+     * @param message
+     *            A detail message that describes the reason for this exception.
+     */
     public DestroyFailedException(String message) {
         super(message);
     }

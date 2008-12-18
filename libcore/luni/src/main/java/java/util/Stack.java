@@ -19,25 +19,30 @@ package java.util;
 
 
 /**
- * <code>Stack</code> is a Last-In/First-Out(LIFO) data structure which
- * represents a stack of objects. It enables users to pop and push onto the
- * stack, including null objects. There is no limit to the size of the stack
+ * {@code Stack} is a Last-In/First-Out(LIFO) data structure which represents a
+ * stack of objects. It enables users to pop to and push from the stack,
+ * including null objects. There is no limit to the size of the stack.
+ * 
+ * @since Android 1.0
  */
 public class Stack<E> extends Vector<E> {
     
     private static final long serialVersionUID = 1224463164541339165L;
 
     /**
-     * Constructs a stack with the default size of <code>Vector</code>.
+     * Constructs a stack with the default size of {@code Vector}.
+     * 
+     * @since Android 1.0
      */
     public Stack() {
         super();
     }
 
     /**
-     * Determines if the stack is empty or not.
+     * Returns whether the stack is empty or not.
      * 
-     * @return true if the stack is empty, false otherwise
+     * @return {@code true} if the stack is empty, {@code false} otherwise.
+     * @since Android 1.0
      */
     public boolean empty() {
         return elementCount == 0;
@@ -46,10 +51,11 @@ public class Stack<E> extends Vector<E> {
     /**
      * Returns the element at the top of the stack without removing it.
      * 
-     * @return the element at the top of the Stack
-     * @exception EmptyStackException
-     *                when empty() is true
+     * @return the element at the top of the stack.
+     * @throws EmptyStackException
+     *             if the stack is empty.
      * @see #pop
+     * @since Android 1.0
      */
     public synchronized E peek() {
         try {
@@ -63,10 +69,11 @@ public class Stack<E> extends Vector<E> {
      * Returns the element at the top of the stack and removes it.
      * 
      * @return the element at the top of the stack.
-     * @exception EmptyStackException
-     *                when empty() is true
+     * @throws EmptyStackException
+     *             if the stack is empty.
      * @see #peek
      * @see #push
+     * @since Android 1.0
      */
     public synchronized E pop() {
         try {
@@ -80,15 +87,14 @@ public class Stack<E> extends Vector<E> {
     }
 
     /**
-     * Pushes the object from the parameter onto the top of the stack.
+     * Pushes the specified object onto the top of the stack.
      * 
      * @param object
-     *            The object to be added to the stack
-     * 
-     * @return the object argument
-     * 
+     *            The object to be added on top of the stack.
+     * @return the object argument.
      * @see #peek
      * @see #pop
+     * @since Android 1.0
      */
     public synchronized E push(E object) {
         addElement(object);
@@ -96,11 +102,14 @@ public class Stack<E> extends Vector<E> {
     }
 
     /**
-     * Returns the index of the first occurrence of the object.
+     * Returns the index of the first occurrence of the object, starting from
+     * the top of the stack.
      * 
-     * @return the index of the first occurrence of the object
+     * @return the index of the first occurrence of the object, assuming that
+     *         the topmost object on the stack has a distance of one.
      * @param o
-     *            the object to be searched
+     *            the object to be searched.
+     * @since Android 1.0
      */
     public synchronized int search(Object o) {
         int index = lastIndexOf(o);

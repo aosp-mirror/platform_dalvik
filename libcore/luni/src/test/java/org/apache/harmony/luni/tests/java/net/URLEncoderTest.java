@@ -16,16 +16,31 @@
 
 package org.apache.harmony.luni.tests.java.net;
 
+import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 
 import junit.framework.TestCase;
 
+@TestTargetClass(URLEncoder.class) 
 public class URLEncoderTest extends TestCase {
     
     /**
      * @tests URLEncoder#encode(String, String)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Regression test. Checks UnsupportedEncodingException & NullPointerException",
+      targets = {
+        @TestTarget(
+          methodName = "encode",
+          methodArgs = {String.class, String.class}
+        )
+    })
     public void test_encodeLjava_lang_StringLjava_lang_String() throws Exception {
         // Regression for HARMONY-24
         try {

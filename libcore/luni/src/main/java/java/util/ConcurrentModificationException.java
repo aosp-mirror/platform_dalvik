@@ -17,30 +17,32 @@
 
 package java.util;
 
-
 /**
- * This runtime exception is thrown when a Collection is modified and an
- * existing iterator on the Collection is used to modify the Collection as well.
+ * An {@code ConcurrentModificationException} is thrown when a Collection is
+ * modified and an existing iterator on the Collection is used to modify the
+ * Collection as well.
  * 
  * @see java.lang.RuntimeException
+ * @since Android 1.0
  */
 public class ConcurrentModificationException extends RuntimeException {
 
     private static final long serialVersionUID = -3666751008965953603L;
 
     /**
-     * Constructs a new instance of this class with its walkback filled in.
+     * Constructs a new {@code ConcurrentModificationException} with the current
+     * stack trace filled in.
      */
     public ConcurrentModificationException() {
         /*empty*/
     }
 
     /**
-     * Constructs a new instance of this class with its walkback and message
-     * filled in.
+     * Constructs a new {@code ConcurrentModificationException} with the current
+     * stack trace and message filled in.
      * 
      * @param detailMessage
-     *            String The detail message for the exception.
+     *           the detail message for the exception.
      */
     public ConcurrentModificationException(String detailMessage) {
         super(detailMessage);

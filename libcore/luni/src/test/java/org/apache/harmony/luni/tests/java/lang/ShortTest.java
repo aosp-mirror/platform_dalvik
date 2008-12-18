@@ -16,8 +16,14 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import junit.framework.TestCase;
 
+@TestTargetClass(Short.class) 
 public class ShortTest extends TestCase {
     private Short sp = new Short((short) 18000);
     private Short sn = new Short((short) -19000);
@@ -25,6 +31,15 @@ public class ShortTest extends TestCase {
     /**
      * @tests java.lang.Short#byteValue()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Checks boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "byteValue",
+          methodArgs = {}
+        )
+    })
     public void test_byteValue() {
         // Test for method byte java.lang.Short.byteValue()
         assertEquals("Returned incorrect byte value", 0, new Short(Short.MIN_VALUE)
@@ -36,6 +51,15 @@ public class ShortTest extends TestCase {
     /**
      * @tests java.lang.Short#compareTo(java.lang.Short)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "compareTo",
+          methodArgs = {java.lang.Short.class}
+        )
+    })
     public void test_compareToLjava_lang_Short() {
         // Test for method int java.lang.Short.compareTo(java.lang.Short)
         Short s = new Short((short) 1);
@@ -61,6 +85,16 @@ public class ShortTest extends TestCase {
     /**
      * @tests java.lang.Short#decode(java.lang.String)
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Doesn't check that no whitespace characters are permitted " +
+                  "in the String. ",
+            targets = {
+              @TestTarget(
+                methodName = "decode",
+                methodArgs = {java.lang.String.class}
+              )
+    })    
     public void test_decodeLjava_lang_String2() {
         // Test for method java.lang.Short
         // java.lang.Short.decode(java.lang.String)
@@ -129,6 +163,15 @@ public class ShortTest extends TestCase {
     /**
      * @tests java.lang.Short#parseShort(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "parseShort",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_parseShortLjava_lang_String2() {
         // Test for method short java.lang.Short.parseShort(java.lang.String)
         short sp = Short.parseShort("32746");
@@ -164,6 +207,15 @@ public class ShortTest extends TestCase {
     /**
      * @tests java.lang.Short#parseShort(java.lang.String, int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "parseShort",
+          methodArgs = {java.lang.String.class, int.class}
+        )
+    })
     public void test_parseShortLjava_lang_StringI2() {
         // Test for method short java.lang.Short.parseShort(java.lang.String,
         // int)
@@ -257,6 +309,15 @@ public class ShortTest extends TestCase {
     /**
      * @tests java.lang.Short#toString()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public void test_toString2() {
         // Test for method java.lang.String java.lang.Short.toString()
         assertTrue("Invalid string returned", sp.toString().equals("18000")
@@ -272,6 +333,15 @@ public class ShortTest extends TestCase {
     /**
      * @tests java.lang.Short#toString(short)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {short.class}
+        )
+    })
     public void test_toStringS2() {
         // Test for method java.lang.String java.lang.Short.toString(short)
         assertEquals("Returned incorrect string", "32767", Short.toString((short) 32767)
@@ -285,6 +355,15 @@ public class ShortTest extends TestCase {
     /**
      * @tests java.lang.Short#valueOf(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Checks boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "valueOf",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_valueOfLjava_lang_String2() {
         // Test for method java.lang.Short
         // java.lang.Short.valueOf(java.lang.String)
@@ -297,6 +376,15 @@ public class ShortTest extends TestCase {
     /**
      * @tests java.lang.Short#valueOf(java.lang.String, int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "valueOf",
+          methodArgs = {java.lang.String.class, int.class}
+        )
+    })
     public void test_valueOfLjava_lang_StringI2() {
         // Test for method java.lang.Short
         // java.lang.Short.valueOf(java.lang.String, int)
@@ -341,8 +429,17 @@ public class ShortTest extends TestCase {
                 "Failed to throw exception when passed string larger than 16 bits");
     }
     /**
-     * @tests java.lang.Short#valueOf(byte)
+     * @tests java.lang.Short#valueOf(short)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "valueOf",
+          methodArgs = {short.class}
+        )
+    })
     public void test_valueOfS() {
         assertEquals(new Short(Short.MIN_VALUE), Short.valueOf(Short.MIN_VALUE));
         assertEquals(new Short(Short.MAX_VALUE), Short.valueOf(Short.MAX_VALUE));
@@ -359,6 +456,15 @@ public class ShortTest extends TestCase {
     /**
      * @tests java.lang.Short#hashCode()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "hashCode",
+          methodArgs = {}
+        )
+    })
     public void test_hashCode() {
         assertEquals(1, new Short((short)1).hashCode());
         assertEquals(2, new Short((short)2).hashCode());
@@ -369,6 +475,15 @@ public class ShortTest extends TestCase {
     /**
      * @tests java.lang.Short#Short(String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Short",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() {
         assertEquals(new Short((short)0), new Short("0"));
         assertEquals(new Short((short)1), new Short("1"));
@@ -398,6 +513,15 @@ public class ShortTest extends TestCase {
     /**
      * @tests java.lang.Short#Short(short)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Short",
+          methodArgs = {short.class}
+        )
+    })
     public void test_ConstructorS() {
         assertEquals(1, new Short((short)1).shortValue());
         assertEquals(2, new Short((short)2).shortValue());
@@ -408,7 +532,16 @@ public class ShortTest extends TestCase {
     /**
      * @tests java.lang.Short#byteValue()
      */
-    public void test_booleanValue() {
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "byteValue",
+          methodArgs = {}
+        )
+    })
+    public void test_byteValue1() {
         assertEquals(1, new Short((short)1).byteValue());    
         assertEquals(2, new Short((short)2).byteValue());
         assertEquals(0, new Short((short)0).byteValue());
@@ -418,6 +551,15 @@ public class ShortTest extends TestCase {
     /**
      * @tests java.lang.Short#equals(Object)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "equals",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_equalsLjava_lang_Object() {
         assertEquals(new Short((short)0), Short.valueOf((short)0));
         assertEquals(new Short((short)1), Short.valueOf((short)1));
@@ -432,6 +574,15 @@ public class ShortTest extends TestCase {
     /**
      * @tests java.lang.Short#toString()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public void test_toString() {
         assertEquals("-1", new Short((short)-1).toString());
         assertEquals("0", new Short((short)0).toString());
@@ -442,6 +593,15 @@ public class ShortTest extends TestCase {
     /**
      * @tests java.lang.Short#toString(short)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {short.class}
+        )
+    })
     public void test_toStringS() {
         assertEquals("-1", Short.toString((short)-1));
         assertEquals("0", Short.toString((short)0));
@@ -452,6 +612,15 @@ public class ShortTest extends TestCase {
     /**
      * @tests java.lang.Short#valueOf(String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "valueOf",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_valueOfLjava_lang_String() {
         assertEquals(new Short((short)0), Short.valueOf("0"));
         assertEquals(new Short((short)1), Short.valueOf("1"));
@@ -481,6 +650,15 @@ public class ShortTest extends TestCase {
     /**
      * @tests java.lang.Short#valueOf(String,int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "valueOf",
+          methodArgs = {java.lang.String.class, int.class}
+        )
+    })
     public void test_valueOfLjava_lang_StringI() {
         assertEquals(new Short((short)0), Short.valueOf("0", 10));
         assertEquals(new Short((short)1), Short.valueOf("1", 10));
@@ -514,6 +692,15 @@ public class ShortTest extends TestCase {
     /**
      * @tests java.lang.Short#parseShort(String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values, unicodes.",
+      targets = {
+        @TestTarget(
+          methodName = "parseShort",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_parseShortLjava_lang_String() {
         assertEquals(0, Short.parseShort("0"));
         assertEquals(1, Short.parseShort("1"));
@@ -543,6 +730,15 @@ public class ShortTest extends TestCase {
     /**
      * @tests java.lang.Short#parseShort(String,int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "parseShort",
+          methodArgs = {java.lang.String.class, int.class}
+        )
+    })
     public void test_parseShortLjava_lang_StringI() {
         assertEquals(0, Short.parseShort("0", 10));
         assertEquals(1, Short.parseShort("1", 10));
@@ -576,6 +772,16 @@ public class ShortTest extends TestCase {
     /**
      * @tests java.lang.Short#decode(String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check that no whitespace characters are permitted " +
+            "in the String. ",
+      targets = {
+        @TestTarget(
+          methodName = "decode",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_decodeLjava_lang_String() {
         assertEquals(new Short((short)0), Short.decode("0"));
         assertEquals(new Short((short)1), Short.decode("1"));
@@ -605,6 +811,15 @@ public class ShortTest extends TestCase {
     /**
      * @tests java.lang.Short#doubleValue()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "doubleValue",
+          methodArgs = {}
+        )
+    })
     public void test_doubleValue() {
         assertEquals(-1D, new Short((short)-1).doubleValue(), 0D);
         assertEquals(0D, new Short((short)0).doubleValue(), 0D);
@@ -614,6 +829,15 @@ public class ShortTest extends TestCase {
     /**
      * @tests java.lang.Short#floatValue()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "floatValue",
+          methodArgs = {}
+        )
+    })
     public void test_floatValue() {
         assertEquals(-1F, new Short((short)-1).floatValue(), 0F);
         assertEquals(0F, new Short((short)0).floatValue(), 0F);
@@ -623,6 +847,15 @@ public class ShortTest extends TestCase {
     /**
      * @tests java.lang.Short#intValue()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "intValue",
+          methodArgs = {}
+        )
+    })
     public void test_intValue() {
         assertEquals(-1, new Short((short)-1).intValue());
         assertEquals(0, new Short((short)0).intValue());
@@ -632,6 +865,15 @@ public class ShortTest extends TestCase {
     /**
      * @tests java.lang.Short#longValue()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "longValue",
+          methodArgs = {}
+        )
+    })
     public void test_longValue() {
         assertEquals(-1L, new Short((short)-1).longValue());
         assertEquals(0L, new Short((short)0).longValue());
@@ -641,6 +883,15 @@ public class ShortTest extends TestCase {
     /**
      * @tests java.lang.Short#shortValue()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "shortValue",
+          methodArgs = {}
+        )
+    })
     public void test_shortValue() {
         assertEquals(-1, new Short((short)-1).shortValue());
         assertEquals(0, new Short((short)0).shortValue());
@@ -650,6 +901,15 @@ public class ShortTest extends TestCase {
     /**
      * @tests java.lang.Short#reverseBytes(short)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "reverseBytes",
+          methodArgs = {short.class}
+        )
+    })
     public void test_reverseBytesS() {
         assertEquals((short)0xABCD, Short.reverseBytes((short)0xCDAB));
         assertEquals((short)0x1234, Short.reverseBytes((short)0x3412));

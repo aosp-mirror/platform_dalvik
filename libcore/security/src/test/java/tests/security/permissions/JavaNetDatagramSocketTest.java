@@ -16,19 +16,25 @@
 
 package tests.security.permissions;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
+import junit.framework.TestCase;
+
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 
-import junit.framework.TestCase;
-
 /*
  * This class tests the secrity permissions which are documented in
  * http://java.sun.com/j2se/1.5.0/docs/guide/security/permissions.html#PermsAndMethods
  * for class java.net.DatagramSocket
  */
+@TestTargetClass(SecurityManager.class)
 public class JavaNetDatagramSocketTest extends TestCase {
     
     SecurityManager old;
@@ -44,7 +50,16 @@ public class JavaNetDatagramSocketTest extends TestCase {
         System.setSecurityManager(old);
         super.tearDown();
     }
-    
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies that java.net.DatagramSocket constructor calls " +
+            "checkListen of security manager.",
+      targets = {
+        @TestTarget(
+          methodName = "checkListen",
+          methodArgs = {int.class}
+        )
+    })
     public void test_ctor() throws IOException {
         class TestSecurityManager extends SecurityManager {
             boolean called = false;

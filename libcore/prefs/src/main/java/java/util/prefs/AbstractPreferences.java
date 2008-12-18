@@ -34,23 +34,12 @@ import org.apache.harmony.luni.util.Base64;
 import org.apache.harmony.prefs.internal.nls.Messages;
 
 /**
- * This class is partly implementation of <code>Preferences</code>, which can be 
- * used to simplify <code>Preferences</code> provider's implementation. 
- * <p>
- * This class define nine abstract SPI methods, which must be implemented by 
- * preference provider. And provider can also override other methods of this 
- * class. Some SPI methods will throw <code>BackingStoreException</code>, 
- * including <code>childrenNamesSpi()</code>, <code>flushSpi()</code>, 
- * <code>keysSpi()</code>, <code>removeNodeSpi()</code>, 
- * <code>syncSpi()</code>; <code>getSpi(String, String)</code> never throws any 
- * exceptions; the last SPI methods, <code>putSpi(String)</code>, 
- * <code>removeSpi(String)</code> and <code>childSpi(String)</code> won't throw 
- * <code>BackingStoreException</code>, but in some implementations, they may 
- * throw <code>SecurityException</code> due to lacking the permission to access 
- * backing end storage.</p>
+ * This abstract class is a partial implementation of the abstract class
+ * Preferences, which can be used to simplify {@code Preferences} provider's
+ * implementation. This class defines nine abstract SPI methods, which must be
+ * implemented by a preference provider.
  * 
- * @since 1.4
- * @see Preferences
+ * @since Android 1.0
  */
 public abstract class AbstractPreferences extends Preferences {
     /*
@@ -58,9 +47,14 @@ public abstract class AbstractPreferences extends Preferences {
      * Class fields
      * -----------------------------------------------------------
      */
-    /** the unhandled events collection */
+    /**
+     * The unhandled events collection.
+     */
     private static final List<EventObject> events = new LinkedList<EventObject>();
-    /** the event dispatcher thread */
+
+    /**
+     * The event dispatcher thread.
+     */
     private static final EventDispatcher dispatcher = new EventDispatcher("Preference Event Dispatcher"); //$NON-NLS-1$
 
     /*
@@ -93,7 +87,9 @@ public abstract class AbstractPreferences extends Preferences {
      * Instance fields (package-private)
      * -----------------------------------------------------------
      */
-    /** true if this node is in user preference hierarchy */
+    /**
+     * True, if this node is in user preference hierarchy.
+     */
     boolean userNode;
 
     /*
@@ -101,20 +97,32 @@ public abstract class AbstractPreferences extends Preferences {
      * Instance fields (private)
      * -----------------------------------------------------------
      */
-    /** Marker class for 'lock' field. */
-    private static class Lock {}
-    /** The object used to lock this node. */
+    /**
+     * Marker class for 'lock' field.
+     */
+    private static class Lock {
+    }
+
+    /**
+     * The object used to lock this node.
+     * 
+     * @since Android 1.0
+     */
     protected final Object lock;
     
     /**
-     * This field is true if this node is created while it doesn't exist in the 
-     * backing store. This field's default value is false, and it is checked when 
-     * the node creation is completed, and if it is true, the node change event 
-     * will be fired for this node's parent.
+     * This field is true if this node is created while it doesn't exist in the
+     * backing store. This field's default value is false, and it is checked
+     * when the node creation is completed, and if it is true, the node change
+     * event will be fired for this node's parent.
+     * 
+     * @since Android 1.0
      */
     protected boolean newNode;
 
-    /** cached child nodes */
+    /**
+     * Cached child nodes
+     */
     private Map<String, AbstractPreferences> cachedNode;
 
     //the collections of listeners
@@ -139,17 +147,19 @@ public abstract class AbstractPreferences extends Preferences {
      * -----------------------------------------------------------
      */
     /**
-     * Construct a new <code>AbstractPreferences</code> instance using given 
-     * parent node and node name. 
-     *
+     * Constructs a new {@code AbstractPreferences} instance using the given parent node
+     * and node name.
+     * 
      * @param parent
-     *                 the parent node of this node, can be null, which means this 
-     *                 node is root
+     *            the parent node of the new node or {@code null} to indicate
+     *            that the new node is a root node.
      * @param name
-     *                 the name of this node, can be empty(""), which means this 
-     *                 node is root
+     *            the name of the new node or an empty string to indicate that
+     *            this node is called "root".
      * @throws IllegalArgumentException
-     *                 if name contains slash, or be empty if parent is not null
+     *             if the name contains a slash character or is empty if {@code
+     *             parent} is not {@code null}.
+     * @since Android 1.0
      */
     protected AbstractPreferences(AbstractPreferences parent, String name) {
         if ((null == parent ^ name.length() == 0) || name.indexOf("/") >= 0) { //$NON-NLS-1$
@@ -172,24 +182,29 @@ public abstract class AbstractPreferences extends Preferences {
      * -----------------------------------------------------------
      */
     /**
-     * Return arrays of all cached children node.
+     * Returns an array of all cached child nodes.
      * 
-     * @return arrays of all cached children node.
+     * @return the array of cached child nodes.
+     * @since Android 1.0
      */
     protected final AbstractPreferences[] cachedChildren() {
         return cachedNode.values().toArray(new AbstractPreferences[cachedNode.size()]);
     }
 
     /**
-     * Return the child node with given name, or null if it doesn't exist. The 
-     * given name must be valid and this node cannot be removed. Invocation of 
-     * this method implies that the node with given name is not cached(or, has 
-     * been removed.)
+     * Returns the child node with the specified name or {@code null} if it
+     * doesn't exist. Implementers can assume that the name supplied to this method 
+     * will be a valid node name string (conforming to the node naming format) and 
+     * will not correspond to a node that has been cached or removed.
      * 
-     * @param name    the given child name to be got 
-     * @return        the child node with given name, or null if it doesn't exist 
+     * @param name
+     *            the name of the desired child node.
+     * @return the child node with the given name or {@code null} if it doesn't
+     *         exist.
      * @throws BackingStoreException
-     *                 if backing store is unavailable or causes operation failure
+     *             if the backing store is unavailable or causes an operation
+     *             failure.
+     * @since Android 1.0
      */
     protected AbstractPreferences getChild(String name)
             throws BackingStoreException {
@@ -209,11 +224,12 @@ public abstract class AbstractPreferences extends Preferences {
     }
 
     /**
-     * Return true if and only if this node has been removed by invoking 
-     * {@link #removeNode() removeNode}. 
-     *
-     * @return true if and only if this node has been removed by invoking 
-     *             {@link #removeNode() removeNode}
+     * Returns whether this node has been removed by invoking the method {@code
+     * removeNode()}.
+     * 
+     * @return {@code true}, if this node has been removed, {@code false}
+     *         otherwise.
+     * @since Android 1.0
      */
     protected boolean isRemoved() {
         synchronized (lock) {
@@ -222,104 +238,126 @@ public abstract class AbstractPreferences extends Preferences {
     }
 
     /**
-     * Flush changes of this node to the backing store. This method should only 
-     * flush this node, and should not include the descendant nodes. The 
-     * implementation which want to flush all nodes at once should override 
-     * {@link #flush() flush()} method. 
-     *
+     * Flushes changes of this node to the backing store. This method should
+     * only flush this node and should not include the descendant nodes. Any
+     * implementation that wants to provide functionality to flush all nodes 
+     * at once should override the method {@link #flush() flush()}.
+     * 
      * @throws BackingStoreException
-     *                 if backing store is unavailable or causes operation failure
+     *             if the backing store is unavailable or causes an operation
+     *             failure.
+     * @since Android 1.0
      */
     protected abstract void flushSpi() throws BackingStoreException;
     
     /**
-     * Return names of this node's all children , or empty array if this node has 
-     * no child. Cached children name is not required to be returned.
-     *
-     * @return names of this node's all children
+     * Returns the names of all of the child nodes of this node or an empty array if
+     * this node has no children. The names of cached children are not required to be
+     * returned.
+     * 
+     * @return the names of this node's children.
      * @throws BackingStoreException
-     *                 if backing store is unavailable or causes operation failure
+     *             if the backing store is unavailable or causes an operation
+     *             failure.
+     * @since Android 1.0
      */
     protected abstract String[] childrenNamesSpi() throws BackingStoreException;
 
     /**
-     * Return the child preference node with the given name, and create new one if 
-     * it does not exist. Invoker of this method should assure that the given name 
-     * are valid as well as this node is not removed. Invocation of this method 
-     * implies that the node with given name is not cached(or, has been removed.)
-     * If the named node has just been removed, implementation of this method must 
-     * create a new one instead of reactivated the removed one. 
+     * Returns the child preference node with the given name, creating it
+     * if it does not exist. The caller of this method should ensure that the
+     * given name is valid and that this node has not been removed or cached. 
+     * If the named node has just been removed, the implementation
+     * of this method must create a new one instead of reactivating the removed
+     * one.
      * <p>
-     * The new creation is not required to be persisted immediately until the flush 
-     * method is invoked.</p>
+     * The new creation is not required to be persisted immediately until the
+     * flush method will be invoked.
+     * </p>
      * 
      * @param name
-     * @return AbstractPreferences
+     *            the name of the child preference to be returned.
+     * @return the child preference node.
+     * @since Android 1.0
      */
     protected abstract AbstractPreferences childSpi(String name);
 
 
     /**
-     * Put the given key-value pair into this node. Invoker of this method should
-     * assure that both the given values are valid as well as this node 
-     * is not removed.
-     *
-     * @param name    the given preference key
-     * @param value the given preference value
+     * Puts the given key-value pair into this node. Caller of this method
+     * should ensure that both of the given values are valid and that this
+     * node has not been removed.
+     * 
+     * @param name
+     *            the given preference key.
+     * @param value
+     *            the given preference value.
+     * @since Android 1.0
      */
     protected abstract void putSpi(String name, String value);
 
     /**
-     * Get the preference value mapped to the given key. Invoker of this method 
-     * should assure that given key are valid as well as this node is not removed. 
-     * This method should not throw exceptions, but if it does, the invoker should 
-     * catch it and deal with it as null return value.
-     *
-     * @param key    the given key to be searched for
-     * @return the preference value mapped to the given key
+     * Gets the preference value mapped to the given key. The caller of this method
+     * should ensure that the given key is valid and that this node has not been
+     * removed. This method should not throw any exceptions but if it does, the
+     * caller will ignore the exception, regarding it as a {@code null} return value.
+     * 
+     * @param key
+     *            the given key to be searched for.
+     * @return the preference value mapped to the given key.
+     * @since Android 1.0
      */
     protected abstract String getSpi(String key);
 
 
     /**
-     * Return all keys of this node's preferences, or empty array if no preference 
-     * found on this node. Invoker of this method should assure that this node is 
-     * not removed.
-     *
-     * @return all keys of this node's preferences
+     * Returns an array of all preference keys of this node or an empty array if
+     * no preferences have been found. The caller of this method should ensure that
+     * this node has not been removed.
+     * 
+     * @return the array of all preference keys.
      * @throws BackingStoreException
-     *                 if backing store is unavailable or causes operation failure
+     *             if the backing store is unavailable or causes an operation
+     *             failure.
+     * @since Android 1.0
      */
     protected abstract String[] keysSpi() throws BackingStoreException;
 
     /**
-     * Remove this node from the preference hierarchy tree. The invoker of this 
-     * method should assure that this node has no child node, which means the 
-     * {@link Preferences#removeNode() Preferences.removeNode()} should invoke 
-     * this method multi-times in bottom-up pattern. The removal is not required 
-     * to be persisted at once until the it is flushed.  
-     *
+     * Removes this node from the preference hierarchy tree. The caller of this
+     * method should ensure that this node has no child nodes, which means the
+     * method {@link Preferences#removeNode() Preferences.removeNode()} should
+     * invoke this method multiple-times in bottom-up pattern. The removal is
+     * not required to be persisted until after it is flushed.
+     * 
      * @throws BackingStoreException
-     *                 if backing store is unavailable or causes operation failure
+     *             if the backing store is unavailable or causes an operation
+     *             failure.
+     * @since Android 1.0
      */
     protected abstract void removeNodeSpi() throws BackingStoreException;
 
     /**
-     * Remove the preference with the given key. Invoker of this method 
-     * should assure that given key are valid as well as this node is not removed. 
+     * Removes the preference with the specified key. The caller of this method
+     * should ensure that the given key is valid and that this node has not been
+     * removed.
      * 
-     * @param key    the given key to removed
+     * @param key
+     *            the key of the preference that is to be removed.
+     * @since Android 1.0
      */
     protected abstract void removeSpi(String key);
 
     /**
-     * Synchronize this node with the backing store. This method should only 
-     * synchronize this node, and should not include the descendant nodes. The 
-     * implementation which want to synchronize all nodes at once should override 
-     * {@link #sync() sync()} method. 
+     * Synchronizes this node with the backing store. This method should only
+     * synchronize this node and should not include the descendant nodes. An
+     * implementation that wants to provide functionality to synchronize all nodes at once should
+     * override the method {@link #sync() sync()}.
      * 
      * @throws BackingStoreException
-     *                 if backing store is unavailable or causes operation failure
+     *             if the backing store is unavailable or causes an operation
+     *             failure.
+     * @since Android 1.0
      */
     protected abstract void syncSpi() throws BackingStoreException;
 

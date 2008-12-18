@@ -16,14 +16,30 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import java.security.Permission;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
+
+import java.security.Permission;
+
 import tests.support.Support_Exec;
 
+@TestTargetClass(SecurityManager.class) 
 public class SecurityManager2Test extends TestCase {
 
-    public void test_SecurityManager_via_SystemProperty() throws Exception {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "SecurityManager",
+          methodArgs = {}
+        )
+    })
+    public void _test_SecurityManager_via_SystemProperty() throws Exception {
         String[] arg = new String[] {
                 "-Djava.security.manager=" + MySecurityManager.class.getName(),
                 TestForSystemProperty.class.getName() };

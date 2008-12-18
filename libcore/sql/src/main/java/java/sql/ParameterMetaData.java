@@ -19,83 +19,105 @@ package java.sql;
 
 /**
  * An interface used to get information about the types and properties of
- * parameters in a PreparedStatement object.
+ * parameters in a {@code PreparedStatement}.
+ *  
+ * @since Android 1.0
  */
 public interface ParameterMetaData {
 
     /**
-     * Indicates that the parameter mode is IN.
+     * Indicates that the parameter mode is {@code IN}.
+     * 
+     * @since Android 1.0
      */
     public static final int parameterModeIn = 1;
 
     /**
-     * Indicates that the parameter mode is INOUT.
+     * Indicates that the parameter mode is {@code INOUT}.
+     * 
+     * @since Android 1.0
      */
     public static final int parameterModeInOut = 2;
 
     /**
-     * Indicates that the parameter mode is OUT.
+     * Indicates that the parameter mode is {@code OUT}.
+     * 
+     * @since Android 1.0
      */
     public static final int parameterModeOut = 4;
 
     /**
      * Indicates that the parameter mode is not known.
+     * 
+     * @since Android 1.0
      */
     public static final int parameterModeUnknown = 0;
 
     /**
-     * Indicates that a parameter is not permitted to be NULL.
+     * Indicates that a parameter is not permitted to be {@code NULL}.
+     * 
+     * @since Android 1.0
      */
     public static final int parameterNoNulls = 0;
 
     /**
-     * Indicates that a parameter is permitted to be NULL.
+     * Indicates that a parameter is permitted to be {@code NULL}.
+     * 
+     * @since Android 1.0
      */
     public static final int parameterNullable = 1;
 
     /**
-     * Indicates that whether a parameter is allowed to be null or not is not
-     * known.
+     * Indicates that whether a parameter is allowed to be {@code null} or not
+     * is not known.
+     * 
+     * @since Android 1.0
      */
     public static final int parameterNullableUnknown = 2;
 
     /**
      * Gets the fully-qualified name of the Java class which should be passed as
-     * a parameter to the method <code>PreparedStatement.setObject</code>.
+     * a parameter to the method {@code PreparedStatement.setObject}.
      * 
      * @param paramIndex
      *            the index number of the parameter, where the first parameter
-     *            has an index of 1
-     * @return a String with the fully qualified Java class name of the
-     *         parameter with the specified index. This class name is used for
-     *         custom mapping.
+     *            has index 1.
+     * @return the fully qualified Java class name of the parameter with the
+     *         specified index. This class name is used for custom mapping
+     *         between SQL types and Java objects.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public String getParameterClassName(int paramIndex) throws SQLException;
 
     /**
-     * Gets the number of parameters in the PreparedStatement for which this
-     * ParameterMetaData contains information.
+     * Gets the number of parameters in the {@code PreparedStatement} for which
+     * this {@code ParameterMetaData} contains information.
      * 
-     * @return the number of parameters as an int
+     * @return the number of parameters.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public int getParameterCount() throws SQLException;
 
     /**
-     * Gets the mode of the specified parameter.
+     * Gets the mode of the specified parameter. Can be one of:
+     * <ul>
+     * <li>ParameterMetaData.parameterModeIn</li>
+     * <li>ParameterMetaData.parameterModeOut</li>
+     * <li>ParameterMetaData.parameterModeInOut</li>
+     * <li>ParameterMetaData.parameterModeUnknown</li>
+     * </ul>
      * 
      * @param paramIndex
      *            the index number of the parameter, where the first parameter
-     *            has an index of 1
-     * @return the parameters mode. Can be: ParameterMetaData.parameterModeIn,
-     *         ParameterMetaData.parameterModeOut,
-     *         ParameterMetaData.parameterModeInOut or
-     *         ParameterMetaData.parameterModeUnknown.
+     *            has index 1.
+     * @return the parameter's mode.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public int getParameterMode(int paramIndex) throws SQLException;
 
@@ -104,11 +126,12 @@ public interface ParameterMetaData {
      * 
      * @param paramIndex
      *            the index number of the parameter, where the first parameter
-     *            has an index of 1
-     * @return the type of the parameter - an SQL type as defined in
-     *         java.sql.Types.
+     *            has index 1.
+     * @return the SQL type of the parameter as defined in {@code
+     *         java.sql.Types}.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public int getParameterType(int paramIndex) throws SQLException;
 
@@ -117,12 +140,13 @@ public interface ParameterMetaData {
      * 
      * @param paramIndex
      *            the index number of the parameter, where the first parameter
-     *            has an index of 1
+     *            has index 1.
      * @return the type name for the parameter as used by the database. A
-     *         fully-qualified name is returned if the parameter is a User
-     *         Defined Type.
+     *         fully-qualified name is returned if the parameter is a <i>User
+     *         Defined Type</i> (UDT).
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public String getParameterTypeName(int paramIndex) throws SQLException;
 
@@ -131,11 +155,12 @@ public interface ParameterMetaData {
      * 
      * @param paramIndex
      *            the index number of the parameter, where the first parameter
-     *            has an index of 1
+     *            has index 1.
      * @return the number of decimal digits ("the precision") for the parameter.
-     *         0 if the parameter is not a numeric type.
+     *         {@code 0} if the parameter is not a numeric type.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public int getPrecision(int paramIndex) throws SQLException;
 
@@ -145,26 +170,31 @@ public interface ParameterMetaData {
      * 
      * @param paramIndex
      *            the index number of the parameter, where the first parameter
-     *            has an index of 1
+     *            has index 1.
      * @return the number of digits after the decimal point ("the scale") for
-     *         the parameter. 0 if the parameter is not a numeric type.
+     *         the parameter. {@code 0} if the parameter is not a numeric type.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public int getScale(int paramIndex) throws SQLException;
 
     /**
-     * Gets whether null values are allowed for the specified parameter.
+     * Gets whether {@code null} values are allowed for the specified parameter.
+     * The returned value is one of:
+     * <ul>
+     * <li>ParameterMetaData.parameterNoNulls</li>
+     * <li>ParameterMetaData.parameterNullable</li>
+     * <li>ParameterMetaData.parameterNullableUnknown</li>
+     * </ul>
      * 
      * @param paramIndex
      *            the index number of the parameter, where the first parameter
-     *            has an index of 1
-     * @return indicator of nullability, can be:
-     *         ParameterMetaData.parameterNoNulls,
-     *         ParameterMetaData.parameterNullable, or
-     *         ParameterMetaData.parameterNullableUnknown
+     *            has index 1.
+     * @return the int code indicating the nullability of the parameter.
      * @throws SQLException
-     *             if a database error is encountered
+     *             if a database error is encountered.
+     * @since Android 1.0
      */
     public int isNullable(int paramIndex) throws SQLException;
 
@@ -173,11 +203,12 @@ public interface ParameterMetaData {
      * 
      * @param paramIndex
      *            the index number of the parameter, where the first parameter
-     *            has an index of 1
-     * @return true if values can be signed numbers for this parameter, false
-     *         otherwise.
+     *            has index 1.
+     * @return {@code true} if values can be signed numbers for this parameter,
+     *         {@code false} otherwise.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public boolean isSigned(int paramIndex) throws SQLException;
 }

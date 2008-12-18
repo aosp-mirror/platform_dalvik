@@ -23,9 +23,10 @@ import java.util.Enumeration;
 import java.util.Vector;
 
 /**
- * FilePermissionCollection is a class which holds a collection of
- * FilePermission objects and can answer a boolean indicating whether or not a
- * specific permissions is implied by a FilePermissionCollection.
+ * Collects {@link FilePermission} objects and allows to query whether a
+ * particular permission is implied by it.
+ * 
+ * @since Android 1.0
  */
 final class FilePermissionCollection extends PermissionCollection implements
         Serializable {
@@ -35,15 +36,22 @@ final class FilePermissionCollection extends PermissionCollection implements
     Vector<Permission> permissions = new Vector<Permission>();
 
     /**
-     * Construct a new FilePermissionCollection.
+     * Construct a new FilePermissionCollection
      */
     public FilePermissionCollection() {
         super();
     }
 
     /**
-     * Add a permission Object to the permission collection.
+     * Add a permission object to the permission collection.
      * 
+     * @param permission
+     *            the FilePermission object to add to the collection.
+     * @throws IllegalArgumentException
+     *             if {@code permission} is not an instance of
+     *             {@code FilePermission}.
+     * @throws IllegalStateException
+     *             if this collection is read-only.
      * @see java.security.PermissionCollection#add(java.security.Permission)
      */
     @Override
@@ -61,6 +69,7 @@ final class FilePermissionCollection extends PermissionCollection implements
     /**
      * Returns an enumeration for the collection of permissions.
      * 
+     * @return a permission enumeration for this permission collection.
      * @see java.security.PermissionCollection#elements()
      */
     @Override
@@ -69,9 +78,11 @@ final class FilePermissionCollection extends PermissionCollection implements
     }
 
     /**
-     * Returns a boolean indicating whether or not this permissions collection
-     * implies a specific <code>permission</code>.
+     * Indicates whether this permissions collection implies a specific
+     * {@code permission}.
      * 
+     * @param permission
+     *            the permission to check.
      * @see java.security.PermissionCollection#implies(java.security.Permission)
      */
     @Override

@@ -17,6 +17,11 @@
 
 package org.apache.harmony.luni.tests.java.io;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -32,9 +37,18 @@ import java.util.ArrayList;
 import org.apache.harmony.testframework.serialization.SerializationTest;
 
 import junit.framework.TestCase;
-
+@TestTargetClass(ObjectInputStream.class)
 public class ObjectInputStreamTest extends TestCase {
 
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Regression test. Checks ObjectStreamException",
+      targets = {
+        @TestTarget(
+          methodName = "readUnshared",
+          methodArgs = {}
+        )
+    })
     public void test_readUnshared() throws IOException, ClassNotFoundException {
         // Regression test for HARMONY-819
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -55,84 +69,102 @@ public class ObjectInputStreamTest extends TestCase {
         }
     } 
 
-	/**
-	 * Micro-scenario of de/serialization of an object with non-serializable superclass.
-	 * The super-constructor only should be invoked on the deserialized instance.
-	 */
-	public void test_readObject_Hierarchy() throws Exception {
-	    ByteArrayOutputStream baos = new ByteArrayOutputStream(); 
+    /**
+     * Micro-scenario of de/serialization of an object with non-serializable superclass.
+     * The super-constructor only should be invoked on the deserialized instance.
+     */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "readObject",
+          methodArgs = {}
+        )
+    })
+    public void test_readObject_Hierarchy() throws Exception {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream(); 
 
-	    ObjectOutputStream oos = new ObjectOutputStream(baos); 
-	    oos.writeObject(new B());
-	    oos.close(); 
+        ObjectOutputStream oos = new ObjectOutputStream(baos); 
+        oos.writeObject(new B());
+        oos.close(); 
 
-	    ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray())); 
-	    B b = (B) ois.readObject();
-	    ois.close();
-	    
-	    assertTrue("should construct super", A.list.contains(b));
-	    assertFalse("should not construct self", B.list.contains(b));
-	    assertEquals("super field A.s", A.DEFAULT, ((A)b).s);
-	    assertNull("transient field B.s", b.s);
-	}
-	
-	/**
-	 * @tests {@link java.io.ObjectInputStream#readNewLongString()}
-	 */
-	public void test_readNewLongString() throws Exception {
-		LongString longString = new LongString();
-		SerializationTest.verifySelf(longString);
-	}
-	
-	private static class LongString implements Serializable{
-		String lString;
-		
-		public LongString() {
-			StringBuilder builder = new StringBuilder();
-			// construct a string whose length > 64K
-			for (int i = 0; i < 65636; i++) {
-				builder.append('1');
-			}
-			lString = builder.toString();
-		}
-		
-		@Override
-		public boolean equals(Object o) {
-			if (o == this) {
-				return true;
-			}
-			if (o instanceof LongString) {
-				LongString l = (LongString) o;
-				return l.lString.equals(l.lString);
-			}
-			return true;
-		}
-		
-		@Override
-		public int hashCode() {
-			return lString.hashCode();
-		}
-	}
+        ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(baos.toByteArray())); 
+        B b = (B) ois.readObject();
+        ois.close();
+        
+        assertTrue("should construct super", A.list.contains(b));
+        assertFalse("should not construct self", B.list.contains(b));
+        assertEquals("super field A.s", A.DEFAULT, ((A)b).s);
+        assertNull("transient field B.s", b.s);
+    }
+    
+    /**
+     * @tests {@link java.io.ObjectInputStream#readNewLongString()}
+     */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Verifies serialization.",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationSelf",
+          methodArgs = {}
+        )
+    })
+    public void test_readNewLongString() throws Exception {
+        LongString longString = new LongString();
+        SerializationTest.verifySelf(longString);
+    }
+    
+    private static class LongString implements Serializable{
+        String lString;
+        
+        public LongString() {
+            StringBuilder builder = new StringBuilder();
+            // construct a string whose length > 64K
+            for (int i = 0; i < 65636; i++) {
+                builder.append('1');
+            }
+            lString = builder.toString();
+        }
+        
+        @Override
+        public boolean equals(Object o) {
+            if (o == this) {
+                return true;
+            }
+            if (o instanceof LongString) {
+                LongString l = (LongString) o;
+                return l.lString.equals(l.lString);
+            }
+            return true;
+        }
+        
+        @Override
+        public int hashCode() {
+            return lString.hashCode();
+        }
+    }
 
-	static class A { 
-		static final ArrayList<A> list = new ArrayList<A>();  
-	    String s;
-	    public static final String DEFAULT = "aaa";
-	    public A() {
-	    	s = DEFAULT;
-	    	list.add(this);
-	    }
-	} 
+    static class A { 
+        static final ArrayList<A> list = new ArrayList<A>();  
+        String s;
+        public static final String DEFAULT = "aaa";
+        public A() {
+            s = DEFAULT;
+            list.add(this);
+        }
+    } 
 
-	static class B extends A implements Serializable { 
+    static class B extends A implements Serializable { 
         private static final long serialVersionUID = 1L;
         static final ArrayList<A> list = new ArrayList<A>();  
-	    transient String s;
-	    public B() {
-	    	s = "bbb";
-	    	list.add(this);
-	    }
-	} 	
+        transient String s;
+        public B() {
+            s = "bbb";
+            list.add(this);
+        }
+    }     
     
     class OIS extends ObjectInputStream {
         
@@ -145,7 +177,16 @@ public class ObjectInputStreamTest extends TestCase {
         }
         
     }
-    
+ 
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "why should throw NullPointerException?",
+      targets = {
+        @TestTarget(
+          methodName = "readClassDescriptor",
+          methodArgs = {}
+        )
+    })
     public void test_readClassDescriptor() throws ClassNotFoundException,IOException {
         try {
             new OIS().test();
@@ -178,7 +219,15 @@ public class ObjectInputStreamTest extends TestCase {
         private static final long serialVersionUID = 11111L;
         int i = 0;
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Checks InvalidClassException.",
+      targets = {
+        @TestTarget(
+          methodName = "resolveClass",
+          methodArgs = {java.io.ObjectStreamClass.class}
+        )
+    })
     public void test_resolveClass_invalidClassName()
             throws Exception {
         // Regression test for HARMONY-1920

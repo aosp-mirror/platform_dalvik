@@ -16,18 +16,32 @@
 
 package org.apache.harmony.nio.tests.java.nio.channels.spi;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.spi.AbstractSelectionKey;
 
 import junit.framework.TestCase;
-
+@TestTargetClass(AbstractSelectionKey.class)
 public class AbstractSelectionKeyTest extends TestCase {
 
     /**
      * @tests AbstractSelectionKey#isValid() without selector
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isValid",
+          methodArgs = {}
+        )
+    })
     public void test_isValid() throws Exception {
         MockSelectionKey testKey = new MockSelectionKey();
         assertTrue(testKey.isValid());
@@ -36,6 +50,15 @@ public class AbstractSelectionKeyTest extends TestCase {
     /**
      * @tests AbstractSelectionKey#cancel
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "cancel",
+          methodArgs = {}
+        )
+    })
     public void test_cancel() throws Exception {
         MockSelectionKey testKey = new MockSelectionKey();
         try {

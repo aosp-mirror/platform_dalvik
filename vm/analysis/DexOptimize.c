@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Convert the output from "dx" into a locally-optimized DEX file.
  *
@@ -45,14 +46,17 @@ typedef struct InlineSub {
     int     inlineIdx;
 } InlineSub;
 
+
 /* fwd */
 static int writeDependencies(int fd, u4 modWhen, u4 crc);
-static bool writeAuxData(int fd, const DexClassLookup* pClassLookup);
+static bool writeAuxData(int fd, const DexClassLookup* pClassLookup,\
+    const IndexMapSet* pIndexMapSet);
 static void logFailedWrite(size_t expected, ssize_t actual, const char* msg,
     int err);
 
 static bool rewriteDex(u1* addr, int len, bool doVerify, bool doOpt,\
     u4* pHeaderFlags, DexClassLookup** ppClassLookup);
+static void updateChecksum(u1* addr, int len, DexHeader* pHeader);
 static bool loadAllClasses(DvmDex* pDvmDex);
 static void optimizeLoadedClasses(DexFile* pDexFile);
 static void optimizeClass(ClassObject* clazz, const InlineSub* inlineSubs);
@@ -87,20 +91,14 @@ static bool rewriteExecuteInline(Method* method, u2* insns,
  * file header, and will be locked with flock.  "*pCachedName" will point
  * to newly-allocated storage.
  */
-int dvmOpenCachedDexFile(const char* fileName, const char* subFileName,
-    u4 modWhen, u4 crc, bool isBootstrap, char** pCachedName, bool* pNewFile,
-    bool createIfMissing)
+int dvmOpenCachedDexFile(const char* fileName, const char* cacheFileName,
+    u4 modWhen, u4 crc, bool isBootstrap, bool* pNewFile, bool createIfMissing)
 {
-    char cacheFileName[512];
     int fd, cc;
     struct stat fdStat, fileStat;
     bool readOnly = false;
 
     *pNewFile = false;
-
-    if (!dexOptGenerateCacheFileName(fileName, subFileName, cacheFileName,
-            sizeof(cacheFileName)))
-        return -1;
 
 retry:
     /*
@@ -156,7 +154,7 @@ retry:
         goto close_fail;
     }
     cc = stat(cacheFileName, &fileStat);
-    if (cc != 0 || 
+    if (cc != 0 ||
         fdStat.st_dev != fileStat.st_dev || fdStat.st_ino != fileStat.st_ino)
     {
         LOGD("DexOpt: our open cache file is stale; sleeping and retrying\n");
@@ -262,8 +260,6 @@ retry:
         }
     }
 
-    *pCachedName = strdup(cacheFileName);
-
     assert(fd >= 0);
     return fd;
 
@@ -316,7 +312,7 @@ bool dvmOptimizeDexFile(int fd, off_t dexOffset, long dexLength,
     if (lastPart != NULL)
         lastPart++;
     else
-        lastPart = "";
+        lastPart = fileName;
 
     /*
      * For basic optimizations (byte-swapping and structure aligning) we
@@ -487,8 +483,8 @@ bool dvmOptimizeDexFile(int fd, off_t dexOffset, long dexLength,
 }
 
 /*
- * Do the actual optimization.  This is called directly, for "minimal"
- * optimization, or from a newly-created process.
+ * Do the actual optimization.  This is called directly for "minimal"
+ * optimization, or from a newly-created process for "full" optimization.
  *
  * For best use of disk/memory, we want to extract once and perform
  * optimizations in place.  If the file has to expand or contract
@@ -504,6 +500,7 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
     const char* fileName, u4 modWhen, u4 crc, bool isBootstrap)
 {
     DexClassLookup* pClassLookup = NULL;
+    IndexMapSet* pIndexMapSet = NULL;
     bool doVerify, doOpt;
     u4 headerFlags = 0;
 
@@ -531,6 +528,10 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
         LOGE("too small to be DEX\n");
         return false;
     }
+    if (dexOffset < (int) sizeof(DexOptHeader)) {
+        LOGE("not enough room for opt header\n");
+        return false;
+    }
 
     bool result = false;
 
@@ -543,9 +544,9 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
 
     {
         /*
-         * Map the entire file (so we don't have to worry about page alignment).
-         * The expectation is that the output file contains our DEX data plus
-         * a small header.
+         * Map the entire file (so we don't have to worry about page
+         * alignment).  The expectation is that the output file contains
+         * our DEX data plus room for a small header.
          */
         bool success;
         void* mapAddr;
@@ -563,6 +564,29 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
          */
         success = rewriteDex(((u1*) mapAddr) + dexOffset, dexLength,
                     doVerify, doOpt, &headerFlags, &pClassLookup);
+
+        if (success) {
+            DvmDex* pDvmDex = NULL;
+            u1* dexAddr = ((u1*) mapAddr) + dexOffset;
+
+            if (dvmDexFileOpenPartial(dexAddr, dexLength, &pDvmDex) != 0) {
+                LOGE("Unable to create DexFile\n");
+            } else {
+                /*
+                 * If configured to do so, scan the instructions, looking
+                 * for ways to reduce the size of the resolved-constant table.
+                 * This is done post-optimization, across the instructions
+                 * in all methods in all classes (even the ones that failed
+                 * to load).
+                 */
+                pIndexMapSet = dvmRewriteConstants(pDvmDex);
+
+                updateChecksum(dexAddr, dexLength,
+                    (DexHeader*) pDvmDex->pHeader);
+
+                dvmDexFileFree(pDvmDex);
+            }
+        }
 
         /* unmap the read-write version, forcing writes to disk */
         if (msync(mapAddr, dexOffset + dexLength, MS_SYNC) != 0) {
@@ -627,7 +651,7 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
     /*
      * Append any auxillary pre-computed data structures.
      */
-    if (!writeAuxData(fd, pClassLookup)) {
+    if (!writeAuxData(fd, pClassLookup, pIndexMapSet)) {
         LOGW("Failed writing aux data\n");
         goto bail;
     }
@@ -664,6 +688,7 @@ bool dvmContinueOptimization(int fd, off_t dexOffset, long dexLength,
     result = true;
 
 bail:
+    dvmFreeIndexMapSet(pIndexMapSet);
     free(pClassLookup);
     return result;
 }
@@ -995,30 +1020,85 @@ static int writeDependencies(int fd, u4 modWhen, u4 crc)
     return result;
 }
 
-/*
- * Write aux data.
- *
- * At the moment this is just the DexClassLookup structure.  In theory we
- * will tuck other stuff in here.  When theory becomes reality, we will need
- * to stow a TOC in here (or use a "chunk" format).  Until then we just
- * write a zero into the first 4 bytes so future generations have something
- * to test for.
- */
-static bool writeAuxData(int fd, const DexClassLookup* pClassLookup)
-{
-    DexFile* pDexFile;
-    ssize_t actual;
-    int zero = 0;
 
-    actual = write(fd, &zero, sizeof(zero));
-    if (actual != sizeof(zero)) {
-        logFailedWrite(sizeof(zero), actual, "aux header", errno);
+/*
+ * Write a block of data in "chunk" format.
+ *
+ * The chunk header fields are always in "native" byte order.  If "size"
+ * is not a multiple of 8 bytes, the data area is padded out.
+ */
+static bool writeChunk(int fd, u4 type, const void* data, size_t size)
+{
+    ssize_t actual;
+    union {             /* save a syscall by grouping these together */
+        char raw[8];
+        struct {
+            u4 type;
+            u4 size;
+        } ts;
+    } header;
+
+    assert(sizeof(header) == 8);
+
+    LOGV("Writing chunk, type=%.4s size=%d\n", (char*) &type, size);
+
+    header.ts.type = type;
+    header.ts.size = (u4) size;
+    actual = write(fd, &header, sizeof(header));
+    if (actual != sizeof(header)) {
+        logFailedWrite(size, actual, "aux chunk header write", errno);
         return false;
     }
 
-    actual = write(fd, pClassLookup, pClassLookup->size);
-    if (actual != pClassLookup->size) {
-        logFailedWrite(pClassLookup->size, actual, "class lookup table", errno);
+    if (size > 0) {
+        actual = write(fd, data, size);
+        if (actual != (ssize_t) size) {
+            logFailedWrite(size, actual, "aux chunk write", errno);
+            return false;
+        }
+    }
+
+    /* if necessary, pad to 64-bit alignment */
+    if ((size & 7) != 0) {
+        int padSize = 8 - (size & 7);
+        LOGV("size was %d, inserting %d pad bytes\n", size, padSize);
+        lseek(fd, padSize, SEEK_CUR);
+    }
+
+    assert( ((int)lseek(fd, 0, SEEK_CUR) & 7) == 0);
+
+    return true;
+}
+
+/*
+ * Write aux data.
+ *
+ * We have different pieces, some of which may be optional.  To make the
+ * most effective use of space, we use a "chunk" format, with a 4-byte
+ * type and a 4-byte length.  We guarantee 64-bit alignment for the data,
+ * so it can be used directly when the file is mapped for reading.
+ */
+static bool writeAuxData(int fd, const DexClassLookup* pClassLookup,
+    const IndexMapSet* pIndexMapSet)
+{
+    /* pre-computed class lookup hash table */
+    if (!writeChunk(fd, (u4) kDexChunkClassLookup, pClassLookup,
+            pClassLookup->size))
+    {
+        return false;
+    }
+
+    /* remapped constants (optional) */
+    if (pIndexMapSet != NULL) {
+        if (!writeChunk(fd, pIndexMapSet->chunkType, pIndexMapSet->chunkData,
+                pIndexMapSet->chunkDataLen))
+        {
+            return false;
+        }
+    }
+
+    /* write the end marker */
+    if (!writeChunk(fd, (u4) kDexChunkEnd, NULL, 0)) {
         return false;
     }
 
@@ -1134,12 +1214,27 @@ static bool rewriteDex(u1* addr, int len, bool doVerify, bool doOpt,
     result = true;
 
 bail:
-    /*
-     * Free up storage.
-     */
+    /* free up storage */
     dvmDexFileFree(pDvmDex);
 
     return result;
+}
+
+/*
+ * Update the Adler-32 checksum stored in the DEX file.  This covers the
+ * swapped and optimized DEX data, but does not include the opt header
+ * or auxillary data.
+ */
+static void updateChecksum(u1* addr, int len, DexHeader* pHeader)
+{
+    /*
+     * Rewrite the checksum.  We leave the SHA-1 signature alone.
+     */
+    uLong adler = adler32(0L, Z_NULL, 0);
+    const int nonSum = sizeof(pHeader->magic) + sizeof(pHeader->checksum);
+
+    adler = adler32(adler, addr + nonSum, len - nonSum);
+    pHeader->checksum = adler;
 }
 
 /*
@@ -1187,7 +1282,7 @@ static bool loadAllClasses(DvmDex* pDvmDex)
         const DexClassDef* pClassDef;
         const char* classDescriptor;
         ClassObject* newClass;
-        
+
         pClassDef = dexGetClassDef(pDvmDex->pDexFile, idx);
         classDescriptor =
             dexStringByTypeIdx(pDvmDex->pDexFile, pClassDef->classIdx);
@@ -1251,12 +1346,6 @@ static InlineSub* createInlineSubsTable(void)
              * Method could be virtual or direct.  Try both.  Don't use
              * the "hier" versions.
              */
-            if (!dvmIsFinalClass(clazz)) {
-                LOGW("DexOpt: WARNING: inline op on non-final class '%s'\n",
-                    clazz->descriptor);
-                // TODO: final methods in non-final classes are okay too
-                /* keep going, I guess */
-            }
             method = dvmFindDirectMethodByDescriptor(clazz, ops[i].methodName,
                         ops[i].methodSignature);
             if (method == NULL)
@@ -1267,6 +1356,21 @@ static InlineSub* createInlineSubsTable(void)
                     ops[i].classDescriptor, ops[i].methodName,
                     ops[i].methodSignature);
             } else {
+                if (!dvmIsFinalClass(clazz) && !dvmIsFinalMethod(method)) {
+                    LOGW("DexOpt: WARNING: inline op on non-final class/method "
+                         "%s.%s\n",
+                        clazz->descriptor, method->name);
+                    /* fail? */
+                }
+                if (dvmIsSynchronizedMethod(method) ||
+                    dvmIsDeclaredSynchronizedMethod(method))
+                {
+                    LOGW("DexOpt: WARNING: inline op on synchronized method "
+                         "%s.%s\n",
+                        clazz->descriptor, method->name);
+                    /* fail? */
+                }
+
                 table[tableIndex].method = method;
                 table[tableIndex].inlineIdx = i;
                 tableIndex++;
@@ -1304,9 +1408,9 @@ static void optimizeLoadedClasses(DexFile* pDexFile)
         const DexClassDef* pClassDef;
         const char* classDescriptor;
         ClassObject* clazz;
-        
+
         pClassDef = dexGetClassDef(pDexFile, idx);
-        classDescriptor= dexStringByTypeIdx(pDexFile, pClassDef->classIdx);
+        classDescriptor = dexStringByTypeIdx(pDexFile, pClassDef->classIdx);
 
         /* all classes are loaded into the bootstrap class loader */
         clazz = dvmLookupClass(classDescriptor, NULL, false);
@@ -1332,7 +1436,7 @@ static void optimizeLoadedClasses(DexFile* pDexFile)
                 classDescriptor);
         }
     }
-    
+
     free(inlineSubs);
 }
 

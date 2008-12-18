@@ -16,6 +16,11 @@
  */
 package org.apache.harmony.archive.tests.java.util.jar;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestLevel;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -36,7 +41,17 @@ import tests.support.resource.Support_Resources;
  * some tests are just copy of JarExecTest ones 
  */
 
+@TestTargetClass(ZipOutputStream.class)
 public class ZipExecTest extends junit.framework.TestCase {
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Regression functional test. Exception checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "putNextEntry",
+          methodArgs = {java.util.zip.ZipEntry.class}
+        )
+    })
     public void test_1562() throws Exception {
         Manifest man = new Manifest();
         Attributes att = man.getMainAttributes();
@@ -72,6 +87,15 @@ public class ZipExecTest extends junit.framework.TestCase {
      * tests Class-Path entry in manifest
      * @throws Exception in case of troubles
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Functional test.",
+      targets = {
+        @TestTarget(
+          methodName = "ZipOutputStream",
+          methodArgs = {java.io.OutputStream.class}
+        )
+    })
     public void test_zip_class_path() throws Exception {
         File fooZip = File.createTempFile("hyts_", ".zip");
         File barZip = File.createTempFile("hyts_", ".zip");
@@ -136,6 +160,15 @@ public class ZipExecTest extends junit.framework.TestCase {
     }
 
     
+@TestInfo(
+        level = TestLevel.PARTIAL,
+        purpose = "Functional test.",
+        targets = {
+          @TestTarget(
+            methodName = "ZipOutputStream",
+            methodArgs = {java.io.OutputStream.class}
+          )
+      })
     public void test_zip_jar_mix() throws Exception {
         File fooJar = File.createTempFile("hyts_", ".jar");
         File barZip = File.createTempFile("hyts_", ".zip");
@@ -170,6 +203,15 @@ public class ZipExecTest extends junit.framework.TestCase {
                 .startsWith("FOOBAR"));
     }
 
+@TestInfo(
+        level = TestLevel.PARTIAL,
+        purpose = "Functional test.",
+        targets = {
+          @TestTarget(
+            methodName = "ZipOutputStream",
+            methodArgs = {java.io.OutputStream.class}
+          )
+      })
     public void test_zip_jar_mix_1() throws Exception {
         File fooZip = File.createTempFile("hyts_", ".zip");
         File barJar = File.createTempFile("hyts_", ".jar");
@@ -210,6 +252,15 @@ public class ZipExecTest extends junit.framework.TestCase {
      * tests case when Main-Class is not in the zip launched but in another zip referenced by Class-Path
      * @throws Exception in case of troubles
      */
+@TestInfo(
+        level = TestLevel.PARTIAL,
+        purpose = "Functional test.",
+        targets = {
+          @TestTarget(
+            methodName = "ZipOutputStream",
+            methodArgs = {java.io.OutputStream.class}
+          )
+      })
     public void test_main_class_in_another_zip() throws Exception {
         File fooZip = File.createTempFile("hyts_", ".zip");
         File barZip = File.createTempFile("hyts_", ".zip");

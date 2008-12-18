@@ -21,31 +21,36 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
- * Java representation of an SQL TIME value. Provides functions to aid
- * generation and interpretation of JDBC escape format for time values.
+ * Java representation of an SQL {@code TIME} value. Provides utilities to 
+ * format and parse the time's representation as a String in JDBC escape format.
  * 
+ * @since Android 1.0
  */
 public class Time extends Date {
 
     private static final long serialVersionUID = 8397324403548013681L;
 
     /**
-     * @deprecated Please use the constructor {@link #Time(long)} Constructs a Time
-     *             object using the supplied values for Hour, Minute and Second.
-     *             The Year, Month and Day elements of the Time object are set
-     *             to 1970, January, 1 reflecting the Epoch (Time in
-     *             milliseconds = 0).
-     *             <p>
-     *             Any attempt to access the Year, Month or Day elements of a
-     *             Time object will result in an IllegalArgumentException.
-     *             <p>
-     *             Result is undefined if any argument is out of bounds.
+     * Constructs a {@code Time} object using the supplied values for <i>Hour</i>,
+     * <i>Minute</i> and <i>Second</i>. The <i>Year</i>, <i>Month</i> and
+     * <i>Day</i> elements of the {@code Time} object are set to the date 
+     * of the Epoch (January 1, 1970).
+     * <p>
+     * Any attempt to access the <i>Year</i>, <i>Month</i> or <i>Day</i>
+     * elements of a {@code Time} object will result in an {@code
+     * IllegalArgumentException}.
+     * </p><p>
+     * The result is undefined if any argument is out of bounds.
+     * </p>
+     * 
+     * @deprecated Please use the constructor {@link #Time(long)}.
      * @param theHour
-     *            a value from 0 - 23
+     *            a value in the range {@code [0,23]}.
      * @param theMinute
-     *            a value from 0 - 59
+     *            a value in the range {@code [0,59]}.
      * @param theSecond
-     *            a value from 0 - 59
+     *            a value in the range {@code [0,59]}.
+     * @since Android 1.0
      */
     @SuppressWarnings("deprecation")
     @Deprecated
@@ -54,22 +59,25 @@ public class Time extends Date {
     }
 
     /**
-     * Constructs a Time object using a supplied time specified in milliseconds
+     * Constructs a {@code Time} object using a supplied time specified in
+     * milliseconds.
      * 
      * @param theTime
-     *            a Time specified in milliseconds since the Epoch (January 1st
-     *            1970, 00:00:00.000)
+     *            a {@code Time} specified in milliseconds since the
+     *            <i>Epoch</i> (January 1st 1970, 00:00:00.000).
+     * @since Android 1.0
      */
     public Time(long theTime) {
         super(theTime);
     }
 
     /**
-     * @deprecated This method is deprecated and must not be used. An SQL Time
-     *             object does not have a Date component.
-     * @return does not return
+     * @deprecated This method is deprecated and must not be used. An SQL
+     *             {@code Time} object does not have a {@code Date} component.
+     * @return does not return anything.
      * @throws IllegalArgumentException
-     *             if this method is called
+     *             if this method is called.
+     * @since Android 1.0
      */
     @SuppressWarnings("deprecation")
     @Deprecated
@@ -79,11 +87,12 @@ public class Time extends Date {
     }
 
     /**
-     * @deprecated This method is deprecated and must not be used. An SQL Time
-     *             object does not have a Day component.
-     * @return does not return
+     * @deprecated This method is deprecated and must not be used. An SQL
+     *             {@code Time} object does not have a <i>Day</i> component.
+     * @return does not return anything.
      * @throws IllegalArgumentException
-     *             if this method is called
+     *             if this method is called.
+     * @since Android 1.0
      */
     @SuppressWarnings("deprecation")
     @Deprecated
@@ -93,11 +102,12 @@ public class Time extends Date {
     }
 
     /**
-     * @deprecated This method is deprecated and must not be used. An SQL Time
-     *             object does not have a Month component.
-     * @return does not return
+     * @deprecated This method is deprecated and must not be used. An SQL
+     *             {@code Time} object does not have a <i>Month</i> component.
+     * @return does not return anything.
      * @throws IllegalArgumentException
-     *             if this method is called
+     *             if this method is called.
+     * @since Android 1.0
      */
     @SuppressWarnings("deprecation")
     @Deprecated
@@ -107,11 +117,12 @@ public class Time extends Date {
     }
 
     /**
-     * @deprecated This method is deprecated and must not be used. An SQL Time
-     *             object does not have a Year component.
-     * @return does not return
+     * @deprecated This method is deprecated and must not be used. An SQL
+     *             {@code Time} object does not have a <i>Year</i> component.
+     * @return does not return anything.
      * @throws IllegalArgumentException
-     *             if this method is called
+     *             if this method is called.
+     * @since Android 1.0
      */
     @SuppressWarnings("deprecation")
     @Deprecated
@@ -121,10 +132,11 @@ public class Time extends Date {
     }
 
     /**
-     * @deprecated This method is deprecated and must not be used. An SQL Time
-     *             object does not have a Date component.
+     * @deprecated This method is deprecated and must not be used. An SQL
+     *             {@code Time} object does not have a {@code Date} component.
      * @throws IllegalArgumentException
-     *             if this method is called
+     *             if this method is called.
+     * @since Android 1.0
      */
     @SuppressWarnings("deprecation")
     @Deprecated
@@ -134,10 +146,11 @@ public class Time extends Date {
     }
 
     /**
-     * @deprecated This method is deprecated and must not be used. An SQL Time
-     *             object does not have a Month component.
+     * @deprecated This method is deprecated and must not be used. An SQL
+     *             {@code Time} object does not have a <i>Month</i> component.
      * @throws IllegalArgumentException
-     *             if this method is called
+     *             if this method is called.
+     * @since Android 1.0
      */
     @SuppressWarnings("deprecation")
     @Deprecated
@@ -147,10 +160,10 @@ public class Time extends Date {
     }
 
     /**
-     * @deprecated This method is deprecated and must not be used. An SQL Time
-     *             object does not have a Year component.
+     * @deprecated This method is deprecated and must not be used. An SQL
+     *             {@code Time} object does not have a <i>Year</i> component.
      * @throws IllegalArgumentException
-     *             if this method is called
+     *             if this method is called.
      */
     @SuppressWarnings("deprecation")
     @Deprecated
@@ -160,12 +173,14 @@ public class Time extends Date {
     }
 
     /**
-     * Sets the time for this Time object to the supplied milliseconds value.
+     * Sets the time for this {@code Time} object to the supplied milliseconds
+     * value.
      * 
      * @param time
-     *            A time value expressed as milliseconds since the Epoch.
+     *            A time value expressed as milliseconds since the <i>Epoch</i>.
      *            Negative values are milliseconds before the Epoch. The Epoch
-     *            is January 1 1970, 00:00:00.000
+     *            is January 1 1970, 00:00:00.000.
+     * @since Android 1.0
      */
     @Override
     public void setTime(long time) {
@@ -173,10 +188,12 @@ public class Time extends Date {
     }
 
     /**
-     * Formats the Time as a String in JDBC escape format: hh:mm:ss
+     * Formats the {@code Time} as a String in JDBC escape format: {@code
+     * hh:mm:ss}.
      * 
-     * @return A String representing the Time value in JDBC escape format:
-     *         HH:mm:ss
+     * @return A String representing the {@code Time} value in JDBC escape
+     *         format: {@code HH:mm:ss}
+     * @since Android 1.0
      */
     @Override
     public String toString() {
@@ -185,18 +202,20 @@ public class Time extends Date {
     }
 
     /**
-     * Creates a Time object from a String holding a time represented in JDBC
-     * escape format: hh:mm:ss.
+     * Creates a {@code Time} object from a string holding a time represented in
+     * JDBC escape format: {@code hh:mm:ss}.
      * <p>
-     * An exception occurs if the input string is not in the form of a time in
-     * JDBC escape format.
+     * An exception occurs if the input string does not comply with this format.
+     * </p>
      * 
      * @param timeString
      *            A String representing the time value in JDBC escape format:
-     *            hh:mm:ss
-     * @return The Time object set to a time corresponding to the given time
+     *            {@code hh:mm:ss}.
+     * @return The {@code Time} object set to a time corresponding to the given
+     *         time.
      * @throws IllegalArgumentException
      *             if the supplied time string is not in JDBC escape format.
+     * @since Android 1.0
      */
     public static Time valueOf(String timeString) {
         if (timeString == null) {

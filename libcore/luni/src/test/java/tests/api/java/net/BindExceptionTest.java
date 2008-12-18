@@ -17,51 +17,75 @@
 
 package tests.api.java.net;
 
+import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.net.BindException;
 
+@TestTargetClass(BindException.class) 
 public class BindExceptionTest extends junit.framework.TestCase {
 
-	/**
-	 * @tests java.net.BindException#BindException()
-	 */
-	public void test_Constructor() {
-		// Test for method java.net.BindException()
-		try {
-			throw new BindException();
-		} catch (BindException e) {
-			return;
-		} catch (Exception e) {
-			fail("Exception during BindException test" + e.toString());
-		}
-		fail("Failed to generate exception");
-	}
+    /**
+     * @tests java.net.BindException#BindException()
+     */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "BindException",
+          methodArgs = {}
+        )
+    })
+    public void test_Constructor() {
+        // Test for method java.net.BindException()
+        try {
+            throw new BindException();
+        } catch (BindException e) {
+            return;
+        } catch (Exception e) {
+            fail("Exception during BindException test" + e.toString());
+        }
+        fail("Failed to generate exception");
+    }
 
-	/**
-	 * @tests java.net.BindException#BindException(java.lang.String)
-	 */
-	public void test_ConstructorLjava_lang_String() {
-		// Test for method java.net.BindException(java.lang.String)
-		try {
-			throw new BindException("Some error message");
-		} catch (BindException e) {
-			return;
-		} catch (Exception e) {
-			fail("Exception during BindException test : " + e.getMessage());
-		}
-		fail("Failed to generate exception");
-	}
+    /**
+     * @tests java.net.BindException#BindException(java.lang.String)
+     */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "BindException",
+          methodArgs = {String.class}
+        )
+    })
+    public void test_ConstructorLjava_lang_String() {
+        // Test for method java.net.BindException(java.lang.String)
+        try {
+            throw new BindException("Some error message");
+        } catch (BindException e) {
+            return;
+        } catch (Exception e) {
+            fail("Exception during BindException test : " + e.getMessage());
+        }
+        fail("Failed to generate exception");
+    }
 
-	/**
-	 * Sets up the fixture, for example, open a network connection. This method
-	 * is called before a test is executed.
-	 */
-	protected void setUp() {
-	}
+    /**
+     * Sets up the fixture, for example, open a network connection. This method
+     * is called before a test is executed.
+     */
+    protected void setUp() {
+    }
 
-	/**
-	 * Tears down the fixture, for example, close a network connection. This
-	 * method is called after a test is executed.
-	 */
-	protected void tearDown() {
-	}
+    /**
+     * Tears down the fixture, for example, close a network connection. This
+     * method is called after a test is executed.
+     */
+    protected void tearDown() {
+    }
 }

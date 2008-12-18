@@ -18,10 +18,10 @@ package java.nio;
 
 
 /**
- * A <code>BufferOverflowException</code> is thrown when you try to write 
- * elements to a buffer, but there is not enough remaining space in the 
- * buffer.
+ * A <code>BufferOverflowException</code> is thrown when elements are written
+ * to a buffer but there is not enough remaining space in the buffer.
  * 
+ * @since Android 1.0
  */
 public class BufferOverflowException extends RuntimeException {
 
@@ -29,6 +29,8 @@ public class BufferOverflowException extends RuntimeException {
 
     /**
      * Constructs a <code>BufferOverflowException</code>.
+     * 
+     * @since Android 1.0
      */
     public BufferOverflowException() {
         super();

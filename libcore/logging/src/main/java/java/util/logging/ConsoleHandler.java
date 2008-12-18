@@ -19,43 +19,47 @@ package java.util.logging;
 
 /**
  * A handler that writes log messages to the standard output stream
- * <code>System.err</code>.
+ * {@code System.err}.
  * <p>
  * This handler reads the following properties from the log manager to
  * initialize itself:
  * <ul>
  * <li>java.util.logging.ConsoleHandler.level specifies the logging level,
- * defaults to <code>Level.INFO</code> if this property is not found or has an
- * invalid value;
+ * defaults to {@code Level.INFO} if this property is not found or has an
+ * invalid value.
  * <li>java.util.logging.ConsoleHandler.filter specifies the name of the filter
- * class to be associated with this handler, defaults to <code>null</code> if
- * this property is not found or has an invalid value;
+ * class to be associated with this handler, defaults to {@code null} if this
+ * property is not found or has an invalid value.
  * <li>java.util.logging.ConsoleHandler.formatter specifies the name of the
  * formatter class to be associated with this handler, defaults to
- * <code>java.util.logging.SimpleFormatter</code> if this property is not
- * found or has an invalid value;
+ * {@code java.util.logging.SimpleFormatter} if this property is not found or
+ * has an invalid value.
  * <li>java.util.logging.ConsoleHandler.encoding specifies the encoding this
- * handler will use to encode log messages, defaults to <code>null</code> if
- * this property is not found or has an invalid value.
+ * handler will use to encode log messages, defaults to {@code null} if this
+ * property is not found or has an invalid value.
  * </ul>
  * </p>
  * <p>
  * This class is not thread-safe.
  * </p>
  * 
+ * @since Android 1.0
  */
 public class ConsoleHandler extends StreamHandler {
 
     /**
-     * Constructs a <code>ConsoleHandler</code> object.
+     * Constructs a {@code ConsoleHandler} object.
+     * 
+     * @since Android 1.0
      */
     public ConsoleHandler() {
         super(System.err);
     }
 
     /**
-     * Closes this handler. The <code>System.err</code> is flushed but not
-     * closed.
+     * Closes this handler. The {@code System.err} is flushed but not closed.
+     * 
+     * @since Android 1.0
      */
     @Override
     public void close() {
@@ -65,7 +69,10 @@ public class ConsoleHandler extends StreamHandler {
     /**
      * Logs a record if necessary. A flush operation will be done.
      * 
-     * @param record the log record to be logged
+     * @param record
+     *            the log record to be logged.
+     * 
+     * @since Android 1.0
      */
     @Override
     public void publish(LogRecord record) {

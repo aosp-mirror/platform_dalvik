@@ -407,21 +407,21 @@ public abstract class Collator implements Cloneable
       
       for(int i = 0; i < locales.length; i++) {
           locale = locales[i];
-          
+
           index = locale.indexOf('_');
           index2 = locale.lastIndexOf('_');
-          
+
           if(index == -1) {
               result[i] = new Locale(locales[i]);
           } else if(index == 2 && index == index2) {
               result[i] = new Locale(
                       locale.substring(0,2),
                       locale.substring(3,5));
-          } else if(index == 2 && index2 == 5) {
+          } else if(index == 2 && index2 > index) {
               result[i] = new Locale(
-                      locale.substring(0,2),
-                      locale.substring(3,5),
-                      locale.substring(6));
+                      locale.substring(0,index),
+                      locale.substring(index + 1,index2),
+                      locale.substring(index2 + 1));
           }
       }
       

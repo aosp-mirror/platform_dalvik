@@ -19,6 +19,18 @@ package java.net;
 
 import java.io.ObjectStreamException;
 
+/**
+ * This class represents a 32 bit long IPv4 address. The most common textual
+ * representation of an IPv4 address follows the pattern {@code b.b.b.b} where
+ * each {@code b} represents one of the four bytes. If only three parts are
+ * specified ({@code b.b.bb} ), the last part is then 16 bit long, the address
+ * represents a class B network address as <i>128.net.host</i>. A two part
+ * address ({@code b.bbb} ) allows to represent a class A network address as
+ * <i>net.host</i>. If there is only one part ({@code bbbb} ) the address is
+ * represented without any byte rearrangement.
+ * 
+ * @since Android 1.0
+ */
 public final class Inet4Address extends InetAddress {
 
     private static final long serialVersionUID = 3286316764910316507L;
@@ -33,10 +45,12 @@ public final class Inet4Address extends InetAddress {
     }
 
     /**
-     * Returns true if the address is a multicast address. Valid IPv4 multicast
-     * addresses are prefixed with 1110 = 0xE
+     * Returns whether the represented address is a multicast address or not.
+     * Valid IPv4 multicast addresses are prefixed with 1110 = 0xE.
      * 
-     * @return boolean
+     * @return {@code true} if this instance represents a multicast address,
+     *         {@code false} otherwise.
+     * @since Android 1.0
      */
     @Override
     public boolean isMulticastAddress() {
@@ -44,9 +58,12 @@ public final class Inet4Address extends InetAddress {
     }
 
     /**
-     * Returns if the address is the ANY Address
+     * Returns whether the represented address is the local wildcard ANY address
+     * or not.
      * 
-     * @return boolean
+     * @return {@code true} if this instance represents the wildcard ANY
+     *         address, {@code false} otherwise.
+     * @since Android 1.0
      */
     @Override
     public boolean isAnyLocalAddress() {
@@ -59,10 +76,12 @@ public final class Inet4Address extends InetAddress {
     }
 
     /**
-     * Returns true if the address is a loopback address. Loopback ipv4
-     * addresses are prefixed with: 011111111 = 127
+     * Returns whether the represented address is a loopback address or not.
+     * Loopback IPv4 addresses are prefixed with: 011111111 = 127.
      * 
-     * @return boolean
+     * @return {@code true} if this instance represents a lookback address,
+     *         {@code false} otherwise.
+     * @since Android 1.0
      */
     @Override
     public boolean isLoopbackAddress() {
@@ -70,13 +89,17 @@ public final class Inet4Address extends InetAddress {
     }
 
     /**
-     * Returns whether this address has link-local scope.
+     * Returns whether this address has a link-local scope or not.
+     * <p>
+     * RFC 3484 <br>
+     * Default Address Selection for Internet Protocol Version 6 (IPv6) states
+     * IPv4 auto-configuration addresses, prefix 169.254/16, IPv4 loopback
+     * addresses, prefix 127/8, are assigned link-local scope.
+     * </p>
      * 
-     * RFC 3484 Default Address Selection for Internet Protocol version 6 (IPv6)
-     * states IPv4 auto-configuration addresses, prefix 169.254/16, IPv4
-     * loopback addresses, prefix 127/8, are assigned link-local scope.
-     * 
-     * @return boolean
+     * @return {@code true} if this instance represents a link-local address,
+     *         {@code false} otherwise.
+     * @since Android 1.0
      */
     @Override
     public boolean isLinkLocalAddress() {
@@ -86,12 +109,17 @@ public final class Inet4Address extends InetAddress {
     }
 
     /**
-     * Returns whether this address has site-local scope. RFC 3484 Default
-     * Address Selection for Internet Protocol version 6 (IPv6) states IPv4
-     * private addresses, prefixes 10/8, 172.16/12, and 192.168/16, are assigned
-     * site-local scope.
+     * Returns whether this address has a site-local scope or not.
+     * <p>
+     * RFC 3484 <br>
+     * Default Address Selection for Internet Protocol Version 6 (IPv6) states
+     * IPv4 private addresses, prefixes 10/8, 172.16/12, and 192.168/16, are
+     * assigned site-local scope.
+     * </p>
      * 
-     * @return boolean
+     * @return {@code true} if this instance represents a site-local address,
+     *         {@code false} otherwise.
+     * @since Android 1.0
      */
     @Override
     public boolean isSiteLocalAddress() {
@@ -102,11 +130,12 @@ public final class Inet4Address extends InetAddress {
     }
 
     /**
-     * Returns true if an address is a global multicast address. Valid MCGlobal
-     * IPv4 addresses are 224.0.1.0 - 238.255.255.255
+     * Returns whether the address is a global multicast address or not. Valid
+     * MCGlobal IPv4 addresses are 224.0.1.0 - 238.255.255.255.
      * 
-     * @return boolean true, if the address is in the global multicast group,
-     *         false otherwise
+     * @return {@code true} if the address is in the global multicast group,
+     *         {@code false} otherwise.
+     * @since Android 1.0
      */
     @Override
     public boolean isMCGlobal() {
@@ -140,10 +169,12 @@ public final class Inet4Address extends InetAddress {
     }
 
     /**
-     * Returns false for all IPv4 addresses. There are no valid IPv4 Node-local
-     * addresses
+     * Returns whether the address has a node-local scope or not. This method
+     * returns always {@code false} because there are no valid IPv4 node-local
+     * addresses.
      * 
-     * @return boolean
+     * @return {@code false} for all IPv4 addresses.
+     * @since Android 1.0
      */
     @Override
     public boolean isMCNodeLocal() {
@@ -151,11 +182,13 @@ public final class Inet4Address extends InetAddress {
     }
 
     /**
-     * Returns true if the address is a link-local address.The valid range for
-     * IPv4 link-local addresses is: 224.0.0.0 to 239.0.0.255 Hence a mask of
-     * 111000000000000000000000 = 0xE00000
+     * Returns whether the address is a link-local multicast address or not. The
+     * valid range for IPv4 link-local addresses is: 224.0.0.0 to 239.0.0.255
+     * Hence a mask of 111000000000000000000000 = 0xE00000.
      * 
-     * @return boolean
+     * @return {@code true} if this instance represents a link-local address,
+     *         {@code false} otherwise.
+     * @since Android 1.0
      */
     @Override
     public boolean isMCLinkLocal() {
@@ -163,11 +196,13 @@ public final class Inet4Address extends InetAddress {
     }
 
     /**
-     * Returns true if the address is a site-local address.The valid range for
-     * IPv4 site-local addresses is: 239.255.0.0 to 239.255.255.255 Hence a mask
-     * of 11101111 11111111 = 0xEFFF.
+     * Returns whether the address is a site-local multicast address or not. The
+     * valid range for IPv4 site-local addresses is: 239.255.0.0 to
+     * 239.255.255.255 Hence a mask of 11101111 11111111 = 0xEFFF.
      * 
-     * @return boolean
+     * @return {@code true} if this instance represents a site-local address,
+     *         {@code false} otherwise.
+     * @since Android 1.0
      */
     @Override
     public boolean isMCSiteLocal() {
@@ -175,12 +210,14 @@ public final class Inet4Address extends InetAddress {
     }
 
     /**
-     * Returns true if the address is a organization-local address. The valid
-     * range for IPv4 org-local addresses is: 239.192.0.0 to 239.195.255.255
-     * Hence masks of 11101111 11000000 to 11101111 11000011 are valid. 0xEFC0
-     * to 0xEFC3
+     * Returns whether the address is a organization-local multicast address or
+     * not. The valid range for IPv4 organization-local addresses is:
+     * 239.192.0.0 to 239.195.255.255 Hence masks of 11101111 11000000 to
+     * 11101111 11000011 are valid. 0xEFC0 to 0xEFC3
      * 
-     * @return true if org local address, false otherwise
+     * @return {@code true} if this instance represents a organization-local
+     *         address, {@code false} otherwise.
+     * @since Android 1.0
      */
     @Override
     public boolean isMCOrgLocal() {
@@ -189,9 +226,10 @@ public final class Inet4Address extends InetAddress {
     }
 
     /**
-     * Returns a String representation of the IP address.
+     * Returns a textual representation of this IP address.
      * 
-     * @return Host address
+     * @return the textual representation of this host address.
+     * @since Android 1.0
      */
     @Override
     public String getHostAddress() {
@@ -206,9 +244,10 @@ public final class Inet4Address extends InetAddress {
     }
 
     /**
-     * Overrides the basic hashcode function.
+     * Gets the hashcode of the represented IP address.
      * 
-     * @return the hash code
+     * @return the appropriate hashcode value.
+     * @since Android 1.0
      */
     @Override
     public int hashCode() {
@@ -216,10 +255,14 @@ public final class Inet4Address extends InetAddress {
     }
 
     /**
-     * Returns true if obj is of the same type as the IPv4 address and they have
-     * the same IP address, false otherwise.
+     * Compares this instance with the IP address in the object {@code obj} and
+     * returns {@code true} if they are of the same type and represent the same
+     * IP address, {@code false} otherwise.
      * 
-     * @return true if equal and false otherwise
+     * @param obj
+     *            the object to be tested for equality.
+     * @return {@code true} if the addresses are equal, {@code false} otherwise.
+     * @since Android 1.0
      */
     @Override
     public boolean equals(Object obj) {

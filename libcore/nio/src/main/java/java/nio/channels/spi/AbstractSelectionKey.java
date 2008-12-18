@@ -19,11 +19,10 @@ package java.nio.channels.spi;
 import java.nio.channels.SelectionKey;
 
 /**
- * Abstract class for selection key.
- * <p>
- * The class takes charge of the validation and cancellation of key.
- * </p>
- * 
+ * {@code AbstractSelectionKey} is the base implementation class for selection keys.
+ * It implements validation and cancellation methods.
+ *
+ * @since Android 1.0
  */
 public abstract class AbstractSelectionKey extends SelectionKey {
 
@@ -33,23 +32,34 @@ public abstract class AbstractSelectionKey extends SelectionKey {
     boolean isValid = true;
 
     /**
-     * Constructor for this class.
+     * Constructs a new {@code AbstractSelectionKey}.
+     * 
+     * @since Android 1.0
      */
     protected AbstractSelectionKey() {
         super();
     }
 
     /**
-     * @see java.nio.channels.SelectionKey#isValid()
+     * Indicates whether this key is valid. A key is valid as long as it has not
+     * been canceled.
+     * 
+     * @return {@code true} if this key has not been canceled, {@code false}
+     *         otherwise.
+     * @since Android 1.0
      */
     public final boolean isValid() {
         return isValid;
     }
 
     /**
-     * Cancels this key and adds it to the cancelled key set.
+     * Cancels this key.
+     * <p>
+     * A key that has been canceled is no longer valid. Calling this method on
+     * an already canceled key does nothing.
+     * </p>
      * 
-     * @see java.nio.channels.SelectionKey#cancel()
+     * @since Android 1.0
      */
     public final void cancel() {
         if (isValid) {

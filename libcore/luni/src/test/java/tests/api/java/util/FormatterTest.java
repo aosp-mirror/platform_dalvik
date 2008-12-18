@@ -15,6 +15,11 @@
  */
 package tests.api.java.util;
 
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass; 
+
 import java.io.BufferedOutputStream;
 import java.io.Closeable;
 import java.io.File;
@@ -54,6 +59,7 @@ import java.util.UnknownFormatConversionException;
 
 import junit.framework.TestCase;
 
+@TestTargetClass(Formatter.class) 
 public class FormatterTest extends TestCase {
 
     class MockAppendable implements Appendable {
@@ -163,6 +169,15 @@ public class FormatterTest extends TestCase {
     /**
      * @tests java.util.Formatter#Formatter()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Formatter",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         Formatter f = new Formatter();
         assertNotNull(f);
@@ -174,6 +189,15 @@ public class FormatterTest extends TestCase {
     /**
      * @tests java.util.Formatter#Formatter(Appendable)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Formatter",
+          methodArgs = {java.lang.Appendable.class}
+        )
+    })
     public void test_ConstructorLjava_lang_Appendable() {
         MockAppendable ma = new MockAppendable();
         Formatter f1 = new Formatter(ma);
@@ -196,6 +220,15 @@ public class FormatterTest extends TestCase {
     /**
      * @tests java.util.Formatter#Formatter(Locale)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Formatter",
+          methodArgs = {java.util.Locale.class}
+        )
+    })
     public void test_ConstructorLjava_util_Locale() {
         Formatter f1 = new Formatter(Locale.FRANCE);
         assertTrue(f1.out() instanceof StringBuilder);
@@ -211,6 +244,15 @@ public class FormatterTest extends TestCase {
     /**
      * @tests java.util.Formatter#Formatter(Appendable, Locale)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Formatter",
+          methodArgs = {java.lang.Appendable.class, java.util.Locale.class}
+        )
+    })
     public void test_ConstructorLjava_lang_AppendableLjava_util_Locale() {
         MockAppendable ma = new MockAppendable();
         Formatter f1 = new Formatter(ma, Locale.CANADA);
@@ -229,6 +271,15 @@ public class FormatterTest extends TestCase {
     /**
      * @tests java.util.Formatter#Formatter(String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Formatter",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() throws IOException {
         Formatter f = null;
         try {
@@ -269,6 +320,15 @@ public class FormatterTest extends TestCase {
     /**
      * @tests java.util.Formatter#Formatter(String, String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Formatter",
+          methodArgs = {java.lang.String.class, java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_StringLjava_lang_String()
             throws IOException {
         Formatter f = null;
@@ -324,6 +384,15 @@ public class FormatterTest extends TestCase {
     /**
      * @tests java.util.Formatter#Formatter(String, String, Locale)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Formatter",
+          methodArgs = {java.lang.String.class, java.lang.String.class, java.util.Locale.class}
+        )
+    })
     public void test_ConstructorLjava_lang_StringLjava_lang_StringLjava_util_Locale()
             throws IOException {
         Formatter f = null;
@@ -388,6 +457,15 @@ public class FormatterTest extends TestCase {
     /**
      * @tests java.util.Formatter#Formatter(File)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Formatter",
+          methodArgs = {java.io.File.class}
+        )
+    })
     public void test_ConstructorLjava_io_File() throws IOException {
         Formatter f = null;
         try {
@@ -428,6 +506,15 @@ public class FormatterTest extends TestCase {
     /**
      * @tests java.util.Formatter#Formatter(File, String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Formatter",
+          methodArgs = {java.io.File.class, java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_io_FileLjava_lang_String()
             throws IOException {
         Formatter f = null;
@@ -495,6 +582,15 @@ public class FormatterTest extends TestCase {
     /**
      * @tests java.util.Formatter#Formatter(File, String, Locale)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Formatter",
+          methodArgs = {java.io.File.class, java.lang.String.class, java.util.Locale.class}
+        )
+    })
     public void test_ConstructorLjava_io_FileLjava_lang_StringLjava_util_Locale()
             throws IOException {
         Formatter f = null;
@@ -558,6 +654,15 @@ public class FormatterTest extends TestCase {
     /**
      * @tests java.util.Formatter#Formatter(PrintStream)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Formatter",
+          methodArgs = {java.io.PrintStream.class}
+        )
+    })
     public void test_ConstructorLjava_io_PrintStream() throws IOException {
         Formatter f = null;
         try {
@@ -576,6 +681,15 @@ public class FormatterTest extends TestCase {
     /**
      * @tests java.util.Formatter#Formatter(OutputStream)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Formatter",
+          methodArgs = {java.io.OutputStream.class}
+        )
+    })
     public void test_ConstructorLjava_io_OutputStream() throws IOException {
         Formatter f = null;
         try {
@@ -594,6 +708,15 @@ public class FormatterTest extends TestCase {
     /**
      * @tests java.util.Formatter#Formatter(OutputStream, String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Formatter",
+          methodArgs = {java.io.OutputStream.class, java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_io_OutputStreamLjava_lang_String()
             throws IOException {
         Formatter f = null;
@@ -636,6 +759,16 @@ public class FormatterTest extends TestCase {
      * Test method for 'java.util.Formatter.Formatter(OutputStream, String,
      * Locale)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Formatter",
+          methodArgs = {java.io.OutputStream.class, java.lang.String.class, 
+                  java.util.Locale.class}
+        )
+    })
     public void test_ConstructorLjava_io_OutputStreamLjava_lang_StringLjava_util_Locale()
             throws IOException {
         Formatter f = null;
@@ -679,6 +812,15 @@ public class FormatterTest extends TestCase {
     /**
      * @tests java.util.Formatter#locale()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify not null value.",
+      targets = {
+        @TestTarget(
+          methodName = "locale",
+          methodArgs = {}
+        )
+    })
     public void test_locale() {
         Formatter f = null;
         f = new Formatter((Locale) null);
@@ -696,6 +838,15 @@ public class FormatterTest extends TestCase {
     /**
      * @tests java.util.Formatter#out()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "out",
+          methodArgs = {}
+        )
+    })
     public void test_out() {
         Formatter f = null;
         f = new Formatter();
@@ -714,6 +865,15 @@ public class FormatterTest extends TestCase {
     /**
      * @tests java.util.Formatter#flush()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "flush",
+          methodArgs = {}
+        )
+    })
     public void test_flush() throws IOException {
         Formatter f = null;
         f = new Formatter(notExist);
@@ -735,6 +895,15 @@ public class FormatterTest extends TestCase {
     /**
      * @tests java.util.Formatter#close()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "close",
+          methodArgs = {}
+        )
+    })
     public void test_close() throws IOException {
         Formatter f = new Formatter(notExist);
         assertTrue(f instanceof Closeable);
@@ -747,6 +916,15 @@ public class FormatterTest extends TestCase {
     /**
      * @tests java.util.Formatter#toString()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public void test_toString() {
         Formatter f = new Formatter();
         assertNotNull(f.toString());
@@ -763,6 +941,15 @@ public class FormatterTest extends TestCase {
     /**
      * @tests java.util.Formatter#ioException()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "ioException",
+          methodArgs = {}
+        )
+    })
     public void test_ioException() throws IOException {
         Formatter f = null;
         f = new Formatter(new MockDestination());
@@ -782,6 +969,15 @@ public class FormatterTest extends TestCase {
     /**
      * @tests java.util.Formatter#format(String, Object...) for null parameter
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies null as a parameter.",
+      targets = {
+        @TestTarget(
+          methodName = "format",
+          methodArgs = {java.lang.String.class, java.lang.Object[].class}
+        )
+    })
     public void test_formatLjava_lang_String$Ljava_lang_Object_null() {
         Formatter f = new Formatter();
         try {
@@ -799,6 +995,16 @@ public class FormatterTest extends TestCase {
     /**
      * @tests java.util.Formatter#format(String, Object...) for argument index
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify IllegalFormatException, " +
+            "FormatterClosedException.",
+      targets = {
+        @TestTarget(
+          methodName = "format",
+          methodArgs = {java.lang.String.class, java.lang.Object[].class}
+        )
+    })
     public void test_formatLjava_lang_String$Ljava_lang_Object_ArgIndex() {
         Formatter formatter = new Formatter(Locale.US);
         formatter.format("%1$s%2$s%3$s%4$s%5$s%6$s%7$s%8$s%9$s%11$s%10$s", "1",
@@ -896,6 +1102,15 @@ public class FormatterTest extends TestCase {
     /**
      * @tests java.util.Formatter#format(String, Object...) for width
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "format",
+          methodArgs = {java.lang.String.class, java.lang.Object[].class}
+        )
+    })
     public void test_formatLjava_lang_String$Ljava_lang_Object_Width() {
         Formatter f = new Formatter(Locale.US);
         f.format("%1$8s", "1");
@@ -918,6 +1133,15 @@ public class FormatterTest extends TestCase {
     /**
      * @tests java.util.Formatter#format(String, Object...) for precision
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "format",
+          methodArgs = {java.lang.String.class, java.lang.Object[].class}
+        )
+    })
     public void test_formatLjava_lang_String$Ljava_lang_Object_Precision() {
         Formatter f = new Formatter(Locale.US);
         f.format("%.5s", "123456");
@@ -976,6 +1200,15 @@ public class FormatterTest extends TestCase {
     /**
      * @tests java.util.Formatter#format(String, Object...) for line sperator
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies IllegalFormatFlagsException.",
+      targets = {
+        @TestTarget(
+          methodName = "format",
+          methodArgs = {java.lang.String.class, java.lang.Object[].class}
+        )
+    })
     public void test_formatLjava_lang_String$Ljava_lang_Object_LineSeparator() {
         Formatter f = null;
 
@@ -1078,6 +1311,15 @@ public class FormatterTest extends TestCase {
     /**
      * @tests java.util.Formatter#format(String, Object...) for percent
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies IllegalFormatPrecisionException.",
+      targets = {
+        @TestTarget(
+          methodName = "format",
+          methodArgs = {java.lang.String.class, java.lang.Object[].class}
+        )
+    })
     public void test_formatLjava_lang_String$Ljava_lang_Object_Percent() {
         Formatter f = null;
 
@@ -1153,6 +1395,16 @@ public class FormatterTest extends TestCase {
     /**
      * @tests java.util.Formatter#format(String, Object...) for flag
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies UnknownFormatConversionException, " +
+            "DuplicateFormatFlagsException.",
+      targets = {
+        @TestTarget(
+          methodName = "format",
+          methodArgs = {java.lang.String.class, java.lang.Object[].class}
+        )
+    })
     public void test_formatLjava_lang_String$Ljava_lang_Object_Flag() {
         Formatter f = new Formatter(Locale.US);
         try {
@@ -1186,6 +1438,16 @@ public class FormatterTest extends TestCase {
      * @tests java.util.Formatter#format(String, Object...) for general
      *        conversion b/B
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify IllegalFormatException, " +
+            "FormatterClosedException.",
+      targets = {
+        @TestTarget(
+          methodName = "format",
+          methodArgs = {java.lang.String.class, java.lang.Object[].class}
+        )
+    })
     public void test_format_LString$LObject_GeneralConversionB() {
         final Object[][] triple = { 
                 { Boolean.FALSE,                "%3.2b",  " fa", },
@@ -1249,6 +1511,16 @@ public class FormatterTest extends TestCase {
      * @tests java.util.Formatter#format(String, Object...) for general
      *        conversion type 's' and 'S'
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify IllegalFormatException, " +
+            "FormatterClosedException.",
+      targets = {
+        @TestTarget(
+          methodName = "format",
+          methodArgs = {java.lang.String.class, java.lang.Object[].class}
+        )
+    })
     public void test_format_LString$LObject_GeneralConversionS() {
 
         final Object[][] triple = { 
@@ -1313,6 +1585,16 @@ public class FormatterTest extends TestCase {
      * @tests java.util.Formatter#format(String, Object...) for general
      *        conversion type 'h' and 'H'
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify IllegalFormatException, " +
+            "FormatterClosedException.",
+      targets = {
+        @TestTarget(
+          methodName = "format",
+          methodArgs = {java.lang.String.class, java.lang.Object[].class}
+        )
+    })
     public void test_format_LString$LObject_GeneralConversionH() {
 
         final Object[] input = { 
@@ -1348,6 +1630,15 @@ public class FormatterTest extends TestCase {
      * @tests java.util.Formatter#format(String, Object...) for general
      *        conversion other cases
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies FormatFlagsConversionMismatchException.",
+      targets = {
+        @TestTarget(
+          methodName = "format",
+          methodArgs = {java.lang.String.class, java.lang.Object[].class}
+        )
+    })
     public void test_formatLjava_lang_String$Ljava_lang_Object_GeneralConversionOther() {
         /*
          * In Turkish locale, the upper case of '\u0069' is '\u0130'. The
@@ -1399,6 +1690,15 @@ public class FormatterTest extends TestCase {
      * @tests java.util.Formatter#format(String, Object...) for general
      *        conversion exception
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "format",
+          methodArgs = {java.lang.String.class, java.lang.Object[].class}
+        )
+    })
     public void test_formatLjava_lang_String$Ljava_lang_Object_GeneralConversionException() {
         final String[] flagMismatch = { "%#b", "%+b", "% b", "%0b", "%,b",
                 "%(b", "%#B", "%+B", "% B", "%0B", "%,B", "%(B", "%#h", "%+h",
@@ -1458,6 +1758,16 @@ public class FormatterTest extends TestCase {
      * @tests java.util.Formatter#format(String, Object...) for Character
      *        conversion
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies IllegalFormatConversionException, " +
+            "FormatFlagsConversionMismatchException, functionality.",
+      targets = {
+        @TestTarget(
+          methodName = "format",
+          methodArgs = {java.lang.String.class, java.lang.Object[].class}
+        )
+    })
     public void test_formatLjava_lang_String$Ljava_lang_Object_CharacterConversion() {
         Formatter f = new Formatter(Locale.US);
         final Object[] illArgs = { Boolean.TRUE, new Float(1.1f),
@@ -1537,6 +1847,15 @@ public class FormatterTest extends TestCase {
      * @tests java.util.Formatter#format(String, Object...) for legal
      *        Byte/Short/Integer/Long conversion type 'd'
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "format",
+          methodArgs = {java.lang.String.class, java.lang.Object[].class}
+        )
+    })
     public void test_formatLjava_lang_String$Ljava_lang_Object_ByteShortIntegerLongConversionD() {
         final Object[][] triple = { 
                 { 0,                "%d",                  "0" }, 
@@ -1635,6 +1954,15 @@ public class FormatterTest extends TestCase {
      * @tests java.util.Formatter#format(String, Object...) for legal
      *        Byte/Short/Integer/Long conversion type 'o'
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "format",
+          methodArgs = {java.lang.String.class, java.lang.Object[].class}
+        )
+    })
     public void test_formatLjava_lang_String$Ljava_lang_Object_ByteShortIntegerLongConversionO() {
         final Object[][] triple = { 
                 { 0,                "%o",                 "0" }, 
@@ -1705,6 +2033,15 @@ public class FormatterTest extends TestCase {
      * @tests java.util.Formatter#format(String, Object...) for legal
      *        Byte/Short/Integer/Long conversion type 'x' and 'X'
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "format",
+          methodArgs = {java.lang.String.class, java.lang.Object[].class}
+        )
+    })
     public void test_formatLjava_lang_String$Ljava_lang_Object_ByteShortIntegerLongConversionX() {
         final Object[][] triple = { 
                 { 0,                "%x",                 "0" }, 
@@ -1782,7 +2119,16 @@ public class FormatterTest extends TestCase {
      * @tests java.util.Formatter#format(String, Object...) for Date/Time
      *        conversion
      */
-    public void test_formatLjava_lang_String$Ljava_lang_Object_DateTimeConversion() {
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "format",
+          methodArgs = {java.lang.String.class, java.lang.Object[].class}
+        )
+    })
+    public void _test_formatLjava_lang_String$Ljava_lang_Object_DateTimeConversion() {
         Formatter f = null;
         Date now = new Date(1147327147578L);
 
@@ -2487,6 +2833,15 @@ public class FormatterTest extends TestCase {
      * @tests java.util.Formatter#format(String, Object...) for null argment for
      *        Byte/Short/Integer/Long/BigInteger conversion
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies null as the second parameter.",
+      targets = {
+        @TestTarget(
+          methodName = "format",
+          methodArgs = {java.lang.String.class, java.lang.Object[].class}
+        )
+    })
     public void test_formatLjava_lang_String$Ljava_lang_Object_ByteShortIntegerLongNullConversion() {
 
         Formatter f = new Formatter(Locale.FRANCE);
@@ -2514,6 +2869,16 @@ public class FormatterTest extends TestCase {
      * @tests java.util.Formatter#format(String, Object...) for legal
      *        BigInteger conversion type 'd'
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify IllegalFormatException, " +
+            "FormatterClosedException.",
+      targets = {
+        @TestTarget(
+          methodName = "format",
+          methodArgs = {java.lang.String.class, java.lang.Object[].class}
+        )
+    })
     public void test_formatLjava_lang_String$LBigInteger() {
         final Object[][] tripleD = {
                 {new BigInteger("123456789012345678901234567890"),          "%d",       "123456789012345678901234567890"}, //$NON-NLS-2$
@@ -2610,6 +2975,15 @@ public class FormatterTest extends TestCase {
      * @tests java.util.Formatter#format(String, Object...) for padding of
      *        BigInteger conversion
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies boundary conditions.",
+      targets = {
+        @TestTarget(
+          methodName = "format",
+          methodArgs = {java.lang.String.class, java.lang.Object[].class}
+        )
+    })
     public void test_formatLjava_lang_String$Ljava_lang_Object_BigIntegerPaddingConversion() {
         Formatter f = null;
 
@@ -2648,6 +3022,15 @@ public class FormatterTest extends TestCase {
      * @tests java.util.Formatter#format(String, Object...) for BigInteger
      *        conversion exception
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "format",
+          methodArgs = {java.lang.String.class, java.lang.Object[].class}
+        )
+    })
     public void test_formatLjava_lang_String$Ljava_lang_Object_BigIntegerConversionException() {
         Formatter f = null;
 
@@ -2728,6 +3111,15 @@ public class FormatterTest extends TestCase {
      * @tests java.util.Formatter#format(String, Object...) for BigInteger
      *        exception throwing order
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "format",
+          methodArgs = {java.lang.String.class, java.lang.Object[].class}
+        )
+    })
     public void test_formatLjava_lang_String$Ljava_lang_Object_BigIntegerExceptionOrder() {
         Formatter f = null;
         BigInteger big = new BigInteger("100");
@@ -2790,7 +3182,16 @@ public class FormatterTest extends TestCase {
      * @tests java.util.Formatter#format(String, Object...) for Float/Double
      *        conversion type 'e' and 'E'
      */
-    public void test_formatLjava_lang_String$Ljava_lang_Object_FloatConversionE() {
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "format",
+          methodArgs = {java.lang.String.class, java.lang.Object[].class}
+        )
+    })
+    public void _test_formatLjava_lang_String$Ljava_lang_Object_FloatConversionE() {
         Formatter f = null;
         final Object[][] tripleE = {
                 {0f, "%e",          "0.000000e+00"},
@@ -3017,7 +3418,16 @@ public class FormatterTest extends TestCase {
      * @tests java.util.Formatter#format(String, Object...) for Float/Double
      *        conversion type 'g' and 'G'
      */
-    public void test_formatLjava_lang_String$Ljava_lang_Object_FloatConversionG() {
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "format",
+          methodArgs = {java.lang.String.class, java.lang.Object[].class}
+        )
+    })
+    public void _test_formatLjava_lang_String$Ljava_lang_Object_FloatConversionG() {
         Formatter f = null;
         final Object[][] tripleG = {
                 {1001f, "%g",           "1001.00"},
@@ -3217,6 +3627,15 @@ public class FormatterTest extends TestCase {
      * @tests java.util.Formatter#format(String, Object...) for Float/Double
      *        conversion type 'g' and 'G' overflow
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "format",
+          methodArgs = {java.lang.String.class, java.lang.Object[].class}
+        )
+    })
     public void test_formatLjava_lang_String$Ljava_lang_Object_FloatConversionG_Overflow() {
         Formatter f = new Formatter();
         f.format("%g", 999999.5);
@@ -3255,7 +3674,16 @@ public class FormatterTest extends TestCase {
      * @tests java.util.Formatter#format(String, Object...) for Float/Double
      *        conversion type 'f'
      */
-    public void test_formatLjava_lang_String$Ljava_lang_Object_FloatConversionF() {
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "format",
+          methodArgs = {java.lang.String.class, java.lang.Object[].class}
+        )
+    })
+    public void _test_formatLjava_lang_String$Ljava_lang_Object_FloatConversionF() {
         Formatter f = null;
 
         final Object[][] tripleF = {
@@ -3492,6 +3920,15 @@ public class FormatterTest extends TestCase {
      * @tests java.util.Formatter#format(String, Object...) for Float/Double
      *        conversion type 'a' and 'A'
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "format",
+          methodArgs = {java.lang.String.class, java.lang.Object[].class}
+        )
+    })
     public void test_formatLjava_lang_String$Ljava_lang_Object_FloatConversionA() {
         Formatter f = null;
         final Object[][] tripleA = {
@@ -3673,7 +4110,17 @@ public class FormatterTest extends TestCase {
      * @tests java.util.Formatter#format(String, Object...) for BigDecimal
      *        conversion type 'e' and 'E'
      */
-    public void test_formatLjava_lang_String$Ljava_lang_Object_BigDecimalConversionE() {
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify IllegalFormatException, " +
+            "FormatterClosedException.",
+      targets = {
+        @TestTarget(
+          methodName = "format",
+          methodArgs = {java.lang.String.class, java.lang.Object[].class}
+        )
+    })
+    public void _test_formatLjava_lang_String$Ljava_lang_Object_BigDecimalConversionE() {
         Formatter f = null;
         final Object[][] tripleE = {
                 {BigDecimal.ZERO, "%e",         "0.000000e+00"},
@@ -3741,7 +4188,17 @@ public class FormatterTest extends TestCase {
      * @tests java.util.Formatter#format(String, Object...) for BigDecimal
      *        conversion type 'g' and 'G'
      */
-    public void test_formatLjava_lang_String$Ljava_lang_Object_BigDecimalConversionG() {
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify IllegalFormatException, " +
+            "FormatterClosedException.",
+      targets = {
+        @TestTarget(
+          methodName = "format",
+          methodArgs = {java.lang.String.class, java.lang.Object[].class}
+        )
+    })
+    public void _test_formatLjava_lang_String$Ljava_lang_Object_BigDecimalConversionG() {
         Formatter f = null;
         final Object[][] tripleG = {
                 {BigDecimal.ZERO, "%g",         "0.00000"},
@@ -3832,6 +4289,16 @@ public class FormatterTest extends TestCase {
      * @tests java.util.Formatter#format(String, Object...) for BigDecimal
      *        conversion type 'f'
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify IllegalFormatException, " +
+            "FormatterClosedException.",
+      targets = {
+        @TestTarget(
+          methodName = "format",
+          methodArgs = {java.lang.String.class, java.lang.Object[].class}
+        )
+    })
     public void test_formatLjava_lang_String$Ljava_lang_Object_BigDecimalConversionF() {
 
         Formatter f = null;
@@ -3900,6 +4367,15 @@ public class FormatterTest extends TestCase {
      * @tests java.util.Formatter#format(String, Object...) for exceptions in
      *        Float/Double/BigDecimal conversion type 'e', 'E', 'g', 'G', 'f', 'a', 'A'
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "format",
+          methodArgs = {java.lang.String.class, java.lang.Object[].class}
+        )
+    })
     public void test_formatLjava_lang_String$Ljava_lang_Object_FloatDoubleBigDecimalConversionException() {
         Formatter f = null;
 
@@ -4010,6 +4486,15 @@ public class FormatterTest extends TestCase {
      * @tests java.util.Formatter#format(String, Object...) for
      *        Float/Double/BigDecimal exception throwing order
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "format",
+          methodArgs = {java.lang.String.class, java.lang.Object[].class}
+        )
+    })
     public void test_formatLjava_lang_String$Ljava_lang_Object_FloatDoubleBigDecimalExceptionOrder() {
         Formatter f = null;
 
@@ -4065,6 +4550,15 @@ public class FormatterTest extends TestCase {
      * @tests java.util.Formatter#format(String, Object...) for BigDecimal
      *        exception throwing order
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "format",
+          methodArgs = {java.lang.String.class, java.lang.Object[].class}
+        )
+    })
     public void test_formatLjava_lang_String$Ljava_lang_Object_BigDecimalExceptionOrder() {
         Formatter f = null;
         BigDecimal bd = new BigDecimal("1.0");
@@ -4121,6 +4615,15 @@ public class FormatterTest extends TestCase {
      * @tests java.util.Formatter#format(String, Object...) for null argment for
      *        Float/Double/BigDecimal conversion
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies null as the second parameter.",
+      targets = {
+        @TestTarget(
+          methodName = "format",
+          methodArgs = {java.lang.String.class, java.lang.Object[].class}
+        )
+    })
     public void test_formatLjava_lang_String$Ljava_lang_Object_FloatDoubleBigDecimalNullConversion() {
         Formatter f = null;
 

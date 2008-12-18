@@ -14,7 +14,7 @@
 
 #
 # Android.mk for Dalvik VM.  If you enable or disable optional features here,
-# rebuild the VM with "make clean-libdvm && make libdvm".
+# rebuild the VM with "make clean-libdvm && make -j4 libdvm".
 #
 LOCAL_PATH:= $(call my-dir)
 include $(CLEAR_VARS)
@@ -29,6 +29,9 @@ LOCAL_CFLAGS += -fstrict-aliasing -Wstrict-aliasing=2 -fno-align-jumps
 # Optional features.  These may impact the size or performance of the VM.
 #
 LOCAL_CFLAGS += -DWITH_PROFILER -DWITH_DEBUGGER
+
+# 0=full cache, 1/2=reduced, 3=no cache
+LOCAL_CFLAGS += -DDVM_RESOLVER_CACHE=0
 
 ifeq ($(WITH_DEADLOCK_PREDICTION),true)
   LOCAL_CFLAGS += -DWITH_DEADLOCK_PREDICTION
@@ -91,7 +94,6 @@ LOCAL_SRC_FILES := \
 	InlineNative.c.arm \
 	Inlines.c \
 	Intern.c \
-	InternalNative.c \
 	Jni.c \
 	JarFile.c \
 	LinearAlloc.c \
@@ -120,9 +122,8 @@ LOCAL_SRC_FILES := \
 	analysis/CodeVerify.c \
 	analysis/DexOptimize.c \
 	analysis/DexVerify.c \
+	analysis/ReduceConstants.c \
 	interp/Interp.c.arm \
-	interp/InterpDbg.c.arm \
-	interp/InterpStd.c.arm \
 	interp/Stack.c \
 	jdwp/ExpandBuf.c \
 	jdwp/JdwpAdb.c \
@@ -132,6 +133,35 @@ LOCAL_SRC_FILES := \
 	jdwp/JdwpMain.c \
 	jdwp/JdwpSocket.c \
 	mterp/Mterp.c.arm \
+	mterp/out/InterpC-portstd.c.arm \
+	mterp/out/InterpC-portdbg.c.arm \
+	native/InternalNative.c \
+	native/dalvik_system_DexFile.c \
+	native/dalvik_system_VMDebug.c \
+	native/dalvik_system_VMRuntime.c \
+	native/dalvik_system_VMStack.c \
+	native/dalvik_system_Zygote.c \
+	native/java_lang_Class.c \
+	native/java_lang_Object.c \
+	native/java_lang_Runtime.c \
+	native/java_lang_String.c \
+	native/java_lang_System.c \
+	native/java_lang_SystemProperties.c \
+	native/java_lang_Throwable.c \
+	native/java_lang_VMClassLoader.c \
+	native/java_lang_VMThread.c \
+	native/java_lang_reflect_AccessibleObject.c \
+	native/java_lang_reflect_Array.c \
+	native/java_lang_reflect_Constructor.c \
+	native/java_lang_reflect_Field.c \
+	native/java_lang_reflect_Method.c \
+	native/java_lang_reflect_Proxy.c \
+	native/java_security_AccessController.c \
+	native/java_util_concurrent_atomic_AtomicLong.c \
+	native/org_apache_harmony_dalvik_NativeTestTarget.c \
+	native/org_apache_harmony_dalvik_ddmc_DdmServer.c \
+	native/org_apache_harmony_dalvik_ddmc_DdmVmInternal.c \
+	native/sun_misc_Unsafe.c \
 	oo/AccessCheck.c \
 	oo/Array.c \
 	oo/Class.c \
@@ -179,32 +209,49 @@ LOCAL_C_INCLUDES += \
 	external/zlib \
 	$(KERNEL_HEADERS)
 
-LOCAL_LDLIBS += -lpthread -ldl
 
 ifeq ($(TARGET_SIMULATOR),true)
+  LOCAL_LDLIBS += -lpthread -ldl
   ifeq ($(HOST_OS),linux)
     # need this for clock_gettime() in profiling
     LOCAL_LDLIBS += -lrt
   endif
+else
+  LOCAL_SHARED_LIBRARIES += libdl
 endif
 
 ifeq ($(TARGET_ARCH),arm)
-	# use custom version rather than FFI
-	#LOCAL_SRC_FILES += arch/arm/CallC.c
-	LOCAL_SRC_FILES += arch/arm/CallOldABI.S arch/arm/CallEABI.S
-	LOCAL_SRC_FILES += \
-		mterp/out/InterpC-armv5.c.arm \
-		mterp/out/InterpAsm-armv5.S
-	LOCAL_SHARED_LIBRARIES += libdl
+  LOCAL_SRC_FILES += \
+		arch/arm/CallOldABI.S \
+		arch/arm/CallEABI.S \
+		arch/arm/HintsEABI.c
+  # TODO: select sources for ARMv4 vs. ARMv5TE
+  LOCAL_SRC_FILES += \
+		mterp/out/InterpC-armv5te.c.arm \
+		mterp/out/InterpAsm-armv5te.S
+  LOCAL_SHARED_LIBRARIES += libdl
 else
-	# use FFI
-	LOCAL_C_INCLUDES += external/libffi/$(TARGET_OS)-$(TARGET_ARCH)
-	LOCAL_SRC_FILES += arch/generic/Call.c
-	LOCAL_SRC_FILES += \
-		mterp/out/InterpC-desktop.c \
-		mterp/out/InterpAsm-desktop.S
-	LOCAL_SHARED_LIBRARIES += libffi
+  ifeq ($(TARGET_ARCH),x86)
+    LOCAL_SRC_FILES += \
+		arch/x86/Call386ABI.S \
+		arch/x86/Hints386ABI.c
+    LOCAL_SRC_FILES += \
+		mterp/out/InterpC-x86.c \
+		mterp/out/InterpAsm-x86.S
+  else
+	# unknown architecture, try to use FFI
+    LOCAL_C_INCLUDES += external/libffi/$(TARGET_OS)-$(TARGET_ARCH)
+    LOCAL_SRC_FILES += \
+		arch/generic/Call.c \
+		arch/generic/Hints.c
+    LOCAL_SHARED_LIBRARIES += libffi
+	
+    LOCAL_SRC_FILES += \
+		mterp/out/InterpC-allstubs.c \
+		mterp/out/InterpAsm-allstubs.S
+  endif
 endif
+
 
 LOCAL_MODULE := libdvm
 
@@ -218,4 +265,3 @@ LOCAL_STATIC_LIBRARIES += \
 	libdex
 
 include $(BUILD_SHARED_LIBRARY)
-

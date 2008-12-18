@@ -45,8 +45,6 @@ int jniRegisterSystemMethods(JNIEnv* env)
         goto bail;
     if (register_java_lang_System(env) != 0)
         goto bail;
-    //if (register_java_lang_reflect_Proxy(env) != 0)
-    //    goto bail;
 
     if (register_org_apache_harmony_luni_platform_OSFileSystem(env) != 0)
         goto bail;
@@ -87,9 +85,6 @@ int jniRegisterSystemMethods(JNIEnv* env)
     if (register_java_net_InetAddress(env) != 0)
         goto bail;
     if (register_java_net_NetworkInterface(env) != 0)
-        goto bail;
-
-    if (register_javax_crypto_HmacSpi(env) != 0)
         goto bail;
 
     if (register_com_ibm_icu4jni_text_NativeBreakIterator(env) != 0)

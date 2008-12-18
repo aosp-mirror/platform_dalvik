@@ -260,9 +260,13 @@ public final class RuleBasedCollator extends Collator
   */
   public RuleBasedCollator(String rules) throws ParseException
   {
-    
-    if (rules.length() == 0)
-      throw new ParseException("Build rules empty.", 0);
+    // BEGIN android-changed
+    if (rules == null) {
+      throw new NullPointerException();
+    }
+    // if (rules.length() == 0)
+    //   throw new ParseException("Build rules empty.", 0);
+    // END android-changed
     m_collator_ = NativeCollation.openCollatorFromRules(rules,
                               CollationAttribute.VALUE_OFF,
                               CollationAttribute.VALUE_DEFAULT_STRENGTH);
@@ -285,8 +289,13 @@ public final class RuleBasedCollator extends Collator
   */
   public RuleBasedCollator(String rules, int strength) throws ParseException
   {
-    if (rules.length() == 0)
-      throw new ParseException("Build rules empty.", 0);
+    // BEGIN android-changed
+    if (rules == null) {
+      throw new NullPointerException();
+    }
+    // if (rules.length() == 0)
+    //   throw new ParseException("Build rules empty.", 0);
+    // END android-changed
     if (!CollationAttribute.checkStrength(strength))
       throw ErrorCode.getException(ErrorCode.U_ILLEGAL_ARGUMENT_ERROR);
       
@@ -320,6 +329,11 @@ public final class RuleBasedCollator extends Collator
   */
   public RuleBasedCollator(String rules, int normalizationmode, int strength)
   {
+    // BEGIN android-added
+    if (rules == null) {
+      throw new NullPointerException();
+    }
+    // END android-added
     if (!CollationAttribute.checkStrength(strength) || 
         !CollationAttribute.checkNormalization(normalizationmode)) {
       throw ErrorCode.getException(ErrorCode.U_ILLEGAL_ARGUMENT_ERROR);

@@ -17,13 +17,18 @@
 
 package org.apache.harmony.text.tests.java.text;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
+import junit.framework.TestCase;
+
 import java.text.AttributedString;
 import java.text.Bidi;
 import java.util.Arrays;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-
+@TestTargetClass(Bidi.class) 
 public class BidiTest extends TestCase {
 
     Bidi bd;
@@ -45,7 +50,22 @@ public class BidiTest extends TestCase {
                     + butWas[1] + " level: " + butWas[2]);
         }
     }
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify positive case for " +
+            "Bidi(AttributedCharacterIterator paragraph).",
+      targets = {
+        @TestTarget(
+          methodName = "Bidi",
+          methodArgs = {char[].class, int.class, byte[].class, 
+                  int.class, int.class, int.class}
+        ),
+        @TestTarget(
+          methodName = "Bidi",
+          methodArgs = {java.text.AttributedCharacterIterator.class}
+        )
 
+    })
     public void testNullPointerConstructor() {
         try {
             bd = new Bidi(null, Bidi.DIRECTION_RIGHT_TO_LEFT);
@@ -71,7 +91,16 @@ public class BidiTest extends TestCase {
         bd = new Bidi("a".toCharArray(), 0, null, 0, 1,
                 Bidi.DIRECTION_RIGHT_TO_LEFT);
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies IllegalArgumentException.",
+      targets = {
+        @TestTarget(
+          methodName = "Bidi",
+          methodArgs = {char[].class, int.class, byte[].class, int.class, 
+                        int.class, int.class}
+        )
+    })
     public void testBadLength() {
         try {
             bd = new Bidi("1".toCharArray(), 0, new byte[] { 0 }, 0, 20,
@@ -147,7 +176,43 @@ public class BidiTest extends TestCase {
 
         bd = new Bidi(new char[] { 'o' }, 0, new byte[] { 2, 2 }, 2, 0, 2);
     }
-
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Doesn't verify all possible returned values for is[Methods].",
+            targets = {
+              @TestTarget(
+                methodName = "baseIsLeftToRight",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "getLevelAt",
+                methodArgs = {int.class}
+              ),
+              @TestTarget(
+                methodName = "getRunCount",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "isRightToLeft",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "isRightToLeft",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "isMixed",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "getBaseLevel",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "getLength",
+                methodArgs = {}
+              )
+          })
     public void testEmptyParagraph() {
         bd = new Bidi("", Bidi.DIRECTION_DEFAULT_LEFT_TO_RIGHT);
         assertTrue(bd.baseIsLeftToRight());
@@ -197,7 +262,43 @@ public class BidiTest extends TestCase {
         assertFalse(bd.isMixed());
         assertTrue(bd.isRightToLeft());
     }
-
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Doesn't verify all possible returned values for is[Methods].",
+            targets = {
+              @TestTarget(
+                methodName = "baseIsLeftToRight",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "getLevelAt",
+                methodArgs = {int.class}
+              ),
+              @TestTarget(
+                methodName = "getRunCount",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "isRightToLeft",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "isRightToLeft",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "isMixed",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "getBaseLevel",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "getLength",
+                methodArgs = {}
+              )
+          })
     public void testSpaceParagraph() {
         bd = new Bidi(" ", Bidi.DIRECTION_DEFAULT_LEFT_TO_RIGHT);
         assertTrue(bd.baseIsLeftToRight());
@@ -247,7 +348,43 @@ public class BidiTest extends TestCase {
         assertFalse(bd.isMixed());
         assertTrue(bd.isRightToLeft());
     }
-
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Doesn't verify all possible returned values for is[Methods].",
+            targets = {
+              @TestTarget(
+                methodName = "baseIsLeftToRight",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "getLevelAt",
+                methodArgs = {int.class}
+              ),
+              @TestTarget(
+                methodName = "getRunCount",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "isRightToLeft",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "isRightToLeft",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "isMixed",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "getBaseLevel",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "getLength",
+                methodArgs = {}
+              )
+          })
     public void testSimpleParagraph() {
         bd = new Bidi("t", Bidi.DIRECTION_DEFAULT_LEFT_TO_RIGHT);
         assertTrue(bd.baseIsLeftToRight());
@@ -289,6 +426,15 @@ public class BidiTest extends TestCase {
     /**
      * @tests java.text.Bidi#toString() Test of method java.text.Bidi#toString()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public void testToString() {
         try {
             bd = new Bidi("bidi", 173);
@@ -297,7 +443,39 @@ public class BidiTest extends TestCase {
             fail("Unexpected exception " + e.toString());
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify that these methods can return all possible flags.",
+      targets = {
+        @TestTarget(
+          methodName = "getBaseLevel",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "getLength",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "getLevelAt",
+          methodArgs = {int.class}
+        ),
+        @TestTarget(
+          methodName = "getRunCount",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "isLeftToRight",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "isMixed",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "isRightToLeft",
+          methodArgs = {}
+        )
+    })
     public void testBadFlags() {
         bd = new Bidi("", 173);
         assertTrue(bd.baseIsLeftToRight());
@@ -311,7 +489,15 @@ public class BidiTest extends TestCase {
         assertFalse(bd.isMixed());
         assertFalse(bd.isRightToLeft());
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies IllegalArgumentException.",
+      targets = {
+        @TestTarget(
+          methodName = "Bidi",
+          methodArgs = {char[].class, int.class, byte[].class, int.class, int.class, int.class}
+        )
+    })
     public void testBadEmbeddings() {
         try {
             bd = new Bidi("".toCharArray(), 0, new byte[] {}, 0, 1,
@@ -321,7 +507,43 @@ public class BidiTest extends TestCase {
             // expected
         }
     }
-
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Doesn't verify all possible returned values for is[Methods].",
+            targets = {
+              @TestTarget(
+                methodName = "baseIsLeftToRight",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "getLevelAt",
+                methodArgs = {int.class}
+              ),
+              @TestTarget(
+                methodName = "getRunCount",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "isRightToLeft",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "isRightToLeft",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "isMixed",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "getBaseLevel",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "getLength",
+                methodArgs = {}
+              )
+          })
     public void testOverrideEmbeddings() {
         bd = new Bidi(new char[] { 's', 's', 's' }, 0, new byte[] { (byte) -7,
                 (byte) -2, (byte) -3 }, 0, 3,
@@ -389,7 +611,43 @@ public class BidiTest extends TestCase {
         assertTrue(bd.isMixed());
         assertFalse(bd.isRightToLeft());
     }
-
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Doesn't verify all possible returned values for is[Methods].",
+            targets = {
+              @TestTarget(
+                methodName = "baseIsLeftToRight",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "getLevelAt",
+                methodArgs = {int.class}
+              ),
+              @TestTarget(
+                methodName = "getRunCount",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "isRightToLeft",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "isRightToLeft",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "isMixed",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "getBaseLevel",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "getLength",
+                methodArgs = {}
+              )
+          })
     public void testDefaultEmbeddings() {
         bd = new Bidi(new char[] { 's', 's', 's' }, 0, new byte[] { (byte) 0,
                 (byte) 0, (byte) 0 }, 0, 3, Bidi.DIRECTION_RIGHT_TO_LEFT);
@@ -406,7 +664,43 @@ public class BidiTest extends TestCase {
         assertTrue(bd.isMixed());
         assertFalse(bd.isRightToLeft());
     }
-
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Doesn't verify all possible returned values for is[Methods].",
+            targets = {
+              @TestTarget(
+                methodName = "baseIsLeftToRight",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "getLevelAt",
+                methodArgs = {int.class}
+              ),
+              @TestTarget(
+                methodName = "getRunCount",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "isRightToLeft",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "isRightToLeft",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "isMixed",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "getBaseLevel",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "getLength",
+                methodArgs = {}
+              )
+          })
     public void testRelativeEmbeddings() {
         bd = new Bidi(new char[] { 's', 's', 's' }, 0, new byte[] { (byte) 1,
                 (byte) 2, (byte) 3 }, 0, 3, Bidi.DIRECTION_RIGHT_TO_LEFT);
@@ -423,7 +717,43 @@ public class BidiTest extends TestCase {
         assertTrue(bd.isMixed());
         assertFalse(bd.isRightToLeft());
     }
-
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Doesn't verify all possible returned values for is[Methods].",
+            targets = {
+              @TestTarget(
+                methodName = "baseIsLeftToRight",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "getLevelAt",
+                methodArgs = {int.class}
+              ),
+              @TestTarget(
+                methodName = "getRunCount",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "isRightToLeft",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "isRightToLeft",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "isMixed",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "getBaseLevel",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "getLength",
+                methodArgs = {}
+              )
+          })
     public void testSimpleHebrewParagraph() {
         bd = new Bidi("\u05D0", Bidi.DIRECTION_DEFAULT_LEFT_TO_RIGHT);
         assertFalse(bd.baseIsLeftToRight());
@@ -461,7 +791,43 @@ public class BidiTest extends TestCase {
         assertFalse(bd.isMixed());
         assertTrue(bd.isRightToLeft());
     }
-
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Doesn't verify all possible returned values for is[Methods].",
+            targets = {
+              @TestTarget(
+                methodName = "baseIsLeftToRight",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "getLevelAt",
+                methodArgs = {int.class}
+              ),
+              @TestTarget(
+                methodName = "getRunCount",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "isRightToLeft",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "isRightToLeft",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "isMixed",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "getBaseLevel",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "getLength",
+                methodArgs = {}
+              )
+          })
     public void testSimpleBidiParagraph_1() {
         bd = new Bidi("\u05D0a", Bidi.DIRECTION_DEFAULT_LEFT_TO_RIGHT);
         assertFalse(bd.baseIsLeftToRight());
@@ -515,7 +881,43 @@ public class BidiTest extends TestCase {
         assertTrue(bd.isMixed());
         assertFalse(bd.isRightToLeft());
     }
-
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Doesn't verify all possible returned values for is[Methods].",
+            targets = {
+              @TestTarget(
+                methodName = "baseIsLeftToRight",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "getLevelAt",
+                methodArgs = {int.class}
+              ),
+              @TestTarget(
+                methodName = "getRunCount",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "isRightToLeft",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "isRightToLeft",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "isMixed",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "getBaseLevel",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "getLength",
+                methodArgs = {}
+              )
+          })
     public void testSimpleBidiParagraph_2() {
         bd = new Bidi("a\u05D0", Bidi.DIRECTION_DEFAULT_LEFT_TO_RIGHT);
         assertTrue(bd.baseIsLeftToRight());
@@ -575,6 +977,43 @@ public class BidiTest extends TestCase {
      * indicating base direction is right-to-left. according to that, the method
      * baseIsLeftToRight() here should return false. however, RI doesn't act so.
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Doesn't verify all possible returned values for is[Methods].",
+            targets = {
+              @TestTarget(
+                methodName = "baseIsLeftToRight",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "getLevelAt",
+                methodArgs = {int.class}
+              ),
+              @TestTarget(
+                methodName = "getRunCount",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "isRightToLeft",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "isRightToLeft",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "isMixed",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "getBaseLevel",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "getLength",
+                methodArgs = {}
+              )
+          })
     public void testRIBug_1() {
         bd = new Bidi("t", Bidi.DIRECTION_RIGHT_TO_LEFT);
         assertFalse(bd.baseIsLeftToRight());
@@ -589,7 +1028,43 @@ public class BidiTest extends TestCase {
         assertTrue(bd.isMixed());
         assertFalse(bd.isRightToLeft());
     }
-
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Doesn't verify all possible returned values for is[Methods].",
+            targets = {
+              @TestTarget(
+                methodName = "baseIsLeftToRight",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "getLevelAt",
+                methodArgs = {int.class}
+              ),
+              @TestTarget(
+                methodName = "getRunCount",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "isRightToLeft",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "isRightToLeft",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "isMixed",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "getBaseLevel",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "getLength",
+                methodArgs = {}
+              )
+          })
     // this is essentially the same bug as Bug_1
     public void testRIBug_2() {
         bd = new Bidi("\u05D0", Bidi.DIRECTION_LEFT_TO_RIGHT);
@@ -604,7 +1079,35 @@ public class BidiTest extends TestCase {
         assertTrue(bd.isMixed());
         assertFalse(bd.isRightToLeft());
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify all possible returned values for is[Methods].",
+      targets = {
+        @TestTarget(
+          methodName = "baseIsLeftToRight",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "getLevelAt",
+          methodArgs = {int.class}
+        ),
+        @TestTarget(
+          methodName = "getRunCount",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "isRightToLeft",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "isRightToLeft",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "isMixed",
+          methodArgs = {}
+        )
+    })
     public void testComplicatedBidi() {
         bd = new Bidi("a\u05D0a\"a\u05D0\"\u05D0a",
                 Bidi.DIRECTION_RIGHT_TO_LEFT);
@@ -628,7 +1131,43 @@ public class BidiTest extends TestCase {
         assertTrue(bd.isMixed());
         assertFalse(bd.isRightToLeft());
     }
-
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Doesn't verify all possible returned values for is[Methods].",
+            targets = {
+              @TestTarget(
+                methodName = "baseIsLeftToRight",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "getLevelAt",
+                methodArgs = {int.class}
+              ),
+              @TestTarget(
+                methodName = "getRunCount",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "isRightToLeft",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "isRightToLeft",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "isMixed",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "getBaseLevel",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "getLength",
+                methodArgs = {}
+              )
+          })
     public void testComplicatedOverrideBidi() {
         bd = new Bidi("a\u05D0a\"a\u05D0\"\u05D0a".toCharArray(), 0,
                 new byte[] { 0, 0, 0, -3, -3, 2, 2, 0, 3 }, 0, 9,
@@ -654,7 +1193,15 @@ public class BidiTest extends TestCase {
         assertTrue(bd.isMixed());
         assertFalse(bd.isRightToLeft());
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "requiresBidi",
+          methodArgs = {char[].class, int.class, int.class}
+        )
+    })
     public void testRequiresBidi() {
         try {
             Bidi.requiresBidi(null, 0, 0);
@@ -728,7 +1275,43 @@ public class BidiTest extends TestCase {
         assertFalse(Bidi.requiresBidi("aa\u05D0a".toCharArray(), 0, 2));
         assertTrue(Bidi.requiresBidi("aa\u05D0a".toCharArray(), 1, 3));
     }
-
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Doesn't verify all possible returned values for is[Methods].",
+            targets = {
+              @TestTarget(
+                methodName = "baseIsLeftToRight",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "getLevelAt",
+                methodArgs = {int.class}
+              ),
+              @TestTarget(
+                methodName = "getRunCount",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "isRightToLeft",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "isRightToLeft",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "isMixed",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "getBaseLevel",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "getLength",
+                methodArgs = {}
+              )
+          })
     public void testHebrewOverrideEmbeddings() {
         bd = new Bidi(new char[] { '\u05D0', '\u05D0', '\u05D0' }, 0,
                 new byte[] { (byte) -1, (byte) -2, (byte) -3 }, 0, 3,
@@ -798,7 +1381,43 @@ public class BidiTest extends TestCase {
         assertTrue(bd.isMixed());
         assertFalse(bd.isRightToLeft());
     }
-
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Doesn't verify all possible returned values for is[Methods].",
+            targets = {
+              @TestTarget(
+                methodName = "baseIsLeftToRight",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "getLevelAt",
+                methodArgs = {int.class}
+              ),
+              @TestTarget(
+                methodName = "getRunCount",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "isRightToLeft",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "isRightToLeft",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "isMixed",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "getBaseLevel",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "getLength",
+                methodArgs = {}
+              )
+          })
     public void testCreateLineBidi() {
         bd = new Bidi("a\u05D0a\na\u05D0\"\u05D0a".toCharArray(), 0,
                 new byte[] { 0, 0, 0, -3, -3, 2, 2, 0, 3 }, 0, 9,
@@ -820,8 +1439,16 @@ public class BidiTest extends TestCase {
         assertTrue(line.isMixed());
         assertFalse(line.isRightToLeft());
     }
-
-    public void testCreateLineBidiInvalid() {
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies IllegalArgumentException.",
+      targets = {
+        @TestTarget(
+          methodName = "createLineBidi",
+          methodArgs = {int.class, int.class}
+        )
+    })
+    public void _testCreateLineBidiInvalid() {
         // regression for HARMONY-1050
         Bidi bidi = new Bidi("str", 1);
         try {
@@ -861,7 +1488,43 @@ public class BidiTest extends TestCase {
             // Expected
         }
     }
-
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Doesn't verify all possible returned values for is[Methods].",
+            targets = {
+              @TestTarget(
+                methodName = "baseIsLeftToRight",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "getLevelAt",
+                methodArgs = {int.class}
+              ),
+              @TestTarget(
+                methodName = "getRunCount",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "isRightToLeft",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "isRightToLeft",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "isMixed",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "getBaseLevel",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                methodName = "getLength",
+                methodArgs = {}
+              )
+          })
     public void testIncompatibleLineAlgorithm() {
         // ICU treat a new line as in the same run, however RI does not
         bd = new Bidi("aaaaa".toCharArray(), 0,
@@ -881,7 +1544,15 @@ public class BidiTest extends TestCase {
         assertFalse(line.isMixed());
         assertTrue(line.isRightToLeft());
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "reorderVisually",
+          methodArgs = {byte[].class, int.class, java.lang.Object[].class, int.class, int.class}
+        )
+    })
     public void testReorderVisually() {
         String[] init = new String[] { "a", "b", "c", "d" };
         String[] s = new String[4];
@@ -906,7 +1577,15 @@ public class BidiTest extends TestCase {
         Bidi.reorderVisually(new byte[] { 2, 1, 0, 1 }, 1, s, 0, 3);
         assertEquals("[a, b, c, d]", Arrays.asList(s).toString());
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "reorderVisually",
+          methodArgs = {byte[].class, int.class, java.lang.Object[].class, int.class, int.class}
+        )
+    })
     public void testBadReorderVisually() {
         String[] s = new String[] { "a", "b", "c", "d" };
 
@@ -953,7 +1632,23 @@ public class BidiTest extends TestCase {
         }
 
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Regression test.",
+      targets = {
+        @TestTarget(
+          methodName = "getRunLimit",
+          methodArgs = {int.class}
+        ),
+        @TestTarget(
+          methodName = "getRunStart",
+          methodArgs = {int.class}
+        ),
+        @TestTarget(
+          methodName = "getRunCount",
+          methodArgs = {}
+        )
+    })
     public void testGetRuns() {
         // Regression test for Harmony-1028
 
@@ -971,7 +1666,15 @@ public class BidiTest extends TestCase {
             assertEquals(expectedRuns[i][1], bi.getRunLimit(i));
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify any int value between 0 and getRunCount().",
+      targets = {
+        @TestTarget(
+          methodName = "getRunLimit",
+          methodArgs = {int.class}
+        )
+    })
     public void testGetRunLimit() {
         bd = new Bidi("text", Bidi.DIRECTION_LEFT_TO_RIGHT);
         try {
@@ -980,7 +1683,15 @@ public class BidiTest extends TestCase {
             fail("Unexpected exception: " + e);
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies positive case.",
+      targets = {
+        @TestTarget(
+          methodName = "Bidi",
+          methodArgs = {java.text.AttributedCharacterIterator.class}
+        )
+    })
     public void testBidiConstructor_Iterator() {
         AttributedString paragraph = new AttributedString("text");
         bd = new Bidi(paragraph.getIterator());

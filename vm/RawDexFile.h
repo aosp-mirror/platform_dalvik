@@ -36,8 +36,8 @@ typedef struct RawDexFile {
  * On success, returns 0 and sets "*ppDexFile" to a newly-allocated DexFile.
  * On failure, returns a meaningful error code [currently just -1].
  */
-int dvmRawDexFileOpen(const char* fileName, RawDexFile** ppDexFile,
-    bool isBootstrap);
+int dvmRawDexFileOpen(const char* fileName, const char* odexOutputName,
+    RawDexFile** ppDexFile, bool isBootstrap);
 
 /*
  * Free a RawDexFile structure, along with any associated structures.

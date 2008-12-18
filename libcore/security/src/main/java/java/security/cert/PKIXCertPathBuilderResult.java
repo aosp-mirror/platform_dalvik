@@ -15,10 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vladimir N. Molotkov
-* @version $Revision$
-*/
 
 package java.security.cert;
 
@@ -27,8 +23,10 @@ import java.security.PublicKey;
 import org.apache.harmony.security.internal.nls.Messages;
 
 /**
- * @com.intel.drl.spec_ref
+ * The result of the PKIX certification path builder, returned by
+ * {@link CertPathBuilder#build(CertPathParameters)}.
  * 
+ * @since Android 1.0
  */
 public class PKIXCertPathBuilderResult extends PKIXCertPathValidatorResult
         implements CertPathBuilderResult {
@@ -36,7 +34,22 @@ public class PKIXCertPathBuilderResult extends PKIXCertPathValidatorResult
     private final CertPath certPath;
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code PKIXCertPathBuilderResult} instance with the
+     * specified validated certification path, the trust anchor of the
+     * certification path, the policy tree and the public key of the subject.
+     * 
+     * @param certPath
+     *            the validated certification path.
+     * @param trustAnchor
+     *            the trust anchor.
+     * @param policyTree
+     *            the policy tree (or {@code null} if not used).
+     * @param subjectPublicKey
+     *            the public key.
+     * @throws NullPointerException
+     *             if the {@code cerPath}, {@code trustAnchor} or {@code
+     *             subjectPolicyKey} is {@code null}.
+     * @since Android 1.0
      */
     public PKIXCertPathBuilderResult(CertPath certPath, TrustAnchor trustAnchor,
             PolicyNode policyTree, PublicKey subjectPublicKey) {
@@ -48,14 +61,22 @@ public class PKIXCertPathBuilderResult extends PKIXCertPathValidatorResult
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the validated certification path.
+     * 
+     * @return the validated certification path.
+     * @since Android 1.0
      */
     public CertPath getCertPath() {
         return certPath;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns a string representation of this {@code PKIXCertPathBuilderResult}
+     * instance.
+     * 
+     * @return a string representation of this {@code PKIXCertPathBuilderResult}
+     *         instance.
+     * @since Android 1.0
      */
     public String toString() {
         StringBuffer sb = new StringBuffer(super.toString());

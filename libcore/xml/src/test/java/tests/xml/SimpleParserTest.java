@@ -16,6 +16,11 @@
 
 package tests.xml;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import junit.framework.TestCase;
 
 import org.xml.sax.Attributes;
@@ -34,6 +39,7 @@ import java.util.Map;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+@TestTargetClass(SAXParser.class) 
 public class SimpleParserTest extends TestCase implements ContentHandler {
 
     private SAXParser parser;
@@ -160,7 +166,16 @@ public class SimpleParserTest extends TestCase implements ContentHandler {
 
     public void startPrefixMapping(String prefix, String uri) {
     }
-    
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "parse",
+          methodArgs = {java.io.InputStream.class, 
+                        org.xml.sax.helpers.DefaultHandler.class}
+        )
+    })
     public void testWorkingFile1() throws Exception {
         SAXParserFactory factory = SAXParserFactory.newInstance();
         factory.setValidating(false);
@@ -185,7 +200,15 @@ public class SimpleParserTest extends TestCase implements ContentHandler {
 
         assertEquals("http://www.foobar.org", namespaces1.get("stuff"));
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "parse",
+          methodArgs = {java.io.InputStream.class, org.xml.sax.helpers.DefaultHandler.class}
+        )
+    })
     public void testWorkingFile2() throws Exception {
         SAXParserFactory factory = SAXParserFactory.newInstance();
 
@@ -214,7 +237,15 @@ public class SimpleParserTest extends TestCase implements ContentHandler {
 
         assertEquals(0, namespaces2.size());
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "parse",
+          methodArgs = {java.io.InputStream.class, org.xml.sax.helpers.DefaultHandler.class}
+        )
+    })
     public void testEntityResolver() throws Exception {
         final StringBuilder text = new StringBuilder();
         DefaultHandler handler = new DefaultHandler() {
@@ -244,7 +275,15 @@ public class SimpleParserTest extends TestCase implements ContentHandler {
                 "resolved external entity must be in parser character stream",
                 text.toString().contains("test"));
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "parse",
+          methodArgs = {java.io.InputStream.class, org.xml.sax.helpers.DefaultHandler.class}
+        )
+    })
     public void testGetValue() throws Exception{
         parser.parse(getClass().getResourceAsStream("/staffNS.xml"), 
                 new DefaultHandler() {

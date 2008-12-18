@@ -17,6 +17,8 @@
 
 package tests.support;
 
+import dalvik.annotation.TestTargetClass;
+
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -24,6 +26,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import junit.framework.TestCase;
 
+@TestTargetClass(Collection.class)
 public class Support_UnmodifiableCollectionTest extends TestCase {
 
     Collection<Integer> col;

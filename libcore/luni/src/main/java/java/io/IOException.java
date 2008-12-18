@@ -18,26 +18,33 @@
 package java.io;
 
 /**
- * This IO exception is thrown when a program encounters some sort I/O error.
- * Details may be specified in the constructor or by one of the subclasses.
+ * Signals a general, I/O-related error. Error details may be specified when
+ * calling the constructor, as usual. Note there are also several subclasses of
+ * this class for more specific error situations, such as
+ * {@link FileNotFoundException} or {@link EOFException}.
+ * 
+ * @since Android 1.0
  */
 public class IOException extends Exception {
 
     private static final long serialVersionUID = 7818375828146090155L;
 
     /**
-     * Constructs a new instance of this class with its walkback filled in.
+     * Constructs a new {@code IOException} with its stack trace filled in.
+     * 
+     * @since Android 1.0
      */
     public IOException() {
         super();
     }
 
     /**
-     * Constructs a new instance of this class with its walkback and message
-     * filled in.
+     * Constructs a new {@code IOException} with its stack trace and detail
+     * message filled in.
      * 
      * @param detailMessage
-     *            The detail message for the exception.
+     *            the detail message for this exception.
+     * @since Android 1.0
      */
     public IOException(String detailMessage) {
         super(detailMessage);

@@ -4,22 +4,11 @@
 
 #include <malloc.h>
 
-/*
-// Throw java.util.zip.DataFormatException
-void throwNewDataFormatException (JNIEnv * env, const char *message)
-{
-  jniThrowException(env, "java/util/zip/DataFormatException", message);
-}
-*/
-
-/* mc: Already defined in dalvik/libcore/luni/src/main/native/exceptions.c
+// Throw java.lang.OutOfMemoryError
 void throwNewOutOfMemoryError (JNIEnv * env, const char *message)
 {
-// Throw java.util.zip.OutOfMemoryError
-//  jniThrowException(env, "java/util/zip/OutOfMemoryError", message);
     jniThrowException(env, "java/lang/OutOfMemoryError", message);
 }
-*/
 
 // Throw java.lang.IllegalStateException
 void throwNewIllegalStateException (JNIEnv * env, const char *message)

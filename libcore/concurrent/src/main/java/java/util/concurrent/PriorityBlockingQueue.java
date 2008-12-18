@@ -210,6 +210,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 
+
     public E poll() {
         final ReentrantLock lock = this.lock;
         lock.lock();
@@ -301,6 +302,7 @@ public class PriorityBlockingQueue<E> extends AbstractQueue<E>
             lock.unlock();
         }
     }
+
 
     public String toString() {
         final ReentrantLock lock = this.lock;

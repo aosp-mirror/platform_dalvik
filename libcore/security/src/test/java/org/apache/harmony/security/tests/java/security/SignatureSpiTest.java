@@ -1,11 +1,16 @@
 package org.apache.harmony.security.tests.java.security;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SignatureSpi;
 
 import junit.framework.TestCase;
-
+@TestTargetClass(SignatureSpi.class)
 public class SignatureSpiTest extends TestCase {
 
     protected void setUp() throws Exception {
@@ -16,6 +21,15 @@ public class SignatureSpiTest extends TestCase {
         super.tearDown();
     }
 
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "clone",
+          methodArgs = {}
+        )
+    })
     public void testClone() {
         MySignatureSpi1 ss1 = new MySignatureSpi1();
         try {

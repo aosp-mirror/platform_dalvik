@@ -17,44 +17,68 @@
 
 package tests.api.java.net;
 
+import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.net.NetPermission;
 
+@TestTargetClass(NetPermission.class) 
 public class NetPermissionTest extends junit.framework.TestCase {
 
-	/**
-	 * @tests java.net.NetPermission#NetPermission(java.lang.String)
-	 */
-	public void test_ConstructorLjava_lang_String() {
-		// Test for method java.net.NetPermission(java.lang.String)
-		NetPermission n = new NetPermission("requestPasswordAuthentication");
-		assertEquals("Returned incorrect name", 
-				"requestPasswordAuthentication", n.getName());
-	}
+    /**
+     * @tests java.net.NetPermission#NetPermission(java.lang.String)
+     */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "NetPermission",
+          methodArgs = {String.class}
+        )
+    })
+    public void test_ConstructorLjava_lang_String() {
+        // Test for method java.net.NetPermission(java.lang.String)
+        NetPermission n = new NetPermission("requestPasswordAuthentication");
+        assertEquals("Returned incorrect name", 
+                "requestPasswordAuthentication", n.getName());
+    }
 
-	/**
-	 * @tests java.net.NetPermission#NetPermission(java.lang.String,
-	 *        java.lang.String)
-	 */
-	public void test_ConstructorLjava_lang_StringLjava_lang_String() {
-		// Test for method java.net.NetPermission(java.lang.String,
-		// java.lang.String)
-		NetPermission n = new NetPermission("requestPasswordAuthentication",
-				null);
-		assertEquals("Returned incorrect name", 
-				"requestPasswordAuthentication", n.getName());
-	}
+    /**
+     * @tests java.net.NetPermission#NetPermission(java.lang.String,
+     *        java.lang.String)
+     */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "NetPermission",
+          methodArgs = {String.class, String.class}
+        )
+    })
+    public void test_ConstructorLjava_lang_StringLjava_lang_String() {
+        // Test for method java.net.NetPermission(java.lang.String,
+        // java.lang.String)
+        NetPermission n = new NetPermission("requestPasswordAuthentication",
+                null);
+        assertEquals("Returned incorrect name", 
+                "requestPasswordAuthentication", n.getName());
+    }
 
-	/**
-	 * Sets up the fixture, for example, open a network connection. This method
-	 * is called before a test is executed.
-	 */
-	protected void setUp() {
-	}
+    /**
+     * Sets up the fixture, for example, open a network connection. This method
+     * is called before a test is executed.
+     */
+    protected void setUp() {
+    }
 
-	/**
-	 * Tears down the fixture, for example, close a network connection. This
-	 * method is called after a test is executed.
-	 */
-	protected void tearDown() {
-	}
+    /**
+     * Tears down the fixture, for example, close a network connection. This
+     * method is called after a test is executed.
+     */
+    protected void tearDown() {
+    }
 }

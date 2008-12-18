@@ -15,21 +15,20 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vladimir N. Molotkov
-* @version $Revision$
-*/
-
 package java.security.spec;
 
 /**
- * @com.intel.drl.spec_ref
+ * The base interface for a Finite Field of an Elliptic Curve. 
  * 
+ * @since Android 1.0
  */
 public interface ECField {
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the size of the field (in bits).
+     * 
+     * @return the size of the field (in bits).
+     * @since Android 1.0
      */
     int getFieldSize();
 }

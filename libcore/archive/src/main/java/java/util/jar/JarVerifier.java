@@ -44,19 +44,17 @@ import org.apache.harmony.xnet.provider.jsse.OpenSSLMessageDigestJDK;
 // END android-added
 
 /**
- * Non-public class used by {@link JarFile} and
- * {@link JarInputStream} to manage the verification of signed
- * jars. <code>JarFile</code> and <code>JarInputStream</code> objects will
- * be expected to have a <code>JarVerifier</code> instance member which can be
- * used to carry out the tasks associated with verifying a signed jar. These
- * tasks would typically include:
+ * Non-public class used by {@link JarFile} and {@link JarInputStream} to manage
+ * the verification of signed JARs. {@code JarFile} and {@code JarInputStream}
+ * objects are expected to have a {@code JarVerifier} instance member which
+ * can be used to carry out the tasks associated with verifying a signed JAR.
+ * These tasks would typically include:
  * <ul>
  * <li>verification of all signed signature files
- * <li>confirmation that all signed data was signed only by the party or
- * parties specified in the signature block data
- * <li>verification that the contents of all signature files (i.e.
- * <code>.SF</code> files) agree with the jar entries information found in the
- * jar manifest.
+ * <li>confirmation that all signed data was signed only by the party or parties
+ * specified in the signature block data
+ * <li>verification that the contents of all signature files (i.e. {@code .SF}
+ * files) agree with the JAR entries information found in the JAR manifest.
  * </ul>
  */
 class JarVerifier {
@@ -124,26 +122,27 @@ class JarVerifier {
     }
 
     /**
-     * Constructs and returns a new instance of JarVerifier.
+     * Constructs and returns a new instance of {@code JarVerifier}.
      * 
      * @param name
-     *            the name of the jar file being verified.
+     *            the name of the JAR file being verified.
      */
     JarVerifier(String name) {
         jarName = name;
     }
 
     /**
-     * Called for each new jar entry read in from the input stream. This method
-     * constructs and returns a new {@link VerifierEntry} which contains the
-     * certificates used to sign the entry and its hash value as specified in
-     * the jar manifest.
+     * Invoked for each new JAR entry read operation from the input
+     * stream. This method constructs and returns a new {@link VerifierEntry}
+     * which contains the certificates used to sign the entry and its hash value
+     * as specified in the JAR MANIFEST format.
      * 
      * @param name
-     *            the name of an entry in a jar file which is <b>not</b> in the
-     *            <code>META-INF</code> directory.
+     *            the name of an entry in a JAR file which is <b>not</b> in the
+     *            {@code META-INF} directory.
      * @return a new instance of {@link VerifierEntry} which can be used by
      *         callers as an {@link OutputStream}.
+     * @since Android 1.0
      */
     VerifierEntry initEntry(String name) {
         // If no manifest is present by the time an entry is found,
@@ -204,14 +203,10 @@ class JarVerifier {
             }
 
             try {
-                // BEGIN android-removed
-                // return new VerifierEntry(MessageDigest.getInstance(algorithm),
-                //        hashBytes, certificatesArray);
-                // END android-removed
-                // BEGIN android-added
+                // BEGIN android-changed
                 return new VerifierEntry(OpenSSLMessageDigestJDK.getInstance(algorithm),
                         hashBytes, certificatesArray);
-                // END android-added
+                // END android-changed
             } catch (NoSuchAlgorithmException e) {
                 // Ignored
             }
@@ -220,16 +215,16 @@ class JarVerifier {
     }
 
     /**
-     * Add a new meta entry to the internal collection of data held on each jar
-     * entry in the <code>META-INF</code> directory including the manifest
-     * file itself. Files associated with the signing of a jar would also be
+     * Add a new meta entry to the internal collection of data held on each JAR
+     * entry in the {@code META-INF} directory including the manifest
+     * file itself. Files associated with the signing of a JAR would also be
      * added to this collection.
      * 
      * @param name
-     *            the name of the file located in the <code>META-INF</code>
+     *            the name of the file located in the {@code META-INF}
      *            directory.
      * @param buf
-     *            the file bytes for the file called <code>name</code>.
+     *            the file bytes for the file called {@code name}.
      * @see #removeMetaEntries()
      */
     void addMetaEntry(String name, byte[] buf) {
@@ -237,21 +232,23 @@ class JarVerifier {
     }
 
     /**
-     * If the associated jar file is signed, check on the validity of all of the
+     * If the associated JAR file is signed, check on the validity of all of the
      * known signatures.
      * 
-     * @return <code>true</code> if the associated jar is signed and an
-     *         internal check verifies the validity of the signature(s).
-     *         <code>false</code> if the associated jar file has no entries at
-     *         all in its <code>META-INF</code> directory. This situation is
-     *         indicative of an invalid jar file.
+     * @return {@code true} if the associated JAR is signed and an internal
+     *         check verifies the validity of the signature(s). {@code false} if
+     *         the associated JAR file has no entries at all in its {@code
+     *         META-INF} directory. This situation is indicative of an invalid
+     *         JAR file.
      *         <p>
-     *         Will also return true if the jar file is <i>not</i> signed.
+     *         Will also return {@code true} if the JAR file is <i>not</i>
+     *         signed.
      *         </p>
      * @throws SecurityException
-     *             if the jar file is signed and it is determined that a
+     *             if the JAR file is signed and it is determined that a
      *             signature block file contains an invalid signature for the
      *             corresponding signature file.
+     * @since Android 1.0
      */
     synchronized boolean readCertificates() {
         if (metaEntries == null) {
@@ -261,19 +258,7 @@ class JarVerifier {
         while (it.hasNext()) {
             String key = it.next();
             if (key.endsWith(".DSA") || key.endsWith(".RSA")) { //$NON-NLS-1$ //$NON-NLS-2$
-                // BEGIN android-changed (temporary, will go away)
-                //log("JarVerifier", "verifyCertificate() called for " + key);
-                //long t0 = System.currentTimeMillis();
                 verifyCertificate(key);
-                //long t1 = System.currentTimeMillis();
-                //log("JarVerifier", "verifyCertificate() took " + (t1 - t0) + " ms");
-                
-                //averageTime = ((measureCount * averageTime) + (t1 - t0)) / (measureCount + 1);
-                //measureCount++;
-
-                //log("JarVerifier", "verifyCertificate() average time is " + averageTime + " ms");
-                // END android-changed (temporary, will go away)
-                
                 // Check for recursive class load
                 if (metaEntries == null) {
                     return false;
@@ -303,7 +288,7 @@ class JarVerifier {
                     new ByteArrayInputStream(sBlockBytes));
             /*
              * Recursive call in loading security provider related class which
-             * is in a signed jar. 
+             * is in a signed JAR. 
              */
             if (null == metaEntries) {
                 return;
@@ -383,7 +368,7 @@ class JarVerifier {
      * Associate this verifier with the specified {@link Manifest} object.
      * 
      * @param mf
-     *            a <code>java.util.jar.Manifest</code> object.
+     *            a {@code java.util.jar.Manifest} object.
      */
     void setManifest(Manifest mf) {
         man = mf;
@@ -397,13 +382,13 @@ class JarVerifier {
      * 
      * @param entry
      *            the {@link VerifierEntry} associated with the specified
-     *            <code>zipEntry</code>.
+     *            {@code zipEntry}.
      * @param zipEntry
-     *            an entry in the jar file
+     *            an entry in the JAR file
      * @throws SecurityException
      *             if the digest value stored in the manifest does <i>not</i>
      *             agree with the decrypted digest as recovered from the
-     *             <code>.SF</code> file.
+     *             {@code .SF} file.
      * @see #initEntry(String)
      */
     void verifySignatures(VerifierEntry entry, ZipEntry zipEntry) {
@@ -417,10 +402,10 @@ class JarVerifier {
     }
 
     /**
-     * Returns a <code>boolean</code> indication of whether or not the
-     * associated jar file is signed.
+     * Returns a {@code boolean} indication of whether or not the
+     * associated JAR file is signed.
      * 
-     * @return <code>true</code> if the jar is signed, <code>false</code>
+     * @return {@code true} if the JAR is signed, {@code false}
      *         otherwise.
      */
     boolean isSignedJar() {
@@ -443,12 +428,9 @@ class JarVerifier {
 
             MessageDigest md;
             try {
-                // BEGIN android-removed
-                // md = MessageDigest.getInstance(algorithm);
-                // END android-removed
-                // BEGIN android-added
+                // BEGIN android-changed
                 md = OpenSSLMessageDigestJDK.getInstance(algorithm);
-                // END android-added
+                // END android-changed
             } catch (NoSuchAlgorithmException e) {
                 continue;
             }
@@ -472,11 +454,11 @@ class JarVerifier {
 
     /**
      * Returns all of the {@link java.security.cert.Certificate} instances that
-     * were used to verify the signature on the jar entry called
-     * <code>name</code>.
+     * were used to verify the signature on the JAR entry called
+     * {@code name}.
      * 
      * @param name
-     *            the name of a jar entry.
+     *            the name of a JAR entry.
      * @return an array of {@link java.security.cert.Certificate}.
      */
     Certificate[] getCertificates(String name) {
@@ -489,7 +471,7 @@ class JarVerifier {
 
     /**
      * Remove all entries from the internal collection of data held about each
-     * jar entry in the <code>META-INF</code> directory.
+     * JAR entry in the {@code META-INF} directory.
      * 
      * @see #addMetaEntry(String, byte[])
      */
@@ -498,23 +480,21 @@ class JarVerifier {
     }
 
     /**
-     * Returns a <code>Vector</code> of all of the
+     * Returns a {@code Vector} of all of the
      * {@link java.security.cert.Certificate}s that are associated with the
      * signing of the named signature file.
      * 
      * @param signatureFileName
-     *            the name of a signature file
+     *            the name of a signature file.
      * @param certificates
-     *            a <code>Map</code> of all of the certificate chains
-     *            discovered so far while attempting to verify the jar that
-     *            contains the signature file <code>signatureFileName</code>.
-     *            This object will have been previously set in the course of one
-     *            or more calls to
+     *            a {@code Map} of all of the certificate chains discovered so
+     *            far while attempting to verify the JAR that contains the
+     *            signature file {@code signatureFileName}. This object is
+     *            previously set in the course of one or more calls to
      *            {@link #verifyJarSignatureFile(String, String, String, Map, Map)}
-     *            where it was passed in as the last argument.
-     * @return all of the <code>Certificate</code> entries for the signer of
-     *         the jar whose actions led to the creation of the named signature
-     *         file.
+     *            where it was passed as the last argument.
+     * @return all of the {@code Certificate} entries for the signer of the JAR
+     *         whose actions led to the creation of the named signature file.
      */
     public static Vector<Certificate> getSignerCertificates(
             String signatureFileName, Map<String, Certificate[]> certificates) {
@@ -527,21 +507,4 @@ class JarVerifier {
         }
         return result;
     }
-    
-    // TODO Just for debugging purposes, remove later.
-    private static void log(String tag, String msg) {
-        try {
-            Class clazz = Class.forName("android.util.Log");
-            java.lang.reflect.Method method = clazz.getMethod("d", new Class[] {
-                    String.class, String.class
-            });
-            method.invoke(null, new Object[] {
-                    tag, msg
-            });
-        } catch (Exception ex) {
-            // Silently ignore.
-        }
-    }
-    
 }
-

@@ -55,7 +55,6 @@ int register_java_lang_Math(JNIEnv* env);
 int register_java_lang_ProcessManager(JNIEnv* env);
 int register_java_lang_StrictMath(JNIEnv* env);
 int register_java_lang_System(JNIEnv* env);
-int register_java_lang_reflect_Proxy(JNIEnv* env);
 
 int register_org_apache_harmony_luni_platform_OSFileSystem(JNIEnv* env);
 int register_org_apache_harmony_luni_platform_OSMemory(JNIEnv* env);
@@ -80,8 +79,6 @@ int register_java_net_NetworkInterface(JNIEnv* env);
 
 int register_org_apache_harmony_luni_util_fltparse(JNIEnv *env);
 int register_org_apache_harmony_luni_util_NumberConvert(JNIEnv *env);
-
-int register_javax_crypto_HmacSpi(JNIEnv* env);
 
 int register_com_ibm_icu4jni_converters_NativeConverter(JNIEnv* env);
 int register_com_ibm_icu4jni_lang_UCharacter(JNIEnv* env);

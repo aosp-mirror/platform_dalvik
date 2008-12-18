@@ -402,6 +402,8 @@ void dvmCreateCstrFromStringRegion(StringObject* jstr, int start, int len,
 
 /*
  * Compute the length, in modified UTF-8, of a java/lang/String object.
+ *
+ * Does not include the terminating null byte.
  */
 int dvmStringUtf8ByteLen(StringObject* jstr)
 {

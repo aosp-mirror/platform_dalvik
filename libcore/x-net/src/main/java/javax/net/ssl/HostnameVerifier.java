@@ -15,21 +15,31 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package javax.net.ssl;
 
 /**
- * @com.intel.drl.spec_ref
+ * The interface to be used to provide hostname verification functionality.
+ * <p>
+ * This is an extended verification option that implementers can provide. It is to be used
+ * during a handshake if the URL's hostname does not match the peer's
+ * identification hostname.
+ * </p>
  * 
+ * @since Android 1.0
  */
 public interface HostnameVerifier {
 
     /**
-     * @com.intel.drl.spec_ref
+     * Verifies that the specified hostname is allowed within the specified SSL
+     * session.
+     * 
+     * @param hostname
+     *            the hostname.
+     * @param session
+     *            the SSL session of the connection.
+     * @return {@code true} if the specified hostname is allowed, otherwise
+     *         {@code false}.
+     * @since Android 1.0
      */
     public boolean verify(String hostname, SSLSession session);
 }

@@ -1,11 +1,11 @@
 <html>
   <head>
-    <title>JNI Tips</title>
+    <title>Android JNI Tips</title>
     <link rel=stylesheet href="android.css">
   </head>
 
   <body>
-    <h1><a name="JNI_Tips"></a>JNI Tips</h1>
+    <h1><a name="JNI_Tips"></a>Android JNI Tips</h1>
 <p>
 </p><p>
 </p><ul>
@@ -45,7 +45,8 @@ dynamic shared libraries, and while cumbersome at times is reasonably efficient.
 </p><p>
 You really should read through the
 <a href="http://java.sun.com/javase/6/docs/technotes/guides/jni/spec/jniTOC.html">JNI spec for J2SE 1.6</a>
-to understand how JNI works.  Some aspects of the spec aren't immediately obvious on
+to get a sense for how JNI works and what features are available.  Some
+aspects of the interface aren't immediately obvious on
 first reading, so you may find the next few sections handy.
 The more detailed <i>JNI Programmer's Guide and Specification</i> can be found
 <a href="http://java.sun.com/docs/books/jni/html/jniTOC.html">here</a>.
@@ -64,10 +65,10 @@ the first argument.
 </p><p>
 
 On some VMs, the JNIEnv is used for thread-local storage.  For this reason, <strong>you cannot share a JNIEnv between threads</strong>.
-If a piece of code has no other way to get a JNIEnv, you should share
+If a piece of code has no other way to get its JNIEnv, you should share
 the JavaVM, and use JavaVM-&gt;GetEnv to discover the thread's JNIEnv.
 </p><p>
-The C and C++ definitions of JNIEnv and JavaVM are different.  "jni.h" provides different typedefs
+The C and C++ declarations of JNIEnv and JavaVM are different.  "jni.h" provides different typedefs
 depending on whether it's included into ".c" or ".cpp".  For this reason it's a bad idea to
 include JNIEnv arguments in header files included by both languages.  (Put another way: if your
 header file requires "#ifdef __cplusplus", you may have to do some extra work if anything in
@@ -171,6 +172,12 @@ references, and should not be passed to <code>NewGlobalRef</code>.  The raw data
 pointers returned by functions like <code>GetStringUTFChars</code>
 and <code>GetByteArrayElements</code> are also not objects.
 </p><p>
+One unusual case deserves separate mention.  If you attach a native
+thread to the VM with AttachCurrentThread, the code you are running will
+never "return" to the VM until the thread detaches from the VM.  Any local
+references you create will have to be deleted manually unless the thread
+is about to exit or detach.
+</p><p>
 </p><p>
 </p><p>
 </p><h2><a name="UTF_8_and_UTF_16_strings"> </a> UTF-8 and UTF-16 Strings </h2>
@@ -185,13 +192,15 @@ arbitrary UTF-8 data into the VM and expect it to work correctly.
 It's usually best to operate with UTF-16 strings.  With our current VMs, the
 <code>GetStringChars</code> method
 does not require a copy, whereas <code>GetStringUTFChars</code> requires a malloc and a UTF conversion.  Note that
-<strong>UTF-16 strings are not zero-terminated</strong>, so you need to hang on to the string length as well as
+<strong>UTF-16 strings are not zero-terminated</strong>, and \u0000 is allowed,
+so you need to hang on to the string length as well as
 the string pointer.
 
 </p><p>
 <strong>Don't forget to Release the strings you Get</strong>.  The string functions return <code>jchar*</code> or <code>jbyte*</code>, which
-are pointers to primitive types rather than local references.  They are not automatically released
-when the native method returns.
+are pointers to primitive types rather than local references.  They are
+guaranteed valid until Release is called, which means they are not
+released when the native method returns.
 </p><p>
 </p><p>
 
@@ -210,6 +219,7 @@ allocate some memory and make a copy.  Either way, the raw pointer returned
 is guaranteed to be valid until the corresponding <code>Release</code> call
 is issued (which implies that, if the data wasn't copied, the array object
 will be pinned down and can't be relocated as part of compacting the heap).
+<strong>You must Release every array you Get.</strong>
 </p><p>
 You can determine whether or not the data was copied by passing in a
 non-NULL pointer for the <code>isCopy</code> argument.  This is rarely
@@ -217,30 +227,32 @@ useful.
 </p><p>
 The <code>Release</code> call takes a <code>mode</code> argument that can
 have one of three values.  The actions performed by the VM depend upon
-whether or not the data was copied:
+whether it returned a pointer to the actual data or a copy of it:
 <ul>
     <li><code>0</code>
     <ul>
+        <li>Actual: the array object is un-pinned.
         <li>Copy: data is copied back.  The buffer with the copy is freed.
-        <li>No copy: the array object is un-pinned.
     </ul>
     <li><code>JNI_COMMIT</code>
     <ul>
-        <li>Copy: data is copied back.  The buffer with the copy is NOT freed.
-        <li>No copy: does nothing.
+        <li>Actual: does nothing.
+        <li>Copy: data is copied back.  The buffer with the copy
+        <strong>is not freed</strong>.
     </ul>
     <li><code>JNI_ABORT</code>
     <ul>
+        <li>Actual: the array object is un-pinned.  Earlier
+        writes are <strong>not</strong> aborted.
         <li>Copy: the buffer with the copy is freed; any changes to it are lost.
-        <li>No copy: the array object is un-pinned.  Earlier
-        writes are NOT aborted.
     </ul>
 </ul>
 </p><p>
 One reason for checking the <code>isCopy</code> flag is to know if
 you need to call <code>Release</code> with <code>JNI_COMMIT</code>
 after making changes to an array -- if you're alternating between making
-changes and executing code that uses the contents of the array, you can
+changes and executing code that uses the contents of the array, you may be
+able to
 skip the no-op commit.  Another possible reason for checking the flag is for
 efficient handling of <code>JNI_ABORT</code>.  For example, you might want
 to get an array, modify it in place, pass pieces to other functions, and
@@ -262,20 +274,36 @@ eventually.
 
 </p><h2><a name="Exceptions"> Exceptions </a></h2>
 <p>
-You may not call most JNI functions when an exception is pending.  Your code is expected to
-see the exception (via <code>ExceptionCheck()</code> or <code>ExceptionOccurred()</code>) and return,
+<strong>You may not call most JNI functions while an exception is pending.</strong>
+Your code is expected to notice the exception (via the function's return value,
+<code>ExceptionCheck()</code>, or <code>ExceptionOccurred()</code>) and return,
 or clear the exception and handle it.
 </p><p>
 The only JNI functions that you are allowed to call while an exception is
-pending are listed <a href="http://java.sun.com/javase/6/docs/technotes/guides/jni/spec/design.html#wp17626">
-    here</a>.
+pending are:
+<font size="-1"><ul>
+    <li>DeleteGlobalRef
+    <li>DeleteLocalRef
+    <li>DeleteWeakGlobalRef
+    <li>ExceptionCheck
+    <li>ExceptionClear
+    <li>ExceptionDescribe
+    <li>ExceptionOccurred
+    <li>MonitorExit
+    <li>PopLocalFrame
+    <li>PushLocalFrame
+    <li>Release<PrimitiveType>ArrayElements
+    <li>ReleasePrimitiveArrayCritical
+    <li>ReleaseStringChars
+    <li>ReleaseStringCritical
+    <li>ReleaseStringUTFChars
+</ul></font>
 </p><p>
 Note that exceptions thrown by interpreted code do not "leap over" native code,
-and exceptions through by native code don't longjmp back into the interpreter.  The
-JNI <code>Throw</code> and <code>ThrowNew</code> instructions just
-set an exception pointer in the
-current thread.  Upon returning from native code, the exception will be noted and
-handled appropriately.
+and C++ exceptions thrown by native code are not handled by Dalvik.
+The JNI <code>Throw</code> and <code>ThrowNew</code> instructions just
+set an exception pointer in the current thread.  Upon returning to the VM from
+native code, the exception will be noted and handled appropriately.
 </p><p>
 Native code can "catch" an exception by calling <code>ExceptionCheck</code> or
 <code>ExceptionOccurred</code>, and clear it with
@@ -294,7 +322,8 @@ hand to printf or a LOG macro.
 </p><h2><a name="Extended_checking"> Extended Checking </a></h2>
 <p>
 JNI does very little error checking.  Calling <code>SetFieldInt</code>
-on an Object field will succeed.  The
+on an Object field will succeed, even if the field is marked
+<code>private</code> and <code>final</code>.  The
 goal is to minimize the overhead on the assumption that, if you've written it in native code,
 you probably did it for performance reasons.
 </p><p>
@@ -305,7 +334,8 @@ an extended series of checks before calling the standard implementation.
 </p><p>
 Some things that may be verified:
 </p><p>
-</p><ul>
+</p>
+<ul>
 <li> Check for null pointers where not allowed.
 <li>
 <li> Verify argument type correctness (jclass is a class object,
@@ -331,7 +361,24 @@ checked.
 The Dalvik VM supports the <code>-Xcheck:jni</code> flag.  For a
 description of how to enable it for Android apps, see
 <a href="embedded-vm-control.html">Controlling the Embedded VM</a>.
-It's currently enabled by default in the Android emulator.
+It's currently enabled by default in the Android emulator and on
+"engineering" device builds.
+
+</p><p>
+JNI checks can be modified with the <code>-Xjniopts</code> command-line
+flag.  Currently supported values include:
+</p>
+<blockquote><dl>
+<dt>forcecopy
+<dd>When set, any function that can return a copy of the original data
+(array of primitive values, UTF-16 chars) will always do so.  The buffers
+are over-allocated and surrounded with a guard pattern to help identify
+code writing outside the buffer, and the contents are erased before the
+storage is freed to trip up code that uses the data after calling Release.
+<dt>warnonly
+<dd>By default, JNI "warnings" cause the VM to abort.  With this flag
+it continues on.
+</dl></blockquote>
 
 </p><p>
 </p><p>
@@ -345,18 +392,41 @@ preferred way to get at your native code is:
 <li> Call <code>System.loadLibrary()</code> from a static class initializer.  (See the earlier example, where one is used to call nativeClassInit().)  The argument is the "undecorated" library name, e.g. to load "libfubar.so" you would pass in "fubar".
 
 </li>
-<li> Provide a native function: <code><b>jint JNI_OnLoad(JavaVM* vm, void* reserved)</b></code>
+<li> Provide a native function: <code><strong>jint JNI_OnLoad(JavaVM* vm, void* reserved)</strong></code>
 </li>
-<li> In JNI_OnLoad, register all of your native methods.  You should declare the methods "static" so the names don't occupy space in the symbol table on the device.
+<li>In <code>JNI_OnLoad</code>, register all of your native methods.  You
+should declare
+the methods "static" so the names don't take up space in the symbol table
+on the device.
 </li>
 </ul>
 <p>
-For a simple example, see <code>//device/tests/jnilibtest/JniLibTest.c</code>
-and <code>//device/apps/AndroidTests/src/com/android/unit_tests/JniLibTest.java</code>.
+The <code>JNI_OnLoad</code> function should look something like this if
+written in C:
+</p><blockquote><pre>jint JNI_OnLoad(JavaVM* vm, void* reserved)
+{
+    JNIEnv* env;
+    if ((*vm)->GetEnv(vm, (void**) &env, JNI_VERSION_1_4) != JNI_OK)
+        return -1;
+
+    /* get class with (*env)->FindClass */
+    /* register methods with (*env)->RegisterNatives */
+
+    return JNI_VERSION_1_4;
+}
+</pre></blockquote>
 </p><p>
 You can also call <code>System.load()</code> with the full path name of the
-shared library.  This is not recommended for Android apps, since the
-installation directory could change in the future.
+shared library.  For Android apps, you can get the full path to the
+application's private data storage area from the context object.
+</p><p>
+Dalvik does support "discovery" of native methods that are named in a
+specific way (see <a href="http://java.sun.com/javase/6/docs/technotes/guides/jni/spec/design.html#wp615">
+    the JNI spec</a> for details), but this is less a less desirable
+approach.  It requires more space in the shared object symbol table,
+loading is slower because it requires string searches through all of the
+loaded shared libraries, and if a method signature is wrong you won't know
+about it until the first time the method is actually used.
 </p><p>
 
 

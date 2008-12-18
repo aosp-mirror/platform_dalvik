@@ -15,16 +15,16 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package javax.net.ssl;
 
 /**
- * @com.intel.drl.spec_ref
+ * The marker interface for JSSE trust managers. The purpose is to group trust
+ * managers. The responsibility a trust manager is to handle the trust data used to
+ * make trust decisions for deciding whether credentials of a peer should be 
+ * accepted,
+ * @see TrustManagerFactory
  * 
+ * @since Android 1.0
  */
 public interface TrustManager {
 }

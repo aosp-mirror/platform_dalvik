@@ -16,9 +16,14 @@
 
 package org.apache.harmony.nio.tests.java.nio;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.nio.ByteBuffer;
 
-
+@TestTargetClass(java.nio.ByteBuffer.class)
 public class HeapByteBufferTest extends ByteBufferTest {
     
     protected void setUp() throws Exception {   
@@ -37,6 +42,15 @@ public class HeapByteBufferTest extends ByteBufferTest {
      * @tests java.nio.ByteBuffer#allocate(int)
      * 
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies IllegalArgumentException.",
+      targets = {
+        @TestTarget(
+          methodName = "allocate",
+          methodArgs = {int.class}
+        )
+    })
     public void testAllocatedByteBuffer_IllegalArg() {
         try {
             ByteBuffer.allocate(-1);
@@ -45,15 +59,39 @@ public class HeapByteBufferTest extends ByteBufferTest {
             // expected 
         }
     }
-    
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies isDirect method with not direct buffer.",
+      targets = {
+        @TestTarget(
+          methodName = "isDirect",
+          methodArgs = {}
+        )
+    })
     public void testIsDirect() {
         assertFalse(buf.isDirect());
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies that hasArray returns true value.",
+      targets = {
+        @TestTarget(
+          methodName = "hasArray",
+          methodArgs = {}
+        )
+    })
     public void testHasArray() {
         assertTrue(buf.hasArray());
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies isReadOnly method with non read only buffer.",
+      targets = {
+        @TestTarget(
+          methodName = "isReadOnly",
+          methodArgs = {}
+        )
+    })
     public void testIsReadOnly() {
         assertFalse(buf.isReadOnly());
     }

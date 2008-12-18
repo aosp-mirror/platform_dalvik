@@ -22,14 +22,39 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.IOException;
 
+/**
+ * An {@code InvalidPropertiesFormatException} is thrown if loading the XML
+ * document defining the properties does not follow the {@code Properties}
+ * specification.
+ * 
+ * Even though this Exception inherits the {@code Serializable} interface, it is not
+ * serializable. The methods used for serialization throw
+ * {@code NotSerializableException}s.
+ * 
+ * @since Android 1.0
+ */
 public class InvalidPropertiesFormatException extends IOException {
     
     private static final long serialVersionUID = 7763056076009360219L;
-    
+
+    /**
+     * Constructs a new {@code InvalidPropertiesFormatException} with the
+     * current stack trace and message filled in.
+     * 
+     * @param m
+     *           the detail message for the exception.
+     */
     public InvalidPropertiesFormatException(String m) {
         super(m);
     }
 
+    /**
+     * Constructs a new {@code InvalidPropertiesFormatException} with the cause
+     * for the Exception.
+     * 
+     * @param c
+     *           the cause for the Exception.
+     */
     public InvalidPropertiesFormatException(Throwable c) {
         initCause(c);
     }

@@ -16,6 +16,8 @@
 
 package tests.sql;
 
+import dalvik.annotation.TestTargetClass;
+
 import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -30,6 +32,7 @@ import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
+@TestTargetClass(Statement.class)
 public class SQLTest extends TestCase {
     static Connection conn;
 

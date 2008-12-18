@@ -15,8 +15,14 @@
  */
 package org.apache.harmony.nio.tests.java.nio;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.nio.ShortBuffer;
 
+@TestTargetClass(java.nio.ShortBuffer.class)
 public class WrappedShortBufferTest extends ShortBufferTest {
     protected void setUp() throws Exception {
         super.setUp();
@@ -35,6 +41,15 @@ public class WrappedShortBufferTest extends ShortBufferTest {
      * @tests java.nio.CharBuffer#allocate(char[],int,int)
      * 
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "wrap",
+          methodArgs = {short[].class, int.class, int.class}
+        )
+    })
     public void testWrappedShortBuffer_IllegalArg() {
         short array[] = new short[20];
         try {

@@ -17,13 +17,28 @@
 
 package tests.api.java.lang.reflect;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.lang.reflect.ReflectPermission;
 
+@TestTargetClass(ReflectPermission.class) 
 public class ReflectPermissionTest extends junit.framework.TestCase {
 
     /**
      * @tests java.lang.reflect.ReflectPermission#ReflectPermission(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "ReflectPermission",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() {
         // Test for method java.lang.reflect.ReflectPermission(java.lang.String)
         String permString = new ReflectPermission("Blah").toString();
@@ -35,6 +50,15 @@ public class ReflectPermissionTest extends junit.framework.TestCase {
      * @tests java.lang.reflect.ReflectPermission#ReflectPermission(java.lang.String,
      *        java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "ReflectPermission",
+          methodArgs = {java.lang.String.class, java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_StringLjava_lang_String() {
         // Test for method java.lang.reflect.ReflectPermission(java.lang.String,
         // java.lang.String)

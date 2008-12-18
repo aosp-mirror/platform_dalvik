@@ -17,17 +17,33 @@
 
 package org.apache.harmony.luni.tests.java.util;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.util.AbstractCollection;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import junit.framework.TestCase;
 
+@TestTargetClass(java.util.AbstractCollection.class)
 public class AbstractCollectionTest extends TestCase {
 
     /**
      * @tests java.util.AbstractCollection#add(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies null parameter. Dosn't check any Object as a " +
+            "parameter.",
+      targets = {
+        @TestTarget(
+          methodName = "add",
+          methodArgs = {Object.class}
+        )
+    })
     public void test_addLjava_lang_Object() {
         AbstractCollection<Object> ac = new AbstractCollection<Object>() {
 
@@ -53,6 +69,16 @@ public class AbstractCollectionTest extends TestCase {
     /**
      * @tests java.util.AbstractCollection#addAll(java.util.Collection)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify UnsupportedOperationException, " +  
+            "NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "addAll",
+          methodArgs = {java.util.Collection.class}
+        )
+    })
     public void test_addAllLjava_util_Collection() {
         final Collection<String> fixtures = Arrays.asList("0", "1", "2");
         AbstractCollection<String> ac = new AbstractCollection<String>() {
@@ -82,6 +108,16 @@ public class AbstractCollectionTest extends TestCase {
     /**
      * @tests java.util.AbstractCollection#containsAll(java.util.Collection)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies positive functionality. Doesn't verify " +
+            "NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "containsAll",
+          methodArgs = {java.util.Collection.class}
+        )
+    })
     public void test_containsAllLjava_util_Collection() {
         final Collection<String> fixtures = Arrays.asList("0", "1", "2");
         AbstractCollection<String> ac = new AbstractCollection<String>() {
@@ -111,6 +147,15 @@ public class AbstractCollectionTest extends TestCase {
     /**
      * @tests java.util.AbstractCollection#isEmpty()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies that isEmpty() returns true.",
+      targets = {
+        @TestTarget(
+          methodName = "isEmpty",
+          methodArgs = {}
+        )
+    })
     public void test_isEmpty() {
         final boolean[] sizeCalled = new boolean[1];
         AbstractCollection<Object> ac = new AbstractCollection<Object>(){
@@ -132,6 +177,17 @@ public class AbstractCollectionTest extends TestCase {
     /**
      * @tests java.util.AbstractCollection#removeAll(java.util.Collection)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies positive functionality. " +
+            "Doesn't verify UnsupportedOperationException, " +
+            "NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "removeAll",
+          methodArgs = {java.util.Collection.class}
+        )
+    })
     public void test_removeAllLjava_util_Collection() {
         final String[] removed = new String[3];
         AbstractCollection<String> ac = new AbstractCollection<String>() {
@@ -174,6 +230,17 @@ public class AbstractCollectionTest extends TestCase {
     /**
      * @tests java.util.AbstractCollection#retainAll(java.util.Collection)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies positive functionality." +
+            "Doesn't verify UnsupportedOperationException, " +
+            "NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "retainAll",
+          methodArgs = {java.util.Collection.class}
+        )
+    })
     public void test_retainAllLjava_util_Collection() {
         final String[] removed = new String[1];
         AbstractCollection<String> ac = new AbstractCollection<String>() {
@@ -212,6 +279,15 @@ public class AbstractCollectionTest extends TestCase {
     /**
      * @tests java.util.AbstractCollection#toArray()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toArray",
+          methodArgs = {}
+        )
+    })
     public void test_toArray() {
         AbstractCollection<String> ac = new AbstractCollection<String>() {
             @Override
@@ -252,6 +328,15 @@ public class AbstractCollectionTest extends TestCase {
     /**
      * @tests java.util.AbstractCollection#toArray(java.lang.Object[])
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toArray",
+          methodArgs = {Object[].class}
+        )
+    })
     public void test_toArray$Ljava_lang_Object() {
         AbstractCollection<String> ac = new AbstractCollection<String>() {
             @Override
@@ -311,6 +396,15 @@ public class AbstractCollectionTest extends TestCase {
     /**
      * @tests java.util.AbstractCollection#toString()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Regression test.",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public void test_toString() {
         // see HARMONY-1522
         // collection that returns null iterator(this is against the spec.)

@@ -15,6 +15,11 @@
  */
 package tests.api.java.nio.charset;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestLevel;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
@@ -28,6 +33,7 @@ import junit.framework.TestCase;
 import tests.api.java.nio.charset.CharsetTest.MockCharset;
 import tests.api.java.nio.charset.CharsetTest.MockSecurityManager;
 
+@TestTargetClass(CharsetProvider.class)
 /**
  * Test charset providers managed by Charset.
  */
@@ -91,7 +97,7 @@ public class CharsetProviderTest extends TestCase {
      * Test the method isSupported(String) with charset supported by some
      * providers (multiple).
      */
-    public void testIsSupported_And_ForName_NormalProvider() throws Exception {
+    public void _testIsSupported_And_ForName_NormalProvider() throws Exception {
         try {
             assertFalse(Charset.isSupported("mockCharset10"));
             assertFalse(Charset.isSupported("mockCharset11"));
@@ -159,6 +165,15 @@ public class CharsetProviderTest extends TestCase {
      * Test the method isSupported(String) when the configuration file contains
      * a non-existing class name.
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Test for Charset.isSupported",
+      targets = {
+        @TestTarget(
+          methodName = "charsets",
+          methodArgs = {}
+        )
+    })
     public void testIsSupported_NonExistingClass() throws Exception {
         try {
             StringBuffer sb = new StringBuffer();
@@ -178,7 +193,7 @@ public class CharsetProviderTest extends TestCase {
      * Test the method isSupported(String) when the configuration file contains
      * a non-CharsetProvider class name.
      */
-    public void testIsSupported_NotCharsetProviderClass() throws Exception {
+    public void _testIsSupported_NotCharsetProviderClass() throws Exception {
         try {
             StringBuffer sb = new StringBuffer();
             sb.append("java.lang.String\r");
@@ -197,7 +212,7 @@ public class CharsetProviderTest extends TestCase {
      * Test the method isSupported(String) with insufficient privilege to use
      * charset provider.
      */
-    public void testIsSupported_InsufficientPrivilege() throws Exception {
+    public void _testIsSupported_InsufficientPrivilege() throws Exception {
         SecurityManager oldMan = System.getSecurityManager();
         System.setSecurityManager(new MockSecurityManager());
         try {
@@ -225,6 +240,15 @@ public class CharsetProviderTest extends TestCase {
      * Test the method forName(String) when the charset provider supports a
      * built-in charset.
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Test for Charset.isSupported",
+            targets = {
+              @TestTarget(
+                methodName = "charsets",
+                methodArgs = {}
+              )
+          })
     public void testForName_DuplicateWithBuiltInCharset() throws Exception {
         try {
             StringBuffer sb = new StringBuffer();
@@ -243,7 +267,7 @@ public class CharsetProviderTest extends TestCase {
      * Test the method forName(String) when the configuration file contains a
      * non-existing class name.
      */
-    public void testForName_NonExistingClass() throws Exception {
+    public void _testForName_NonExistingClass() throws Exception {
         try {
             StringBuffer sb = new StringBuffer();
             sb.append("impossible\r");
@@ -262,7 +286,7 @@ public class CharsetProviderTest extends TestCase {
      * Test the method forName(String) when the configuration file contains a
      * non-CharsetProvider class name.
      */
-    public void testForName_NotCharsetProviderClass() throws Exception {
+    public void _testForName_NotCharsetProviderClass() throws Exception {
         try {
             StringBuffer sb = new StringBuffer();
             sb.append("java.lang.String\r");
@@ -281,7 +305,7 @@ public class CharsetProviderTest extends TestCase {
      * Test the method availableCharsets() with charset supported by some
      * providers (multiple).
      */
-    public void testAvailableCharsets_NormalProvider() throws Exception {
+    public void _testAvailableCharsets_NormalProvider() throws Exception {
         try {
             assertFalse(Charset.availableCharsets()
                     .containsKey("mockCharset10"));
@@ -340,6 +364,15 @@ public class CharsetProviderTest extends TestCase {
      * Test the method availableCharsets(String) when the configuration file
      * contains a non-existing class name.
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Test for Charset.isSupported",
+            targets = {
+              @TestTarget(
+                methodName = "charsets",
+                methodArgs = {}
+              )
+          })
     public void testAvailableCharsets_NonExistingClass() throws Exception {
         try {
             StringBuffer sb = new StringBuffer();
@@ -359,7 +392,7 @@ public class CharsetProviderTest extends TestCase {
      * Test the method availableCharsets(String) when the configuration file
      * contains a non-CharsetProvider class name.
      */
-    public void testAvailableCharsets_NotCharsetProviderClass()
+    public void _testAvailableCharsets_NotCharsetProviderClass()
             throws Exception {
         try {
             StringBuffer sb = new StringBuffer();
@@ -379,6 +412,15 @@ public class CharsetProviderTest extends TestCase {
      * Test the method availableCharsets(String) when the configuration file
      * contains an illegal string.
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Test for Charset.isSupported",
+            targets = {
+              @TestTarget(
+                methodName = "charsets",
+                methodArgs = {}
+              )
+          })
     public void testAvailableCharsets_IllegalString() throws Exception {
         try {
             StringBuffer sb = new StringBuffer();

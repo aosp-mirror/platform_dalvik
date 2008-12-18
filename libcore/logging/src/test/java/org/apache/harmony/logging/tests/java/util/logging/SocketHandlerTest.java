@@ -17,6 +17,11 @@
 
 package org.apache.harmony.logging.tests.java.util.logging;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -33,6 +38,7 @@ import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.LogRecord;
 import java.util.logging.LoggingPermission;
+import java.util.logging.SimpleFormatter;
 import java.util.logging.SocketHandler;
 import java.util.logging.XMLFormatter;
 
@@ -46,6 +52,7 @@ import tests.util.CallVerificationStack;
 /**
  * Test class java.util.logging.ConsoleHandler
  */
+@TestTargetClass(SocketHandler.class)
 public class SocketHandlerTest extends TestCase {
 
     private static final LogManager LOG_MANAGER = LogManager.getLogManager();
@@ -75,21 +82,7 @@ public class SocketHandlerTest extends TestCase {
      * @see TestCase#tearDown()
      */
     protected void tearDown() throws Exception {
-        initProps();
-        LOG_MANAGER.reset();
-        LOG_MANAGER.readConfiguration(EnvironmentHelper
-                .PropertiesToInputStream(props));
-        CallVerificationStack.getInstance().clear();
-        if (null != h) {
-            h.close();
-            h = null;
-        }
-        System.setErr(err);
-        super.tearDown();
-    }
-    
-
-    private void initProps() throws Exception {
+        //initProps
         props = new Properties();
         props.put("handlers", className + "$MockHandler " + className
                 + "$MockHandler");
@@ -105,11 +98,38 @@ public class SocketHandlerTest extends TestCase {
         props.put("foo.handlers", "java.util.logging.ConsoleHandler");
         props.put("foo.level", "WARNING");
         props.put("com.xyz.foo.level", "SEVERE");
+        
+        
+        LOG_MANAGER.reset();
+        LOG_MANAGER.readConfiguration(EnvironmentHelper
+                .PropertiesToInputStream(props));
+        CallVerificationStack.getInstance().clear();
+        if (null != h) {
+            h.close();
+            h = null;
+        }
+        System.setErr(err);
+        super.tearDown();
     }
+    
 
     /*
      * Test the constructor with no relevant log manager properties are set.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies the constructor with no relevant log manager " +
+            "properties are set.",
+      targets = {
+        @TestTarget(
+          methodName = "SocketHandler",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "SocketHandler",
+          methodArgs = {java.lang.String.class, int.class}
+        )
+    })
     public void testConstructor_NoProperties() throws Exception {
         assertNull(LOG_MANAGER.getProperty(
                 "java.util.logging.SocketHandler.level"));
@@ -185,6 +205,20 @@ public class SocketHandlerTest extends TestCase {
      * Test the constructor with no relevant log manager properties are set
      * except host and port.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies the constructor with no relevant log manager " +
+            "properties are set except host and port.",
+      targets = {
+        @TestTarget(
+          methodName = "SocketHandler",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "SocketHandler",
+          methodArgs = {java.lang.String.class, int.class}
+        )
+    })
     public void testConstructor_NoBasicProperties() throws Exception {
         assertNull(LOG_MANAGER.getProperty(
                 "java.util.logging.SocketHandler.level"));
@@ -224,6 +258,19 @@ public class SocketHandlerTest extends TestCase {
     /*
      * Test the constructor with insufficient privilege for connection.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies SecurityException.",
+      targets = {
+        @TestTarget(
+          methodName = "SocketHandler",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "SocketHandler",
+          methodArgs = {java.lang.String.class, int.class}
+        )
+    })
     public void testConstructor_InsufficientPrivilege() throws Exception {
         SecurityManager oldMan = null;
         Properties p = new Properties();
@@ -260,6 +307,20 @@ public class SocketHandlerTest extends TestCase {
     /*
      * Test the constructor with valid relevant log manager properties are set.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies the constructor with valid relevant log manager " +
+            "properties are set.",
+      targets = {
+        @TestTarget(
+          methodName = "SocketHandler",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "SocketHandler",
+          methodArgs = {java.lang.String.class, int.class}
+        )
+    })
     public void testConstructor_ValidProperties() throws Exception {
         Properties p = new Properties();
         p.put("java.util.logging.SocketHandler.level", "FINE");
@@ -306,6 +367,20 @@ public class SocketHandlerTest extends TestCase {
      * Test the constructor with invalid relevant log manager properties are set
      * except host and port.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies the constructor with invalid relevant log manager " +
+            "properties are set except host and port.",
+      targets = {
+        @TestTarget(
+          methodName = "SocketHandler",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "SocketHandler",
+          methodArgs = {java.lang.String.class, int.class}
+        )
+    })
     public void testConstructor_InvalidBasicProperties() throws Exception {
         Properties p = new Properties();
         p.put("java.util.logging.SocketHandler.level", INVALID_LEVEL);
@@ -354,6 +429,15 @@ public class SocketHandlerTest extends TestCase {
      * Test the constructor with valid relevant log manager properties are set
      * except port.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies IllegalArgumentException.",
+      targets = {
+        @TestTarget(
+          methodName = "SocketHandler",
+          methodArgs = {}
+        )
+    })
     public void testConstructor_InvalidPort() throws Exception {
         Properties p = new Properties();
         p.put("java.util.logging.SocketHandler.level", "FINE");
@@ -379,6 +463,20 @@ public class SocketHandlerTest extends TestCase {
      * Test the constructor with valid relevant log manager properties are set,
      * but the port is not open.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies that the constructor with valid relevant log manager " +
+            "properties are set, but the port is not open.",
+      targets = {
+        @TestTarget(
+          methodName = "SocketHandler",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "SocketHandler",
+          methodArgs = {java.lang.String.class, int.class}
+        )
+    })
     public void testConstructor_NotOpenPort() throws Exception {
         Properties p = new Properties();
         p.put("java.util.logging.SocketHandler.level", "FINE");
@@ -411,6 +509,19 @@ public class SocketHandlerTest extends TestCase {
      * Test the constructor with valid relevant log manager properties are set
      * except port.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies IOException.",
+      targets = {
+        @TestTarget(
+          methodName = "SocketHandler",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "SocketHandler",
+          methodArgs = {java.lang.String.class, int.class}
+        )
+    })
     public void testConstructor_InvalidHost() throws Exception {
         Properties p = new Properties();
         p.put("java.util.logging.SocketHandler.level", "FINE");
@@ -443,6 +554,16 @@ public class SocketHandlerTest extends TestCase {
      * Test close() when having sufficient privilege, and a record has been
      * written to the output stream.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies close() when having sufficient privilege, " +
+            "and a record has been written to the output stream.",
+      targets = {
+        @TestTarget(
+          methodName = "close",
+          methodArgs = {}
+        )
+    })
     public void testClose_SufficientPrivilege_NormalClose() throws Exception {
         Properties p = new Properties();
         p.put("java.util.logging.SocketHandler.formatter", className
@@ -471,6 +592,15 @@ public class SocketHandlerTest extends TestCase {
      * Test close() when having sufficient privilege, and no record has been
      * written to the output stream.
      */
+    @TestInfo
+    (level = TestLevel.PARTIAL_OK, 
+            purpose = "Verifies close() when having sufficient privilege, " +
+                    "and no record has been written to the output stream.", 
+            targets = 
+            {
+            @TestTarget(methodName = "close", methodArgs = {})
+            }
+     )
     public void testClose_SufficientPrivilege_DirectClose() throws Exception {
         Properties p = new Properties();
         p.put("java.util.logging.SocketHandler.formatter", className
@@ -496,6 +626,14 @@ public class SocketHandlerTest extends TestCase {
     /*
      * Test close() when having insufficient privilege.
      */
+    @TestInfo
+    (level = TestLevel.PARTIAL_OK, 
+            purpose = "Verifies close() when having insufficient privilege.", 
+            targets = 
+            {
+            @TestTarget(methodName = "close", methodArgs = {})
+            }
+     )
     public void testClose_InsufficientPrivilege() throws Exception {
         Properties p = new Properties();
         p.put("java.util.logging.SocketHandler.formatter", className
@@ -530,6 +668,16 @@ public class SocketHandlerTest extends TestCase {
     /*
      * Test publish(), use no filter, having output stream, normal log record.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies publish(), use no filter, having output stream, " +
+            "normal log record.",
+      targets = {
+        @TestTarget(
+          methodName = "publish",
+          methodArgs = {java.util.logging.LogRecord.class}
+        )
+    })
     public void testPublish_NoFilter() throws Exception {
         Properties p = new Properties();
         p.put("java.util.logging.SocketHandler.formatter", className
@@ -569,6 +717,16 @@ public class SocketHandlerTest extends TestCase {
     /*
      * Test publish(), use a filter, having output stream, normal log record.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies publish(), use a filter, having output stream, " +
+            "normal log record.",
+      targets = {
+        @TestTarget(
+          methodName = "publish",
+          methodArgs = {java.util.logging.LogRecord.class}
+        )
+    })
     public void testPublish_WithFilter() throws Exception {
         Properties p = new Properties();
         p.put("java.util.logging.SocketHandler.formatter", className
@@ -599,6 +757,15 @@ public class SocketHandlerTest extends TestCase {
     /*
      * Test publish(), null log record, having output stream
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies publish(), null log record, having output stream.",
+      targets = {
+        @TestTarget(
+          methodName = "publish",
+          methodArgs = {java.util.logging.LogRecord.class}
+        )
+    })
     public void testPublish_Null() throws Exception {
         Properties p = new Properties();
         p.put("java.util.logging.SocketHandler.formatter", className
@@ -626,6 +793,16 @@ public class SocketHandlerTest extends TestCase {
     /*
      * Test publish(), a log record with empty msg, having output stream
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies  publish() method, a log record with empty msg, " +
+            "having output stream.",
+      targets = {
+        @TestTarget(
+          methodName = "publish",
+          methodArgs = {java.util.logging.LogRecord.class}
+        )
+    })
     public void testPublish_EmptyMsg() throws Exception {
         Properties p = new Properties();
         p.put("java.util.logging.SocketHandler.formatter", className
@@ -651,6 +828,16 @@ public class SocketHandlerTest extends TestCase {
     /*
      * Test publish(), a log record with null msg, having output stream
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies publish(), a log record with null msg, " +
+            "having output stream.",
+      targets = {
+        @TestTarget(
+          methodName = "publish",
+          methodArgs = {java.util.logging.LogRecord.class}
+        )
+    })
     public void testPublish_NullMsg() throws Exception {
         Properties p = new Properties();
         p.put("java.util.logging.SocketHandler.formatter", className
@@ -676,6 +863,15 @@ public class SocketHandlerTest extends TestCase {
     /*
      * Test publish(), after close.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies publish() method after close.",
+      targets = {
+        @TestTarget(
+          methodName = "publish",
+          methodArgs = {java.util.logging.LogRecord.class}
+        )
+    })
     public void testPublish_AfterClose() throws Exception {
         Properties p = new Properties();
         p.put("java.util.logging.SocketHandler.formatter", className

@@ -16,6 +16,11 @@
  */
 package org.apache.harmony.text.tests.java.text;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.text.DateFormat;
 import java.text.DateFormatSymbols;
 import java.text.FieldPosition;
@@ -28,8 +33,7 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 
-import junit.framework.Test;
-
+@TestTargetClass(DateFormat.class) 
 public class DateFormatTest extends junit.framework.TestCase {
 
     private class MockDateFormat extends DateFormat {
@@ -58,6 +62,15 @@ public class DateFormatTest extends junit.framework.TestCase {
      * @tests java.text.DateFormat#DateFormat() Test of method
      *        java.text.DateFormat#DateFormat().
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "DateFormat",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         try {
             new MockDateFormat();
@@ -70,7 +83,16 @@ public class DateFormatTest extends junit.framework.TestCase {
      * @tests java.text.DateFormat#equals(java.lang.Object obj) Test of
      *        java.text.DateFormat#equals(java.lang.Object obj).
      */
-    public void test_equalsLjava_lang_Object() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "equals",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
+    public void _test_equalsLjava_lang_Object() {
         try {
             DateFormat format = DateFormat.getInstance();
             DateFormat clone = (DateFormat) format.clone();
@@ -88,6 +110,15 @@ public class DateFormatTest extends junit.framework.TestCase {
      * @tests java.text.DateFormat#format(java.util.Date) Test of method
      *        java.text.DateFormat#format(java.util.Date).
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "format",
+          methodArgs = {java.util.Date.class}
+        )
+    })
     public void test_formatLjava_util_Date() {
         try {
             DateFormat format = DateFormat.getDateTimeInstance(
@@ -106,6 +137,16 @@ public class DateFormatTest extends junit.framework.TestCase {
      *        Test of method java.text.DateFormat#format(Object, StringBuffer,
      *        FieldPosition)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "format",
+          methodArgs = {java.lang.Object.class, java.lang.StringBuffer.class, 
+                  java.text.FieldPosition.class}
+        )
+    })
     public void test_formatLjava_lang_ObjectLjava_lang_StringBufferLjava_text_FieldPosition() {
         try {
             DateFormat format = DateFormat.getDateTimeInstance(
@@ -129,7 +170,16 @@ public class DateFormatTest extends junit.framework.TestCase {
     /**
      * @tests java.text.DateFormat#clone()
      */
-    public void test_clone() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "clone",
+          methodArgs = {}
+        )
+    })
+    public void _test_clone() {
         DateFormat format = DateFormat.getInstance();
         DateFormat clone = (DateFormat) format.clone();
         assertTrue("Clone not equal", format.equals(clone));
@@ -140,6 +190,15 @@ public class DateFormatTest extends junit.framework.TestCase {
     /**
      * @tests java.text.DateFormat#getAvailableLocales()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getAvailableLocales",
+          methodArgs = {}
+        )
+    })
     public void test_getAvailableLocales() {
         Locale[] locales = DateFormat.getAvailableLocales();
         assertTrue("No locales", locales.length > 0);
@@ -160,6 +219,15 @@ public class DateFormatTest extends junit.framework.TestCase {
     /**
      * @tests java.text.DateFormat#getCalendar()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getCalendar",
+          methodArgs = {}
+        )
+    })
     public void test_getCalendar() {
         DateFormat format = DateFormat.getInstance();
         Calendar cal1 = format.getCalendar();
@@ -170,7 +238,16 @@ public class DateFormatTest extends junit.framework.TestCase {
     /**
      * @tests java.text.DateFormat#getDateInstance()
      */
-    public void test_getDateInstance() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getDateInstance",
+          methodArgs = {}
+        )
+    })
+    public void _test_getDateInstance() {
         SimpleDateFormat f2 = (SimpleDateFormat) DateFormat.getDateInstance();
         assertTrue("Wrong class", f2.getClass() == SimpleDateFormat.class);
         assertTrue("Wrong default", f2.equals(DateFormat.getDateInstance(
@@ -184,7 +261,16 @@ public class DateFormatTest extends junit.framework.TestCase {
     /**
      * @tests java.text.DateFormat#getDateInstance(int)
      */
-    public void test_getDateInstanceI() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getDateInstance",
+          methodArgs = {int.class}
+        )
+    })
+    public void _test_getDateInstanceI() {
         assertTrue("Default not medium",
                 DateFormat.DEFAULT == DateFormat.MEDIUM);
 
@@ -237,6 +323,15 @@ public class DateFormatTest extends junit.framework.TestCase {
     /**
      * @tests java.text.DateFormat#getDateInstance(int, java.util.Locale)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getDateInstance",
+          methodArgs = {int.class, java.util.Locale.class}
+        )
+    })
     public void test_getDateInstanceILjava_util_Locale() {
         SimpleDateFormat f2 = (SimpleDateFormat) DateFormat.getDateInstance(
                 DateFormat.SHORT, Locale.GERMAN);
@@ -282,7 +377,16 @@ public class DateFormatTest extends junit.framework.TestCase {
     /**
      * @tests java.text.DateFormat#getDateTimeInstance()
      */
-    public void test_getDateTimeInstance() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getDateTimeInstance",
+          methodArgs = {}
+        )
+    })
+    public void _test_getDateTimeInstance() {
         SimpleDateFormat f2 = (SimpleDateFormat) DateFormat
                 .getDateTimeInstance();
         assertTrue("Wrong class", f2.getClass() == SimpleDateFormat.class);
@@ -313,6 +417,15 @@ public class DateFormatTest extends junit.framework.TestCase {
     /**
      * @tests java.text.DateFormat#getDateTimeInstance(int, int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getDateTimeInstance",
+          methodArgs = {int.class, int.class}
+        )
+    })
     public void test_getDateTimeInstanceII() {
         testDateTime(DateFormat.SHORT, DateFormat.SHORT);
         testDateTime(DateFormat.SHORT, DateFormat.MEDIUM);
@@ -363,6 +476,15 @@ public class DateFormatTest extends junit.framework.TestCase {
      * @tests java.text.DateFormat#getDateTimeInstance(int, int,
      *        java.util.Locale)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getDateTimeInstance",
+          methodArgs = {int.class, int.class, java.util.Locale.class}
+        )
+    })
     public void test_getDateTimeInstanceIILjava_util_Locale() {
         testDateTimeLocale(DateFormat.SHORT, DateFormat.SHORT);
         testDateTimeLocale(DateFormat.SHORT, DateFormat.MEDIUM);
@@ -396,7 +518,16 @@ public class DateFormatTest extends junit.framework.TestCase {
     /**
      * @tests java.text.DateFormat#getInstance()
      */
-    public void test_getInstance() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getInstance",
+          methodArgs = {}
+        )
+    })
+    public void _test_getInstance() {
         SimpleDateFormat f2 = (SimpleDateFormat) DateFormat.getInstance();
         assertTrue("Wrong class", f2.getClass() == SimpleDateFormat.class);
         assertTrue("Wrong default", f2.equals(DateFormat.getDateTimeInstance(
@@ -410,6 +541,15 @@ public class DateFormatTest extends junit.framework.TestCase {
     /**
      * @tests java.text.DateFormat#getNumberFormat()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getNumberFormat",
+          methodArgs = {}
+        )
+    })
     public void test_getNumberFormat() {
         DateFormat format = DateFormat.getInstance();
         NumberFormat nf1 = format.getNumberFormat();
@@ -420,7 +560,16 @@ public class DateFormatTest extends junit.framework.TestCase {
     /**
      * @tests java.text.DateFormat#getTimeInstance()
      */
-    public void test_getTimeInstance() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getTimeInstance",
+          methodArgs = {}
+        )
+    })
+    public void _test_getTimeInstance() {
         SimpleDateFormat f2 = (SimpleDateFormat) DateFormat.getTimeInstance();
         assertTrue("Wrong class", f2.getClass() == SimpleDateFormat.class);
         assertTrue("Wrong default", f2.equals(DateFormat.getTimeInstance(
@@ -434,7 +583,16 @@ public class DateFormatTest extends junit.framework.TestCase {
     /**
      * @tests java.text.DateFormat#getTimeInstance(int)
      */
-    public void test_getTimeInstanceI() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getTimeInstance",
+          methodArgs = {int.class}
+        )
+    })
+    public void _test_getTimeInstanceI() {
         SimpleDateFormat f2 = (SimpleDateFormat) DateFormat
                 .getTimeInstance(DateFormat.SHORT);
         assertTrue("Wrong class1", f2.getClass() == SimpleDateFormat.class);
@@ -484,6 +642,15 @@ public class DateFormatTest extends junit.framework.TestCase {
     /**
      * @tests java.text.DateFormat#getTimeInstance(int, java.util.Locale)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getTimeInstance",
+          methodArgs = {int.class, java.util.Locale.class}
+        )
+    })
     public void test_getTimeInstanceILjava_util_Locale() {
         SimpleDateFormat f2 = (SimpleDateFormat) DateFormat.getTimeInstance(
                 DateFormat.SHORT, Locale.GERMAN);
@@ -529,6 +696,15 @@ public class DateFormatTest extends junit.framework.TestCase {
      * @tests java.text.DateFormat#getTimeZone() Test of method
      *        java.text.DateFormat#getTimeZone().
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getTimeZone",
+          methodArgs = {}
+        )
+    })
     public void test_getTimeZone() {
         try {
             DateFormat format = DateFormat.getInstance();
@@ -549,7 +725,16 @@ public class DateFormatTest extends junit.framework.TestCase {
      * @tests java.text.DateFormat#hashCode() Test of method
      *        java.text.DateFormat#hashCode().
      */
-    public void test_hashCode() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "hashCode",
+          methodArgs = {}
+        )
+    })
+    public void _test_hashCode() {
         try {
             DateFormat df1 = DateFormat.getInstance();
             DateFormat df2 = (DateFormat) df1.clone();
@@ -566,6 +751,15 @@ public class DateFormatTest extends junit.framework.TestCase {
      * @tests java.text.DateFormat#isLenient() Test of method
      *        java.text.DateFormat#isLenient().
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isLenient",
+          methodArgs = {}
+        )
+    })
     public void test_isLenient() {
         DateFormat df = DateFormat.getInstance();
         Calendar c = df.getCalendar();
@@ -609,6 +803,15 @@ public class DateFormatTest extends junit.framework.TestCase {
     /**
      * @tests java.text.DateFormat#setCalendar(java.util.Calendar)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setCalendar",
+          methodArgs = {java.util.Calendar.class}
+        )
+    })
     public void test_setCalendarLjava_util_Calendar() {
         DateFormat format = DateFormat.getInstance();
         Calendar cal = Calendar.getInstance();
@@ -619,6 +822,15 @@ public class DateFormatTest extends junit.framework.TestCase {
     /**
      * @tests java.text.DateFormat#setNumberFormat(java.text.NumberFormat)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setNumberFormat",
+          methodArgs = {java.text.NumberFormat.class}
+        )
+    })
     public void test_setNumberFormatLjava_text_NumberFormat() {
         DateFormat format = DateFormat.getInstance();
         NumberFormat f1 = NumberFormat.getInstance();
@@ -629,6 +841,15 @@ public class DateFormatTest extends junit.framework.TestCase {
     /**
      * @tests java.text.DateFormat#parse(String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies ParseException.",
+      targets = {
+        @TestTarget(
+          methodName = "parse",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_parse_LString() {
         DateFormat format = DateFormat.getInstance();
         try {
@@ -646,6 +867,15 @@ public class DateFormatTest extends junit.framework.TestCase {
      *        partialy correct data string. Case 3: Try to use argument
      *        ParsePosition as null.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify incorrect data string as a parameter.",
+      targets = {
+        @TestTarget(
+          methodName = "parseObject",
+          methodArgs = {java.lang.String.class, java.text.ParsePosition.class}
+        )
+    })
     public void test_parseObjectLjava_lang_StringLjava_text_ParsePosition() {
         DateFormat df = DateFormat.getInstance();
         try {
@@ -684,6 +914,15 @@ public class DateFormatTest extends junit.framework.TestCase {
      * @tests java.text.DateFormat#setLenient(boolean) Test of method
      *        java.text.DateFormat#setLenient(boolean).
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setLenient",
+          methodArgs = {boolean.class}
+        )
+    })
     public void test_setLenientZ() {
         DateFormat df = DateFormat.getInstance();
         Calendar c = df.getCalendar();
@@ -714,6 +953,15 @@ public class DateFormatTest extends junit.framework.TestCase {
      * @tests java.text.DateFormat#setTimeZone(TimeZone) Test of method
      *        java.text.DateFormat#setTimeZone(TimeZone).
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setTimeZone",
+          methodArgs = {java.util.TimeZone.class}
+        )
+    })
     public void test_setTimeZoneLjava_util_TimeZone() {
         try {
             DateFormat format = DateFormat.getInstance();

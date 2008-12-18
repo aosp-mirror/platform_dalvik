@@ -18,12 +18,10 @@
 package java.lang;
 
 /**
- * <p>
- * Short is the wrapper for the primitive type <code>short</code>.
- * </p>
+ * The wrapper for the primitive type {@code short}.
  * 
  * @see java.lang.Number
- * @since 1.1
+ * @since Android 1.0
  */
 public final class Short extends Number implements Comparable<Short> {
 
@@ -35,31 +33,32 @@ public final class Short extends Number implements Comparable<Short> {
     private final short value;
 
     /**
-     * <p>
-     * Constant for the maximum <code>short</code> value, 2<sup>15</sup>-1.
-     * </p>
+     * Constant for the maximum {@code short} value, 2<sup>15</sup>-1.
+     * 
+     * @since Android 1.0
      */
     public static final short MAX_VALUE = (short) 0x7FFF;
 
     /**
-     * <p>
-     * Constant for the minimum <code>short</code> value, -2<sup>15</sup>.
-     * </p>
+     * Constant for the minimum {@code short} value, -2<sup>15</sup>.
+     * 
+     * @since Android 1.0
      */
     public static final short MIN_VALUE = (short) 0x8000;
 
     /**
-     * <p>
-     * Constant for the number of bits to represent a <code>short</code> in
-     * two's compliment form.
-     * </p>
+     * Constant for the number of bits needed to represent a {@code short} in
+     * two's complement form.
      * 
-     * @since 1.5
+     * @since Android 1.0
      */
     public static final int SIZE = 16;
 
     /**
-     * The java.lang.Class that represents this class.
+     * The {@link Class} object that represents the primitive type {@code 
+     * short}.
+     * 
+     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     public static final Class<Short> TYPE = (Class<Short>) new short[0]
@@ -70,68 +69,65 @@ public final class Short extends Number implements Comparable<Short> {
 
     
     /**
-     * Constructs a new instance of this class given a string.
+     * Constructs a new {@code Short} from the specified string.
      * 
      * @param string
-     *            a string representation of a short quantity.
-     * @exception NumberFormatException
-     *                if the argument could not be parsed as a short quantity.
+     *            the string representation of a short value.
+     * @throws NumberFormatException
+     *             if {@code string} can not be decoded into a short value.
+     * @see #parseShort(String)
+     * @since Android 1.0
      */
     public Short(String string) throws NumberFormatException {
         this(parseShort(string));
     }
 
     /**
-     * Constructs a new instance of the receiver which represents the short
-     * valued argument.
+     * Constructs a new {@code Short} with the specified primitive short value.
      * 
      * @param value
-     *            the short to store in the new instance.
+     *            the primitive short value to store in the new instance.
+     * @since Android 1.0
      */
     public Short(short value) {
         this.value = value;
     }
 
-    /**
-     * Returns the byte value which the receiver represents
-     * 
-     * @return byte the value of the receiver.
-     */
     @Override
     public byte byteValue() {
         return (byte) value;
     }
 
     /**
-     * <p>
-     * Compares this <code>Short</code> to the <code>Short</code>
-     * passed. If this instance's value is equal to the value of the instance
-     * passed, then 0 is returned. If this instance's value is less than the
-     * value of the instance passed, then a negative value is returned. If this
-     * instance's value is greater than the value of the instance passed, then a
-     * positive value is returned.
-     * </p>
+     * Compares this object to the specified short object to determine their
+     * relative order.
      * 
-     * @param object The instance to compare to.
-     * @throws NullPointerException if <code>object</code> is
-     *         <code>null</code>.
-     * @since 1.2
+     * @param object
+     *            the short object to compare this object to.
+     * @return a negative value if the value of this short is less than the
+     *         value of {@code object}; 0 if the value of this short and the
+     *         value of {@code object} are equal; a positive value if the value
+     *         of this short is greater than the value of {@code object}.
+     * @see java.lang.Comparable
+     * @since Android 1.0
      */
     public int compareTo(Short object) {
         return value > object.value ? 1 : (value < object.value ? -1 : 0);
     }
 
     /**
-     * Parses the string argument as if it was a short value and returns the
-     * result. Throws NumberFormatException if the string does not represent an
-     * int quantity. The string may be a hexadecimal ("0x..."), octal ("0..."),
-     * or decimal ("...") representation of a byte.
+     * Parses the specified string and returns a {@code Short} instance if the
+     * string can be decoded into a short value. The string may be an optional
+     * minus sign "-" followed by a hexadecimal ("0x..." or "#..."), octal
+     * ("0..."), or decimal ("...") representation of a short.
      * 
      * @param string
-     *            a string representation of a short quantity.
-     * @return Short the value represented by the argument
-     * @exception NumberFormatException
-     *                if the argument could not be parsed as a short quantity.
+     *            a string representation of a short value.
+     * @return a {@code Short} containing the value represented by
+     *         {@code string}.
+     * @throws NumberFormatException
+     *             if {@code string} can not be parsed as a short value.
+     * @since Android 1.0
      */
     public static Short decode(String string) throws NumberFormatException {
         int intValue = Integer.decode(string).intValue();
@@ -142,28 +138,21 @@ public final class Short extends Number implements Comparable<Short> {
         throw new NumberFormatException();
     }
 
-    /**
-     * Returns the double value which the receiver represents
-     * 
-     * @return double the value of the receiver.
-     */
     @Override
     public double doubleValue() {
         return value;
     }
 
     /**
-     * Compares the argument to the receiver, and returns true if they represent
-     * the <em>same</em> object using a class specific comparison.
-     * <p>
-     * In this case, the argument must also be a Short, and the receiver and
-     * argument must represent the same short value.
+     * Compares this instance with the specified object and indicates if they
+     * are equal. In order to be equal, {@code object} must be an instance of
+     * {@code Short} and have the same short value as this object.
      * 
      * @param object
-     *            the object to compare with this object
-     * @return <code>true</code> if the object is the same as this object
-     *         <code>false</code> if it is different from this object
-     * @see #hashCode
+     *            the object to compare this short with.
+     * @return {@code true} if the specified object is equal to this
+     *         {@code Short}; {@code false} otherwise.
+     * @since Android 1.0
      */
     @Override
     public boolean equals(Object object) {
@@ -171,78 +160,58 @@ public final class Short extends Number implements Comparable<Short> {
                 && (value == ((Short) object).value);
     }
 
-    /**
-     * Returns the float value which the receiver represents
-     * 
-     * @return float the value of the receiver.
-     */
     @Override
     public float floatValue() {
         return value;
     }
 
-    /**
-     * Returns an integer hash code for the receiver. Any two objects which
-     * answer <code>true</code> when passed to <code>equals</code> must
-     * answer the same value for this method.
-     * 
-     * @return the receiver's hash
-     * 
-     * @see #equals
-     */
     @Override
     public int hashCode() {
         return value;
     }
 
-    /**
-     * Returns the int value which the receiver represents
-     * 
-     * @return int the value of the receiver.
-     */
     @Override
     public int intValue() {
         return value;
     }
 
-    /**
-     * Returns the long value which the receiver represents
-     * 
-     * @return long the value of the receiver.
-     */
     @Override
     public long longValue() {
         return value;
     }
 
     /**
-     * Parses the string argument as if it was a short value and returns the
-     * result. Throws NumberFormatException if the string does not represent an
-     * short quantity.
+     * Parses the specified string as a signed decimal short value. The ASCII
+     * character \u002d ('-') is recognized as the minus sign.
      * 
      * @param string
-     *            a string representation of a short quantity.
-     * @return short the value represented by the argument
-     * @exception NumberFormatException
-     *                if the argument could not be parsed as a short quantity.
+     *            the string representation of a short value.
+     * @return the primitive short value represented by {@code string}.
+     * @throws NumberFormatException
+     *             if {@code string} is {@code null}, has a length of zero or
+     *             can not be parsed as a short value.
+     * @since Android 1.0
      */
     public static short parseShort(String string) throws NumberFormatException {
         return parseShort(string, 10);
     }
 
     /**
-     * Parses the string argument as if it was a short value and returns the
-     * result. Throws NumberFormatException if the string does not represent a
-     * single short quantity. The second argument specifies the radix to use
-     * when parsing the value.
+     * Parses the specified string as a signed short value using the specified
+     * radix. The ASCII character \u002d ('-') is recognized as the minus sign.
      * 
      * @param string
-     *            a string representation of a short quantity.
+     *            the string representation of a short value.
      * @param radix
      *            the radix to use when parsing.
-     * @return short the value represented by the argument
-     * @exception NumberFormatException
-     *                if the argument could not be parsed as a short quantity.
+     * @return the primitive short value represented by {@code string} using
+     *         {@code radix}.
+     * @throws NumberFormatException
+     *             if {@code string} is {@code null} or has a length of zero,
+     *             {@code radix < Character.MIN_RADIX},
+     *             {@code radix > Character.MAX_RADIX}, or if {@code string}
+     *             can not be parsed as a short value.
+     * @since Android 1.0
      */
     public static short parseShort(String string, int radix)
             throws NumberFormatException {
@@ -255,21 +224,16 @@ public final class Short extends Number implements Comparable<Short> {
     }
 
     /**
-     * Returns the short value which the receiver represents
+     * Gets the primitive value of this short.
      * 
-     * @return short the value of the receiver.
+     * @return this object's primitive value.
+     * @since Android 1.0
      */
     @Override
     public short shortValue() {
         return value;
     }
 
-    /**
-     * Returns a string containing a concise, human-readable description of the
-     * receiver.
-     * 
-     * @return a printable representation for the receiver.
-     */
     @Override
     public String toString() {
         return Integer.toString(value);
@@ -277,44 +241,51 @@ public final class Short extends Number implements Comparable<Short> {
 
     /**
      * Returns a string containing a concise, human-readable description of the
-     * argument.
+     * specified short value with radix 10.
      * 
      * @param value
-     *            short the short to convert.
-     * @return String a printable representation for the short.
+     *             the short to convert to a string.
+     * @return a printable representation of {@code value}.
+     * @since Android 1.0
      */
     public static String toString(short value) {
         return Integer.toString(value);
     }
 
     /**
-     * Parses the string argument as if it was a short value and returns a Short
-     * representing the result. Throws NumberFormatException if the string does
-     * not represent a single short quantity.
+     * Parses the specified string as a signed decimal short value.
      * 
      * @param string
-     *            a string representation of a short quantity.
-     * @return Short the value represented by the argument
-     * @exception NumberFormatException
-     *                if the argument could not be parsed as a short quantity.
+     *            the string representation of a short value.
+     * @return a {@code Short} instance containing the short value represented
+     *         by {@code string}.
+     * @throws NumberFormatException
+     *             if {@code string} is {@code null}, has a length of zero or
+     *             can not be parsed as a short value.
+     * @see #parseShort(String)
+     * @since Android 1.0
      */
     public static Short valueOf(String string) throws NumberFormatException {
         return valueOf(parseShort(string));
     }
 
     /**
-     * Parses the string argument as if it was a short value and returns a Short
-     * representing the result. Throws NumberFormatException if the string does
-     * not represent a short quantity. The second argument specifies the radix
-     * to use when parsing the value.
+     * Parses the specified string as a signed short value using the specified
+     * radix.
      * 
      * @param string
-     *            a string representation of a short quantity.
+     *            the string representation of a short value.
      * @param radix
      *            the radix to use when parsing.
-     * @return Short the value represented by the argument
-     * @exception NumberFormatException
-     *                if the argument could not be parsed as a short quantity.
+     * @return a {@code Short} instance containing the short value represented
+     *         by {@code string} using {@code radix}.
+     * @throws NumberFormatException
+     *             if {@code string} is {@code null} or has a length of zero,
+     *             {@code radix < Character.MIN_RADIX},
+     *             {@code radix > Character.MAX_RADIX}, or if {@code string}
+     *             can not be parsed as a short value.
+     * @see #parseShort(String, int)
+     * @since Android 1.0
      */
     public static Short valueOf(String string, int radix)
             throws NumberFormatException {
@@ -322,13 +293,12 @@ public final class Short extends Number implements Comparable<Short> {
     }
     
     /**
-     * <p>
-     * Reverses the bytes of a <code>short</code>.
-     * </p>
+     * Reverses the bytes of the specified short.
      * 
-     * @param s The <code>short</code> to reverse.
-     * @return The reversed value.
-     * @since 1.5
+     * @param s
+     *            the short value for which to reverse bytes.
+     * @return the reversed value.
+     * @since Android 1.0
      */
     public static short reverseBytes(short s) {
         int high = (s >> 8) & 0xFF;
@@ -337,15 +307,17 @@ public final class Short extends Number implements Comparable<Short> {
     }
 
     /**
+     * Returns a {@code Short} instance for the specified short value.
      * <p>
-     * Returns a <code>Short</code> instance for the <code>short</code>
-     * value passed. This method is preferred over the constructor, as this
-     * method may maintain a cache of instances.
+     * If it is not necessary to get a new {@code Short} instance, it is
+     * recommended to use this method instead of the constructor, since it
+     * maintains a cache of instances which may result in better performance.
      * </p>
      * 
-     * @param s The short value.
-     * @return A <code>Short</code> instance.
-     * @since 1.5
+     * @param s
+     *            the short value to store in the instance.
+     * @return a {@code Short} instance containing {@code s}.
+     * @since Android 1.0
      */
     public static Short valueOf(short s) {
         if (s < -128 || s > 127) {

@@ -15,40 +15,52 @@
  *  limitations under the License.
  */
 
-/**
-* @author Boris V. Kuznetsov
-* @version $Revision$
-*/
-
 package javax.net.ssl;
 
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.net.Socket;
 import java.security.AccessController;
 import java.security.Security;
+// BEGIN android-added
+import java.lang.reflect.Method;
+import java.net.UnknownHostException;
+// END android-added
 
 import javax.net.SocketFactory;
 
 /**
- * @com.intel.drl.spec_ref
+ * The abstract factory implementation to create {@code SSLSocket}s.
  * 
+ * @since Android 1.0
  */
 public abstract class SSLSocketFactory extends SocketFactory {
-    // FIXME EXPORT CONTROL
 
     // The default SSL socket factory
     private static SocketFactory defaultSocketFactory;
 
     private static String defaultName;
 
+    /**
+     * Creates a new {@code SSLSocketFactory}.
+     * 
+     * @since Android 1.0
+     */
     public SSLSocketFactory() {
         super();
     }
 
+    /**
+     * Returns the default {@code SSLSocketFactory} instance. The default is
+     * defined by the security property {@code 'ssl.SocketFactory.provider'}.
+     * 
+     * @return the default ssl socket factory instance.
+     * @since Android 1.0
+     */
     public static SocketFactory getDefault() {
         if (defaultSocketFactory != null) {
+            // BEGIN android-added
             log("SSLSocketFactory", "Using factory " + defaultSocketFactory);
+            // END android-added
             return defaultSocketFactory;
         }
         if (defaultName == null) {
@@ -80,13 +92,16 @@ public abstract class SSLSocketFactory extends SocketFactory {
             }
         }
         if (defaultSocketFactory == null) {
+            // Use internal implementation
             defaultSocketFactory = new DefaultSSLSocketFactory("No SSLSocketFactory installed");
         }
-
+        // BEGIN android-added
         log("SSLSocketFactory", "Using factory " + defaultSocketFactory);
+        // END android-added
         return defaultSocketFactory;
     }
 
+    // BEGIN android-added
     @SuppressWarnings("unchecked")
     private static void log(String tag, String msg) {
         try {
@@ -97,11 +112,46 @@ public abstract class SSLSocketFactory extends SocketFactory {
             // Silently ignore.
         }
     }
-    
+    // END android-added
+
+    /**
+     * Returns the names of the cipher suites that are enabled by default.
+     * 
+     * @return the names of the cipher suites that are enabled by default.
+     * @since Android 1.0
+     */
     public abstract String[] getDefaultCipherSuites();
 
+    /**
+     * Returns the names of the cipher suites that are supported and could be
+     * enabled for an SSL connection.
+     * 
+     * @return the names of the cipher suites that are supported.
+     * @since Android 1.0
+     */
     public abstract String[] getSupportedCipherSuites();
 
+    /**
+     * Creates an {@code SSLSocket} over the specified socket that is connected
+     * to the specified host at the specified port.
+     * 
+     * @param s
+     *            the socket.
+     * @param host
+     *            the host.
+     * @param port
+     *            the port number.
+     * @param autoClose
+     *            {@code true} if socket {@code s} should be closed when the
+     *            created socket is closed, {@code false} if the socket
+     *            {@code s} should be left open.
+     * @return the creates ssl socket.
+     * @throws IOException
+     *             if creating the socket fails.
+     * @throws UnknownHostException
+     *             if the host is unknown.
+     * @since Android 1.0
+     */
     public abstract Socket createSocket(Socket s, String host, int port,
             boolean autoClose) throws IOException;
 

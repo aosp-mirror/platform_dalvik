@@ -19,36 +19,41 @@ package java.util;
 
 
 /**
- * ListResourceBundle is the abstract superclass of classes which provide
- * resources by implementing the <code>getContents()</code> method to return
+ * {@code ListResourceBundle} is the abstract superclass of classes which provide
+ * resources by implementing the {@code getContents()} method to return
  * the list of resources.
  * 
  * @see ResourceBundle
- * @since 1.1
+ * @since Android 1.0
  */
 public abstract class ListResourceBundle extends ResourceBundle {
     Hashtable<String, Object> table;
 
     /**
      * Constructs a new instance of this class.
+     * 
+     * @since Android 1.0
      */
     public ListResourceBundle() {
         super();
     }
 
     /**
-     * Returns an Object array which contains the resources of this
-     * ListResourceBundle. Each element in the array is an array of two
-     * elements, the first is the resource key and the second is the resource.
+     * Returns an {@code Object} array which contains the resources of this
+     * {@code ListResourceBundle}. Each element in the array is an array of two
+     * elements, the first is the resource key string and the second is the
+     * resource.
      * 
-     * @return a Object array containing the resources
+     * @return a {@code Object} array containing the resources.
+     * @since Android 1.0
      */
     protected abstract Object[][] getContents();
 
     /**
-     * Returns the names of the resources contained in this ListResourceBundle.
+     * Returns the names of the resources contained in this {@code ListResourceBundle}.
      * 
-     * @return an Enumeration of the resource names
+     * @return an {@code Enumeration} of the resource names.
+     * @since Android 1.0
      */
     @Override
     public Enumeration<String> getKeys() {
@@ -101,14 +106,6 @@ public abstract class ListResourceBundle extends ResourceBundle {
         };
     }
 
-    /**
-     * Returns the named resource from this ResourceBundle, or null if the
-     * resource is not found.
-     * 
-     * @param key
-     *            the name of the resource
-     * @return the resource object
-     */
     @Override
     public final Object handleGetObject(String key) {
         if (table == null) {

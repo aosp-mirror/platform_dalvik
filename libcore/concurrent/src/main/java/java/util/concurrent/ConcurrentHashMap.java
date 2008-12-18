@@ -601,6 +601,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         putAll(t);
     }
 
+    // inherit Map javadoc
     public boolean isEmpty() {
         final Segment[] segments = this.segments;
         /*
@@ -633,6 +634,7 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         return true;
     }
 
+    // inherit Map javadoc
     public int size() {
         final Segment[] segments = this.segments;
         int[] mc = new int[segments.length];
@@ -919,28 +921,28 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
     }
 
 
-// BEGIN android-changed
-//        /**
-//     * Returns a shallow copy of this
-//     * <tt>ConcurrentHashMap</tt> instance: the keys and
-//     * values themselves are not cloned.
-//     *
-//     * @return a shallow copy of this map.
-//     */
-//    public Object clone() {
-//        // We cannot call super.clone, since it would share final
-//        // segments array, and there's no way to reassign finals.
-//
-//        float lf = segments[0].loadFactor;
-//        int segs = segments.length;
-//        int cap = (int)(size() / lf);
-//        if (cap < segs) cap = segs;
-//        ConcurrentHashMap<K,V> t = new ConcurrentHashMap<K,V>(cap, lf, segs);
-//        t.putAll(this);
-//        return t;
-//    }
-// END android-changed
-    
+    // BEGIN android-removed
+    // /**
+    //  * Returns a shallow copy of this
+    //  * <tt>ConcurrentHashMap</tt> instance: the keys and
+    //  * values themselves are not cloned.
+    //  *
+    //  * @return a shallow copy of this map.
+    //  */
+    // public Object clone() {
+    //     // We cannot call super.clone, since it would share final
+    //     // segments array, and there's no way to reassign finals.
+    //
+    //     float lf = segments[0].loadFactor;
+    //     int segs = segments.length;
+    //     int cap = (int)(size() / lf);
+    //     if (cap < segs) cap = segs;
+    //     ConcurrentHashMap<K,V> t = new ConcurrentHashMap<K,V>(cap, lf, segs);
+    //     t.putAll(this);
+    //     return t;
+    // }
+    // END android-changed
+
     /**
      * Returns a set view of the keys contained in this map.  The set is
      * backed by the map, so changes to the map are reflected in the set, and
@@ -1348,7 +1350,4 @@ public class ConcurrentHashMap<K, V> extends AbstractMap<K, V>
         }
     }
 }
-
-
-
 

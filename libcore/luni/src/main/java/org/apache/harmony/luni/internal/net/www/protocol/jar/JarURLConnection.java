@@ -41,7 +41,9 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.zip.ZipFile;
 
-import org.apache.harmony.kernel.vm.VM;
+// BEGIN android-removed
+// import org.apache.harmony.kernel.vm.VM;
+// END android-removed
 import org.apache.harmony.luni.util.Msg;
 import org.apache.harmony.luni.util.Util;
 
@@ -77,7 +79,10 @@ public class JarURLConnection extends java.net.JarURLConnection {
                 return Integer.getInteger("jar.cacheSize", 500); //$NON-NLS-1$
             }
         });
-        VM.closeJars();
+        // BEGIN android-removed
+        // TODO this needs to be implemented once this is available.
+        // VM.closeJars();
+        // END android-removed
     }
 
     static final class CacheEntry<T extends JarFile> extends WeakReference<T> {

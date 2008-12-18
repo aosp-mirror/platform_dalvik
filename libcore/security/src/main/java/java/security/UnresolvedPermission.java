@@ -41,20 +41,17 @@ import org.apache.harmony.security.fortress.PolicyUtils;
 import org.apache.harmony.security.internal.nls.Messages;
 
 /**
- * Holds permissions which are of an unknown type when a policy file is read.
- *
- * Technically, the resolution of UnresolvedPermissions and
- * substitution by actual permissions takes place in the
- * <code>implies()</code> method of a <code>Permissions</code>
- * collection, right before actual checking.
+ * An {@code UnresolvedPermission} represents a {@code Permission} whose type
+ * should be resolved lazy and not during initialization time of the {@code
+ * Policy}. {@code UnresolvedPermission}s contain all information to be replaced
+ * by a concrete typed {@code Permission} right before the access checks are
+ * performed.
  * 
+ * @since Android 1.0
  */
 public final class UnresolvedPermission extends Permission
     implements Serializable {
 
-    /** 
-     * @com.intel.drl.spec_ref 
-     */
     private static final long serialVersionUID = -4821973115467008846L;
 
     private static final ObjectStreamField serialPersistentFields[] = {
@@ -75,15 +72,25 @@ public final class UnresolvedPermission extends Permission
     private transient int hash;
 
     /**
-     * Constructs a new instance of this class with its type, name, and
-     * certificates set to the arguments by definition, actions are ignored
+     * Constructs a new instance of {@code UnresolvedPermission}. The supplied
+     * parameters are used when this instance is resolved to the concrete
+     * {@code Permission}.
      * 
      * @param type
-     *            class of permission object
+     *            the fully qualified class name of the permission this class is
+     *            resolved to.
      * @param name
-     *            identifies the permission that could not be resolved
+     *            the name of the permission this class is resolved to, maybe
+     *            {@code null}.
      * @param actions
+     *            the actions of the permission this class is resolved to, maybe
+     *            {@code null}.
      * @param certs
+     *            the certificates of the permission this class is resolved to,
+     *            maybe {@code null}.
+     * @throws NullPointerException
+     *             if type is {@code null}.
+     * @since Android 1.0
      */
     public UnresolvedPermission(String type, String name, String actions,
                                 Certificate[] certs) {
@@ -123,17 +130,19 @@ public final class UnresolvedPermission extends Permission
     }
 
     /**
-     * Compares the argument to the receiver, and returns true if they represent
-     * the <em>same</em> object using a class specific comparison. In this
-     * case, the receiver and the object must have the same class, permission
-     * name, actions, and certificates
+     * Compares the specified object with this {@code UnresolvedPermission} for
+     * equality and returns {@code true} if the specified object is equal,
+     * {@code false} otherwise. To be equal, the specified object needs to be an
+     * instance of {@code UnresolvedPermission}, the two {@code
+     * UnresolvedPermission}s must refer to the same type and must have the same
+     * name, the same actions and certificates.
      * 
      * @param obj
-     *            the object to compare with this object
-     * @return <code>true</code> if the object is the same as this object,
-     *         <code>false</code> otherwise.
-     * 
-     * @see #hashCode
+     *            object to be compared for equality with this {@code
+     *            UnresolvedPermission}.
+     * @return {@code true} if the specified object is equal to this {@code
+     *         UnresolvedPermission}, otherwise {@code false}.
+     * @since Android 1.0
      */
     public boolean equals(Object obj) {
         if (obj == this) {
@@ -155,13 +164,15 @@ public final class UnresolvedPermission extends Permission
     }
 
     /**
-     * Returns an integer hash code for the receiver. Any two objects which
-     * answer <code>true</code> when passed to <code>equals</code> must
-     * answer the same value for this method.
+     * Returns the hash code value for this {@code UnresolvedPermission}.
+     * Returns the same hash code for {@code UnresolvedPermission}s that are
+     * equal to each other as required by the general contract of
+     * {@link Object#hashCode}.
      * 
-     * @return the receiver's hash
-     * 
-     * @see #equals
+     * @return the hash code value for this {@code UnresolvedPermission}.
+     * @see Object#equals(Object)
+     * @see UnresolvedPermission#equals(Object)
+     * @since Android 1.0
      */
     public int hashCode() {
         if (hash == 0) {
@@ -177,38 +188,60 @@ public final class UnresolvedPermission extends Permission
     }
 
     /**
-     * Returns the actions associated with the receiver. Since
-     * UnresolvedPermission objects have no actions, answer the empty string.
+     * Returns an empty string since there are no actions allowed for {@code
+     * UnresolvedPermission}. The actions, specified in the constructor, are
+     * used when the concrete permission is resolved and created.
      * 
-     * @return the actions associated with the receiver.
+     * @return an empty string, indicating that there are no actions.
+     * @since Android 1.0
      */
     public String getActions() {
         return ""; //$NON-NLS-1$
     }
 
-    /** 
-     * @com.intel.drl.spec_ref 
+    /**
+     * Returns the name of the permission this {@code UnresolvedPermission} is
+     * resolved to.
+     * 
+     * @return the name of the permission this {@code UnresolvedPermission} is
+     *         resolved to.
+     * @since Android 1.0
      */
     public String getUnresolvedName() {
         return targetName;
     }
 
-    /** 
-     * @com.intel.drl.spec_ref 
+    /**
+     * Returns the actions of the permission this {@code UnresolvedPermission}
+     * is resolved to.
+     * 
+     * @return the actions of the permission this {@code UnresolvedPermission}
+     *         is resolved to.
+     * @since Android 1.0
      */
     public String getUnresolvedActions() {
         return targetActions;
     }
 
-    /** 
-     * @com.intel.drl.spec_ref 
+    /**
+     * Returns the fully qualified class name of the permission this {@code
+     * UnresolvedPermission} is resolved to.
+     * 
+     * @return the fully qualified class name of the permission this {@code
+     *         UnresolvedPermission} is resolved to.
+     * @since Android 1.0
      */
     public String getUnresolvedType() {
         return super.getName();
     }
 
-    /** 
-     * @com.intel.drl.spec_ref 
+    /**
+     * Returns the certificates of the permission this {@code
+     * UnresolvedPermission} is resolved to.
+     * 
+     * @return the certificates of the permission this {@code
+     *         UnresolvedPermission} is resolved to.
+     * @since Android 1.0
      */
     public Certificate[] getUnresolvedCerts() {
         if (targetCerts != null) {
@@ -220,28 +253,32 @@ public final class UnresolvedPermission extends Permission
     }
 
     /**
-     * Indicates whether the argument permission is implied by the
-     * receiver.  UnresolvedPermission objects imply nothing
-     * because nothing is known about them yet.
+     * Indicates whether the specified permission is implied by this {@code
+     * UnresolvedPermission}. {@code UnresolvedPermission} objects imply nothing
+     * since nothing is known about them yet.
+     * <p>
+     * Before actual implication checking, this method tries to resolve
+     * UnresolvedPermissions (if any) against the passed instance. Successfully
+     * resolved permissions (if any) are taken into account during further
+     * processing.
+     * </p>
      * 
-         * Before actual implication checking, this method tries to
-         * resolve UnresolvedPermissions (if any) against the passed
-         * instance. Successfully resolved permissions (if any) are
-         * taken into account during further processing.
-         *
      * @param permission
-     *            the permission to check
-     * @return always replies false
+     *            the permission to check.
+     * @return always {@code false}
+     * @since Android 1.0
      */
     public boolean implies(Permission permission) {
         return false;
     }
 
     /**
-     * Returns a string containing a concise, human-readable description of the
-     * receiver.
+     * Returns a string containing a concise, human-readable description of this
+     * {@code UnresolvedPermission} including its target name and its target
+     * actions.
      * 
-     * @return a printable representation for the receiver.
+     * @return a printable representation for this {@code UnresolvedPermission}.
+     * @since Android 1.0
      */
     public String toString() {
         return "(unresolved " + getName() + " " + targetName + " " //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -249,31 +286,36 @@ public final class UnresolvedPermission extends Permission
     }
 
     /**
-     * Returns a new PermissionCollection for holding permissions of this class.
-     * Answer null if any permission collection can be used.
+     * Returns a new {@code PermissionCollection} for holding {@code
+     * UnresolvedPermission} objects.
      * 
-     * @return a new PermissionCollection or null
-     * 
-     * @see java.security.BasicPermissionCollection
+     * @return a new PermissionCollection for holding {@code
+     *         UnresolvedPermission} objects.
+     * @since Android 1.0
      */
     public PermissionCollection newPermissionCollection() {
         return new UnresolvedPermissionCollection();
     }
 
     /**
-     * Tries to resolve this permission into the specified class. It is assumed
-     * that the class has a proper name (as returned by <code>getName()</code>
-     * of this unresolved permission), so no check is performed to verify this.
-     * However, the class must have all required certificates (as per
-     * <code>getUnresolvedCerts()</code>) among the passed collection of
-     * signers. If it does, a zero, one, and/or two-argument constructor is
-     * tried to instantiate a new permission, which is then returned. <br>
-     * If an appropriate constructor is not available or the class is
-     * improperly signed, <code>null</code> is returned.
+     * Tries to resolve this permission into the specified class.
+     * <p>
+     * It is assumed that the class has a proper name (as returned by {@code
+     * getName()} of this unresolved permission), so no check is performed to
+     * verify this. However, the class must have all required certificates (as
+     * per {@code getUnresolvedCerts()}) among the passed collection of signers.
+     * If it does, a zero, one, and/or two-argument constructor is tried to
+     * instantiate a new permission, which is then returned.
+     * </p>
+     * <p>
+     * If an appropriate constructor is not available or the class is improperly
+     * signed, {@code null} is returned.
+     * </p>
      * 
-     * @param targetType - a target class instance, must not be
-     *        <code>null</code>
-     * @param signers - actual signers of the targetType
+     * @param targetType
+     *            - a target class instance, must not be {@code null}
+     * @param signers
+     *            - actual signers of the targetType
      * @return resolved permission or null
      */
     Permission resolve(Class targetType) {
@@ -293,7 +335,7 @@ public final class UnresolvedPermission extends Permission
     /**
      * @com.intel.drl.spec_ref
      * 
-     * Outputs <code>type</code>,<code>name</code>,<code>actions</code>
+     * Outputs {@code type},{@code name},{@code actions}
      * fields via default mechanism; next manually writes certificates in the
      * following format: <br>
      *

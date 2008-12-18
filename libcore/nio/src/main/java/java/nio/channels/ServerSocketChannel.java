@@ -23,96 +23,103 @@ import java.nio.channels.spi.AbstractSelectableChannel;
 import java.nio.channels.spi.SelectorProvider;
 
 /**
- * A ServerSocketChannel is a partly abstracted stream-oriented listening socket
- * which is selectable. Binding and manipulation of socket options can only be done
- * through the associated <code>ServerSocket</code> object, returned by calling 
- * socket method. ServerSocketChannels can not be constructed for a pre-existing 
- * server socket, nor can it be assigned a SocketImpl.
- * <p> 
- * A Server-Socket channel is open but not bound when created by
- * <code>open</code> method. (Calling <code>accept</code> before bound will cause a
- * <code>NotYetBoundException</code>). It can be bound by calling the bind method 
- * of a related <code>ServerSocket</code> instance.</p>  
+ * A {@code ServerSocketChannel} is a partial abstraction of a selectable,
+ * stream-oriented listening socket. Binding and manipulation of socket options
+ * can only be done through the associated {@link ServerSocket} object, returned
+ * by calling {@code socket()}. ServerSocketChannels can not be constructed for
+ * an already existing server-socket, nor can a {@link java.net.SocketImpl} be assigned.
+ * <p>
+ * A server-socket channel is open but not bound when created by the {@code
+ * open()} method. Calling {@code accept} before bound will cause a
+ * {@link NotYetBoundException}. It can be bound by calling the bind method of a
+ * related {@code ServerSocket} instance.
+ * </p>
+ * 
+ * @since Android 1.0
  */
 public abstract class ServerSocketChannel extends AbstractSelectableChannel {
 
     /**
-     * Construct a new instance for ServerSocketChannel
+     * Constructs a new {@link ServerSocketChannel}.
+     * 
      * @param selectorProvider
-     *            An instance of SelectorProvider
+     *            an instance of SelectorProvider.
+     * @since Android 1.0
      */
-
     protected ServerSocketChannel(SelectorProvider selectorProvider) {
         super(selectorProvider);
     }
 
     /**
-     * Create an open and unbound server-socket channel.
+     * Creates an open and unbound server-socket channel.
      * <p>
-     * This channel is got by calling <code>openServerSocketChannel</code>
-     * method of the default <code>SelectorProvider </code> instance.
-     * </p> 
+     * This channel is created by calling {@code openServerSocketChannel} method
+     * of the default {@code SelectorProvider} instance.
+     * </p>
      * 
-     * @return The new created channel which is open but unbound.
+     * @return the new channel which is open but unbound.
      * @throws IOException
-     *             If some IO problem occurs.
+     *             if an I/O error occurs.
+     * @since Android 1.0
      */
     public static ServerSocketChannel open() throws IOException {
         return SelectorProvider.provider().openServerSocketChannel();
     }
 
     /**
-     * Get the valid operations of this channel. Server-socket channels support
-     * accepting operation.Currently the only supported operation is OP_ACCEPT.
-     * It always returns <code>SelectionKey.OP_ACCEPT</code>.
+     * Gets the valid operations of this channel. Server-socket channels support
+     * accepting operation, so this method returns {@code
+     * SelectionKey.OP_ACCEPT}.
      * 
      * @see java.nio.channels.SelectableChannel#validOps()
-     * @return Valid operations in bit-set.
+     * @return the operations supported by this channel.
+     * @since Android 1.0
      */
     public final int validOps() {
         return SelectionKey.OP_ACCEPT;
     }
 
     /**
-     * Return the related server-socket of this channel. 
-     * All public methods declared in returned object should be declared in <code>ServerSocket</code>.
+     * Return the server-socket assigned this channel, which does not declare
+     * any public methods that are not declared in {@code ServerSocket}.
      * 
-     * @return The related ServerSocket instance.
+     * @return the server-socket assigned to this channel.
+     * @since Android 1.0
      */
     public abstract ServerSocket socket();
 
     /**
-     * Accepts a connection to this socket.
+     * Accepts a connection to this server-socket channel.
      * <p>
-     * It returns null when the channel is non-blocking and no connections available, otherwise it
-     * blocks indefinitely until a new connection is available or an I/O error occurs.
-     * The returned channel will be in blocking mode any way. 
+     * This method returns {@code null} when this channel is non-blocking and no
+     * connection is available, otherwise it blocks until a new connection is
+     * available or an I/O error occurs. The socket channel returned by this
+     * method will always be in blocking mode.
+     * </p>
+     * <p>
+     * This method just executes the same security checks as the {@code
+     * accept()} method of the {@link ServerSocket} class.
      * </p>
      * 
-     * <p>
-     * This method just execute the same security checks as the accept method of
-     * the <code>ServerSocket</code> class.
-     * </p>
-     * 
-     * @return The accepted SocketChannel instance, or null as the channel is
-     *         non-blocking and no connections available.
-     * @throws ClosedChannelException
-     *             If the channel is already closed.
+     * @return the accepted {@code SocketChannel} instance, or {@code null} if
+     *         the channel is non-blocking and no connection is available.
      * @throws AsynchronousCloseException
-     *             If the channel is closed by another thread while this method
+     *             if this channel is closed by another thread while this method
      *             is in operation.
      * @throws ClosedByInterruptException
-     *             If another thread interrupts the calling thread while the
-     *             operation is in progress. The calling thread will have the
-     *             interrupt state set, and the channel will be closed.
-     * @throws NotYetBoundException
-     *             If the socket has not yet been bound.
-     * @throws SecurityException
-     *             If there is a security manager, and the new connection is not
-     *             permitted to access.
+     *             if another thread interrupts the calling thread while this
+     *             operation is in progress. The interrupt state of the calling
+     *             thread is set and the channel is closed.
+     * @throws ClosedChannelException
+     *             if this channel is closed.
      * @throws IOException
-     *             Some other IO error occurred.
-     * 
+     *             if another I/O error occurs.
+     * @throws NotYetBoundException
+     *             if the socket has not yet been bound.
+     * @throws SecurityException
+     *             if there is a security manager and it does not permit to
+     *             access the new connection.
+     * @since Android 1.0
      */
     public abstract SocketChannel accept() throws IOException;
 

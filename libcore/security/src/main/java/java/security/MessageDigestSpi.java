@@ -26,41 +26,60 @@ import java.nio.ByteBuffer;
 
 import org.apache.harmony.security.internal.nls.Messages;
 
-
 /**
- * This class is a Service Provider Interface (therefore the Spi suffix) for
- * digest algorithms to be supplied by providers. Examples of digest algorithms
- * are MD5 and SHA.
+ * {@code MessageDigestSpi} is the Service Provider Interface (SPI) definition
+ * for {@link MessageDigest}. Examples of digest algorithms are MD5 and SHA. A
+ * digest is a secure one way hash function for a stream of bytes. It acts like
+ * a fingerprint for a stream of bytes.
  * 
- * A digest is a secure hash function for a stream of bytes, like a fingerprint
- * for the stream of bytes.
- * 
+ * @see MessageDigest
+ * @since Android 1.0
  */
 public abstract class MessageDigestSpi {
     
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the engine digest length in bytes. If the implementation does not
+     * implement this function {@code 0} is returned.
      * 
+     * @return the digest length in bytes, or {@code 0}.
+     * @since Android 1.0
      */
     protected int engineGetDigestLength() {
         return 0;
     }
     
     /**
-     * @com.intel.drl.spec_ref
+     * Updates this {@code MessageDigestSpi} using the given {@code byte}.
      * 
+     * @param input
+     *            the {@code byte} to update this {@code MessageDigestSpi} with.
+     * @see #engineReset()
+     * @since Android 1.0
      */
     protected abstract void engineUpdate(byte input);
-    
+
     /**
-     * @com.intel.drl.spec_ref
+     * Updates this {@code MessageDigestSpi} using the given {@code byte[]}.
      * 
+     * @param input
+     *            the {@code byte} array.
+     * @param offset
+     *            the index of the first byte in {@code input} to update from.
+     * @param len
+     *            the number of bytes in {@code input} to update from.
+     * @throws IllegalArgumentException
+     *             if {@code offset} or {@code len} are not valid in respect to
+     *             {@code input}.
+     * @since Android 1.0
      */
     protected abstract void engineUpdate(byte[] input, int offset, int len);
     
     /**
-     * @com.intel.drl.spec_ref
+     * Updates this {@code MessageDigestSpi} using the given {@code input}.
      * 
+     * @param input
+     *            the {@code ByteBuffer}.
+     * @since Android 1.0
      */
     protected void engineUpdate(ByteBuffer input) {
         if (!input.hasRemaining()) {
@@ -82,14 +101,35 @@ public abstract class MessageDigestSpi {
     }
     
     /**
-     * @com.intel.drl.spec_ref
+     * Computes and returns the final hash value for this
+     * {@link MessageDigestSpi}. After the digest is computed the receiver is
+     * reset.
      * 
+     * @return the computed one way hash value.
+     * @see #engineReset()
+     * @since Android 1.0
      */
     protected abstract byte[] engineDigest();
     
     /**
-     * @com.intel.drl.spec_ref
+     * Computes and stores the final hash value for this
+     * {@link MessageDigestSpi}. After the digest is computed the receiver is
+     * reset.
      * 
+     * @param buf
+     *            the buffer to store the result in.
+     * @param offset
+     *            the index of the first byte in {@code buf} to store in.
+     * @param len
+     *            the number of bytes allocated for the digest.
+     * @return the number of bytes written to {@code buf}.
+     * @throws DigestException
+     *             if an error occures.
+     * @throws IllegalArgumentException
+     *             if {@code offset} or {@code len} are not valid in respect to
+     *             {@code buf}.
+     * @see #engineReset()
+     * @since Android 1.0
      */
     protected int engineDigest(byte[] buf, int offset, int len)
                     throws DigestException {
@@ -114,15 +154,13 @@ public abstract class MessageDigestSpi {
     }
     
     /**
-     * @com.intel.drl.spec_ref
+     * Puts this {@code MessageDigestSpi} back in an initial state, such that it
+     * is ready to compute a one way hash value.
      * 
+     * @since Android 1.0
      */
     protected abstract void engineReset();
     
-    /**
-     * @com.intel.drl.spec_ref
-     * 
-     */
     public Object clone() throws CloneNotSupportedException {
         return super.clone();
     }

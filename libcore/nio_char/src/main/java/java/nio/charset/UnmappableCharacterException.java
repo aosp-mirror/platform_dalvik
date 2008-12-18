@@ -20,12 +20,15 @@ package java.nio.charset;
 import org.apache.harmony.niochar.internal.nls.Messages;
 
 /**
- * Thrown when an unmappable character for the given charset is encountered.
+ * An {@code UnmappableCharacterException} is thrown when an unmappable
+ * character for the given charset is encountered.
+ * 
+ * @since Android 1.0
  */
 public class UnmappableCharacterException extends CharacterCodingException {
 
     /*
-     * This constant is used during deserialization to check the J2SE version
+     * This constant is used during deserialization to check the version
      * which created the serialized object.
      */
     private static final long serialVersionUID = -7026962371537706123L;
@@ -34,10 +37,11 @@ public class UnmappableCharacterException extends CharacterCodingException {
     private int inputLength;
 
     /**
-     * Constructs an instance of this exception.
+     * Constructs a new {@code UnmappableCharacterException}.
      * 
      * @param length
-     *            the length of the unmappable character
+     *            the length of the unmappable character.
+     * @since Android 1.0
      */
     public UnmappableCharacterException(int length) {
         this.inputLength = length;
@@ -46,7 +50,8 @@ public class UnmappableCharacterException extends CharacterCodingException {
     /**
      * Gets the length of the unmappable character.
      * 
-     * @return the length of the unmappable character
+     * @return the length of the unmappable character.
+     * @since Android 1.0
      */
     public int getInputLength() {
         return this.inputLength;
@@ -55,7 +60,8 @@ public class UnmappableCharacterException extends CharacterCodingException {
     /**
      * Gets a message describing this exception.
      * 
-     * @return a message describing this exception
+     * @return a message describing this exception.
+     * @since Android 1.0
      */
     public String getMessage() {
         // niochar.0A=The unmappable character length is {0}.

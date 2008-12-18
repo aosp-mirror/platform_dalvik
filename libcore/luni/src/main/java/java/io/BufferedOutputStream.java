@@ -24,32 +24,46 @@ import java.util.logging.Logger;
 // END android-added
 
 /**
- * BufferedOutputStream is a class which takes an output stream and
- * <em>buffers</em> the writes to that stream. In this way, costly interaction
- * with the original output stream can be minimized by writing buffered amounts
- * of data infrequently. The drawback is that extra space is required to hold
- * the buffer and copying takes place when writing that buffer.
+ * Wraps an existing {@link OutputStream} and <em>buffers</em> the output.
+ * Expensive interaction with the underlying input stream is minimized, since
+ * most (smaller) requests can be satisfied by accessing the buffer alone. The
+ * drawback is that some extra space is required to hold the buffer and that
+ * copying takes place when flushing that buffer, but this is usually outweighed
+ * by the performance benefits.
+ * 
+ * <p/>A typical application pattern for the class looks like this:<p/>
+ * 
+ * <pre>
+ * BufferedOutputStream buf = new BufferedOutputStream(new FileOutputStream(&quot;file.java&quot;));
+ * </pre>
  * 
  * @see BufferedInputStream
+ * 
+ * @since Android 1.0
  */
 public class BufferedOutputStream extends FilterOutputStream {
     /**
-     * The buffer containing the bytes to be written to the target OutputStream.
+     * The buffer containing the bytes to be written to the target stream.
+     * 
+     * @since Android 1.0
      */
     protected byte[] buf;
 
     /**
-     * The total number of bytes inside the byte array <code>buf</code>.
+     * The total number of bytes inside the byte array {@code buf}.
+     * 
+     * @since Android 1.0
      */
     protected int count;
 
     /**
-     * Constructs a new BufferedOutputStream on the OutputStream
-     * <code>out</code>. The default buffer size (8Kb) is allocated and all
-     * writes are now filtered through this stream.
+     * Constructs a new {@code BufferedOutputStream} on the {@link OutputStream}
+     * {@code out}. The buffer size is set to the default value of 8 KB.
      * 
      * @param out
-     *            the OutputStream to buffer writes on.
+     *            the {@code OutputStream} for which write operations are
+     *            buffered.
+     * @since Android 1.0
      */
     public BufferedOutputStream(OutputStream out) {
         super(out);
@@ -57,12 +71,11 @@ public class BufferedOutputStream extends FilterOutputStream {
 
         // BEGIN android-added
         /*
-         * For Android, we want to discourage the use of this
-         * constructor (with its arguably too-large default), so we
-         * note its use in the log. We don't disable it, nor do we
-         * alter the default, however, because we still aim to behave
-         * compatibly, and the default value, though not documented,
-         * is established by convention.
+         * For Android, we want to discourage the use of this constructor (with
+         * its arguably too-large default), so we note its use in the log. We
+         * don't disable it, nor do we alter the default, however, because we
+         * still aim to behave compatibly, and the default value, though not
+         * documented, is established by convention.
          */
         Logger.global.info(
                 "Default buffer size used in BufferedOutputStream " +
@@ -72,16 +85,16 @@ public class BufferedOutputStream extends FilterOutputStream {
     }
 
     /**
-     * Constructs a new BufferedOutputStream on the OutputStream
-     * <code>out</code>. The buffer size is set to <code>size</code> and
-     * all writes are now filtered through this stream.
+     * Constructs a new {@code BufferedOutputStream} on the {@link OutputStream}
+     * {@code out}. The buffer size is set to {@code size}.
      * 
      * @param out
-     *            the OutputStream to buffer writes on.
+     *            the output stream for which write operations are buffered.
      * @param size
      *            the size of the buffer in bytes.
      * @throws IllegalArgumentException
-     *             the size is <= 0
+     *             if {@code size <= 0}.
+     * @since Android 1.0
      */
     public BufferedOutputStream(OutputStream out, int size) {
         super(out);
@@ -93,13 +106,12 @@ public class BufferedOutputStream extends FilterOutputStream {
     }
 
     /**
-     * Flush this BufferedOutputStream to ensure all pending data is written out
-     * to the target OutputStream. In addition, the target stream is also
-     * flushed.
+     * Flushes this stream to ensure all pending data is written out to the
+     * target stream. In addition, the target stream is flushed.
      * 
      * @throws IOException
-     *             If an error occurs attempting to flush this
-     *             BufferedOutputStream.
+     *             if an error occurs attempting to flush this stream.
+     * @since Android 1.0
      */
     @Override
     public synchronized void flush() throws IOException {
@@ -111,27 +123,28 @@ public class BufferedOutputStream extends FilterOutputStream {
     }
 
     /**
-     * Writes <code>count</code> <code>bytes</code> from the byte array
-     * <code>buffer</code> starting at <code>offset</code> to this
-     * BufferedOutputStream. If there is room in the buffer to hold the bytes,
-     * they are copied in. If not, the buffered bytes plus the bytes in
-     * <code>buffer</code> are written to the target stream, the target is
-     * flushed, and the buffer is cleared.
+     * Writes {@code count} bytes from the byte array {@code buffer} starting at
+     * {@code offset} to this stream. If there is room in the buffer to hold the
+     * bytes, they are copied in. If not, the buffered bytes plus the bytes in
+     * {@code buffer} are written to the target stream, the target is flushed,
+     * and the buffer is cleared.
      * 
      * @param buffer
-     *            the buffer to be written
+     *            the buffer to be written.
      * @param offset
-     *            offset in buffer to get bytes
+     *            the start position in {@code buffer} from where to get bytes.
      * @param length
-     *            number of bytes in buffer to write
-     * 
-     * @throws IOException
-     *             If an error occurs attempting to write to this
-     *             BufferedOutputStream.
-     * @throws NullPointerException
-     *             If buffer is null.
+     *            the number of bytes from {@code buffer} to write to this
+     *            stream.
      * @throws ArrayIndexOutOfBoundsException
-     *             If offset or count is outside of bounds.
+     *             if {@code offset < 0} or {@code length < 0}, or if
+     *             {@code offset + length} is greater than the size of
+     *             {@code buffer}.
+     * @throws IOException
+     *             if an error occurs attempting to write to this stream.
+     * @throws NullPointerException
+     *             if {@code buffer} is {@code null}.
+     * @since Android 1.0
      */
     @Override
     public synchronized void write(byte[] buffer, int offset, int length)
@@ -140,10 +153,16 @@ public class BufferedOutputStream extends FilterOutputStream {
             // K0047=buffer is null
             throw new NullPointerException(Msg.getString("K0047")); //$NON-NLS-1$
         }
-        if (offset < 0 || offset > buffer.length - length || length < 0) {
+        // BEGIN android-changed
+        // Exception priorities (in case of multiple errors) differ from
+        // RI, but are spec-compliant.
+        // used (offset | length) < 0 instead of (offset < 0) || (length < 0)
+        // to safe one operation
+        if ((offset | length) < 0 || offset > buffer.length - length) {
             // K002f=Arguments out of bounds
             throw new ArrayIndexOutOfBoundsException(Msg.getString("K002f")); //$NON-NLS-1$
         }
+        // END android-changed
         if (count == 0 && length >= buf.length) {
             out.write(buffer, offset, length);
             return;
@@ -173,19 +192,17 @@ public class BufferedOutputStream extends FilterOutputStream {
     }
 
     /**
-     * Writes the specified byte <code>oneByte</code> to this
-     * BufferedOutputStream. Only the low order byte of <code>oneByte</code>
-     * is written. If there is room in the buffer, the byte is copied in and the
-     * count incremented. Otherwise, the buffer plus <code>oneByte</code> are
-     * written to the target stream, the target is flushed, and the buffer is
-     * reset.
+     * Writes one byte to this stream. Only the low order byte of the integer
+     * {@code oneByte} is written. If there is room in the buffer, the byte is
+     * copied into the buffer and the count incremented. Otherwise, the buffer
+     * plus {@code oneByte} are written to the target stream, the target is
+     * flushed, and the buffer is reset.
      * 
      * @param oneByte
-     *            the byte to be written
-     * 
+     *            the byte to be written.
      * @throws IOException
-     *             If an error occurs attempting to write to this
-     *             BufferedOutputStream.
+     *             if an error occurs attempting to write to this stream.
+     * @since Android 1.0
      */
     @Override
     public synchronized void write(int oneByte) throws IOException {

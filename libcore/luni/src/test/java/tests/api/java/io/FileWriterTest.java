@@ -17,6 +17,11 @@
 
 package tests.api.java.io;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass; 
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -25,46 +30,62 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 
+@TestTargetClass(FileWriter.class) 
 public class FileWriterTest extends junit.framework.TestCase {
 
-	FileWriter fw;
+    FileWriter fw;
 
-	FileInputStream fis;
+    FileInputStream fis;
 
-	BufferedWriter bw;
+    BufferedWriter bw;
 
-	File f;
+    File f;
 
-	FileOutputStream fos;
+    FileOutputStream fos;
 
-	BufferedReader br;
+    BufferedReader br;
 
-	/**
-	 * @tests java.io.FileWriter#FileWriter(java.io.File)
-	 */
-	public void test_ConstructorLjava_io_File() {
-		// Test for method java.io.FileWriter(java.io.File)
-		try {
-			fos = new FileOutputStream(f.getPath());
-			fos.write("Test String".getBytes());
-			fos.close();
-			bw = new BufferedWriter(new FileWriter(f));
-			bw.write(" After test string", 0, 18);
-			bw.close();
-			br = new BufferedReader(new FileReader(f.getPath()));
-			char[] buf = new char[100];
-			int r = br.read(buf);
-			br.close();
-			assertEquals("Failed to write correct chars", " After test string", new String(buf, 0, r)
-					);
-		} catch (Exception e) {
-			fail("Exception during Constructor test " + e.toString());
-		}
-	}
+    /**
+     * @tests java.io.FileWriter#FileWriter(java.io.File)
+     */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "IOException checking missed.",
+            targets = { @TestTarget(methodName = "FileWriter", 
+                                    methodArgs = {java.io.File.class})                         
+            }
+        )      
+    public void test_ConstructorLjava_io_File() {
+        // Test for method java.io.FileWriter(java.io.File)
+        try {
+            fos = new FileOutputStream(f.getPath());
+            fos.write("Test String".getBytes());
+            fos.close();
+            bw = new BufferedWriter(new FileWriter(f));
+            bw.write(" After test string", 0, 18);
+            bw.close();
+            br = new BufferedReader(new FileReader(f.getPath()));
+            char[] buf = new char[100];
+            int r = br.read(buf);
+            br.close();
+            assertEquals("Failed to write correct chars", " After test string", new String(buf, 0, r)
+                    );
+        } catch (Exception e) {
+            fail("Exception during Constructor test " + e.toString());
+        }
+    }
 
     /**
      * @tests java.io.FileWriter#FileWriter(java.io.File, boolean)
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Verifies FileWriter(java.io.File, boolean) constructor.",
+            targets = { @TestTarget(methodName = "FileWriter", 
+                                    methodArgs = {java.io.File.class,
+                                                  boolean.class})                         
+            }
+        )              
     public void test_ConstructorLjava_io_FileZ() throws Exception {
         // Test for method java.io.FileWriter(java.io.File)
         //append = true
@@ -106,117 +127,139 @@ public class FileWriterTest extends junit.framework.TestCase {
         }
     }
     
-	/**
-	 * @tests java.io.FileWriter#FileWriter(java.io.FileDescriptor)
-	 */
-	public void test_ConstructorLjava_io_FileDescriptor() {
-		// Test for method java.io.FileWriter(java.io.FileDescriptor)
-		try {
-			fos = new FileOutputStream(f.getPath());
-			fos.write("Test String".getBytes());
-			fos.close();
-			fis = new FileInputStream(f.getPath());
-			br = new BufferedReader(new FileReader(fis.getFD()));
-			char[] buf = new char[100];
-			int r = br.read(buf);
-			br.close();
-			fis.close();
-			assertTrue("Failed to write correct chars: "
-					+ new String(buf, 0, r), new String(buf, 0, r)
-					.equals("Test String"));
-		} catch (Exception e) {
-			fail("Exception during Constructor test " + e.toString());
-		}
-	}
+    /**
+     * @tests java.io.FileWriter#FileWriter(java.io.FileDescriptor)
+     */
+    @TestInfo(
+            level = TestLevel.COMPLETE,
+            purpose = "Verifies FileWriter(java.io.FileDescriptor) constructor.",
+            targets = { @TestTarget(methodName = "FileWriter", 
+                                    methodArgs = {java.io.FileDescriptor.class})                         
+            }
+        )          
+    public void test_ConstructorLjava_io_FileDescriptor() {
+        // Test for method java.io.FileWriter(java.io.FileDescriptor)
+        try {
+            fos = new FileOutputStream(f.getPath());
+            fos.write("Test String".getBytes());
+            fos.close();
+            fis = new FileInputStream(f.getPath());
+            br = new BufferedReader(new FileReader(fis.getFD()));
+            char[] buf = new char[100];
+            int r = br.read(buf);
+            br.close();
+            fis.close();
+            assertTrue("Failed to write correct chars: "
+                    + new String(buf, 0, r), new String(buf, 0, r)
+                    .equals("Test String"));
+        } catch (Exception e) {
+            fail("Exception during Constructor test " + e.toString());
+        }
+    }
 
-	/**
-	 * @tests java.io.FileWriter#FileWriter(java.lang.String)
-	 */
-	public void test_ConstructorLjava_lang_String() {
-		// Test for method java.io.FileWriter(java.lang.String)
-		try {
-			fos = new FileOutputStream(f.getPath());
-			fos.write("Test String".getBytes());
-			fos.close();
-			bw = new BufferedWriter(new FileWriter(f.getPath()));
-			bw.write(" After test string", 0, 18);
-			bw.close();
-			br = new BufferedReader(new FileReader(f.getPath()));
-			char[] buf = new char[100];
-			int r = br.read(buf);
-			br.close();
-			assertEquals("Failed to write correct chars", " After test string", new String(buf, 0, r)
-					);
-		} catch (Exception e) {
-			fail("Exception during Constructor test " + e.toString());
-		}
-	}
+    /**
+     * @tests java.io.FileWriter#FileWriter(java.lang.String)
+     */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "IOException checking missed.",
+            targets = { @TestTarget(methodName = "FileWriter", 
+                                    methodArgs = {java.lang.String.class})                         
+            }
+        )     
+    public void test_ConstructorLjava_lang_String() {
+        // Test for method java.io.FileWriter(java.lang.String)
+        try {
+            fos = new FileOutputStream(f.getPath());
+            fos.write("Test String".getBytes());
+            fos.close();
+            bw = new BufferedWriter(new FileWriter(f.getPath()));
+            bw.write(" After test string", 0, 18);
+            bw.close();
+            br = new BufferedReader(new FileReader(f.getPath()));
+            char[] buf = new char[100];
+            int r = br.read(buf);
+            br.close();
+            assertEquals("Failed to write correct chars", " After test string", new String(buf, 0, r)
+                    );
+        } catch (Exception e) {
+            fail("Exception during Constructor test " + e.toString());
+        }
+    }
 
-	/**
-	 * @tests java.io.FileWriter#FileWriter(java.lang.String, boolean)
-	 */
-	public void test_ConstructorLjava_lang_StringZ() {
-		// Test for method java.io.FileWriter(java.lang.String, boolean)
+    /**
+     * @tests java.io.FileWriter#FileWriter(java.lang.String, boolean)
+     */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "IOException checking missed.",
+            targets = { @TestTarget(methodName = "FileWriter", 
+                                    methodArgs = {java.lang.String.class,
+                                                  boolean.class})                         
+            }
+        )       
+    public void test_ConstructorLjava_lang_StringZ() {
+        // Test for method java.io.FileWriter(java.lang.String, boolean)
 
-		try {
-			fos = new FileOutputStream(f.getPath());
-			fos.write("Test String".getBytes());
-			fos.close();
-			bw = new BufferedWriter(new FileWriter(f.getPath(), true));
-			bw.write(" After test string", 0, 18);
-			bw.close();
-			br = new BufferedReader(new FileReader(f.getPath()));
-			char[] buf = new char[100];
-			int r = br.read(buf);
-			br.close();
-			assertEquals("Failed to append to file", "Test String After test string", new String(buf, 0, r)
-					);
+        try {
+            fos = new FileOutputStream(f.getPath());
+            fos.write("Test String".getBytes());
+            fos.close();
+            bw = new BufferedWriter(new FileWriter(f.getPath(), true));
+            bw.write(" After test string", 0, 18);
+            bw.close();
+            br = new BufferedReader(new FileReader(f.getPath()));
+            char[] buf = new char[100];
+            int r = br.read(buf);
+            br.close();
+            assertEquals("Failed to append to file", "Test String After test string", new String(buf, 0, r)
+                    );
 
-			fos = new FileOutputStream(f.getPath());
-			fos.write("Test String".getBytes());
-			fos.close();
-			bw = new BufferedWriter(new FileWriter(f.getPath(), false));
-			bw.write(" After test string", 0, 18);
-			bw.close();
-			br = new BufferedReader(new FileReader(f.getPath()));
-			buf = new char[100];
-			r = br.read(buf);
-			br.close();
-			assertEquals("Failed to overwrite file", " After test string", new String(buf, 0, r)
-					);
-		} catch (Exception e) {
-			fail("Exception during Constructor test " + e.toString());
-		}
+            fos = new FileOutputStream(f.getPath());
+            fos.write("Test String".getBytes());
+            fos.close();
+            bw = new BufferedWriter(new FileWriter(f.getPath(), false));
+            bw.write(" After test string", 0, 18);
+            bw.close();
+            br = new BufferedReader(new FileReader(f.getPath()));
+            buf = new char[100];
+            r = br.read(buf);
+            br.close();
+            assertEquals("Failed to overwrite file", " After test string", new String(buf, 0, r)
+                    );
+        } catch (Exception e) {
+            fail("Exception during Constructor test " + e.toString());
+        }
 
-	}
+    }
 
-	/**
-	 * Sets up the fixture, for example, open a network connection. This method
-	 * is called before a test is executed.
-	 */
-	protected void setUp() {
+    /**
+     * Sets up the fixture, for example, open a network connection. This method
+     * is called before a test is executed.
+     */
+    protected void setUp() {
 
-		f = new File(System.getProperty("user.home"), "writer.tst");
+        f = new File(System.getProperty("user.home"), "writer.tst");
 
-		if (f.exists())
-			if (!f.delete()) {
-				fail("Unable to delete test file");
-			}
-	}
+        if (f.exists())
+            if (!f.delete()) {
+                fail("Unable to delete test file");
+            }
+    }
 
-	/**
-	 * Tears down the fixture, for example, close a network connection. This
-	 * method is called after a test is executed.
-	 */
-	protected void tearDown() {
-		try {
-			bw.close();
-		} catch (Exception e) {
-		}
-		try {
-			fis.close();
-		} catch (Exception e) {
-		}
-		f.delete();
-	}
+    /**
+     * Tears down the fixture, for example, close a network connection. This
+     * method is called after a test is executed.
+     */
+    protected void tearDown() {
+        try {
+            bw.close();
+        } catch (Exception e) {
+        }
+        try {
+            fis.close();
+        } catch (Exception e) {
+        }
+        f.delete();
+    }
 }

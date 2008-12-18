@@ -17,6 +17,11 @@
 
 package tests.api.javax.net.ssl;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyStore;
@@ -40,7 +45,7 @@ import junit.framework.TestCase;
  * Tests for <code>TrustManagerFactory</code> class constructors and methods.
  * 
  */
-
+@TestTargetClass(TrustManagerFactory.class) 
 public class TrustManagerFactory1Test extends TestCase {
   
     private static final String srvTrustManagerFactory = "TrustManagerFactory";
@@ -98,6 +103,15 @@ public class TrustManagerFactory1Test extends TestCase {
      * constructor
      * Assertion: created new TrustManagerFactory object
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "TrustManagerFactory",
+          methodArgs = {TrustManagerFactorySpi.class, Provider.class, String.class}
+        )
+    })
     public void test_ConstructorLjavax_net_ssl_TrustManagerFactorySpiLjava_security_ProviderLjava_lang_String()
         throws NoSuchAlgorithmException {
         if (!DEFSupported) {
@@ -130,28 +144,46 @@ public class TrustManagerFactory1Test extends TestCase {
      * @throws NoSuchAlgorithmException 
      * @throws NoSuchProviderException 
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getAlgorithm",
+          methodArgs = {}
+        )
+    })
     public void test_getAlgorithm()
         throws NoSuchAlgorithmException, NoSuchProviderException {
         if (!DEFSupported) fail(NotSupportedMsg);
         assertEquals("Incorrect algorithm",
-        		defaultAlgorithm,
-        		TrustManagerFactory
-        		.getInstance(defaultAlgorithm).getAlgorithm());
+                defaultAlgorithm,
+                TrustManagerFactory
+                .getInstance(defaultAlgorithm).getAlgorithm());
         assertEquals("Incorrect algorithm",
-        		defaultAlgorithm,
-        		TrustManagerFactory
-        		.getInstance(defaultAlgorithm, defaultProviderName)
-        		.getAlgorithm());
+                defaultAlgorithm,
+                TrustManagerFactory
+                .getInstance(defaultAlgorithm, defaultProviderName)
+                .getAlgorithm());
         assertEquals("Incorrect algorithm",
-        		defaultAlgorithm,
-        		TrustManagerFactory.getInstance(defaultAlgorithm, defaultProvider)
-        		.getAlgorithm());
+                defaultAlgorithm,
+                TrustManagerFactory.getInstance(defaultAlgorithm, defaultProvider)
+                .getAlgorithm());
     }
 
     /**
      *  Test for <code>getDefaultAlgorithm()</code> method
      * Assertion: returns value which is specifoed in security property
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getDefaultAlgorithm",
+          methodArgs = {}
+        )
+    })
     public void test_getDefaultAlgorithm() {
         if (!DEFSupported) {
             fail(NotSupportedMsg);
@@ -180,6 +212,15 @@ public class TrustManagerFactory1Test extends TestCase {
      * Assertions: returns security property "ssl.TrustManagerFactory.algorithm"; 
      * returns instance of TrustManagerFactory
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getInstance",
+          methodArgs = {String.class}
+        )
+    })
     public void test_getInstanceLjava_lang_String01() throws NoSuchAlgorithmException {
         if (!DEFSupported) {
             fail(NotSupportedMsg);
@@ -201,6 +242,15 @@ public class TrustManagerFactory1Test extends TestCase {
      * throws NullPointerException when algorithm is null;
      * throws NoSuchAlgorithmException when algorithm is not correct;
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getInstance",
+          methodArgs = {String.class}
+        )
+    })
     public void test_getInstanceLjava_lang_String02() {
         try {
             TrustManagerFactory.getInstance(null);
@@ -224,6 +274,15 @@ public class TrustManagerFactory1Test extends TestCase {
      * Assertion: throws IllegalArgumentException when provider is null
      * or empty
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getInstance",
+          methodArgs = {String.class, String.class}
+        )
+    })
     public void test_getInstanceLjava_lang_StringLjava_lang_String01() throws NoSuchProviderException,
             NoSuchAlgorithmException {
         if (!DEFSupported) {
@@ -252,6 +311,15 @@ public class TrustManagerFactory1Test extends TestCase {
      * throws NullPointerException when algorithm is null;
      * throws NoSuchAlgorithmException when algorithm is not correct;
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getInstance",
+          methodArgs = {String.class, String.class}
+        )
+    })
     public void test_getInstanceLjava_lang_StringLjava_lang_String02() throws NoSuchProviderException {
         if (!DEFSupported) {
             fail(NotSupportedMsg);
@@ -280,6 +348,15 @@ public class TrustManagerFactory1Test extends TestCase {
      * Assertion: throws NoSuchProviderException when provider has
      * invalid value
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getInstance",
+          methodArgs = {String.class, String.class}
+        )
+    })
     public void test_getInstanceLjava_lang_StringLjava_lang_String03() throws NoSuchAlgorithmException {
         if (!DEFSupported) {
             fail(NotSupportedMsg);
@@ -304,6 +381,15 @@ public class TrustManagerFactory1Test extends TestCase {
      * method
      * Assertion: returns instance of TrustManagerFactory
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getInstance",
+          methodArgs = {String.class, String.class}
+        )
+    })
     public void test_getInstanceLjava_lang_StringLjava_lang_String04() throws NoSuchAlgorithmException,
             NoSuchProviderException {
         if (!DEFSupported) {
@@ -328,6 +414,15 @@ public class TrustManagerFactory1Test extends TestCase {
      * method
      * Assertion: throws IllegalArgumentException when provider is null
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getInstance",
+          methodArgs = {String.class, Provider.class}
+        )
+    })
     public void test_getInstanceLjava_lang_StringLjava_security_Provider01() throws NoSuchAlgorithmException {
         if (!DEFSupported) {
             fail(NotSupportedMsg);
@@ -350,6 +445,15 @@ public class TrustManagerFactory1Test extends TestCase {
      * throws NullPointerException when algorithm is null;
      * throws NoSuchAlgorithmException when algorithm is not correct;
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getInstance",
+          methodArgs = {String.class, Provider.class}
+        )
+    })
     public void test_getInstanceLjava_lang_StringLjava_security_Provider02() {
         if (!DEFSupported) {
             fail(NotSupportedMsg);
@@ -377,6 +481,15 @@ public class TrustManagerFactory1Test extends TestCase {
      * method
      * Assertion: returns instance of TrustManagerFactory
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getInstance",
+          methodArgs = {String.class, Provider.class}
+        )
+    })
     public void test_getInstanceLjava_lang_StringLjava_security_Provider03() throws NoSuchAlgorithmException {
         if (!DEFSupported) {
             fail(NotSupportedMsg);
@@ -400,22 +513,31 @@ public class TrustManagerFactory1Test extends TestCase {
      * @throws NoSuchAlgorithmException 
      * @throws NoSuchProviderException 
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getProvider",
+          methodArgs = {}
+        )
+    })
     public void test_getProvider()
         throws NoSuchAlgorithmException, NoSuchProviderException {
-    	if (!DEFSupported) fail(NotSupportedMsg);
+        if (!DEFSupported) fail(NotSupportedMsg);
         assertEquals("Incorrect provider",
-        		defaultProvider,
-        		TrustManagerFactory
-        		.getInstance(defaultAlgorithm).getProvider());
+                defaultProvider,
+                TrustManagerFactory
+                .getInstance(defaultAlgorithm).getProvider());
         assertEquals("Incorrect provider",
-        		defaultProvider,
-        		TrustManagerFactory
-        		.getInstance(defaultAlgorithm, defaultProviderName)
-        		.getProvider());
+                defaultProvider,
+                TrustManagerFactory
+                .getInstance(defaultAlgorithm, defaultProviderName)
+                .getProvider());
         assertEquals("Incorrect provider",
-        		defaultProvider,
-        		TrustManagerFactory.getInstance(defaultAlgorithm, defaultProvider)
-        		.getProvider());
+                defaultProvider,
+                TrustManagerFactory.getInstance(defaultAlgorithm, defaultProvider)
+                .getProvider());
     }
     
     /**
@@ -425,7 +547,16 @@ public class TrustManagerFactory1Test extends TestCase {
      * @throws CertificateException 
      * @throws NoSuchAlgorithmException 
      */
-    public void test_getTrustManagers()
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getTrustManagers",
+          methodArgs = {}
+        )
+    })
+    public void _test_getTrustManagers()
         throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {
         KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
         ks.load(null, null);            
@@ -436,7 +567,7 @@ public class TrustManagerFactory1Test extends TestCase {
             try {
                 trustMF[i].init((KeyStore)null);
             } catch (KeyStoreException e) {
-            	fail("Unexpected exception " + e.toString());
+                fail("Unexpected exception " + e.toString());
             }
             trustMF[i].init(ks);
             tm = trustMF[i].getTrustManagers();
@@ -450,6 +581,15 @@ public class TrustManagerFactory1Test extends TestCase {
      * Test for <code>init(KeyStore keyStore)</code>
      * Assertion: returns not empty TrustManager array
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Method init wasn't invoked in this test",
+      targets = {
+        @TestTarget(
+          methodName = "init",
+          methodArgs = {KeyStore.class}
+        )
+    })
     public void test_initLjava_security_KeyStore() throws NoSuchAlgorithmException,
             KeyStoreException {
         if (!DEFSupported) {
@@ -475,6 +615,15 @@ public class TrustManagerFactory1Test extends TestCase {
      * Assertion:
      * throws InvalidAlgorithmParameterException when params is null
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "InvalidAlgorithmParameterException case was tested only",
+      targets = {
+        @TestTarget(
+          methodName = "init",
+          methodArgs = {ManagerFactoryParameters.class}
+        )
+    })
     public void test_initLjavax_net_ssl_ManagerFactoryParameters()
         throws NoSuchAlgorithmException,
         KeyStoreException, InvalidAlgorithmParameterException  {

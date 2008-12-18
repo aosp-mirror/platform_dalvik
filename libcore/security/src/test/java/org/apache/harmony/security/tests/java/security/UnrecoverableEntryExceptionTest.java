@@ -22,10 +22,15 @@
 
 package org.apache.harmony.security.tests.java.security;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+
 import java.security.UnrecoverableEntryException;
 
 import junit.framework.TestCase;
-
+@TestTargetClass( UnrecoverableEntryException.class)
 /**
  * Tests for <code>UnrecoverableEntryException</code> class
  * 
@@ -52,6 +57,15 @@ public class UnrecoverableEntryExceptionTest extends TestCase {
     /*
      * Class under test for void UnrecoverableEntryException()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "UnrecoverableEntryException",
+          methodArgs = {}
+        )
+    })
     public void testUnrecoverableEntryException() {
         UnrecoverableEntryException tE = new UnrecoverableEntryException();
         assertNull("getMessage() must return null.", tE.getMessage());
@@ -61,6 +75,15 @@ public class UnrecoverableEntryExceptionTest extends TestCase {
     /*
      * Class under test for void UnrecoverableEntryException(String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verification with null string parameter missed",
+      targets = {
+        @TestTarget(
+          methodName = "UnrecoverableEntryException",
+          methodArgs = {String.class}
+        )
+    })
     public void testUnrecoverableEntryExceptionString() {
         UnrecoverableEntryException tE;
         for (int i = 0; i < msgs.length; i++) {

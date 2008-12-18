@@ -22,6 +22,11 @@
 
 package tests.api.javax.net;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
@@ -32,27 +37,45 @@ import javax.net.ServerSocketFactory;
 
 import junit.framework.TestCase;
 
-
+ 
 /**
  * Tests for <code>ServerSocketFactory</code> class constructors and methods.
  */
-
+@TestTargetClass(ServerSocketFactory.class)
 public class ServerSocketFactoryTest extends TestCase {
 
-	/**
-	 * @tests javax.net.SocketFactory#SocketFactory()
-	 */
-	public void test_Constructor() {
-		try {
-			new MyServerSocketFactory();
-		} catch (Exception e) {
-			fail("Unexpected exception " + e.toString());
-		}
-	}
+    /**
+     * @tests javax.net.SocketFactory#SocketFactory()
+     */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "ServerSocketFactory",
+          methodArgs = {}
+        )
+    })
+    public void test_Constructor() {
+        try {
+            new MyServerSocketFactory();
+        } catch (Exception e) {
+            fail("Unexpected exception " + e.toString());
+        }
+    }
 
-	/**
+    /**
      * @tests javax.net.ServerSocketFactory#createServerSocket()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "createServerSocket",
+          methodArgs = {}
+        )
+    })
     public final void test_createServerSocket() {
         ServerSocketFactory sf = new MyServerSocketFactory();
         try {
@@ -67,6 +90,15 @@ public class ServerSocketFactoryTest extends TestCase {
     /**
      * @tests javax.net.ServerSocketFactory#getDefault()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getDefault",
+          methodArgs = {}
+        )
+    })
     public final void test_getDefault() {
         ServerSocketFactory sf = ServerSocketFactory.getDefault();
         ServerSocket s;
@@ -89,11 +121,11 @@ public class ServerSocketFactoryTest extends TestCase {
 }
 
 class MyServerSocketFactory extends ServerSocketFactory {
-	
-	public MyServerSocketFactory() {
-		super();
-	}
-	
+    
+    public MyServerSocketFactory() {
+        super();
+    }
+    
     public ServerSocket createServerSocket(int port) throws IOException, UnknownHostException {
         throw new IOException();
     }

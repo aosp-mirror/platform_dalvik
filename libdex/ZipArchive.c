@@ -559,7 +559,12 @@ static bool inflateToFile(int fd, const void* inBuf, long uncompLen,
             long writeSize = zstream.next_out - writeBuf;
             int cc = write(fd, writeBuf, writeSize);
             if (cc != (int) writeSize) {
-                LOGW("write failed in inflate (%d vs %ld)\n", cc, writeSize);
+                if (cc < 0) {
+                    LOGW("write failed in inflate: %s\n", strerror(errno));
+                } else {
+                    LOGW("partial write in inflate (%d vs %ld)\n",
+                        cc, writeSize);
+                }
                 goto z_bail;
             }
 

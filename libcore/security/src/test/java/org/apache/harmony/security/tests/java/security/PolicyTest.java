@@ -22,6 +22,11 @@
 
 package org.apache.harmony.security.tests.java.security;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.File;
 import java.io.FilePermission;
 import java.net.MalformedURLException;
@@ -42,8 +47,7 @@ import org.apache.harmony.security.tests.support.SecurityChecker;
 import org.apache.harmony.security.tests.support.TestUtils;
 
 import junit.framework.TestCase;
-
-
+@TestTargetClass(Policy.class)
 /**
  * Tests for <code>Policy</code>
  */
@@ -56,8 +60,17 @@ public class PolicyTest extends TestCase {
     }
 
     /**
-     * @tests java.security.Policy#setPolicy(java.security.Policy)
+     * @tests constructor Policy()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Policy",
+          methodArgs = {}
+        )
+    })
     public void test_constructor() {
         try {
             new TestProvider();
@@ -69,6 +82,19 @@ public class PolicyTest extends TestCase {
     /**
      * @tests java.security.Policy#setPolicy(java.security.Policy)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setPolicy",
+          methodArgs = {Policy.class}
+        ),
+        @TestTarget(
+          methodName = "getPolicy",
+          methodArgs = {}
+        )
+    })
     public void test_setPolicyLjava_security_Policy() {
         SecurityManager old = System.getSecurityManager();
         Policy oldPolicy = Policy.getPolicy();
@@ -97,6 +123,19 @@ public class PolicyTest extends TestCase {
     /**
      * @tests java.security.Policy#getPolicy()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getPolicy",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "setPolicy",
+          methodArgs = {Policy.class}
+        )
+    })
     public void test_getPolicy() {
         SecurityManager old = System.getSecurityManager();
         Policy oldPolicy = Policy.getPolicy();
@@ -136,6 +175,15 @@ public class PolicyTest extends TestCase {
     /**
      * Tests that getPermissions() does proper permission evaluation.
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getPermissions",
+          methodArgs = {ProtectionDomain.class}
+        )
+    })
     public void testGetPermissions() {
         SecurityPermission sp = new SecurityPermission("abc");
         SecurityPermission sp2 = new SecurityPermission("fbdf");
@@ -184,6 +232,19 @@ public class PolicyTest extends TestCase {
      * @tests java.security.Policy#getPolicy()
      * @tests java.security.Policy#setPolicy()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setPolicy",
+          methodArgs = {Policy.class}
+        ),
+        @TestTarget(
+          methodName = "getPolicy",
+          methodArgs = {}
+        )
+    })
     public void testResetingPolicyToDefault() {
 
         Policy oldPolicy = Policy.getPolicy();
@@ -208,7 +269,16 @@ public class PolicyTest extends TestCase {
     /**
      * @tests java.security.Policy#implies(ProtectionDomain, Permission)
      */
-    public void test_implies() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "implies",
+          methodArgs = {ProtectionDomain.class, Permission.class}
+        )
+    })
+    public void _test_implies() {
         Policy policy = Policy.getPolicy();
         char s = File.separatorChar;
 
@@ -285,7 +355,20 @@ public class PolicyTest extends TestCase {
     /**
      * Test property expansion in policy files
      */
-    public void testPropertyExpansion() throws Exception {
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setPolicy",
+          methodArgs = {Policy.class}
+        ),
+        @TestTarget(
+          methodName = "getPolicy",
+          methodArgs = {}
+        )
+    })
+    public void _testPropertyExpansion() throws Exception {
 
         // Regression for HARMONY-1963 and HARMONY-2910
         String policyFile = new File(ClassLoader.getSystemClassLoader()

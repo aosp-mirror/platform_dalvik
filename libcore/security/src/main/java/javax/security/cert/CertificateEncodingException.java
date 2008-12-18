@@ -15,36 +15,41 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
 
 package javax.security.cert;
 
 /**
- * @com.intel.drl.spec_ref
- * 
+ * The exception that is thrown when an error occurs while a {@code Certificate}
+ * is being encoded.
+ * <p>
+ * Note: This package is provided only for compatibility reasons. It contains a
+ * simplified version of the java.security.cert package that was previously used
+ * by JSSE (Java SSL package). All applications that do not have to be
+ * compatible with older versions of JSSE (that is before Java SDK 1.5) should
+ * only use java.security.cert.
+ * </p>
+ * @since Android 1.0
  */
-
 public class CertificateEncodingException extends CertificateException {
 
-    /**
-     * @serial
-     */
     private static final long serialVersionUID = -8187642723048403470L;
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Creates a new {@code CertificateEncodingException} with the specified
+     * message.
+     * 
+     * @param msg
+     *            the detail message for the exception.
+     * @since Android 1.0
      */
     public CertificateEncodingException(String msg) {
         super(msg);
     }
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Creates a new {@code CertificateEncodingException}.
+     * 
+     * @since Android 1.0
      */
     public CertificateEncodingException() {
     }

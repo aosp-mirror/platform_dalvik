@@ -30,35 +30,22 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
 /**
- * @com.intel.drl.spec_ref
+ * A {@code SignedObject} instance acts as a container for another object. The
+ * {@code SignedObject} contains the target in serialized form along with a
+ * digital signature of the serialized data.
  * 
+ * @since Android 1.0
  */
 public final class SignedObject implements Serializable {
 
-    /**
-     * @com.intel.drl.spec_ref
-     */
     private static final long serialVersionUID = 720502720485447167L;
 
-    /**
-     * @com.intel.drl.spec_ref
-     */
     private byte[] content;
 
-    /**
-     * @com.intel.drl.spec_ref
-     */
     private byte[] signature;
 
-    /**
-     * @com.intel.drl.spec_ref
-     */
     private String thealgorithm;
 
-    /**
-     * @com.intel.drl.spec_ref
-     * 
-     */
     private void readObject(ObjectInputStream s) throws IOException,
             ClassNotFoundException {
 
@@ -72,8 +59,23 @@ public final class SignedObject implements Serializable {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Constructs a new instance of {@code SignedObject} with the target object,
+     * the private key and the engine to compute the signature. The given
+     * {@code object} is signed with the specified key and engine.
      * 
+     * @param object
+     *            the object to bes signed.
+     * @param signingKey
+     *            the private key, used to sign the {@code object}.
+     * @param signingEngine
+     *            the engine that performs the signature generation.
+     * @throws IOException
+     *             if a serialization error occurs.
+     * @throws InvalidKeyException
+     *             if the private key is not valid.
+     * @throws SignatureException
+     *             if signature generation failed.
+     * @since Android 1.0
      */
     public SignedObject(Serializable object, PrivateKey signingKey,
             Signature signingEngine) throws IOException, InvalidKeyException,
@@ -96,8 +98,15 @@ public final class SignedObject implements Serializable {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the encapsulated object. Each time this method is invoked, the
+     * encapsulated object is deserialized before it is returned.
      * 
+     * @return the encapsulated object.
+     * @throws IOException
+     *             if deserialization failed.
+     * @throws ClassNotFoundException
+     *             if the class of the encapsulated object can not be found.
+     * @since Android 1.0
      */
     public Object getObject() throws IOException, ClassNotFoundException {
         // deserialize our object
@@ -111,8 +120,10 @@ public final class SignedObject implements Serializable {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the signature data of the encapsulated serialized object.
      * 
+     * @return the signature data of the encapsulated serialized object.
+     * @since Android 1.0
      */
     public byte[] getSignature() {
         byte[] sig = new byte[signature.length];
@@ -121,16 +132,30 @@ public final class SignedObject implements Serializable {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the name of the algorithm of this {@code SignedObject}.
      * 
+     * @return the name of the algorithm of this {@code SignedObject}.
+     * @since Android 1.0
      */
     public String getAlgorithm() {
         return thealgorithm;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Indicates whether the contained signature for the encapsulated object is
+     * valid.
      * 
+     * @param verificationKey
+     *            the public key to verify the signature.
+     * @param verificationEngine
+     *            the signature engine.
+     * @return {@code true} if the contained signature for the encapsulated
+     *         object is valid, {@code false} otherwise.
+     * @throws InvalidKeyException
+     *             if the public key is invalid.
+     * @throws SignatureException
+     *             if signature verification failed.
+     * @since Android 1.0
      */
     public boolean verify(PublicKey verificationKey,
             Signature verificationEngine) throws InvalidKeyException,

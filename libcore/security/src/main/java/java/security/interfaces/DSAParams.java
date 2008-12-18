@@ -15,36 +15,38 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package java.security.interfaces;
 
 import java.math.BigInteger;
 
 /**
- * @com.intel.drl.spec_ref
+ * The interface for Digital Signature Algorithm (DSA) specific parameters. 
  * 
+ * @since Android 1.0
  */
 public interface DSAParams {
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Returns the base ({@code g}) value.
+     * 
+     * @return the base ({@code g}) value.
+     * @since Android 1.0
      */
     public BigInteger getG();
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Returns the prime ({@code p}) value.
+     * 
+     * @return the prime ({@code p}) value.
+     * @since Android 1.0
      */
     public BigInteger getP();
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Returns the subprime ({@code q} value.
+     * 
+     * @return the subprime ({@code q} value.
+     * @since Android 1.0
      */
     public BigInteger getQ();
 

@@ -15,29 +15,30 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package java.security.interfaces;
 
 import java.math.BigInteger;
 import java.security.PrivateKey;
 
 /**
- * @com.intel.drl.spec_ref
+ * The interface for an PKCS#1 RSA private key.
  * 
+ * @since Android 1.0
  */
 public interface RSAPrivateKey extends PrivateKey, RSAKey {
+
     /**
-     * @com.intel.drl.spec_ref
+     * The serial version identifier.
+     * 
+     * @since Android 1.0
      */
     public static final long serialVersionUID = 5187144804936595022L;
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Returns the private exponent {@code d}.
+     * 
+     * @return the private exponent {@code d}.
+     * @since Android 1.0
      */
     public BigInteger getPrivateExponent();
 }

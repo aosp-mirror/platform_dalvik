@@ -16,17 +16,22 @@
 
 package tests.security.permissions;
 
-import java.security.Permission;
-import java.util.Locale;
-import java.util.PropertyPermission;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
 
+import java.security.Permission;
+import java.util.Locale;
+import java.util.PropertyPermission;
 /*
  * This class tests the secrity permissions which are documented in
  * http://java.sun.com/j2se/1.5.0/docs/guide/security/permissions.html#PermsAndMethods
  * for class java.util.Locale
  */
+@TestTargetClass(SecurityManager.class)
 public class JavaUtilLocale extends TestCase {
     
     SecurityManager old;
@@ -42,7 +47,16 @@ public class JavaUtilLocale extends TestCase {
         System.setSecurityManager(old);
         super.tearDown();
     }
-    
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies that java.util.Locale.setDefault(Locale) method " +
+            "calls checkPermission method of security permissions.",
+      targets = {
+        @TestTarget(
+          methodName = "checkPermission",
+          methodArgs = {java.security.Permission.class}
+        )
+    })
     public void test_setDefault() {
         class TestSecurityManager extends SecurityManager {
             boolean called = false;

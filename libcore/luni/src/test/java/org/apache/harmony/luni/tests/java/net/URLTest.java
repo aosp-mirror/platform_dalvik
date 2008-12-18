@@ -16,16 +16,31 @@
 
 package org.apache.harmony.luni.tests.java.net;
 
+import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.net.MalformedURLException;
 import java.net.URL;
 
 import junit.framework.TestCase;
 
+@TestTargetClass(URL.class) 
 public class URLTest extends TestCase {
 
     /**
      * @tests java.net.URL#getHost()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Regression test.",
+      targets = {
+        @TestTarget(
+          methodName = "getHost",
+          methodArgs = {}
+        )
+    })
     public void test_getHost() throws MalformedURLException {
         // Regression for HARMONY-60
         String ipv6Host = "FEDC:BA98:7654:3210:FEDC:BA98:7654:3210";
@@ -36,6 +51,15 @@ public class URLTest extends TestCase {
     /**
      * @tests java.net.URL#URL(java.lang.String, java.lang.String, int, java.lang.String)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Regression test.",
+      targets = {
+        @TestTarget(
+          methodName = "URL",
+          methodArgs = {String.class, String.class, int.class, String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_StringLjava_lang_StringILjava_lang_String()
             throws MalformedURLException {
         // Regression for HARMONY-83
@@ -52,6 +76,15 @@ public class URLTest extends TestCase {
      * @tests java.net.URL#URL(java.lang.String, java.lang.String,
      *        java.lang.String)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "MalformedURLException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "URL",
+          methodArgs = {String.class, String.class, String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_StringLjava_lang_StringLjava_lang_String() throws MalformedURLException {
         // Strange behavior in reference, the hostname contains a ':' so it gets wrapped in '[', ']'
         URL testURL = new URL("http", "www.apache.org:8080", "test.html#anch");
@@ -66,6 +99,15 @@ public class URLTest extends TestCase {
      * @tests java.net.URL#URL(String, String, String)
      *
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Regression test.",
+      targets = {
+        @TestTarget(
+          methodName = "URL",
+          methodArgs = {String.class, String.class, String.class}
+        )
+    })
     public void test_java_protocol_handler_pkgs_prop() throws MalformedURLException {
         // Regression test for Harmony-3094
         final String HANDLER_PKGS = "java.protocol.handler.pkgs";

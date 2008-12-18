@@ -16,6 +16,11 @@
  */
 package org.apache.harmony.text.tests.java.text;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.text.DateFormat;
 import java.text.DateFormatSymbols;
 import java.text.FieldPosition;
@@ -31,6 +36,7 @@ import java.util.TimeZone;
 
 import tests.support.Support_SimpleDateFormat;
 
+@TestTargetClass(SimpleDateFormat.class) 
 public class SimpleDateFormatTest extends junit.framework.TestCase {
 
     static SimpleDateFormat format = new SimpleDateFormat("", Locale.ENGLISH);
@@ -107,6 +113,15 @@ public class SimpleDateFormatTest extends junit.framework.TestCase {
     /**
      * @tests java.text.SimpleDateFormat#SimpleDateFormat()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "SimpleDateFormat",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         // Test for method java.text.SimpleDateFormat()
         SimpleDateFormat f2 = new SimpleDateFormat();
@@ -122,6 +137,15 @@ public class SimpleDateFormatTest extends junit.framework.TestCase {
     /**
      * @tests java.text.SimpleDateFormat#SimpleDateFormat(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "SimpleDateFormat",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() {
         // Test for method java.text.SimpleDateFormat(java.lang.String)
         SimpleDateFormat f2 = new SimpleDateFormat("yyyy");
@@ -162,6 +186,15 @@ public class SimpleDateFormatTest extends junit.framework.TestCase {
      * @tests java.text.SimpleDateFormat#SimpleDateFormat(java.lang.String,
      *        java.text.DateFormatSymbols)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify NullPointerException, IllegalArgumentException.",
+      targets = {
+        @TestTarget(
+          methodName = "SimpleDateFormat",
+          methodArgs = {java.lang.String.class, java.text.DateFormatSymbols.class}
+        )
+    })
     public void test_ConstructorLjava_lang_StringLjava_text_DateFormatSymbols() {
         // Test for method java.text.SimpleDateFormat(java.lang.String,
         // java.text.DateFormatSymbols)
@@ -179,6 +212,15 @@ public class SimpleDateFormatTest extends junit.framework.TestCase {
      * @tests java.text.SimpleDateFormat#SimpleDateFormat(java.lang.String,
      *        java.util.Locale)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify NullPointerException, IllegalArgumentException.",
+      targets = {
+        @TestTarget(
+          methodName = "SimpleDateFormat",
+          methodArgs = {java.lang.String.class, java.util.Locale.class}
+        )
+    })
     public void test_ConstructorLjava_lang_StringLjava_util_Locale() {
         // Test for method java.text.SimpleDateFormat(java.lang.String,
         // java.util.Locale)
@@ -195,6 +237,15 @@ public class SimpleDateFormatTest extends junit.framework.TestCase {
     /**
      * @tests java.text.SimpleDateFormat#applyLocalizedPattern(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify positive functionality.",
+      targets = {
+        @TestTarget(
+          methodName = "applyLocalizedPattern",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_applyLocalizedPatternLjava_lang_String() {
         // Test for method void
         // java.text.SimpleDateFormat.applyLocalizedPattern(java.lang.String)
@@ -249,6 +300,15 @@ public class SimpleDateFormatTest extends junit.framework.TestCase {
     /**
      * @tests java.text.SimpleDateFormat#applyPattern(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "applyPattern",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_applyPatternLjava_lang_String() {
         // Test for method void
         // java.text.SimpleDateFormat.applyPattern(java.lang.String)
@@ -287,6 +347,15 @@ public class SimpleDateFormatTest extends junit.framework.TestCase {
     /**
      * @tests java.text.SimpleDateFormat#clone()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "clone",
+          methodArgs = {}
+        )
+    })
     public void test_clone() {
         // Test for method java.lang.Object java.text.SimpleDateFormat.clone()
         SimpleDateFormat f2 = new SimpleDateFormat();
@@ -305,6 +374,15 @@ public class SimpleDateFormatTest extends junit.framework.TestCase {
     /**
      * @tests java.text.SimpleDateFormat#equals(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "equals",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_equalsLjava_lang_Object() {
         // Test for method boolean
         // java.text.SimpleDateFormat.equals(java.lang.Object)
@@ -318,6 +396,15 @@ public class SimpleDateFormatTest extends junit.framework.TestCase {
     /**
      * @tests java.text.SimpleDateFormat#hashCode()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "hashCode",
+          methodArgs = {}
+        )
+    })
     public void test_hashCode() {
         SimpleDateFormat format = (SimpleDateFormat) DateFormat.getInstance();
         SimpleDateFormat clone = (SimpleDateFormat) format.clone();
@@ -332,7 +419,15 @@ public class SimpleDateFormatTest extends junit.framework.TestCase {
         assertFalse("objects has equal hash code", format2.hashCode() == format
                 .hashCode());
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Regression test.",
+      targets = {
+        @TestTarget(
+          methodName = "SimpleDateFormat",
+          methodArgs = {}
+        )
+    })
     public void test_equals_afterFormat() {
         // Regression test for HARMONY-209
         SimpleDateFormat df = new SimpleDateFormat();
@@ -343,7 +438,16 @@ public class SimpleDateFormatTest extends junit.framework.TestCase {
     /**
      * @tests java.text.SimpleDateFormat#formatToCharacterIterator(java.lang.Object)
      */
-    public void test_formatToCharacterIteratorLjava_lang_Object() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "formatToCharacterIterator",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
+    public void _test_formatToCharacterIteratorLjava_lang_Object() {
 
         try {
             // Regression for HARMONY-466
@@ -363,7 +467,16 @@ public class SimpleDateFormatTest extends junit.framework.TestCase {
      * @tests java.text.SimpleDateFormat#format(java.util.Date,
      *        java.lang.StringBuffer, java.text.FieldPosition)
      */
-    public void test_formatLjava_util_DateLjava_lang_StringBufferLjava_text_FieldPosition() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "format",
+          methodArgs = {java.util.Date.class, java.lang.StringBuffer.class, java.text.FieldPosition.class}
+        )
+    })
+    public void _test_formatLjava_util_DateLjava_lang_StringBufferLjava_text_FieldPosition() {
         // Test for method java.lang.StringBuffer
         // java.text.SimpleDateFormat.format(java.util.Date,
         // java.lang.StringBuffer, java.text.FieldPosition)
@@ -542,7 +655,24 @@ public class SimpleDateFormatTest extends junit.framework.TestCase {
     /**
      * @tests java.text.SimpleDateFormat#format(java.util.Date)
      */
-    public void test_timeZoneFormatting() {
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies formatting of timezones.",
+      targets = {
+        @TestTarget(
+          methodName = "setTimeZone",
+          methodArgs = {TimeZone.class}
+        ),
+        @TestTarget(
+          methodName = "format",
+          methodArgs = {java.util.Date.class, java.lang.StringBuffer.class, java.text.FieldPosition.class}
+        ),
+        @TestTarget(
+          methodName = "applyPattern",
+          methodArgs = {java.lang.String.class}
+        )
+    })
+    public void _test_timeZoneFormatting() {
         // tests specific to formatting of timezones
         Date summerDate = new GregorianCalendar(1999, Calendar.JUNE, 2, 15, 3,
                 6).getTime();
@@ -582,6 +712,15 @@ public class SimpleDateFormatTest extends junit.framework.TestCase {
     /**
      * @tests java.text.SimpleDateFormat#get2DigitYearStart()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "get2DigitYearStart",
+          methodArgs = {}
+        )
+    })
     public void test_get2DigitYearStart() {
         // Test for method java.util.Date
         // java.text.SimpleDateFormat.get2DigitYearStart()
@@ -597,6 +736,15 @@ public class SimpleDateFormatTest extends junit.framework.TestCase {
     /**
      * @tests java.text.SimpleDateFormat#getDateFormatSymbols()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getDateFormatSymbols",
+          methodArgs = {}
+        )
+    })
     public void test_getDateFormatSymbols() {
         // Test for method java.text.DateFormatSymbols
         // java.text.SimpleDateFormat.getDateFormatSymbols()
@@ -609,6 +757,15 @@ public class SimpleDateFormatTest extends junit.framework.TestCase {
      * @tests java.text.SimpleDateFormat#parse(java.lang.String,
      *        java.text.ParsePosition)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verified ParseException.",
+      targets = {
+        @TestTarget(
+          methodName = "parse",
+          methodArgs = {java.lang.String.class, java.text.ParsePosition.class}
+        )
+    })
     public void test_parseLjava_lang_StringLjava_text_ParsePosition() {
         // Test for method java.util.Date
         // java.text.SimpleDateFormat.parse(java.lang.String,
@@ -815,6 +972,15 @@ public class SimpleDateFormatTest extends junit.framework.TestCase {
     /**
      * @tests java.text.SimpleDateFormat#set2DigitYearStart(java.util.Date)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "set2DigitYearStart",
+          methodArgs = {java.util.Date.class}
+        )
+    })
     public void test_set2DigitYearStartLjava_util_Date() {
         // Test for method void
         // java.text.SimpleDateFormat.set2DigitYearStart(java.util.Date)
@@ -842,6 +1008,15 @@ public class SimpleDateFormatTest extends junit.framework.TestCase {
     /**
      * @tests java.text.SimpleDateFormat#setDateFormatSymbols(java.text.DateFormatSymbols)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "setDateFormatSymbols",
+          methodArgs = {java.text.DateFormatSymbols.class}
+        )
+    })
     public void test_setDateFormatSymbolsLjava_text_DateFormatSymbols() {
         // Test for method void
         // java.text.SimpleDateFormat.setDateFormatSymbols(java.text.DateFormatSymbols)
@@ -863,6 +1038,15 @@ public class SimpleDateFormatTest extends junit.framework.TestCase {
     /**
      * @tests java.text.SimpleDateFormat#toLocalizedPattern()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toLocalizedPattern",
+          methodArgs = {}
+        )
+    })
     public void test_toLocalizedPattern() {
         // BEGIN android-changed
         // Test for method java.lang.String
@@ -891,6 +1075,15 @@ public class SimpleDateFormatTest extends junit.framework.TestCase {
     /**
      * @tests java.text.SimpleDateFormat#toPattern()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toPattern",
+          methodArgs = {}
+        )
+    })
     public void test_toPattern() {
         String pattern = "yyyy mm dd";
         SimpleDateFormat f = new SimpleDateFormat(pattern);
@@ -910,6 +1103,15 @@ public class SimpleDateFormatTest extends junit.framework.TestCase {
      * @tests java.text.SimpleDateFormat#parse(java.lang.String,
      *        java.text.ParsePosition)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Regression test.",
+      targets = {
+        @TestTarget(
+          methodName = "parse",
+          methodArgs = {java.lang.String.class, java.text.ParsePosition.class}
+        )
+    })
     public void test_parse_with_spaces() {
         // Regression for HARMONY-502
         SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss");

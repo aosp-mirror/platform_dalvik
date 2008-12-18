@@ -1,20 +1,4 @@
 /*
- * Copyright (C) 2008 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/*
  *  Licensed to the Apache Software Foundation (ASF) under one or more
  *  contributor license agreements.  See the NOTICE file distributed with
  *  this work for additional information regarding copyright ownership.
@@ -70,7 +54,9 @@ class Conversion {
     
     /** @see BigInteger#toString(int) */
     static String bigInteger2String(BigInteger val, int radix) {
+        // BEGIN android-added
         val.establishOldRepresentation("Conversion.bigInteger2String");
+        // END android-added
         int sign = val.sign;
         int numberLength = val.numberLength;
         int digits[] = val.digits;
@@ -154,7 +140,9 @@ class Conversion {
      * @see BigDecimal#toString()
      */
     static String toDecimalScaledString(BigInteger val, int scale) {
+        // BEGIN android-added
         val.establishOldRepresentation("Conversion.toDecimalScaledString");
+        // END android-added
         int sign = val.sign;
         int numberLength = val.numberLength;
         int digits[] = val.digits;
@@ -435,7 +423,9 @@ class Conversion {
 
     /** @see BigInteger#doubleValue() */
     static double bigInteger2Double(BigInteger val) {
+        // BEGIN android-added
         val.establishOldRepresentation("Conversion.bigInteger2Double");
+        // END android-added
         // val.bitLength() < 64
         if ((val.numberLength < 2)
                 || ((val.numberLength == 2) && (val.digits[1] > 0))) {

@@ -17,6 +17,13 @@
 
 package org.apache.harmony.text.tests.java.text;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
+import junit.framework.TestCase;
+
 import java.text.CharacterIterator;
 import java.text.CollationElementIterator;
 import java.text.CollationKey;
@@ -26,13 +33,21 @@ import java.text.RuleBasedCollator;
 import java.text.StringCharacterIterator;
 import java.util.Locale;
 
-import junit.framework.TestCase;
-
+@TestTargetClass(RuleBasedCollator.class) 
 public class RuleBasedCollatorTest extends TestCase {
 
     /**
      * @tests java.text.RuleBasedCollator#RuleBasedCollator(String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "RuleBasedCollator",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_constrLRuleBasedCollatorLjava_lang_String() {
         RuleBasedCollator rbc;
         try {
@@ -70,7 +85,15 @@ public class RuleBasedCollatorTest extends TestCase {
         } catch (java.text.ParseException pe) {
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Regression test. Doesn't verify positive functionality.",
+      targets = {
+        @TestTarget(
+          methodName = "getCollationKey",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_getCollationKeyLjava_lang_String() {
         // Regression test for HARMONY-28
         String source = null;
@@ -84,7 +107,15 @@ public class RuleBasedCollatorTest extends TestCase {
         CollationKey ck = rbc.getCollationKey(source);
         assertNull("Assert 1: getCollationKey (null) does not return null", ck);
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "hashCode",
+          methodArgs = {}
+        )
+    })
     public void testHashCode() throws ParseException {
         {
             String rule = "< a < b < c < d";
@@ -99,7 +130,15 @@ public class RuleBasedCollatorTest extends TestCase {
         }
 
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "clone",
+          methodArgs = {}
+        )
+    })
     public void testClone() throws ParseException {
         RuleBasedCollator coll = (RuleBasedCollator) Collator
                 .getInstance(Locale.US);
@@ -113,6 +152,15 @@ public class RuleBasedCollatorTest extends TestCase {
     /*
      * Class under test for boolean equals(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "equals",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void testEqualsObject() throws ParseException {
         String rule = "< a < b < c < d < e";
         RuleBasedCollator coll = new RuleBasedCollator(rule);
@@ -133,12 +181,29 @@ public class RuleBasedCollatorTest extends TestCase {
     /*
      * Class under test for int compare(java.lang.String, java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify positive case.",
+      targets = {
+        @TestTarget(
+          methodName = "compare",
+          methodArgs = {java.lang.String.class, java.lang.String.class}
+        )
+    })
     public void testCompareStringString() throws ParseException {
         String rule = "< c < b < a";
         RuleBasedCollator coll = new RuleBasedCollator(rule);
         assertEquals(-1, coll.compare("c", "a"));
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify null as a parameter.",
+      targets = {
+        @TestTarget(
+          methodName = "getCollationKey",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void testGetCollationKey() {
         RuleBasedCollator coll = (RuleBasedCollator) Collator
                 .getInstance(Locale.GERMAN);
@@ -152,7 +217,15 @@ public class RuleBasedCollatorTest extends TestCase {
         assertTrue(coll.compare(source, source2) > 0);
 
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getRules",
+          methodArgs = {}
+        )
+    })
     public void testGetRules() throws ParseException {
         String rule = "< a = b < c";
         RuleBasedCollator coll = new RuleBasedCollator(rule);
@@ -163,7 +236,16 @@ public class RuleBasedCollatorTest extends TestCase {
      * Class under test for java.text.CollationElementIterator
      * getCollationElementIterator(java.lang.String)
      */
-    public void testGetCollationElementIteratorString() throws Exception {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getCollationElementIterator",
+          methodArgs = {java.lang.String.class}
+        )
+    })
+    public void _testGetCollationElementIteratorString() throws Exception {
         {
             Locale locale = new Locale("es", "", "TRADITIONAL");
             RuleBasedCollator coll = (RuleBasedCollator) Collator
@@ -212,7 +294,16 @@ public class RuleBasedCollatorTest extends TestCase {
      * Class under test for java.text.CollationElementIterator
      * getCollationElementIterator(java.text.CharacterIterator)
      */
-    public void testGetCollationElementIteratorCharacterIterator() throws Exception {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getCollationElementIterator",
+          methodArgs = {java.text.CharacterIterator.class}
+        )
+    })
+    public void _testGetCollationElementIteratorCharacterIterator() throws Exception {
         {
             Locale locale = new Locale("es", "", "TRADITIONAL");
             RuleBasedCollator coll = (RuleBasedCollator) Collator
@@ -259,7 +350,21 @@ public class RuleBasedCollatorTest extends TestCase {
             // expected
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify setStrength method with PRIMARY, SECONDARY, " +
+            "TERTIARY or IDENTICAL values as a parameter; doesn't verify that" +
+            "setStrength method can throw IllegalArgumentException.",
+      targets = {
+        @TestTarget(
+          methodName = "setStrength",
+          methodArgs = {int.class}
+        ),
+        @TestTarget(
+          methodName = "getStrength",
+          methodArgs = {}
+        )        
+    })
     public void testStrength() {
         RuleBasedCollator coll = (RuleBasedCollator) Collator
                 .getInstance(Locale.US);
@@ -269,7 +374,20 @@ public class RuleBasedCollatorTest extends TestCase {
         }
 
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify NO_DECOMPOSITION, CANONICAL_DECOMPOSITION, " +
+            "FULL_DECOMPOSITION.",
+      targets = {
+        @TestTarget(
+          methodName = "setDecomposition",
+          methodArgs = {int.class}
+        ),
+        @TestTarget(
+          methodName = "getDecomposition",
+          methodArgs = {}
+        )
+    })
     public void testDecomposition() {
         RuleBasedCollator coll = (RuleBasedCollator) Collator
                 .getInstance(Locale.US);
@@ -278,7 +396,15 @@ public class RuleBasedCollatorTest extends TestCase {
             assertEquals(i, coll.getDecomposition());
         }
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getInstance",
+          methodArgs = {}
+        )
+    })
     public void testCollator_GetInstance() {
         Collator coll = Collator.getInstance();
         Object obj1 = "a";
@@ -288,7 +414,15 @@ public class RuleBasedCollatorTest extends TestCase {
         Collator.getInstance();
         assertFalse(coll.equals("A", "\uFF21"));
     }
-
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test.",
+      targets = {
+        @TestTarget(
+          methodName = "getAvailableLocales",
+          methodArgs = {}
+        )
+    })
     public void testGetAvaiableLocales() {
         // Locale[] locales = Collator.getAvailableLocales();
         // for (int i = 0; i < locales.length; i++) {
@@ -297,6 +431,15 @@ public class RuleBasedCollatorTest extends TestCase {
     }
 
     // Test CollationKey
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getCollationKey",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void testCollationKey() {
         Collator coll = Collator.getInstance(Locale.US);
         String text = "abc";
@@ -311,6 +454,16 @@ public class RuleBasedCollatorTest extends TestCase {
     /**
      * @tests java.text.RuleBasedCollator.RuleBasedCollator(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies RuleBasedCollator(java.lang.String) constructor with " +
+            "null as a parameter.",
+      targets = {
+        @TestTarget(
+          methodName = "RuleBasedCollator",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void testNullPointerException() throws Exception {
         // Regression for HARMONY-241
         try {
@@ -323,6 +476,15 @@ public class RuleBasedCollatorTest extends TestCase {
     /**
      * @tests java.text.RuleBasedCollator.compare(java.lang.String, java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies null as parameters.",
+      targets = {
+        @TestTarget(
+          methodName = "compare",
+          methodArgs = {java.lang.String.class, java.lang.String.class}
+        )
+    })
     public void testCompareNull() throws Exception {
         // Regression for HARMONY-836
         try {
@@ -335,6 +497,15 @@ public class RuleBasedCollatorTest extends TestCase {
     /**
      * @tests java.text.RuleBasedCollator.RuleBasedCollator(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies empty string as a parameter.",
+      targets = {
+        @TestTarget(
+          methodName = "RuleBasedCollator",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void testEmptyStringException() {
         // Regression for HARMONY-241
         try {

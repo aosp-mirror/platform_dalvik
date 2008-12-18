@@ -666,9 +666,20 @@ public class JCEBlockCipher extends WrapCipherSpi
         int     inputLen,
         byte[]  output,
         int     outputOffset) 
-        throws IllegalBlockSizeException, BadPaddingException
+        throws IllegalBlockSizeException, BadPaddingException, ShortBufferException
     {
+        // BEGIN android-note
+        // added ShortBufferException to the throws statement
+        // END android-note
         int     len = 0;
+
+        // BEGIN android-added
+        int outputLen = cipher.getOutputSize(inputLen);
+
+        if (outputLen + outputOffset > output.length) {
+            throw new ShortBufferException("need at least " + outputLen + " bytes");
+        }
+        // BEGIN android-added
 
         if (inputLen != 0)
         {

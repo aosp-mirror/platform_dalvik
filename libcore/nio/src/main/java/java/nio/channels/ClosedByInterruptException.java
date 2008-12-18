@@ -18,20 +18,24 @@ package java.nio.channels;
 
 
 /**
- * Thrown when a thread is interrupted in a blocking IO operation.
+ * A {@code ClosedByInterruptException} is thrown when a thread is interrupted
+ * in a blocking I/O operation.
  * <p>
- * When the thread is interrupted by a call to <code>interrupt()</code>
- * it will close the channel, set the interrupt status of the thread to true,
- * and throw a <code>ClosedByInterruptException</code>.
+ * When the thread is interrupted by a call to {@code interrupt()}, it closes
+ * the channel, sets the interrupt status of the thread to {@code true} and
+ * throws a {@code ClosedByInterruptException}.
+ * </p>
  * 
+ * @since Android 1.0
  */
 public class ClosedByInterruptException extends AsynchronousCloseException {
 
     private static final long serialVersionUID = -4488191543534286750L;
 
     /**
-     * Default constructor.
-     *
+     * Constructs a {@code ClosedByInterruptException}.
+     * 
+     * @since Android 1.0
      */
     public ClosedByInterruptException() {
         super();

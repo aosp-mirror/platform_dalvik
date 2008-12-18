@@ -16,6 +16,11 @@
 
 package org.apache.harmony.nio_char.tests.java.nio.charset;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestLevel;
+
 import java.io.IOException;
 import java.nio.charset.CharacterCodingException;
 
@@ -23,11 +28,21 @@ import junit.framework.TestCase;
 
 import org.apache.harmony.testframework.serialization.SerializationTest;
 
+@TestTargetClass(CharacterCodingException.class)
 /**
  * Test CharacterCodingException
  */
 public class CharacterCodingExceptionTest extends TestCase {
 
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "CharacterCodingException",
+          methodArgs = {}
+        )
+    })
     public void testConstructor() {
         CharacterCodingException ex = new CharacterCodingException();
         assertTrue(ex instanceof IOException);
@@ -38,6 +53,15 @@ public class CharacterCodingExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility.
      */
+@TestInfo(
+          level = TestLevel.COMPLETE,
+          purpose = "Verifies serialization.",
+          targets = {
+            @TestTarget(
+              methodName = "!SerializationSelf",
+              methodArgs = {}
+            )
+        })
     public void testSerializationSelf() throws Exception {
 
         SerializationTest.verifySelf(new CharacterCodingException());
@@ -46,6 +70,15 @@ public class CharacterCodingExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
+@TestInfo(
+          level = TestLevel.COMPLETE,
+          purpose = "Verifies serialization.",
+          targets = {
+            @TestTarget(
+              methodName = "!SerializationGolden",
+              methodArgs = {}
+            )
+        })
     public void testSerializationCompatibility() throws Exception {
         SerializationTest.verifyGolden(this, new CharacterCodingException());
 

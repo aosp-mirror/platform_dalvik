@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vladimir N. Molotkov
-* @version $Revision$
-*/
-
 package java.security.spec;
 
 import java.math.BigInteger;
@@ -27,8 +22,9 @@ import java.math.BigInteger;
 import org.apache.harmony.security.internal.nls.Messages;
 
 /**
- * @com.intel.drl.spec_ref
+ * The parameter specification used with Elliptic Curve Cryptography (ECC). 
  * 
+ * @since Android 1.0
  */
 public class ECParameterSpec implements AlgorithmParameterSpec {
     // Elliptic curve for which this is parameter
@@ -41,7 +37,21 @@ public class ECParameterSpec implements AlgorithmParameterSpec {
     private final int cofactor;
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code ECParameterSpec} with the specified elliptic curve,
+     * the base point, the order of the generator (or base point) and the
+     * co-factor.
+     * 
+     * @param curve
+     *            the elliptic curve.
+     * @param generator
+     *            the generator (or base point).
+     * @param order
+     *            the order of the generator.
+     * @param cofactor
+     *            the co-factor.
+     * @throws IllegalArgumentException
+     *             if {@code order <= zero} or {@code cofactor <= zero}.
+     * @since Android 1.0
      */
     public ECParameterSpec(EllipticCurve curve, ECPoint generator,
             BigInteger order, int cofactor) {
@@ -71,28 +81,40 @@ public class ECParameterSpec implements AlgorithmParameterSpec {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the {@code cofactor}.
+     * 
+     * @return the {@code cofactor}.
+     * @since Android 1.0
      */
     public int getCofactor() {
         return cofactor;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the elliptic curve.
+     * 
+     * @return the elliptic curve.
+     * @since Android 1.0
      */
     public EllipticCurve getCurve() {
         return curve;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the generator (or base point).
+     * 
+     * @return the generator (or base point).
+     * @since Android 1.0
      */
     public ECPoint getGenerator() {
         return generator;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the order of the generator.
+     * 
+     * @return the order of the generator.
+     * @since Android 1.0
      */
     public BigInteger getOrder() {
         return order;

@@ -17,11 +17,26 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
+@TestTargetClass(ExceptionInInitializerError.class) 
 public class ExceptionInInitializerErrorTest extends junit.framework.TestCase {
 
     /**
      * @tests java.lang.ExceptionInInitializerError#ExceptionInInitializerError()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "ExceptionInInitializerError",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         ExceptionInInitializerError e = new ExceptionInInitializerError();
         assertNull(e.getMessage());
@@ -32,6 +47,15 @@ public class ExceptionInInitializerErrorTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.ExceptionInInitializerError#ExceptionInInitializerError(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "ExceptionInInitializerError",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() {
         ExceptionInInitializerError e = new ExceptionInInitializerError("fixture");
         assertEquals("fixture", e.getMessage());
@@ -41,6 +65,15 @@ public class ExceptionInInitializerErrorTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.ExceptionInInitializerExceptionInInitializerError#ExceptionInInitializerError(java.lang.Throwable)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "ExceptionInInitializerError",
+          methodArgs = {java.lang.Throwable.class}
+        )
+    })
     public void test_ConstructorLjava_lang_Throwable() {
         NullPointerException npe = new NullPointerException("fixture");
         ExceptionInInitializerError e = new ExceptionInInitializerError(npe);

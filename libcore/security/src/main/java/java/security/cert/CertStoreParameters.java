@@ -15,21 +15,21 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package java.security.cert;
 
 /**
- * @com.intel.drl.spec_ref
+ * The marker interface specifying the parameters used to initialize a {@code
+ * CertStore} instance.
  * 
+ * @since Android 1.0
  */
 public interface CertStoreParameters extends Cloneable {
 
     /**
-     * @com.intel.drl.spec_ref
+     * Clones this {@code CertStoreParameters} instance.
+     * 
+     * @return the cloned instance.
+     * @since Android 1.0
      */
     public Object clone();
 }

@@ -17,11 +17,17 @@
 
 package tests.api.java.util;
 
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass; 
+
 import java.util.Collection;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.LinkedList;
 
+@TestTargetClass(ConcurrentModificationException.class) 
 public class ConcurrentModificationExceptionTest extends
         junit.framework.TestCase {
 
@@ -50,6 +56,15 @@ public class ConcurrentModificationExceptionTest extends
     /**
      * @tests java.util.ConcurrentModificationException#ConcurrentModificationException()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "ConcurrentModificationException",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         // Test for method java.util.ConcurrentModificationException()
         Collection myCollection = new LinkedList();
@@ -75,6 +90,15 @@ public class ConcurrentModificationExceptionTest extends
     /**
      * @tests java.util.ConcurrentModificationException#ConcurrentModificationException(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "ConcurrentModificationException",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() {
         // Test for method
         // java.util.ConcurrentModificationException(java.lang.String)

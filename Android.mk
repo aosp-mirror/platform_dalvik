@@ -38,7 +38,7 @@ dex:
 	$(hide) $(MAKE) DONT_INSTALL_DEX_FILES=false
 else
 # DONT_INSTALL_DEX_FILES is already false, so a normal make takes care of it.
-dex: $(DEFAULT_TARGET)
+dex: $(DEFAULT_GOAL)
 endif
 
 d :=
@@ -62,5 +62,5 @@ dex-debug:
 else
 # GENERATE_DEX_DEBUG and DONT_INSTALL_DEX_FILES are already set properly,
 # so a normal make takes care of it.
-dex-debug: $(DEFAULT_TARGET)
+dex-debug: $(DEFAULT_GOAL)
 endif

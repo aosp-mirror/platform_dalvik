@@ -16,6 +16,11 @@
 
 package org.apache.harmony.nio.tests.java.nio.channels;
 
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -27,7 +32,7 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 
 import junit.framework.TestCase;
-
+@TestTargetClass(java.nio.channels.Pipe.SinkChannel.class)
 /**
  * Tests for Pipe.SinkChannel class
  */
@@ -60,13 +65,31 @@ public class SinkChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.Pipe.SinkChannel#validOps()
      */
+    @TestInfo(
+            level = TestLevel.COMPLETE,
+            purpose = "",
+            targets = {
+              @TestTarget(
+                methodName = "validOps",                        
+                methodArgs = {}
+              )
+          })
     public void test_validOps() {
         assertEquals(SelectionKey.OP_WRITE, sink.validOps());
     }
 
     /**
-     * @tests java.nio.channels.Pipe.SinkChannel#write(ByteBuffer)
+     * @tests java.nio.channels.Pipe.SinkChannel#write(ByteBuffer [])
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "",
+            targets = {
+              @TestTarget(
+                methodName = "write",                        
+                methodArgs = {ByteBuffer[].class}
+              )
+          })    
     public void test_write_LByteBuffer() throws IOException {
         ByteBuffer[] bufArray = { buffer, positionedBuffer };
         boolean[] sinkBlockingMode = { true, true, false, false };
@@ -102,6 +125,15 @@ public class SinkChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.Pipe.SinkChannel#write(ByteBuffer)
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "",
+            targets = {
+              @TestTarget(
+                methodName = "write",                        
+                methodArgs = {ByteBuffer[].class}
+              )
+          })    
     public void test_write_LByteBuffer_mutliThread() throws IOException,
             InterruptedException {
         final int THREAD_NUM = 20;
@@ -146,6 +178,15 @@ public class SinkChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.Pipe.SinkChannel#write(ByteBuffer)
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Verifies NullPointerException.",
+            targets = {
+              @TestTarget(
+                methodName = "write",                        
+                methodArgs = {ByteBuffer[].class}
+              )
+          })    
     public void test_write_LByteBuffer_Exception() throws IOException {
         // write null ByteBuffer
         ByteBuffer nullBuf = null;
@@ -160,6 +201,15 @@ public class SinkChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.Pipe.SinkChannel#write(ByteBuffer)
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "",
+            targets = {
+              @TestTarget(
+                methodName = "write",                        
+                methodArgs = {ByteBuffer[].class}
+              )
+          })     
     public void test_write_LByteBuffer_SourceClosed() throws IOException {
         source.close();
         int written = sink.write(buffer);
@@ -169,6 +219,16 @@ public class SinkChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.Pipe.SinkChannel#write(ByteBuffer)
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Verifies ClosedChannelException, " +
+                    "NullPointerException.",
+            targets = {
+              @TestTarget(
+                methodName = "write",                        
+                methodArgs = {ByteBuffer[].class}
+              )
+          })     
     public void test_write_LByteBuffer_SinkClosed() throws IOException {
         sink.close();
         try {
@@ -191,6 +251,15 @@ public class SinkChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.Pipe.SinkChannel#write(ByteBuffer[])
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "",
+            targets = {
+              @TestTarget(
+                methodName = "write",                        
+                methodArgs = {ByteBuffer[].class}
+              )
+          })
     public void test_write_$LByteBuffer() throws IOException {
         ByteBuffer[] bufArray = { buffer, positionedBuffer };
         boolean[] sinkBlockingMode = { true, true, false, false };
@@ -224,6 +293,15 @@ public class SinkChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.Pipe.SinkChannel#write(ByteBuffer[])
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Verifies NullPointerException.",
+            targets = {
+              @TestTarget(
+                methodName = "write",                        
+                methodArgs = {ByteBuffer[].class}
+              )
+          })
     public void test_write_$LByteBuffer_Exception() throws IOException {
         // write null ByteBuffer[]
         ByteBuffer[] nullBufArrayRef = null;
@@ -248,6 +326,15 @@ public class SinkChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.Pipe.SinkChannel#write(ByteBuffer[])
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "",
+            targets = {
+              @TestTarget(
+                methodName = "write",                        
+                methodArgs = {ByteBuffer[].class}
+              )
+          })
     public void test_write_$LByteBuffer_SourceClosed() throws IOException {
         ByteBuffer[] bufArray = { buffer };
         source.close();
@@ -258,6 +345,15 @@ public class SinkChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.Pipe.SinkChannel#write(ByteBuffer[])
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Verifies ClosedChannelException, NullPointerException.",
+            targets = {
+              @TestTarget(
+                methodName = "write",                        
+                methodArgs = {ByteBuffer[].class}
+              )
+          })
     public void test_write_$LByteBuffer_SinkClosed() throws IOException {
         ByteBuffer[] bufArray = { buffer };
         sink.close();
@@ -290,6 +386,15 @@ public class SinkChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.Pipe.SinkChannel#write(ByteBuffer[], int, int)
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "",
+            targets = {
+              @TestTarget(
+                methodName = "write",                        
+                methodArgs = {ByteBuffer[].class, int.class, int.class}
+              )
+          })    
     public void test_write_$LByteBufferII() throws IOException {
         ByteBuffer[] bufArray = { buffer, positionedBuffer };
         boolean[] sinkBlockingMode = { true, true, false, false };
@@ -319,6 +424,16 @@ public class SinkChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.Pipe.SinkChannel#write(ByteBuffer[], int, int)
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Verifies NullPointerException, " +
+                    "IndexOutOfBoundsException.",
+            targets = {
+              @TestTarget(
+                methodName = "write",                        
+                methodArgs = {ByteBuffer[].class, int.class, int.class}
+              )
+          })        
     public void test_write_$LByteBufferII_Exception() throws IOException {
         // write null ByteBuffer[]
         ByteBuffer[] nullBufArrayRef = null;
@@ -393,6 +508,15 @@ public class SinkChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.Pipe.SinkChannel#write(ByteBuffer[], int, int)
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "",
+            targets = {
+              @TestTarget(
+                methodName = "write",                        
+                methodArgs = {ByteBuffer[].class, int.class, int.class}
+              )
+          })        
     public void test_write_$LByteBufferII_SourceClosed() throws IOException {
         ByteBuffer[] bufArray = { buffer };
         source.close();
@@ -403,6 +527,16 @@ public class SinkChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.Pipe.SinkChannel#write(ByteBuffer[], int, int)
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Verifies ClosedChannelException, NullPointerException, " +
+                    "IndexOutOfBoundsException.",
+            targets = {
+              @TestTarget(
+                methodName = "write",                        
+                methodArgs = {ByteBuffer[].class, int.class, int.class}
+              )
+          })        
     public void test_write_$LByteBufferII_SinkClosed() throws IOException {
         ByteBuffer[] bufArray = { buffer };
         sink.close();
@@ -487,11 +621,33 @@ public class SinkChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.Pipe.SinkChannel#close()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Verifies write method after close.",
+      targets = {
+        @TestTarget(
+          methodName = "close",
+          methodArgs = {}
+        )
+    })
     public void test_close() throws IOException {
         sink.close();
         assertFalse(sink.isOpen());
     }
-    
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Verifies that NullPointerException is thrown if " +
+                    "write method is called for closed channel.",
+            targets = {
+              @TestTarget(
+                methodName = "write",                        
+                methodArgs = {ByteBuffer.class}
+              ),
+              @TestTarget(
+                methodName = "close",                        
+                methodArgs = {}
+              )              
+          })
     public void test_socketChannel_read_close() throws Exception {
         ServerSocketChannel ssc = ServerSocketChannel.open();
         ssc.socket().bind(new InetSocketAddress(InetAddress.getLocalHost(),49999));
@@ -515,7 +671,15 @@ public class SinkChannelTest extends TestCase {
         }
         sock.close();
     }
-
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Verifies NullPointerException.",
+            targets = {
+              @TestTarget(
+                methodName = "write",                        
+                methodArgs = {ByteBuffer[].class, int.class, int.class}
+              )
+          })
     public void test_socketChannel_read_write() throws Exception {
         ServerSocketChannel ssc = ServerSocketChannel.open();
         ssc.socket().bind(new InetSocketAddress(InetAddress.getLocalHost(),49999));

@@ -17,17 +17,33 @@
 
 package org.apache.harmony.logging.tests.java.util.logging;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.util.logging.LoggingPermission;
 
 import junit.framework.TestCase;
 
 import org.apache.harmony.testframework.serialization.SerializationTest;
 
+@TestTargetClass(LoggingPermission.class) 
 public class LoggingPermissionTest extends TestCase {
 
     /**
      * @tests serialization/deserialization compatibility.
      */
+    @TestInfo(
+            level = TestLevel.COMPLETE,
+            purpose = "",
+            targets = {
+                    
+              @TestTarget(
+                methodName = "!SerializationSelf",
+                methodArgs = {}
+              )
+          })
     public void testSerializationSelf() throws Exception {
         SerializationTest.verifySelf(new LoggingPermission("control", ""));
     }
@@ -35,12 +51,32 @@ public class LoggingPermissionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
+    @TestInfo(
+            level = TestLevel.COMPLETE,
+            purpose = "",
+            targets = {
+                    
+              @TestTarget(
+                methodName = "!SerializationGolden",
+                methodArgs = {}
+              )
+          })
     public void testSerializationCompatibility() throws Exception {
 
         SerializationTest.verifyGolden(this, new LoggingPermission("control",
                 ""));
     }
 
+    @TestInfo(
+            level = TestLevel.COMPLETE,
+            purpose = "",
+            targets = {
+                    
+              @TestTarget(
+                methodName = "LoggingPermission",
+                methodArgs = {String.class, String.class}
+              )
+          })
     public void testLoggingPermission() {
         try {
             new LoggingPermission(null, null);

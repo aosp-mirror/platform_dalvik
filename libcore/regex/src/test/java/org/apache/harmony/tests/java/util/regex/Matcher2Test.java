@@ -19,7 +19,7 @@ package org.apache.harmony.tests.java.util.regex;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestStatus;
+import dalvik.annotation.TestLevel;
 
 import junit.framework.TestCase;
 import java.util.regex.*;
@@ -32,8 +32,8 @@ import java.util.regex.*;
 public class Matcher2Test extends TestCase {
     
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies the basic functionality of toString() method.",
+            level = TestLevel.PARTIAL,
+            purpose = "Verifies the basic functionality of toString() method.",
             targets = { @TestTarget(methodName = "toString", 
                                     methodArgs = {})                                    
             }
@@ -45,8 +45,8 @@ public class Matcher2Test extends TestCase {
     }
    
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies start, end, group, usePattern methods " +
+            level = TestLevel.PARTIAL_OK,
+            purpose = "Verifies start, end, group, usePattern methods " +
                     "with wrong conditions, IllegalStateException should be " +
                     "thrown",
             targets = { @TestTarget(methodName = "start", 
@@ -117,8 +117,8 @@ public class Matcher2Test extends TestCase {
     }
 
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies end, start, group methods with wrong " +
+            level = TestLevel.PARTIAL_OK,
+            purpose = "Verifies end, start, group methods with wrong " +
                     "conditions, IndexOutOfBoundsException, " +
                     "IllegalStateException should be thrown",
             targets = { @TestTarget(methodName = "start", 
@@ -269,8 +269,8 @@ public class Matcher2Test extends TestCase {
      * Regression test for HARMONY-997
      */
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies that IndexOutOfBoundsException " +
+            level = TestLevel.PARTIAL_OK,
+            purpose = "Verifies that IndexOutOfBoundsException " +
                     "exception is thrown while calling of replaceAll " +
                     "method with incorrect string.",
             targets = { @TestTarget(methodName = "replaceAll", 

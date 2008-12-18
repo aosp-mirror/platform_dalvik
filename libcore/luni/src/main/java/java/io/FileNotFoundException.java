@@ -18,26 +18,31 @@
 package java.io;
 
 /**
- * This IO exception is thrown when a file specified by a program cannot be
- * found.
+ * Thrown when a file specified by a program cannot be found.
+ * 
+ * @since Android 1.0
  */
 public class FileNotFoundException extends IOException {
 
     private static final long serialVersionUID = -897856973823710492L;
 
     /**
-     * Constructs a new instance of this class with its walkback filled in.
+     * Constructs a new {@code FileNotFoundException} with its stack trace
+     * filled in.
+     * 
+     * @since Android 1.0
      */
     public FileNotFoundException() {
         super();
     }
 
     /**
-     * Constructs a new instance of this class with its walkback and message
-     * filled in.
+     * Constructs a new {@code FileNotFoundException} with its stack trace and
+     * detail message filled in.
      * 
      * @param detailMessage
-     *            The detail message for the exception.
+     *            the detail message for this exception.
+     * @since Android 1.0
      */
     public FileNotFoundException(String detailMessage) {
         super(detailMessage);

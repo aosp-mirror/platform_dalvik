@@ -17,6 +17,8 @@
 
 package org.apache.harmony.logging.tests.java.util.logging;
 
+import dalvik.annotation.*;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -37,6 +39,7 @@ import java.util.logging.LogManager;
 import java.util.logging.LogRecord;
 import java.util.logging.LoggingPermission;
 import java.util.logging.SimpleFormatter;
+import java.util.logging.SocketHandler;
 import java.util.logging.StreamHandler;
 
 import junit.framework.TestCase;
@@ -48,6 +51,7 @@ import tests.util.CallVerificationStack;
 /**
  * Test the class StreamHandler.
  */
+@TestTargetClass(StreamHandler.class)
 public class StreamHandlerTest extends TestCase {
 
     private final static String INVALID_LEVEL = "impossible_level";
@@ -89,6 +93,16 @@ public class StreamHandlerTest extends TestCase {
      * Test the constructor with no parameter, and no relevant log manager
      * properties are set.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies the constructor with no parameter, " +
+            "and no relevant log manager properties are set.",
+      targets = {
+        @TestTarget(
+          methodName = "StreamHandler",
+          methodArgs = {}
+        )
+    })
     public void testConstructor_NoParameter_NoProperties() {
         assertNull(LogManager.getLogManager().getProperty(
                 "java.util.logging.StreamHandler.level"));
@@ -109,6 +123,15 @@ public class StreamHandlerTest extends TestCase {
     /*
      * Test the constructor with insufficient privilege.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies the constructor with insufficient privilege.",
+      targets = {
+        @TestTarget(
+          methodName = "StreamHandler",
+          methodArgs = {java.io.OutputStream.class, java.util.logging.Formatter.class}
+        )
+    })
     public void testConstructor_NoParameter_InsufficientPrivilege() {
         assertNull(LogManager.getLogManager().getProperty(
                 "java.util.logging.StreamHandler.level"));
@@ -137,6 +160,16 @@ public class StreamHandlerTest extends TestCase {
      * Test the constructor with no parameter, and valid relevant log manager
      * properties are set.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies the constructor with no parameter, and valid " +
+            "relevant log manager properties are set.",
+      targets = {
+        @TestTarget(
+          methodName = "StreamHandler",
+          methodArgs = {}
+        )
+    })
     public void testConstructor_NoParameter_ValidProperties() throws Exception {
         Properties p = new Properties();
         p.put("java.util.logging.StreamHandler.level", "FINE");
@@ -163,6 +196,16 @@ public class StreamHandlerTest extends TestCase {
      * Test the constructor with no parameter, and invalid relevant log manager
      * properties are set.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies the constructor with no parameter, and invalid " +
+            "relevant log manager properties are set.",
+      targets = {
+        @TestTarget(
+          methodName = "StreamHandler",
+          methodArgs = {}
+        )
+    })
     public void testConstructor_NoParameter_InvalidProperties()
             throws Exception {
         Properties p = new Properties();
@@ -191,6 +234,17 @@ public class StreamHandlerTest extends TestCase {
      * Test the constructor with normal parameter values, and no relevant log
      * manager properties are set.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies the constructor with normal parameter values, " +
+            "and no relevant log manager properties are set.",
+      targets = {
+        @TestTarget(
+          methodName = "StreamHandler",
+          methodArgs = {java.io.OutputStream.class, 
+                  java.util.logging.Formatter.class}
+        )
+    })
     public void testConstructor_HasParameters_NoProperties() {
         assertNull(LogManager.getLogManager().getProperty(
                 "java.util.logging.StreamHandler.level"));
@@ -212,6 +266,16 @@ public class StreamHandlerTest extends TestCase {
     /*
      * Test the constructor with insufficient privilege.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies the constructor with insufficient privilege.",
+      targets = {
+        @TestTarget(
+          methodName = "StreamHandler",
+          methodArgs = {java.io.OutputStream.class, 
+                  java.util.logging.Formatter.class}
+        )
+    })
     public void testConstructor_HasParameter_InsufficientPrivilege() {
         assertNull(LogManager.getLogManager().getProperty(
                 "java.util.logging.StreamHandler.level"));
@@ -241,6 +305,16 @@ public class StreamHandlerTest extends TestCase {
      * Test the constructor with normal parameter values, and valid relevant log
      * manager properties are set.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies the constructor with normal parameter values, " +
+            "and valid relevant log manager properties are set.",
+      targets = {
+        @TestTarget(
+          methodName = "StreamHandler",
+          methodArgs = {java.io.OutputStream.class, java.util.logging.Formatter.class}
+        )
+    })
     public void testConstructor_HasParameters_ValidProperties()
             throws Exception {
         Properties p = new Properties();
@@ -269,6 +343,16 @@ public class StreamHandlerTest extends TestCase {
      * Test the constructor with normal parameter, and invalid relevant log
      * manager properties are set.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies the constructor with normal parameter, " +
+            "and invalid relevant log manager properties are set.",
+      targets = {
+        @TestTarget(
+          methodName = "StreamHandler",
+          methodArgs = {java.io.OutputStream.class, java.util.logging.Formatter.class}
+        )
+    })
     public void testConstructor_HasParameters_InvalidProperties()
             throws Exception {
         Properties p = new Properties();
@@ -295,6 +379,16 @@ public class StreamHandlerTest extends TestCase {
      * Test the constructor with null formatter, and invalid relevant log manager
      * properties are set.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies the constructor with null formatter, " +
+            "and invalid relevant log manager properties are set.",
+      targets = {
+        @TestTarget(
+          methodName = "StreamHandler",
+          methodArgs = {java.io.OutputStream.class, java.util.logging.Formatter.class}
+        )
+    })
     public void testConstructor_HasParameters_ValidPropertiesNullStream()
             throws Exception {
         Properties p = new Properties();
@@ -323,6 +417,16 @@ public class StreamHandlerTest extends TestCase {
      * Test the constructor with null output stream, and invalid relevant log
      * manager properties are set.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies the constructor with null output stream, " +
+            "and invalid relevant log manager properties are set.",
+      targets = {
+        @TestTarget(
+          methodName = "StreamHandler",
+          methodArgs = {java.io.OutputStream.class, java.util.logging.Formatter.class}
+        )
+    })
     public void testConstructor_HasParameters_ValidPropertiesNullFormatter()
             throws Exception {
         Properties p = new Properties();
@@ -351,6 +455,16 @@ public class StreamHandlerTest extends TestCase {
      * Test close() when having sufficient privilege, and a record has been
      * written to the output stream.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies close() when having sufficient privilege, " +
+            "and a record has been written to the output stream.",
+      targets = {
+        @TestTarget(
+          methodName = "close",
+          methodArgs = {}
+        )
+    })
     public void testClose_SufficientPrivilege_NormalClose() {
         ByteArrayOutputStream aos = new MockOutputStream();
         StreamHandler h = new StreamHandler(aos, new MockFormatter());
@@ -371,6 +485,15 @@ public class StreamHandlerTest extends TestCase {
      * Test close() when having sufficient privilege, and an output stream that
      * always throws exceptions.
      */
+    @TestInfo
+    (level = TestLevel.PARTIAL_OK, 
+            purpose = "Verifies close() when having sufficient privilege, " +
+                    "and an output stream that always throws exceptions.", 
+            targets = {@TestTarget(
+                         methodName = "close", 
+                         methodArgs = {})
+            }
+     )
     public void testClose_SufficientPrivilege_Exception() {
         ByteArrayOutputStream aos = new MockExceptionOutputStream();
         StreamHandler h = new StreamHandler(aos, new MockFormatter());
@@ -384,6 +507,15 @@ public class StreamHandlerTest extends TestCase {
      * Test close() when having sufficient privilege, and no record has been
      * written to the output stream.
      */
+    @TestInfo
+    (level = TestLevel.PARTIAL_OK, 
+            purpose = "Verifies close() method when having sufficient privilege, " +
+                    "and no record has been written to the output stream.", 
+            targets = 
+            {
+            @TestTarget(methodName = "close", methodArgs = {})
+            }
+     )
     public void testClose_SufficientPrivilege_DirectClose() {
         ByteArrayOutputStream aos = new MockOutputStream();
         StreamHandler h = new StreamHandler(aos, new MockFormatter());
@@ -394,19 +526,27 @@ public class StreamHandlerTest extends TestCase {
         assertEquals("flush", CallVerificationStack.getInstance()
                 .getCurrentSourceMethod());
         CallVerificationStack.getInstance().clear();
-        assertEquals("MockFormatter_HeadMockFormatter_Tail", aos.toString()
-                );
+        assertEquals("MockFormatter_HeadMockFormatter_Tail", aos.toString());
     }
 
     /*
      * Test close() when having insufficient privilege.
      */
-    public void testClose_InsufficientPrivilege() {
+    @TestInfo
+    (level = TestLevel.PARTIAL_OK, 
+            purpose = "Verifies SecurityException.", 
+            targets = 
+            {
+            @TestTarget(methodName = "close", methodArgs = {})
+            }
+     )
+     public void testClose_InsufficientPrivilege() {          
+        StreamHandler h = new StreamHandler(new ByteArrayOutputStream(),
+                new MockFormatter());
+
         SecurityManager oldMan = System.getSecurityManager();
         System.setSecurityManager(new MockSecurityManager());
         try {
-            StreamHandler h = new StreamHandler(new ByteArrayOutputStream(),
-                    new MockFormatter());
             h.close();
             fail("Should throw SecurityException!");
         } catch (SecurityException e) {
@@ -419,6 +559,14 @@ public class StreamHandlerTest extends TestCase {
     /*
      * Test close() when having no output stream.
      */
+    @TestInfo
+    (level = TestLevel.PARTIAL_OK, 
+            purpose = "Verifies close() method when having no output stream.", 
+            targets = 
+            {
+            @TestTarget(methodName = "close", methodArgs = {})
+            }
+     )
     public void testClose_NoOutputStream() {
         StreamHandler h = new StreamHandler();
         h.close();
@@ -427,12 +575,20 @@ public class StreamHandlerTest extends TestCase {
     /*
      * Test flush().
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies flush() method.",
+      targets = {
+        @TestTarget(
+          methodName = "flush",
+          methodArgs = {}
+        )
+    })
     public void testFlush_Normal() {
         ByteArrayOutputStream aos = new MockOutputStream();
         StreamHandler h = new StreamHandler(aos, new MockFormatter());
         h.flush();
-        assertEquals("flush", CallVerificationStack.getInstance()
-                .getCurrentSourceMethod());
+        assertEquals("flush", CallVerificationStack.getInstance().getCurrentSourceMethod());
         assertNull(CallVerificationStack.getInstance().pop());
         CallVerificationStack.getInstance().clear();
     }
@@ -440,14 +596,32 @@ public class StreamHandlerTest extends TestCase {
     /*
      * Test flush() when having no output stream.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies flush() when having no output stream.",
+      targets = {
+        @TestTarget(
+          methodName = "flush",
+          methodArgs = {}
+        )
+    })
     public void testFlush_NoOutputStream() {
         StreamHandler h = new StreamHandler();
         h.flush();
     }
 
     /*
-     * Test isLoggable(), use no filter, having output stream
+     * Test isLoggable(), use no filter, having no output stream
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies isLoggable(), use no filter, having no output stream.",
+      targets = {
+        @TestTarget(
+          methodName = "isLoggable",
+          methodArgs = {java.util.logging.LogRecord.class}
+        )
+    })
     public void testIsLoggable_NoOutputStream() {
         StreamHandler h = new StreamHandler();
         LogRecord r = new LogRecord(Level.INFO, null);
@@ -467,6 +641,15 @@ public class StreamHandlerTest extends TestCase {
     /*
      * Test isLoggable(), use no filter, having output stream
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies isLoggable(), use no filter, having output stream.",
+      targets = {
+        @TestTarget(
+          methodName = "isLoggable",
+          methodArgs = {java.util.logging.LogRecord.class}
+        )
+    })
     public void testIsLoggable_NoFilter() {
         StreamHandler h = new StreamHandler(new ByteArrayOutputStream(),
                 new SimpleFormatter());
@@ -487,6 +670,15 @@ public class StreamHandlerTest extends TestCase {
     /*
      * Test isLoggable(), use a filter, having output stream
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies isLoggable(), use a filter, having output stream.",
+      targets = {
+        @TestTarget(
+          methodName = "isLoggable",
+          methodArgs = {java.util.logging.LogRecord.class}
+        )
+    })
     public void testIsLoggable_WithFilter() {
         StreamHandler h = new StreamHandler(new ByteArrayOutputStream(),
                 new SimpleFormatter());
@@ -500,7 +692,7 @@ public class StreamHandlerTest extends TestCase {
         assertSame(r, CallVerificationStack.getInstance().pop());
 
         h.setLevel(Level.WARNING);
-        assertFalse(h.isLoggable(r));
+        assertFalse(h.isLoggable(r)); //level to high, data will not reach the filter
         assertTrue(CallVerificationStack.getInstance().empty());
     }
 
@@ -508,6 +700,16 @@ public class StreamHandlerTest extends TestCase {
      * Test isLoggable(), null log record, having output stream. Handler should
      * call ErrorManager to handle exceptional case
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies isLoggable(), null log record, having output stream. " +
+            "Handler should call ErrorManager to handle exceptional case.",
+      targets = {
+        @TestTarget(
+          methodName = "isLoggable",
+          methodArgs = {java.util.logging.LogRecord.class}
+        )
+    })
     public void testIsLoggable_Null() {
         StreamHandler h = new StreamHandler(new ByteArrayOutputStream(),
                 new SimpleFormatter());
@@ -517,6 +719,15 @@ public class StreamHandlerTest extends TestCase {
     /*
      * Test isLoggable(), null log record, without output stream
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies isLoggable(), null log record, without output stream.",
+      targets = {
+        @TestTarget(
+          methodName = "isLoggable",
+          methodArgs = {java.util.logging.LogRecord.class}
+        )
+    })
     public void testIsLoggable_Null_NoOutputStream() {
         StreamHandler h = new StreamHandler();
         assertFalse(h.isLoggable(null));
@@ -525,8 +736,18 @@ public class StreamHandlerTest extends TestCase {
     /*
      * Test publish(), use no filter, having output stream, normal log record.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies publish(), use no filter, having output stream, " +
+            "normal log record.",
+      targets = {
+        @TestTarget(
+          methodName = "publish",
+          methodArgs = {java.util.logging.LogRecord.class}
+        )
+    })
     public void testPublish_NoOutputStream() {
-        StreamHandler h = new StreamHandler();
+        StreamHandler h = new StreamHandler(); 
         LogRecord r = new LogRecord(Level.INFO, "testPublish_NoOutputStream");
         h.publish(r);
 
@@ -544,6 +765,16 @@ public class StreamHandlerTest extends TestCase {
     /*
      * Test publish(), use no filter, having output stream, normal log record.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies publish(), use no filter, having output stream, " +
+            "normal log record.",
+      targets = {
+        @TestTarget(
+          methodName = "publish",
+          methodArgs = {java.util.logging.LogRecord.class}
+        )
+    })
     public void testPublish_NoFilter() {
         ByteArrayOutputStream aos = new ByteArrayOutputStream();
         StreamHandler h = new StreamHandler(aos, new MockFormatter());
@@ -578,6 +809,16 @@ public class StreamHandlerTest extends TestCase {
     /*
      * Test publish(), use a filter, having output stream, normal log record.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies publish(), use a filter, having output stream, " +
+            "normal log record.",
+      targets = {
+        @TestTarget(
+          methodName = "publish",
+          methodArgs = {java.util.logging.LogRecord.class}
+        )
+    })
     public void testPublish_WithFilter() {
         ByteArrayOutputStream aos = new ByteArrayOutputStream();
         StreamHandler h = new StreamHandler(aos, new MockFormatter());
@@ -614,6 +855,16 @@ public class StreamHandlerTest extends TestCase {
      * Test publish(), null log record, handler should call ErrorManager to
      * handle exceptional case
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies publish(), null log record, handler should call " +
+            "ErrorManager to handle exceptional case.",
+      targets = {
+        @TestTarget(
+          methodName = "publish",
+          methodArgs = {java.util.logging.LogRecord.class}
+        )
+    })
     public void testPublish_Null() {
         StreamHandler h = new StreamHandler(new ByteArrayOutputStream(),
                 new SimpleFormatter());
@@ -623,6 +874,15 @@ public class StreamHandlerTest extends TestCase {
     /*
      * Test publish(), null log record, without output stream
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies publish(), null log record, without output stream.",
+      targets = {
+        @TestTarget(
+          methodName = "publish",
+          methodArgs = {java.util.logging.LogRecord.class}
+        )
+    })
     public void testPublish_Null_NoOutputStream() {
         StreamHandler h = new StreamHandler();
         h.publish(null);
@@ -640,6 +900,16 @@ public class StreamHandlerTest extends TestCase {
     /*
      * Test publish(), a log record with empty msg, having output stream
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies publish(), a log record with empty msg, " +
+            "having output stream.",
+      targets = {
+        @TestTarget(
+          methodName = "publish",
+          methodArgs = {java.util.logging.LogRecord.class}
+        )
+    })
     public void testPublish_EmptyMsg() {
         ByteArrayOutputStream aos = new ByteArrayOutputStream();
         StreamHandler h = new StreamHandler(aos, new MockFormatter());
@@ -652,6 +922,16 @@ public class StreamHandlerTest extends TestCase {
     /*
      * Test publish(), a log record with null msg, having output stream
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies publish(), a log record with null msg, " +
+            "having output stream.",
+      targets = {
+        @TestTarget(
+          methodName = "publish",
+          methodArgs = {java.util.logging.LogRecord.class}
+        )
+    })
     public void testPublish_NullMsg() {
         ByteArrayOutputStream aos = new ByteArrayOutputStream();
         StreamHandler h = new StreamHandler(aos, new MockFormatter());
@@ -664,6 +944,15 @@ public class StreamHandlerTest extends TestCase {
     /*
      * Test publish(), after close.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies publish(), after close.",
+      targets = {
+        @TestTarget(
+          methodName = "publish",
+          methodArgs = {java.util.logging.LogRecord.class}
+        )
+    })
     public void testPublish_AfterClose() throws Exception {
         Properties p = new Properties();
         p.put("java.util.logging.StreamHandler.level", "FINE");
@@ -685,6 +974,15 @@ public class StreamHandlerTest extends TestCase {
     /*
      * Test setEncoding() method with supported encoding.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies setEncoding() method with supported encoding.",
+      targets = {
+        @TestTarget(
+          methodName = "setEncoding",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void testSetEncoding_Normal() throws Exception {
         ByteArrayOutputStream aos = new ByteArrayOutputStream();
         StreamHandler h = new StreamHandler(aos, new MockFormatter());
@@ -704,6 +1002,16 @@ public class StreamHandlerTest extends TestCase {
      * Test setEncoding() method with supported encoding, after a log record
      * has been written.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies setEncoding() method with supported encoding, " +
+            "after a log record has been written.",
+      targets = {
+        @TestTarget(
+          methodName = "setEncoding",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void testSetEncoding_AfterPublish() throws Exception {
         ByteArrayOutputStream aos = new ByteArrayOutputStream();
         StreamHandler h = new StreamHandler(aos, new MockFormatter());
@@ -739,6 +1047,15 @@ public class StreamHandlerTest extends TestCase {
     /*
      * Test setEncoding() methods with null.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies setEncoding() methods with null.",
+      targets = {
+        @TestTarget(
+          methodName = "setEncoding",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void testSetEncoding_Null() throws Exception {
         StreamHandler h = new StreamHandler();
         h.setEncoding(null);
@@ -748,6 +1065,15 @@ public class StreamHandlerTest extends TestCase {
     /*
      * Test setEncoding() methods with unsupported encoding.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies setEncoding() methods with unsupported encoding.",
+      targets = {
+        @TestTarget(
+          methodName = "setEncoding",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void testSetEncoding_Unsupported() {
         StreamHandler h = new StreamHandler();
         try {
@@ -762,6 +1088,15 @@ public class StreamHandlerTest extends TestCase {
     /*
      * Test setEncoding() with insufficient privilege.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies setEncoding() method with insufficient privilege.",
+      targets = {
+        @TestTarget(
+          methodName = "setEncoding",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void testSetEncoding_InsufficientPrivilege() throws Exception {
         StreamHandler h = new StreamHandler();
         SecurityManager oldMan = System.getSecurityManager();
@@ -793,6 +1128,16 @@ public class StreamHandlerTest extends TestCase {
     /*
      * Test setEncoding() methods will flush a stream before setting.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies that setEncoding() method will flush a stream " +
+            "before setting.",
+      targets = {
+        @TestTarget(
+          methodName = "setEncoding",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void testSetEncoding_FlushBeforeSetting() throws Exception {
         ByteArrayOutputStream aos = new ByteArrayOutputStream();
         StreamHandler h = new StreamHandler(aos, new MockFormatter());
@@ -806,6 +1151,15 @@ public class StreamHandlerTest extends TestCase {
     /*
      * Test setOutputStream() with null.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies setOutputStream() method with null.",
+      targets = {
+        @TestTarget(
+          methodName = "setOutputStream",
+          methodArgs = {java.io.OutputStream.class}
+        )
+    })
     public void testSetOutputStream_null() {
         MockStreamHandler h = new MockStreamHandler(
                 new ByteArrayOutputStream(), new SimpleFormatter());
@@ -820,6 +1174,15 @@ public class StreamHandlerTest extends TestCase {
     /*
      * Test setOutputStream() under normal condition.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies setOutputStream() method under normal condition.",
+      targets = {
+        @TestTarget(
+          methodName = "setOutputStream",
+          methodArgs = {java.io.OutputStream.class}
+        )
+    })
     public void testSetOutputStream_Normal() {
         ByteArrayOutputStream aos = new ByteArrayOutputStream();
         MockStreamHandler h = new MockStreamHandler(aos, new MockFormatter());
@@ -850,6 +1213,15 @@ public class StreamHandlerTest extends TestCase {
     /*
      * Test setOutputStream() after close.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies setOutputStream() method after close.",
+      targets = {
+        @TestTarget(
+          methodName = "setOutputStream",
+          methodArgs = {java.io.OutputStream.class}
+        )
+    })
     public void testSetOutputStream_AfterClose() {
         ByteArrayOutputStream aos = new ByteArrayOutputStream();
         MockStreamHandler h = new MockStreamHandler(aos, new MockFormatter());
@@ -881,6 +1253,16 @@ public class StreamHandlerTest extends TestCase {
     /*
      * Test setOutputStream() when having insufficient privilege.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies setOutputStream() method when having insufficient " +
+            "privilege.",
+      targets = {
+        @TestTarget(
+          methodName = "setOutputStream",
+          methodArgs = {java.io.OutputStream.class}
+        )
+    })
     public void testSetOutputStream_InsufficientPrivilege() {
         MockStreamHandler h = new MockStreamHandler();
         SecurityManager oldMan = System.getSecurityManager();
@@ -1009,7 +1391,6 @@ public class StreamHandlerTest extends TestCase {
          * @see java.io.OutputStream#write(int)
          */
         public void write(int oneByte) {
-            // TODO Auto-generated method stub
             super.write(oneByte);
         }
     }

@@ -51,14 +51,16 @@ class VMThread
      * Suspends the Thread.
      */
     void suspend() {
-        // TODO Ticket 164: Native implementation missing.
+        throw new UnsupportedOperationException(
+                "Deprecated Thread methods are not supported.");
     }
 
     /**
      * Resumes the Thread, assuming it is suspended.
      */
     void resume() {
-        // TODO Ticket 164: Native implementation missing.
+        throw new UnsupportedOperationException(
+                "Deprecated Thread methods are not supported.");
     }
 
     /**
@@ -71,7 +73,8 @@ class VMThread
      * Stops the Thread, passing it a Throwable (which might be ThreadDeath).
      */
     void stop(Throwable throwable) {
-        // TODO Ticket 164: Native implementation missing.
+        throw new UnsupportedOperationException(
+                "Deprecated Thread methods are not supported.");
     }
 
     native void setPriority(int newPriority);

@@ -21,11 +21,16 @@
 */
 
 package org.apache.harmony.security.tests.java.security;
+
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.security.InvalidParameterException;
 
 import junit.framework.TestCase;
-
-
+@TestTargetClass(InvalidParameterException.class)
 /**
  * Tests for <code>InvalidParameterException</code> class constructors and
  * methods.
@@ -56,6 +61,15 @@ public class InvalidParameterExceptionTest extends TestCase {
      * Test for <code>InvalidParameterException()</code> constructor
      * Assertion: constructs InvalidParameterException with no detail message
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "InvalidParameterException",
+          methodArgs = {}
+        )
+    })
     public void testInvalidParameterException01() {
         InvalidParameterException tE = new InvalidParameterException();
         assertNull("getMessage() must return null.", tE.getMessage());
@@ -67,6 +81,15 @@ public class InvalidParameterExceptionTest extends TestCase {
      * Assertion: constructs InvalidParameterException with detail message msg.
      * Parameter <code>msg</code> is not null.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "InvalidParameterException",
+          methodArgs = {String.class}
+        )
+    })
     public void testInvalidParameterException02() {
         InvalidParameterException tE;
         for (int i = 0; i < msgs.length; i++) {
@@ -82,6 +105,15 @@ public class InvalidParameterExceptionTest extends TestCase {
      * Assertion: constructs InvalidParameterException when <code>msg</code>
      * is null
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "InvalidParameterException",
+          methodArgs = {String.class}
+        )
+    })
     public void testInvalidParameterException03() {
         String msg = null;
         InvalidParameterException tE = new InvalidParameterException(msg);

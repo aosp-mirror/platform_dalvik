@@ -17,6 +17,11 @@
 
 package org.apache.harmony.nio.tests.java.nio;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.nio.BufferOverflowException;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteOrder;
@@ -27,6 +32,7 @@ import java.nio.LongBuffer;
  * Tests java.nio.LongBuffer
  * 
  */
+@TestTargetClass(java.nio.LongBuffer.class)
 public class LongBufferTest extends AbstractBufferTest {
     
     
@@ -52,7 +58,15 @@ public class LongBufferTest extends AbstractBufferTest {
      * following usecases: 1. case for check LongBuffer testBuf properties 2.
      * case expected IllegalArgumentException
      */
-    
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify boundary value.",
+      targets = {
+        @TestTarget(
+          methodName = "allocate",
+          methodArgs = {int.class}
+        )
+    })
     public void test_AllocateI() {
         // case: LongBuffer testBuf properties is satisfy the conditions
         // specification
@@ -69,7 +83,15 @@ public class LongBufferTest extends AbstractBufferTest {
             // expected
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "The same test as testArrayOffset.",
+      targets = {
+        @TestTarget(
+          methodName = "array",
+          methodArgs = {}
+        )
+    })
     public void testArray() {
         long array[] = buf.array();
         assertContentEquals(buf, array, buf.arrayOffset(), buf.capacity());
@@ -86,7 +108,15 @@ public class LongBufferTest extends AbstractBufferTest {
         loadTestData2(buf);
         assertContentEquals(buf, array, buf.arrayOffset(), buf.capacity());
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "The same test as testArray.",
+      targets = {
+        @TestTarget(
+          methodName = "arrayOffset",
+          methodArgs = {}
+        )
+    })
     public void testArrayOffset() {
         long array[] = buf.array();
         assertContentEquals(buf, array, buf.arrayOffset(), buf.capacity());
@@ -103,7 +133,15 @@ public class LongBufferTest extends AbstractBufferTest {
         loadTestData2(buf);
         assertContentEquals(buf, array, buf.arrayOffset(), buf.capacity());
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "asReadOnlyBuffer",
+          methodArgs = {}
+        )
+    })
     public void testAsReadOnlyBuffer() {
         buf.clear();
         buf.mark();
@@ -127,7 +165,15 @@ public class LongBufferTest extends AbstractBufferTest {
         buf.reset();
         assertEquals(buf.position(), 0);
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "compact",
+          methodArgs = {}
+        )
+    })
     public void testCompact() {
         // case: buffer is full
         buf.clear();
@@ -178,7 +224,15 @@ public class LongBufferTest extends AbstractBufferTest {
             // expected
         }
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "compareTo",
+          methodArgs = {java.nio.LongBuffer.class}
+        )
+    })
     public void testCompareTo() {
         // compare to self
         assertEquals(0, buf.compareTo(buf));
@@ -201,7 +255,15 @@ public class LongBufferTest extends AbstractBufferTest {
         assertTrue(buf.compareTo(other) > 0);
         assertTrue(other.compareTo(buf) < 0);
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "duplicate",
+          methodArgs = {}
+        )
+    })
     public void testDuplicate() {
         buf.clear();
         buf.mark();
@@ -233,7 +295,15 @@ public class LongBufferTest extends AbstractBufferTest {
             assertContentEquals(buf, duplicate);
         }
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "equals",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void testEquals() {
         // equal to self
         assertTrue(buf.equals(buf));
@@ -259,6 +329,15 @@ public class LongBufferTest extends AbstractBufferTest {
     /*
      * Class under test for long get()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "get",
+          methodArgs = {}
+        )
+    })
     public void testGet() {
         buf.clear();
         for (int i = 0; i < buf.capacity(); i++) {
@@ -276,6 +355,15 @@ public class LongBufferTest extends AbstractBufferTest {
     /*
      * Class under test for java.nio.LongBuffer get(long[])
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "get",
+          methodArgs = {long[].class}
+        )
+    })
     public void testGetlongArray() {
         long array[] = new long[1];
         buf.clear();
@@ -303,6 +391,15 @@ public class LongBufferTest extends AbstractBufferTest {
     /*
      * Class under test for java.nio.LongBuffer get(long[], int, int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "get",
+          methodArgs = {long[].class, int.class, int.class}
+        )
+    })
     public void testGetlongArrayintint() {
         buf.clear();
         long array[] = new long[buf.capacity()];
@@ -370,6 +467,15 @@ public class LongBufferTest extends AbstractBufferTest {
     /*
      * Class under test for long get(int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "get",
+          methodArgs = {int.class}
+        )
+    })
     public void testGetint() {
         buf.clear();
         for (int i = 0; i < buf.capacity(); i++) {
@@ -389,11 +495,27 @@ public class LongBufferTest extends AbstractBufferTest {
             // expected
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies that array method doesn't return null.",
+      targets = {
+        @TestTarget(
+          methodName = "array",
+          methodArgs = {}
+        )
+    })
     public void testHasArray() {
         assertNotNull(buf.array());
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "hashCode",
+          methodArgs = {}
+        )
+    })
     public void testHashCode() {
         buf.clear();
         LongBuffer readonly = buf.asReadOnlyBuffer();
@@ -404,11 +526,27 @@ public class LongBufferTest extends AbstractBufferTest {
         duplicate.position(buf.capacity() / 2);
         assertTrue(buf.hashCode() != duplicate.hashCode());
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies isDirect method for non direct buffer.",
+      targets = {
+        @TestTarget(
+          methodName = "isDirect",
+          methodArgs = {}
+        )
+    })
     public void testIsDirect() {
         assertFalse(buf.isDirect());
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "order",
+          methodArgs = {}
+        )
+    })
     public void testOrder() {
         buf.order();
         assertEquals(ByteOrder.nativeOrder(), buf.order());
@@ -417,6 +555,15 @@ public class LongBufferTest extends AbstractBufferTest {
     /*
      * Class under test for java.nio.LongBuffer put(long)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify ReadOnlyBufferException.",
+      targets = {
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {long.class}
+        )
+    })
     public void testPutlong() {
          buf.clear();
         for (int i = 0; i < buf.capacity(); i++) {
@@ -436,6 +583,15 @@ public class LongBufferTest extends AbstractBufferTest {
     /*
      * Class under test for java.nio.LongBuffer put(long[])
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify ReadOnlyBufferException.",
+      targets = {
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {long[].class}
+        )
+    })
     public void testPutlongArray() {
         long array[] = new long[1];
         buf.clear();
@@ -464,6 +620,15 @@ public class LongBufferTest extends AbstractBufferTest {
     /*
      * Class under test for java.nio.LongBuffer put(long[], int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify ReadOnlyBufferException.",
+      targets = {
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {long[].class, int.class, int.class}
+        )
+    })
     public void testPutlongArrayintint() {
         buf.clear();
         long array[] = new long[buf.capacity()];
@@ -536,6 +701,15 @@ public class LongBufferTest extends AbstractBufferTest {
     /*
      * Class under test for java.nio.LongBuffer put(java.nio.LongBuffer)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify ReadOnlyBufferException.",
+      targets = {
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {java.nio.LongBuffer.class}
+        )
+    })
     public void testPutLongBuffer() {
         LongBuffer other = LongBuffer.allocate(buf.capacity());
         try {
@@ -571,6 +745,15 @@ public class LongBufferTest extends AbstractBufferTest {
     /*
      * Class under test for java.nio.LongBuffer put(int, long)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify ReadOnlyBufferException.",
+      targets = {
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {int.class, long.class}
+        )
+    })
     public void testPutintlong() {
         buf.clear();
         for (int i = 0; i < buf.capacity(); i++) {
@@ -592,7 +775,15 @@ public class LongBufferTest extends AbstractBufferTest {
             // expected
         }
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "slice",
+          methodArgs = {}
+        )
+    })
     public void testSlice() {
         assertTrue(buf.capacity() > 5);
         buf.position(1);
@@ -620,7 +811,15 @@ public class LongBufferTest extends AbstractBufferTest {
             assertEquals(slice.get(1), 500);
         }
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public void testToString() {
         String str = buf.toString();
         assertTrue(str.indexOf("Long") >= 0 || str.indexOf("long") >= 0);
@@ -635,7 +834,15 @@ public class LongBufferTest extends AbstractBufferTest {
      * for check equal between buf2 and ling array[] 3. case for check a buf2
      * dependens to array[]
      */
-    
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "wrap",
+          methodArgs = {long[].class}
+        )
+    })
     public void test_Wrap$L() {
         long array[] = new long[BUFFER_LENGTH];
         loadTestData1(array, 0, BUFFER_LENGTH);
@@ -662,7 +869,15 @@ public class LongBufferTest extends AbstractBufferTest {
      * case for check a buf2 dependens to array[] 4. case expected
      * IndexOutOfBoundsException
      */
-    
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "wrap",
+          methodArgs = {long[].class, int.class, int.class}
+        )
+    })
     public void test_Wrap$LII() {
         long array[] = new long[BUFFER_LENGTH];
         int offset = 5;

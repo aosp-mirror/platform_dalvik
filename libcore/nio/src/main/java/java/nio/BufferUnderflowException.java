@@ -18,10 +18,10 @@ package java.nio;
 
 
 /**
- * A <code>BufferUnderflowException</code> is thrown when you try to read
- * elements from a buffer, but there is not enough remaining elements in the
- * buffer.
+ * A <code>BufferUnderflowException</code> is thrown when elements are read
+ * from a buffer but there are not enough remaining elements in the buffer.
  * 
+ * @since Android 1.0
  */
 public class BufferUnderflowException extends RuntimeException {
 
@@ -29,6 +29,8 @@ public class BufferUnderflowException extends RuntimeException {
 
     /**
      * Constructs a <code>BufferUnderflowException</code>.
+     * 
+     * @since Android 1.0
      */
     public BufferUnderflowException() {
         super();

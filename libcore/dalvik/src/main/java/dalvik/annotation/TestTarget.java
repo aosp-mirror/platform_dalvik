@@ -25,6 +25,8 @@ import java.lang.annotation.Target;
  * Defines an annotation used be used within the TestInfo annotation. It
  * specifies a single method target for the test (but can be used multiple
  * times).
+ * 
+ * @since Android 1.0
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.ANNOTATION_TYPE })
@@ -33,7 +35,19 @@ public @interface TestTarget {
     /**
      * Specifies the name of the method that is being tested.
      */
-    String methodName();
+    String methodName() default "";
+
+    /**
+     * Specifies the name of a concept being tested. Use this if
+     * {@code methodName} is not accurate enough. E.g. for
+     * {@link java.util.regex.Pattern#compile(String)} {@code methodName} is not
+     * sufficient since the String contains a pattern with its own syntax which
+     * has to be tested with different aspects. Areas concerned are e.g. JDBC
+     * (SELECT, INSERT, UPDATE, DELETE, ...), regex (character sets,
+     * operators,...), formatters (DecimalFormat, DateFormat, ChoiceFormat,
+     * ...), ...
+     */
+    String conceptName() default "";
     
     /**
      * Specifies the signature of the method that is being tested, in terms of

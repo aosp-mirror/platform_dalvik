@@ -15,6 +15,11 @@
  */
 package tests.api.java.nio.charset;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestLevel;
+
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.CharacterCodingException;
@@ -29,7 +34,7 @@ import java.nio.charset.UnsupportedCharsetException;
 import java.util.Arrays;
 
 import junit.framework.TestCase;
-
+@TestTargetClass(CharsetEncoder.class)
 /**
  * API unit test for java.nio.charset.CharsetEncoder
  */
@@ -81,11 +86,44 @@ public class CharsetEncoderTest extends TestCase {
         super.tearDown();
     }
 
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "averageBytesPerChar",
+          methodArgs = {}
+        ), @TestTarget(
+          methodName = "maxBytesPerChar",
+          methodArgs = {}
+        )
+    })
     public void testSpecificDefaultValue() {
         assertTrue(encoder.averageBytesPerChar() == AVER_BYTES);
         assertTrue(encoder.maxBytesPerChar() == MAX_BYTES);
     }
 
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "onMalformedInput & onUnmappableCharacter requires check for IllegalArgumentException",
+      targets = {
+        @TestTarget(
+          methodName = "malformedInputAction",
+          methodArgs = {}
+        ), @TestTarget(
+          methodName = "unmappableCharacterAction",
+          methodArgs = {}
+        ), @TestTarget(
+          methodName = "onMalformedInput",
+          methodArgs = {java.nio.charset.CodingErrorAction.class}
+        ), @TestTarget(
+          methodName = "onUnmappableCharacter",
+          methodArgs = {java.nio.charset.CodingErrorAction.class}
+        ), @TestTarget(
+          methodName = "replacement",
+          methodArgs = {}
+        )
+    })
     public void testDefaultValue() {
         assertEquals(CodingErrorAction.REPORT, encoder.malformedInputAction());
         assertEquals(CodingErrorAction.REPORT, encoder
@@ -105,6 +143,33 @@ public class CharsetEncoderTest extends TestCase {
     /*
      * Class under test for constructor CharsetEncoder(Charset, float, float)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "charset",
+          methodArgs = {}
+        ), @TestTarget(
+          methodName = "averageBytesPerChar",
+          methodArgs = {}
+        ), @TestTarget(
+          methodName = "maxBytesPerChar",
+          methodArgs = {}
+        ), @TestTarget(
+          methodName = "malformedInputAction",
+          methodArgs = {}
+        ), @TestTarget(
+          methodName = "unmappableCharacterAction",
+          methodArgs = {}
+        ), @TestTarget(
+          methodName = "CharsetEncoder",
+          methodArgs = {java.nio.charset.Charset.class, float.class, float.class}
+        ), @TestTarget(
+          methodName = "replacement",
+          methodArgs = {}
+        )
+    })
     public void testCharsetEncoderCharsetfloatfloat() {
         // default value
         encoder = new MockCharsetEncoder(cs, (float) AVER_BYTES, MAX_BYTES);
@@ -174,6 +239,27 @@ public class CharsetEncoderTest extends TestCase {
      * Class under test for constructor CharsetEncoder(Charset, float, float,
      * byte[])
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "CharsetEncoder",
+          methodArgs = {java.nio.charset.Charset.class, float.class, float.class, byte[].class}
+        ), @TestTarget(
+          methodName = "charset",
+          methodArgs = {}
+        ), @TestTarget(
+          methodName = "averageBytesPerChar",
+          methodArgs = {}
+        ), @TestTarget(
+          methodName = "maxBytesPerChar",
+          methodArgs = {}
+        ), @TestTarget(
+          methodName = "replacement",
+          methodArgs = {}
+        )
+    })
     public void testCharsetEncoderCharsetfloatfloatbyteArray() {
         byte[] ba = getLegalByteArray();
         // normal case
@@ -248,6 +334,15 @@ public class CharsetEncoderTest extends TestCase {
     /*
      * Class under test for boolean canEncode(char)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IllegalStateException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "canEncode",
+          methodArgs = {char.class}
+        )
+    })
     public void testCanEncodechar() throws CharacterCodingException {
         // for non-mapped char
         assertTrue(encoder.canEncode('\uc2c0'));
@@ -267,6 +362,27 @@ public class CharsetEncoderTest extends TestCase {
 
     // Normal case: just after reset, and it also means reset can be done
     // anywhere
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "canEncode",
+          methodArgs = {char.class}
+        ), @TestTarget(
+          methodName = "canEncode",
+          methodArgs = {java.lang.CharSequence.class}
+        ), @TestTarget(
+          methodName = "encode",
+          methodArgs = {java.nio.CharBuffer.class}
+        ), @TestTarget(
+          methodName = "encode",
+          methodArgs = {java.nio.CharBuffer.class, java.nio.ByteBuffer.class, boolean.class}
+        ), @TestTarget(
+          methodName = "reset",
+          methodArgs = {}
+        )
+    })
     public void testResetIllegalState() throws CharacterCodingException {
         assertSame(encoder, encoder.reset());
         encoder.canEncode('\ud901');
@@ -281,6 +397,18 @@ public class CharsetEncoderTest extends TestCase {
         assertSame(encoder, encoder.reset());
     }
 
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "reset",
+          methodArgs = {}
+        ), @TestTarget(
+          methodName = "flush",
+          methodArgs = {java.nio.ByteBuffer.class}
+        )
+    })
     public void testFlushIllegalState() throws CharacterCodingException {
         CharBuffer in = CharBuffer.wrap("aaa");
         ByteBuffer out = ByteBuffer.allocate(5);
@@ -309,6 +437,27 @@ public class CharsetEncoderTest extends TestCase {
     }
 
     // test illegal states for encode facade
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "encode",
+          methodArgs = {java.nio.CharBuffer.class}
+        ), @TestTarget(
+          methodName = "canEncode",
+          methodArgs = {char.class}
+        ), @TestTarget(
+          methodName = "canEncode",
+          methodArgs = {java.lang.CharSequence.class}
+        ), @TestTarget(
+          methodName = "encode",
+          methodArgs = {java.nio.CharBuffer.class, java.nio.ByteBuffer.class, boolean.class}
+        ), @TestTarget(
+          methodName = "flush",
+          methodArgs = {java.nio.ByteBuffer.class}
+        )
+    })
     public void testEncodeFacadeIllegalState() throws CharacterCodingException {
         // encode facade can be execute in anywhere
         CharBuffer in = CharBuffer.wrap("aaa");
@@ -354,6 +503,27 @@ public class CharsetEncoderTest extends TestCase {
     }
 
     // test illegal states for two encode method with endOfInput is true
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "encode",
+          methodArgs = {java.nio.CharBuffer.class, java.nio.ByteBuffer.class, boolean.class}
+        ), @TestTarget(
+          methodName = "canEncode",
+          methodArgs = {char.class}
+        ), @TestTarget(
+          methodName = "canEncode",
+          methodArgs = {java.lang.CharSequence.class}
+        ), @TestTarget(
+          methodName = "reset",
+          methodArgs = {}
+        ), @TestTarget(
+          methodName = "flush",
+          methodArgs = {java.nio.ByteBuffer.class}
+        )
+    })
     public void testEncodeTrueIllegalState() throws CharacterCodingException {
         CharBuffer in = CharBuffer.wrap("aaa");
         ByteBuffer out = ByteBuffer.allocate(5);
@@ -404,6 +574,30 @@ public class CharsetEncoderTest extends TestCase {
     }
 
     // test illegal states for two encode method with endOfInput is false
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "encode",
+          methodArgs = {java.nio.CharBuffer.class, java.nio.ByteBuffer.class, boolean.class}
+        ), @TestTarget(
+          methodName = "encode",
+          methodArgs = {java.nio.CharBuffer.class}
+        ), @TestTarget(
+          methodName = "canEncode",
+          methodArgs = {char.class}
+        ), @TestTarget(
+          methodName = "canEncode",
+          methodArgs = {java.lang.CharSequence.class}
+        ), @TestTarget(
+          methodName = "reset",
+          methodArgs = {}
+        ), @TestTarget(
+          methodName = "flush",
+          methodArgs = {java.nio.ByteBuffer.class}
+        )
+    })
     public void testEncodeFalseIllegalState() throws CharacterCodingException {
         CharBuffer in = CharBuffer.wrap("aaa");
         ByteBuffer out = ByteBuffer.allocate(5);
@@ -462,6 +656,24 @@ public class CharsetEncoderTest extends TestCase {
     }
 
     // test illegal states for two canEncode methods
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "canEncode",
+          methodArgs = {char.class}
+        ), @TestTarget(
+          methodName = "canEncode",
+          methodArgs = {java.lang.CharSequence.class}
+        ), @TestTarget(
+          methodName = "reset",
+          methodArgs = {}
+        ), @TestTarget(
+          methodName = "flush",
+          methodArgs = {java.nio.ByteBuffer.class}
+        )
+    })
     public void testCanEncodeIllegalState() throws CharacterCodingException {
         // Normal case: just created
         encoder.canEncode("\ud900\udc00");
@@ -508,6 +720,15 @@ public class CharsetEncoderTest extends TestCase {
     /*
      * Class under test for boolean canEncode(CharSequence)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IllegalStateException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "canEncode",
+          methodArgs = {java.lang.CharSequence.class}
+        )
+    })
     public void testCanEncodeCharSequence() {
         // for non-mapped char
         assertTrue(encoder.canEncode("\uc2c0"));
@@ -524,6 +745,15 @@ public class CharsetEncoderTest extends TestCase {
     /*
      * Class under test for Charset charset()
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "CharsetEncoder",
+          methodArgs = {java.nio.charset.Charset.class, float.class, float.class}
+        )
+    })
     public void testCharset() {
         try {
             encoder = new MockCharsetEncoder(Charset.forName("gbk"), 1,
@@ -538,6 +768,15 @@ public class CharsetEncoderTest extends TestCase {
     /*
      * Class under test for ByteBuffer encode(CharBuffer)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Functional test. Exceptions checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "encode",
+          methodArgs = {java.nio.CharBuffer.class}
+        )
+    })
     public void testEncodeCharBuffer() throws CharacterCodingException {
         // Null pointer
         try {
@@ -598,6 +837,15 @@ public class CharsetEncoderTest extends TestCase {
         return CharBuffer.wrap("runtime buffer");
     }
 
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Missed checking for IllegalStateException & CharacterCodingException",
+      targets = {
+        @TestTarget(
+          methodName = "encode",
+          methodArgs = {java.nio.CharBuffer.class}
+        )
+    })
     public void testEncodeCharBufferException() throws CharacterCodingException {
         ByteBuffer out;
         CharBuffer in;
@@ -677,6 +925,15 @@ public class CharsetEncoderTest extends TestCase {
     /*
      * Class under test for CoderResult encode(CharBuffer, ByteBuffer, boolean)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Functional test. Exceptions checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "encode",
+          methodArgs = {java.nio.CharBuffer.class, java.nio.ByteBuffer.class, boolean.class}
+        )
+    })
     public void testEncodeCharBufferByteBufferboolean()
             throws CharacterCodingException {
         ByteBuffer out = ByteBuffer.allocate(200);
@@ -782,11 +1039,29 @@ public class CharsetEncoderTest extends TestCase {
         }
     }
 
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Functional test. Exceptions checking missed.",
+            targets = {
+              @TestTarget(
+                methodName = "encode",
+                methodArgs = {java.nio.CharBuffer.class, java.nio.ByteBuffer.class, boolean.class}
+              )
+          })
     public void testEncodeCharBufferByteBufferbooleanExceptionFalse()
             throws CharacterCodingException {
         implTestEncodeCharBufferByteBufferbooleanException(false);
     }
 
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Functional test. Exceptions checking missed.",
+            targets = {
+              @TestTarget(
+                methodName = "encode",
+                methodArgs = {java.nio.CharBuffer.class, java.nio.ByteBuffer.class, boolean.class}
+              )
+          })
     public void testEncodeCharBufferByteBufferbooleanExceptionTrue()
             throws CharacterCodingException {
         implTestEncodeCharBufferByteBufferbooleanException(true);
@@ -887,6 +1162,15 @@ public class CharsetEncoderTest extends TestCase {
     /*
      * Class under test for CoderResult flush(ByteBuffer)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "encode",
+          methodArgs = {java.nio.CharBuffer.class, java.nio.ByteBuffer.class, boolean.class}
+        )
+    })
     public void testFlush() throws CharacterCodingException {
         ByteBuffer out = ByteBuffer.allocate(6);
         CharBuffer in = CharBuffer.wrap("aaa");
@@ -902,6 +1186,15 @@ public class CharsetEncoderTest extends TestCase {
     /*
      * test isLegalReplacement(byte[])
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isLegalReplacement",
+          methodArgs = {byte[].class}
+        )
+    })
     public void testIsLegalReplacement() {
         try {
             encoder.isLegalReplacement(null);
@@ -917,6 +1210,15 @@ public class CharsetEncoderTest extends TestCase {
         }
     }
 
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isLegalReplacement",
+          methodArgs = {byte[].class}
+        )
+    })
     public void testIsLegalReplacementEmptyArray() {
         // ISO, ASC, GB, UTF8 encoder will throw exception in RI
         // others will pass
@@ -927,6 +1229,18 @@ public class CharsetEncoderTest extends TestCase {
         // }
     }
 
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "onMalformedInput",
+          methodArgs = {java.nio.charset.CodingErrorAction.class}
+        ), @TestTarget(
+          methodName = "malformedInputAction",
+          methodArgs = {}
+        )
+    })
     public void testOnMalformedInput() {
         assertSame(CodingErrorAction.REPORT, encoder.malformedInputAction());
         try {
@@ -938,6 +1252,18 @@ public class CharsetEncoderTest extends TestCase {
         assertSame(CodingErrorAction.IGNORE, encoder.malformedInputAction());
     }
 
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "onUnmappableCharacter",
+          methodArgs = {java.nio.charset.CodingErrorAction.class}
+        ), @TestTarget(
+          methodName = "unmappableCharacterAction",
+          methodArgs = {}
+        )
+    })
     public void testOnUnmappableCharacter() {
         assertSame(CodingErrorAction.REPORT, encoder
                 .unmappableCharacterAction());
@@ -951,6 +1277,18 @@ public class CharsetEncoderTest extends TestCase {
                 .unmappableCharacterAction());
     }
 
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "replaceWith",
+          methodArgs = {byte[].class}
+        ), @TestTarget(
+          methodName = "replacement",
+          methodArgs = {}
+        )
+    })
     public void testReplacement() {
         try {
             encoder.replaceWith(null);

@@ -14,7 +14,7 @@ import java.security.PrivilegedExceptionAction;
 /**
  * An {@link Executor} that provides methods to manage termination and
  * methods that can produce a {@link Future} for tracking progress of
- * one or more asynchronous tasks.
+ * one or more asynchronous tasks.  
  *
  * <p>
  * An <tt>ExecutorService</tt> can be shut down, which will cause it
@@ -163,7 +163,7 @@ public interface ExecutorService extends Executor {
     /**
      * Submits a Runnable task for execution and returns a Future 
      * representing that task that will upon completion return 
-     * the given result.
+     * the given result
      *
      * @param task the task to submit
      * @param result the result to return
@@ -207,6 +207,7 @@ public interface ExecutorService extends Executor {
      * @throws RejectedExecutionException if any task cannot be scheduled
      * for execution
      */
+
     <T> List<Future<T>> invokeAll(Collection<Callable<T>> tasks)
         throws InterruptedException;
 

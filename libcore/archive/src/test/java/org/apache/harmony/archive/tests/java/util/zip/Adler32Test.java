@@ -16,13 +16,28 @@
  */
 package org.apache.harmony.archive.tests.java.util.zip;
 
+import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.util.zip.Adler32;
 
+@TestTargetClass(Adler32.class) 
 public class Adler32Test extends junit.framework.TestCase {
 
     /**
      * @tests java.util.zip.Adler32#Adler32()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Adler32",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         // test method of java.util.zip.Adler32()
         Adler32 adl = new Adler32();
@@ -32,6 +47,15 @@ public class Adler32Test extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.Adler32#getValue()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getValue",
+          methodArgs = {}
+        )
+    })
     public void test_getValue() {
         // test methods of java.util.zip.getValue()
         Adler32 adl = new Adler32();
@@ -59,6 +83,15 @@ public class Adler32Test extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.Adler32#reset()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "reset",
+          methodArgs = {}
+        )
+    })
     public void test_reset() {
         // test methods of java.util.zip.reset()
         Adler32 adl = new Adler32();
@@ -75,6 +108,15 @@ public class Adler32Test extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.Adler32#update(int)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "update",
+          methodArgs = {int.class}
+        )
+    })
     public void test_updateI() {
         // test methods of java.util.zip.update(int)
         Adler32 adl = new Adler32();
@@ -102,6 +144,15 @@ public class Adler32Test extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.Adler32#update(byte[])
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "update",
+          methodArgs = {byte[].class}
+        )
+    })
     public void test_update$B() {
         // test method of java.util.zip.update(byte[])
         byte byteArray[] = { 1, 2 };
@@ -125,6 +176,15 @@ public class Adler32Test extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.Adler32#update(byte[], int, int)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "update",
+          methodArgs = {byte[].class, int.class, int.class}
+        )
+    })
     public void test_update$BII() {
         // test methods of java.util.zip.update(byte[],int,int)
         byte[] byteArray = { 1, 2, 3 };

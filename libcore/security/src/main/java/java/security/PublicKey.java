@@ -23,15 +23,17 @@
 package java.security;
 
 /**
- * Superinterface for all specific public key interfaces
+ * {@code PublicKey} is the common interface for public keys.
  * 
- * 
- * @see PublicKey
  * @see PrivateKey
+ * @since Android 1.0
  */
 public interface PublicKey extends Key {
+    
     /**
-     * @com.intel.drl.spec_ref
+     * The {@code serialVersionUID} to be compatible with JDK1.1.
+     * 
+     * @since Android 1.0
      */
     public static final long serialVersionUID = 7187392471159151072L;
 }

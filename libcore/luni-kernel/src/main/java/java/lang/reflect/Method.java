@@ -14,22 +14,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/*
+ * Copyright (C) 2008 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package java.lang.reflect;
 
-// BEGIN android-added
+import java.lang.annotation.Annotation;
+
 import org.apache.harmony.kernel.vm.StringUtils;
 import org.apache.harmony.luni.lang.reflect.GenericSignatureParser;
 import org.apache.harmony.luni.lang.reflect.ListOfTypes;
 import org.apache.harmony.luni.lang.reflect.Types;
-// END android-added
-
-import java.lang.annotation.Annotation;
-
 
 /**
- * This class models a method. Information about the method can be accessed, and
- * the method can be invoked dynamically.
+ * This class represents a method. Information about the method can be accessed,
+ * and the method can be invoked dynamically.
+ * 
+ * @since Android 1.0
  */
 public final class Method extends AccessibleObject implements GenericDeclaration, Member {
     
@@ -45,7 +59,6 @@ public final class Method extends AccessibleObject implements GenericDeclaration
     
     private Class<?> returnType;
 
-    // BEGIN android-added
     private ListOfTypes genericExceptionTypes;
     private ListOfTypes genericParameterTypes;
     private Type genericReturnType;
@@ -64,21 +77,10 @@ public final class Method extends AccessibleObject implements GenericDeclaration
             genericTypesAreInitialized = true;
         }
     }
-    // END android-added
-    
-    // BEGIN android-removed
-    /**
-     * Prevent this class from being instantiated
-     */
-    //private Method(){
-        //do nothing
-    //}
-    // END android-removed
 
-    // BEGIN android-added
     /**
      * Construct a clone of the given instance.
-     * 
+     *
      * @param orig non-null; the original instance to clone
      */
     /*package*/ Method(Method orig) {
@@ -90,7 +92,6 @@ public final class Method extends AccessibleObject implements GenericDeclaration
             this.flag = true;
         }
     }
-    // END android-added
 
     private Method(Class<?> declaring, Class<?>[] paramTypes, Class<?>[] exceptTypes, Class<?> returnType, String name, int slot)
     {
@@ -103,13 +104,9 @@ public final class Method extends AccessibleObject implements GenericDeclaration
     }
 
     public TypeVariable<Method>[] getTypeParameters() {
-        // BEGIN android-changed
         initGenericTypes();
         return formalTypeParameters.clone();
-        // END android-changed
     }
-
-    // BEGIN android-changed
 
     /** {@inheritDoc} */
     @Override /*package*/ String getSignatureAttribute() {
@@ -123,25 +120,21 @@ public final class Method extends AccessibleObject implements GenericDeclaration
     }
     
     /**
-     * Gets the Signature annotation for this method. Returns null if
+     * Returns the Signature annotation for this method. Returns {@code null} if
      * not found.
      */
     native private Object[] getSignatureAnnotation(Class declaringClass,
             int slot);
 
-    // END android-changed
-
     /**
-     * <p>
-     * Returns the String representation of the method's declaration, including
+     * Returns the string representation of the method's declaration, including
      * the type parameters.
-     * </p>
+     *
+     * @return the string representation of this method
      * 
-     * @return An instance of String.
-     * @since 1.5
+     * @since Android 1.0
      */
     public String toGenericString() {
-        // BEGIN android-changed
         StringBuilder sb = new StringBuilder(80);
         
         initGenericTypes();
@@ -174,7 +167,7 @@ public final class Method extends AccessibleObject implements GenericDeclaration
         appendArrayGenericType(sb, 
                 Types.getClonedTypeArray(genericParameterTypes));
         sb.append(')');
-        // append exeptions if any
+        // append exceptions if any
         Type[] genericExceptionTypeArray = Types.getClonedTypeArray(
                 genericExceptionTypes);
         if (genericExceptionTypeArray.length > 0) {
@@ -182,73 +175,69 @@ public final class Method extends AccessibleObject implements GenericDeclaration
             appendArrayGenericType(sb, genericExceptionTypeArray);
         }
         return sb.toString();
-        // END android-changed
     }
 
     /**
-     * <p>
-     * Gets the parameter types as an array of {@link Type} instances, in
-     * declaration order. If the method has no parameters, then an empty array
-     * is returned.
-     * </p>
+     * Returns the parameter types as an array of {@code Type} instances, in
+     * declaration order. If this method has no parameters, an empty array is
+     * returned.
+     *
+     * @return the parameter types
      * 
-     * @return An array of {@link Type} instances.
-     * @throws GenericSignatureFormatError if the generic method signature is
-     *         invalid.
-     * @throws TypeNotPresentException if the component type points to a missing
-     *         type.
-     * @throws MalformedParameterizedTypeException if the component type points
-     *         to a type that can't be instantiated for some reason.
-     * @since 1.5
+     * @throws GenericSignatureFormatError
+     *             if the generic method signature is invalid
+     * @throws TypeNotPresentException
+     *             if any parameter type points to a missing type
+     * @throws MalformedParameterizedTypeException
+     *             if any parameter type points to a type that cannot be
+     *             instantiated for some reason
+     * 
+     * @since Android 1.0
      */
     public Type[] getGenericParameterTypes() {
-        // BEGIN android-changed
         initGenericTypes();
         return Types.getClonedTypeArray(genericParameterTypes);
-        // END android-changed
     }
 
     /**
-     * <p>
-     * Gets the exception types as an array of {@link Type} instances. If the
-     * method has no declared exceptions, then an empty array is returned.
-     * </p>
+     * Returns the exception types as an array of {@code Type} instances. If
+     * this method has no declared exceptions, an empty array will be returned.
      * 
-     * @return An array of {@link Type} instances.
-     * @throws GenericSignatureFormatError if the generic method signature is
-     *         invalid.
-     * @throws TypeNotPresentException if the component type points to a missing
-     *         type.
-     * @throws MalformedParameterizedTypeException if the component type points
-     *         to a type that can't be instantiated for some reason.
-     * @since 1.5
+     * @return an array of generic exception types
+     * 
+     * @throws GenericSignatureFormatError
+     *             if the generic method signature is invalid
+     * @throws TypeNotPresentException
+     *             if any exception type points to a missing type
+     * @throws MalformedParameterizedTypeException
+     *             if any exception type points to a type that cannot be
+     *             instantiated for some reason
+     * 
+     * @since Android 1.0
      */
     public Type[] getGenericExceptionTypes() {
-        // BEGIN android-changed
         initGenericTypes();
         return Types.getClonedTypeArray(genericExceptionTypes);
-        // END android-changed
     }
 
     /**
-     * <p>
-     * Gets the return type as a {@link Type} instance.
-     * </p>
+     * Returns the return type of this method as a {@code Type} instance.
+     *
+     * @return the return type of this method
      * 
-     * @return A {@link Type} instance.
-     * @throws GenericSignatureFormatError if the generic method signature is
-     *         invalid.
-     * @throws TypeNotPresentException if the component type points to a missing
-     *         type.
-     * @throws MalformedParameterizedTypeException if the component type points
-     *         to a type that can't be instantiated for some reason.
-     * @since 1.5
+     * @throws GenericSignatureFormatError
+     *             if the generic method signature is invalid
+     * @throws TypeNotPresentException
+     *             if the return type points to a missing type
+     * @throws MalformedParameterizedTypeException
+     *             if the return type points to a type that cannot be
+     *             instantiated for some reason
+     * 
+     * @since Android 1.0
      */
     public Type getGenericReturnType() {
-        // BEGIN android-changed
         initGenericTypes();
         return Types.getType(genericReturnType);
-        // END android-changed
     }
 
     @Override
@@ -258,7 +247,6 @@ public final class Method extends AccessibleObject implements GenericDeclaration
     native private Annotation[] getDeclaredAnnotations(Class declaringClass,
         int slot);
 
-// BEGIN android-added
     private static final Annotation[] NO_ANNOTATIONS = new Annotation[0];
 
     /**
@@ -271,27 +259,23 @@ public final class Method extends AccessibleObject implements GenericDeclaration
         }
         return annotations;
     }
-// END android-added
 
     /**
-     * <p>
-     * Gets an array of arrays that represent the annotations of the formal
+     * Returns an array of arrays that represent the annotations of the formal
      * parameters of this method. If there are no parameters on this method,
      * then an empty array is returned. If there are no annotations set, then
      * and array of empty arrays is returned.
-     * </p>
+     *
+     * @return an array of arrays of {@code Annotation} instances
      * 
-     * @return An array of arrays of {@link Annotation} instances.
-     * @since 1.5
+     * @since Android 1.0
      */
     public Annotation[][] getParameterAnnotations() {
-// BEGIN android-changed
         Annotation[][] parameterAnnotations
                 = getParameterAnnotations(declaringClass, slot);
         if (parameterAnnotations.length == 0) {
             return noAnnotations(parameterTypes.length);
         }
-// END android-changed
         return parameterAnnotations;
     }
 
@@ -299,13 +283,11 @@ public final class Method extends AccessibleObject implements GenericDeclaration
         int slot);
 
     /**
-     * <p>
      * Indicates whether or not this method takes a variable number argument.
-     * </p>
+     *
+     * @return {@code true} if a vararg is declared, {@code false} otherwise
      * 
-     * @return A value of <code>true</code> if a vararg is declare, otherwise
-     *         <code>false</code>.
-     * @since 1.5
+     * @since Android 1.0
      */
     public boolean isVarArgs() {
         int modifiers = getMethodModifiers(declaringClass, slot);
@@ -313,13 +295,11 @@ public final class Method extends AccessibleObject implements GenericDeclaration
     }
 
     /**
-     * <p>
      * Indicates whether or not this method is a bridge.
-     * </p>
+     *
+     * @return {@code true} if this method is a bridge, {@code false} otherwise
      * 
-     * @return A value of <code>true</code> if this method's a bridge,
-     *         otherwise <code>false</code>.
-     * @since 1.5
+     * @since Android 1.0
      */
     public boolean isBridge() {
         int modifiers = getMethodModifiers(declaringClass, slot);
@@ -327,26 +307,28 @@ public final class Method extends AccessibleObject implements GenericDeclaration
     }
 
     /**
-     * <p>
      * Indicates whether or not this method is synthetic.
-     * </p>
+     *
+     * @return {@code true} if this method is synthetic, {@code false} otherwise
      * 
-     * @return A value of <code>true</code> if this method is synthetic,
-     *         otherwise <code>false</code>.
-     * @since 1.5
+     * @since Android 1.0
      */
     public boolean isSynthetic() {
         int modifiers = getMethodModifiers(declaringClass, slot);
         return (modifiers & Modifier.SYNTHETIC) != 0;
     }
-    
+
     /**
-     * <p>Gets the default value for the annotation member represented by
-     * this method.</p>
-     * @return The default value or <code>null</code> if none.
-     * @throws TypeNotPresentException if the annotation is of type {@link Class}
-     * and no definition can be found.
-     * @since 1.5
+     * Returns the default value for the annotation member represented by this
+     * method.
+     * 
+     * @return the default value, or {@code null} if none
+     * 
+     * @throws TypeNotPresentException
+     *             if this annotation member is of type {@code Class} and no
+     *             definition can be found
+     * 
+     * @since Android 1.0
      */
     public Object getDefaultValue() {
         return getDefaultValue(declaringClass, slot);
@@ -354,15 +336,20 @@ public final class Method extends AccessibleObject implements GenericDeclaration
     native private Object getDefaultValue(Class declaringClass, int slot);
 
     /**
-     * Compares the specified object to this Method and determines if they are
-     * equal. The object must be an instance of Method with the same defining
-     * class and parameter types.
+     * Indicates whether or not the specified {@code object} is equal to this
+     * method. To be equal, the specified object must be an instance
+     * of {@code Method} with the same declaring class and parameter types
+     * as this method.
      * 
      * @param object
      *            the object to compare
-     * @return true if the specified object is equal to this Method, false
-     *         otherwise
+     *            
+     * @return {@code true} if the specified object is equal to this
+     *         method, {@code false} otherwise
+     *         
      * @see #hashCode
+     * 
+     * @since Android 1.0
      */
     @Override
     public boolean equals(Object object) {
@@ -370,21 +357,23 @@ public final class Method extends AccessibleObject implements GenericDeclaration
     }
 
     /**
-     * Return the {@link Class} associated with the class that defined this
-     * method.
-     * 
+     * Returns the class that declares this method.
+     *
      * @return the declaring class
+     * 
+     * @since Android 1.0
      */
     public Class<?> getDeclaringClass() {
         return declaringClass;
     }
 
     /**
-     * Return an array of the {@link Class} objects associated with the
-     * exceptions declared to be thrown by this method. If the method was not
-     * declared to throw any exceptions, the array returned will be empty.
+     * Returns the exception types as an array of {@code Class} instances. If
+     * this method has no declared exceptions, an empty array is returned.
      * 
      * @return the declared exception classes
+     * 
+     * @since Android 1.0
      */
     public Class<?>[] getExceptionTypes() {
         if (exceptionTypes == null) {
@@ -395,55 +384,68 @@ public final class Method extends AccessibleObject implements GenericDeclaration
     }
 
     /**
-     * Return the modifiers for the modeled method. The Modifier class
-     * should be used to decode the result.
+     * Returns the modifiers for this method. The {@link Modifier} class should
+     * be used to decode the result.
+     *
+     * @return the modifiers for this method
      * 
-     * @return the modifiers
-     * @see java.lang.reflect.Modifier
+     * @see Modifier
+     * 
+     * @since Android 1.0
      */
     public int getModifiers() {
         return getMethodModifiers(declaringClass, slot);
     }
 
     private native int getMethodModifiers(Class<?> decl_class, int slot);
-    
+
     /**
-     * Return the name of the modeled method.
+     * Returns the name of the method represented by this {@code Method}
+     * instance.
      * 
-     * @return the name
+     * @return the name of this method
+     * 
+     * @since Android 1.0
      */
     public String getName() {
         return name;
     }
 
     /**
-     * Return an array of the {@link Class} objects associated with the
-     * parameter types of this method. If the method was declared with no
-     * parameters, the array returned will be empty.
+     * Returns an array of {@code Class} objects associated with the parameter
+     * types of this method. If the method was declared with no parameters, an
+     * empty array will be returned.
      * 
      * @return the parameter types
+     * 
+     * @since Android 1.0
      */
     public Class<?>[] getParameterTypes() {
         return parameterTypes;
     }
 
     /**
-     * Return the {@link Class} associated with the return type of this
+     * Returns the {@code Class} associated with the return type of this
      * method.
      * 
      * @return the return type
+     * 
+     * @since Android 1.0
      */
     public Class<?> getReturnType() {
         return returnType;
     }
 
     /**
-     * Returns an integer hash code for the receiver. Objects which are equal
-     * return the same value for this method. The hash code for a Method is the
-     * hash code of the method's name.
+     * Returns an integer hash code for this method. Objects which are equal
+     * return the same value for this method. The hash code for this Method is
+     * the hash code of the name of this method.
      * 
-     * @return the receiver's hash
+     * @return hash code for this method
+     * 
      * @see #equals
+     * 
+     * @since Android 1.0
      */
     @Override
     public int hashCode() {
@@ -451,59 +453,60 @@ public final class Method extends AccessibleObject implements GenericDeclaration
     }
 
     /**
-     * Return the result of dynamically invoking the modeled method. This
-     * reproduces the effect of
-     * <code>receiver.methodName(arg1, arg2, ... , argN)</code> This method
-     * performs the following:
+     * Returns the result of dynamically invoking this method. This reproduces
+     * the effect of {@code receiver.methodName(arg1, arg2, ... , argN)} This
+     * method performs the following:
      * <ul>
-     * <li>If the modeled method is static, the receiver argument is ignored.
+     * <li>If this method is static, the receiver argument is ignored.</li>
+     * <li>Otherwise, if the receiver is null, a NullPointerException is thrown.
      * </li>
-     * <li>Otherwise, if the receiver is null, a NullPointerException is
-     * thrown.</li>
-     * If the receiver is not an instance of the declaring class of the method,
-     * an IllegalArgumentException is thrown.
+     * <li>If the receiver is not an instance of the declaring class of the
+     * method, an IllegalArgumentException is thrown.</li>
      * <li>If this Method object is enforcing access control (see
-     * AccessibleObject) and the modeled method is not accessible from the
-     * current context, an IllegalAccessException is thrown.</li>
-     * <li>If the number of arguments passed and the number of parameters do
-     * not match, an IllegalArgumentException is thrown.</li>
+     * AccessibleObject) and this method is not accessible from the current
+     * context, an IllegalAccessException is thrown.</li>
+     * <li>If the number of arguments passed and the number of parameters do not
+     * match, an IllegalArgumentException is thrown.</li>
      * <li>For each argument passed:
      * <ul>
-     * <li>If the corresponding parameter type is a base type, the argument is
-     * unwrapped. If the unwrapping fails, an IllegalArgumentException is
+     * <li>If the corresponding parameter type is a primitive type, the argument
+     * is unwrapped. If the unwrapping fails, an IllegalArgumentException is
      * thrown.</li>
      * <li>If the resulting argument cannot be converted to the parameter type
      * via a widening conversion, an IllegalArgumentException is thrown.</li>
      * </ul>
-     * <li>If the modeled method is static, it is invoked directly. If it is
-     * non-static, the modeled method and the receiver are then used to perform
-     * a standard dynamic method lookup. The resulting method is then invoked.
-     * </li>
+     * <li>If this method is static, it is invoked directly. If it is
+     * non-static, this method and the receiver are then used to perform a
+     * standard dynamic method lookup. The resulting method is then invoked.</li>
      * <li>If an exception is thrown during the invocation it is caught and
-     * wrapped in an InvocationTargetException. This exception is then thrown.
-     * </li>
-     * <li>If the invocation completes normally, the return value is itself
-     * returned. If the method is declared to return a base type, the return
-     * value is first wrapped. If the return type is void, null is returned.
-     * </li>
+     * wrapped in an InvocationTargetException. This exception is then thrown.</li>
+     * <li>If the invocation completes normally, the return value itself is
+     * returned. If the method is declared to return a primitive type, the
+     * return value is first wrapped. If the return type is void, null is
+     * returned.</li>
      * </ul>
      * 
      * @param receiver
-     *            The object on which to call the modeled method
+     *            the object on which to call this method
      * @param args
      *            the arguments to the method
+     * 
      * @return the new, initialized, object
-     * @throws java.lang.NullPointerException
-     *                if the receiver is null for a non-static method
-     * @throws java.lang.IllegalAccessException
-     *                if the modeled method is not accessible
-     * @throws java.lang.IllegalArgumentException
-     *                if an incorrect number of arguments are passed, the
-     *                receiver is incompatible with the declaring class, or an
-     *                argument could not be converted by a widening conversion
-     * @throws java.lang.reflect.InvocationTargetException
-     *                if an exception was thrown by the invoked method
-     * @see java.lang.reflect.AccessibleObject
+     * 
+     * @throws NullPointerException
+     *             if the receiver is null for a non-static method
+     * @throws IllegalAccessException
+     *             if this method is not accessible
+     * @throws IllegalArgumentException
+     *             if an incorrect number of arguments are passed, the receiver
+     *             is incompatible with the declaring class, or an argument
+     *             could not be converted by a widening conversion
+     * @throws InvocationTargetException
+     *             if an exception was thrown by the invoked method
+     * 
+     * @see AccessibleObject
+     * 
+     * @since Android 1.0
      */
     public Object invoke(Object receiver, Object... args)
             throws IllegalAccessException, IllegalArgumentException,
@@ -519,22 +522,35 @@ public final class Method extends AccessibleObject implements GenericDeclaration
     throws IllegalAccessException,
              IllegalArgumentException,
              InvocationTargetException;
-    
+
     /**
-     * Returns a string containing a concise, human-readable description of the
-     * receiver. The format of the string is modifiers (if any) return type
-     * declaring class name '.' method name '(' parameter types, separated by
-     * ',' ')' If the method throws exceptions, ' throws ' exception types,
-     * separated by ',' For example:
-     * <code>public native Object java.lang.Method.invoke(Object,Object) throws IllegalAccessException,IllegalArgumentException,InvocationTargetException</code>
+     * Returns a string containing a concise, human-readable description of this
+     * method. The format of the string is:
      * 
-     * @return a printable representation for the receiver
+     * <ol>
+     *   <li>modifiers (if any)
+     *   <li>return type or 'void'
+     *   <li>declaring class name
+     *   <li>'('
+     *   <li>parameter types, separated by ',' (if any)
+     *   <li>')'
+     *   <li>'throws' plus exception types, separated by ',' (if any)
+     * </ol>
+     *
+     * For example: {@code public native Object
+     * java.lang.Method.invoke(Object,Object) throws
+     * IllegalAccessException,IllegalArgumentException
+     * ,InvocationTargetException}
+     * 
+     * @return a printable representation for this method
+     * 
+     * @since Android 1.0
      */
     @Override
     public String toString() {
         StringBuilder result = new StringBuilder(Modifier.toString(getModifiers()));
 
-        if (result.length() != 0)       // android-changed
+        if (result.length() != 0)
             result.append(' ');
         result.append(returnType.getName());
         result.append(' ');
@@ -556,7 +572,7 @@ public final class Method extends AccessibleObject implements GenericDeclaration
      * Returns the constructor's signature in non-printable form. This is called
      * (only) from IO native code and needed for deriving the serialVersionUID
      * of the class
-     * 
+     *
      * @return The constructor's signature.
      */
     @SuppressWarnings("unused")

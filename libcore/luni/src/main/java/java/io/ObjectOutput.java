@@ -18,79 +18,85 @@
 package java.io;
 
 /**
- * Streams to be used with serialization to write objects must implement this
- * interface. ObjectOutputStream is one example.
+ * Defines an interface for classes that allow reading serialized objects.
  * 
  * @see ObjectOutputStream
  * @see ObjectInput
+ * 
+ * @since Android 1.0
  */
 public interface ObjectOutput extends DataOutput {
     /**
-     * Close this ObjectOutput. Concrete implementations of this class should
-     * free any resources during close.
+     * Closes the target stream. Implementations of this method should free any
+     * resources used by the stream.
      * 
      * @throws IOException
-     *             If an error occurs attempting to close this ObjectOutput.
+     *             if an error occurs while closing the target stream.
+     * @since Android 1.0
      */
     public void close() throws IOException;
 
     /**
-     * Flush this ObjectOutput. Concrete implementations of this class should
-     * ensure any pending writes are written out when this method is envoked.
+     * Flushes the target stream. Implementations of this method should ensure
+     * that any pending writes are written out to the target stream.
      * 
      * @throws IOException
-     *             If an error occurs attempting to flush this ObjectOutput.
+     *             if an error occurs while flushing the target stream.
+     * @since Android 1.0
      */
     public void flush() throws IOException;
 
     /**
-     * Writes the entire contents of the byte array <code>buffer</code> to
-     * this ObjectOutput.
+     * Writes the entire contents of the byte array {@code buffer} to the output
+     * stream. Blocks until all bytes are written.
      * 
      * @param buffer
-     *            the buffer to be written
-     * 
-     * @throws java.io.IOException
-     *             If an error occurs attempting to write to this ObjectOutput.
+     *            the buffer to write.
+     * @throws IOException
+     *             if an error occurs while writing to the target stream.
+     * @since Android 1.0
      */
     public void write(byte[] buffer) throws IOException;
 
     /**
-     * Writes <code>count</code> <code>bytes</code> from this byte array
-     * <code>buffer</code> starting at offset <code>index</code> to this
-     * ObjectOutput.
+     * Writes {@code count} bytes from the byte array {@code buffer} starting at
+     * position {@code offset} to the target stream. Blocks until all bytes are
+     * written.
      * 
      * @param buffer
-     *            the buffer to be written
+     *            the buffer to write.
      * @param offset
-     *            offset in buffer to get bytes
+     *            the index of the first byte in {@code buffer} to write.
      * @param count
-     *            number of bytes in buffer to write
-     * 
-     * @throws java.io.IOException
-     *             If an error occurs attempting to write to this ObjectOutput.
+     *            the number of bytes from {@code buffer} to write to the target
+     *            stream.
+     * @throws IOException
+     *             if an error occurs while writing to the target stream.
+     * @since Android 1.0
      */
     public void write(byte[] buffer, int offset, int count) throws IOException;
 
     /**
-     * Writes the specified int <code>value</code> to this ObjectOutput.
+     * Writes a single byte to the target stream. Only the least significant
+     * byte of the integer {@code value} is written to the stream. Blocks until
+     * the byte is actually written.
      * 
      * @param value
-     *            the int to be written
-     * 
-     * @throws java.io.IOException
-     *             If an error occurs attempting to write to this ObjectOutput.
+     *            the byte to write.
+     * @throws IOException
+     *             if an error occurs while writing to the target stream.
+     * @since Android 1.0
      */
     public void write(int value) throws IOException;
 
     /**
-     * Writes the specified object <code>obj</code> to this ObjectOutput.
+     * Writes the specified object {@code obj} to the target stream.
      * 
      * @param obj
-     *            the object to be written
-     * 
-     * @throws java.io.IOException
-     *             If an error occurs attempting to write to this ObjectOutput.
+     *            the object to write.
+     * @throws IOException
+     *             if an error occurs while writing to the target stream.
+     * @since Android 1.0
      */
     public void writeObject(Object obj) throws IOException;
 }

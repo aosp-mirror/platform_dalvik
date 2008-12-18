@@ -27,33 +27,54 @@ import java.security.spec.AlgorithmParameterSpec;
 import org.apache.harmony.security.internal.nls.Messages;
 
 /**
- * @com.intel.drl.spec_ref
+ * {@code KeyPairGeneratorSpi} is the Service Provider Interface (SPI)
+ * definition for {@link KeyPairGenerator}.
  * 
+ * @see KeyPairGenerator
+ * @since Android 1.0
  */
-
 public abstract class KeyPairGeneratorSpi {
+    
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Constructs a new instance of {@code KeyPairGeneratorSpi}.
+     * 
+     * @since Android 1.0
      */
     public KeyPairGeneratorSpi() {
     }
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Computes and returns a new unique {@code KeyPair} each time this method
+     * is called.
+     * 
+     * @return a new unique {@code KeyPair} each time this method is called.
+     * @since Android 1.0
      */
     public abstract KeyPair generateKeyPair();
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Initializes this {@code KeyPairGeneratorSpi} with the given key size and
+     * the given {@code SecureRandom}. The default parameter set will be used.
+     * 
+     * @param keysize
+     *            the key size (number of bits).
+     * @param random
+     *            the source of randomness.
+     * @since Android 1.0
      */
     public abstract void initialize(int keysize, SecureRandom random);
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Initializes this {@code KeyPairGeneratorSpi} with the given {@code
+     * AlgorithmParameterSpec} and the given {@code SecureRandom}.
+     * 
+     * @param params
+     *            the parameters to use.
+     * @param random
+     *            the source of randomness.
+     * @throws InvalidAlgorithmParameterException
+     *             if the specified parameters are not supported.
+     * @since Android 1.0
      */
     public void initialize(AlgorithmParameterSpec params, SecureRandom random)
             throws InvalidAlgorithmParameterException {

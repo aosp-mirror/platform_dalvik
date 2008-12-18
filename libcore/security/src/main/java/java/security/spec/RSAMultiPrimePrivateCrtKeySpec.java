@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vladimir N. Molotkov
-* @version $Revision$
-*/
-
 package java.security.spec;
 
 import java.math.BigInteger;
@@ -27,8 +22,15 @@ import java.math.BigInteger;
 import org.apache.harmony.security.internal.nls.Messages;
 
 /**
- * @com.intel.drl.spec_ref
+ * The key specification of a RSA multi-prime private key with the Chinese
+ * Remainder Theorem (CRT) information values used.
+ * <p>
+ * Defined in the <a
+ * href="http://www.rsa.com/rsalabs/pubs/PKCS/html/pkcs-1.html">PKCS #1 v2.1</a>
+ * standard.
+ * </p>
  * 
+ * @since Android 1.0
  */
 public class RSAMultiPrimePrivateCrtKeySpec extends RSAPrivateKeySpec {
     // Public Exponent
@@ -47,7 +49,32 @@ public class RSAMultiPrimePrivateCrtKeySpec extends RSAPrivateKeySpec {
     private final RSAOtherPrimeInfo[] otherPrimeInfo;
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code RSAMultiPrimePrivateCrtKeySpec} with the specified
+     * modulus, public exponent, private exponent, prime factors, prime
+     * exponents, crt coefficient, and additional primes.
+     * 
+     * @param modulus
+     *            the modulus {@code n}.
+     * @param publicExponent
+     *            the public exponent {@code e}.
+     * @param privateExponent
+     *            the private exponent {@code d}.
+     * @param primeP
+     *            the prime factor {@code p} of {@code n}.
+     * @param primeQ
+     *            the prime factor {@code q} of {@code n}.
+     * @param primeExponentP
+     *            the exponent of the prime {@code p}.
+     * @param primeExponentQ
+     *            the exponent of the prime {@code q}.
+     * @param crtCoefficient
+     *            the CRT coefficient {@code q^-1 mod p}.
+     * @param otherPrimeInfo
+     *            the information for the additional primes or {@code null} if
+     *            there are only the two primes ({@code p, q}).
+     * @throws IllegalArgumentException
+     *             if {@code otherPrimeInfo} is not null but empty.
+     * @since Android 1.0
      */
     public RSAMultiPrimePrivateCrtKeySpec(
             BigInteger modulus,
@@ -109,14 +136,21 @@ public class RSAMultiPrimePrivateCrtKeySpec extends RSAPrivateKeySpec {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the CRT coefficient, {@code q^-1 mod p}.
+     * 
+     * @return the CRT coefficient, {@code q^-1 mod p}.
+     * @since Android 1.0
      */
     public BigInteger getCrtCoefficient() {
         return crtCoefficient;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the information for the additional primes.
+     * 
+     * @return the information for the additional primes, or {@code null} if
+     *         there are only the two primes ({@code p, q}).
+     * @since Android 1.0
      */
     public RSAOtherPrimeInfo[] getOtherPrimeInfo() {
         // Clone array (if not null) to prevent subsequent modification
@@ -131,35 +165,50 @@ public class RSAMultiPrimePrivateCrtKeySpec extends RSAPrivateKeySpec {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the exponent of the prime {@code p}.
+     * 
+     * @return the exponent of the prime {@code p}.
+     * @since Android 1.0
      */
     public BigInteger getPrimeExponentP() {
         return primeExponentP;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the exponent of the prime {@code q}.
+     * 
+     * @return the exponent of the prime {@code q}.
+     * @since Android 1.0
      */
     public BigInteger getPrimeExponentQ() {
         return primeExponentQ;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the prime factor {@code p}.
+     * 
+     * @return the prime factor {@code p}.
+     * @since Android 1.0
      */
     public BigInteger getPrimeP() {
         return primeP;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the prime factor {@code q}.
+     * 
+     * @return the prime factor {@code q}.
+     * @since Android 1.0
      */
     public BigInteger getPrimeQ() {
         return primeQ;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the public exponent {@code e}.
+     * 
+     * @return the public exponent {@code e}.
+     * @since Android 1.0
      */
     public BigInteger getPublicExponent() {
         return publicExponent;

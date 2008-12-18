@@ -15,28 +15,30 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package java.security.interfaces;
 
 import java.math.BigInteger;
 import java.security.PrivateKey;
 
 /**
- * @com.intel.drl.spec_ref
+ * The interface for an Elliptic Curve (EC) private key.
  * 
+ * @since Android 1.0
  */
 public interface ECPrivateKey extends PrivateKey, ECKey {
+
     /**
-     * @com.intel.drl.spec_ref
+     * The serial version identifier.
+     * 
+     * @since Android 1.0
      */
     public static final long serialVersionUID = -7896394956925609184L;
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the private value {@code S}.
+     * 
+     * @return the private value {@code S}.
+     * @since Android 1.0
      */
     public BigInteger getS();
 }

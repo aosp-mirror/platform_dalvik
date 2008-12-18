@@ -22,6 +22,11 @@
 
 package org.apache.harmony.security.tests.java.security;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,7 +38,7 @@ import java.util.Arrays;
 import org.apache.harmony.security.tests.support.MDGoldenData;
 
 import junit.framework.TestCase;
-
+@TestTargetClass(DigestInputStream.class)
 /**
  * Tests for fields and methods of class <code>DigestInputStream</code>
  * 
@@ -85,6 +90,15 @@ public class DigestInputStreamTest extends TestCase {
      *
      * @throws NoSuchAlgorithmException
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies both non null parameters",
+      targets = {
+        @TestTarget(
+          methodName = "DigestInputStream",
+          methodArgs = {InputStream.class, MessageDigest.class}
+        )
+    })
     public final void testDigestInputStream01()  {
         for (int i=0; i<algorithmName.length; i++) {
             try {
@@ -106,6 +120,16 @@ public class DigestInputStreamTest extends TestCase {
      * Assertion: creates new <code>DigestInputStream</code> instance
      * using valid parameters (both <code>null</code>)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies both null parameters. " +
+                "Need cases where just one parameter null",
+      targets = {
+        @TestTarget(
+          methodName = "DigestInputStream",
+          methodArgs = {InputStream.class, MessageDigest.class}
+        )
+    })
     public final void testDigestInputStream02() {
         InputStream dis = new DigestInputStream(null, null);
         assertTrue(dis instanceof DigestInputStream);
@@ -117,6 +141,15 @@ public class DigestInputStreamTest extends TestCase {
      * Assertion: returns the byte read<br>
      * Assertion: updates associated digest<br>
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {}
+        )
+    })
     public final void testRead01()
         throws IOException {
         for (int ii=0; ii<algorithmName.length; ii++) {
@@ -150,6 +183,15 @@ public class DigestInputStreamTest extends TestCase {
      * Assertion: must not update digest if EOS had been
      * reached but not read before method call<br>
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {}
+        )
+    })
     public final void testRead02()
         throws IOException {
         for (int ii=0; ii<algorithmName.length; ii++) {
@@ -185,6 +227,15 @@ public class DigestInputStreamTest extends TestCase {
      * (if <code>true</code> passed as a parameter) or off (if <code>false</code>
      *  passed)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {}
+        )
+    })
     public final void testRead03()
         throws IOException {
         for (int ii=0; ii<algorithmName.length; ii++) {
@@ -218,6 +269,15 @@ public class DigestInputStreamTest extends TestCase {
      * <code>InputStream</code> not set. <code>read()</code> must
      * not work
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException is not tested",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {}
+        )
+    })
     public final void testRead04() throws IOException {
         for (int ii=0; ii<algorithmName.length; ii++) {
             try {
@@ -249,6 +309,15 @@ public class DigestInputStreamTest extends TestCase {
      * <code>read()</code> must not work when digest
      * functionality is on
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException is not tested",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {}
+        )
+    })
     public final void testRead05() {
         InputStream is = new ByteArrayInputStream(myMessage);
         DigestInputStream dis = new DigestInputStream(is, null);
@@ -272,6 +341,15 @@ public class DigestInputStreamTest extends TestCase {
      * <code>read()</code> must work when digest
      * functionality is off
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {}
+        )
+    })
     public final void testRead06()
         throws IOException {
         InputStream is = new ByteArrayInputStream(myMessage);
@@ -294,6 +372,16 @@ public class DigestInputStreamTest extends TestCase {
      * 
      * Assertion: updates associated digest<br>
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException is not tested" +
+                  "Case when len>off isn't tested (and other boundary cases)",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {byte[].class, int.class, int.class}
+        )
+    })
     public final void testReadbyteArrayintint01()
         throws IOException {        
         for (int ii=0; ii<algorithmName.length; ii++) {
@@ -328,6 +416,16 @@ public class DigestInputStreamTest extends TestCase {
      * 
      * Assertion: updates associated digest<br>
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException is not tested" +
+                "Case when len>off isn't tested (and other boundary cases)",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {byte[].class, int.class, int.class}
+        )
+    })
     public final void testReadbyteArrayintint02()
         throws IOException {
         // check precondition
@@ -368,6 +466,16 @@ public class DigestInputStreamTest extends TestCase {
      * 
      * Assertion: updates associated digest<br>
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException is not tested" +
+                "Case when len>off isn't tested (and other boundary cases)",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {byte[].class, int.class, int.class}
+        )
+    })
     public final void testReadbyteArrayintint03()
         throws IOException {
         // check precondition
@@ -415,6 +523,16 @@ public class DigestInputStreamTest extends TestCase {
      * 
      * Assertion: updates associated digest<br>
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException is not tested" +
+                "Case when len>off isn't tested (and other boundary cases)",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {byte[].class, int.class, int.class}
+        )
+    })
     public final void testReadbyteArrayintint04()
         throws IOException {        
         for (int ii=0; ii<algorithmName.length; ii++) {
@@ -451,6 +569,16 @@ public class DigestInputStreamTest extends TestCase {
      * Assertion: does not update associated digest if
      * digest functionality is off<br>
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException is not tested" +
+                "Case when len>off isn't tested (and other boundary cases)",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {byte[].class, int.class, int.class}
+        )
+    })
     public final void testReadbyteArrayintint05()
         throws IOException {
         // check precondition
@@ -485,6 +613,15 @@ public class DigestInputStreamTest extends TestCase {
      * 
      * Assertion: returns associated message digest<br>
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getMessageDigest",
+          methodArgs = {}
+        )
+    })
     public final void testGetMessageDigest() {
         for (int ii=0; ii<algorithmName.length; ii++) {
             try {
@@ -506,6 +643,15 @@ public class DigestInputStreamTest extends TestCase {
      * 
      * Assertion: set associated message digest<br>
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Method setMessageDigest is not tested with null parameter",
+      targets = {
+        @TestTarget(
+          methodName = "setMessageDigest",
+          methodArgs = {MessageDigest.class}
+        )
+    })
     public final void testSetMessageDigest() {
         for (int ii=0; ii<algorithmName.length; ii++) {
             try {
@@ -526,6 +672,15 @@ public class DigestInputStreamTest extends TestCase {
      * Test for <code>on()</code> method<br>
      * Assertion: turns digest functionality on or off
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "on",
+          methodArgs = {boolean.class}
+        )
+    })
     public final void testOn() throws IOException {
         for (int ii=0; ii<algorithmName.length; ii++) {
             try {
@@ -565,6 +720,15 @@ public class DigestInputStreamTest extends TestCase {
      * Test for <code>toString()</code> method<br>
      * Assertion: returns <code>String</code> representation of this object
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public final void testToString() {
         for (int ii=0; ii<algorithmName.length; ii++) {
             try {

@@ -17,13 +17,28 @@
 
 package org.apache.harmony.security.tests.java.security;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.security.KeyException;
 
+@TestTargetClass(KeyException.class)
 public class KeyException2Test extends junit.framework.TestCase {
 
     /**
      * @tests java.security.KeyException#KeyException()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "KeyException",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         // Test for method java.security.KeyException()
         KeyException e = new KeyException();
@@ -34,6 +49,15 @@ public class KeyException2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.KeyException#KeyException(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies constructor with one variant of string parameter",
+      targets = {
+        @TestTarget(
+          methodName = "KeyException",
+          methodArgs = {String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() {
         // Test for method java.security.KeyException(java.lang.String)
         KeyException e = new KeyException("test message");

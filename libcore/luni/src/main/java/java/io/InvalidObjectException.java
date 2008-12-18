@@ -18,23 +18,24 @@
 package java.io;
 
 /**
- * The object graph loaded (deserialized) can be validated by a collection of
- * validator objects. If these decide the validation fails, then will throw
- * InvalidObjectException.
+ * Signals that, during deserialization, the validation of an object has failed.
  * 
  * @see ObjectInputStream#registerValidation(ObjectInputValidation, int)
  * @see ObjectInputValidation#validateObject()
+ * 
+ * @since Android 1.0
  */
 public class InvalidObjectException extends ObjectStreamException {
 
     private static final long serialVersionUID = 3233174318281839583L;
 
     /**
-     * Constructs a new instance of this class with its walkback and message
-     * filled in.
+     * Constructs an {@code InvalidObjectException} with its stack trace and
+     * detail message filled in.
      * 
      * @param detailMessage
-     *            The detail message for the exception.
+     *            the detail message for this exception.
+     * @since Android 1.0
      */
     public InvalidObjectException(String detailMessage) {
         super(detailMessage);

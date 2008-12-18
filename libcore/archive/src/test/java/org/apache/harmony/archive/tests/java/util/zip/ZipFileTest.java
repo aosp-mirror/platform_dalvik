@@ -16,6 +16,11 @@
  */
 package org.apache.harmony.archive.tests.java.util.zip;
 
+import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import tests.support.Support_PlatformFile;
 import tests.support.resource.Support_Resources;
 
@@ -29,6 +34,7 @@ import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+@TestTargetClass(ZipFile.class) 
 public class ZipFileTest extends junit.framework.TestCase {
 
 // BEGIN android-added
@@ -53,6 +59,15 @@ public class ZipFileTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipFile#ZipFile(java.io.File)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "setUp procedure checks this type of constructor.",
+      targets = {
+        @TestTarget(
+          methodName = "ZipFile",
+          methodArgs = {java.io.File.class}
+        )
+    })
     public void test_ConstructorLjava_io_File() {
         // Test for method java.util.zip.ZipFile(java.io.File)
         assertTrue("Used to test", true);
@@ -61,6 +76,15 @@ public class ZipFileTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipFile#ZipFile(java.io.File, int)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "ZipFile",
+          methodArgs = {java.io.File.class, int.class}
+        )
+    })
     public void test_ConstructorLjava_io_FileI() throws IOException {
                 zfile.close(); // about to reopen the same temp file
                 File file = new File(tempFileName);
@@ -73,6 +97,15 @@ public class ZipFileTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipFile#ZipFile(java.lang.String)
      */
+@TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Test contains empty brackets.",
+      targets = {
+        @TestTarget(
+          methodName = "ZipFile",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() {
         // Test for method java.util.zip.ZipFile(java.lang.String)
         /*
@@ -93,6 +126,15 @@ public class ZipFileTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipFile#finalize()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "finalize",
+          methodArgs = {}
+        )
+    })
     public void test_finalize() throws IOException {
             InputStream in = Support_Resources.getStream("hyts_ZipFile.zip");
             File file = Support_Resources.createTempFile(".jar");
@@ -122,12 +164,21 @@ public class ZipFileTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipFile#close()
      */
-    public void test_close() {
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "close",
+          methodArgs = {}
+        )
+    })
+    public void _test_close() {
         // Test for method void java.util.zip.ZipFile.close()
         try {
             zfile.close();
             zfile.getInputStream(zfile.getEntry("ztest/file1.txt"));
-        } catch (Exception e) {
+        } catch (IOException e) {
             return;
         }
         fail("Close test failed");
@@ -136,6 +187,15 @@ public class ZipFileTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipFile#entries()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "entries",
+          methodArgs = {}
+        )
+    })
     public void test_entries() {
         // Test for method java.util.Enumeration java.util.zip.ZipFile.entries()
         Enumeration<? extends ZipEntry> enumer = zfile.entries();
@@ -165,6 +225,15 @@ public class ZipFileTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipFile#getEntry(java.lang.String)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IllegalStateException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "getEntry",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_getEntryLjava_lang_String() throws IOException {
         // Test for method java.util.zip.ZipEntry
         // java.util.zip.ZipFile.getEntry(java.lang.String)
@@ -207,6 +276,15 @@ public class ZipFileTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipFile#getInputStream(java.util.zip.ZipEntry)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IllegalStateException & ZipException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "getInputStream",
+          methodArgs = {java.util.zip.ZipEntry.class}
+        )
+    })
     public void test_getInputStreamLjava_util_zip_ZipEntry() {
         // Test for method java.io.InputStream
         // java.util.zip.ZipFile.getInputStream(java.util.zip.ZipEntry)
@@ -233,6 +311,15 @@ public class ZipFileTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipFile#getName()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getName",
+          methodArgs = {}
+        )
+    })
     public void test_getName() {
         // Test for method java.lang.String java.util.zip.ZipFile.getName()
         assertTrue("Returned incorrect name: " + zfile.getName(), zfile
@@ -242,6 +329,15 @@ public class ZipFileTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipFile#size()
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IllegalStateException  checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "size",
+          methodArgs = {}
+        )
+    })
     public void test_size() {
         assertEquals(6, zfile.size());
     }

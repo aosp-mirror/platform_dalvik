@@ -23,13 +23,23 @@ import java.util.List;
 import java.security.KeyStore;
 
 /**
- * @com.intel.drl.spec_ref
- *  
+ * The parameters for {@code KeyManager}s. The parameters are a list of
+ * {@code KeyStore.Builder}s.
+ * 
+ * @since Android 1.0
  */
 public class KeyStoreBuilderParameters implements ManagerFactoryParameters {
 
     private List ksbuilders;
 
+    /**
+     * Creates a new {@code KeyStoreBuilderParameters} with the specified key
+     * store builder.
+     * 
+     * @param builder
+     *            the key store builder.
+     * @since Android 1.0
+     */
     public KeyStoreBuilderParameters(KeyStore.Builder builder) {
         ksbuilders = new ArrayList();
         if (builder != null) {
@@ -37,6 +47,16 @@ public class KeyStoreBuilderParameters implements ManagerFactoryParameters {
         }
     }
 
+    /**
+     * Creates a new {@code KeyStoreBuilderParameters} with the specified list
+     * of {@code KeyStore.Builder}s.
+     * 
+     * @param parameters
+     *            the list of key store builders
+     * @throws IllegalArgumentException
+     *             if the specified list is empty.
+     * @since Android 1.0
+     */
     public KeyStoreBuilderParameters(List parameters) {
         if (parameters == null) {
             throw new NullPointerException("Builders list is null");
@@ -47,6 +67,13 @@ public class KeyStoreBuilderParameters implements ManagerFactoryParameters {
         ksbuilders = new ArrayList(parameters);
     }
 
+    /**
+     * Returns the unmodifiable list of {@code KeyStore.Builder}s associated
+     * with this parameters instance.
+     * 
+     * @return the unmodifiable list of {@code KeyStore.Builder}s.
+     * @since Android 1.0
+     */
     public List getParameters() {
         return Collections.unmodifiableList(ksbuilders);
     }

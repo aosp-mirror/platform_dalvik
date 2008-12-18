@@ -16,47 +16,60 @@
 
 package org.apache.harmony.luni.tests.java.io;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass; 
+
 import java.io.IOException;
 import java.io.Writer;
 
 import junit.framework.TestCase;
 
+@TestTargetClass(Writer.class) 
 public class WriterTest extends TestCase {
 
-	/**
-	 * @tests java.io.Writer#write(String)
-	 */
-	public void test_writeLjava_lang_String() throws IOException {
-		// Regression for HARMONY-51
-		Object lock = new Object();
-		Writer wr = new MockWriter(lock);
-		// FIXME This test should be added to the exclusion list until
-		// Thread.holdsLock works on IBM VME
-//		wr.write("Some string");
-		wr.close();
-	}
+    /**
+     * @tests java.io.Writer#write(String)
+     */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed. Regression test.",
+      targets = {
+        @TestTarget(
+          methodName = "write",
+          methodArgs = {java.lang.String.class}
+        )
+    })
+    public void test_writeLjava_lang_String() throws IOException {
+        // Regression for HARMONY-51
+        Object lock = new Object();
+        Writer wr = new MockWriter(lock);
+        wr.write("Some string");
+        wr.close();
+    }
 
-	class MockWriter extends Writer {
-		final Object myLock;
+    class MockWriter extends Writer {
+        final Object myLock;
 
-		MockWriter(Object lock) {
-			super(lock);
-			myLock = lock;
-		}
+        MockWriter(Object lock) {
+            super(lock);
+            myLock = lock;
+        }
 
-		@Override
+        @Override
         public synchronized void close() throws IOException {
-			// do nothing
-		}
+            // do nothing
+        }
 
-		@Override
+        @Override
         public synchronized void flush() throws IOException {
-			// do nothing
-		}
+            // do nothing
+        }
 
-		@Override
+        @Override
         public void write(char[] arg0, int arg1, int arg2) throws IOException {
-			assertTrue(Thread.holdsLock(myLock));
-		}
-	}
+            assertTrue(Thread.holdsLock(myLock));
+        }
+    }
 }

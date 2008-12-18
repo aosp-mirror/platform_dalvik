@@ -15,21 +15,17 @@
  *  limitations under the License.
  */
 
-/**
-* @author Boris V. Kuznetsov
-* @version $Revision$
-*/
-
 package javax.net.ssl;
 
 /**
  * Default implementation of javax.net.ssl.HostnameVerifier
  * 
+ * @since Android 1.0
  */
 class DefaultHostnameVerifier implements HostnameVerifier {
 
     /**
-     * DefaultHostnameVerifier assumes the connection should not be permitted
+     * DefaultHostnameVerifier assumes the connection should not be permitted.
      * 
      * @param hostname
      * @param session

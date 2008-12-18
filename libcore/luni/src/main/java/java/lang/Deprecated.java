@@ -19,6 +19,13 @@ package java.lang;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 
+/**
+ * Annotation type used to mark program elements that should no longer be used
+ * by programmers. Compilers produce a warning if a deprecated program element
+ * is used.
+ * 
+ * @since Android 1.0
+ */
 @Documented
 @Retention(value=java.lang.annotation.RetentionPolicy.RUNTIME)
 public @interface Deprecated

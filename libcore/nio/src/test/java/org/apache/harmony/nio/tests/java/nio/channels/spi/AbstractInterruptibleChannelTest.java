@@ -16,17 +16,31 @@
 
 package org.apache.harmony.nio.tests.java.nio.channels.spi;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.io.IOException;
 import java.nio.channels.AsynchronousCloseException;
 import java.nio.channels.spi.AbstractInterruptibleChannel;
 
 import junit.framework.TestCase;
-
+@TestTargetClass(AbstractInterruptibleChannel.class)
 public class AbstractInterruptibleChannelTest extends TestCase {
     
     /**
      * @tests AbstractInterruptibleChannel#close()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "close",
+          methodArgs = {}
+        )
+    })
     public void test_close() throws IOException {
         MockInterruptibleChannel testMiChannel = new MockInterruptibleChannel();
         assertTrue(testMiChannel.isOpen());
@@ -39,6 +53,19 @@ public class AbstractInterruptibleChannelTest extends TestCase {
     /**
      * @tests AbstractInterruptibleChannel#begin/end()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "begin",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "end",
+          methodArgs = {boolean.class}
+        )
+    })
     public void test_begin_end() throws IOException {
         boolean complete = false;
         MockInterruptibleChannel testChannel = new MockInterruptibleChannel();
@@ -78,6 +105,23 @@ public class AbstractInterruptibleChannelTest extends TestCase {
     /**
      * @tests AbstractInterruptibleChannel#close/begin/end()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "begin",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "end",
+          methodArgs = {boolean.class}
+        ),
+        @TestTarget(
+          methodName = "close",
+          methodArgs = {}
+        )
+    })
     public void test_close_begin_end() throws IOException {
         boolean complete = false;
         MockInterruptibleChannel testChannel = new MockInterruptibleChannel();

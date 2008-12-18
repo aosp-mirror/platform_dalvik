@@ -24,6 +24,7 @@
 #include <string.h>
 #include <assert.h>
 #include <netdb.h>
+#include <errno.h>
 
 #include <cutils/properties.h>
 #include <cutils/adb_networking.h>
@@ -67,20 +68,20 @@ static jboolean InetAddress_gethostbyname(JNIEnv* env, jobject obj, jstring name
         throwNullPointerException(env);
         return false;
     }
-    
+
     jboolean ret;
     const char* name = env->GetStringUTFChars(nameStr, NULL);
 
     char useAdbNetworkingProperty[PROPERTY_VALUE_MAX];
     char adbConnected[PROPERTY_VALUE_MAX];
 
-    property_get ("android.net.use-adb-networking", 
+    property_get ("android.net.use-adb-networking",
             useAdbNetworkingProperty, "");
 
-    property_get ("adb.connected", 
+    property_get ("adb.connected",
             adbConnected, "");
 
-    if ((strlen(useAdbNetworkingProperty) > 0) 
+    if ((strlen(useAdbNetworkingProperty) > 0)
             && (strlen(adbConnected) > 0) ) {
         // Any non-empty string value for use-adb-networking is considered "set"
         union {
@@ -92,8 +93,8 @@ static jboolean InetAddress_gethostbyname(JNIEnv* env, jobject obj, jstring name
         int err;
         err = adb_networking_gethostbyname(name, &(outaddr.a));
 #if 0
-        LOGI("ADB networking: -gethostbyname err %d addr 0x%08x %u.%u.%u.%u", 
-                err, (unsigned int)outaddr.a.s_addr, 
+        LOGI("ADB networking: -gethostbyname err %d addr 0x%08x %u.%u.%u.%u",
+                err, (unsigned int)outaddr.a.s_addr,
                 outaddr.j[0],outaddr.j[1],
                 outaddr.j[2],outaddr.j[3]);
 #endif
@@ -102,17 +103,23 @@ static jboolean InetAddress_gethostbyname(JNIEnv* env, jobject obj, jstring name
             ret = false;
         } else {
             ret = true;
-            env->SetByteArrayRegion(addr, 0, 4, outaddr.j);            
+            env->SetByteArrayRegion(addr, 0, 4, outaddr.j);
         }
     } else {
         // normal case...no adb networking
         struct hostent* ent = gethostbyname(name);
-                
-        if (ent != NULL  && ent->h_length > 0) {
+
+        if (ent != NULL && ent->h_length > 0) {
             jbyte v[4];
             memcpy(v, ent->h_addr, 4);
             env->SetByteArrayRegion(addr, 0, 4, v);
             ret = true;
+        } else if (errno == EACCES) {
+            /* No permission to use network */
+            ret = false;
+            jniThrowException(
+                    env, "java/lang/SecurityException",
+                    "Permission denied (maybe missing INTERNET permission)");
         } else {
             ret = false;
         }

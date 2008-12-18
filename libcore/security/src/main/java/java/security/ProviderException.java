@@ -23,37 +23,56 @@
 package java.security;
 
 /**
- * @com.intel.drl.spec_ref
+ * {@code ProviderException} is a general exception, thrown by security {@code
+ * Providers}.
  * 
+ * @see Provider
+ * @since Android 1.0
  */
 public class ProviderException extends RuntimeException {
-    /**
-     * @com.intel.drl.spec_ref
-     */
+
     private static final long serialVersionUID = 5256023526693665674L;
 
     /**
-     * @com.intel.drl.spec_ref
+     * Constructs a new instance of {@code ProviderException} with the given
+     * message.
+     * 
+     * @param msg
+     *            the detail message for this exception.
+     * @since Android 1.0
      */
     public ProviderException(String msg) {
         super(msg);
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Constructs a new instance of {@code ProviderException}.
+     * 
+     * @since Android 1.0
      */
     public ProviderException() {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Constructs a new instance of {@code ProviderException} with the given
+     * message and the cause.
+     * 
+     * @param message
+     *            the detail message for this exception.
+     * @param cause
+     *            the exception which is the cause for this exception.
+     * @since Android 1.0
      */
     public ProviderException(String message, Throwable cause) {
         super(message, cause);
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Constructs a new instance of {@code ProviderException} with the cause.
+     * 
+     * @param cause
+     *            the exception which is the cause for this exception.
+     * @since Android 1.0
      */
     public ProviderException(Throwable cause) {
         super(cause);

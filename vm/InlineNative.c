@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Inlined native functions.  These definitions replace interpreted or
  * native implementations at runtime; "intrinsic" might be a better word.
  */
 #include "Dalvik.h"
 
-//#undef HAVE__MEMCMP16
-
 #ifdef HAVE__MEMCMP16
+/* hand-coded assembly implementation, available on some platforms */
 //#warning "trying memcmp16"
 //#define CHECK_MEMCMP16
 /* "count" is in 16-bit units */
@@ -31,9 +31,10 @@ extern u4 __memcmp16(const u2* s0, const u2* s1, size_t count);
 /*
  * Some notes on "inline" functions.
  *
- * These are NOT native methods.  A full method definition must still be
- * provided.  Depending on the flags passed into the VM at runtime, the
- * original or inline version may be selected by the DEX optimizer.
+ * These are NOT simply native implementations.  A full method definition
+ * must still be provided.  Depending on the flags passed into the VM
+ * at runtime, the original or inline version may be selected by the
+ * DEX optimizer.
  *
  * PLEASE DO NOT use this as the default location for native methods.
  * The difference between this and an "internal native" static method
@@ -52,9 +53,8 @@ extern u4 __memcmp16(const u2* s0, const u2* s1, size_t count);
  * yourself (cheap/easy way is to check the resolved-methods table, and
  * resolve the method if it hasn't been).
  *
- * DO NOT replace "synchronized" methods.  (We can't reliabily check for
- * this at DEX optimization time because "dx" doesn't propagate the
- * "synchronized" flag for non-native methods.)
+ * DO NOT replace "synchronized" methods.  We do not support method
+ * synchronization here.
  *
  * Remember that these functions are executing while the thread is in
  * the "RUNNING" state, not the "NATIVE" state.  If you perform a blocking
@@ -74,35 +74,330 @@ extern u4 __memcmp16(const u2* s0, const u2* s1, size_t count);
  * subclass, as polymorphism does not work correctly.  For safety you should
  * only provide inline functions for classes/methods declared "final".
  *
- * It's best to avoid inlining the overridden version of a method, e.g.
- * String.hashCode() is inherited from Object.hashCode().  Somebody
+ * It's best to avoid inlining the overridden version of a method.  For
+ * example, String.hashCode() is inherited from Object.hashCode().  Code
  * calling String.hashCode() through an Object reference will run the
  * "slow" version, while calling it through a String reference gets
- * the inlined version.  Best to have just one version unless there are
- * clear performance gains.
+ * the inlined version.  It's best to have just one version unless there
+ * are clear performance gains.
+ *
+ * Because the actual method is not called, debugger breakpoints on these
+ * methods will not happen.  (TODO: have the code here find the original
+ * method and call it when the debugger is active.)  Additional steps have
+ * been taken to allow method profiling to produce correct results.
  */
 
 
 /*
- * Forward declarations.
+ * ===========================================================================
+ *      org.apache.harmony.dalvik.NativeTestTarget
+ * ===========================================================================
+ */
+
+/*
+ * public static void emptyInlineMethod
+ *
+ * This exists only for benchmarks.
  */
 static bool org_apache_harmony_dalvik_NativeTestTarget_emptyInlineMethod(
-    u4 arg0, u4 arg1, u4 arg2, u4 arg3, JValue* pResult);
+    u4 arg0, u4 arg1, u4 arg2, u4 arg3, JValue* pResult)
+{
+    // do nothing
+    return true;
+}
+
+
+/*
+ * ===========================================================================
+ *      java.lang.String
+ * ===========================================================================
+ */
+
+/*
+ * public char charAt(int index)
+ */
 static bool javaLangString_charAt(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
-    JValue* pResult);
+    JValue* pResult)
+{
+    int count, offset;
+    ArrayObject* chars;
+
+    /* null reference check on "this" */
+    if (!dvmValidateObject((Object*) arg0))
+        return false;
+
+    //LOGI("String.charAt this=0x%08x index=%d\n", arg0, arg1);
+    count = dvmGetFieldInt((Object*) arg0, gDvm.offJavaLangString_count);
+    if ((s4) arg1 < 0 || (s4) arg1 >= count) {
+        dvmThrowException("Ljava/lang/StringIndexOutOfBoundsException;", NULL);
+        return false;
+    } else {
+        offset = dvmGetFieldInt((Object*) arg0, gDvm.offJavaLangString_offset);
+        chars = (ArrayObject*)
+            dvmGetFieldObject((Object*) arg0, gDvm.offJavaLangString_value);
+
+        pResult->i = ((const u2*) chars->contents)[arg1 + offset];
+        return true;
+    }
+}
+
+#ifdef CHECK_MEMCMP16
+/*
+ * Utility function when we're evaluating alternative implementations.
+ */
+static void badMatch(StringObject* thisStrObj, StringObject* compStrObj,
+    int expectResult, int newResult, const char* compareType)
+{
+    ArrayObject* thisArray;
+    ArrayObject* compArray;
+    const char* thisStr;
+    const char* compStr;
+    int thisOffset, compOffset, thisCount, compCount;
+
+    thisCount =
+        dvmGetFieldInt((Object*) thisStrObj, gDvm.offJavaLangString_count);
+    compCount =
+        dvmGetFieldInt((Object*) compStrObj, gDvm.offJavaLangString_count);
+    thisOffset =
+        dvmGetFieldInt((Object*) thisStrObj, gDvm.offJavaLangString_offset);
+    compOffset =
+        dvmGetFieldInt((Object*) compStrObj, gDvm.offJavaLangString_offset);
+    thisArray = (ArrayObject*)
+        dvmGetFieldObject((Object*) thisStrObj, gDvm.offJavaLangString_value);
+    compArray = (ArrayObject*)
+        dvmGetFieldObject((Object*) compStrObj, gDvm.offJavaLangString_value);
+
+    thisStr = dvmCreateCstrFromString(thisStrObj);
+    compStr = dvmCreateCstrFromString(compStrObj);
+
+    LOGE("%s expected %d got %d\n", compareType, expectResult, newResult);
+    LOGE(" this (o=%d l=%d) '%s'\n", thisOffset, thisCount, thisStr);
+    LOGE(" comp (o=%d l=%d) '%s'\n", compOffset, compCount, compStr);
+    dvmPrintHexDumpEx(ANDROID_LOG_INFO, LOG_TAG,
+        ((const u2*) thisArray->contents) + thisOffset, thisCount*2,
+        kHexDumpLocal);
+    dvmPrintHexDumpEx(ANDROID_LOG_INFO, LOG_TAG,
+        ((const u2*) compArray->contents) + compOffset, compCount*2,
+        kHexDumpLocal);
+    dvmAbort();
+}
+#endif
+
+/*
+ * public int compareTo(String s)
+ */
 static bool javaLangString_compareTo(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
-    JValue* pResult);
+    JValue* pResult)
+{
+    /*
+     * Null reference check on "this".  Normally this is performed during
+     * the setup of the virtual method call.  We need to do it before
+     * anything else.  While we're at it, check out the other string,
+     * which must also be non-null.
+     */
+    if (!dvmValidateObject((Object*) arg0) ||
+        !dvmValidateObject((Object*) arg1))
+    {
+        return false;
+    }
+
+    /* quick test for comparison with itself */
+    if (arg0 == arg1) {
+        pResult->i = 0;
+        return true;
+    }
+
+    /*
+     * This would be simpler and faster if we promoted StringObject to
+     * a full representation, lining up the C structure fields with the
+     * actual object fields.
+     */
+    int thisCount, thisOffset, compCount, compOffset;
+    ArrayObject* thisArray;
+    ArrayObject* compArray;
+    const u2* thisChars;
+    const u2* compChars;
+    int i, minCount, countDiff;
+
+    thisCount = dvmGetFieldInt((Object*) arg0, gDvm.offJavaLangString_count);
+    compCount = dvmGetFieldInt((Object*) arg1, gDvm.offJavaLangString_count);
+    countDiff = thisCount - compCount;
+    minCount = (countDiff < 0) ? thisCount : compCount;
+    thisOffset = dvmGetFieldInt((Object*) arg0, gDvm.offJavaLangString_offset);
+    compOffset = dvmGetFieldInt((Object*) arg1, gDvm.offJavaLangString_offset);
+    thisArray = (ArrayObject*)
+        dvmGetFieldObject((Object*) arg0, gDvm.offJavaLangString_value);
+    compArray = (ArrayObject*)
+        dvmGetFieldObject((Object*) arg1, gDvm.offJavaLangString_value);
+    thisChars = ((const u2*) thisArray->contents) + thisOffset;
+    compChars = ((const u2*) compArray->contents) + compOffset;
+
+#ifdef HAVE__MEMCMP16
+    /*
+     * Use assembly version, which returns the difference between the
+     * characters.  The annoying part here is that 0x00e9 - 0xffff != 0x00ea,
+     * because the interpreter converts the characters to 32-bit integers
+     * *without* sign extension before it subtracts them (which makes some
+     * sense since "char" is unsigned).  So what we get is the result of
+     * 0x000000e9 - 0x0000ffff, which is 0xffff00ea.
+     */
+    int otherRes = __memcmp16(thisChars, compChars, minCount);
+# ifdef CHECK_MEMCMP16
+    for (i = 0; i < minCount; i++) {
+        if (thisChars[i] != compChars[i]) {
+            pResult->i = (s4) thisChars[i] - (s4) compChars[i];
+            if (pResult->i != otherRes) {
+                badMatch((StringObject*) arg0, (StringObject*) arg1,
+                    pResult->i, otherRes, "compareTo");
+            }
+            return true;
+        }
+    }
+# endif
+    if (otherRes != 0) {
+        pResult->i = otherRes;
+        return true;
+    }
+
+#else
+    /*
+     * Straightforward implementation, examining 16 bits at a time.  Compare
+     * the characters that overlap, and if they're all the same then return
+     * the difference in lengths.
+     */
+    for (i = 0; i < minCount; i++) {
+        if (thisChars[i] != compChars[i]) {
+            pResult->i = (s4) thisChars[i] - (s4) compChars[i];
+            return true;
+        }
+    }
+#endif
+
+    pResult->i = countDiff;
+    return true;
+}
+
+/*
+ * public boolean equals(Object anObject)
+ */
 static bool javaLangString_equals(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
-    JValue* pResult);
+    JValue* pResult)
+{
+    /*
+     * Null reference check on "this".
+     */
+    if (!dvmValidateObject((Object*) arg0))
+        return false;
+
+    /* quick test for comparison with itself */
+    if (arg0 == arg1) {
+        pResult->i = true;
+        return true;
+    }
+
+    /*
+     * See if the other object is also a String.
+     *
+     * str.equals(null) is expected to return false, presumably based on
+     * the results of the instanceof test.
+     */
+    if (arg1 == 0 || ((Object*) arg0)->clazz != ((Object*) arg1)->clazz) {
+        pResult->i = false;
+        return true;
+    }
+
+    /*
+     * This would be simpler and faster if we promoted StringObject to
+     * a full representation, lining up the C structure fields with the
+     * actual object fields.
+     */
+    int thisCount, thisOffset, compCount, compOffset;
+    ArrayObject* thisArray;
+    ArrayObject* compArray;
+    const u2* thisChars;
+    const u2* compChars;
+    int i;
+
+    /* quick length check */
+    thisCount = dvmGetFieldInt((Object*) arg0, gDvm.offJavaLangString_count);
+    compCount = dvmGetFieldInt((Object*) arg1, gDvm.offJavaLangString_count);
+    if (thisCount != compCount) {
+        pResult->i = false;
+        return true;
+    }
+
+    thisOffset = dvmGetFieldInt((Object*) arg0, gDvm.offJavaLangString_offset);
+    compOffset = dvmGetFieldInt((Object*) arg1, gDvm.offJavaLangString_offset);
+    thisArray = (ArrayObject*)
+        dvmGetFieldObject((Object*) arg0, gDvm.offJavaLangString_value);
+    compArray = (ArrayObject*)
+        dvmGetFieldObject((Object*) arg1, gDvm.offJavaLangString_value);
+    thisChars = ((const u2*) thisArray->contents) + thisOffset;
+    compChars = ((const u2*) compArray->contents) + compOffset;
+
+#ifdef HAVE__MEMCMP16
+    pResult->i = (__memcmp16(thisChars, compChars, thisCount) == 0);
+# ifdef CHECK_MEMCMP16
+    int otherRes = (memcmp(thisChars, compChars, thisCount * 2) == 0);
+    if (pResult->i != otherRes) {
+        badMatch((StringObject*) arg0, (StringObject*) arg1,
+            otherRes, pResult->i, "equals-1");
+    }
+# endif
+#else
+    /*
+     * Straightforward implementation, examining 16 bits at a time.  The
+     * direction of the loop doesn't matter, and starting at the end may
+     * give us an advantage when comparing certain types of strings (e.g.
+     * class names).
+     *
+     * We want to go forward for benchmarks against __memcmp16 so we get a
+     * meaningful comparison when the strings don't match (could also test
+     * with palindromes).
+     */
+    //for (i = 0; i < thisCount; i++)
+    for (i = thisCount-1; i >= 0; --i)
+    {
+        if (thisChars[i] != compChars[i]) {
+            pResult->i = false;
+            return true;
+        }
+    }
+    pResult->i = true;
+#endif
+
+    return true;
+}
+
+/*
+ * public int length()
+ */
 static bool javaLangString_length(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
-    JValue* pResult);
+    JValue* pResult)
+{
+    //LOGI("String.length this=0x%08x pResult=%p\n", arg0, pResult);
+
+    /* null reference check on "this" */
+    if (!dvmValidateObject((Object*) arg0))
+        return false;
+
+    pResult->i = dvmGetFieldInt((Object*) arg0, gDvm.offJavaLangString_count);
+    return true;
+}
+
+
+/*
+ * ===========================================================================
+ *      Infrastructure
+ * ===========================================================================
+ */
 
 /*
  * Table of methods.
  *
- * The DEX optimizer uses the class/method/signature strings to decide
+ * The DEX optimizer uses the class/method/signature string fields to decide
  * which calls it can trample.  The interpreter just uses the function
- * pointer.
+ * pointer field.
  *
  * IMPORTANT: you must update DALVIK_VM_BUILD in DalvikVersion.h if you make
  * changes to this table.
@@ -229,292 +524,5 @@ bool dvmPerformInlineOp4Dbg(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
 skip_prof:
 #endif
     return (*gDvmInlineOpsTable[opIndex].func)(arg0, arg1, arg2, arg3, pResult);
-}
-
-/*
- * org.apache.harmony.dalvik.NativeTestTarget
- * public static void emptyInlineMethod
- *
- * This exists only for benchmarks.
- */
-static bool org_apache_harmony_dalvik_NativeTestTarget_emptyInlineMethod(
-    u4 arg0, u4 arg1, u4 arg2, u4 arg3, JValue* pResult)
-{
-    // do nothing
-    return true;
-}
-
-/*
- * java.lang.String
- * public char charAt(int index)
- */
-static bool javaLangString_charAt(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
-    JValue* pResult)
-{
-    int count, offset;
-    ArrayObject* chars;
-
-    /* null reference check on "this" */
-    if (!dvmValidateObject((Object*) arg0))
-        return false;
-
-    //LOGI("String.charAt this=0x%08x index=%d\n", arg0, arg1);
-    count = dvmGetFieldInt((Object*) arg0, gDvm.offJavaLangString_count);
-    if ((s4) arg1 < 0 || (s4) arg1 >= count) {
-        dvmThrowException("Ljava/lang/StringIndexOutOfBoundsException;", NULL);
-        return false;
-    } else {
-        offset = dvmGetFieldInt((Object*) arg0, gDvm.offJavaLangString_offset);
-        chars = (ArrayObject*)
-            dvmGetFieldObject((Object*) arg0, gDvm.offJavaLangString_value);
-
-        pResult->i = ((const u2*) chars->contents)[arg1 + offset];
-        return true;
-    }
-}
-
-/*
- * Utility function when we're evaluating alternative implementations.
- */
-static void badMatch(StringObject* thisStrObj, StringObject* compStrObj,
-    int expectResult, int newResult, const char* compareType)
-{
-    ArrayObject* thisArray;
-    ArrayObject* compArray;
-    const char* thisStr;
-    const char* compStr;
-    int thisOffset, compOffset, thisCount, compCount;
-
-    thisCount =
-        dvmGetFieldInt((Object*) thisStrObj, gDvm.offJavaLangString_count);
-    compCount =
-        dvmGetFieldInt((Object*) compStrObj, gDvm.offJavaLangString_count);
-    thisOffset =
-        dvmGetFieldInt((Object*) thisStrObj, gDvm.offJavaLangString_offset);
-    compOffset =
-        dvmGetFieldInt((Object*) compStrObj, gDvm.offJavaLangString_offset);
-    thisArray = (ArrayObject*)
-        dvmGetFieldObject((Object*) thisStrObj, gDvm.offJavaLangString_value);
-    compArray = (ArrayObject*)
-        dvmGetFieldObject((Object*) compStrObj, gDvm.offJavaLangString_value);
-
-    thisStr = dvmCreateCstrFromString(thisStrObj);
-    compStr = dvmCreateCstrFromString(compStrObj);
-
-    LOGE("%s expected %d got %d\n", compareType, expectResult, newResult);
-    LOGE(" this (o=%d l=%d) '%s'\n", thisOffset, thisCount, thisStr);
-    LOGE(" comp (o=%d l=%d) '%s'\n", compOffset, compCount, compStr);
-    dvmPrintHexDumpEx(ANDROID_LOG_INFO, LOG_TAG,
-        ((const u2*) thisArray->contents) + thisOffset, thisCount*2,
-        kHexDumpLocal);
-    dvmPrintHexDumpEx(ANDROID_LOG_INFO, LOG_TAG,
-        ((const u2*) compArray->contents) + compOffset, compCount*2,
-        kHexDumpLocal);
-    dvmAbort();
-}
-
-/*
- * java.lang.String
- * public int compareTo(String s)
- */
-static bool javaLangString_compareTo(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
-    JValue* pResult)
-{
-    /*
-     * Null reference check on "this".  Normally this is performed during
-     * the setup of the virtual method call.  We need to do it before
-     * anything else.  While we're at it, check out the other string,
-     * which must also be non-null.
-     */
-    if (!dvmValidateObject((Object*) arg0) ||
-        !dvmValidateObject((Object*) arg1))
-    {
-        return false;
-    }
-
-    /* quick test for comparison with itself */
-    if (arg0 == arg1) {
-        pResult->i = 0;
-        return true;
-    }
-
-    /*
-     * This would be simpler and faster if we promoted StringObject to
-     * a full representation, lining up the C structure fields with the
-     * actual object fields.
-     */
-    int thisCount, thisOffset, compCount, compOffset;
-    ArrayObject* thisArray;
-    ArrayObject* compArray;
-    const u2* thisChars;
-    const u2* compChars;
-    int i, minCount, countDiff;
-
-    thisCount = dvmGetFieldInt((Object*) arg0, gDvm.offJavaLangString_count);
-    compCount = dvmGetFieldInt((Object*) arg1, gDvm.offJavaLangString_count);
-    countDiff = thisCount - compCount;
-    minCount = (countDiff < 0) ? thisCount : compCount;
-    thisOffset = dvmGetFieldInt((Object*) arg0, gDvm.offJavaLangString_offset);
-    compOffset = dvmGetFieldInt((Object*) arg1, gDvm.offJavaLangString_offset);
-    thisArray = (ArrayObject*)
-        dvmGetFieldObject((Object*) arg0, gDvm.offJavaLangString_value);
-    compArray = (ArrayObject*)
-        dvmGetFieldObject((Object*) arg1, gDvm.offJavaLangString_value);
-    thisChars = ((const u2*) thisArray->contents) + thisOffset;
-    compChars = ((const u2*) compArray->contents) + compOffset;
-
-#ifdef HAVE__MEMCMP16
-    /*
-     * Use assembly version, which returns the difference between the
-     * characters.  The annoying part here is that 0x00e9 - 0xffff != 0x00ea,
-     * because the interpreter converts the characters to 32-bit integers
-     * *without* sign extension before it subtracts them (which makes some
-     * sense since "char" is unsigned).  So what we get is the result of
-     * 0x000000e9 - 0x0000ffff, which is 0xffff00ea.
-     */
-    int otherRes = __memcmp16(thisChars, compChars, minCount);
-# ifdef CHECK_MEMCMP16
-    for (i = 0; i < minCount; i++) {
-        if (thisChars[i] != compChars[i]) {
-            pResult->i = (s4) thisChars[i] - (s4) compChars[i];
-            if (pResult->i != otherRes) {
-                badMatch((StringObject*) arg0, (StringObject*) arg1,
-                    pResult->i, otherRes, "compareTo");
-            }
-            return true;
-        }
-    }
-# endif
-    if (otherRes != 0) {
-        pResult->i = otherRes;
-        return true;
-    }
-
-#else
-    /*
-     * Straightforward implementation, examining 16 bits at a time.  Compare
-     * the characters that overlap, and if they're all the same then return
-     * the difference in lengths.
-     */
-    for (i = 0; i < minCount; i++) {
-        if (thisChars[i] != compChars[i]) {
-            pResult->i = (s4) thisChars[i] - (s4) compChars[i];
-            return true;
-        }
-    }
-#endif
-
-    pResult->i = countDiff;
-    return true;
-}
-
-/*
- * java.lang.String
- * public boolean equals(Object anObject)
- */
-static bool javaLangString_equals(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
-    JValue* pResult)
-{
-    /*
-     * Null reference check on "this".
-     */
-    if (!dvmValidateObject((Object*) arg0))
-        return false;
-
-    /* quick test for comparison with itself */
-    if (arg0 == arg1) {
-        pResult->i = true;
-        return true;
-    }
-
-    /*
-     * See if the other object is also a String.
-     *
-     * str.equals(null) is expected to return false, presumably based on
-     * the results of the instanceof test.
-     */
-    if (arg1 == 0 || ((Object*) arg0)->clazz != ((Object*) arg1)->clazz) {
-        pResult->i = false;
-        return true;
-    }
-
-    /*
-     * This would be simpler and faster if we promoted StringObject to
-     * a full representation, lining up the C structure fields with the
-     * actual object fields.
-     */
-    int thisCount, thisOffset, compCount, compOffset;
-    ArrayObject* thisArray;
-    ArrayObject* compArray;
-    const u2* thisChars;
-    const u2* compChars;
-    int i;
-
-    /* quick length check */
-    thisCount = dvmGetFieldInt((Object*) arg0, gDvm.offJavaLangString_count);
-    compCount = dvmGetFieldInt((Object*) arg1, gDvm.offJavaLangString_count);
-    if (thisCount != compCount) {
-        pResult->i = false;
-        return true;
-    }
-
-    thisOffset = dvmGetFieldInt((Object*) arg0, gDvm.offJavaLangString_offset);
-    compOffset = dvmGetFieldInt((Object*) arg1, gDvm.offJavaLangString_offset);
-    thisArray = (ArrayObject*)
-        dvmGetFieldObject((Object*) arg0, gDvm.offJavaLangString_value);
-    compArray = (ArrayObject*)
-        dvmGetFieldObject((Object*) arg1, gDvm.offJavaLangString_value);
-    thisChars = ((const u2*) thisArray->contents) + thisOffset;
-    compChars = ((const u2*) compArray->contents) + compOffset;
-
-#ifdef HAVE__MEMCMP16
-    pResult->i = (__memcmp16(thisChars, compChars, thisCount) == 0);
-# ifdef CHECK_MEMCMP16
-    int otherRes = (memcmp(thisChars, compChars, thisCount * 2) == 0);
-    if (pResult->i != otherRes) {
-        badMatch((StringObject*) arg0, (StringObject*) arg1,
-            otherRes, pResult->i, "equals-1");
-    }
-# endif
-#else
-    /*
-     * Straightforward implementation, examining 16 bits at a time.  The
-     * direction of the loop doesn't matter, and starting at the end may
-     * give us an advantage when comparing certain types of strings (e.g.
-     * class names).
-     *
-     * We want to go forward for benchmarks against __memcmp16 so we get a
-     * meaningful comparison when the strings don't match (could also test
-     * with palindromes).
-     */
-    //for (i = 0; i < thisCount; i++)
-    for (i = thisCount-1; i >= 0; --i)
-    {
-        if (thisChars[i] != compChars[i]) {
-            pResult->i = false;
-            return true;
-        }
-    }
-    pResult->i = true;
-#endif
-
-    return true;
-}
-
-/*
- * java.lang.String
- * public int length()
- */
-static bool javaLangString_length(u4 arg0, u4 arg1, u4 arg2, u4 arg3,
-    JValue* pResult)
-{
-    //LOGI("String.length this=0x%08x pResult=%p\n", arg0, pResult);
-
-    /* null reference check on "this" */
-    if (!dvmValidateObject((Object*) arg0))
-        return false;
-
-    pResult->i = dvmGetFieldInt((Object*) arg0, gDvm.offJavaLangString_count);
-    return true;
 }
 

@@ -20,28 +20,34 @@ package java.net;
 import java.io.IOException;
 
 /**
- * This UnknownServiceException is thrown when a particular service requested
- * isn't support by the URL. Examples are attempts to read from an URL via an
- * <code>InputStream</code> or write to an URL via an
- * <code>OutputStream</code>
+ * Is thrown if no appropriate {@code ContentHandler} could be found for a
+ * particular service requested by the URL connection. This could be happened if
+ * there is an invalid MIME type or the application wants to send data over a
+ * read-only connection.
+ * 
+ * @since Android 1.0
  */
 public class UnknownServiceException extends IOException {
 
     private static final long serialVersionUID = -4169033248853639508L;
 
     /**
-     * Constructs a new instance of this class with its walkback filled in.
+     * Constructs a new {@code UnknownServiceException} instance with its
+     * walkback filled in.
+     * 
+     * @since Android 1.0
      */
     public UnknownServiceException() {
         super();
     }
 
     /**
-     * Constructs a new instance of this class with its walkback and message
-     * filled in.
+     * Constructs a new {@code UnknownServiceException} instance with its
+     * walkback and message filled in.
      * 
      * @param detailMessage
-     *            String The detail message for the exception.
+     *            the detail message for this exception.
+     * @since Android 1.0
      */
     public UnknownServiceException(String detailMessage) {
         super(detailMessage);

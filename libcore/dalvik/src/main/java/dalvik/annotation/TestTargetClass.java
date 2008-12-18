@@ -21,11 +21,15 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import dalvik.annotation.TestTargetNew;
+
 /**
  * Defines an annotation for test classes that allows to link them to the class
  * that is being tested. The current assumption is that the test are somewhat
  * organized according to the API classes they test. Might be too strict for
  * some cases.
+ * 
+ * @since Android 1.0
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.TYPE })
@@ -36,4 +40,9 @@ public @interface TestTargetClass {
      */
     Class<?> value();
     
+    /**
+     * Option to specify untested methods for the class.
+     * @hide
+     */
+    TestTargetNew[] untestedMethods() default {};
 }

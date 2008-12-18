@@ -17,13 +17,28 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import junit.framework.TestCase;
 
+@TestTargetClass(InterruptedException.class) 
 public class InterruptedExceptionTest extends TestCase {
 
     /**
      * @tests java.lang.InterruptedException#InterruptedException()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "InterruptedException",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         InterruptedException e = new InterruptedException();
         assertNull(e.getMessage());
@@ -34,6 +49,15 @@ public class InterruptedExceptionTest extends TestCase {
     /**
      * @tests java.lang.InterruptedException#InterruptedException(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "InterruptedException",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() {
         InterruptedException e = new InterruptedException("fixture");
         assertEquals("fixture", e.getMessage());

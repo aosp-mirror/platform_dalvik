@@ -20,25 +20,29 @@ package java.sql;
 import java.io.Serializable;
 
 /**
- * An Exception class that is used in conjunction with JDBC operations. It
- * provides information about problems encountered with Database access and
+ * An {@code Exception} class that is used in conjunction with JDBC operations.
+ * It provides information about problems encountered with database access and
  * other problems related to JDBC
  * <p>
- * The SQLException class provides the following information:
+ * The {@code SQLException} class provides the following information:
  * <ul>
- * <li>A standard Java exception message, as a String
- * <li>An SQLState string. This is an error description string which follows
- * either the SQL 99 conventions or the XOPEN SQLstate conventions. The
- * potential values of the SQLState string are described in each of the
- * specifications. Which of the conventions is being used by the SQLState string
- * can be discovered by using the getSQLStateType method of the DatabaseMetaData
- * interface.
- * <li>An Error Code, an an integer. The error code is specific to each
- * database vendor and is typically the error code returned by the database
- * itself.
- * <li>A chain to a next Exception, if relevant, which can give access to
- * additional error information.
+ * <li>A standard Java exception message, as a {@code String}</li>
+ * <li>An {@code SQLState} string. This is an error description string which
+ * follows either the SQL 99 conventions or the X/OPEN {@code SQLstate}
+ * conventions. The potential values of the {@code SQLState} string are
+ * described in each of the specifications. Which of the conventions is being
+ * used by the {@code SQLState} string can be discovered by using the {@code
+ * getSQLStateType} method of the {@code DatabaseMetaData} interface.</li>
+ * <li>An error code, an an integer. The error code is specific to each database
+ * vendor and is typically the error code returned by the database itself.</li>
+ * <li>A chain to a next {@code Exception}, if relevant, which can give access
+ * to additional error information.</li>
  * </ul>
+ * </p>
+ * 
+ * @see DatabaseMetaData
+ * 
+ * @since Android 1.0
  */
 public class SQLException extends Exception implements Serializable {
 
@@ -51,16 +55,17 @@ public class SQLException extends Exception implements Serializable {
     private SQLException next = null;
 
     /**
-     * Creates an SQLException object. The Reason string is set to null, the
-     * SQLState string is set to null and the Error Code is set to 0.
+     * Creates an {@code SQLException} object. The reason string is set to
+     * {@code null}, the {@code SQLState} string is set to {@code null} and the
+     * error code is set to 0.
      */
     public SQLException() {
         super();
     }
 
     /**
-     * Creates an SQLException object. The Reason string is set to the given
-     * reason string, the SQLState string is set to null and the Error Code is
+     * Creates an {@code SQLException} object. The reason string is set to the given
+     * reason string, the {@code SQLState} string is set to {@code null} and the error code is
      * set to 0.
      * 
      * @param theReason
@@ -71,30 +76,33 @@ public class SQLException extends Exception implements Serializable {
     }
 
     /**
-     * Creates an SQLException object. The Reason string is set to the given
-     * reason string, the SQLState string is set to the given SQLState string
-     * and the Error Code is set to 0.
+     * Creates an {@code SQLException} object. The reason string is set to the
+     * given reason string, the {@code SQLState} string is set to the given
+     * {@code SQLState} string and the error code is set to 0.
      * 
      * @param theReason
-     *            the string to use as the Reason string
+     *            the string to use as the reason string.
      * @param theSQLState
-     *            the string to use as the SQLState string
+     *            the string to use as the {@code SQLState} string.
+     * @since Android 1.0
      */
     public SQLException(String theReason, String theSQLState) {
         this(theReason, theSQLState, 0);
     }
 
     /**
-     * Creates an SQLException object. The Reason string is set to the given
-     * reason string, the SQLState string is set to the given SQLState string
-     * and the Error Code is set to the given error code value.
+     * Creates an {@code SQLException} object. The reason string is set to the
+     * given reason string, the {@code SQLState} string is set to the given
+     * {@code SQLState} string and the error code is set to the given error code
+     * value.
      * 
      * @param theReason
-     *            the string to use as the Reason string
+     *            the string to use as the reason string.
      * @param theSQLState
-     *            the string to use as the SQLState string
+     *            the string to use as the {@code SQLState} string.
      * @param theErrorCode
-     *            the integer value for the error code
+     *            the integer value for the error code.
+     * @since Android 1.0
      */
     public SQLException(String theReason, String theSQLState, int theErrorCode) {
         super(theReason);
@@ -103,45 +111,52 @@ public class SQLException extends Exception implements Serializable {
     }
 
     /**
-     * Returns the integer error code for this SQLException
+     * Returns the integer error code for this {@code SQLException}.
      * 
-     * @return The integer error code for this SQLException. The meaning of the
-     *         code is specific to the vendor of the database.
+     * @return The integer error code for this {@code SQLException}. The meaning
+     *         of the code is specific to the vendor of the database.
+     * @since Android 1.0
      */
     public int getErrorCode() {
         return vendorCode;
     }
 
     /**
-     * Retrieves the SQLException chained to this SQLException, if any.
+     * Retrieves the {@code SQLException} chained to this {@code SQLException},
+     * if any.
      * 
-     * @return The SQLException chained to this SQLException. null if there is
-     *         no SQLException chained to this SQLException.
+     * @return The {@code SQLException} chained to this {@code SQLException}.
+     *         {@code null} if there is no {@code SQLException} chained to this
+     *         {@code SQLException}.
      */
     public SQLException getNextException() {
         return next;
     }
 
     /**
-     * Retrieves the SQLState description string for this SQLException object
+     * Retrieves the {@code SQLState} description string for this {@code
+     * SQLException} object.
      * 
-     * @return The SQLState string for this SQLException object. This is an
-     *         error description string which follows either the SQL 99
-     *         conventions or the XOPEN SQLstate conventions. The potential
-     *         values of the SQLState string are described in each of the
-     *         specifications. Which of the conventions is being used by the
-     *         SQLState string can be discovered by using the getSQLStateType
-     *         method of the DatabaseMetaData interface.
+     * @return The {@code SQLState} string for this {@code SQLException} object.
+     *         This is an error description string which follows either the SQL
+     *         99 conventions or the X/OPEN {@code SQLstate} conventions. The
+     *         potential values of the {@code SQLState} string are described in
+     *         each of the specifications. Which of the conventions is being
+     *         used by the {@code SQLState} string can be discovered by using
+     *         the {@code getSQLStateType} method of the {@code
+     *         DatabaseMetaData} interface.
      */
     public String getSQLState() {
         return SQLState;
     }
 
     /**
-     * Adds the SQLException to the end of this SQLException chain.
+     * Adds the SQLException to the end of this {@code SQLException} chain.
      * 
      * @param ex
-     *            the new SQLException to be added to the end of the chain
+     *            the new {@code SQLException} to be added to the end of the
+     *            chain.
+     * @since Android 1.0
      */
     public void setNextException(SQLException ex) {    
         if (next != null) {

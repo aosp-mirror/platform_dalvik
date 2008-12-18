@@ -16,6 +16,11 @@
 
 package org.apache.harmony.nio_char.tests.java.nio.charset;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestLevel;
+
 import java.io.Serializable;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.MalformedInputException;
@@ -25,11 +30,27 @@ import junit.framework.TestCase;
 import org.apache.harmony.testframework.serialization.SerializationTest;
 import org.apache.harmony.testframework.serialization.SerializationTest.SerializableAssert;
 
+@TestTargetClass(MalformedInputException.class)
 /**
  * Test class MalformedInputException.
  */
 public class MalformedInputExceptionTest extends TestCase {
 
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "MalformedInputException",
+          methodArgs = {int.class}
+        ),@TestTarget(
+          methodName = "getMessage",
+          methodArgs = {}
+        ),@TestTarget(
+          methodName = "getInputLength",
+          methodArgs = {}
+        )
+    })
     public void testConstructor() {
         MalformedInputException ex = new MalformedInputException(3);
         assertTrue(ex instanceof CharacterCodingException);
@@ -68,6 +89,15 @@ public class MalformedInputExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility.
      */
+    @TestInfo(
+              level = TestLevel.COMPLETE,
+              purpose = "Verifies serialization.",
+              targets = {
+                @TestTarget(
+                  methodName = "!SerializationSelf",
+                  methodArgs = {}
+                )
+            })
     public void testSerializationSelf() throws Exception {
 
         SerializationTest.verifySelf(new MalformedInputException(11),
@@ -77,6 +107,15 @@ public class MalformedInputExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
+    @TestInfo(
+              level = TestLevel.COMPLETE,
+              purpose = "Verifies serialization.",
+              targets = {
+                @TestTarget(
+                  methodName = "!SerializationGolden",
+                  methodArgs = {}
+                )
+            })
     public void testSerializationCompatibility() throws Exception {
 
         SerializationTest.verifyGolden(this, new MalformedInputException(11),

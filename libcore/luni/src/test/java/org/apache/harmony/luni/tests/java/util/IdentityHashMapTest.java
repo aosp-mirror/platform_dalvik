@@ -17,6 +17,11 @@
 
 package org.apache.harmony.luni.tests.java.util;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
@@ -29,6 +34,7 @@ import java.util.TreeSet;
 import org.apache.harmony.testframework.serialization.SerializationTest;
 import org.apache.harmony.testframework.serialization.SerializationTest.SerializableAssert;
 
+@TestTargetClass(IdentityHashMap.class) 
 public class IdentityHashMapTest extends junit.framework.TestCase {
 
     /**
@@ -37,6 +43,27 @@ public class IdentityHashMapTest extends junit.framework.TestCase {
      * @tests java.util.IdentityHashMap#put(java.lang.Object, java.lang.Object)
      * @tests java.util.IdentityHashMap#get(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Checks null as a parameter.",
+      targets = {
+        @TestTarget(
+          methodName = "containsKey",
+          methodArgs = {java.lang.Object.class}
+        ),
+        @TestTarget(
+          methodName = "containsValue",
+          methodArgs = {java.lang.Object.class}
+        ),
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {Object.class, Object.class}
+        ),
+        @TestTarget(
+          methodName = "get",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_null_Keys_and_Values() {
         // tests with null keys and values
         IdentityHashMap map = new IdentityHashMap();
@@ -92,6 +119,15 @@ public class IdentityHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.IdentityHashMap#put(java.lang.Object, java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Checks null as a parameter.",
+      targets = {
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {Object.class, Object.class}
+        )
+    })
     public void test_putLjava_lang_ObjectLjava_lang_Object() {
         IdentityHashMap<Object, Object> map = new IdentityHashMap<Object, Object>();
         
@@ -110,6 +146,15 @@ public class IdentityHashMapTest extends junit.framework.TestCase {
      * @tests java.util.IdentityHashMap#remove(java.lang.Object)
      * @tests java.util.IdentityHashMap#keySet()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify removed value.",
+      targets = {
+        @TestTarget(
+          methodName = "remove",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_remove() {
         IdentityHashMap map = new IdentityHashMap();
         map.put(null, null);
@@ -129,6 +174,15 @@ public class IdentityHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.IdentityHashMapTest#remove(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Regression test.",
+      targets = {
+        @TestTarget(
+          methodName = "remove",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_removeLjava_lang_Object() {
         // Regression for HARMONY-37
         IdentityHashMap<String, String> hashMap = new IdentityHashMap<String, String>();
@@ -150,6 +204,23 @@ public class IdentityHashMapTest extends junit.framework.TestCase {
      * @tests java.util.IdentityHashMap#keySet()
      * @tests java.util.IdentityHashMap#values()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "keySet",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "entrySet",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "values",
+          methodArgs = {}
+        )
+    })
     public void test_sets() {
         // tests with null keys and values
         IdentityHashMap map = new IdentityHashMap();
@@ -185,6 +256,20 @@ public class IdentityHashMapTest extends junit.framework.TestCase {
      * @tests java.util.IdentityHashMap#entrySet()
      * @tests java.util.IdentityHashMap#remove(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies positive functionality. Doesn't verify that remove " +
+            "method returns null if there was no entry for key.",
+      targets = {
+        @TestTarget(
+          methodName = "entrySet",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "remove",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_entrySet_removeAll() {
         IdentityHashMap map = new IdentityHashMap();
         for (int i = 0; i < 1000; i++) {
@@ -204,6 +289,15 @@ public class IdentityHashMapTest extends junit.framework.TestCase {
      * @tests java.util.IdentityHashMap#keySet()
      * @tests java.util.IdentityHashMap#clear()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "clear",
+          methodArgs = {}
+        )
+    })
     public void test_keySet_clear() {
         IdentityHashMap map = new IdentityHashMap();
         for (int i = 0; i < 1000; i++) {
@@ -222,6 +316,15 @@ public class IdentityHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.IdentityHashMap#values()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "values",
+          methodArgs = {}
+        )
+    })
     public void test_values() {
 
         IdentityHashMap map = new IdentityHashMap();
@@ -273,6 +376,15 @@ public class IdentityHashMapTest extends junit.framework.TestCase {
      * @tests java.util.IdentityHashMap#keySet()
      * @tests java.util.IdentityHashMap#remove(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "keySet",
+          methodArgs = {}
+        )
+    })
     public void test_keySet_removeAll() {
         IdentityHashMap map = new IdentityHashMap();
         for (int i = 0; i < 1000; i++) {
@@ -291,6 +403,15 @@ public class IdentityHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.IdentityHashMap#keySet()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "keySet",
+          methodArgs = {}
+        )
+    })
     public void test_keySet_retainAll() {
         IdentityHashMap map = new IdentityHashMap();
         for (int i = 0; i < 1000; i++) {
@@ -317,6 +438,19 @@ public class IdentityHashMapTest extends junit.framework.TestCase {
      * @tests java.util.IdentityHashMap#keySet()
      * @tests java.util.IdentityHashMap#remove(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "keySet",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "remove",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_keyset_remove() {
         IdentityHashMap map = new IdentityHashMap();
 
@@ -372,6 +506,15 @@ public class IdentityHashMapTest extends junit.framework.TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationGolden",
+          methodArgs = {}
+        )
+    })
     public void testSerializationCompatibility() throws Exception {
         IdentityHashMap<String, String> identityHashMap = new IdentityHashMap<String, String>();
         identityHashMap.put("key1", "value1");

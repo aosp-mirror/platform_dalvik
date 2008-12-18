@@ -28,20 +28,39 @@ import java.io.Serializable;
 import org.apache.harmony.security.internal.nls.Messages;
 
 /**
- * Superclass of permissions which have names but no action lists.
+ * {@code BasicPermission} is the common base class of all permissions which
+ * have a name but no action lists. A {@code BasicPermission} is granted or it
+ * is not.
+ * <p>
+ * Names of a BasicPermission follow the dot separated, hierarchical property
+ * naming convention. Asterisk '*' can be used as wildcards. Either by itself,
+ * matching anything, or at the end of the name, immediately preceded by a '.'.
+ * For example:
  * 
+ * <pre>
+ * com.google.android.*  grants all permissions under the com.google.android permission hierarchy
+ * *                     grants all permissions
+ * </pre>
+ * </p><p>
+ * While this class ignores the action list in the
+ * {@link #BasicPermission(String, String)} constructor, subclasses may
+ * implement actions on top of this class.
+ * </p>
  */
-
 public abstract class BasicPermission extends Permission implements
     Serializable {
 
     private static final long serialVersionUID = 6279438298436773498L;
 
     /**
-     * Creates an instance of this class with the given name and action list.
+     * Constructs a new instance of {@code BasicPermission} with the specified
+     * name.
      * 
      * @param name
-     *            String the name of the new permission.
+     *            the name of the permission.
+     * @throws NullPointerException if {@code name} is {@code null}.
+     * @throws IllegalArgumentException if {@code name.length() == 0}.
+     * @since Android 1.0
      */
     public BasicPermission(String name) {
         super(name);
@@ -49,13 +68,18 @@ public abstract class BasicPermission extends Permission implements
     }
 
     /**
-     * Creates an instance of this class with the given name and action list.
-     * The action list is ignored.
+     * Constructs a new instance of {@code BasicPermission} with the specified
+     * name. The {@code action} parameter is ignored.
      * 
      * @param name
-     *            String the name of the new permission.
+     *            the name of the permission.
      * @param action
-     *            String ignored.
+     *            is ignored.
+     * @throws NullPointerException
+     *             if {@code name} is {@code null}.
+     * @throws IllegalArgumentException
+     *             if {@code name.length() == 0}.
+     * @since Android 1.0
      */
     public BasicPermission(String name, String action) {
         super(name);
@@ -75,15 +99,20 @@ public abstract class BasicPermission extends Permission implements
     }
 
     /**
-     * Compares the argument to the receiver, and returns true if they represent
-     * the <em>same</em> object using a class specific comparison. In this
-     * case, the receiver and the object must have the same class and name.
+     * Compares the specified object with this {@code BasicPermission} for
+     * equality. Returns {@code true} if the specified object has the same class
+     * and the two {@code Permissions}s have the same name.
+     * <p>
+     * The {@link #implies(Permission)} method should be used for making access
+     * control checks.
+     * </p>
      * 
      * @param obj
-     *            the object to compare with this object
-     * @return <code>true</code> if the object is the same as this object
-     *         <code>false</code> if it is different from this object
-     * @see #hashCode
+     *            object to be compared for equality with this {@code
+     *            BasicPermission}.
+     * @return {@code true} if the specified object is equal to this {@code
+     *         BasicPermission}, otherwise {@code false}.
+     * @since Android 1.0
      */
     public boolean equals(Object obj) {
         if (obj == this) {
@@ -97,35 +126,38 @@ public abstract class BasicPermission extends Permission implements
     }
 
     /**
-     * Returns an integer hash code for the receiver. Any two objects which
-     * answer <code>true</code> when passed to <code>equals</code> must
-     * answer the same value for this method.
+     * Returns the hash code value for this {@code BasicPermission}. Returns the
+     * same hash code for {@code BasicPermission}s that are equal to each other
+     * as required by the general contract of {@link Object#hashCode}.
      * 
-     * @return int the receiver's hash
-     * 
-     * @see #equals
+     * @return the hash code value for this {@code BasicPermission}.
+     * @see Object#equals(Object)
+     * @see BasicPermission#equals(Object)
+     * @since Android 1.0
      */
     public int hashCode() {
         return getName().hashCode();
     }
 
     /**
-     * Returns the actions associated with the receiver. BasicPermission objects
-     * have no actions, so answer the empty string.
+     * Returns the actions associated with this permission. Since {@code
+     * BasicPermission} instances have no actions, an empty string is returned.
      * 
-     * @return String the actions associated with the receiver.
+     * @return an empty string.
+     * @since Android 1.0
      */
     public String getActions() {
         return ""; //$NON-NLS-1$
     }
 
     /**
-     * Indicates whether the argument permission is implied by the receiver.
+     * Indicates whether the specified permission is implied by this permission.
      * 
-     * @return boolean <code>true</code> if the argument permission is implied
-     *         by the receiver, and <code>false</code> if it is not.
      * @param permission
-     *            java.security.Permission the permission to check
+     *            the permission to check against this permission.
+     * @return {@code true} if the specified permission is implied by this
+     *         permission, {@code false} otherwise.
+     * @since Android 1.0
      */
     public boolean implies(Permission permission) {
         if (permission != null && permission.getClass() == this.getClass()) {
@@ -135,9 +167,9 @@ public abstract class BasicPermission extends Permission implements
     }
 
     /**
-     * Checks if <code>thisName</code> implies <code>thatName</code>,
+     * Checks if {@code thisName} implies {@code thatName},
      * accordingly to hierarchical property naming convention.
-     * It is assumed that names cannot be null or empty.
+     * It is assumed that names cannot be {@code null} or empty.
      */
     static boolean nameImplies(String thisName, String thatName) {
         if (thisName == thatName) {
@@ -164,19 +196,19 @@ public abstract class BasicPermission extends Permission implements
     }
 
     /**
-     * Returns a new PermissionCollection for holding permissions of this class.
-     * Answer null if any permission collection can be used.
+     * Returns an empty {@link PermissionCollection} for holding permissions.
      * <p>
-     * Note: For BasicPermission (and subclasses which do not override this
-     * method), the collection which is returned does <em>not</em> invoke the
-     * .implies method of the permissions which are stored in it when checking
-     * if the collection implies a permission. Instead, it assumes that if the
-     * type of the permission is correct, and the name of the permission is
-     * correct, there is a match.
+     * For {@code PermissionCollection} (and subclasses which do not override
+     * this method), the collection which is returned does <em>not</em> invoke
+     * the {@link #implies(Permission)} method of the permissions which are
+     * stored in it when checking if the collection implies a permission.
+     * Instead, it assumes that if the type of the permission is correct, and
+     * the name of the permission is correct, there is a match.
+     * </p>
      * 
-     * @return a new PermissionCollection or null
-     * 
-     * @see java.security.BasicPermissionCollection
+     * @return an empty {@link PermissionCollection} for holding permissions.
+     * @see BasicPermissionCollection
+     * @since Android 1.0
      */
     public PermissionCollection newPermissionCollection() {
         return new BasicPermissionCollection();

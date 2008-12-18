@@ -18,31 +18,37 @@
 
 package java.lang;
 
-
 /**
- * This error is thrown when the VM notices that an attempt is made to load a
+ * Thrown when the virtual machine notices that an attempt is made to load a
  * class which would directly or indirectly inherit from one of its subclasses.
  * <p>
- * Note that this can only occur when inconsistant class files are being loaded,
- * since this error would be detected at compile time.
+ * Note that this error can only occur when inconsistent class files are loaded,
+ * since it would normally be detected at compile time.
+ * </p>
+ * 
+ * @since Android 1.0
  */
 public class ClassCircularityError extends LinkageError {
 
     private static final long serialVersionUID = 1054362542914539689L;
 
     /**
-     * Constructs a new instance of this class with its walkback filled in.
+     * Constructs a new {@code ClassCircularityError} that include the current
+     * stack trace.
+     * 
+     * @since Android 1.0
      */
     public ClassCircularityError() {
         super();
     }
 
     /**
-     * Constructs a new instance of this class with its walkback and message
-     * filled in.
+     * Constructs a new {@code ClassCircularityError} with the current stack
+     * trace and the specified detail message.
      * 
      * @param detailMessage
-     *            String The detail message for the exception.
+     *            the detail message for this error.
+     * @since Android 1.0
      */
     public ClassCircularityError(String detailMessage) {
         super(detailMessage);

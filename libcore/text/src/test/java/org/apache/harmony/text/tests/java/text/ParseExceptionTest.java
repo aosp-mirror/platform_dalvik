@@ -16,14 +16,29 @@
  */
 package org.apache.harmony.text.tests.java.text;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.text.DateFormat;
 import java.text.ParseException;
 
+@TestTargetClass(ParseException.class) 
 public class ParseExceptionTest extends junit.framework.TestCase {
 
     /**
      * @tests java.text.ParseException#ParseException(java.lang.String, int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "ParseException",
+          methodArgs = {java.lang.String.class, int.class}
+        )
+    })
     public void test_ConstructorLjava_lang_StringI() {
         // Test for method java.text.ParseException(java.lang.String, int)
         // SM
@@ -39,6 +54,15 @@ public class ParseExceptionTest extends junit.framework.TestCase {
     /**
      * @tests java.text.ParseException#getErrorOffset()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getErrorOffset",
+          methodArgs = {}
+        )
+    })
     public void test_getErrorOffset() {
         // Test for method int java.text.ParseException.getErrorOffset()
         // SM

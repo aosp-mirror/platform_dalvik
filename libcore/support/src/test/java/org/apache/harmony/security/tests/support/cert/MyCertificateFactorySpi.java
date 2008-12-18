@@ -71,6 +71,7 @@ public class MyCertificateFactorySpi extends CertificateFactorySpi {
         return null;
     }
 
+    @SuppressWarnings("unchecked")
     public Collection engineGenerateCertificates(InputStream inStream)
             throws CertificateException {
         if (!(inStream instanceof DataInputStream)) {
@@ -86,6 +87,7 @@ public class MyCertificateFactorySpi extends CertificateFactorySpi {
         return null;
     }
 
+    @SuppressWarnings("unchecked")
     public Collection engineGenerateCRLs(InputStream inStream)
             throws CRLException {
         if (!(inStream instanceof DataInputStream)) {

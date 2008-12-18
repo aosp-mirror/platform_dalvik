@@ -16,6 +16,11 @@
 
 package tests.api.java.net;
 
+import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.IOException;
 import java.net.CookieHandler;
 import java.net.NetPermission;
@@ -25,11 +30,21 @@ import java.util.Map;
 
 import junit.framework.TestCase;
 
+@TestTargetClass(CookieHandler.class) 
 public class CookieHandlerTest extends TestCase {
 
     /**
      * @tests java.net.CookieHandler#getDefault()
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "This is a complete subset of tests for getDefault method.",
+      targets = {
+        @TestTarget(
+          methodName = "getDefault",
+          methodArgs = {}
+        )
+    })
     public void test_GetDefault() {
         assertNull(CookieHandler.getDefault());
     }
@@ -37,6 +52,15 @@ public class CookieHandlerTest extends TestCase {
     /**
      * @tests java.net.CookieHandler#setDefault(CookieHandler)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "This is a complete subset of tests for setDefault method.",
+      targets = {
+        @TestTarget(
+          methodName = "setDefault",
+          methodArgs = {CookieHandler.class}
+        )
+    })
     public void test_SetDefault_java_net_cookieHandler() {
         MockCookieHandler rc1 = new MockCookieHandler();
         MockCookieHandler rc2 = new MockCookieHandler();
@@ -51,6 +75,15 @@ public class CookieHandlerTest extends TestCase {
     /**
      * @tests java.net.CookieHandler#getDefault()
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "This is a complete subset of tests for getDefault method.",
+      targets = {
+        @TestTarget(
+          methodName = "getDefault",
+          methodArgs = {}
+        )
+    })
     public void testGetDefault_Security() {
         SecurityManager old = System.getSecurityManager();
         try {
@@ -72,7 +105,15 @@ public class CookieHandlerTest extends TestCase {
     /**
      * @tests java.net.CookieHandler#setDefault(CookieHandler)
      */
-    public void testSetDefault_Security() {
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "This is a complete subset of tests for setDefault method.",
+      targets = {
+        @TestTarget(
+          methodName = "setDefault",
+          methodArgs = {CookieHandler.class}
+        )
+    })    public void testSetDefault_Security() {
         CookieHandler rc = new MockCookieHandler();
         SecurityManager old = System.getSecurityManager();
         try {

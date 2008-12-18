@@ -53,6 +53,11 @@ void dvmPlatformInvoke(void* pEnv, ClassObject* clazz, int argInfo, int argc,
     const u4* argv, const char* signature, void* func, JValue* pResult);
 
 /*
+ * Generate hints to speed native calls.  This is platform specific.
+ */
+u4 dvmPlatformInvokeHints(const DexProto* proto);
+
+/*
  * Convert a short library name ("jpeg") to a system-dependent name
  * ("libjpeg.so").  Returns a newly-allocated string.
  */
@@ -60,17 +65,6 @@ char* dvmCreateSystemLibraryName(char* libName);
 //void dvmLoadNativeLibrary(StringObject* libNameObj, Object* classLoader);
 bool dvmLoadNativeCode(const char* fileName, Object* classLoader);
 
-
-/*
- * Some setup for internal native functions.
- */
-bool dvmInternalNativeStartup(void);
-void dvmInternalNativeShutdown(void);
-
-DalvikNativeFunc dvmLookupInternalNativeMethod(const Method* method);
-
-/* exception-throwing stub for abstract methods (DalvikNativeFunc) */
-void dvmAbstractMethodStub(const u4* args, JValue* pResult);
 
 /*
  * Resolve a native method.  This uses the same prototype as a

@@ -15,6 +15,10 @@
  *  limitations under the License.
  */
 
+// BEGIN android-note
+// address length was changed from long to int for performance reasons.
+// END android-note
+
 package org.apache.harmony.luni.platform;
 
 
@@ -68,6 +72,12 @@ public class PlatformAddress implements ICommonDataTypes, Comparable {
     public PlatformAddress offsetBytes(int offset) {
         return PlatformAddressFactory.on(osaddr + offset, size - offset);
     }
+
+    // BEGIN android-removed
+    // public PlatformAddress offsetBytes(long offset) {
+    //     return PlatformAddressFactory.on(osaddr + offset, size - offset);
+    // }
+    // END android-removed
 
     public final void moveTo(PlatformAddress dest, long numBytes) {
         osMemory.memmove(dest.osaddr, osaddr, numBytes);
@@ -240,9 +250,11 @@ public class PlatformAddress implements ICommonDataTypes, Comparable {
         return osMemory.getDouble(osaddr + offset);
     }
 
+    // BEGIN android-added
     public final int toInt() {
         return osaddr;
     }
+    // END android-added
 
     public final long toLong() {
         return osaddr;

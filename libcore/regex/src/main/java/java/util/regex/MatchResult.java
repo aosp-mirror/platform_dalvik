@@ -28,8 +28,8 @@ package java.util.regex;
  * 
  * @since Android 1.0
  */
-public interface MatchResult
-{
+public interface MatchResult {
+
     /**
      * Returns the index of the first character following the text that matched
      * the whole regular expression. 
@@ -38,7 +38,7 @@ public interface MatchResult
      * 
      * @since Android 1.0
      */
-    public int end();
+    int end();
 
     /**
      * Returns the index of the first character following the text that matched
@@ -52,7 +52,7 @@ public interface MatchResult
      * 
      * @since Android 1.0
      */
-    public int end(int group);
+    int end(int group);
 
     /**
      * Returns the text that matched the whole regular expression. 
@@ -61,7 +61,7 @@ public interface MatchResult
      * 
      * @since Android 1.0
      */
-    public String group();
+    String group();
 
     /**
      * Returns the text that matched a given group of the regular expression.
@@ -74,7 +74,7 @@ public interface MatchResult
      * 
      * @since Android 1.0
      */
-    public String group(int group);
+    String group(int group);
 
     /**
      * Returns the number of groups in the result, which is always equal to
@@ -84,7 +84,7 @@ public interface MatchResult
      * 
      * @since Android 1.0
      */
-    public int groupCount();
+    int groupCount();
 
     /**
      * Returns the index of the first character of the text that matched
@@ -94,7 +94,7 @@ public interface MatchResult
      * 
      * @since Android 1.0
      */
-    public int start();
+    int start();
 
     /**
      * Returns the index of the first character of the text that matched a given
@@ -108,6 +108,5 @@ public interface MatchResult
      * 
      * @since Android 1.0
      */
-    public int start(int group);
-
+    int start(int group);
 }

@@ -19,9 +19,12 @@ package java.util;
 import org.apache.harmony.luni.util.Msg;
 
 /**
- * The unchecked exception will be thrown out if there no corresponding argument
- * with the specified conversion or an argument index that refers to a
- * missing argument.
+ * A {@code MissingFormatArgumentException} will be thrown if there is no
+ * corresponding argument with the specified conversion or an argument index
+ * that refers to a missing argument.
+ * 
+ * @see java.lang.RuntimeException
+ * @since Android 1.0
  */
 public class MissingFormatArgumentException extends IllegalFormatException {
     private static final long serialVersionUID = 19190115L;
@@ -29,11 +32,11 @@ public class MissingFormatArgumentException extends IllegalFormatException {
     private String s;
 
     /**
-     * Constructs an MissingFormatArgumentException with the specified
-     * conversion that lacks the argument.
+     * Constructs a new {@code MissingFormatArgumentException} with the
+     * specified conversion that lacks the argument.
      * 
      * @param s
-     *            The specified conversion that lacks the argument.
+     *           the specified conversion that lacks the argument.
      */
     public MissingFormatArgumentException(String s) {
         if (null == s) {
@@ -45,7 +48,7 @@ public class MissingFormatArgumentException extends IllegalFormatException {
     /**
      * Returns the conversion associated with the exception.
      * 
-     * @return The conversion associated with the exception.
+     * @return the conversion associated with the exception.
      */
     public String getFormatSpecifier() {
         return s;
@@ -54,7 +57,7 @@ public class MissingFormatArgumentException extends IllegalFormatException {
     /**
      * Returns the message of the exception.
      * 
-     * @return The message of the exception.
+     * @return the message of the exception.
      */
     @Override
     public String getMessage() {

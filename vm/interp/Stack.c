@@ -730,42 +730,7 @@ Object* dvmInvokeMethod(Object* obj, const Method* method,
      * leave us with a shortened stack trace in the top-level exception.
      */
     if (dvmCheckException(self)) {
-        Object* origExcep;
-        ClassObject* iteClass;
-
-        origExcep = dvmGetException(self);
-        dvmAddTrackedAlloc(origExcep, self);
-
-        dvmClearException(self);        // clear before class lookup
-        iteClass = dvmFindSystemClass(
-                "Ljava/lang/reflect/InvocationTargetException;");
-        if (iteClass != NULL) {
-            Object* iteExcep;
-            Method* initMethod;
-
-            iteExcep = dvmAllocObject(iteClass, ALLOC_DEFAULT);
-            if (iteExcep != NULL) {
-                initMethod = dvmFindDirectMethodByDescriptor(iteClass, "<init>",
-                                "(Ljava/lang/Throwable;)V");
-                if (initMethod != NULL) {
-                    JValue unused;
-                    dvmCallMethod(self, initMethod, iteExcep, &unused,
-                        origExcep);
-
-                    /* if <init> succeeded, replace the old exception */
-                    if (!dvmCheckException(self))
-                        dvmSetException(self, iteExcep);
-                }
-                dvmReleaseTrackedAlloc(iteExcep, NULL);
-
-                /* if initMethod doesn't exist, or failed... */
-                if (!dvmCheckException(self))
-                    dvmSetException(self, origExcep);
-            }
-        }
-
-        assert(dvmCheckException(self));
-        dvmReleaseTrackedAlloc(origExcep, self);
+        dvmWrapException("Ljava/lang/reflect/InvocationTargetException;");
     } else {
         /*
          * If this isn't a void method or constructor, convert the return type

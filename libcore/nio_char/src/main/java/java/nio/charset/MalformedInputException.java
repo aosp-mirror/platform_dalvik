@@ -20,13 +20,15 @@ package java.nio.charset;
 import org.apache.harmony.niochar.internal.nls.Messages;
 
 /**
- * Thrown when a malformed input is encountered, for example, a byte sequence is
- * illegal for the given charset.
+ * A {@code MalformedInputException} is thrown when a malformed input is
+ * encountered, for example if a byte sequence is illegal for the given charset.
+ * 
+ * @since Android 1.0
  */
 public class MalformedInputException extends CharacterCodingException {
 
     /*
-     * This constant is used during deserialization to check the J2SE version
+     * This constant is used during deserialization to check the version
      * which created the serialized object.
      */
     private static final long serialVersionUID = -3438823399834806194L;
@@ -35,10 +37,11 @@ public class MalformedInputException extends CharacterCodingException {
     private int inputLength;
 
     /**
-     * Constructs an instance of this exception.
+     * Constructs a new {@code MalformedInputException}.
      * 
      * @param length
-     *            the length of the malformed input
+     *            the length of the malformed input.
+     * @since Android 1.0
      */
     public MalformedInputException(int length) {
         this.inputLength = length;
@@ -47,7 +50,8 @@ public class MalformedInputException extends CharacterCodingException {
     /**
      * Gets the length of the malformed input.
      * 
-     * @return the length of the malformed input
+     * @return the length of the malformed input.
+     * @since Android 1.0
      */
     public int getInputLength() {
         return this.inputLength;
@@ -56,7 +60,8 @@ public class MalformedInputException extends CharacterCodingException {
     /**
      * Gets a message describing this exception.
      * 
-     * @return a message describing this exception
+     * @return a message describing this exception.
+     * @since Android 1.0
      */
     public String getMessage() {
         // niochar.05=Malformed input length is {0}.

@@ -14,6 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/**
+*******************************************************************************
+* Copyright (C) 1996-2007, International Business Machines Corporation and    *
+* others. All Rights Reserved.                                                *
+*******************************************************************************
+*/
+
+// BEGIN android-note
+// The class javadoc description is copied from ICU UserGuide.
+// Changes have been made to the copied descriptions.
+// The icu license header was added to this file. 
+// END android-note
 
 package java.text;
 
@@ -23,11 +35,56 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * ChoiceFormat is used to associate strings with ranges of double values. The
- * strings and ranges are either specified using arrays or with a pattern which
- * is parsed to determine the Strings and ranges.
+ * Returns a fixed string based on a numeric value. The class can be used in
+ * conjunction with the {@link MessageFormat} class to handle plurals in
+ * messages. {@code ChoiceFormat} enables users to attach a format to a range of
+ * numbers. The choice is specified with an ascending list of doubles, where
+ * each item specifies a half-open interval up to the next item as in the
+ * following: X matches j if and only if {@code limit[j] <= X < limit[j+1]}.
+ * <p>
+ * If there is no match, then either the first or last index is used. The first
+ * or last index is used depending on whether the number is too low or too high.
+ * The length of the format array must be the same as the length of the limits
+ * array.
+ * </p>
+ * <h5>Examples:</h5>
+ * <blockquote>
+ * 
+ * <pre>
+ * double[] limits = {1, 2, 3, 4, 5, 6, 7};
+ * String[] fmts = {"Sun", "Mon", "Tue", "Wed", "Thur", "Fri", "Sat"};
+ * 
+ * double[] limits2 = {0, 1, ChoiceFormat.nextDouble(1)};
+ * String[] fmts2 = {"no files", "one file", "many files"};
+ * </pre>
+ * </blockquote>
+ * <p> 
+ * ChoiceFormat.nextDouble(double) allows to get the double following the one
+ * passed to the method. This is used to create half open intervals.
+ * </p>
+ * <p>
+ * {@code ChoiceFormat} objects also may be converted to and from patterns.
+ * The conversion can be done programmatically, as in the example above, or
+ * by using a pattern like the following:
+ * </p>
+ * <blockquote>
+ * 
+ * <pre>
+ * "1#Sun|2#Mon|3#Tue|4#Wed|5#Thur|6#Fri|7#Sat"
+ * "0#are no files|1#is one file|1&lt;are many files"
+ * </pre>
+ * 
+ * </blockquote>
+ * <p>
+ * where:
+ * </p>
+ * <ul>
+ * <li><number>"#"</number> specifies an inclusive limit value;</li>
+ * <li><number>"<"</number> specifies an exclusive limit value.</li>
+ * </ul>
+ * 
+ * @since Android 1.0
  */
-
 public class ChoiceFormat extends NumberFormat {
 
     private static final long serialVersionUID = 1795184449645032964L;
@@ -37,31 +94,39 @@ public class ChoiceFormat extends NumberFormat {
     private String[] choiceFormats;
 
     /**
-     * Constructs a new ChoiceFormat with the specified ranges and associated
-     * strings.
+     * Constructs a new {@code ChoiceFormat} with the specified double values
+     * and associated strings. When calling
+     * {@link #format(double, StringBuffer, FieldPosition) format} with a double
+     * value {@code d}, then the element {@code i} in {@code formats} is
+     * selected where {@code i} fulfills {@code limits[i] <= d < limits[i+1]}.
+     * <p>
+     * The length of the {@code limits} and {@code formats} arrays must be the
+     * same.
+     * </p>
      * 
      * @param limits
-     *            an array of double, the ranges are greater or equal to the
-     *            value in lower index up to less than the value in the next
-     *            higher index. The bounds of the lowest and highest indexes are
-     *            negative and positive infinity.
+     *            an array of doubles in ascending order. The lowest and highest
+     *            possible values are negative and positive infinity.
      * @param formats
-     *            the strings associated with the ranges. The lower bound of the
-     *            associated range is at the same index as the string.
+     *            the strings associated with the ranges defined through {@code
+     *            limits}. The lower bound of the associated range is at the
+     *            same index as the string.
+     * @since Android 1.0
      */
     public ChoiceFormat(double[] limits, String[] formats) {
         setChoices(limits, formats);
     }
 
     /**
-     * Constructs a new ChoiceFormat with the strings and ranges parsed from the
-     * specified pattern.
+     * Constructs a new {@code ChoiceFormat} with the strings and limits parsed
+     * from the specified pattern.
      * 
      * @param template
-     *            the pattern of strings and ranges
+     *            the pattern of strings and ranges.
      * 
      * @exception IllegalArgumentException
-     *                then an error occurs parsing the pattern
+     *                if an error occurs while parsing the pattern.
+     * @since Android 1.0
      */
     public ChoiceFormat(String template) {
         applyPattern(template);
@@ -69,13 +134,14 @@ public class ChoiceFormat extends NumberFormat {
 
     /**
      * Parses the pattern to determine new strings and ranges for this
-     * ChoiceFormat.
+     * {@code ChoiceFormat}.
      * 
      * @param template
-     *            the pattern of strings and ranges
+     *            the pattern of strings and ranges.
      * 
      * @exception IllegalArgumentException
-     *                then an error occurs parsing the pattern
+     *                if an error occurs while parsing the pattern.
+     * @since Android 1.0
      */
     public void applyPattern(String template) {
         double[] limits = new double[5];
@@ -140,12 +206,13 @@ public class ChoiceFormat extends NumberFormat {
     }
 
     /**
-     * Returns a new instance of ChoiceFormat with the same ranges and strings
-     * as this ChoiceFormat.
+     * Returns a new instance of {@code ChoiceFormat} with the same ranges and
+     * strings as this {@code ChoiceFormat}.
      * 
-     * @return a shallow copy of this ChoiceFormat
+     * @return a shallow copy of this {@code ChoiceFormat}.
      * 
      * @see java.lang.Cloneable
+     * @since Android 1.0
      */
     @Override
     public Object clone() {
@@ -156,16 +223,16 @@ public class ChoiceFormat extends NumberFormat {
     }
 
     /**
-     * Compares the specified object to this ChoiceFormat and answer if they are
-     * equal. The object must be an instance of ChoiceFormat and have the same
-     * limits and formats.
+     * Compares the specified object with this {@code ChoiceFormat}. The object
+     * must be an instance of {@code ChoiceFormat} and have the same limits and
+     * formats to be equal to this instance.
      * 
      * @param object
-     *            the object to compare with this object
-     * @return true if the specified object is equal to this ChoiceFormat, false
-     *         otherwise
-     * 
+     *            the object to compare with this instance.
+     * @return {@code true} if the specified object is equal to this instance;
+     *         {@code false} otherwise.
      * @see #hashCode
+     * @since Android 1.0
      */
     @Override
     public boolean equals(Object object) {
@@ -181,16 +248,17 @@ public class ChoiceFormat extends NumberFormat {
     }
 
     /**
-     * Appends to the specified StringBuffer the string associated with the
-     * range in which the specified double value fits.
+     * Appends the string associated with the range in which the specified
+     * double value fits to the specified string buffer.
      * 
      * @param value
-     *            the double to format
+     *            the double to format.
      * @param buffer
-     *            the StringBuffer
+     *            the target string buffer to append the formatted value to.
      * @param field
-     *            a FieldPosition which is ignored
-     * @return the StringBuffer parameter <code>buffer</code>
+     *            a {@code FieldPosition} which is ignored.
+     * @return the string buffer.
+     * @since Android 1.0
      */
     @Override
     public StringBuffer format(double value, StringBuffer buffer,
@@ -205,16 +273,17 @@ public class ChoiceFormat extends NumberFormat {
     }
 
     /**
-     * Appends to the specified StringBuffer the string associated with the
-     * range in which the specified long value fits.
+     * Appends the string associated with the range in which the specified long
+     * value fits to the specified string buffer.
      * 
      * @param value
-     *            the long to format
+     *            the long to format.
      * @param buffer
-     *            the StringBuffer
+     *            the target string buffer to append the formatted value to.
      * @param field
-     *            a FieldPosition which is ignored
-     * @return the StringBuffer parameter <code>buffer</code>
+     *            a {@code FieldPosition} which is ignored.
+     * @return the string buffer.
+     * @since Android 1.0
      */
     @Override
     public StringBuffer format(long value, StringBuffer buffer,
@@ -223,21 +292,22 @@ public class ChoiceFormat extends NumberFormat {
     }
 
     /**
-     * Returns the Strings associated with the ranges of this ChoiceFormat.
+     * Returns the strings associated with the ranges of this {@code
+     * ChoiceFormat}.
      * 
-     * @return an array of String
+     * @return an array of format strings.
+     * @since Android 1.0
      */
     public Object[] getFormats() {
         return choiceFormats;
     }
 
     /**
-     * Returns the ranges of this ChoiceFormat.
+     * Returns the limits of this {@code ChoiceFormat}.
      * 
-     * @return an array of double, the ranges are greater or equal to the value
-     *         in lower index up to less than the value in the next higher
-     *         index. The bounds of the lowest and highest indexes are negative
-     *         and positive infinity.
+     * @return the array of doubles which make up the limits of this {@code
+     *         ChoiceFormat}.
+     * @since Android 1.0
      */
     public double[] getLimits() {
         return choiceLimits;
@@ -245,11 +315,12 @@ public class ChoiceFormat extends NumberFormat {
 
     /**
      * Returns an integer hash code for the receiver. Objects which are equal
-     * answer the same value for this method.
+     * return the same value for this method.
      * 
-     * @return the receiver's hash
+     * @return the receiver's hash.
      * 
      * @see #equals
+     * @since Android 1.0
      */
     @Override
     public int hashCode() {
@@ -266,8 +337,9 @@ public class ChoiceFormat extends NumberFormat {
      * larger.
      * 
      * @param value
-     *            a double value
-     * @return the next larger double value
+     *            a double value.
+     * @return the next larger double value.
+     * @since Android 1.0
      */
     public static final double nextDouble(double value) {
         if (value == Double.POSITIVE_INFINITY) {
@@ -288,30 +360,44 @@ public class ChoiceFormat extends NumberFormat {
      * either larger or smaller as specified.
      * 
      * @param value
-     *            a double value
+     *            a double value.
      * @param increment
-     *            true to get a larger value, false to get a smaller value
-     * @return the next larger or smaller double value
+     *            {@code true} to get the next larger value, {@code false} to
+     *            get the previous smaller value.
+     * @return the next larger or smaller double value.
+     * @since Android 1.0
      */
     public static double nextDouble(double value, boolean increment) {
         return increment ? nextDouble(value) : previousDouble(value);
     }
 
     /**
-     * Parse a Double from the specified String starting at the index specified
-     * by the ParsePosition. The String is compared to the strings of this
-     * ChoiceFormat and if a match occurs, the answer is the lower bound of the
-     * corresponding range. If the string is successfully parsed, the index of
-     * the ParsePosition is updated to the index following the parsed text.
+     * Parses a double from the specified string starting at the index specified
+     * by {@code position}. The string is compared to the strings of this
+     * {@code ChoiceFormat} and if a match occurs then the lower bound of the
+     * corresponding range in the limits array is returned. If the string is
+     * successfully parsed then the index of the {@code ParsePosition} passed to
+     * this method is updated to the index following the parsed text.
      * 
      * @param string
-     *            the String to parse
+     *            the source string to parse.
      * @param position
-     *            the ParsePosition, updated on return with the index following
-     *            the parsed text, or on error the index is unchanged and the
-     *            error index is set to the index where the error occurred
-     * @return a Double resulting from the parse, or Double.NaN if there is an
-     *         error
+     *            input/output parameter, specifies the start index in {@code string}
+     *            from where to start parsing. See the <em>Returns</em> section for
+     *            a description of the output values.
+     * @return if one of the format strings of this {@code ChoiceFormat} instance
+     * is found in {@code string} starting at the index specified by {@code position.getIndex()} then
+     * <ul>
+     * <li>the index in {@code position} is set to the index following the parsed text;
+     * <li>the {@link java.lang.Double Double} corresponding to the format string is returned.</li>
+     * </ul>
+     * <p>
+     * If none of the format strings is found in {@code string} then
+     * <ul> 
+     * <li>the error index in {@code position} is set to the current index in {@code position};</li>
+     * <li> {@link java.lang.Double#NaN Double.NaN} is returned.
+     * </ul>
+     * @since Android 1.0
      */
     @Override
     public Number parse(String string, ParsePosition position) {
@@ -331,8 +417,9 @@ public class ChoiceFormat extends NumberFormat {
      * smaller.
      * 
      * @param value
-     *            a double value
-     * @return the next smaller double value
+     *            a double value.
+     * @return the next smaller double value.
+     * @since Android 1.0
      */
     public static final double previousDouble(double value) {
         if (value == Double.NEGATIVE_INFINITY) {
@@ -349,16 +436,24 @@ public class ChoiceFormat extends NumberFormat {
     }
 
     /**
-     * Sets the ranges and associated strings of this ChoiceFormat.
+     * Sets the double values and associated strings of this ChoiceFormat. When
+     * calling {@link #format(double, StringBuffer, FieldPosition) format} with
+     * a double value {@code d}, then the element {@code i} in {@code formats}
+     * is selected where {@code i} fulfills 
+     * {@code limits[i] <= d < limits[i+1]}.
+     * <p>
+     * The length of the {@code limits} and {@code formats} arrays must be the
+     * same.
+     * </p>
      * 
      * @param limits
-     *            an array of double, the ranges are greater or equal to the
-     *            value in lower index up to less than the value in the next
-     *            higher index. The bounds of the lowest and highest indexes are
-     *            negative and positive infinity.
+     *            an array of doubles in ascending order. The lowest and highest
+     *            possible values are negative and positive infinity.
      * @param formats
-     *            the strings associated with the ranges. The lower bound of the
-     *            range is at the same index as the string.
+     *            the strings associated with the ranges defined through {@code
+     *            limits}. The lower bound of the associated range is at the
+     *            same index as the string.
+     * @since Android 1.0
      */
     public void setChoices(double[] limits, String[] formats) {
         if (limits.length != formats.length) {
@@ -377,10 +472,11 @@ public class ChoiceFormat extends NumberFormat {
     }
 
     /**
-     * Returns the pattern of this ChoiceFormat which specified the ranges and
-     * their associated strings.
+     * Returns the pattern of this {@code ChoiceFormat} which specifies the
+     * ranges and their associated strings.
      * 
-     * @return the pattern
+     * @return the pattern.
+     * @since Android 1.0
      */
     public String toPattern() {
         StringBuffer buffer = new StringBuffer();

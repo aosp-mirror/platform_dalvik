@@ -25,7 +25,9 @@ import java.security.Permission;
 import java.security.PermissionCollection;
 
 /**
- * A PermissionCollection for holding PropertyPermissions.
+ * A {@code PermissionCollection} for holding {@code PropertyPermission}s.
+ *  
+ * @since Android 1.0
  */
 class PropertyPermissionCollection extends PermissionCollection {
 

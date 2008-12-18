@@ -18,11 +18,11 @@
 package java.net;
 
 /**
- * An attempt to connect to a socket of the wrong type (stream or nonstream)
- * will trigger this exception. An invalid operation applied on the protocol
- * that doesn't support it will also throw this exception.
+ * Signals that either a connection attempt to a socket of the wrong type, the
+ * application of an unsupported operation or that a general error in the
+ * underlying protocol has occurred.
  * 
- * @see URL
+ * @since Android 1.0
  */
 public class ProtocolException extends java.io.IOException {
 
@@ -30,6 +30,8 @@ public class ProtocolException extends java.io.IOException {
 
     /**
      * Constructs a new instance of this class with its walkback filled in.
+     * 
+     * @since Android 1.0
      */
     public ProtocolException() {
         super();
@@ -40,7 +42,8 @@ public class ProtocolException extends java.io.IOException {
      * filled in.
      * 
      * @param detailMessage
-     *            String The detail message for the exception.
+     *            the detail message for this exception.
+     * @since Android 1.0
      */
     public ProtocolException(String detailMessage) {
         super(detailMessage);

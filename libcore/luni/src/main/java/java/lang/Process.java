@@ -22,65 +22,72 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
- * Instances of class Process provide control of and access to platform
- * processes.
+ * Represents an external process. Enables writing to, reading from, destroying,
+ * and waiting for the external process, as well as querying its exit value.
+ * 
+ * @see Runtime#exec
+ * @see ProcessBuilder#start()
+ * 
+ * @since Android 1.0
  */
 public abstract class Process {
 
     /**
-     * Terimates the receiver and closes any associated streams.
+     * Terminates this process and closes any associated streams.
+     * 
+     * @since Android 1.0
      */
     abstract public void destroy();
 
     /**
-     * Returns the exit value of the receiving Process. It is available only
-     * when the OS subprocess is finished.
+     * Returns the exit value of the native process represented by this object.
+     * It is available only when the native process has terminated.
      * 
-     * @return The exit value of the receiver.
-     * 
+     * @return the exit value of this process.
      * @throws IllegalThreadStateException
-     *             If the receiver has not terminated.
+     *             if this process has not terminated.
+     * @since Android 1.0
      */
     abstract public int exitValue();
 
     /**
-     * Returns the receiver's error output stream.
-     * <p>
-     * Note: This is an InputStream which allows reading of the other threads
-     * "stderr".
+     * Returns an input stream that is connected to the error stream
+     * <em>(stderr)</em> of the native process represented by this object.
      * 
-     * @return The error stream associated with the receiver
+     * @return the input stream to read from the error stream associated with
+     *         the native process.
+     * @since Android 1.0
      */
     abstract public InputStream getErrorStream();
 
     /**
-     * Returns the receiver's standard input stream
-     * <p>
-     * Note: This is an InputStream which allows reading from the other process'
-     * "stdout".
+     * Returns an input stream that is connected to the standard output stream
+     * <em>(stdout)</em> of the native process represented by this object.
      * 
-     * @return The receiver's process' stdin.
+     * @return the input stream to read from the output stream associated with
+     *         the native process.
+     * @since Android 1.0
      */
     abstract public InputStream getInputStream();
 
     /**
-     * Returns the receiver's standard output stream
-     * <p>
-     * Note: This is an OutputStream which allows writing to the other process'
-     * "stdin".
+     * Returns an output stream that is connected to the standard input stream
+     * <em>(stdin)</em> of the native process represented by this object.
      * 
-     * @return The receiver's process' stdout.
+     * @return the output stream to write to the input stream associated with
+     *         the native process.
+     * @since Android 1.0
      */
     abstract public OutputStream getOutputStream();
 
     /**
-     * Causes the calling thread to wait for the process associated with the
-     * receiver to finish executing.
+     * Causes the calling thread to wait for the native process associated with
+     * this object to finish executing.
      * 
-     * @return The exit value of the Process being waited on
-     * 
+     * @return the exit value of the native process being waited on.
      * @throws InterruptedException
-     *             If the calling thread is interrupted
+     *             if the calling thread is interrupted.
+     * @since Android 1.0
      */
     abstract public int waitFor() throws InterruptedException;
 }

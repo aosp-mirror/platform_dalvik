@@ -19,7 +19,7 @@ package org.apache.harmony.tests.java.util.regex;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestStatus;
+import dalvik.annotation.TestLevel;
 
 import junit.framework.TestCase;
 import java.util.regex.Pattern;
@@ -33,8 +33,8 @@ import java.util.regex.PatternSyntaxException;
 @TestTargetClass(Pattern.class)
 public class ModeTest extends TestCase {
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies compile(String regex) and " +
+            level = TestLevel.PARTIAL,
+            purpose = "The test verifies compile(String regex) and " +
                     "compile(String regex, int flags) methods with " +
                     "Pattern.CASE_INSENSITIVE mode.",
             targets = { @TestTarget(methodName = "compile", 
@@ -73,8 +73,8 @@ public class ModeTest extends TestCase {
         assertFalse(m.find());
     }
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies compile(String regex) and " +
+            level = TestLevel.PARTIAL,
+            purpose = "The test verifies compile(String regex) and " +
                     "compile(String regex, int flags) methods with " +
                     "Pattern.MULTILINE mode.",
             targets = { @TestTarget(methodName = "compile", 

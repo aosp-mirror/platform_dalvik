@@ -22,42 +22,57 @@
 
 package java.security;
 
+// BEGIN android-note
+// added Deprecated annotation
+// END android-note
 /**
- * @com.intel.drl.spec_ref
+ * {@link Signer} represents an identity (individual or corporation) that owns a
+ * private key and the corresponding public key.
  * 
- * @deprecated Replaced by behavior in
- *             {@link java.security.cert java.security.cert} package and
- *             {@link java.security.Principal Principal}
+ * @deprecated Replaced by behavior in {@link java.security.cert
+ *             java.security.cert} package and {@link java.security.Principal
+ *             Principal}
+ * @since Android 1.0
  */
-
+@Deprecated
 public abstract class Signer extends Identity {
 
-    /**
-     * @com.intel.drl.spec_ref 
-     */
     private static final long serialVersionUID = -1763464102261361480L;
 
-    /**
-     * @com.intel.drl.spec_ref 
-     */
     private PrivateKey privateKey;
 
     /**
-     * @com.intel.drl.spec_ref 
+     * Constructs a new instance of {@code Signer}.
+     * 
+     * @since Android 1.0
      */
     protected Signer() {
         super();
     }
 
     /**
-     * @com.intel.drl.spec_ref 
+     * Constructs a new instance of {@code Signer} with the given name.
+     * 
+     * @param name
+     *            the name of the signer.
+     * @since Android 1.0
      */
     public Signer(String name) {
         super(name);
     }
 
     /**
-     * @com.intel.drl.spec_ref 
+     * Constructs a new instance of {@code Signer} with the given name in the
+     * given scope.
+     * 
+     * @param name
+     *            the name of the signer.
+     * @param scope
+     *            the scope of the signer.
+     * @throws KeyManagementException
+     *             if a signer with the specified name already exists in the
+     *             provided scope.
+     * @since Android 1.0
      */
     public Signer(String name, IdentityScope scope)
             throws KeyManagementException {
@@ -65,7 +80,16 @@ public abstract class Signer extends Identity {
     }
 
     /**
-     * @com.intel.drl.spec_ref 
+     * Returns the private key of this {@code Signer}. If a {@code
+     * SecurityManager} is installed, code calling this method needs the {@code
+     * SecurityPermission} {@code "getSignerPrivateKey"} to be granted, otherwise
+     * a {@code SecurityException} will be thrown.
+     * 
+     * @return the private key of this {@code Signer}.
+     * @throws SecurityException
+     *             if a {@code SecurityManager} is installed and the caller does
+     *             not have permission to invoke this method.
+     * @since Android 1.0
      */
     public PrivateKey getPrivateKey() {
         SecurityManager sm = System.getSecurityManager();
@@ -77,7 +101,21 @@ public abstract class Signer extends Identity {
     }
 
     /**
-     * @com.intel.drl.spec_ref 
+     * Associates the specified key pair with this {@code Signer}. If a {@code
+     * SecurityManager} is installed, code calling this method needs the {@code
+     * SecurityPermission} {@code getSignerPrivateKey} to be granted, otherwise
+     * a {@code SecurityException} will be thrown.
+     * 
+     * @param pair
+     *            the key pair to associate with this {@code Signer}.
+     * @throws InvalidParameterException
+     *             if the key pair is invalid.
+     * @throws KeyException
+     *             if any other key related problem occurs.
+     * @throws SecurityException
+     *             if a {@code SecurityManager} is installed and the caller does
+     *             not have permission to invoke this method.
+     * @since Android 1.0
      */
     public final void setKeyPair(KeyPair pair)
             throws InvalidParameterException, KeyException {
@@ -108,7 +146,11 @@ public abstract class Signer extends Identity {
     }
 
     /**
-     * @com.intel.drl.spec_ref 
+     * Returns a string containing a concise, human-readable description of this
+     * {@code Signer} including its name and its scope if present.
+     * 
+     * @return a printable representation for this {@code Signer}.
+     * @since Android 1.0
      */
     public String toString() {
         String s = "[Signer]" + getName(); //$NON-NLS-1$

@@ -20,41 +20,45 @@ package java.lang;
 import org.apache.harmony.luni.util.Msg;
 
 /**
- * This runtime exception is thrown when a program attempts to cast a an object
- * to a type which it is not compatible with.
+ * Thrown when a program attempts to cast a an object to a type with which it is
+ * not compatible.
  * 
+ * @since Android 1.0
  */
 public class ClassCastException extends RuntimeException {
     private static final long serialVersionUID = -9223365651070458532L;
 
     /**
-     * Constructs a new instance of this class with its walkback filled in.
+     * Constructs a new {@code ClassCastException} that includes the current
+     * stack trace.
      * 
+     * @since Android 1.0
      */
     public ClassCastException() {
         super();
     }
 
     /**
-     * Constructs a new instance of this class with its walkback and message
-     * filled in.
+     * Constructs a new {@code ClassCastException} with the current stack trace
+     * and the specified detail message.
      * 
      * @param detailMessage
-     *            String The detail message for the exception.
+     *            the detail message for this exception.
+     * @since Android 1.0
      */
     public ClassCastException(String detailMessage) {
         super(detailMessage);
     }
 
     /**
-     * Constructs a new instance of this class with its walkback and message
-     * filled in.
+     * Constructs a new {@code ClassCastException} with the current stack trace
+     * and a detail message based on the source and target class.
      * 
      * @param instanceClass
-     *            Class The class being cast from.
-     * 
+     *            the class being cast from.
      * @param castClass
-     *            Class The class being cast to.
+     *            the class being cast to.
+     * @since Android 1.0
      */
     ClassCastException(Class<?> instanceClass, Class<?> castClass) {
         super(Msg.getString("K0340", instanceClass.getName(), castClass //$NON-NLS-1$

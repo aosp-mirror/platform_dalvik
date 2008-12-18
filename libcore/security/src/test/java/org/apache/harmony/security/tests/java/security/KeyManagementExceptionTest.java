@@ -21,11 +21,16 @@
 */
 
 package org.apache.harmony.security.tests.java.security;
+
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.security.KeyManagementException;
 
 import junit.framework.TestCase;
-
-
+@TestTargetClass(KeyManagementException.class)
 /**
  * Tests for <code>KeyManagementException</code> class constructors and
  * methods.
@@ -56,6 +61,15 @@ public class KeyManagementExceptionTest extends TestCase {
      * Test for <code>KeyManagementException()</code> constructor Assertion:
      * constructs KeyManagementException with no detail message
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "KeyManagementException",
+          methodArgs = {}
+        )
+    })
     public void testKeyManagementException01() {
         KeyManagementException tE = new KeyManagementException();
         assertNull("getMessage() must return null.", tE.getMessage());
@@ -67,6 +81,15 @@ public class KeyManagementExceptionTest extends TestCase {
      * Assertion: constructs KeyManagementException with detail message msg.
      * Parameter <code>msg</code> is not null.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "KeyManagementException",
+          methodArgs = {String.class}
+        )
+    })
     public void testKeyManagementException02() {
         KeyManagementException tE;
         for (int i = 0; i < msgs.length; i++) {
@@ -82,6 +105,15 @@ public class KeyManagementExceptionTest extends TestCase {
      * Assertion: constructs KeyManagementException when <code>msg</code> is
      * null
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "KeyManagementException",
+          methodArgs = {String.class}
+        )
+    })
     public void testKeyManagementException03() {
         String msg = null;
         KeyManagementException tE = new KeyManagementException(msg);
@@ -94,6 +126,15 @@ public class KeyManagementExceptionTest extends TestCase {
      * Assertion: constructs KeyManagementException when <code>cause</code> is
      * null
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "KeyManagementException",
+          methodArgs = {Throwable.class}
+        )
+    })
     public void testKeyManagementException04() {
         Throwable cause = null;
         KeyManagementException tE = new KeyManagementException(cause);
@@ -106,6 +147,15 @@ public class KeyManagementExceptionTest extends TestCase {
      * Assertion: constructs KeyManagementException when <code>cause</code> is
      * not null
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "KeyManagementException",
+          methodArgs = {Throwable.class}
+        )
+    })
     public void testKeyManagementException05() {
         KeyManagementException tE = new KeyManagementException(tCause);
         if (tE.getMessage() != null) {
@@ -124,6 +174,15 @@ public class KeyManagementExceptionTest extends TestCase {
      * constructor Assertion: constructs KeyManagementException when
      * <code>cause</code> is null <code>msg</code> is null
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "KeyManagementException",
+          methodArgs = {String.class, Throwable.class}
+        )
+    })
     public void testKeyManagementException06() {
         KeyManagementException tE = new KeyManagementException(null, null);
         assertNull("getMessage() must return null", tE.getMessage());
@@ -135,6 +194,15 @@ public class KeyManagementExceptionTest extends TestCase {
      * constructor Assertion: constructs KeyManagementException when
      * <code>cause</code> is null <code>msg</code> is not null
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "KeyManagementException",
+          methodArgs = {String.class, Throwable.class}
+        )
+    })
     public void testKeyManagementException07() {
         KeyManagementException tE;
         for (int i = 0; i < msgs.length; i++) {
@@ -150,6 +218,15 @@ public class KeyManagementExceptionTest extends TestCase {
      * constructor Assertion: constructs KeyManagementException when
      * <code>cause</code> is not null <code>msg</code> is null
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "KeyManagementException",
+          methodArgs = {String.class, Throwable.class}
+        )
+    })
     public void testKeyManagementException08() {
         KeyManagementException tE = new KeyManagementException(null, tCause);
         if (tE.getMessage() != null) {
@@ -168,6 +245,15 @@ public class KeyManagementExceptionTest extends TestCase {
      * constructor Assertion: constructs KeyManagementException when
      * <code>cause</code> is not null <code>msg</code> is not null
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "KeyManagementException",
+          methodArgs = {String.class, Throwable.class}
+        )
+    })
     public void testKeyManagementException09() {
         KeyManagementException tE;
         for (int i = 0; i < msgs.length; i++) {

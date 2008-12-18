@@ -109,6 +109,20 @@ INLINE bool dvmCheckException(Thread* self) {
 }
 
 /*
+ * Returns "true" if this is a "checked" exception, i.e. it's a subclass
+ * of Throwable (assumed) but not a subclass of RuntimeException or Error.
+ */
+bool dvmIsCheckedException(const Object* exception);
+
+/*
+ * Wrap the now-pending exception in a different exception.
+ *
+ * If something fails, an (unchecked) exception related to that failure
+ * will be pending instead.
+ */
+void dvmWrapException(const char* newExcepStr);
+
+/*
  * Print the exception stack trace on stderr.  Calls the exception's
  * print function.
  */

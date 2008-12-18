@@ -16,8 +16,10 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
+import dalvik.annotation.TestTargetClass; 
 import junit.framework.TestCase;
 
+@TestTargetClass(StackTraceElement.class) 
 public class StackTraceElementOriginal extends TestCase {
 
     public void pureJavaMethod(Object test) throws Exception {

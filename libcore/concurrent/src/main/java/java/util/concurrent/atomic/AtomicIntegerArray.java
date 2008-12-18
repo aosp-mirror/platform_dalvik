@@ -19,11 +19,10 @@ import java.util.*;
 public class AtomicIntegerArray implements java.io.Serializable { 
     private static final long serialVersionUID = 2862133569453604235L;
 
-    // setup to use Unsafe.compareAndSwapInt for updates
+   // setup to use Unsafe.compareAndSwapInt for updates
     // BEGIN android-changed
     private static final Unsafe unsafe = UnsafeAccess.THE_ONE;
     // END android-changed
-
     private static final int base = unsafe.arrayBaseOffset(int[].class);
     private static final int scale = unsafe.arrayIndexScale(int[].class);
     private final int[] array;

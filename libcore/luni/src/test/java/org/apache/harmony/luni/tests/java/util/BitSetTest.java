@@ -17,15 +17,30 @@
 
 package org.apache.harmony.luni.tests.java.util;
 
-import java.util.BitSet;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
 
+import java.util.BitSet;
+
+@TestTargetClass(BitSet.class) 
 public class BitSetTest extends TestCase {
 
     /**
      * @tests java.util.BitSet#clear(int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IndexOutOfBoundsException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "clear",
+          methodArgs = {int.class, int.class}
+        )
+    })
     public void test_clearII() {
         // Regression for HARMONY-98
         BitSet bitset = new BitSet();
@@ -36,8 +51,17 @@ public class BitSetTest extends TestCase {
     }
 
     /**
-     * @tests java.util.BitSet#clear(int, int)
+     * @tests java.util.BitSet#flip(int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IndexOutOfBoundsException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "flip",
+          methodArgs = {int.class, int.class}
+        )
+    })
     public void test_flipII() {
         BitSet bitset = new BitSet();
         for (int i = 0; i < 20; i++) {
@@ -49,6 +73,15 @@ public class BitSetTest extends TestCase {
     /**
      * @tests java.util.BitSet#get(int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IndexOutOfBoundsException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "get",
+          methodArgs = {int.class, int.class}
+        )
+    })
     public void test_getII() {
         BitSet bitset = new BitSet(30);
         bitset.get(3, 3);
@@ -57,6 +90,15 @@ public class BitSetTest extends TestCase {
     /**
      * @tests java.util.BitSet#set(int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IndexOutOfBoundsException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "set",
+          methodArgs = {int.class, int.class}
+        )
+    })
     public void test_setII() {
         BitSet bitset = new BitSet(30);
         bitset.set(29, 29);

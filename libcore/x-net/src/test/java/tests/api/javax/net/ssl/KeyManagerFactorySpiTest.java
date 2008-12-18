@@ -16,6 +16,11 @@
 
 package tests.api.javax.net.ssl;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -28,6 +33,7 @@ import javax.net.ssl.ManagerFactoryParameters;
 
 import junit.framework.TestCase;
 
+@TestTargetClass(KeyManagerFactorySpi.class) 
 public class KeyManagerFactorySpiTest extends TestCase {
 
     private class MockKeyManagerFactorySpi extends KeyManagerFactorySpi {
@@ -64,6 +70,15 @@ public class KeyManagerFactorySpiTest extends TestCase {
     /**
      * @tests javax.net.ssl.KeyManagerFactorySpi#KeyManagerFactorySpi()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "KeyManagerFactorySpi",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         try {
             new MockKeyManagerFactorySpi();

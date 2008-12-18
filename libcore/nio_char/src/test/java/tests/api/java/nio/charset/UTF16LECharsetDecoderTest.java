@@ -16,6 +16,11 @@
 
 package tests.api.java.nio.charset;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestLevel;
+
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
@@ -23,6 +28,7 @@ import java.nio.charset.Charset;
 /**
  * TODO typedef
  */
+@TestTargetClass(java.nio.charset.CharsetDecoder.class)
 public class UTF16LECharsetDecoderTest extends CharsetDecoderTest {
 
     protected void setUp() throws Exception {

@@ -27,11 +27,22 @@ import java.util.logging.Logger;
 // END android-added
 
 /**
- * BufferedWriter is for writing buffered character output. Characters written
- * to this Writer are buffered internally before being committed to the target
- * Writer.
+ * Wraps an existing {@link Writer} and <em>buffers</em> the output. Expensive
+ * interaction with the underlying reader is minimized, since most (smaller)
+ * requests can be satisfied by accessing the buffer alone. The drawback is that
+ * some extra space is required to hold the buffer and that copying takes place
+ * when filling that buffer, but this is usually outweighed by the performance
+ * benefits.
+ * 
+ * <p/>A typical application pattern for the class looks like this:<p/>
+ * 
+ * <pre>
+ * BufferedWriter buf = new BufferedWriter(new FileWriter(&quot;file.java&quot;));
+ * </pre>
  * 
  * @see BufferedReader
+ * 
+ * @since Android 1.0
  */
 public class BufferedWriter extends Writer {
 
@@ -45,12 +56,13 @@ public class BufferedWriter extends Writer {
             .doPrivileged(new PriviAction<String>("line.separator")); //$NON-NLS-1$
 
     /**
-     * Constructs a new BufferedReader with <code>out</code> as the Writer on
-     * which to buffer write operations. The buffer size is set to the default,
-     * which is 8K.
+     * Constructs a new {@code BufferedWriter} with {@code out} as the writer
+     * for which to buffer write operations. The buffer size is set to the
+     * default value of 8 KB.
      * 
      * @param out
-     *            The Writer to buffer character writing on
+     *            the writer for which character writing is buffered.
+     * @since Android 1.0
      */
     public BufferedWriter(Writer out) {
         super(out);
@@ -59,12 +71,11 @@ public class BufferedWriter extends Writer {
 
         // BEGIN android-added
         /*
-         * For Android, we want to discourage the use of this
-         * constructor (with its arguably too-large default), so we
-         * note its use in the log. We don't disable it, nor do we
-         * alter the default, however, because we still aim to behave
-         * compatibly, and the default value, though not documented,
-         * is established by convention.
+         * For Android, we want to discourage the use of this constructor (with
+         * its arguably too-large default), so we note its use in the log. We
+         * don't disable it, nor do we alter the default, however, because we
+         * still aim to behave compatibly, and the default value, though not
+         * documented, is established by convention.
          */
         Logger.global.info(
                 "Default buffer size used in BufferedWriter " +
@@ -74,14 +85,17 @@ public class BufferedWriter extends Writer {
     }
 
     /**
-     * Constructs a new BufferedReader with <code>out</code> as the Writer on
-     * which buffer write operations. The buffer size is set to
-     * <code>size</code>.
+     * Constructs a new {@code BufferedWriter} with {@code out} as the writer
+     * for which to buffer write operations. The buffer size is set to {@code
+     * size}.
      * 
      * @param out
-     *            The Writer to buffer character writing on.
+     *            the writer for which character writing is buffered.
      * @param size
-     *            The size of the buffer to use.
+     *            the size of the buffer in bytes.
+     * @throws IllegalArgumentException
+     *             if {@code size <= 0}.
+     * @since Android 1.0
      */
     public BufferedWriter(Writer out, int size) {
         super(out);
@@ -93,12 +107,13 @@ public class BufferedWriter extends Writer {
     }
 
     /**
-     * Close this BufferedWriter. The contents of the buffer are flushed, the
-     * target writer is closed, and the buffer is released. Only the first
-     * invocation of close has any effect.
+     * Closes this writer. The contents of the buffer are flushed, the target
+     * writer is closed, and the buffer is released. Only the first invocation
+     * of close has any effect.
      * 
      * @throws IOException
-     *             If an error occurs attempting to close this Writer.
+     *             if an error occurs while closing this writer.
+     * @since Android 1.0
      */
     @Override
     public void close() throws IOException {
@@ -113,11 +128,12 @@ public class BufferedWriter extends Writer {
     }
 
     /**
-     * Flush this BufferedWriter. The contents of the buffer are committed to
-     * the target writer and it is then flushed.
+     * Flushes this writer. The contents of the buffer are committed to the
+     * target writer and it is then flushed.
      * 
      * @throws IOException
-     *             If an error occurs attempting to flush this Writer.
+     *             if an error occurs while flushing this writer.
+     * @since Android 1.0
      */
     @Override
     public void flush() throws IOException {
@@ -134,45 +150,46 @@ public class BufferedWriter extends Writer {
     }
 
     /**
-     * Answer a boolean indicating whether or not this BufferedWriter is closed.
+     * Indicates whether this writer is closed.
      * 
-     * @return <code>true</code> if this reader is closed, <code>false</code>
-     *         otherwise
+     * @return {@code true} if this writer is closed, {@code false} otherwise.
      */
     private boolean isClosed() {
         return out == null;
     }
 
     /**
-     * Write a newline to thie Writer. A newline is determined by the System
+     * Writes a newline to this writer. A newline is determined by the System
      * property "line.separator". The target writer may or may not be flushed
      * when a newline is written.
      * 
      * @throws IOException
-     *             If an error occurs attempting to write to this Writer.
+     *             if an error occurs attempting to write to this writer.
+     * @since Android 1.0
      */
     public void newLine() throws IOException {
         write(lineSeparator, 0, lineSeparator.length());
     }
 
     /**
-     * Writes out <code>count</code> characters starting at
-     * <code>offset</code> in <code>buf</code> to this BufferedWriter. If
-     * <code>count</code> is greater than this Writers buffer then flush the
-     * contents and also write the characters directly to the target Writer.
+     * Writes {@code count} characters starting at {@code offset} in
+     * {@code cbuf} to this writer. If {@code count} is greater than this
+     * writer's buffer, then the buffer is flushed and the characters are
+     * written directly to the target writer.
      * 
      * @param cbuf
-     *            the non-null array containing characters to write.
+     *            the array containing characters to write.
      * @param offset
-     *            offset in buf to retrieve characters
+     *            the start position in {@code cbuf} for retrieving characters.
      * @param count
-     *            maximum number of characters to write
-     * 
-     * @throws IOException
-     *             If this Writer has already been closed or some other
-     *             IOException occurs.
+     *            the maximum number of characters to write.
      * @throws IndexOutOfBoundsException
-     *             If offset or count are outside of bounds.
+     *             if {@code offset < 0} or {@code count < 0}, or if
+     *             {@code offset + count} is greater than the size of
+     *             {@code cbuf}.
+     * @throws IOException
+     *             if this writer is closed or another I/O error occurs.
+     * @since Android 1.0
      */
     @Override
     public void write(char[] cbuf, int offset, int count) throws IOException {
@@ -180,9 +197,18 @@ public class BufferedWriter extends Writer {
             if (isClosed()) {
                 throw new IOException(Msg.getString("K005d")); //$NON-NLS-1$
             }
-            if (offset < 0 || offset > cbuf.length - count || count < 0) {
-                throw new IndexOutOfBoundsException();
+            // BEGIN android-changed
+            // Exception priorities (in case of multiple errors) differ from
+            // RI, but are spec-compliant.
+            // made implicit null check explicit, used (offset | count) < 0
+            // instead of (offset < 0) || (count < 0) to safe one operation
+            if (cbuf == null) {
+                throw new NullPointerException(Msg.getString("K0047")); //$NON-NLS-1$
             }
+            if ((offset | count) < 0 || offset > cbuf.length - count) {
+                throw new IndexOutOfBoundsException(Msg.getString("K002f")); //$NON-NLS-1$
+            }
+            // END android-changed
             if (pos == 0 && count >= this.buf.length) {
                 out.write(cbuf, offset, count);
                 return;
@@ -214,16 +240,15 @@ public class BufferedWriter extends Writer {
     }
 
     /**
-     * Writes the character <code>oneChar</code> BufferedWriter. If the buffer
-     * is filled by writing this character, flush this Writer. Only the lower 2
-     * bytes are written.
+     * Writes the character {@code oneChar} to this writer. If the buffer
+     * gets full by writing this character, this writer is flushed. Only the
+     * lower two bytes of the integer {@code oneChar} are written.
      * 
      * @param oneChar
-     *            The Character to write out.
-     * 
+     *            the character to write.
      * @throws IOException
-     *             If this Writer has already been closed or some other
-     *             IOException occurs.
+     *             if this writer is closed or another I/O error occurs.
+     * @since Android 1.0
      */
     @Override
     public void write(int oneChar) throws IOException {
@@ -240,23 +265,25 @@ public class BufferedWriter extends Writer {
     }
 
     /**
-     * Writes out <code>count</code> characters starting at
-     * <code>offset</code> in <code>str</code> to this BufferedWriter. If
-     * <code>count</code> is greater than this Writers buffer then flush the
-     * contents and also write the characters directly to the target Writer.
+     * Writes {@code count} characters starting at {@code offset} in {@code str}
+     * to this writer. If {@code count} is greater than this writer's buffer,
+     * then this writer is flushed and the remaining characters are written
+     * directly to the target writer. If count is negative no characters are
+     * written to the buffer. This differs from the behavior of the superclass.
      * 
      * @param str
-     *            the non-null String containing characters to write
+     *            the non-null String containing characters to write.
      * @param offset
-     *            offset in str to retrieve characters
+     *            the start position in {@code str} for retrieving characters.
      * @param count
-     *            maximum number of characters to write
-     * 
+     *            maximum number of characters to write.
      * @throws IOException
-     *             If this Writer has already been closed or some other
-     *             IOException occurs.
-     * @throws ArrayIndexOutOfBoundsException
-     *             If offset or count are outside of bounds.
+     *             if this writer has already been closed or another I/O error
+     *             occurs.
+     * @throws StringIndexOutOfBoundsException
+     *             if {@code offset < 0} or {@code offset + count} is greater
+     *             than the length of {@code str}.
+     * @since Android 1.0
      */
     @Override
     public void write(String str, int offset, int count) throws IOException {

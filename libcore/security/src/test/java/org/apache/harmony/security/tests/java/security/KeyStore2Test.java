@@ -17,6 +17,11 @@
 
 package org.apache.harmony.security.tests.java.security;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
@@ -55,6 +60,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 import tests.support.Support_TestProvider;
 
+@TestTargetClass(KeyStore.class)
 public class KeyStore2Test extends junit.framework.TestCase {
     static PrivateKey privateKey;
     static {
@@ -169,6 +175,15 @@ public class KeyStore2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.KeyStore#aliases()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "KeyStoreException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "aliases",
+          methodArgs = {}
+        )
+    })
     public void test_aliases() throws Exception {
         // Test for method java.util.Enumeration
         // java.security.KeyStore.aliases()
@@ -207,6 +222,15 @@ public class KeyStore2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.KeyStore#containsAlias(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "KeyStoreException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "containsAlias",
+          methodArgs = {String.class}
+        )
+    })
     public void test_containsAliasLjava_lang_String() throws Exception {
         // Test for method boolean
         // java.security.KeyStore.containsAlias(java.lang.String)
@@ -231,6 +255,15 @@ public class KeyStore2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.KeyStore#getCertificate(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "KeyStoreException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getCertificate",
+          methodArgs = {String.class}
+        )
+    })
     public void test_getCertificateLjava_lang_String() throws Exception {
         // Test for method java.security.cert.Certificate
         // java.security.KeyStore.getCertificate(java.lang.String)
@@ -264,6 +297,15 @@ public class KeyStore2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.KeyStore#getCertificateAlias(java.security.cert.Certificate)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "KeyStoreException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getCertificateAlias",
+          methodArgs = {Certificate.class}
+        )
+    })
     public void test_getCertificateAliasLjava_security_cert_Certificate()
             throws Exception {
         // Test for method java.lang.String
@@ -299,6 +341,15 @@ public class KeyStore2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.KeyStore#getCertificateChain(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "KeyStoreException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getCertificateChain",
+          methodArgs = {String.class}
+        )
+    })
     public void test_getCertificateChainLjava_lang_String() throws Exception {
         // Test for method java.security.cert.Certificate []
         // java.security.KeyStore.getCertificateChain(java.lang.String)
@@ -333,6 +384,15 @@ public class KeyStore2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.KeyStore#getInstance(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "KeyStoreException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getInstance",
+          methodArgs = {String.class}
+        )
+    })
     public void test_getInstanceLjava_lang_String() throws Exception {
         // Test for method java.security.KeyStore
         // java.security.KeyStore.getInstance(java.lang.String)
@@ -346,7 +406,17 @@ public class KeyStore2Test extends junit.framework.TestCase {
      * @tests java.security.KeyStore#getInstance(java.lang.String,
      *        java.lang.String)
      */
-    public void test_getInstanceLjava_lang_StringLjava_lang_String() {
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "KeyStoreException, NoSuchProviderException, " +
+                  "IllegalArgumentException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getInstance",
+          methodArgs = {String.class, String.class}
+        )
+    })
+    public void _test_getInstanceLjava_lang_StringLjava_lang_String() {
         // Test for method java.security.KeyStore
         // java.security.KeyStore.getInstance(java.lang.String,
         // java.lang.String)
@@ -369,7 +439,16 @@ public class KeyStore2Test extends junit.framework.TestCase {
      * @tests java.security.KeyStore#getInstance(java.lang.String,
      *        java.security.Provider)
      */
-    public void test_getInstanceLjava_lang_StringLjava_security_Provider() {
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "KeyStoreException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getInstance",
+          methodArgs = {String.class, Provider.class}
+        )
+    })
+    public void _test_getInstanceLjava_lang_StringLjava_security_Provider() {
         // Test for method java.security.KeyStore
         // java.security.KeyStore.getInstance(java.lang.String,
         // java.security.Provider)
@@ -399,6 +478,15 @@ public class KeyStore2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.KeyStore#getKey(java.lang.String, char[])
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "KeyStoreException, NoSuchAlgorithmException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getKey",
+          methodArgs = {String.class, char[].class}
+        )
+    })
     public void test_getKeyLjava_lang_String$C() throws Exception {
 
         // Test for method java.security.Key
@@ -438,7 +526,16 @@ public class KeyStore2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.KeyStore#getProvider()
      */
-    public void test_getProvider() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getProvider",
+          methodArgs = {}
+        )
+    })
+    public void _test_getProvider() {
         // Test for method java.security.Provider
         // java.security.KeyStore.getProvider()
         try {
@@ -457,7 +554,16 @@ public class KeyStore2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.KeyStore#getType()
      */
-    public void test_getType() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getType",
+          methodArgs = {}
+        )
+    })
+    public void _test_getType() {
         // Test for method java.lang.String java.security.KeyStore.getType()
         try {
 
@@ -476,6 +582,15 @@ public class KeyStore2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.KeyStore#isCertificateEntry(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "KeyStoreException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "isCertificateEntry",
+          methodArgs = {String.class}
+        )
+    })
     public void test_isCertificateEntryLjava_lang_String() throws Exception {
         // Test for method boolean
         // java.security.KeyStore.isCertificateEntry(java.lang.String)
@@ -501,6 +616,15 @@ public class KeyStore2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.KeyStore#isKeyEntry(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "KeyStoreException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "isKeyEntry",
+          methodArgs = {String.class}
+        )
+    })
     public void test_isKeyEntryLjava_lang_String() throws Exception {
         // Test for method boolean
         // java.security.KeyStore.isKeyEntry(java.lang.String)
@@ -525,7 +649,16 @@ public class KeyStore2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.KeyStore#load(java.io.InputStream, char[])
      */
-    public void test_loadLjava_io_InputStream$C() throws Exception {
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException, NoSuchAlgorithmException, CertificateException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "load",
+          methodArgs = {InputStream.class, char[].class}
+        )
+    })
+    public void _test_loadLjava_io_InputStream$C() throws Exception {
         // Test for method void java.security.KeyStore.load(java.io.InputStream,
         // char [])
         byte[] keyStore = creatCertificate();
@@ -565,6 +698,17 @@ public class KeyStore2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.KeyStore#load(KeyStore.LoadStoreParameter param)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IllegalArgumentException, IOException, " +
+                  "NoSuchAlgorithmException, CertificateException" +
+                  " and non null parameter checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "load",
+          methodArgs = {java.security.KeyStore.LoadStoreParameter.class}
+        )
+    })
     public void test_loadLjava_security_KeyStoreLoadStoreParameter() {
         try {
             KeyStore keyTest = KeyStore.getInstance(KeyStore.getDefaultType());
@@ -580,6 +724,15 @@ public class KeyStore2Test extends junit.framework.TestCase {
      * @tests java.security.KeyStore#setCertificateEntry(java.lang.String,
      *        java.security.cert.Certificate)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "KeyStoreException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "setCertificateEntry",
+          methodArgs = {String.class, Certificate.class}
+        )
+    })
     public void test_setCertificateEntryLjava_lang_StringLjava_security_cert_Certificate()
             throws Exception {
         // Test for method void
@@ -607,6 +760,15 @@ public class KeyStore2Test extends junit.framework.TestCase {
      * @tests java.security.KeyStore#setKeyEntry(java.lang.String,
      *        java.security.Key, char[], java.security.cert.Certificate[])
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "KeyStoreException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "setKeyEntry",
+          methodArgs = {String.class, java.security.Key.class, char[].class, Certificate[].class}
+        )
+    })
     public void test_setKeyEntryLjava_lang_StringLjava_security_Key$C$Ljava_security_cert_Certificate()
             throws Exception {
 
@@ -629,6 +791,15 @@ public class KeyStore2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.KeyStore#size()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "KeyStoreException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "size",
+          methodArgs = {}
+        )
+    })
     public void test_size() throws Exception {
         // Test for method int java.security.KeyStore.size()
 
@@ -653,7 +824,16 @@ public class KeyStore2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.KeyStore#deleteEntry(String)
      */
-    public void test_deleteEntry() {
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "KeyStoreException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "deleteEntry",
+          methodArgs = {String.class}
+        )
+    })
+    public void _test_deleteEntry() {
         try {
             KeyStore keyTest = KeyStore.getInstance(KeyStore.getDefaultType());
             keyTest.load(null, null);
@@ -711,6 +891,15 @@ public class KeyStore2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.KeyStore#getCreationDate(String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "KeyStoreException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getCreationDate",
+          methodArgs = {String.class}
+        )
+    })
     public void test_getCreationDate() throws Exception {
         String type = "DSA";
 
@@ -780,7 +969,16 @@ public class KeyStore2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.KeyStore#getDefaultType()
      */
-    public void test_getDefaultType() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getDefaultType",
+          methodArgs = {}
+        )
+    })
+    public void _test_getDefaultType() {
         assertEquals("jks", KeyStore.getDefaultType());
     }
 
@@ -788,7 +986,17 @@ public class KeyStore2Test extends junit.framework.TestCase {
      * @tests java.security.KeyStore#getEntry(String,
      *        KeyStore.ProtectionParameter)
      */
-    public void test_getEntry() {
+   @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NullPointerException, NoSuchAlgorithmException, UnrecoverableEntryException, " +
+                  "KeyStoreException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getEntry",
+          methodArgs = {String.class, java.security.KeyStore.ProtectionParameter.class}
+        )
+    })
+    public void _test_getEntry() {
         String type = "DSA";
         KeyStore keyTest = null;
         KeyStore.PasswordProtection pp = null;
@@ -857,7 +1065,16 @@ public class KeyStore2Test extends junit.framework.TestCase {
      * @tests java.security.KeyStore#setEntry(String, KeyStore.Entry,
      *        KeyStore.ProtectionParameter)
      */
-    public void test_setEntry() {
+   @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setEntry",
+          methodArgs = {String.class, java.security.KeyStore.Entry.class, java.security.KeyStore.ProtectionParameter.class}
+        )
+    })
+    public void _test_setEntry() {
         String type = "DSA";
         KeyStore keyTest = null;
         KeyStore.PasswordProtection pp = null;
@@ -958,6 +1175,15 @@ public class KeyStore2Test extends junit.framework.TestCase {
      * @tests java.security.KeyStore.entryInstanceOf(String, Class<? extends
      * Entry>)
      */
+   @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NullPointerException, KeyStoreException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "entryInstanceOf",
+          methodArgs = {String.class, Class.class}
+        )
+    })
     public void test_entryInstanceOf() throws Exception {
 
         KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
@@ -983,6 +1209,16 @@ public class KeyStore2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.KeyStore#store(KeyStore.LoadStoreParameter)
      */
+   @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IllegalArgumentException, KeyStoreException, IOException, " +
+                  "NoSuchAlgorithmException, CertificateException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "store",
+          methodArgs = {java.security.KeyStore.LoadStoreParameter.class}
+        )
+    })
     public void test_store_java_securityKeyStore_LoadStoreParameter()
             throws Exception {
         KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
@@ -998,12 +1234,22 @@ public class KeyStore2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.KeyStore#store(OutputStream, char[])
      */
-    public void test_store_java_io_OutputStream_char() throws Exception {
+   @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "KeyStoreException, IOException, " +
+                "NoSuchAlgorithmException, CertificateException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "store",
+          methodArgs = {java.io.OutputStream.class, char[].class}
+        )
+    })
+    public void _test_store_java_io_OutputStream_char() throws Exception {
         KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
         keyStore.load(null, "pwd".toCharArray());
         try {
             keyStore.store(null, "pwd".toCharArray());
-            fail("UnsupportedOperationException expected");
+            fail("NullPointerException expected");
         } catch (NullPointerException e) {
             // expected
         } catch (Exception e) {

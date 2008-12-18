@@ -15,35 +15,34 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package java.security.cert;
 
 /**
- * This class indicates that a given certificate is not valid yet.
+ * The exception that is thrown when a {@code Certificate} is not yet valid or
+ * will not yet be valid on a specified date.
+ * 
+ * @since Android 1.0
  */
 public class CertificateNotYetValidException extends CertificateException {
-    /**
-     * @com.intel.drl.spec_ref
-     */
+
     private static final long serialVersionUID = 4355919900041064702L;
 
     /**
-     * Constructs a new instance of this class with its walkback and message
-     * filled in.
+     * Creates a new {@code CertificateNotYetValidException} with the specified
+     * message.
      * 
      * @param msg
-     *            String The detail message for the exception.
+     *            the detail message for the exception.
+     * @since Android 1.0
      */
     public CertificateNotYetValidException(String msg) {
         super(msg);
     }
 
     /**
-     * Constructs a new instance of this class with its walkback filled in.
+     * Creates a new {@code CertificateNotYetValidException}.
+     * 
+     * @since Android 1.0
      */
     public CertificateNotYetValidException() {
     }

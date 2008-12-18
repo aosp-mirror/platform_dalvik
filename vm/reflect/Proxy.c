@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Implementation of java.lang.reflect.Proxy.
  *
@@ -27,9 +28,14 @@
 #include <stdlib.h>
 
 // fwd
-static bool gatherMethods(ArrayObject* interfaces, Method*** pMethods,
-    int* pMethodCount);
-static bool addMethod(Method* meth, Method** methArray, int slot);
+static bool returnTypesAreCompatible(Method* baseMethod, Method* subMethod);
+static bool gatherMethods(ArrayObject* interfaces, Method*** pMethods,\
+    ArrayObject** pThrows, int* pMethodCount);
+static int copyWithoutDuplicates(Method** allMethods, int allCount,
+    Method** outMethods, ArrayObject* throws);
+static bool createExceptionClassList(const Method* method,
+    PointerSet** pThrows);
+static void updateExceptionClassList(const Method* method, PointerSet* throws);
 static void createConstructor(ClassObject* clazz, Method* meth);
 static void createHandlerMethod(ClassObject* clazz, Method* dstMeth,
     const Method* srcMeth);
@@ -37,6 +43,11 @@ static void proxyConstructor(const u4* args, JValue* pResult,
     const Method* method, Thread* self);
 static void proxyInvoker(const u4* args, JValue* pResult,
     const Method* method, Thread* self);
+static bool mustWrapException(const Method* method, const Object* throwable);
+
+/* private static fields in the Proxy class */
+#define kThrowsField    0
+
 
 /*
  * Perform Proxy setup.
@@ -50,14 +61,14 @@ bool dvmReflectProxyStartup()
     Method* methH;
     Method* methT;
     Method* methF;
-    methE = dvmFindVirtualMethodByDescriptor(gDvm.classJavaLangObject, "equals",
-            "(Ljava/lang/Object;)Z");
-    methH = dvmFindVirtualMethodByDescriptor(gDvm.classJavaLangObject, "hashCode",
-            "()I");
-    methT = dvmFindVirtualMethodByDescriptor(gDvm.classJavaLangObject, "toString",
-            "()Ljava/lang/String;");
-    methF = dvmFindVirtualMethodByDescriptor(gDvm.classJavaLangObject, "finalize",
-            "()V");
+    methE = dvmFindVirtualMethodByDescriptor(gDvm.classJavaLangObject,
+                "equals", "(Ljava/lang/Object;)Z");
+    methH = dvmFindVirtualMethodByDescriptor(gDvm.classJavaLangObject,
+                "hashCode", "()I");
+    methT = dvmFindVirtualMethodByDescriptor(gDvm.classJavaLangObject,
+                "toString", "()Ljava/lang/String;");
+    methF = dvmFindVirtualMethodByDescriptor(gDvm.classJavaLangObject,
+                "finalize", "()V");
     if (methE == NULL || methH == NULL || methT == NULL || methF == NULL) {
         LOGE("Could not find equals/hashCode/toString/finalize in Object\n");
         return false;
@@ -87,6 +98,16 @@ bool dvmReflectProxyStartup()
     }
     gDvm.methJavaLangReflectProxy_constructorPrototype = meth;
 
+    /*
+     * Get the offset of the "h" field in Proxy.
+     */
+    gDvm.offJavaLangReflectProxy_h = dvmFindFieldOffset(proxyClass, "h",
+        "Ljava/lang/reflect/InvocationHandler;");
+    if (gDvm.offJavaLangReflectProxy_h < 0) {
+        LOGE("Unable to find 'h' field in java.lang.Proxy\n");
+        return false;
+    }
+
     return true;
 }
 
@@ -95,8 +116,12 @@ bool dvmReflectProxyStartup()
  * Generate a proxy class with the specified name, interfaces, and loader.
  * "interfaces" is an array of class objects.
  *
- * The interpreted code has done all of the necessary checks, e.g. we know
- * that "interfaces" contains only interface classes.
+ * The Proxy.getProxyClass() code has done the following:
+ *  - Verified that "interfaces" contains only interfaces
+ *  - Verified that no interface appears twice
+ *  - Prepended the package name to the class name if one or more
+ *    interfaces are non-public
+ *  - Searched for an existing instance of an appropriate Proxy class
  *
  * On failure we leave a partially-created class object sitting around,
  * but the garbage collector will take care of it.
@@ -107,6 +132,7 @@ ClassObject* dvmGenerateProxyClass(StringObject* str, ArrayObject* interfaces,
     int result = -1;
     char* nameStr = NULL;
     Method** methods = NULL;
+    ArrayObject* throws = NULL;
     ClassObject* newClass = NULL;
     int i;
     
@@ -126,10 +152,14 @@ ClassObject* dvmGenerateProxyClass(StringObject* str, ArrayObject* interfaces,
      * - concrete class, public and final
      * - superclass is java.lang.reflect.Proxy
      * - implements all listed interfaces (req'd for instanceof)
-     * - has one method for each method in the interfaces (barring duplicates)
+     * - has one method for each method in the interfaces (for duplicates,
+     *   the method in the earliest interface wins)
      * - has one constructor (takes an InvocationHandler arg)
      * - has overrides for hashCode, equals, and toString (these come first)
-     * - has one field, a reference to the InvocationHandler object
+     * - has one field, a reference to the InvocationHandler object, inherited
+     *   from Proxy
+     *
+     * TODO: set protection domain so it matches bootstrap classes.
      *
      * The idea here is to create a class object and fill in the details
      * as we would in loadClassFromDex(), and then call dvmLinkClass() to do
@@ -140,8 +170,8 @@ ClassObject* dvmGenerateProxyClass(StringObject* str, ArrayObject* interfaces,
     /*
      * Generate a temporary list of virtual methods.
      */
-    int methodCount;
-    if (!gatherMethods(interfaces, &methods, &methodCount))
+    int methodCount = -1;
+    if (!gatherMethods(interfaces, &methods, &throws, &methodCount))
         goto bail;
 
     /*
@@ -149,7 +179,7 @@ ClassObject* dvmGenerateProxyClass(StringObject* str, ArrayObject* interfaces,
      */
     newClass = (ClassObject*) dvmMalloc(sizeof(*newClass), ALLOC_DEFAULT);
     if (newClass == NULL)
-        return NULL;
+        goto bail;
     DVM_OBJECT_INIT(&newClass->obj, gDvm.unlinkedJavaLangClass);
     newClass->descriptorAlloc = dvmNameToDescriptor(nameStr);
     newClass->descriptor = newClass->descriptorAlloc;
@@ -195,27 +225,24 @@ ClassObject* dvmGenerateProxyClass(StringObject* str, ArrayObject* interfaces,
     dvmLinearReadOnly(newClass->classLoader, newClass->interfaces);
 
     /*
-     * The class has one instance field, "protected InvocationHandler h",
-     * which is filled in by the constructor.
+     * Static field list.  We have one private field, for our list of
+     * exceptions declared for each method.
      */
-    newClass->ifieldCount = 1;
-    newClass->ifields = (InstField*) dvmLinearAlloc(newClass->classLoader,
-            1 * sizeof(InstField));
-    InstField* ifield = &newClass->ifields[0];
-    ifield->field.clazz = newClass;
-    ifield->field.name = "h";
-    ifield->field.signature = "Ljava/lang/reflect/InvocationHandler;";
-    ifield->field.accessFlags = ACC_PROTECTED;
-    ifield->byteOffset = -1;        /* set later */
-    dvmLinearReadOnly(newClass->classLoader, newClass->ifields);
-
+    newClass->sfieldCount = 1;
+    newClass->sfields = (StaticField*) calloc(1, sizeof(StaticField));
+    StaticField* sfield = &newClass->sfields[kThrowsField];
+    sfield->field.clazz = newClass;
+    sfield->field.name = "throws";
+    sfield->field.signature = "[[Ljava/lang/Throwable;";
+    sfield->field.accessFlags = ACC_STATIC | ACC_PRIVATE;
+    dvmSetStaticFieldObject(sfield, (Object*)throws);
 
     /*
      * Everything is ready.  See if the linker will lap it up.
      */
     newClass->status = CLASS_LOADED;
     if (!dvmLinkClass(newClass, true)) {
-        LOGI("Proxy class link failed\n");
+        LOGD("Proxy class link failed\n");
         goto bail;
     }
 
@@ -239,26 +266,38 @@ bail:
         /* must free innards explicitly if we didn't finish linking */
         dvmFreeClassInnards(newClass);
         newClass = NULL;
-        dvmThrowException("Ljava/lang/RuntimeException;", NULL);
+        if (!dvmCheckException(dvmThreadSelf())) {
+            /* throw something */
+            dvmThrowException("Ljava/lang/RuntimeException;", NULL);
+        }
     }
 
-    /* this allows the GC to free it */
+    /* allow the GC to free these when nothing else has a reference */
+    dvmReleaseTrackedAlloc((Object*) throws, NULL);
     dvmReleaseTrackedAlloc((Object*) newClass, NULL);
 
     return newClass;
 }
 
+
 /*
  * Generate a list of methods.  The Method pointers returned point to the
  * abstract method definition from the appropriate interface, or to the
  * virtual method definition in java.lang.Object.
+ *
+ * We also allocate an array of arrays of throwable classes, one for each
+ * method,so we can do some special handling of checked exceptions.  The
+ * caller must call ReleaseTrackedAlloc() on *pThrows.
  */
 static bool gatherMethods(ArrayObject* interfaces, Method*** pMethods,
-    int* pMethodCount)
+    ArrayObject** pThrows, int* pMethodCount)
 {
     ClassObject** classes;
-    Method** methods;
-    int numInterfaces, maxCount, actualCount;
+    ArrayObject* throws = NULL;
+    Method** methods = NULL;
+    Method** allMethods = NULL;
+    int numInterfaces, maxCount, actualCount, allCount;
+    bool result = false;
     int i;
 
     /*
@@ -287,21 +326,21 @@ static bool gatherMethods(ArrayObject* interfaces, Method*** pMethods,
     }
 
     methods = (Method**) malloc(maxCount * sizeof(*methods));
-    if (methods == NULL)
-        return false;
+    allMethods = (Method**) malloc(maxCount * sizeof(*methods));
+    if (methods == NULL || allMethods == NULL)
+        goto bail;
 
     /*
      * First three entries are the java.lang.Object methods.
      */
     ClassObject* obj = gDvm.classJavaLangObject;
-    methods[0] = obj->vtable[gDvm.voffJavaLangObject_equals];
-    methods[1] = obj->vtable[gDvm.voffJavaLangObject_hashCode];
-    methods[2] = obj->vtable[gDvm.voffJavaLangObject_toString];
-    actualCount = 3;
+    allMethods[0] = obj->vtable[gDvm.voffJavaLangObject_equals];
+    allMethods[1] = obj->vtable[gDvm.voffJavaLangObject_hashCode];
+    allMethods[2] = obj->vtable[gDvm.voffJavaLangObject_toString];
+    allCount = 3;
 
     /*
-     * Add the methods from each interface, in order, checking for
-     * duplicates.  This is O(n^2), but that should be okay here.
+     * Add the methods from each interface, in order.
      */
     classes = (ClassObject**) interfaces->contents;
     for (i = 0; i < numInterfaces; i++, classes++) {
@@ -309,8 +348,7 @@ static bool gatherMethods(ArrayObject* interfaces, Method*** pMethods,
         int j;
 
         for (j = 0; j < clazz->virtualMethodCount; j++) {
-            if (addMethod(&clazz->virtualMethods[j], methods, actualCount))
-                actualCount++;
+            allMethods[allCount++] = &clazz->virtualMethods[j];
         }
 
         for (j = 0; j < clazz->iftableCount; j++) {
@@ -318,12 +356,31 @@ static bool gatherMethods(ArrayObject* interfaces, Method*** pMethods,
             int k;
 
             for (k = 0; k < iclass->virtualMethodCount; k++) {
-                if (addMethod(&iclass->virtualMethods[k], methods, actualCount))
-                    actualCount++;
+                allMethods[allCount++] = &iclass->virtualMethods[k];
             }
         }
     }
+    assert(allCount == maxCount);
 
+    /*
+     * Allocate some storage to hold the lists of throwables.  We need
+     * one entry per unique method, but it's convenient to allocate it
+     * ahead of the duplicate processing.
+     */
+    ClassObject* arrArrClass;
+    arrArrClass = dvmFindArrayClass("[[Ljava/lang/Throwable;", NULL);
+    if (arrArrClass == NULL)
+        goto bail;
+    throws = dvmAllocArrayByClass(arrArrClass, allCount, ALLOC_DEFAULT);
+
+    /*
+     * Identify and remove duplicates.
+     */
+    actualCount = copyWithoutDuplicates(allMethods, allCount, methods, throws);
+    if (actualCount < 0)
+        goto bail;
+
+    //LOGI("gathered methods:\n");
     //for (i = 0; i < actualCount; i++) {
     //    LOGI(" %d: %s.%s\n",
     //        i, methods[i]->clazz->descriptor, methods[i]->name);
@@ -331,28 +388,398 @@ static bool gatherMethods(ArrayObject* interfaces, Method*** pMethods,
 
     *pMethods = methods;
     *pMethodCount = actualCount;
-    return true;
+    *pThrows = throws;
+    result = true;
+
+bail:
+    free(allMethods);
+    if (!result) {
+        free(methods);
+        dvmReleaseTrackedAlloc((Object*)throws, NULL);
+    }
+    return result;
 }
 
 /*
- * Add a method to "methArray" if a matching method does not already
- * exist.  Two methods match if they have the same name and signature.
+ * Identify and remove duplicates, where "duplicate" means it has the
+ * same name and arguments, but not necessarily the same return type.
  *
- * Returns "true" if the item was added, "false" if a duplicate was
- * found and the method was not added.
+ * If duplicate methods have different return types, we want to use the
+ * first method whose return type is assignable from all other duplicate
+ * methods.  That is, if we have:
+ *   class base {...}
+ *   class sub extends base {...}
+ *   class subsub extends sub {...}
+ * Then we want to return the method that returns subsub, since callers
+ * to any form of the method will get a usable object back.
+ *
+ * All other duplicate methods are stripped out.
+ *
+ * This also populates the "throwLists" array with arrays of Class objects,
+ * one entry per method in "outMethods".  Methods that don't declare any
+ * throwables (or have no common throwables with duplicate methods) will
+ * have NULL entries.
+ *
+ * Returns the number of methods copied into "methods", or -1 on failure.
  */
-static bool addMethod(Method* meth, Method** methArray, int slot)
+static int copyWithoutDuplicates(Method** allMethods, int allCount,
+    Method** outMethods, ArrayObject* throwLists)
 {
-    int i;
+    Method* best;
+    int outCount = 0;
+    int i, j;
 
-    for (i = 0; i < slot; i++) {
-        if (dvmCompareMethodNamesAndProtos(methArray[i], meth) == 0) {
-            return false;
+    /*
+     * The plan is to run through all methods, checking all other methods
+     * for a duplicate.  If we find a match, we see if the other methods'
+     * return type is compatible/assignable with ours.  If the current
+     * method is assignable from all others, we copy it to the new list,
+     * and NULL out all other entries.  If not, we keep looking for a
+     * better version.
+     *
+     * If there are no duplicates, we copy the method and NULL the entry.
+     *
+     * At the end of processing, if we have any non-NULL entries, then we
+     * have bad duplicates and must exit with an exception.
+     */
+    for (i = 0; i < allCount; i++) {
+        bool best, dupe;
+
+        if (allMethods[i] == NULL)
+            continue;
+
+        /*
+         * Find all duplicates.  If any of the return types is not
+         * assignable to our return type, then we're not the best.
+         *
+         * We start from 0, not i, because we need to compare assignability
+         * the other direction even if we've compared these before.
+         */
+        dupe = false;
+        best = true;
+        for (j = 0; j < allCount; j++) {
+            if (i == j)
+                continue;
+            if (allMethods[j] == NULL)
+                continue;
+
+            if (dvmCompareMethodNamesAndParameterProtos(allMethods[i],
+                    allMethods[j]) == 0)
+            {
+                /*
+                 * Duplicate method, check return type.  If it's a primitive
+                 * type or void, the types must match exactly, or we throw
+                 * an exception now.
+                 */
+                LOGV("MATCH on %s.%s and %s.%s\n",
+                    allMethods[i]->clazz->descriptor, allMethods[i]->name,
+                    allMethods[j]->clazz->descriptor, allMethods[j]->name);
+                dupe = true;
+                if (!returnTypesAreCompatible(allMethods[i], allMethods[j]))
+                    best = false;
+            }
+        }
+
+        /*
+         * If this is the best of a set of duplicates, copy it over and
+         * nuke all duplicates.
+         *
+         * While we do this, we create the set of exceptions declared to
+         * be thrown by all occurrences of the method.
+         */
+        if (dupe) {
+            if (best) {
+                LOGV("BEST %d %s.%s -> %d\n", i,
+                    allMethods[i]->clazz->descriptor, allMethods[i]->name,
+                    outCount);
+
+                /* if we have exceptions, make a local copy */
+                PointerSet* commonThrows = NULL;
+                if (!createExceptionClassList(allMethods[i], &commonThrows))
+                    return -1;
+
+                /*
+                 * Run through one more time, erasing the duplicates.  (This
+                 * would go faster if we had marked them somehow.)
+                 */
+                for (j = 0; j < allCount; j++) {
+                    if (i == j)
+                        continue;
+                    if (allMethods[j] == NULL)
+                        continue;
+                    if (dvmCompareMethodNamesAndParameterProtos(allMethods[i],
+                            allMethods[j]) == 0)
+                    {
+                        LOGV("DEL %d %s.%s\n", j,
+                            allMethods[j]->clazz->descriptor,
+                            allMethods[j]->name);
+
+                        /*
+                         * Update set to hold the intersection of method[i]'s
+                         * and method[j]'s throws.
+                         */
+                        if (commonThrows != NULL) {
+                            updateExceptionClassList(allMethods[j],
+                                commonThrows);
+                        }
+
+                        allMethods[j] = NULL;
+                    }
+                }
+
+                /*
+                 * If the set of Throwable classes isn't empty, create an
+                 * array of Class, copy them into it, and put the result
+                 * into the "throwLists" array.
+                 */
+                if (commonThrows != NULL &&
+                    dvmPointerSetGetCount(commonThrows) > 0)
+                {
+                    int commonCount = dvmPointerSetGetCount(commonThrows);
+                    ArrayObject* throwArray;
+                    Object** contents;
+                    int ent;
+
+                    throwArray = dvmAllocArrayByClass(
+                            gDvm.classJavaLangClassArray, commonCount,
+                            ALLOC_DEFAULT);
+                    if (throwArray == NULL) {
+                        LOGE("common-throw array alloc failed\n");
+                        return -1;
+                    }
+
+                    contents = (Object**) throwArray->contents;
+                    for (ent = 0; ent < commonCount; ent++) {
+                        contents[ent] = (Object*)
+                            dvmPointerSetGetEntry(commonThrows, ent);
+                    }
+
+                    /* add it to the array of arrays */
+                    contents = (Object**) throwLists->contents;
+                    contents[outCount] = (Object*) throwArray;
+                    dvmReleaseTrackedAlloc((Object*) throwArray, NULL);
+                }
+
+                /* copy the winner and NULL it out */
+                outMethods[outCount++] = allMethods[i];
+                allMethods[i] = NULL;
+
+                dvmPointerSetFree(commonThrows);
+            } else {
+                LOGV("BEST not %d\n", i);
+            }
+        } else {
+            /*
+             * Singleton.  Copy the entry and NULL it out.
+             */
+            LOGV("COPY singleton %d %s.%s -> %d\n", i,
+                allMethods[i]->clazz->descriptor, allMethods[i]->name,
+                outCount);
+
+            /* keep track of our throwables */
+            ArrayObject* exceptionArray = dvmGetMethodThrows(allMethods[i]);
+            if (exceptionArray != NULL) {
+                Object** contents;
+
+                contents = (Object**) throwLists->contents;
+                contents[outCount] = (Object*) exceptionArray;
+                dvmReleaseTrackedAlloc((Object*) exceptionArray, NULL);
+            }
+
+            outMethods[outCount++] = allMethods[i];
+            allMethods[i] = NULL;
         }
     }
 
-    methArray[slot] = meth;
-    return true;
+    /*
+     * Check for stragglers.  If we find any, throw an exception.
+     */
+    for (i = 0; i < allCount; i++) {
+        if (allMethods[i] != NULL) {
+            LOGV("BAD DUPE: %d %s.%s\n", i,
+                allMethods[i]->clazz->descriptor, allMethods[i]->name);
+            dvmThrowException("Ljava/lang/IllegalArgumentException;",
+                "incompatible return types in proxied interfaces");
+            return -1;
+        }
+    }
+
+    return outCount;
+}
+
+
+/*
+ * Classes can declare to throw multiple exceptions in a hierarchy, e.g.
+ * IOException and FileNotFoundException.  Since we're only interested in
+ * knowing the set that can be thrown without requiring an extra wrapper,
+ * we can remove anything that is a subclass of something else in the list.
+ *
+ * The "mix" step we do next reduces things toward the most-derived class,
+ * so it's important that we start with the least-derived classes.
+ */
+static void reduceExceptionClassList(ArrayObject* exceptionArray)
+{
+    const ClassObject** classes = (const ClassObject**)exceptionArray->contents;
+    int len = exceptionArray->length;
+    int i, j;
+
+    /*
+     * Consider all pairs of classes.  If one is the subclass of the other,
+     * null out the subclass.
+     */
+    for (i = 0; i < len-1; i++) {
+        if (classes[i] == NULL)
+            continue;
+        for (j = i + 1; j < len; j++) {
+            if (classes[j] == NULL)
+                continue;
+
+            if (dvmInstanceof(classes[i], classes[j])) {
+                classes[i] = NULL;
+                break;      /* no more comparisons against classes[i] */
+            } else if (dvmInstanceof(classes[j], classes[i])) {
+                classes[j] = NULL;
+            }
+        }
+    }
+}
+
+/*
+ * Create a local array with a copy of the throwable classes declared by
+ * "method".  If no throws are declared, "*pSet" will be NULL.
+ *
+ * Returns "false" on allocation failure.
+ */
+static bool createExceptionClassList(const Method* method, PointerSet** pThrows)
+{
+    ArrayObject* exceptionArray = NULL;
+    bool result = false;
+
+    exceptionArray = dvmGetMethodThrows(method);
+    if (exceptionArray != NULL && exceptionArray->length > 0) {
+        /* reduce list, nulling out redundant entries */
+        reduceExceptionClassList(exceptionArray);
+
+        *pThrows = dvmPointerSetAlloc(exceptionArray->length);
+        if (*pThrows == NULL)
+            goto bail;
+
+        const ClassObject** contents;
+        int i;
+
+        contents = (const ClassObject**) exceptionArray->contents;
+        for (i = 0; i < (int) exceptionArray->length; i++) {
+            if (contents[i] != NULL)
+                dvmPointerSetAddEntry(*pThrows, contents[i]);
+        }
+    } else {
+        *pThrows = NULL;
+    }
+
+    result = true;
+
+bail:
+    dvmReleaseTrackedAlloc((Object*) exceptionArray, NULL);
+    return result;
+}
+
+/*
+ * We need to compute the intersection of the arguments, i.e. remove
+ * anything from "throws" that isn't in the method's list of throws.
+ *
+ * If one class is a subclass of another, we want to keep just the subclass,
+ * moving toward the most-restrictive set.
+ *
+ * We assume these are all classes, and don't try to filter out interfaces.
+ */
+static void updateExceptionClassList(const Method* method, PointerSet* throws)
+{
+    int setSize = dvmPointerSetGetCount(throws);
+    if (setSize == 0)
+        return;
+
+    ArrayObject* exceptionArray = dvmGetMethodThrows(method);
+    if (exceptionArray == NULL) {
+        /* nothing declared, so intersection is empty */
+        dvmPointerSetClear(throws);
+        return;
+    }
+
+    /* reduce list, nulling out redundant entries */
+    reduceExceptionClassList(exceptionArray);
+
+    int mixLen = dvmPointerSetGetCount(throws);
+    const ClassObject* mixSet[mixLen];
+
+    int declLen = exceptionArray->length;
+    const ClassObject** declSet = (const ClassObject**)exceptionArray->contents;
+
+    int i, j;
+
+    /* grab a local copy to work on */
+    for (i = 0; i < mixLen; i++) {
+        mixSet[i] = dvmPointerSetGetEntry(throws, i);
+    }
+
+    for (i = 0; i < mixLen; i++) {
+        for (j = 0; j < declLen; j++) {
+            if (declSet[j] == NULL)
+                continue;
+
+            if (mixSet[i] == declSet[j]) {
+                /* match, keep this one */
+                break;
+            } else if (dvmInstanceof(mixSet[i], declSet[j])) {
+                /* mix is a subclass of a declared throwable, keep it */
+                break;
+            } else if (dvmInstanceof(declSet[j], mixSet[i])) {
+                /* mix is a superclass, replace it */
+                mixSet[i] = declSet[j];
+                break;
+            }
+        }
+
+        if (j == declLen) {
+            /* no match, remove entry by nulling it out */
+            mixSet[i] = NULL;
+        }
+    }
+
+    /* copy results back out; this eliminates duplicates as we go */
+    dvmPointerSetClear(throws);
+    for (i = 0; i < mixLen; i++) {
+        if (mixSet[i] != NULL)
+            dvmPointerSetAddEntry(throws, mixSet[i]);
+    }
+
+    dvmReleaseTrackedAlloc((Object*) exceptionArray, NULL);
+}
+
+
+/*
+ * Check to see if the return types are compatible.
+ *
+ * If the return type is primitive or void, it must match exactly.
+ *
+ * If not, the type in "subMethod" must be assignable to the type in
+ * "baseMethod".
+ */
+static bool returnTypesAreCompatible(Method* subMethod, Method* baseMethod)
+{
+    const char* baseSig = dexProtoGetReturnType(&baseMethod->prototype);
+    const char* subSig = dexProtoGetReturnType(&subMethod->prototype);
+    ClassObject* baseClass;
+    ClassObject* subClass;
+
+    if (baseSig[1] == '\0' || subSig[1] == '\0') {
+        /* at least one is primitive type */
+        return (baseSig[0] == subSig[0] && baseSig[1] == subSig[1]);
+    }
+
+    baseClass = dvmFindClass(baseSig, baseMethod->clazz->classLoader);
+    subClass = dvmFindClass(subSig, subMethod->clazz->classLoader);
+    bool result = dvmInstanceof(subClass, baseClass);
+    return result;
 }
 
 /*
@@ -478,24 +905,16 @@ bail:
 }
 
 /*
- * This is the constructor for a generated proxy object.
+ * This is the constructor for a generated proxy object.  All we need to
+ * do is stuff "handler" into "h".
  */
 static void proxyConstructor(const u4* args, JValue* pResult,
     const Method* method, Thread* self)
 {
     Object* obj = (Object*) args[0];
     Object* handler = (Object*) args[1];
-    ClassObject* clazz = obj->clazz;
-    int fieldOffset;
 
-    fieldOffset = dvmFindFieldOffset(clazz, "h",
-                    "Ljava/lang/reflect/InvocationHandler;");
-    if (fieldOffset < 0) {
-        LOGE("Unable to find 'h' in Proxy object\n");
-        //dvmDumpClass(clazz, kDumpClassFullDetail);
-        dvmAbort();     // this should never happen
-    }
-    dvmSetFieldObject(obj, fieldOffset, handler);
+    dvmSetFieldObject(obj, gDvm.offJavaLangReflectProxy_h, handler);
 }
 
 /*
@@ -521,15 +940,10 @@ static void proxyInvoker(const u4* args, JValue* pResult,
     JValue invokeResult;
 
     /*
-     * Retrieve handler object for this proxy instance.
+     * Retrieve handler object for this proxy instance.  The field is
+     * defined in the superclass (Proxy).
      */
-    hOffset = dvmFindFieldOffset(thisObj->clazz, "h",
-                    "Ljava/lang/reflect/InvocationHandler;");
-    if (hOffset < 0) {
-        LOGE("Unable to find 'h' in Proxy object\n");
-        dvmAbort();
-    }
-    handler = dvmGetFieldObject(thisObj, hOffset);
+    handler = dvmGetFieldObject(thisObj, gDvm.offJavaLangReflectProxy_h);
 
     /*
      * Find the invoke() method, looking in "this"s class.  (Because we
@@ -595,8 +1009,14 @@ static void proxyInvoker(const u4* args, JValue* pResult,
      */
     dvmCallMethod(self, invoke, handler, &invokeResult,
         thisObj, methodObj, argArray);
-    if (dvmCheckException(self))
+    if (dvmCheckException(self)) {
+        Object* excep = dvmGetException(self);
+        if (mustWrapException(method, excep)) {
+            /* wrap with UndeclaredThrowableException */
+            dvmWrapException("Ljava/lang/reflect/UndeclaredThrowableException;");
+        }
         goto bail;
+    }
 
     /*
      * Unbox the return value.  If it's the wrong type, throw a
@@ -623,5 +1043,55 @@ static void proxyInvoker(const u4* args, JValue* pResult,
 bail:
     dvmReleaseTrackedAlloc(methodObj, self);
     dvmReleaseTrackedAlloc((Object*)argArray, self);
+}
+
+/*
+ * Determine if it's okay for this method to throw this exception.  If
+ * an unchecked exception was thrown we immediately return false.  If
+ * checked, we have to ensure that this method and all of its duplicates
+ * have declared that they throw it.
+ */
+static bool mustWrapException(const Method* method, const Object* throwable)
+{
+    const ArrayObject* throws;
+    const ArrayObject* methodThrows;
+    const Object** contents;
+    const ClassObject** classes;
+
+    if (!dvmIsCheckedException(throwable))
+        return false;
+
+    const StaticField* sfield = &method->clazz->sfields[kThrowsField];
+    throws = (ArrayObject*) dvmGetStaticFieldObject(sfield);
+
+    int methodIndex = method - method->clazz->virtualMethods;
+    assert(methodIndex >= 0 && methodIndex < method->clazz->virtualMethodCount);
+
+    contents = (const Object**) throws->contents;
+    methodThrows = (ArrayObject*) contents[methodIndex];
+
+    if (methodThrows == NULL) {
+        /* no throws declared, must wrap all checked exceptions */
+        //printf("+++ methodThrows[%d] is null, wrapping all\n", methodIndex);
+        return true;
+    }
+
+    int throwCount = methodThrows->length;
+    classes = (const ClassObject**) methodThrows->contents;
+    int i;
+
+    //printf("%s.%s list:\n", method->clazz->descriptor, method->name);
+    //for (i = 0; i < throwCount; i++)
+    //    printf(" %d: %s\n", i, classes[i]->descriptor);
+
+    for (i = 0; i < throwCount; i++) {
+        if (dvmInstanceof(throwable->clazz, classes[i])) {
+            /* this was declared, okay to throw */
+            return false;
+        }
+    }
+
+    /* no match in declared throws */
+    return true;
 }
 

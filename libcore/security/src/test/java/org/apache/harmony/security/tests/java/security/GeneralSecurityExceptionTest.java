@@ -21,11 +21,16 @@
 */
 
 package org.apache.harmony.security.tests.java.security;
+
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.security.GeneralSecurityException;
 
 import junit.framework.TestCase;
-
-
+@TestTargetClass(GeneralSecurityException.class)
 /**
  * Tests for <code>GeneralSecurityException</code> class constructors and
  * methods.
@@ -56,6 +61,15 @@ public class GeneralSecurityExceptionTest extends TestCase {
      * Test for <code>GeneralSecurityException()</code> constructor Assertion:
      * constructs GeneralSecurityException with no detail message
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "GeneralSecurityException",
+          methodArgs = {}
+        )
+    })
     public void testGeneralSecurityException01() {
         GeneralSecurityException tE = new GeneralSecurityException();
         assertNull("getMessage() must return null.", tE.getMessage());
@@ -67,6 +81,15 @@ public class GeneralSecurityExceptionTest extends TestCase {
      * Assertion: constructs GeneralSecurityException with detail message msg.
      * Parameter <code>msg</code> is not null.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "GeneralSecurityException",
+          methodArgs = {String.class}
+        )
+    })
     public void testGeneralSecurityException02() {
         GeneralSecurityException tE;
         for (int i = 0; i < msgs.length; i++) {
@@ -82,6 +105,15 @@ public class GeneralSecurityExceptionTest extends TestCase {
      * Assertion: constructs GeneralSecurityException when <code>msg</code> is
      * null
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "GeneralSecurityException",
+          methodArgs = {String.class}
+        )
+    })
     public void testGeneralSecurityException03() {
         String msg = null;
         GeneralSecurityException tE = new GeneralSecurityException(msg);
@@ -94,6 +126,15 @@ public class GeneralSecurityExceptionTest extends TestCase {
      * Assertion: constructs GeneralSecurityException when <code>cause</code>
      * is null
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "GeneralSecurityException",
+          methodArgs = {Throwable.class}
+        )
+    })
     public void testGeneralSecurityException04() {
         Throwable cause = null;
         GeneralSecurityException tE = new GeneralSecurityException(cause);
@@ -106,6 +147,15 @@ public class GeneralSecurityExceptionTest extends TestCase {
      * Assertion: constructs GeneralSecurityException when <code>cause</code>
      * is not null
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "GeneralSecurityException",
+          methodArgs = {Throwable.class}
+        )
+    })
     public void testGeneralSecurityException05() {
         GeneralSecurityException tE = new GeneralSecurityException(tCause);
         if (tE.getMessage() != null) {
@@ -124,6 +174,15 @@ public class GeneralSecurityExceptionTest extends TestCase {
      * constructor Assertion: constructs GeneralSecurityException when
      * <code>cause</code> is null <code>msg</code> is null
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "GeneralSecurityException",
+          methodArgs = {String.class, Throwable.class}
+        )
+    })
     public void testGeneralSecurityException06() {
         GeneralSecurityException tE = new GeneralSecurityException(null, null);
         assertNull("getMessage() must return null", tE.getMessage());
@@ -135,6 +194,15 @@ public class GeneralSecurityExceptionTest extends TestCase {
      * constructor Assertion: constructs GeneralSecurityException when
      * <code>cause</code> is null <code>msg</code> is not null
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "GeneralSecurityException",
+          methodArgs = {String.class, Throwable.class}
+        )
+    })
     public void testGeneralSecurityException07() {
         GeneralSecurityException tE;
         for (int i = 0; i < msgs.length; i++) {
@@ -150,6 +218,15 @@ public class GeneralSecurityExceptionTest extends TestCase {
      * constructor Assertion: constructs GeneralSecurityException when
      * <code>cause</code> is not null <code>msg</code> is null
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "GeneralSecurityException",
+          methodArgs = {String.class, Throwable.class}
+        )
+    })
     public void testGeneralSecurityException08() {
         GeneralSecurityException tE = new GeneralSecurityException(null, tCause);
         if (tE.getMessage() != null) {
@@ -168,6 +245,15 @@ public class GeneralSecurityExceptionTest extends TestCase {
      * constructor Assertion: constructs GeneralSecurityException when
      * <code>cause</code> is not null <code>msg</code> is not null
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "GeneralSecurityException",
+          methodArgs = {String.class, Throwable.class}
+        )
+    })
     public void testGeneralSecurityException09() {
         GeneralSecurityException tE;
         for (int i = 0; i < msgs.length; i++) {

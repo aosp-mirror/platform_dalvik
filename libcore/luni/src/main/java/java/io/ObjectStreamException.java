@@ -18,9 +18,9 @@
 package java.io;
 
 /**
- * This is the superclass of all exceptions that can happen when serializing or
- * deserialing objects. The state of the stream is unknown when one of these
- * serialization-related exceptions are thrown.
+ * Signals some sort of problem during either serialization or deserialization
+ * of objects. This is actually the superclass of several other, more specific
+ * exception classes.
  * 
  * @see InvalidObjectException
  * @see NotActiveException
@@ -28,24 +28,30 @@ package java.io;
  * @see OptionalDataException
  * @see StreamCorruptedException
  * @see WriteAbortedException
+ * 
+ * @since Android 1.0
  */
 public abstract class ObjectStreamException extends IOException {
 
     private static final long serialVersionUID = 7260898174833392607L;
 
     /**
-     * Constructs a new instance of this class with its walkback filled in.
+     * Constructs a new {@code ObjectStreamException} with its stack trace
+     * filled in.
+     * 
+     * @since Android 1.0
      */
     protected ObjectStreamException() {
         super();
     }
 
     /**
-     * Constructs a new instance of this class with its walkback and message
-     * filled in.
+     * Constructs a new {@code ObjectStreamException} with its stack trace and
+     * detail message filled in.
      * 
      * @param detailMessage
-     *            The detail message for the exception.
+     *            the detail message for this exception.
+     * @since Android 1.0
      */
     protected ObjectStreamException(String detailMessage) {
         super(detailMessage);

@@ -205,7 +205,8 @@ public final class RopTranslator {
         pickOrder();
         outputInstructions();
 
-        CatchBuilder catches = new CatchBuilder(method, order, addresses);
+        StdCatchBuilder catches =
+            new StdCatchBuilder(method, order, addresses);
 
         return new DalvCode(positionInfo, output.getFinisher(), catches);
     }

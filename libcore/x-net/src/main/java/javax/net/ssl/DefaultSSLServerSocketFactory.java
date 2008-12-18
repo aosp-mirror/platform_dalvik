@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Boris V. Kuznetsov
-* @version $Revision$
-*/
-
 package javax.net.ssl;
 
 import java.io.IOException;
@@ -30,6 +25,7 @@ import java.net.SocketException;
 /**
  * Default inoperative implementation of javax.net.ssl.SSLServerSocketFactory
  * 
+ * @since Android 1.0
  */
 class DefaultSSLServerSocketFactory extends SSLServerSocketFactory {
 

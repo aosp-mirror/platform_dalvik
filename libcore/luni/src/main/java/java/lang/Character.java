@@ -21,42 +21,40 @@ import java.io.Serializable;
 // BEGIN android-removed
 // import java.util.SortedMap;
 // import java.util.TreeMap;
+// 
 // import org.apache.harmony.luni.util.BinarySearch;
 // END android-removed
+
+// BEGIN android-changed
 import com.ibm.icu4jni.lang.UCharacter;
+// END android-changed
 
 /**
- * <p>
- * Character is the wrapper for the primitive type <code>char</code>. This
- * class also provides a number of utility methods for working with
- * <code>char</code>s.
- * </p>
- * 
+ * The wrapper for the primitive type {@code char}. This class also provides a
+ * number of utility methods for working with characters.
  * <p>
  * Character data is based upon the Unicode Standard, 4.0. The Unicode
  * specification, character tables and other information are available at <a
  * href="http://www.unicode.org/">http://www.unicode.org/</a>.
  * </p>
- * 
  * <p>
  * Unicode characters are referred to as <i>code points</i>. The range of valid
  * code points is U+0000 to U+10FFFF. The <i>Basic Multilingual Plane (BMP)</i>
  * is the code point range U+0000 to U+FFFF. Characters above the BMP are
  * referred to as <i>Supplementary Characters</i>. On the Java platform, UTF-16
- * encoding and <code>char</code> pairs are used to represent code points in
- * the supplementary range. A pair of <code>char</code> values that represent
- * a supplementary character are made up of a <i>high surrogate</i> with a
- * value range of 0xD800 to 0xDBFF and a <i>low surrogate</i> with a value
- * range of 0xDC00 to 0xDFFF.
+ * encoding and {@code char} pairs are used to represent code points in the
+ * supplementary range. A pair of {@code char} values that represent a
+ * supplementary character are made up of a <i>high surrogate</i> with a value
+ * range of 0xD800 to 0xDBFF and a <i>low surrogate</i> with a value range of
+ * 0xDC00 to 0xDFFF.
  * </p>
- * 
  * <p>
- * On the Java platform a <code>char</code> value represents either a single
- * BMP code point or a UTF-16 unit that's part of a surrogate pair. The
- * <code>int</code> type is used to represent all Unicode code points.
+ * On the Java platform a {@code char} value represents either a single BMP code
+ * point or a UTF-16 unit that's part of a surrogate pair. The {@code int} type
+ * is used to represent all Unicode code points.
  * </p>
  * 
- * @since 1.0
+ * @since Android 1.0
  */
 public final class Character implements Serializable, Comparable<Character> {
     private static final long serialVersionUID = 3786198910865385080L;
@@ -64,29 +62,37 @@ public final class Character implements Serializable, Comparable<Character> {
     private final char value;
 
     /**
-     * The minimum possible Character value.
+     * The minimum {@code Character} value.
+     * 
+     * @since Android 1.0
      */
     public static final char MIN_VALUE = '\u0000';
 
     /**
-     * The maximum possible Character value.
+     * The maximum {@code Character} value.
+     * 
+     * @since Android 1.0
      */
     public static final char MAX_VALUE = '\uffff';
 
     /**
-     * The minimum possible radix used for conversions between Characters and
-     * integers.
+     * The minimum radix used for conversions between characters and integers.
+     * 
+     * @since Android 1.0
      */
     public static final int MIN_RADIX = 2;
 
     /**
-     * The maximum possible radix used for conversions between Characters and
-     * integers.
+     * The maximum radix used for conversions between characters and integers.
+     * 
+     * @since Android 1.0
      */
     public static final int MAX_RADIX = 36;
 
     /**
-     * The <code>char</code> {@link Class} object.
+     * The {@link Class} object that represents the primitive type {@code char}.
+     * 
+     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     public static final Class<Character> TYPE = (Class<Character>) new char[0]
@@ -97,367 +103,426 @@ public final class Character implements Serializable, Comparable<Character> {
 
     /**
      * Unicode category constant Cn.
+     * 
+     * @since Android 1.0
      */
     public static final byte UNASSIGNED = 0;
 
     /**
      * Unicode category constant Lu.
+     * 
+     * @since Android 1.0
      */
     public static final byte UPPERCASE_LETTER = 1;
 
     /**
      * Unicode category constant Ll.
+     * 
+     * @since Android 1.0
      */
     public static final byte LOWERCASE_LETTER = 2;
 
     /**
      * Unicode category constant Lt.
+     * 
+     * @since Android 1.0
      */
     public static final byte TITLECASE_LETTER = 3;
 
     /**
      * Unicode category constant Lm.
+     * 
+     * @since Android 1.0
      */
     public static final byte MODIFIER_LETTER = 4;
 
     /**
      * Unicode category constant Lo.
+     * 
+     * @since Android 1.0
      */
     public static final byte OTHER_LETTER = 5;
 
     /**
      * Unicode category constant Mn.
+     * 
+     * @since Android 1.0
      */
     public static final byte NON_SPACING_MARK = 6;
 
     /**
      * Unicode category constant Me.
+     * 
+     * @since Android 1.0
      */
     public static final byte ENCLOSING_MARK = 7;
 
     /**
      * Unicode category constant Mc.
+     * 
+     * @since Android 1.0
      */
     public static final byte COMBINING_SPACING_MARK = 8;
 
     /**
      * Unicode category constant Nd.
+     * 
+     * @since Android 1.0
      */
     public static final byte DECIMAL_DIGIT_NUMBER = 9;
 
     /**
      * Unicode category constant Nl.
+     * 
+     * @since Android 1.0
      */
     public static final byte LETTER_NUMBER = 10;
 
     /**
      * Unicode category constant No.
+     * 
+     * @since Android 1.0
      */
     public static final byte OTHER_NUMBER = 11;
 
     /**
      * Unicode category constant Zs.
+     * 
+     * @since Android 1.0
      */
     public static final byte SPACE_SEPARATOR = 12;
 
     /**
      * Unicode category constant Zl.
+     * 
+     * @since Android 1.0
      */
     public static final byte LINE_SEPARATOR = 13;
 
     /**
      * Unicode category constant Zp.
+     * 
+     * @since Android 1.0
      */
     public static final byte PARAGRAPH_SEPARATOR = 14;
 
     /**
      * Unicode category constant Cc.
+     * 
+     * @since Android 1.0
      */
     public static final byte CONTROL = 15;
 
     /**
      * Unicode category constant Cf.
+     * 
+     * @since Android 1.0
      */
     public static final byte FORMAT = 16;
 
     /**
      * Unicode category constant Co.
+     * 
+     * @since Android 1.0
      */
     public static final byte PRIVATE_USE = 18;
 
     /**
      * Unicode category constant Cs.
+     * 
+     * @since Android 1.0
      */
     public static final byte SURROGATE = 19;
 
     /**
      * Unicode category constant Pd.
+     * 
+     * @since Android 1.0
      */
     public static final byte DASH_PUNCTUATION = 20;
 
     /**
      * Unicode category constant Ps.
+     * 
+     * @since Android 1.0
      */
     public static final byte START_PUNCTUATION = 21;
 
     /**
      * Unicode category constant Pe.
+     * 
+     * @since Android 1.0
      */
     public static final byte END_PUNCTUATION = 22;
 
     /**
      * Unicode category constant Pc.
+     * 
+     * @since Android 1.0
      */
     public static final byte CONNECTOR_PUNCTUATION = 23;
 
     /**
      * Unicode category constant Po.
+     * 
+     * @since Android 1.0
      */
     public static final byte OTHER_PUNCTUATION = 24;
 
     /**
      * Unicode category constant Sm.
+     * 
+     * @since Android 1.0
      */
     public static final byte MATH_SYMBOL = 25;
 
     /**
      * Unicode category constant Sc.
+     * 
+     * @since Android 1.0
      */
     public static final byte CURRENCY_SYMBOL = 26;
 
     /**
      * Unicode category constant Sk.
+     * 
+     * @since Android 1.0
      */
     public static final byte MODIFIER_SYMBOL = 27;
 
     /**
      * Unicode category constant So.
+     * 
+     * @since Android 1.0
      */
     public static final byte OTHER_SYMBOL = 28;
 
     /**
      * Unicode category constant Pi.
-     * @since 1.4
+     * 
+     * @since Android 1.0
      */
     public static final byte INITIAL_QUOTE_PUNCTUATION = 29;
 
     /**
      * Unicode category constant Pf.
-     * @since 1.4
+     * 
+     * @since Android 1.0
      */
     public static final byte FINAL_QUOTE_PUNCTUATION = 30;
 
     /**
      * Unicode bidirectional constant.
-     * @since 1.4
+     * 
+     * @since Android 1.0
      */
     public static final byte DIRECTIONALITY_UNDEFINED = -1;
 
     /**
      * Unicode bidirectional constant L.
-     * @since 1.4
+     * 
+     * @since Android 1.0
      */
     public static final byte DIRECTIONALITY_LEFT_TO_RIGHT = 0;
 
     /**
      * Unicode bidirectional constant R.
-     * @since 1.4
+     * 
+     * @since Android 1.0
      */
     public static final byte DIRECTIONALITY_RIGHT_TO_LEFT = 1;
 
     /**
      * Unicode bidirectional constant AL.
-     * @since 1.4
+     * 
+     * @since Android 1.0
      */
     public static final byte DIRECTIONALITY_RIGHT_TO_LEFT_ARABIC = 2;
 
     /**
      * Unicode bidirectional constant EN.
-     * @since 1.4
+     * 
+     * @since Android 1.0
      */
     public static final byte DIRECTIONALITY_EUROPEAN_NUMBER = 3;
 
     /**
      * Unicode bidirectional constant ES.
-     * @since 1.4
+     * 
+     * @since Android 1.0
      */
     public static final byte DIRECTIONALITY_EUROPEAN_NUMBER_SEPARATOR = 4;
 
     /**
      * Unicode bidirectional constant ET.
-     * @since 1.4
+     * 
+     * @since Android 1.0
      */
     public static final byte DIRECTIONALITY_EUROPEAN_NUMBER_TERMINATOR = 5;
 
     /**
      * Unicode bidirectional constant AN.
-     * @since 1.4
+     * 
+     * @since Android 1.0
      */
     public static final byte DIRECTIONALITY_ARABIC_NUMBER = 6;
 
     /**
      * Unicode bidirectional constant CS.
-     * @since 1.4
+     * 
+     * @since Android 1.0
      */
     public static final byte DIRECTIONALITY_COMMON_NUMBER_SEPARATOR = 7;
 
     /**
      * Unicode bidirectional constant NSM.
-     * @since 1.4
+     *
+     * @since Android 1.0
      */
     public static final byte DIRECTIONALITY_NONSPACING_MARK = 8;
 
     /**
      * Unicode bidirectional constant BN.
-     * @since 1.4
+     * 
+     * @since Android 1.0
      */
     public static final byte DIRECTIONALITY_BOUNDARY_NEUTRAL = 9;
 
     /**
      * Unicode bidirectional constant B.
-     * @since 1.4
+     * 
+     * @since Android 1.0
      */
     public static final byte DIRECTIONALITY_PARAGRAPH_SEPARATOR = 10;
 
     /**
      * Unicode bidirectional constant S.
-     * @since 1.4
+     * 
+     * @since Android 1.0
      */
     public static final byte DIRECTIONALITY_SEGMENT_SEPARATOR = 11;
 
     /**
      * Unicode bidirectional constant WS.
-     * @since 1.4
+     * 
+     * @since Android 1.0
      */
     public static final byte DIRECTIONALITY_WHITESPACE = 12;
 
     /**
      * Unicode bidirectional constant ON.
-     * @since 1.4
+     * 
+     * @since Android 1.0
      */
     public static final byte DIRECTIONALITY_OTHER_NEUTRALS = 13;
 
     /**
      * Unicode bidirectional constant LRE.
-     * @since 1.4
+     * 
+     * @since Android 1.0
      */
     public static final byte DIRECTIONALITY_LEFT_TO_RIGHT_EMBEDDING = 14;
 
     /**
      * Unicode bidirectional constant LRO.
-     * @since 1.4
+     * 
+     * @since Android 1.0
      */
     public static final byte DIRECTIONALITY_LEFT_TO_RIGHT_OVERRIDE = 15;
 
     /**
      * Unicode bidirectional constant RLE.
-     * @since 1.4
+     * 
+     * @since Android 1.0
      */
     public static final byte DIRECTIONALITY_RIGHT_TO_LEFT_EMBEDDING = 16;
 
     /**
      * Unicode bidirectional constant RLO.
-     * @since 1.4
+     * 
+     * @since Android 1.0
      */
     public static final byte DIRECTIONALITY_RIGHT_TO_LEFT_OVERRIDE = 17;
 
     /**
      * Unicode bidirectional constant PDF.
-     * @since 1.4
+     * 
+     * @since Android 1.0
      */
     public static final byte DIRECTIONALITY_POP_DIRECTIONAL_FORMAT = 18;
     
     /**
-     * <p>
-     * Minimum value of a high surrogate or leading surrogate unit in UTF-16
-     * encoding - <code>'\uD800'</code>.
-     * </p>
+     * The minimum value of a high surrogate or leading surrogate unit in UTF-16
+     * encoding, {@code '\uD800'}.
      * 
-     * @since 1.5
+     * @since Android 1.0
      */
     public static final char MIN_HIGH_SURROGATE = '\uD800';
 
     /**
-     * <p>
-     * Maximum value of a high surrogate or leading surrogate unit in UTF-16
-     * encoding - <code>'\uDBFF'</code>.
-     * </p>
+     * The maximum value of a high surrogate or leading surrogate unit in UTF-16
+     * encoding, {@code '\uDBFF'}.
      * 
-     * @since 1.5
+     * @since Android 1.0
      */
     public static final char MAX_HIGH_SURROGATE = '\uDBFF';
 
     /**
-     * <p>
-     * Minimum value of a low surrogate or trailing surrogate unit in UTF-16
-     * encoding - <code>'\uDC00'</code>.
-     * </p>
+     * The minimum value of a low surrogate or trailing surrogate unit in UTF-16
+     * encoding, {@code '\uDC00'}.
      * 
-     * @since 1.5
+     * @since Android 1.0
      */
     public static final char MIN_LOW_SURROGATE = '\uDC00';
 
     /**
-     * Maximum value of a low surrogate or trailing surrogate unit in UTF-16
-     * encoding - <code>'\uDFFF'</code>.
-     * </p>
+     * The maximum value of a low surrogate or trailing surrogate unit in UTF-16
+     * encoding, {@code '\uDFFF'}.
      * 
-     * @since 1.5
+     * @since Android 1.0
      */
     public static final char MAX_LOW_SURROGATE = '\uDFFF';
 
     /**
-     * <p>
-     * Minimum value of a surrogate unit in UTF-16 encoding - <code>'\uD800'</code>.
-     * </p>
+     * The minimum value of a surrogate unit in UTF-16 encoding, {@code '\uD800'}.
      * 
-     * @since 1.5
+     * @since Android 1.0
      */
     public static final char MIN_SURROGATE = '\uD800';
 
     /**
-     * <p>
-     * Maximum value of a surrogate unit in UTF-16 encoding - <code>'\uDFFF'</code>.
-     * </p>
+     * The maximum value of a surrogate unit in UTF-16 encoding, {@code '\uDFFF'}.
      * 
-     * @since 1.5
+     * @since Android 1.0
      */
     public static final char MAX_SURROGATE = '\uDFFF';
 
     /**
-     * <p>
-     * Minimum value of a supplementary code point - <code>U+010000</code>.
-     * </p>
+     * The minimum value of a supplementary code point, {@code U+010000}.
      * 
-     * @since 1.5
+     * @since Android 1.0
      */
     public static final int MIN_SUPPLEMENTARY_CODE_POINT = 0x10000;
 
     /**
-     * <p>
-     * Minimum code point value - <code>U+0000</code>.
-     * </p>
+     * The minimum code point value, {@code U+0000}.
      * 
-     * @since 1.5
+     * @since Android 1.0
      */
     public static final int MIN_CODE_POINT = 0x000000;
 
     /**
-     * <p>
-     * Maximum code point value - <code>U+10FFFF</code>.
-     * </p>
+     * The maximum code point value, {@code U+10FFFF}.
      * 
-     * @since 1.5
+     * @since Android 1.0
      */
     public static final int MAX_CODE_POINT = 0x10FFFF;
 
     /**
-     * <p>
-     * Constant for the number of bits to represent a <code>char</code> in
+     * The number of bits required to represent a {@code Character} value in
      * two's compliment form.
-     * </p>
      * 
-     * @since 1.5
+     * @since Android 1.0
      */
     public static final int SIZE = 16;
 
@@ -496,12 +561,21 @@ public final class Character implements Serializable, Comparable<Character> {
     // icu data.
     // END android-removed
     
-    /*
-     * Subset represents a subset of characters.
+    /**
+     * Represents a subset of the Unicode character set.
+     * 
+     * @since Android 1.0
      */
     public static class Subset {
         String name;
 
+        /**
+         * Constructs a new {@code Subset}.
+         * 
+         * @param string
+         *            this subset's name.
+         * @since Android 1.0
+         */
         protected Subset(String string) {
             if (string == null) {
                 throw new NullPointerException();
@@ -510,15 +584,14 @@ public final class Character implements Serializable, Comparable<Character> {
         }
 
         /**
-         * Compares the specified object to this Subset and returns true if they
-         * are equal. The object must be the same instance of Subset.
+         * Compares this character subset with the specified object. Uses
+         * {@link java.lang.Object#equals(Object)} to do the comparison.
          * 
          * @param object
-         *            the object to compare
-         * @return true if the specified object is equal to this Subset, false
-         *         otherwise
-         * 
-         * @see #hashCode
+         *            the object to compare this character subset with.
+         * @return {@code true} if {@code object} is this subset, that is, if
+         *         {@code object == this}; {@code false} otherwise.
+         * @since Android 1.0
          */
         @Override
         public final boolean equals(Object object) {
@@ -526,12 +599,11 @@ public final class Character implements Serializable, Comparable<Character> {
         }
 
         /**
-         * Returns an integer hash code for the receiver. Objects which are
-         * equal answer the same value for this method.
+         * Returns the integer hash code for this character subset.
          * 
-         * @return the receiver's hash
-         * 
-         * @see #equals
+         * @return this subset's hash code, which is the hash code computed by
+         *         {@link java.lang.Object#hashCode()}.
+         * @since Android 1.0
          */
         @Override
         public final int hashCode() {
@@ -539,9 +611,10 @@ public final class Character implements Serializable, Comparable<Character> {
         }
 
         /**
-         * Returns the string representation of this Subset.
+         * Returns the string representation of this subset.
          * 
-         * @return the string representation of this Subset
+         * @return this subset's name.
+         * @since Android 1.0
          */
         @Override
         public final String toString() {
@@ -552,639 +625,779 @@ public final class Character implements Serializable, Comparable<Character> {
     // BEGIN android-changed
     
     /**
-     * Blocks of characters, as defined by the Unicode 4.0.1 specification. 
-     * @since 1.2
+     * Represents a block of Unicode characters, as defined by the Unicode 4.0.1
+     * specification.
+     * 
+     * @since Android 1.0
      */
     public static final class UnicodeBlock extends Subset {
         /**
-         * The &quot;Surrogates Area&quot; Unicode Block. 
-         * @deprecated As of Java 5, this block has been replaced by {@link #HIGH_SURROGATES}, {@link #HIGH_PRIVATE_USE_SURROGATES} and {@link #LOW_SURROGATES}.
+         * The &quot;Surrogates Area&quot; Unicode Block.
+         * 
+         * @deprecated As of Java 5, this block has been replaced by
+         *             {@link #HIGH_SURROGATES},
+         *             {@link #HIGH_PRIVATE_USE_SURROGATES} and
+         *             {@link #LOW_SURROGATES}.
+         * @since Android 1.0
          */
         @Deprecated
         public static final UnicodeBlock SURROGATES_AREA = new UnicodeBlock("SURROGATES_AREA");
         /**
          * The &quot;Basic Latin&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock BASIC_LATIN = new UnicodeBlock("BASIC_LATIN");
         /**
          * The &quot;Latin-1 Supplement&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock LATIN_1_SUPPLEMENT = new UnicodeBlock("LATIN_1_SUPPLEMENT");
         /**
          * The &quot;Latin Extended-A&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock LATIN_EXTENDED_A = new UnicodeBlock("LATIN_EXTENDED_A");
         /**
          * The &quot;Latin Extended-B&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock LATIN_EXTENDED_B = new UnicodeBlock("LATIN_EXTENDED_B");
         /**
          * The &quot;IPA Extensions&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock IPA_EXTENSIONS = new UnicodeBlock("IPA_EXTENSIONS");
         /**
          * The &quot;Spacing Modifier Letters&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock SPACING_MODIFIER_LETTERS = new UnicodeBlock("SPACING_MODIFIER_LETTERS");
         /**
          * The &quot;Combining Diacritical Marks&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock COMBINING_DIACRITICAL_MARKS = new UnicodeBlock("COMBINING_DIACRITICAL_MARKS");
         /**
-         * The &quot;Greek and Coptic&quot; Unicode Block. Previously referred to as &quot;Greek&quot;.
-         * @since 1.2
+         * The &quot;Greek and Coptic&quot; Unicode Block. Previously referred
+         * to as &quot;Greek&quot;.
+         * 
+         * @since Android 1.0
          */
         public static final UnicodeBlock GREEK = new UnicodeBlock("GREEK");
         /**
          * The &quot;Cyrillic&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock CYRILLIC = new UnicodeBlock("CYRILLIC");
         /**
-         * The &quot;Cyrillic Supplement&quot; Unicode Block. Previously referred to as &quot;Cyrillic Supplementary&quot;.
-         * @since 1.5
+         * The &quot;Cyrillic Supplement&quot; Unicode Block. Previously
+         * referred to as &quot;Cyrillic Supplementary&quot;.
+         * 
+         * @since Android 1.0
          */
         public static final UnicodeBlock CYRILLIC_SUPPLEMENTARY = new UnicodeBlock("CYRILLIC_SUPPLEMENTARY");
         /**
          * The &quot;Armenian&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock ARMENIAN = new UnicodeBlock("ARMENIAN");
         /**
          * The &quot;Hebrew&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock HEBREW = new UnicodeBlock("HEBREW");
         /**
          * The &quot;Arabic&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock ARABIC = new UnicodeBlock("ARABIC");
         /**
          * The &quot;Syriac&quot; Unicode Block. 
-         * @since 1.4
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock SYRIAC = new UnicodeBlock("SYRIAC");
         /**
          * The &quot;Thaana&quot; Unicode Block. 
-         * @since 1.4
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock THAANA = new UnicodeBlock("THAANA");
         /**
          * The &quot;Devanagari&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock DEVANAGARI = new UnicodeBlock("DEVANAGARI");
         /**
          * The &quot;Bengali&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock BENGALI = new UnicodeBlock("BENGALI");
         /**
          * The &quot;Gurmukhi&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock GURMUKHI = new UnicodeBlock("GURMUKHI");
         /**
          * The &quot;Gujarati&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock GUJARATI = new UnicodeBlock("GUJARATI");
         /**
          * The &quot;Oriya&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock ORIYA = new UnicodeBlock("ORIYA");
         /**
          * The &quot;Tamil&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock TAMIL = new UnicodeBlock("TAMIL");
         /**
          * The &quot;Telugu&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock TELUGU = new UnicodeBlock("TELUGU");
         /**
          * The &quot;Kannada&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock KANNADA = new UnicodeBlock("KANNADA");
         /**
          * The &quot;Malayalam&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock MALAYALAM = new UnicodeBlock("MALAYALAM");
         /**
          * The &quot;Sinhala&quot; Unicode Block. 
-         * @since 1.4
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock SINHALA = new UnicodeBlock("SINHALA");
         /**
          * The &quot;Thai&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock THAI = new UnicodeBlock("THAI");
         /**
          * The &quot;Lao&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock LAO = new UnicodeBlock("LAO");
         /**
          * The &quot;Tibetan&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock TIBETAN = new UnicodeBlock("TIBETAN");
         /**
          * The &quot;Myanmar&quot; Unicode Block. 
-         * @since 1.4
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock MYANMAR = new UnicodeBlock("MYANMAR");
         /**
          * The &quot;Georgian&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock GEORGIAN = new UnicodeBlock("GEORGIAN");
         /**
          * The &quot;Hangul Jamo&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock HANGUL_JAMO = new UnicodeBlock("HANGUL_JAMO");
         /**
          * The &quot;Ethiopic&quot; Unicode Block. 
-         * @since 1.4
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock ETHIOPIC = new UnicodeBlock("ETHIOPIC");
         /**
          * The &quot;Cherokee&quot; Unicode Block. 
-         * @since 1.4
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock CHEROKEE = new UnicodeBlock("CHEROKEE");
         /**
          * The &quot;Unified Canadian Aboriginal Syllabics&quot; Unicode Block. 
-         * @since 1.4
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock UNIFIED_CANADIAN_ABORIGINAL_SYLLABICS = new UnicodeBlock("UNIFIED_CANADIAN_ABORIGINAL_SYLLABICS");
         /**
          * The &quot;Ogham&quot; Unicode Block. 
-         * @since 1.4
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock OGHAM = new UnicodeBlock("OGHAM");
         /**
          * The &quot;Runic&quot; Unicode Block. 
-         * @since 1.4
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock RUNIC = new UnicodeBlock("RUNIC");
         /**
          * The &quot;Tagalog&quot; Unicode Block. 
-         * @since 1.5
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock TAGALOG = new UnicodeBlock("TAGALOG");
         /**
          * The &quot;Hanunoo&quot; Unicode Block. 
-         * @since 1.5
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock HANUNOO = new UnicodeBlock("HANUNOO");
         /**
          * The &quot;Buhid&quot; Unicode Block. 
-         * @since 1.5
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock BUHID = new UnicodeBlock("BUHID");
         /**
          * The &quot;Tagbanwa&quot; Unicode Block. 
-         * @since 1.5
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock TAGBANWA = new UnicodeBlock("TAGBANWA");
         /**
          * The &quot;Khmer&quot; Unicode Block. 
-         * @since 1.4
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock KHMER = new UnicodeBlock("KHMER");
         /**
          * The &quot;Mongolian&quot; Unicode Block. 
-         * @since 1.4
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock MONGOLIAN = new UnicodeBlock("MONGOLIAN");
         /**
          * The &quot;Limbu&quot; Unicode Block. 
-         * @since 1.5
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock LIMBU = new UnicodeBlock("LIMBU");
         /**
          * The &quot;Tai Le&quot; Unicode Block. 
-         * @since 1.5
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock TAI_LE = new UnicodeBlock("TAI_LE");
         /**
          * The &quot;Khmer Symbols&quot; Unicode Block. 
-         * @since 1.5
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock KHMER_SYMBOLS = new UnicodeBlock("KHMER_SYMBOLS");
         /**
          * The &quot;Phonetic Extensions&quot; Unicode Block. 
-         * @since 1.5
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock PHONETIC_EXTENSIONS = new UnicodeBlock("PHONETIC_EXTENSIONS");
         /**
          * The &quot;Latin Extended Additional&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock LATIN_EXTENDED_ADDITIONAL = new UnicodeBlock("LATIN_EXTENDED_ADDITIONAL");
         /**
          * The &quot;Greek Extended&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock GREEK_EXTENDED = new UnicodeBlock("GREEK_EXTENDED");
         /**
          * The &quot;General Punctuation&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock GENERAL_PUNCTUATION = new UnicodeBlock("GENERAL_PUNCTUATION");
         /**
          * The &quot;Superscripts and Subscripts&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock SUPERSCRIPTS_AND_SUBSCRIPTS = new UnicodeBlock("SUPERSCRIPTS_AND_SUBSCRIPTS");
         /**
          * The &quot;Currency Symbols&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock CURRENCY_SYMBOLS = new UnicodeBlock("CURRENCY_SYMBOLS");
         /**
-         * The &quot;Combining Diacritical Marks for Symbols&quot; Unicode Block. Previously referred to as &quot;Combining Marks for Symbols&quot;.
-         * @since 1.2
+         * The &quot;Combining Diacritical Marks for Symbols&quot; Unicode
+         * Block. Previously referred to as &quot;Combining Marks for
+         * Symbols&quot;.
+         * 
+         * @since Android 1.0
          */
         public static final UnicodeBlock COMBINING_MARKS_FOR_SYMBOLS = new UnicodeBlock("COMBINING_MARKS_FOR_SYMBOLS");
         /**
          * The &quot;Letterlike Symbols&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock LETTERLIKE_SYMBOLS = new UnicodeBlock("LETTERLIKE_SYMBOLS");
         /**
          * The &quot;Number Forms&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock NUMBER_FORMS = new UnicodeBlock("NUMBER_FORMS");
         /**
          * The &quot;Arrows&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock ARROWS = new UnicodeBlock("ARROWS");
         /**
          * The &quot;Mathematical Operators&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock MATHEMATICAL_OPERATORS = new UnicodeBlock("MATHEMATICAL_OPERATORS");
         /**
          * The &quot;Miscellaneous Technical&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock MISCELLANEOUS_TECHNICAL = new UnicodeBlock("MISCELLANEOUS_TECHNICAL");
         /**
          * The &quot;Control Pictures&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock CONTROL_PICTURES = new UnicodeBlock("CONTROL_PICTURES");
         /**
          * The &quot;Optical Character Recognition&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock OPTICAL_CHARACTER_RECOGNITION = new UnicodeBlock("OPTICAL_CHARACTER_RECOGNITION");
         /**
          * The &quot;Enclosed Alphanumerics&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock ENCLOSED_ALPHANUMERICS = new UnicodeBlock("ENCLOSED_ALPHANUMERICS");
         /**
          * The &quot;Box Drawing&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock BOX_DRAWING = new UnicodeBlock("BOX_DRAWING");
         /**
          * The &quot;Block Elements&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock BLOCK_ELEMENTS = new UnicodeBlock("BLOCK_ELEMENTS");
         /**
          * The &quot;Geometric Shapes&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock GEOMETRIC_SHAPES = new UnicodeBlock("GEOMETRIC_SHAPES");
         /**
          * The &quot;Miscellaneous Symbols&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock MISCELLANEOUS_SYMBOLS = new UnicodeBlock("MISCELLANEOUS_SYMBOLS");
         /**
          * The &quot;Dingbats&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock DINGBATS = new UnicodeBlock("DINGBATS");
         /**
          * The &quot;Miscellaneous Mathematical Symbols-A&quot; Unicode Block. 
-         * @since 1.5
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock MISCELLANEOUS_MATHEMATICAL_SYMBOLS_A = new UnicodeBlock("MISCELLANEOUS_MATHEMATICAL_SYMBOLS_A");
         /**
          * The &quot;Supplemental Arrows-A&quot; Unicode Block. 
-         * @since 1.5
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock SUPPLEMENTAL_ARROWS_A = new UnicodeBlock("SUPPLEMENTAL_ARROWS_A");
         /**
          * The &quot;Braille Patterns&quot; Unicode Block. 
-         * @since 1.4
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock BRAILLE_PATTERNS = new UnicodeBlock("BRAILLE_PATTERNS");
         /**
          * The &quot;Supplemental Arrows-B&quot; Unicode Block. 
-         * @since 1.5
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock SUPPLEMENTAL_ARROWS_B = new UnicodeBlock("SUPPLEMENTAL_ARROWS_B");
         /**
          * The &quot;Miscellaneous Mathematical Symbols-B&quot; Unicode Block. 
-         * @since 1.5
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock MISCELLANEOUS_MATHEMATICAL_SYMBOLS_B = new UnicodeBlock("MISCELLANEOUS_MATHEMATICAL_SYMBOLS_B");
         /**
          * The &quot;Supplemental Mathematical Operators&quot; Unicode Block. 
-         * @since 1.5
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock SUPPLEMENTAL_MATHEMATICAL_OPERATORS = new UnicodeBlock("SUPPLEMENTAL_MATHEMATICAL_OPERATORS");
         /**
          * The &quot;Miscellaneous Symbols and Arrows&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock MISCELLANEOUS_SYMBOLS_AND_ARROWS = new UnicodeBlock("MISCELLANEOUS_SYMBOLS_AND_ARROWS");
         /**
          * The &quot;CJK Radicals Supplement&quot; Unicode Block. 
-         * @since 1.4
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock CJK_RADICALS_SUPPLEMENT = new UnicodeBlock("CJK_RADICALS_SUPPLEMENT");
         /**
          * The &quot;Kangxi Radicals&quot; Unicode Block. 
-         * @since 1.4
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock KANGXI_RADICALS = new UnicodeBlock("KANGXI_RADICALS");
         /**
          * The &quot;Ideographic Description Characters&quot; Unicode Block. 
-         * @since 1.4
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock IDEOGRAPHIC_DESCRIPTION_CHARACTERS = new UnicodeBlock("IDEOGRAPHIC_DESCRIPTION_CHARACTERS");
         /**
          * The &quot;CJK Symbols and Punctuation&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock CJK_SYMBOLS_AND_PUNCTUATION = new UnicodeBlock("CJK_SYMBOLS_AND_PUNCTUATION");
         /**
          * The &quot;Hiragana&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock HIRAGANA = new UnicodeBlock("HIRAGANA");
         /**
          * The &quot;Katakana&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock KATAKANA = new UnicodeBlock("KATAKANA");
         /**
          * The &quot;Bopomofo&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock BOPOMOFO = new UnicodeBlock("BOPOMOFO");
         /**
          * The &quot;Hangul Compatibility Jamo&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock HANGUL_COMPATIBILITY_JAMO = new UnicodeBlock("HANGUL_COMPATIBILITY_JAMO");
         /**
          * The &quot;Kanbun&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock KANBUN = new UnicodeBlock("KANBUN");
         /**
          * The &quot;Bopomofo Extended&quot; Unicode Block. 
-         * @since 1.4
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock BOPOMOFO_EXTENDED = new UnicodeBlock("BOPOMOFO_EXTENDED");
         /**
          * The &quot;Katakana Phonetic Extensions&quot; Unicode Block. 
-         * @since 1.5
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock KATAKANA_PHONETIC_EXTENSIONS = new UnicodeBlock("KATAKANA_PHONETIC_EXTENSIONS");
         /**
          * The &quot;Enclosed CJK Letters and Months&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock ENCLOSED_CJK_LETTERS_AND_MONTHS = new UnicodeBlock("ENCLOSED_CJK_LETTERS_AND_MONTHS");
         /**
          * The &quot;CJK Compatibility&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock CJK_COMPATIBILITY = new UnicodeBlock("CJK_COMPATIBILITY");
         /**
          * The &quot;CJK Unified Ideographs Extension A&quot; Unicode Block. 
-         * @since 1.4
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock CJK_UNIFIED_IDEOGRAPHS_EXTENSION_A = new UnicodeBlock("CJK_UNIFIED_IDEOGRAPHS_EXTENSION_A");
         /**
          * The &quot;Yijing Hexagram Symbols&quot; Unicode Block. 
-         * @since 1.5
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock YIJING_HEXAGRAM_SYMBOLS = new UnicodeBlock("YIJING_HEXAGRAM_SYMBOLS");
         /**
          * The &quot;CJK Unified Ideographs&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock CJK_UNIFIED_IDEOGRAPHS = new UnicodeBlock("CJK_UNIFIED_IDEOGRAPHS");
         /**
          * The &quot;Yi Syllables&quot; Unicode Block. 
-         * @since 1.4
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock YI_SYLLABLES = new UnicodeBlock("YI_SYLLABLES");
         /**
          * The &quot;Yi Radicals&quot; Unicode Block. 
-         * @since 1.4
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock YI_RADICALS = new UnicodeBlock("YI_RADICALS");
         /**
          * The &quot;Hangul Syllables&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock HANGUL_SYLLABLES = new UnicodeBlock("HANGUL_SYLLABLES");
         /**
-         * The &quot;High Surrogates&quot; Unicode Block. 
-         * This block represents code point values in the high surrogate range 0xD800 to 0xDB7F @since 1.5
+         * The &quot;High Surrogates&quot; Unicode Block. This block represents
+         * code point values in the high surrogate range 0xD800 to 0xDB7F
+         * 
+         * @since Android 1.0
          */
         public static final UnicodeBlock HIGH_SURROGATES = new UnicodeBlock("HIGH_SURROGATES");
         /**
-         * The &quot;High Private Use Surrogates&quot; Unicode Block. 
-         * This block represents code point values in the high surrogate range 0xDB80 to 0xDBFF @since 1.5
+         * The &quot;High Private Use Surrogates&quot; Unicode Block. This block
+         * represents code point values in the high surrogate range 0xDB80 to
+         * 0xDBFF
+         * 
+         * @since Android 1.0
          */
         public static final UnicodeBlock HIGH_PRIVATE_USE_SURROGATES = new UnicodeBlock("HIGH_PRIVATE_USE_SURROGATES");
         /**
-         * The &quot;Low Surrogates&quot; Unicode Block. 
-         * This block represents code point values in the low surrogate range 0xDC00 to 0xDFFF @since 1.5
+         * The &quot;Low Surrogates&quot; Unicode Block. This block represents
+         * code point values in the low surrogate range 0xDC00 to 0xDFFF
+         * 
+         * @since Android 1.0
          */
         public static final UnicodeBlock LOW_SURROGATES = new UnicodeBlock("LOW_SURROGATES");
         /**
          * The &quot;Private Use Area&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock PRIVATE_USE_AREA = new UnicodeBlock("PRIVATE_USE_AREA");
         /**
          * The &quot;CJK Compatibility Ideographs&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock CJK_COMPATIBILITY_IDEOGRAPHS = new UnicodeBlock("CJK_COMPATIBILITY_IDEOGRAPHS");
         /**
          * The &quot;Alphabetic Presentation Forms&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock ALPHABETIC_PRESENTATION_FORMS = new UnicodeBlock("ALPHABETIC_PRESENTATION_FORMS");
         /**
          * The &quot;Arabic Presentation Forms-A&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock ARABIC_PRESENTATION_FORMS_A = new UnicodeBlock("ARABIC_PRESENTATION_FORMS_A");
         /**
          * The &quot;Variation Selectors&quot; Unicode Block. 
-         * @since 1.5
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock VARIATION_SELECTORS = new UnicodeBlock("VARIATION_SELECTORS");
         /**
          * The &quot;Combining Half Marks&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock COMBINING_HALF_MARKS = new UnicodeBlock("COMBINING_HALF_MARKS");
         /**
          * The &quot;CJK Compatibility Forms&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock CJK_COMPATIBILITY_FORMS = new UnicodeBlock("CJK_COMPATIBILITY_FORMS");
         /**
          * The &quot;Small Form Variants&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock SMALL_FORM_VARIANTS = new UnicodeBlock("SMALL_FORM_VARIANTS");
         /**
          * The &quot;Arabic Presentation Forms-B&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock ARABIC_PRESENTATION_FORMS_B = new UnicodeBlock("ARABIC_PRESENTATION_FORMS_B");
         /**
          * The &quot;Halfwidth and Fullwidth Forms&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock HALFWIDTH_AND_FULLWIDTH_FORMS = new UnicodeBlock("HALFWIDTH_AND_FULLWIDTH_FORMS");
         /**
          * The &quot;Specials&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock SPECIALS = new UnicodeBlock("SPECIALS");
         /**
          * The &quot;Linear B Syllabary&quot; Unicode Block. 
-         * @since 1.2
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock LINEAR_B_SYLLABARY = new UnicodeBlock("LINEAR_B_SYLLABARY");
         /**
          * The &quot;Linear B Ideograms&quot; Unicode Block. 
-         * @since 1.5
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock LINEAR_B_IDEOGRAMS = new UnicodeBlock("LINEAR_B_IDEOGRAMS");
         /**
          * The &quot;Aegean Numbers&quot; Unicode Block. 
-         * @since 1.5
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock AEGEAN_NUMBERS = new UnicodeBlock("AEGEAN_NUMBERS");
         /**
          * The &quot;Old Italic&quot; Unicode Block. 
-         * @since 1.5
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock OLD_ITALIC = new UnicodeBlock("OLD_ITALIC");
         /**
          * The &quot;Gothic&quot; Unicode Block. 
-         * @since 1.5
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock GOTHIC = new UnicodeBlock("GOTHIC");
         /**
          * The &quot;Ugaritic&quot; Unicode Block. 
-         * @since 1.5
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock UGARITIC = new UnicodeBlock("UGARITIC");
         /**
          * The &quot;Deseret&quot; Unicode Block. 
-         * @since 1.5
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock DESERET = new UnicodeBlock("DESERET");
         /**
          * The &quot;Shavian&quot; Unicode Block. 
-         * @since 1.5
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock SHAVIAN = new UnicodeBlock("SHAVIAN");
         /**
          * The &quot;Osmanya&quot; Unicode Block. 
-         * @since 1.5
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock OSMANYA = new UnicodeBlock("OSMANYA");
         /**
          * The &quot;Cypriot Syllabary&quot; Unicode Block. 
-         * @since 1.5
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock CYPRIOT_SYLLABARY = new UnicodeBlock("CYPRIOT_SYLLABARY");
         /**
          * The &quot;Byzantine Musical Symbols&quot; Unicode Block. 
-         * @since 1.5
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock BYZANTINE_MUSICAL_SYMBOLS = new UnicodeBlock("BYZANTINE_MUSICAL_SYMBOLS");
         /**
          * The &quot;Musical Symbols&quot; Unicode Block. 
-         * @since 1.5
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock MUSICAL_SYMBOLS = new UnicodeBlock("MUSICAL_SYMBOLS");
         /**
          * The &quot;Tai Xuan Jing Symbols&quot; Unicode Block. 
-         * @since 1.5
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock TAI_XUAN_JING_SYMBOLS = new UnicodeBlock("TAI_XUAN_JING_SYMBOLS");
         /**
          * The &quot;Mathematical Alphanumeric Symbols&quot; Unicode Block. 
-         * @since 1.5
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock MATHEMATICAL_ALPHANUMERIC_SYMBOLS = new UnicodeBlock("MATHEMATICAL_ALPHANUMERIC_SYMBOLS");
         /**
          * The &quot;CJK Unified Ideographs Extension B&quot; Unicode Block. 
-         * @since 1.5
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock CJK_UNIFIED_IDEOGRAPHS_EXTENSION_B = new UnicodeBlock("CJK_UNIFIED_IDEOGRAPHS_EXTENSION_B");
         /**
          * The &quot;CJK Compatibility Ideographs Supplement&quot; Unicode Block. 
-         * @since 1.5
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock CJK_COMPATIBILITY_IDEOGRAPHS_SUPPLEMENT = new UnicodeBlock("CJK_COMPATIBILITY_IDEOGRAPHS_SUPPLEMENT");
         /**
          * The &quot;Tags&quot; Unicode Block. 
-         * @since 1.5
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock TAGS = new UnicodeBlock("TAGS");
         /**
          * The &quot;Variation Selectors Supplement&quot; Unicode Block. 
-         * @since 1.5
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock VARIATION_SELECTORS_SUPPLEMENT = new UnicodeBlock("VARIATION_SELECTORS_SUPPLEMENT");
         /**
          * The &quot;Supplementary Private Use Area-A&quot; Unicode Block. 
-         * @since 1.5
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock SUPPLEMENTARY_PRIVATE_USE_AREA_A = new UnicodeBlock("SUPPLEMENTARY_PRIVATE_USE_AREA_A");
         /**
          * The &quot;Supplementary Private Use Area-B&quot; Unicode Block. 
-         * @since 1.5
+         *
+         * @since Android 1.0
          */
         public static final UnicodeBlock SUPPLEMENTARY_PRIVATE_USE_AREA_B = new UnicodeBlock("SUPPLEMENTARY_PRIVATE_USE_AREA_B");
 
@@ -1196,11 +1409,9 @@ public final class Character implements Serializable, Comparable<Character> {
         // END android-changed
         
         /**
-         * <p>
-         * Retrieves the constant that corresponds to the block name given. The
-         * block names are defined by the Unicode 4.0.1 specification in the
-         * <code>Blocks-4.0.1.txt</code> file.
-         * </p>
+         * Retrieves the constant that corresponds to the specified block name.
+         * The block names are defined by the Unicode 4.0.1 specification in the
+         * {@code Blocks-4.0.1.txt} file.
          * <p>
          * Block names may be one of the following:
          * </p>
@@ -1209,20 +1420,22 @@ public final class Character implements Serializable, Comparable<Character> {
          * case-insensitive.</li>
          * <li>Canonical block name without any spaces, as defined by the
          * Unicode specification; case-insensitive.</li>
-         * <li><code>UnicodeBlock</code> constant identifier. This is
-         * determined by uppercasing the canonical name and replacing all spaces
-         * and hyphens with underscores.</li>
+         * <li>{@code UnicodeBlock} constant identifier. This is determined by
+         * uppercasing the canonical name and replacing all spaces and hyphens
+         * with underscores.</li>
          * </ul>
          * 
-         * @param blockName The name of the block to retrieve.
-         * @return A UnicodeBlock constant.
-         * @throws NullPointerException if <code>blockName</code> is
-         *         <code>null</code>.
-         * @throws IllegalArgumentException if <code>blockName</code> is not a
-         *         valid block name.
-         * @since 1.5
+         * @param blockName
+         *            the name of the block to retrieve.
+         * @return the UnicodeBlock constant corresponding to {@code blockName}.
+         * @throws IllegalArgumentException
+         *             if {@code blockName} is not a valid block name.
+         * @since Android 1.0
          */
-        public static UnicodeBlock forName(String blockName) {
+        public static final UnicodeBlock forName(String blockName) {
+            // BEGIN android-note
+            // trying to get closer to the RI which defines this as final.
+            // END android-note
             if (blockName == null) {
                 throw new NullPointerException();
             }
@@ -1248,30 +1461,34 @@ public final class Character implements Serializable, Comparable<Character> {
         }
         
         /**
-         * <p>
-         * Retrieves the constant that contains the given <code>char</code> or
-         * <code>null</code> if there is none.
-         * </p>
+         * Gets the constant for the Unicode block that contains the specified
+         * character.
          * 
-         * @param c The character to retrieve a UnicodeBlock for.
-         * @return A UnicodeBlock constant or <code>null</code>.
+         * @param c
+         *            the character for which to get the {@code UnicodeBlock}
+         *            constant.
+         * @return the {@code UnicodeBlock} constant for the block that contains
+         *         {@code c}, or {@code null} if {@code c} does not belong to
+         *         any defined block.
+         * @since Android 1.0
          */
         public static UnicodeBlock of(char c) {
             return of((int) c);
         }
         
         /**
-         * <p>
-         * Retrieves the constant that contains the given Unicode code point or
-         * <code>null</code> if there is none.
-         * </p>
+         * Gets the constant for the Unicode block that contains the specified
+         * Unicode code point.
          * 
-         * @param codePoint The Unicode code point to retrieve a UnicodeBlock
-         *        for.
-         * @return A UnicodeBlock constant or <code>null</code>.
-         * @throws IllegalArgumentException if <code>codePoint</code> is not a
-         *         valid Unicode code point.
-         * @since 1.5
+         * @param codePoint
+         *            the Unicode code point for which to get the
+         *            {@code UnicodeBlock} constant.
+         * @return the {@code UnicodeBlock} constant for the block that contains
+         *         {@code codePoint}, or {@code null} if {@code codePoint} does
+         *         not belong to any defined block.
+         * @throws IllegalArgumentException
+         *             if {@code codePoint} is not a valid Unicode code point.
+         * @since Android 1.0
          */
         public static UnicodeBlock of(int codePoint) {
             if (!isValidCodePoint(codePoint)) {
@@ -1297,52 +1514,55 @@ public final class Character implements Serializable, Comparable<Character> {
     }
 
     /**
-     * Constructs a new instance of the receiver which represents the char
-     * valued argument.
+     * Constructs a new {@code Character} with the specified primitive char
+     * value.
      * 
      * @param value
-     *            the char to store in the new instance.
+     *            the primitive char value to store in the new instance.
+     * @since Android 1.0
      */
     public Character(char value) {
         this.value = value;
     }
 
     /**
-     * Returns the char value which the receiver represents.
+     * Gets the primitive value of this character.
      * 
-     * @return char the value of the receiver
+     * @return this object's primitive value.
+     * @since Android 1.0
      */
     public char charValue() {
         return value;
     }
 
     /**
-     * Compares the receiver to the specified Character to determine the
-     * relative ordering.
+     * Compares this object to the specified character object to determine their
+     * relative order.
      * 
      * @param c
-     *            the Character
-     * @return an int < 0 if this Character is less than the specified
-     *         Character, 0 if they are equal, and > 0 if this Character is
-     *         greater
-     * @throws NullPointerException
-     *             if <code>c</code> is <code>null</code>.
-     * @since 1.2
+     *            the character object to compare this object to.
+     * @return {@code 0} if the value of this character and the value of
+     *         {@code c} are equal; a positive value if the value of this
+     *         character is greater than the value of {@code c}; a negative
+     *         value if the value of this character is less than the value of
+     *         {@code c}.
+     * @see java.lang.Comparable
+     * @since Android 1.0
      */
     public int compareTo(Character c) {
         return value - c.value;
     }
     
     /**
-     * <p>
-     * Returns a <code>Character</code> instance for the <code>char</code>
-     * value passed. This method is preferred over the constructor, as this
-     * method may maintain a cache of instances.
-     * </p>
+     * Returns a {@code Character} instance for the {@code char} value passed.
+     * For ASCII/Latin-1 characters (and generally all characters with a Unicode
+     * value up to 512), this method should be used instead of the constructor,
+     * as it maintains a cache of corresponding {@code Character} instances.
      * 
-     * @param c The char value.
-     * @return A <code>Character</code> instance.
-     * @since 1.5
+     * @param c
+     *            the char value for which to get a {@code Character} instance.
+     * @return the {@code Character} instance for {@code c}.
+     * @since Android 1.0
      */
     public static Character valueOf(char c) {
         if (c >= CACHE_LEN ) {
@@ -1368,116 +1588,113 @@ public final class Character implements Serializable, Comparable<Character> {
         }
     }
     /**
-     * <p>
-     * A test for determining if the <code>codePoint</code> is a valid Unicode
-     * code point.
-     * </p>
+     * Indicates whether {@code codePoint} is a valid Unicode code point.
      * 
-     * @param codePoint The code point to test.
-     * @return A boolean value.
-     * @since 1.5
+     * @param codePoint
+     *            the code point to test.
+     * @return {@code true} if {@code codePoint} is a valid Unicode code point;
+     *         {@code false} otherwise.
+     * @since Android 1.0
      */
     public static boolean isValidCodePoint(int codePoint) {
         return (MIN_CODE_POINT <= codePoint && MAX_CODE_POINT >= codePoint);
     }
 
     /**
-     * <p>
-     * A test for determining if the <code>codePoint</code> is within the
-     * supplementary code point range.
-     * </p>
+     * Indicates whether {@code codePoint} is within the supplementary code
+     * point range.
      * 
-     * @param codePoint The code point to test.
-     * @return A boolean value.
-     * @since 1.5
+     * @param codePoint
+     *            the code point to test.
+     * @return {@code true} if {@code codePoint} is within the supplementary
+     *         code point range; {@code false} otherwise.
+     * @since Android 1.0
      */
     public static boolean isSupplementaryCodePoint(int codePoint) {
         return (MIN_SUPPLEMENTARY_CODE_POINT <= codePoint && MAX_CODE_POINT >= codePoint);
     }
 
     /**
-     * <p>
-     * A test for determining if the <code>char</code> is a high
-     * surrogate/leading surrogate unit that's used for representing
-     * supplementary characters in UTF-16 encoding.
-     * </p>
+     * Indicates whether {@code ch} is a high- (or leading-) surrogate code unit
+     * that is used for representing supplementary characters in UTF-16
+     * encoding.
      * 
-     * @param ch The <code>char</code> unit to test.
-     * @return A boolean value.
-     * @since 1.5
+     * @param ch
+     *            the character to test.
+     * @return {@code true} if {@code ch} is a high-surrogate code unit;
+     *         {@code false} otherwise.
      * @see #isLowSurrogate(char)
+     * @since Android 1.0
      */
     public static boolean isHighSurrogate(char ch) {
         return (MIN_HIGH_SURROGATE <= ch && MAX_HIGH_SURROGATE >= ch);
     }
 
     /**
-     * <p>
-     * A test for determining if the <code>char</code> is a high
-     * surrogate/leading surrogate unit that's used for representing
-     * supplementary characters in UTF-16 encoding.
-     * </p>
+     * Indicates whether {@code ch} is a low- (or trailing-) surrogate code unit
+     * that is used for representing supplementary characters in UTF-16
+     * encoding.
      * 
-     * @param ch The <code>char</code> unit to test.
-     * @return A boolean value.
-     * @since 1.5
+     * @param ch
+     *            the character to test.
+     * @return {@code true} if {@code ch} is a low-surrogate code unit;
+     *         {@code false} otherwise.
      * @see #isHighSurrogate(char)
-     */
+     * @since Android 1.0
+     */    
     public static boolean isLowSurrogate(char ch) {
         return (MIN_LOW_SURROGATE <= ch && MAX_LOW_SURROGATE >= ch);
     }
 
     /**
-     * <p>
-     * A test for determining if the <code>char</code> pair is a valid
-     * surrogate pair.
-     * </p>
+     * Indicates whether the specified character pair is a valid surrogate pair.
      * 
-     * @param high The high surrogate unit to test.
-     * @param low The low surrogate unit to test.
-     * @return A boolean value.
-     * @since 1.5
+     * @param high
+     *            the high surrogate unit to test.
+     * @param low
+     *            the low surrogate unit to test.
+     * @return {@code true} if {@code high} is a high-surrogate code unit and
+     *         {@code low} is a low-surrogate code unit; {@code false}
+     *         otherwise.
      * @see #isHighSurrogate(char)
      * @see #isLowSurrogate(char)
+     * @since Android 1.0
      */
     public static boolean isSurrogatePair(char high, char low) {
         return (isHighSurrogate(high) && isLowSurrogate(low));
     }
 
     /**
-     * <p>
-     * Calculates the number of <code>char</code> values required to represent
-     * the Unicode code point. This method only tests if the
-     * <code>codePoint</code> is greater than or equal to <code>0x10000</code>,
-     * in which case <code>2</code> is returned, otherwise <code>1</code>.
-     * To test if the code point is valid, use the
-     * {@link #isValidCodePoint(int)} method.
-     * </p>
+     * Calculates the number of {@code char} values required to represent the
+     * specified Unicode code point. This method checks if the {@code codePoint}
+     * is greater than or equal to {@code 0x10000}, in which case {@code 2} is
+     * returned, otherwise {@code 1}. To test if the code point is valid, use
+     * the {@link #isValidCodePoint(int)} method.
      * 
-     * @param codePoint The code point to test.
-     * @return An <code>int</code> value of 2 or 1.
-     * @since 1.5
-     * @see #isValidCodePoint(int)
-     * @see #isSupplementaryCodePoint(int)
+     * @param codePoint
+     *            the code point for which to calculate the number of required
+     *            chars.
+     * @return {@code 2} if {@code codePoint >= 0x10000}; {@code 1} otherwise.
+     * @since Android 1.0
      */
     public static int charCount(int codePoint) {
         return (codePoint >= 0x10000 ? 2 : 1);
     }
 
     /**
-     * <p>
-     * Converts a surrogate pair into a Unicode code point. This method assume
-     * that the pair are valid surrogates. If the pair are NOT valid surrogates,
-     * then the result is indeterminate. The
+     * Converts a surrogate pair into a Unicode code point. This method assumes
+     * that the pair are valid surrogates. If the pair are <i>not</i> valid
+     * surrogates, then the result is indeterminate. The
      * {@link #isSurrogatePair(char, char)} method should be used prior to this
      * method to validate the pair.
-     * </p>
      * 
-     * @param high The high surrogate unit.
-     * @param low The low surrogate unit.
-     * @return The decoded code point.
-     * @since 1.5
+     * @param high
+     *            the high surrogate unit.
+     * @param low
+     *            the low surrogate unit.
+     * @return the Unicode code point corresponding to the surrogate unit pair.
      * @see #isSurrogatePair(char, char)
+     * @since Android 1.0
      */
     public static int toCodePoint(char high, char low) {
         // See RFC 2781, Section 2.2
@@ -1488,23 +1705,24 @@ public final class Character implements Serializable, Comparable<Character> {
     }
 
     /**
-     * <p>
-     * Returns the code point at the index in the <code>CharSequence</code>.
-     * If <code>char</code> unit at the index is a high-surrogate unit, the
-     * next index is less than the length of the sequence and the
-     * <code>char</code> unit at the next index is a low surrogate unit, then
-     * the code point represented by the pair is returned; otherwise the
-     * <code>char</code> unit at the index is returned.
-     * </p>
+     * Returns the code point at {@code index} in the specified sequence of
+     * character units. If the unit at {@code index} is a high-surrogate unit,
+     * {@code index + 1} is less than the length of the sequence and the unit at
+     * {@code index + 1} is a low-surrogate unit, then the supplementary code
+     * point represented by the pair is returned; otherwise the {@code char}
+     * value at {@code index} is returned.
      * 
-     * @param seq The sequence of <code>char</code> units.
-     * @param index The index into the <code>seq</code> to retrieve and
-     *        convert.
-     * @return The Unicode code point.
-     * @throws NullPointerException if <code>seq</code> is <code>null</code>.
-     * @throws IndexOutOfBoundsException if the <code>index</code> is negative
-     *         or greater than or equal to <code>seq.length()</code>.
-     * @since 1.5
+     * @param seq
+     *            the source sequence of {@code char} units.
+     * @param index
+     *            the position in {@code seq} from which to retrieve the code
+     *            point.
+     * @return the Unicode code point or {@code char} value at {@code index} in
+     *         {@code seq}.
+     * @throws IndexOutOfBoundsException
+     *             if the {@code index} is negative or greater than or equal to
+     *             the length of {@code seq}.
+     * @since Android 1.0
      */
     public static int codePointAt(CharSequence seq, int index) {
         if (seq == null) {
@@ -1527,23 +1745,24 @@ public final class Character implements Serializable, Comparable<Character> {
     }
 
     /**
-     * <p>
-     * Returns the code point at the index in the <code>char[]</code>. If
-     * <code>char</code> unit at the index is a high-surrogate unit, the next
-     * index is less than the length of the sequence and the <code>char</code>
-     * unit at the next index is a low surrogate unit, then the code point
-     * represented by the pair is returned; otherwise the <code>char</code>
-     * unit at the index is returned.
-     * </p>
+     * Returns the code point at {@code index} in the specified array of
+     * character units. If the unit at {@code index} is a high-surrogate unit,
+     * {@code index + 1} is less than the length of the array and the unit at
+     * {@code index + 1} is a low-surrogate unit, then the supplementary code
+     * point represented by the pair is returned; otherwise the {@code char}
+     * value at {@code index} is returned.
      * 
-     * @param seq The sequence of <code>char</code> units.
-     * @param index The index into the <code>seq</code> to retrieve and
-     *        convert.
-     * @return The Unicode code point.
-     * @throws NullPointerException if <code>seq</code> is <code>null</code>.
-     * @throws IndexOutOfBoundsException if the <code>index</code> is negative
-     *         or greater than or equal to <code>seq.length()</code>.
-     * @since 1.5
+     * @param seq
+     *            the source array of {@code char} units.
+     * @param index
+     *            the position in {@code seq} from which to retrieve the code
+     *            point.
+     * @return the Unicode code point or {@code char} value at {@code index} in
+     *         {@code seq}.
+     * @throws IndexOutOfBoundsException
+     *             if the {@code index} is negative or greater than or equal to
+     *             the length of {@code seq}.
+     * @since Android 1.0
      */
     public static int codePointAt(char[] seq, int index) {
         if (seq == null) {
@@ -1566,27 +1785,27 @@ public final class Character implements Serializable, Comparable<Character> {
     }
 
     /**
-     * <p>
-     * Returns the code point at the index in the <code>char[]</code> that's
-     * within the limit. If <code>char</code> unit at the index is a
-     * high-surrogate unit, the next index is less than the <code>limit</code>
-     * and the <code>char</code> unit at the next index is a low surrogate
-     * unit, then the code point represented by the pair is returned; otherwise
-     * the <code>char</code> unit at the index is returned.
-     * </p>
+     * Returns the code point at {@code index} in the specified array of
+     * character units, where {@code index} has to be less than {@code limit}.
+     * If the unit at {@code index} is a high-surrogate unit, {@code index + 1}
+     * is less than {@code limit} and the unit at {@code index + 1} is a
+     * low-surrogate unit, then the supplementary code point represented by the
+     * pair is returned; otherwise the {@code char} value at {@code index} is
+     * returned.
      * 
-     * @param seq The sequence of <code>char</code> units.
-     * @param index The index into the <code>seq</code> to retrieve and
-     *        convert.
-     * @param limit The exclusive index into the <code>seq</code> that marks
-     *        the end of the units that can be used.
-     * @return The Unicode code point.
-     * @throws NullPointerException if <code>seq</code> is <code>null</code>.
-     * @throws IndexOutOfBoundsException if the <code>index</code> is
-     *         negative, greater than or equal to <code>limit</code>,
-     *         <code>limit</code> is negative or <code>limit</code> is
-     *         greater than the length of <code>seq</code>.
-     * @since 1.5
+     * @param seq
+     *            the source array of {@code char} units.
+     * @param index
+     *            the position in {@code seq} from which to get the code point.
+     * @param limit
+     *            the index after the last unit in {@code seq} that can be used.
+     * @return the Unicode code point or {@code char} value at {@code index} in
+     *         {@code seq}.
+     * @throws IndexOutOfBoundsException
+     *             if {@code index < 0}, {@code index >= limit},
+     *             {@code limit < 0} or if {@code limit} is greater than the
+     *             length of {@code seq}.
+     * @since Android 1.0
      */
     public static int codePointAt(char[] seq, int index, int limit) {
         if (index < 0 || index >= limit || limit < 0 || limit > seq.length) {
@@ -1605,24 +1824,24 @@ public final class Character implements Serializable, Comparable<Character> {
     }
 
     /**
-     * <p>
-     * Returns the Unicode code point that proceeds the <code>index</code> in
-     * the <code>CharSequence</code>. If the <code>char</code> unit at
-     * <code>index - 1</code> is within the low surrogate range, the value
-     * <code>index - 2</code> isn't negative and the <code>char</code> unit
-     * at <code>index - 2</code> is within the high surrogate range, then the
-     * supplementary code point made up of the surrogate pair is returned;
-     * otherwise, the <code>char</code> value at <code>index - 1</code> is
-     * returned.
-     * </p>
+     * Returns the code point that preceds {@code index} in the specified
+     * sequence of character units. If the unit at {@code index - 1} is a
+     * low-surrogate unit, {@code index - 2} is not negative and the unit at
+     * {@code index - 2} is a high-surrogate unit, then the supplementary code
+     * point represented by the pair is returned; otherwise the {@code char}
+     * value at {@code index - 1} is returned.
      * 
-     * @param seq The <code>CharSequence</code> to search.
-     * @param index The index into the <code>seq</code>.
-     * @return A Unicode code point.
-     * @throws NullPointerException if <code>seq</code> is <code>null</code>.
-     * @throws IndexOutOfBoundsException if <code>index</code> is less than 1
-     *         or greater than <code>seq.length()</code>.
-     * @since 1.5
+     * @param seq
+     *            the source sequence of {@code char} units.
+     * @param index
+     *            the position in {@code seq} following the code
+     *            point that should be returned.
+     * @return the Unicode code point or {@code char} value before {@code index}
+     *         in {@code seq}.
+     * @throws IndexOutOfBoundsException
+     *             if the {@code index} is less than 1 or greater than the
+     *             length of {@code seq}.
+     * @since Android 1.0
      */
     public static int codePointBefore(CharSequence seq, int index) {
         if (seq == null) {
@@ -1645,24 +1864,24 @@ public final class Character implements Serializable, Comparable<Character> {
     }
 
     /**
-     * <p>
-     * Returns the Unicode code point that proceeds the <code>index</code> in
-     * the <code>char[]</code>. If the <code>char</code> unit at
-     * <code>index - 1</code> is within the low surrogate range, the value
-     * <code>index - 2</code> isn't negative and the <code>char</code> unit
-     * at <code>index - 2</code> is within the high surrogate range, then the
-     * supplementary code point made up of the surrogate pair is returned;
-     * otherwise, the <code>char</code> value at <code>index - 1</code> is
-     * returned.
-     * </p>
+     * Returns the code point that preceds {@code index} in the specified
+     * array of character units. If the unit at {@code index - 1} is a
+     * low-surrogate unit, {@code index - 2} is not negative and the unit at
+     * {@code index - 2} is a high-surrogate unit, then the supplementary code
+     * point represented by the pair is returned; otherwise the {@code char}
+     * value at {@code index - 1} is returned.
      * 
-     * @param seq The <code>char[]</code> to search.
-     * @param index The index into the <code>seq</code>.
-     * @return A Unicode code point.
-     * @throws NullPointerException if <code>seq</code> is <code>null</code>.
-     * @throws IndexOutOfBoundsException if <code>index</code> is less than 1
-     *         or greater than <code>seq.length</code>.
-     * @since 1.5
+     * @param seq
+     *            the source array of {@code char} units.
+     * @param index
+     *            the position in {@code seq} following the code
+     *            point that should be returned.
+     * @return the Unicode code point or {@code char} value before {@code index}
+     *         in {@code seq}.
+     * @throws IndexOutOfBoundsException
+     *             if the {@code index} is less than 1 or greater than the
+     *             length of {@code seq}.
+     * @since Android 1.0
      */
     public static int codePointBefore(char[] seq, int index) {
         if (seq == null) {
@@ -1685,28 +1904,29 @@ public final class Character implements Serializable, Comparable<Character> {
     }
 
     /**
-     * <p>
-     * Returns the Unicode code point that proceeds the <code>index</code> in
-     * the <code>char[]</code> and isn't less than <code>start</code>. If
-     * the <code>char</code> unit at <code>index - 1</code> is within the
-     * low surrogate range, the value <code>index - 2</code> isn't less than
-     * <code>start</code> and the <code>char</code> unit at
-     * <code>index - 2</code> is within the high surrogate range, then the
-     * supplementary code point made up of the surrogate pair is returned;
-     * otherwise, the <code>char</code> value at <code>index - 1</code> is
-     * returned.
-     * </p>
+     * Returns the code point that preceds the {@code index} in the specified
+     * array of character units and is not less than {@code start}. If the unit
+     * at {@code index - 1} is a low-surrogate unit, {@code index - 2} is not
+     * less than {@code start} and the unit at {@code index - 2} is a
+     * high-surrogate unit, then the supplementary code point represented by the
+     * pair is returned; otherwise the {@code char} value at {@code index - 1}
+     * is returned.
      * 
-     * @param seq The <code>char[]</code> to search.
-     * @param index The index into the <code>seq</code>.
-     * @return A Unicode code point.
-     * @throws NullPointerException if <code>seq</code> is <code>null</code>.
-     * @throws IndexOutOfBoundsException if <code>index</code> is less than or
-     *         equal to <code>start</code>, <code>index</code> is greater
-     *         than <code>seq.length</code>, <code>start</code> is not
-     *         negative and <code>start</code> is greater than
-     *         <code>seq.length</code>.
-     * @since 1.5
+     * @param seq
+     *            the source array of {@code char} units.
+     * @param index
+     *            the position in {@code seq} following the code point that
+     *            should be returned.
+     * @param start
+     *            the index of the first element in {@code seq}.
+     * @return the Unicode code point or {@code char} value before {@code index}
+     *         in {@code seq}.
+     * @throws IndexOutOfBoundsException
+     *             if the {@code index <= start}, {@code start < 0},
+     *             {@code index} is greater than the length of {@code seq}, or
+     *             if {@code start} is equal or greater than the length of
+     *             {@code seq}.
+     * @since Android 1.0
      */
     public static int codePointBefore(char[] seq, int index, int start) {
         if (seq == null) {
@@ -1729,26 +1949,25 @@ public final class Character implements Serializable, Comparable<Character> {
     }
 
     /**
-     * <p>
-     * Converts the Unicode code point, <code>codePoint</code>, into a UTF-16
-     * encoded sequence and copies the value(s) into the
-     * <code>char[]</code> <code>dst</code>, starting at the index
-     * <code>dstIndex</code>.
-     * </p>
+     * Converts the specified Unicode code point into a UTF-16 encoded sequence
+     * and copies the value(s) into the char array {@code dst}, starting at
+     * index {@code dstIndex}.
      * 
-     * @param codePoint The Unicode code point to encode.
-     * @param dst The <code>char[]</code> to copy the encoded value into.
-     * @param dstIndex The index to start copying into <code>dst</code>.
-     * @return The number of <code>char</code> value units copied into
-     *         <code>dst</code>.
-     * @throws IllegalArgumentException if <code>codePoint</code> is not a
-     *         valid Unicode code point.
-     * @throws NullPointerException if <code>dst</code> is <code>null</code>.
-     * @throws IndexOutOfBoundsException if <code>dstIndex</code> is negative,
-     *         greater than or equal to <code>dst.length</code> or equals
-     *         <code>dst.length - 1</code> when <code>codePoint</code> is a
-     *         {@link #isSupplementaryCodePoint(int) supplementary code point}.
-     * @since 1.5
+     * @param codePoint
+     *            the Unicode code point to encode.
+     * @param dst
+     *            the destination array to copy the encoded value into.
+     * @param dstIndex
+     *            the index in {@code dst} from where to start copying.
+     * @return the number of {@code char} value units copied into {@code dst}.
+     * @throws IllegalArgumentException
+     *             if {@code codePoint} is not a valid Unicode code point.
+     * @throws IndexOutOfBoundsException
+     *             if {@code dstIndex} is negative, greater than or equal to
+     *             {@code dst.length} or equals {@code dst.length - 1} when
+     *             {@code codePoint} is a
+     *             {@link #isSupplementaryCodePoint(int) supplementary code point}.
+     * @since Android 1.0
      */
     public static int toChars(int codePoint, char[] dst, int dstIndex) {
         if (!isValidCodePoint(codePoint)) {
@@ -1780,19 +1999,18 @@ public final class Character implements Serializable, Comparable<Character> {
     }
 
     /**
-     * <p>
-     * Converts the Unicode code point, <code>codePoint</code>, into a UTF-16
-     * encoded sequence that is returned as a <code>char[]</code>.
-     * </p>
+     * Converts the specified Unicode code point into a UTF-16 encoded sequence
+     * and returns it as a char array.
      * 
-     * @param codePoint The Unicode code point to encode.
-     * @return The UTF-16 encoded <code>char</code> sequence; if code point is
-     *         a {@link #isSupplementaryCodePoint(int) supplementary code point},
-     *         then a 2 <code>char</code> array is returned, otherwise a 1
-     *         <code>char</code> array is returned.
-     * @throws IllegalArgumentException if <code>codePoint</code> is not a
-     *         valid Unicode code point.
-     * @since 1.5
+     * @param codePoint
+     *            the Unicode code point to encode.
+     * @return the UTF-16 encoded char sequence. If {@code codePoint} is a
+     *         {@link #isSupplementaryCodePoint(int) supplementary code point},
+     *         then the returned array contains two characters, otherwise it
+     *         contains just one character.
+     * @throws IllegalArgumentException
+     *             if {@code codePoint} is not a valid Unicode code point.
+     * @since Android 1.0
      */
     public static char[] toChars(int codePoint) {
         if (!isValidCodePoint(codePoint)) {
@@ -1809,22 +2027,22 @@ public final class Character implements Serializable, Comparable<Character> {
     }
 
     /**
-     * <p>
      * Counts the number of Unicode code points in the subsequence of the
-     * <code>CharSequence</code>, as delineated by the
-     * <code>beginIndex</code> and <code>endIndex</code>. Any surrogate
-     * values with missing pair values will be counted as 1 code point.
-     * </p>
+     * specified character sequence, as delineated by {@code beginIndex} and
+     * {@code endIndex}. Any surrogate values with missing pair values will be
+     * counted as one code point.
      * 
-     * @param seq The <code>CharSequence</code> to look through.
-     * @param beginIndex The inclusive index to begin counting at.
-     * @param endIndex The exclusive index to stop counting at.
-     * @return The number of Unicode code points.
-     * @throws NullPointerException if <code>seq</code> is <code>null</code>.
-     * @throws IndexOutOfBoundsException if <code>beginIndex</code> is
-     *         negative, greater than <code>seq.length()</code> or greater
-     *         than <code>endIndex</code>.
-     * @since 1.5
+     * @param seq
+     *            the {@code CharSequence} to look through.
+     * @param beginIndex
+     *            the inclusive index to begin counting at.
+     * @param endIndex
+     *            the exclusive index to stop counting at.
+     * @return the number of Unicode code points.
+     * @throws IndexOutOfBoundsException
+     *             if {@code beginIndex < 0}, {@code beginIndex > endIndex} or
+     *             if {@code endIndex} is greater than the length of {@code seq}.
+     * @since Android 1.0
      */
     public static int codePointCount(CharSequence seq, int beginIndex,
             int endIndex) {
@@ -1853,23 +2071,24 @@ public final class Character implements Serializable, Comparable<Character> {
     }
 
     /**
-     * <p>
      * Counts the number of Unicode code points in the subsequence of the
-     * <code>char[]</code>, as delineated by the <code>offset</code> and
-     * <code>count</code>. Any surrogate values with missing pair values will
-     * be counted as 1 code point.
-     * </p>
+     * specified char array, as delineated by {@code offset} and {@code count}.
+     * Any surrogate values with missing pair values will be counted as one code
+     * point.
      * 
-     * @param seq The <code>char[]</code> to look through.
-     * @param offset The inclusive index to begin counting at.
-     * @param count The number of <code>char</code> values to look through in
-     *        <code>seq</code>.
-     * @return The number of Unicode code points.
-     * @throws NullPointerException if <code>seq</code> is <code>null</code>.
-     * @throws IndexOutOfBoundsException if <code>offset</code> or
-     *         <code>count</code> is negative or if <code>endIndex</code> is
-     *         greater than <code>seq.length</code>.
-     * @since 1.5
+     * @param seq
+     *            the char array to look through
+     * @param offset
+     *            the inclusive index to begin counting at.
+     * @param count
+     *            the number of {@code char} values to look through in
+     *            {@code seq}.
+     * @return the number of Unicode code points.
+     * @throws IndexOutOfBoundsException
+     *             if {@code offset < 0}, {@code count < 0} or if
+     *             {@code offset + count} is greater than the length of
+     *             {@code seq}.
+     * @since Android 1.0
      */
     public static int codePointCount(char[] seq, int offset, int count) {
         if (seq == null) {
@@ -1898,26 +2117,25 @@ public final class Character implements Serializable, Comparable<Character> {
     }
 
     /**
-     * <p>
-     * Determines the index into the <code>CharSequence</code> that is offset
-     * (measured in code points and specified by <code>codePointOffset</code>),
-     * from the <code>index</code> argument.
-     * </p>
+     * Determines the index in the specified character sequence that is offset
+     * {@code codePointOffset} code points from {@code index}.
      * 
-     * @param seq The <code>CharSequence</code> to find the index within.
-     * @param index The index to begin from, within the
-     *        <code>CharSequence</code>.
-     * @param codePointOffset The number of code points to look back or
-     *        forwards; may be a negative or positive value.
-     * @return The calculated index that is <code>codePointOffset</code> code
-     *         points from <code>index</code>.
-     * @throws NullPointerException if <code>seq</code> is <code>null</code>.
-     * @throws IndexOutOfBoundsException if <code>index</code> is negative,
-     *         greater than <code>seq.length()</code>, there aren't enough
-     *         values in <code>seq</code> after <code>index</code> or before
-     *         <code>index</code> if <code>codePointOffset</code> is
-     *         negative.
-     * @since 1.5
+     * @param seq
+     *            the character sequence to find the index in.
+     * @param index
+     *            the start index in {@code seq}.
+     * @param codePointOffset
+     *            the number of code points to look backwards or forwards; may
+     *            be a negative or positive value.
+     * @return the index in {@code seq} that is {@code codePointOffset} code
+     *         points away from {@code index}.
+     * @throws IndexOutOfBoundsException
+     *             if {@code index < 0}, {@code index} is greater than the
+     *             length of {@code seq}, or if there are not enough values in
+     *             {@code seq} to skip {@code codePointOffset} code points
+     *             forwards or backwards (if {@code codePointOffset} is
+     *             negative) from {@code index}.
+     * @since Android 1.0
      */
     public static int offsetByCodePoints(CharSequence seq, int index,
             int codePointOffset) {
@@ -1972,34 +2190,34 @@ public final class Character implements Serializable, Comparable<Character> {
     }
 
     /**
-     * <p>
-     * Determines the index into the <code>char[]</code> that is offset
-     * (measured in code points and specified by <code>codePointOffset</code>),
-     * from the <code>index</code> argument and is within the subsequence as
-     * delineated by <code>start</code> and <code>count</code>.
-     * </p>
+     * Determines the index in a subsequence of the specified character array
+     * that is offset {@code codePointOffset} code points from {@code index}.
+     * The subsequence is delineated by {@code start} and {@code count}.
      * 
-     * @param seq The <code>char[]</code> to find the index within.
-     * 
-     * @param index The index to begin from, within the <code>char[]</code>.
-     * @param codePointOffset The number of code points to look back or
-     *        forwards; may be a negative or positive value.
-     * @param start The inclusive index that marks the beginning of the
-     *        subsequence.
-     * @param count The number of <code>char</code> values to include within
-     *        the subsequence.
-     * @return The calculated index that is <code>codePointOffset</code> code
-     *         points from <code>index</code>.
-     * @throws NullPointerException if <code>seq</code> is <code>null</code>.
-     * @throws IndexOutOfBoundsException if <code>start</code> or
-     *         <code>count</code> is negative, <code>start + count</code>
-     *         greater than <code>seq.length</code>, <code>index</code> is
-     *         less than <code>start</code>, <code>index</code> is greater
-     *         than <code>start + count</code> or there aren't enough values
-     *         in <code>seq</code> after <code>index</code> or before
-     *         <code>index</code> if <code>codePointOffset</code> is
-     *         negative.
-     * @since 1.5
+     * @param seq
+     *            the character array to find the index in.
+     * @param start
+     *            the inclusive index that marks the beginning of the
+     *            subsequence.
+     * @param count
+     *            the number of {@code char} values to include within the
+     *            subsequence.
+     * @param index
+     *            the start index in the subsequence of the char array.
+     * @param codePointOffset
+     *            the number of code points to look backwards or forwards; may
+     *            be a negative or positive value.
+     * @return the index in {@code seq} that is {@code codePointOffset} code
+     *         points away from {@code index}.
+     * @throws IndexOutOfBoundsException
+     *             if {@code start < 0}, {@code count < 0},
+     *             {@code index < start}, {@code index > start + count},
+     *             {@code start + count} is greater than the length of
+     *             {@code seq}, or if there are not enough values in
+     *             {@code seq} to skip {@code codePointOffset} code points
+     *             forward or backward (if {@code codePointOffset} is
+     *             negative) from {@code index}.
+     * @since Android 1.0
      */
     public static int offsetByCodePoints(char[] seq, int start, int count,
             int index, int codePointOffset) {
@@ -2055,17 +2273,17 @@ public final class Character implements Serializable, Comparable<Character> {
     }
 
     /**
-     * Convenient method to determine the value of character <code>c</code> in
-     * the supplied radix. The value of <code>radix</code> must be between
-     * MIN_RADIX and MAX_RADIX.
+     * Convenience method to determine the value of the specified character
+     * {@code c} in the supplied radix. The value of {@code radix} must be
+     * between MIN_RADIX and MAX_RADIX.
      * 
      * @param c
-     *            the character
+     *            the character to determine the value of.
      * @param radix
-     *            the radix
-     * @return if <code>radix</code> lies between {@link #MIN_RADIX} and
-     *         {@link #MAX_RADIX} then the value of the character in the radix,
-     *         otherwise -1.
+     *            the radix.
+     * @return the value of {@code c} in {@code radix} if {@code radix} lies
+     *         between {@link #MIN_RADIX} and {@link #MAX_RADIX}; -1 otherwise.
+     * @since Android 1.0
      */
     public static int digit(char c, int radix) {
         // BEGIN android-changed
@@ -2097,35 +2315,33 @@ public final class Character implements Serializable, Comparable<Character> {
     }
     
     /**
-     * Convenient method to determine the value of character
-     * <code>codePoint</code> in the supplied radix. The value of
-     * <code>radix</code> must be between MIN_RADIX and MAX_RADIX.
+     * Convenience method to determine the value of the character
+     * {@code codePoint} in the supplied radix. The value of {@code radix} must
+     * be between MIN_RADIX and MAX_RADIX.
      * 
      * @param codePoint
-     *            the character, including supplementary characters
+     *            the character, including supplementary characters.
      * @param radix
-     *            the radix
-     * @return if <code>radix</code> lies between {@link #MIN_RADIX} and
-     *         {@link #MAX_RADIX} then the value of the character in the radix,
-     *         otherwise -1.
+     *            the radix.
+     * @return if {@code radix} lies between {@link #MIN_RADIX} and
+     *         {@link #MAX_RADIX} then the value of the character in the radix;
+     *         -1 otherwise.
+     * @since Android 1.0
      */
     public static int digit(int codePoint, int radix) {
         return UCharacter.digit(codePoint, radix);
     }
 
     /**
-     * Compares the argument to the receiver, and returns true if they represent
-     * the <em>same</em> object using a class specific comparison.
-     * <p>
-     * In this case, the argument must also be a Character, and the receiver and
-     * argument must represent the same char value.
+     * Compares this object with the specified object and indicates if they are
+     * equal. In order to be equal, {@code object} must be an instance of
+     * {@code Character} and have the same char value as this object.
      * 
      * @param object
-     *            the object to compare with this object
-     * @return <code>true</code> if the object is the same as this object
-     *         <code>false</code> if it is different from this object
-     * 
-     * @see #hashCode
+     *            the object to compare this double with.
+     * @return {@code true} if the specified object is equal to this
+     *         {@code Character}; {@code false} otherwise.
+     * @since Android 1.0
      */
     @Override
     public boolean equals(Object object) {
@@ -2134,14 +2350,19 @@ public final class Character implements Serializable, Comparable<Character> {
     }
 
     /**
-     * Returns the character which represents the value in the specified radix.
-     * The radix must be between MIN_RADIX and MAX_RADIX inclusive.
+     * Returns the character which represents the specified digit in the
+     * specified radix. The {@code radix} must be between {@code MIN_RADIX} and
+     * {@code MAX_RADIX} inclusive; {@code digit} must not be negative and
+     * smaller than {@code radix}. If any of these conditions does not hold, 0
+     * is returned.
      * 
      * @param digit
-     *            the integer value
+     *            the integer value.
      * @param radix
-     *            the radix
-     * @return the character which represents the value in the radix
+     *            the radix.
+     * @return the character which represents the {@code digit} in the
+     *         {@code radix}.
+     * @since Android 1.0
      */
     public static char forDigit(int digit, int radix) {
         if (MIN_RADIX <= radix && radix <= MAX_RADIX) {
@@ -2153,12 +2374,14 @@ public final class Character implements Serializable, Comparable<Character> {
     }
 
     /**
-     * Gets the numeric value of the Unicode character.
+     * Gets the numeric value of the specified Unicode character.
      * 
      * @param c
-     *            the character
-     * @return a numeric int value >= 0, -1 if there is no numeric value, -2 if
-     *         the numeric value is not an int >= 0
+     *            the Unicode character to get the numeric value of.
+     * @return a non-negative numeric integer value if a numeric value for
+     *         {@code c} exists, -1 if there is no numeric value for {@code c},
+     *         -2 if the numeric value can not be represented with an integer.
+     * @since Android 1.0
      */
     public static int getNumericValue(char c) {
         // BEGIN android-changed
@@ -2193,12 +2416,17 @@ public final class Character implements Serializable, Comparable<Character> {
     }
     
     /**
-     * Gets the numeric value of the Unicode character.
+     * Gets the numeric value of the specified Unicode code point. For example,
+     * the code point '\u216B' stands for the Roman number XII, which has the
+     * numeric value 12.
      * 
      * @param codePoint
-     *            the character, including supplementary characters
-     * @return a numeric int value which is not negative, -1 if there is no numeric value, -2 if
-     *         the numeric value is negative
+     *            the Unicode code point to get the numeric value of.
+     * @return a non-negative numeric integer value if a numeric value for
+     *         {@code codePoint} exists, -1 if there is no numeric value for
+     *         {@code codePoint}, -2 if the numeric value can not be
+     *         represented with an integer.
+     * @since Android 1.0
      */
     public static int getNumericValue(int codePoint) {
         return UCharacter.getNumericValue(codePoint);
@@ -2208,8 +2436,9 @@ public final class Character implements Serializable, Comparable<Character> {
      * Gets the general Unicode category of the specified character.
      * 
      * @param c
-     *            the character
-     * @return the Unicode category
+     *            the character to get the category of.
+     * @return the Unicode category of {@code c}.
+     * @since Android 1.0
      */
     public static int getType(char c) {
         // BEGIN android-changed
@@ -2228,17 +2457,18 @@ public final class Character implements Serializable, Comparable<Character> {
     }
     
     /**
-     * Gets the general Unicode category of the specified character.
+     * Gets the general Unicode category of the specified code point.
      * 
      * @param codePoint
-     *            the character, including supplementary characters
-     * @return the Unicode category
+     *            the Unicode code point to get the category of.
+     * @return the Unicode category of {@code codePoint}.
+     * @since Android 1.0
      */
     public static int getType(int codePoint) {
         int type = UCharacter.getType(codePoint);
 
         // the type values returned by UCharacter are not compatible with what
-        // the spec says. RI's Character type values skip the value 17.
+        // the spec says.RI's Character type values skip the value 17.
         if (type <= Character.FORMAT) {
             return type;
         }
@@ -2249,8 +2479,9 @@ public final class Character implements Serializable, Comparable<Character> {
      * Gets the Unicode directionality of the specified character.
      * 
      * @param c
-     *            the character
-     * @return the Unicode directionality
+     *            the character to get the directionality of.
+     * @return the Unicode directionality of {@code c}.
+     * @since Android 1.0
      */
     public static byte getDirectionality(char c) {
         // BEGIN android-changed
@@ -2272,8 +2503,9 @@ public final class Character implements Serializable, Comparable<Character> {
      * Gets the Unicode directionality of the specified character.
      * 
      * @param codePoint
-     *            the character, including supplementary characters
-     * @return the Unicode directionality
+     *            the Unicode code point to get the directionality of.
+     * @return the Unicode directionality of {@code codePoint}.
+     * @since Android 1.0
      */
     public static byte getDirectionality(int codePoint) {
         if (getType(codePoint) == Character.UNASSIGNED) {
@@ -2288,11 +2520,13 @@ public final class Character implements Serializable, Comparable<Character> {
     }
 
     /**
-     * Returns whether the specified character is mirrored
+     * Indicates whether the specified character is mirrored.
      * 
      * @param c
-     *            the character
-     * @return true if the character is mirrored, false otherwise
+     *            the character to check.
+     * @return {@code true} if {@code c} is mirrored; {@code false}
+     *         otherwise.
+     * @since Android 1.0
      */
     public static boolean isMirrored(char c) {
         // BEGIN android-changed
@@ -2307,38 +2541,32 @@ public final class Character implements Serializable, Comparable<Character> {
     }
     
     /**
-     * Returns whether the specified character is mirrored
+     * Indicates whether the specified code point is mirrored.
      * 
      * @param codePoint
-     *            the character, including supplementary characters
-     * @return true if the character is mirrored, false otherwise
+     *            the code point to check.
+     * @return {@code true} if {@code codePoint} is mirrored, {@code false}
+     *         otherwise.
+     * @since Android 1.0
      */
     public static boolean isMirrored(int codePoint) {
         return UCharacter.isMirrored(codePoint);
     }
 
-    /**
-     * Returns an integer hash code for the receiver. Any two objects which
-     * answer <code>true</code> when passed to <code>equals</code> must
-     * answer the same value for this method.
-     * 
-     * @return the receiver's hash
-     * 
-     * @see #equals
-     */
     @Override
     public int hashCode() {
         return value;
     }
 
     /**
-     * Returns whether the specified character is defined in the Unicode
+     * Indicates whether the specified character is defined in the Unicode
      * specification.
      * 
      * @param c
-     *            the character
-     * @return true if the general Unicode category of the character is not
-     *         UNASSIGNED, false otherwise
+     *            the character to check.
+     * @return {@code true} if the general Unicode category of the character is
+     *         not {@code UNASSIGNED}; {@code false} otherwise.
+     * @since Android 1.0
      */
     public static boolean isDefined(char c) {
         // BEGIN android-changed
@@ -2348,24 +2576,27 @@ public final class Character implements Serializable, Comparable<Character> {
     }
     
     /**
-     * Returns whether the specified character is defined in the Unicode
+     * Indicates whether the specified code point is defined in the Unicode
      * specification.
      * 
      * @param codePoint
-     *            the character, including supplementary characters
-     * @return true if the general Unicode category of the character is not
-     *         UNASSIGNED, false otherwise
+     *            the code point to check.
+     * @return {@code true} if the general Unicode category of the code point is
+     *         not {@code UNASSIGNED}; {@code false} otherwise.
+     * @since Android 1.0
      */
     public static boolean isDefined(int codePoint) {
         return UCharacter.isDefined(codePoint);
     }
 
     /**
-     * Returns whether the character is a digit.
+     * Indicates whether the specified character is a digit.
      * 
      * @param c
-     *            the character
-     * @return true when the character is a digit, false otherwise
+     *            the character to check.
+     * @return {@code true} if {@code c} is a digit; {@code false}
+     *         otherwise.
+     * @since Android 1.0
      */
     public static boolean isDigit(char c) {
         // BEGIN android-changed
@@ -2382,23 +2613,26 @@ public final class Character implements Serializable, Comparable<Character> {
     }
     
     /**
-     * Returns whether the character is a digit.
+     * Indicates whether the specified code point is a digit.
      * 
      * @param codePoint
-     *            the character, including supplementary characters
-     * @return true when the character is a digit, false otherwise
+     *            the code point to check.
+     * @return {@code true} if {@code codePoint} is a digit; {@code false}
+     *         otherwise.
+     * @since Android 1.0
      */
     public static boolean isDigit(int codePoint) {
         return UCharacter.isDigit(codePoint);
     }
 
     /**
-     * Returns whether the specified character is ignorable in a Java or Unicode
-     * identifier.
+     * Indicates whether the specified character is ignorable in a Java or
+     * Unicode identifier.
      * 
      * @param c
-     *            the character
-     * @return true when the character is ignorable, false otherwise
+     *            the character to check.
+     * @return {@code true} if {@code c} is ignorable; {@code false} otherwise.
+     * @since Android 1.0
      */
     public static boolean isIdentifierIgnorable(char c) {
         // BEGIN android-changed
@@ -2409,49 +2643,54 @@ public final class Character implements Serializable, Comparable<Character> {
     }
     
     /**
-     * Returns whether the specified character is ignorable in a Java or Unicode
-     * identifier.
+     * Indicates whether the specified code point is ignorable in a Java or
+     * Unicode identifier.
      * 
      * @param codePoint
-     *            the character, including supplementary characters
-     * @return true when the character is ignorable, false otherwise
+     *            the code point to check.
+     * @return {@code true} if {@code codePoint} is ignorable; {@code false}
+     *         otherwise.
+     * @since Android 1.0
      */
     public static boolean isIdentifierIgnorable(int codePoint) {
         return UCharacter.isIdentifierIgnorable(codePoint);
     }
 
     /**
-     * Returns whether the character is an ISO control character.
+     * Indicates whether the specified character is an ISO control character.
      * 
      * @param c
-     *            the character
-     * @return <code>true</code> if <code>c</code> is an ISO control
-     *         character, otherwise <code>false</code>
+     *            the character to check.
+     * @return {@code true} if {@code c} is an ISO control character;
+     *         {@code false} otherwise.
+     * @since Android 1.0
      */
     public static boolean isISOControl(char c) {
         return isISOControl((int)c);
     }
 
     /**
-     * Returns whether the character is an ISO control character.
+     * Indicates whether the specified code point is an ISO control character.
      * 
      * @param c
-     *            the character, including supplementary characters
-     * @return <code>true</code> if <code>c</code> is an ISO control
-     *         character, otherwise <code>false</code>
+     *            the code point to check.
+     * @return {@code true} if {@code c} is an ISO control character;
+     *         {@code false} otherwise.
+     * @since Android 1.0
      */
     public static boolean isISOControl(int c) {
         return (c >= 0 && c <= 0x1f) || (c >= 0x7f && c <= 0x9f);
     }
 
     /**
-     * Returns whether the character is a valid part of a Unicode identifier as
-     * other than the first character.
+     * Indicates whether the specified character is a valid part of a Java
+     * identifier other than the first character.
      * 
      * @param c
-     *            the character
-     * @return true when the character is valid as part of a Java identifier,
-     *         false otherwise
+     *            the character to check.
+     * @return {@code true} if {@code c} is valid as part of a Java identifier;
+     *         {@code false} otherwise.
+     * @since Android 1.0
      */
     public static boolean isJavaIdentifierPart(char c) {
         // Optimized case for ASCII
@@ -2468,13 +2707,14 @@ public final class Character implements Serializable, Comparable<Character> {
     }
 
     /**
-     * Returns whether the character is a valid part of a Unicode identifier as
-     * other than the first character.
+     * Indicates whether the specified code point is a valid part of a Java
+     * identifier other than the first character.
      * 
      * @param codePoint
-     *            the character, including supplementary characters
-     * @return true when the character is valid as part of a Java identifier,
-     *         false otherwise
+     *            the code point to check.
+     * @return {@code true} if {@code c} is valid as part of a Java identifier;
+     *         {@code false} otherwise.
+     * @since Android 1.0
      */
     public static boolean isJavaIdentifierPart(int codePoint) {
         int type = getType(codePoint);
@@ -2486,12 +2726,14 @@ public final class Character implements Serializable, Comparable<Character> {
     }
 
     /**
-     * Returns whether the character is a valid start of a Unicode identifier
+     * Indicates whether the specified character is a valid first character for
+     * a Java identifier.
      * 
      * @param c
-     *            the character
-     * @return true when the character is a valid start of a Java identifier,
-     *         false otherwise
+     *            the character to check.
+     * @return {@code true} if {@code c} is a valid first character of a Java
+     *         identifier; {@code false} otherwise.
+     * @since Android 1.0
      */
     public static boolean isJavaIdentifierStart(char c) {
         // Optimized case for ASCII
@@ -2506,12 +2748,14 @@ public final class Character implements Serializable, Comparable<Character> {
     }
     
     /**
-     * Returns whether the character is a valid start of a Unicode identifier
+     * Indicates whether the specified code point is a valid start for a Java
+     * identifier.
      * 
      * @param codePoint
-     *            the character, including supplementary characters
-     * @return true when the character is a valid start of a Java identifier,
-     *         false otherwise
+     *            the code point to check.
+     * @return {@code true} if {@code codePoint} is a valid start of a Java
+     *         identifier; {@code false} otherwise.
+     * @since Android 1.0
      */
     public static boolean isJavaIdentifierStart(int codePoint) {
         int type = getType(codePoint);
@@ -2520,9 +2764,14 @@ public final class Character implements Serializable, Comparable<Character> {
     }
 
     /**
-     * Returns whether the character is a Java letter.
+     * Indicates whether the specified character is a Java letter.
      * 
+     * @param c
+     *            the character to check.
+     * @return {@code true} if {@code c} is a Java letter; {@code false}
+     *         otherwise.
      * @deprecated Use {@link #isJavaIdentifierStart(char)}
+     * @since Android 1.0
      */
     @Deprecated
     public static boolean isJavaLetter(char c) {
@@ -2530,9 +2779,15 @@ public final class Character implements Serializable, Comparable<Character> {
     }
 
     /**
-     * Returns whether the character is a Java letter or digit character.
+     * Indicates whether the specified character is a Java letter or digit
+     * character.
      * 
+     * @param c
+     *            the character to check.
+     * @return {@code true} if {@code c} is a Java letter or digit;
+     *         {@code false} otherwise.
      * @deprecated Use {@link #isJavaIdentifierPart(char)}
+     * @since Android 1.0
      */
     @Deprecated
     public static boolean isJavaLetterOrDigit(char c) {
@@ -2540,11 +2795,12 @@ public final class Character implements Serializable, Comparable<Character> {
     }
 
     /**
-     * Returns whether the character is a letter.
+     * Indicates whether the specified character is a letter.
      * 
      * @param c
-     *            the character
-     * @return true when the character is a letter, false otherwise
+     *            the character to check.
+     * @return {@code true} if {@code c} is a letter; {@code false} otherwise.
+     * @since Android 1.0
      */
     public static boolean isLetter(char c) {
         // BEGIN android-changed
@@ -2561,22 +2817,26 @@ public final class Character implements Serializable, Comparable<Character> {
     }
     
     /**
-     * Returns whether the character is a letter.
+     * Indicates whether the specified code point is a letter.
      * 
      * @param codePoint
-     *            the character, including supplementary characters
-     * @return true when the character is a letter, false otherwise
+     *            the code point to check.
+     * @return {@code true} if {@code codePoint} is a letter; {@code false}
+     *         otherwise.
+     * @since Android 1.0
      */
     public static boolean isLetter(int codePoint) {
         return UCharacter.isLetter(codePoint);
     }
 
     /**
-     * Returns whether the character is a letter or a digit.
+     * Indicates whether the specified character is a letter or a digit.
      * 
      * @param c
-     *            the character
-     * @return true when the character is a letter or a digit, false otherwise
+     *            the character to check.
+     * @return {@code true} if {@code c} is a letter or a digit; {@code false}
+     *         otherwise.
+     * @since Android 1.0
      */
     public static boolean isLetterOrDigit(char c) {
         // BEGIN android-changed
@@ -2588,22 +2848,26 @@ public final class Character implements Serializable, Comparable<Character> {
     }
     
     /**
-     * Returns whether the character is a letter or a digit.
+     * Indicates whether the specified code point is a letter or a digit.
      * 
      * @param codePoint
-     *            the character, including supplementary characters
-     * @return true when the character is a letter or a digit, false otherwise
+     *            the code point to check.
+     * @return {@code true} if {@code codePoint} is a letter or a digit;
+     *         {@code false} otherwise.
+     * @since Android 1.0
      */
     public static boolean isLetterOrDigit(int codePoint) {
         return UCharacter.isLetterOrDigit(codePoint);
     }
 
     /**
-     * Returns whether the character is a lower case letter.
+     * Indicates whether the specified character is a lower case letter.
      * 
      * @param c
-     *            the character
-     * @return true when the character is a lower case letter, false otherwise
+     *            the character to check.
+     * @return {@code true} if {@code c} is a lower case letter; {@code false}
+     *         otherwise.
+     * @since Android 1.0
      */
     public static boolean isLowerCase(char c) {
         // BEGIN android-changed
@@ -2621,20 +2885,27 @@ public final class Character implements Serializable, Comparable<Character> {
     }
     
     /**
-     * Returns whether the character is a lower case letter.
+     * Indicates whether the specified code point is a lower case letter.
      * 
      * @param codePoint
-     *            the character, including supplementary characters
-     * @return true when the character is a lower case letter, false otherwise
+     *            the code point to check.
+     * @return {@code true} if {@code codePoint} is a lower case letter;
+     *         {@code false} otherwise.
+     * @since Android 1.0
      */
     public static boolean isLowerCase(int codePoint) {
         return UCharacter.isLowerCase(codePoint);
     }
 
     /**
-     * Returns whether the character is a Java space.
+     * Indicates whether the specified character is a Java space.
      * 
+     * @param c
+     *            the character to check.
+     * @return {@code true} if {@code c} is a Java space; {@code false}
+     *         otherwise.
      * @deprecated Use {@link #isWhitespace(char)}
+     * @since Android 1.0
      */
     @Deprecated
     public static boolean isSpace(char c) {
@@ -2642,14 +2913,15 @@ public final class Character implements Serializable, Comparable<Character> {
     }
 
     /**
-     * Returns whether the character is a Unicode space character. A member of
-     * one of the Unicode categories Space Separator, Line Separator, or
-     * Paragraph Separator.
+     * Indicates whether the specified character is a Unicode space character.
+     * That is, if it is a member of one of the Unicode categories Space
+     * Separator, Line Separator, or Paragraph Separator.
      * 
      * @param c
-     *            the character
-     * @return true when the character is a Unicode space character, false
-     *         otherwise
+     *            the character to check.
+     * @return {@code true} if {@code c} is a Unicode space character,
+     *         {@code false} otherwise.
+     * @since Android 1.0
      */
     public static boolean isSpaceChar(char c) {
         // BEGIN android-changed
@@ -2666,26 +2938,28 @@ public final class Character implements Serializable, Comparable<Character> {
     }
     
     /**
-     * Returns whether the character is a Unicode space character. A member of
-     * one of the Unicode categories Space Separator, Line Separator, or
-     * Paragraph Separator.
+     * Indicates whether the specified code point is a Unicode space character.
+     * That is, if it is a member of one of the Unicode categories Space
+     * Separator, Line Separator, or Paragraph Separator.
      * 
      * @param codePoint
-     *            the character, including supplementary characters
-     * @return true when the character is a Unicode space character, false
-     *         otherwise
+     *            the code point to check.
+     * @return {@code true} if {@code codePoint} is a Unicode space character,
+     *         {@code false} otherwise.
+     * @since Android 1.0
      */
     public static boolean isSpaceChar(int codePoint) {
         return UCharacter.isSpaceChar(codePoint);
     }
 
     /**
-     * Returns whether the character is a titlecase character.
+     * Indicates whether the specified character is a titlecase character.
      * 
      * @param c
-     *            the character
-     * @return true when the character is a titlecase character, false
-     *         otherwise
+     *            the character to check.
+     * @return {@code true} if {@code c} is a titlecase character, {@code false}
+     *         otherwise.
+     * @since Android 1.0
      */
     public static boolean isTitleCase(char c) {
         // BEGIN android-changed
@@ -2706,25 +2980,27 @@ public final class Character implements Serializable, Comparable<Character> {
     }
     
     /**
-     * Returns whether the character is a titlecase character.
+     * Indicates whether the specified code point is a titlecase character.
      * 
      * @param codePoint
-     *            the character, including supplementary characters
-     * @return true when the character is a titlecase character, false
-     *         otherwise
+     *            the code point to check.
+     * @return {@code true} if {@code codePoint} is a titlecase character,
+     *         {@code false} otherwise.
+     * @since Android 1.0
      */
     public static boolean isTitleCase(int codePoint) {
         return UCharacter.isTitleCase(codePoint);
     }
 
     /**
-     * Returns whether the character is valid as part of a Unicode identifier as
-     * other than the first character.
+     * Indicates whether the specified character is valid as part of a Unicode
+     * identifier other than the first character.
      * 
      * @param c
-     *            the character
-     * @return true when the character is valid as part of a Unicode identifier,
-     *         false otherwise
+     *            the character to check.
+     * @return {@code true} if {@code c} is valid as part of a Unicode
+     *         identifier; {@code false} otherwise.
+     * @since Android 1.0
      */
     public static boolean isUnicodeIdentifierPart(char c) {
         // BEGIN android-changed
@@ -2739,26 +3015,28 @@ public final class Character implements Serializable, Comparable<Character> {
     }
     
     /**
-     * Returns whether the character is valid as part of a Unicode identifier as
-     * other than the first character.
+     * Indicates whether the specified code point is valid as part of a Unicode
+     * identifier other than the first character.
      * 
      * @param codePoint
-     *            the character, including supplementary characters
-     * @return true when the character is valid as part of a Unicode identifier,
-     *         false otherwise
+     *            the code point to check.
+     * @return {@code true} if {@code codePoint} is valid as part of a Unicode
+     *         identifier; {@code false} otherwise.
+     * @since Android 1.0
      */
     public static boolean isUnicodeIdentifierPart(int codePoint) {
         return UCharacter.isUnicodeIdentifierPart(codePoint);
     }
 
     /**
-     * Returns whether the character is a valid initial character for a Unicode
-     * identifier.
+     * Indicates whether the specified character is a valid initial character
+     * for a Unicode identifier.
      * 
      * @param c
-     *            the character
-     * @return true when the character is a valid start of a Unicode identifier,
-     *         false otherwise
+     *            the character to check.
+     * @return {@code true} if {@code c} is a valid first character for a
+     *         Unicode identifier; {@code false} otherwise.
+     * @since Android 1.0
      */
     public static boolean isUnicodeIdentifierStart(char c) {
         // BEGIN android-changed
@@ -2770,24 +3048,27 @@ public final class Character implements Serializable, Comparable<Character> {
     }
     
     /**
-     * Returns whether the character is a valid initial character for a Unicode
-     * identifier.
+     * Indicates whether the specified code point is a valid initial character
+     * for a Unicode identifier.
      * 
      * @param codePoint
-     *            the character, including supplementary characters
-     * @return true when the character is a valid start of a Unicode identifier,
-     *         false otherwise
+     *            the code point to check.
+     * @return {@code true} if {@code codePoint} is a valid first character for
+     *         a Unicode identifier; {@code false} otherwise.
+     * @since Android 1.0
      */
     public static boolean isUnicodeIdentifierStart(int codePoint) {
         return UCharacter.isUnicodeIdentifierStart(codePoint);
     }
 
     /**
-     * Returns whether the character is an upper case letter.
+     * Indicates whether the specified character is an upper case letter.
      * 
      * @param c
-     *            the character
-     * @return true when the character is a upper case letter, false otherwise
+     *            the character to check.
+     * @return {@code true} if {@code c} is a upper case letter; {@code false}
+     *         otherwise.
+     * @since Android 1.0
      */
     public static boolean isUpperCase(char c) {
         // BEGIN android-changed
@@ -2805,23 +3086,27 @@ public final class Character implements Serializable, Comparable<Character> {
     }
     
     /**
-     * Returns whether the character is an upper case letter.
+     * Indicates whether the specified code point is an upper case letter.
      * 
      * @param codePoint
-     *            the character, including supplementary characters
-     * @return true when the character is a upper case letter, false otherwise
+     *            the code point to check.
+     * @return {@code true} if {@code codePoint} is a upper case letter;
+     *         {@code false} otherwise.
+     * @since Android 1.0
      */
     public static boolean isUpperCase(int codePoint) {
         return UCharacter.isUpperCase(codePoint);
     }
 
     /**
-     * Returns whether the character is a whitespace character in Java.
+     * Indicates whether the specified character is a whitespace character in
+     * Java.
      * 
      * @param c
-     *            the character
-     * @return true if the supplied <code>c</code> is a whitespace character
-     *         in Java, otherwise false.
+     *            the character to check.
+     * @return {@code true} if the supplied {@code c} is a whitespace character
+     *         in Java; {@code false} otherwise.
+     * @since Android 1.0
      */
     public static boolean isWhitespace(char c) {
         // BEGIN android-changed
@@ -2841,12 +3126,14 @@ public final class Character implements Serializable, Comparable<Character> {
     }
     
     /**
-     * Returns whether the character is a whitespace character in Java.
+     * Indicates whether the specified code point is a whitespace character in
+     * Java.
      * 
      * @param codePoint
-     *            the character, including supplementary characters
-     * @return true if the supplied <code>c</code> is a whitespace character
-     *         in Java, otherwise false.
+     *            the code point to check.
+     * @return {@code true} if the supplied {@code c} is a whitespace character
+     *         in Java; {@code false} otherwise.
+     * @since Android 1.0
      */
     public static boolean isWhitespace(int codePoint) {
         //FIXME depends on ICU when the codePoint is '\u2007'
@@ -2854,23 +3141,28 @@ public final class Character implements Serializable, Comparable<Character> {
     }
 
     /**
-     * Reverse the order of the first and second bytes in character
+     * Reverses the order of the first and second byte in the specified
+     * character.
+     * 
      * @param c
-     *            the character
-     * @return    the character with reordered bytes.
+     *            the character to reverse.
+     * @return the character with reordered bytes.
+     * @since Android 1.0
      */
     public static char reverseBytes(char c) {
         return (char)((c<<8) | (c>>8));
     }
 
     /**
-     * Returns the lower case equivalent for the character when the character is
-     * an upper case letter, otherwise returns the character.
+     * Returns the lower case equivalent for the specified character if the
+     * character is an upper case letter. Otherwise, the specified character is
+     * returned unchanged.
      * 
      * @param c
      *            the character
-     * @return if c is not a lower case character then its lower case
-     *         counterpart, otherwise just c
+     * @return if {@code c} is an upper case character then its lower case
+     *         counterpart, otherwise just {@code c}.
+     * @since Android 1.0
      */
     public static char toLowerCase(char c) {
         // BEGIN android-changed
@@ -2905,24 +3197,20 @@ public final class Character implements Serializable, Comparable<Character> {
     }
     
     /**
-     * Returns the lower case equivalent for the character when the character is
-     * an upper case letter, otherwise returns the character.
+     * Returns the lower case equivalent for the specified code point if it is
+     * an upper case letter. Otherwise, the specified code point is returned
+     * unchanged.
      * 
      * @param codePoint
-     *            the character, including supplementary characters
-     * @return if codePoint is not a lower case character then its lower case
-     *         counterpart, otherwise just codePoint
+     *            the code point to check.
+     * @return if {@code codePoint} is an upper case character then its lower
+     *         case counterpart, otherwise just {@code codePoint}.
+     * @since Android 1.0
      */
     public static int toLowerCase(int codePoint) {
         return UCharacter.toLowerCase(codePoint);
     }
 
-    /**
-     * Returns a string containing a concise, human-readable description of the
-     * receiver.
-     * 
-     * @return a printable representation for the receiver.
-     */
     @Override
     public String toString() {
         return String.valueOf(value);
@@ -2932,20 +3220,23 @@ public final class Character implements Serializable, Comparable<Character> {
      * Converts the specified character to its string representation.
      * 
      * @param value
-     *            the character
-     * @return the character converted to a string
+     *            the character to convert.
+     * @return the character converted to a string.
+     * @since Android 1.0
      */
     public static String toString(char value) {
         return String.valueOf(value);
     }
 
     /**
-     * Returns the title case equivalent for the character, otherwise returns the
-     * character.
+     * Returns the title case equivalent for the specified character if it
+     * exists. Otherwise, the specified character is returned unchanged.
      * 
      * @param c
-     *            the character
-     * @return the title case equivalent of the character
+     *            the character to convert.
+     * @return the title case equivalent of {@code c} if it exists, otherwise
+     *         {@code c}.
+     * @since Android 1.0
      */
     public static char toTitleCase(char c) {
         // BEGIN android-changed
@@ -2962,25 +3253,29 @@ public final class Character implements Serializable, Comparable<Character> {
     }
     
     /**
-     * Returns the title case equivalent for the character, otherwise returns the
-     * character.
+     * Returns the title case equivalent for the specified code point if it
+     * exists. Otherwise, the specified code point is returned unchanged.
      * 
      * @param codePoint
-     *            the character
-     * @return the title case equivalent of the character
+     *            the code point to convert.
+     * @return the title case equivalent of {@code codePoint} if it exists,
+     *         otherwise {@code codePoint}.
+     * @since Android 1.0
      */
     public static int toTitleCase(int codePoint) {
         return UCharacter.toTitleCase(codePoint);
     }
 
     /**
-     * Returns the upper case equivalent for the character when the character is
-     * a lower case letter, otherwise returns the character.
+     * Returns the upper case equivalent for the specified character if the
+     * character is a lower case letter. Otherwise, the specified character is
+     * returned unchanged.
      * 
      * @param c
-     *            the character
-     * @return if c is not an upper case character then its upper case
-     *         counterpart, otherwise just c
+     *            the character to convert.
+     * @return if {@code c} is a lower case character then its upper case
+     *         counterpart, otherwise just {@code c}.
+     * @since Android 1.0
      */
     public static char toUpperCase(char c) {
         // BEGIN android-changed
@@ -3015,13 +3310,15 @@ public final class Character implements Serializable, Comparable<Character> {
     }
     
     /**
-     * Returns the upper case equivalent for the character when the character is
-     * a lower case letter, otherwise returns the character.
+     * Returns the upper case equivalent for the specified code point if the
+     * code point is a lower case letter. Otherwise, the specified code point is
+     * returned unchanged.
      * 
      * @param codePoint
-     *            the character, including supplementary characters
-     * @return if codePoint is not an upper case character then its upper case
-     *         counterpart, otherwise just codePoint
+     *            the code point to convert.
+     * @return if {@code codePoint} is a lower case character then its upper
+     *         case counterpart, otherwise just {@code codePoint}.
+     * @since Android 1.0
      */
     public static int toUpperCase(int codePoint) {
         return UCharacter.toUpperCase(codePoint);

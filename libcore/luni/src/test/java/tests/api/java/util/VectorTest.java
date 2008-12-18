@@ -17,6 +17,11 @@
 
 package tests.api.java.util;
 
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass; 
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Enumeration;
@@ -28,6 +33,7 @@ import java.util.Vector;
 
 import tests.support.Support_ListTest;
 
+@TestTargetClass(Vector.class) 
 public class VectorTest extends junit.framework.TestCase {
 
     private Vector tVector = new Vector();
@@ -39,6 +45,15 @@ public class VectorTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Vector#Vector()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Vector",
+          methodArgs = {}
+         )
+    })
     public void test_Constructor() {
         // Test for method java.util.Vector()
 
@@ -60,6 +75,15 @@ public class VectorTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Vector#Vector(int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IllegalArgumentException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "Vector",
+          methodArgs = {int.class}
+        )
+    })
     public void test_ConstructorI() {
         // Test for method java.util.Vector(int)
 
@@ -71,6 +95,15 @@ public class VectorTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Vector#Vector(int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IllegalArgumentException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "Vector",
+          methodArgs = {int.class, int.class}
+        )
+    })
     public void test_ConstructorII() {
         // Test for method java.util.Vector(int, int)
 
@@ -94,6 +127,15 @@ public class VectorTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Vector#Vector(java.util.Collection)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NullPointerException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "Vector",
+          methodArgs = {java.util.Collection.class}
+        )
+    })
     public void test_ConstructorLjava_util_Collection() {
         // Test for method java.util.Vector(java.util.Collection)
         Collection l = new LinkedList();
@@ -110,6 +152,15 @@ public class VectorTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Vector#add(int, java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "ArrayIndexOutOfBoundsException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "add",
+          methodArgs = {int.class, Object.class}
+        )
+    })
     public void test_addILjava_lang_Object() {
         // Test for method void java.util.Vector.add(int, java.lang.Object)
         Object o = new Object();
@@ -130,6 +181,15 @@ public class VectorTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Vector#add(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "add",
+          methodArgs = {Object.class}
+        )
+    })
     public void test_addLjava_lang_Object() {
         // Test for method boolean java.util.Vector.add(java.lang.Object)
         Object o = new Object();
@@ -145,6 +205,15 @@ public class VectorTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Vector#addAll(int, java.util.Collection)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NullPointerException & ArrayIndexOutOfBoundsException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "addAll",
+          methodArgs = {int.class, java.util.Collection.class}
+        )
+    })
     public void test_addAllILjava_util_Collection() {
         // Test for method boolean java.util.Vector.addAll(int,
         // java.util.Collection)
@@ -183,6 +252,15 @@ public class VectorTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Vector#addAll(java.util.Collection)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NullPointerException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "addAll",
+          methodArgs = {java.util.Collection.class}
+        )
+    })
     public void test_addAllLjava_util_Collection() {
         // Test for method boolean java.util.Vector.addAll(java.util.Collection)
         Vector v = new Vector();
@@ -214,6 +292,15 @@ public class VectorTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Vector#addElement(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "addElement",
+          methodArgs = {Object.class}
+        )
+    })
     public void test_addElementLjava_lang_Object() {
         // Test for method void java.util.Vector.addElement(java.lang.Object)
         Vector v = vectorClone(tVector);
@@ -229,6 +316,15 @@ public class VectorTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Vector#addElement(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "addElement",
+          methodArgs = {Object.class}
+        )
+    })
     public void test_addElementLjava_lang_Object_subtest0() {
         // Test for method void java.util.Vector.addElement(java.lang.Object)
         Vector v = vectorClone(tVector);
@@ -244,6 +340,15 @@ public class VectorTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Vector#capacity()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "capacity",
+          methodArgs = {}
+        )
+    })
     public void test_capacity() {
         // Test for method int java.util.Vector.capacity()
 
@@ -254,6 +359,15 @@ public class VectorTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Vector#clear()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "clear",
+          methodArgs = {}
+        )
+    })
     public void test_clear() {
         // Test for method void java.util.Vector.clear()
         Vector orgVector = vectorClone(tVector);
@@ -276,6 +390,15 @@ public class VectorTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Vector#clone()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "clone",
+          methodArgs = {}
+        )
+    })
     public void test_clone() {
         // Test for method java.lang.Object java.util.Vector.clone()
         tVector.add(25, null);
@@ -296,6 +419,15 @@ public class VectorTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Vector#contains(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "contains",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_containsLjava_lang_Object() {
         // Test for method boolean java.util.Vector.contains(java.lang.Object)
         assertTrue("Did not find element", tVector.contains("Test 42"));
@@ -312,6 +444,15 @@ public class VectorTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Vector#containsAll(java.util.Collection)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NullPointerException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "containsAll",
+          methodArgs = {java.util.Collection.class}
+        )
+    })
     public void test_containsAllLjava_util_Collection() {
         // Test for method boolean
         // java.util.Vector.containsAll(java.util.Collection)
@@ -336,6 +477,15 @@ public class VectorTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Vector#copyInto(java.lang.Object[])
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NullPointerException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "copyInto",
+          methodArgs = {java.lang.Object[].class}
+        )
+    })
     public void test_copyInto$Ljava_lang_Object() {
         // Test for method void java.util.Vector.copyInto(java.lang.Object [])
 
@@ -350,6 +500,15 @@ public class VectorTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Vector#elementAt(int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "ArrayIndexOutOfBoundsException  is not tested.",
+      targets = {
+        @TestTarget(
+          methodName = "elementAt",
+          methodArgs = {int.class}
+        )
+    })
     public void test_elementAtI() {
         // Test for method java.lang.Object java.util.Vector.elementAt(int)
         assertEquals("Incorrect element returned", "Test 18", ((String) tVector
@@ -363,6 +522,15 @@ public class VectorTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Vector#elements()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "elements",
+          methodArgs = {}
+        )
+    })
     public void test_elements() {
         // Test for method java.util.Enumeration java.util.Vector.elements()
         tVector.insertElementAt(null, 20);
@@ -379,6 +547,15 @@ public class VectorTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Vector#elements()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "elements",
+          methodArgs = {}
+        )
+    })
     public void test_elements_subtest0() {
         final int iterations = 10000;
         final Vector v = new Vector();
@@ -410,6 +587,15 @@ public class VectorTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Vector#ensureCapacity(int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "ensureCapacity",
+          methodArgs = {int.class}
+        )
+    })
     public void test_ensureCapacityI() {
         // Test for method void java.util.Vector.ensureCapacity(int)
 
@@ -424,6 +610,15 @@ public class VectorTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Vector#equals(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "equals",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_equalsLjava_lang_Object() {
         // Test for method boolean java.util.Vector.equals(java.lang.Object)
         Vector v = new Vector();
@@ -441,6 +636,15 @@ public class VectorTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Vector#firstElement()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NoSuchElementException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "firstElement",
+          methodArgs = {}
+        )
+    })
     public void test_firstElement() {
         // Test for method java.lang.Object java.util.Vector.firstElement()
         assertEquals("Returned incorrect firstElement", "Test 0", tVector.firstElement()
@@ -453,6 +657,15 @@ public class VectorTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Vector#get(int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify ArrayIndexOutOfBoundsException.",
+      targets = {
+        @TestTarget(
+          methodName = "get",
+          methodArgs = {int.class}
+        )
+    })
     public void test_getI() {
         // Test for method java.lang.Object java.util.Vector.get(int)
         assertEquals("Get returned incorrect object", 
@@ -465,6 +678,15 @@ public class VectorTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Vector#hashCode()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "hashCode",
+          methodArgs = {}
+        )
+    })
     public void test_hashCode() {
         // Test for method int java.util.Vector.hashCode()
         int hashCode = 1; // one
@@ -480,6 +702,15 @@ public class VectorTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Vector#indexOf(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "indexOf",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_indexOfLjava_lang_Object() {
         // Test for method int java.util.Vector.indexOf(java.lang.Object)
         assertEquals("Incorrect index returned", 10, tVector.indexOf("Test 10"));
@@ -494,6 +725,15 @@ public class VectorTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Vector#indexOf(java.lang.Object, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IndexOutOfBoundsException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "indexOf",
+          methodArgs = {java.lang.Object.class, int.class}
+        )
+    })
     public void test_indexOfLjava_lang_ObjectI() {
         // Test for method int java.util.Vector.indexOf(java.lang.Object, int)
         assertTrue("Failed to find correct index", (tVector.indexOf("Test 98",
@@ -512,6 +752,15 @@ public class VectorTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Vector#insertElementAt(java.lang.Object, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "ArrayIndexOutOfBoundsException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "insertElementAt",
+          methodArgs = {Object.class, int.class}
+        )
+    })
     public void test_insertElementAtLjava_lang_ObjectI() {
         // Test for method void
         // java.util.Vector.insertElementAt(java.lang.Object, int)
@@ -529,6 +778,15 @@ public class VectorTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Vector#isEmpty()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isEmpty",
+          methodArgs = {}
+        )
+    })
     public void test_isEmpty() {
         // Test for method boolean java.util.Vector.isEmpty()Vector
         Vector v = new java.util.Vector();
@@ -540,6 +798,15 @@ public class VectorTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Vector#isEmpty()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isEmpty",
+          methodArgs = {}
+        )
+    })
     public void test_isEmpty_subtest0() {
         final Vector v = new Vector();
         v.addElement("initial");
@@ -571,6 +838,15 @@ public class VectorTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Vector#lastElement()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NoSuchElementException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "lastElement",
+          methodArgs = {}
+        )
+    })
     public void test_lastElement() {
         // Test for method java.lang.Object java.util.Vector.lastElement()
         assertEquals("Incorrect last element returned", "Test 99", tVector.lastElement()
@@ -583,6 +859,15 @@ public class VectorTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Vector#lastIndexOf(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "lastIndexOf",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_lastIndexOfLjava_lang_Object() {
         // Test for method int java.util.Vector.lastIndexOf(java.lang.Object)
         Vector v = new Vector(9);
@@ -599,6 +884,15 @@ public class VectorTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Vector#lastIndexOf(java.lang.Object, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IndexOutOfBoundsException is not tested.",
+      targets = {
+        @TestTarget(
+          methodName = "lastIndexOf",
+          methodArgs = {java.lang.Object.class, int.class}
+        )
+    })
     public void test_lastIndexOfLjava_lang_ObjectI() {
         // Test for method int java.util.Vector.lastIndexOf(java.lang.Object,
         // int)
@@ -620,6 +914,15 @@ public class VectorTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Vector#remove(int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "ArrayIndexOutOfBoundsException is not tested.",
+      targets = {
+        @TestTarget(
+          methodName = "remove",
+          methodArgs = {int.class}
+        )
+    })
     public void test_removeI() {
         // Test for method java.lang.Object java.util.Vector.remove(int)
         tVector.remove(36);
@@ -639,6 +942,15 @@ public class VectorTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Vector#remove(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "remove",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_removeLjava_lang_Object() {
         // Test for method boolean java.util.Vector.remove(java.lang.Object)
         tVector.remove("Test 0");
@@ -656,6 +968,16 @@ public class VectorTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Vector#removeAll(java.util.Collection)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "[NullPointerException is not tested, removeAll for empty method " +
+              "is not tested.]",
+      targets = {
+        @TestTarget(
+          methodName = "removeAll",
+          methodArgs = {java.util.Collection.class}
+        )
+    })
     public void test_removeAllLjava_util_Collection() {
         // Test for method boolean
         // java.util.Vector.removeAll(java.util.Collection)
@@ -688,6 +1010,15 @@ public class VectorTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Vector#removeAllElements()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "removeAllElements",
+          methodArgs = {}
+        )
+    })
     public void test_removeAllElements() {
         // Test for method void java.util.Vector.removeAllElements()
         Vector v = vectorClone(tVector);
@@ -698,6 +1029,15 @@ public class VectorTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Vector#removeElement(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Doesn't check negative case.",
+      targets = {
+        @TestTarget(
+          methodName = "removeElement",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_removeElementLjava_lang_Object() {
         // Test for method boolean
         // java.util.Vector.removeElement(java.lang.Object)
@@ -716,6 +1056,15 @@ public class VectorTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Vector#removeElementAt(int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "ArrayIndexOutOfBoundsException is not tested.",
+      targets = {
+        @TestTarget(
+          methodName = "removeElementAt",
+          methodArgs = {int.class}
+        )
+    })
     public void test_removeElementAtI() {
         // Test for method void java.util.Vector.removeElementAt(int)
         Vector v = vectorClone(tVector);
@@ -730,6 +1079,15 @@ public class VectorTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Vector#retainAll(java.util.Collection)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NullPointerException and returned value are not checked.",
+      targets = {
+        @TestTarget(
+          methodName = "retainAll",
+          methodArgs = {java.util.Collection.class}
+        )
+    })
     public void test_retainAllLjava_util_Collection() {
         // Test for method boolean
         // java.util.Vector.retainAll(java.util.Collection)
@@ -746,6 +1104,15 @@ public class VectorTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Vector#set(int, java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "ArrayIndexOutOfBoundsException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "set",
+          methodArgs = {int.class, Object.class}
+        )
+    })
     public void test_setILjava_lang_Object() {
         // Test for method java.lang.Object java.util.Vector.set(int,
         // java.lang.Object)
@@ -757,6 +1124,15 @@ public class VectorTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Vector#setElementAt(java.lang.Object, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "ArrayIndexOutOfBoundsException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "setElementAt",
+          methodArgs = {Object.class, int.class}
+        )
+    })
     public void test_setElementAtLjava_lang_ObjectI() {
         // Test for method void java.util.Vector.setElementAt(java.lang.Object,
         // int)
@@ -769,6 +1145,15 @@ public class VectorTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Vector#setSize(int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check ArrayIndexOutOfBoundsException exception.",
+      targets = {
+        @TestTarget(
+          methodName = "setSize",
+          methodArgs = {int.class}
+        )
+    })
     public void test_setSizeI() {
         // Test for method void java.util.Vector.setSize(int)
         Vector v = vectorClone(tVector);
@@ -779,6 +1164,15 @@ public class VectorTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Vector#size()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "size",
+          methodArgs = {}
+        )
+    })
     public void test_size() {
         // Test for method int java.util.Vector.size()
         assertEquals("Returned incorrect size", 100, tVector.size());
@@ -813,6 +1207,15 @@ public class VectorTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Vector#subList(int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions are not tested.",
+      targets = {
+        @TestTarget(
+          methodName = "subList",
+          methodArgs = {int.class, int.class}
+        )
+    })
     public void test_subListII() {
         // Test for method java.util.List java.util.Vector.subList(int, int)
         List sl = tVector.subList(10, 25);
@@ -829,6 +1232,15 @@ public class VectorTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Vector#toArray()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toArray",
+          methodArgs = {}
+        )
+    })
     public void test_toArray() {
         // Test for method java.lang.Object [] java.util.Vector.toArray()
         assertTrue("Returned incorrect array", Arrays.equals(objArray, tVector
@@ -838,6 +1250,15 @@ public class VectorTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Vector#toArray(java.lang.Object[])
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "toArray",
+          methodArgs = {Object[].class}
+        )
+    })
     public void test_toArray$Ljava_lang_Object() {
         // Test for method java.lang.Object []
         // java.util.Vector.toArray(java.lang.Object [])
@@ -854,6 +1275,15 @@ public class VectorTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Vector#toString()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public void test_toString() {
         // Test for method java.lang.String java.util.Vector.toString()
         assertTrue("Incorrect String returned", tVector.toString().equals(
@@ -872,6 +1302,15 @@ public class VectorTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Vector#trimToSize()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "trimToSize",
+          methodArgs = {}
+        )
+    })
     public void test_trimToSize() {
         // Test for method void java.util.Vector.trimToSize()
         Vector v = new Vector(10);

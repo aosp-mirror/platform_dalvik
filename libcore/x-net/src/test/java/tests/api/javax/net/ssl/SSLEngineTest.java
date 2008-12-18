@@ -17,6 +17,11 @@
 
 package tests.api.javax.net.ssl;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.nio.ByteBuffer;
 
 import javax.net.ssl.SSLEngine;
@@ -26,11 +31,13 @@ import javax.net.ssl.SSLEngineResult;
 
 import junit.framework.TestCase;
 
+
+
 /**
  * Tests for SSLEngine class
  * 
  */
-
+@TestTargetClass(SSLEngine.class) 
 public class SSLEngineTest extends TestCase {
 
     public static void main(String[] args) {
@@ -41,6 +48,15 @@ public class SSLEngineTest extends TestCase {
      * Test for <code>SSLEngine()</code> constructor Assertion: creates
      * SSLEngine object with null host and -1 port
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "SSLEngine",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         SSLEngine e = new mySSLEngine();
         assertNull(e.getPeerHost());
@@ -53,6 +69,15 @@ public class SSLEngineTest extends TestCase {
     /**
      * Test for <code>SSLEngine(String host, int port)</code> constructor
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verification with incorrect parameters missed",
+      targets = {
+        @TestTarget(
+          methodName = "SSLEngine",
+          methodArgs = {String.class, int.class}
+        )
+    })
     public void test_ConstructorLjava_lang_StringI01() throws SSLException {
         int port = 1010;
         SSLEngine e = new mySSLEngine(null, port);
@@ -67,6 +92,15 @@ public class SSLEngineTest extends TestCase {
     /**
      * Test for <code>SSLEngine(String host, int port)</code> constructor
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verification with incorrect parameters missed",
+      targets = {
+        @TestTarget(
+          methodName = "SSLEngine",
+          methodArgs = {String.class, int.class}
+        )
+    })
     public void test_ConstructorLjava_lang_StringI02() {
         String host = "new host";
         int port = 8080;
@@ -83,21 +117,39 @@ public class SSLEngineTest extends TestCase {
     /**
      * Test for <code>getPeerHost()</code> method
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Verification of real host name missed",
+      targets = {
+        @TestTarget(
+          methodName = "getPeerHost",
+          methodArgs = {}
+        )
+    })
     public void test_getPeerHost() {
         SSLEngine e = new mySSLEngine();
         assertNull(e.getPeerHost());
-        e = new mySSLEngine("ps.noser.com", 80);
-        assertEquals("Incorrect host name",	"ps.noser.com", e.getPeerHost());
+        e = new mySSLEngine("www.fortify.net", 80);
+        assertEquals("Incorrect host name",    "www.fortify.net", e.getPeerHost());
     }
     
     /**
      * Test for <code>getPeerPort()</code> method
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Verification of real port number missed",
+      targets = {
+        @TestTarget(
+          methodName = "getPeerPort",
+          methodArgs = {}
+        )
+    })
     public void test_getPeerPort() {
         SSLEngine e = new mySSLEngine();
         assertEquals("Incorrect default value of peer port",
-        		-1 ,e.getPeerPort());
-        e = new mySSLEngine("ps.noser.com", 80);
+                -1 ,e.getPeerPort());
+        e = new mySSLEngine("www.fortify.net", 80);
         assertEquals("Incorrect peer port", 80, e.getPeerPort());
     }
 
@@ -111,6 +163,15 @@ public class SSLEngineTest extends TestCase {
      * jdk 1.5 does not throw IllegalArgumentException when parameters are null
      * and does not throw ReadOnlyBufferException if dst is read only byte buffer
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IllegalStateException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "wrap",
+          methodArgs = {ByteBuffer.class, ByteBuffer.class}
+        )
+    })
     public void test_wrapLjava_nio_ByteBufferLjava_nio_ByteBuffer01() throws SSLException {
         String host = "new host";
         int port = 8080;
@@ -133,6 +194,15 @@ public class SSLEngineTest extends TestCase {
      * Assertion: encodes a buffer data into network data.
      *  
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IllegalStateException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "wrap",
+          methodArgs = {ByteBuffer.class, ByteBuffer.class}
+        )
+    })
     public void test_wrapLjava_nio_ByteBufferLjava_nio_ByteBuffer02() throws SSLException {
         String host = "new host";
         int port = 8080;
@@ -156,6 +226,15 @@ public class SSLEngineTest extends TestCase {
      * if srcs contains null elements It does not throw ReadOnlyBufferException
      * for read only dst
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IllegalStateException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "wrap",
+          methodArgs = {ByteBuffer[].class, ByteBuffer.class}
+        )
+    })
     public void test_wrap$Ljava_nio_ByteBufferLjava_nio_ByteBuffer01() throws SSLException {
         String host = "new host";
         int port = 8080;
@@ -188,6 +267,15 @@ public class SSLEngineTest extends TestCase {
      * 
      * Assertion: encodes datas from buffers into network data.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IllegalStateException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "wrap",
+          methodArgs = {ByteBuffer[].class, ByteBuffer.class}
+        )
+    })
     public void test_wrap$Ljava_nio_ByteBufferLjava_nio_ByteBuffer02() throws SSLException {
         String host = "new host";
         int port = 8080;
@@ -208,6 +296,20 @@ public class SSLEngineTest extends TestCase {
      * 
      * Assertion: these methods throw SSLException
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IllegalStateException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "wrap",
+          methodArgs = {ByteBuffer.class, ByteBuffer.class}
+        ),
+        @TestTarget(
+          methodName = "wrap",
+          methodArgs = {ByteBuffer[].class, ByteBuffer.class}
+        )
+
+    })
     public void test_wrap() throws SSLException {
         String host = "new host";
         int port = 8080;
@@ -244,6 +346,15 @@ public class SSLEngineTest extends TestCase {
      * jdk 1.5 does not throw IllegalArgumentException when parameters are null
      * and does not throw ReadOnlyBufferException if dst is read only byte buffer
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IllegalStateException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "unwrap",
+          methodArgs = {ByteBuffer.class, ByteBuffer.class}
+        )
+    })
     public void test_unwrapLjava_nio_ByteBufferLjava_nio_ByteBuffer01() throws SSLException {
         String host = "new host";
         int port = 8080;
@@ -266,6 +377,20 @@ public class SSLEngineTest extends TestCase {
      * 
      * Assertion: these methods throw SSLException
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IllegalStateException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "unwrap",
+          methodArgs = {ByteBuffer.class, ByteBuffer.class}
+        ),
+        @TestTarget(
+          methodName = "unwrap",
+          methodArgs = {ByteBuffer.class, ByteBuffer[].class}
+        )
+
+    })
     public void test_unwrapLjava_nio_ByteBufferLjava_nio_ByteBuffer02() throws SSLException {
         ByteBuffer bbs = ByteBuffer.allocate(100);
         ByteBuffer bbd = ByteBuffer.allocate(10);
@@ -294,6 +419,15 @@ public class SSLEngineTest extends TestCase {
      * 
      * Assertion: decodes  network data into a data buffer. 
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IllegalStateException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "unwrap",
+          methodArgs = {ByteBuffer.class, ByteBuffer.class}
+        )
+    })
     public void test_unwrapLjava_nio_ByteBufferLjava_nio_ByteBuffer03() throws SSLException {
         String host = "new host";
         int port = 8080;
@@ -317,6 +451,15 @@ public class SSLEngineTest extends TestCase {
      * if dsts contains null elements It does not throw ReadOnlyBufferException
      * when dsts contains read only elements
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IllegalStateException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "unwrap",
+          methodArgs = {ByteBuffer.class, ByteBuffer[].class}
+        )
+    })
     public void test_unwrapLjava_nio_ByteBuffer$Ljava_nio_ByteBuffer01() throws SSLException {
         String host = "new host";
         int port = 8080;
@@ -351,6 +494,15 @@ public class SSLEngineTest extends TestCase {
      * Assertion: 
      * decode network data into data buffers.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IllegalStateException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "unwrap",
+          methodArgs = {ByteBuffer.class, ByteBuffer[].class}
+        )
+    })
     public void test_unwrapLjava_nio_ByteBuffer$Ljava_nio_ByteBuffer02() throws SSLException {
         String host = "new host";
         int port = 8080;

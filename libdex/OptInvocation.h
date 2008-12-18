@@ -30,8 +30,8 @@ extern "C" {
 /*
  * Utility routines, used by the VM.
  */
-int dexOptGenerateCacheFileName(const char* fileName, const char* subFileName,
-    char* nameBuf, unsigned int bufSize);
+char* dexOptGenerateCacheFileName(const char* fileName,
+    const char* subFileName);
 int dexOptCreateEmptyHeader(int fd);
 
 /* some flags that get passed through to "dexopt" command */

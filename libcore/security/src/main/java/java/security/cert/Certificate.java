@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vladimir N. Molotkov
-* @version $Revision$
-*/
-
 package java.security.cert;
 
 import java.io.ByteArrayInputStream;
@@ -40,43 +35,49 @@ import org.apache.harmony.security.internal.nls.Messages;
  * Abstract class to represent identity certificates. It represents a way to
  * verify the binding of a Principal and its public key. Examples are X.509,
  * PGP, and SDSI.
+ * 
+ * @since Android 1.0
  */
 public abstract class Certificate implements Serializable {
-    /**
-     * @com.intel.drl.spec_ref
-     */
+
     private static final long serialVersionUID = -3585440601605666277L;
 
     // The standard name of the certificate type
     private final String type;
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code Certificate} with the specified type.
+     * 
+     * @param type
+     *        the certificate type.
+     * @since Android 1.0
      */
     protected Certificate(String type) {
         this.type = type;
     }
 
     /**
-     * Returns the certificate type represented by the receiver.
+     * Returns the certificate type.
      * 
-     * @return the certificate type represented by the receiver.
+     * @return the certificate type.
+     * @since Android 1.0
      */
     public final String getType() {
         return type;
     }
 
     /**
-     * Compares the argument to the receiver, and returns true if they represent
-     * the <em>same</em> object using a class specific comparison. The
-     * implementation in Object returns true only if the argument is the exact
-     * same object as the receiver (==).
+     * Compares the argument to the certificate, and returns {@code true} if they
+     * represent the <em>same</em> object using a class specific comparison. The
+     * implementation in Object returns {@code true} only if the argument is the
+     * exact same object as the callee (==).
      * 
      * @param other
-     *            the object to compare with this object
-     * @return <code>true</code> if the object is the same as this object
-     *         <code>false</code> if it is different from this object
+     *            the object to compare with this object.
+     * @return {@code true} if the object is the same as this object, {@code
+     *         false} if it is different from this object.
      * @see #hashCode
+     * @since Android 1.0
      */
     public boolean equals(Object other) {
         // obj equal to itself
@@ -96,13 +97,13 @@ public abstract class Certificate implements Serializable {
     }
 
     /**
-     * Returns an integer hash code for the receiver. Any two objects which
-     * answer <code>true</code> when passed to <code>equals</code> must
-     * answer the same value for this method.
+     * Returns an integer hash code for the certificate. Any two objects which
+     * return {@code true} when passed to {@code equals} must return the same
+     * value for this method.
      * 
-     * @return the receiver's hash
-     * 
+     * @return the certificate's hash
      * @see #equals
+     * @since Android 1.0
      */
     public int hashCode() {
         try {
@@ -121,6 +122,9 @@ public abstract class Certificate implements Serializable {
      * Returns the encoded representation for this certificate.
      * 
      * @return the encoded representation for this certificate.
+     * @throws CertificateEncodingException
+     *             if the encoding fails.
+     * @since Android 1.0
      */
     public abstract byte[] getEncoded() throws CertificateEncodingException;
 
@@ -130,17 +134,17 @@ public abstract class Certificate implements Serializable {
      * @param key
      *            PublicKey public key for which verification should be
      *            performed.
-     * 
-     * @exception CertificateException
-     *                if encoding errors are detected
-     * @exception NoSuchAlgorithmException
-     *                if an unsupported algorithm is detected
-     * @exception InvalidKeyException
-     *                if an invalid key is detected
-     * @exception NoSuchProviderException
-     *                if there is no default provider
-     * @exception SignatureException
-     *                if signature errors are detected
+     * @throws CertificateException
+     *             if encoding errors are detected.
+     * @throws NoSuchAlgorithmException
+     *             if an unsupported algorithm is detected.
+     * @throws InvalidKeyException
+     *             if an invalid key is detected.
+     * @throws NoSuchProviderException
+     *             if there is no default provider.
+     * @throws SignatureException
+     *             if signature errors are detected.
+     * @since Android 1.0
      */
     public abstract void verify(PublicKey key)
         throws CertificateException,
@@ -150,25 +154,25 @@ public abstract class Certificate implements Serializable {
                SignatureException;
 
     /**
-     * Verifies that this certificate was signed with the given public key. Uses
-     * the signature algorithm given by the provider.
+     * Verifies that this certificate was signed with the given public key. It
+     * Uses the signature algorithm given by the provider.
      * 
      * @param key
      *            PublicKey public key for which verification should be
      *            performed.
      * @param sigProvider
      *            String the name of the signature provider.
-     * 
      * @exception CertificateException
-     *                if encoding errors are detected
+     *                if encoding errors are detected.
      * @exception NoSuchAlgorithmException
-     *                if an unsupported algorithm is detected
+     *                if an unsupported algorithm is detected.
      * @exception InvalidKeyException
-     *                if an invalid key is detected
+     *                if an invalid key is detected.
      * @exception NoSuchProviderException
-     *                if there is no default provider
+     *                if the specified provider does not exists.
      * @exception SignatureException
-     *                if signature errors are detected
+     *                if signature errors are detected.
+     * @since Android 1.0
      */
     public abstract void verify(PublicKey key, String sigProvider)
         throws CertificateException,
@@ -179,9 +183,10 @@ public abstract class Certificate implements Serializable {
 
     /**
      * Returns a string containing a concise, human-readable description of the
-     * receiver.
+     * certificate.
      * 
-     * @return a printable representation for the receiver.
+     * @return a printable representation for the certificate.
+     * @since Android 1.0
      */
     public abstract String toString();
 
@@ -189,11 +194,17 @@ public abstract class Certificate implements Serializable {
      * Returns the public key corresponding to this certificate.
      * 
      * @return the public key corresponding to this certificate.
+     * @since Android 1.0
      */
     public abstract PublicKey getPublicKey();
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns an alternate object to be serialized.
+     * 
+     * @return the object to serialize.
+     * @throws ObjectStreamException
+     *             if the creation of the alternate object fails.
+     * @since Android 1.0
      */
     protected Object writeReplace() throws ObjectStreamException {
         try {
@@ -205,13 +216,13 @@ public abstract class Certificate implements Serializable {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * The alternate {@code Serializable} class to be used for serialization and
+     * deserialization of {@code Certificate} objects. 
      * 
+     * @since Android 1.0
      */
     protected static class CertificateRep implements Serializable {
-        /**
-         * @com.intel.drl.spec_ref
-         */
+
         private static final long serialVersionUID = -8563758940495660020L;
         // The standard name of the certificate type
         private final String type;
@@ -226,7 +237,14 @@ public abstract class Certificate implements Serializable {
         };
 
         /**
-         * @com.intel.drl.spec_ref
+         * Creates a new {@code CertificateRep} instance with the specified
+         * certificate type and encoded data.
+         * 
+         * @param type
+         *            the certificate type.
+         * @param data
+         *            the encoded data.
+         * @since Android 1.0
          */
         protected CertificateRep(String type, byte[] data) {
             this.type = type;
@@ -234,7 +252,13 @@ public abstract class Certificate implements Serializable {
         }
 
         /**
-         * @com.intel.drl.spec_ref
+         * Deserializes a {@code Certificate} from a serialized {@code
+         * CertificateRep} object.
+         * 
+         * @return the deserialized {@code Certificate}.
+         * @throws ObjectStreamException
+         *             if deserialization fails.
+         * @since Android 1.0
          */
         protected Object readResolve() throws ObjectStreamException {
             try {

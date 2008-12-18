@@ -17,15 +17,31 @@
 
 package org.apache.harmony.archive.tests.java.util.jar;
 
+import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.jar.Manifest;
 import junit.framework.TestCase;
+import java.util.jar.JarException;
 
+@TestTargetClass(JarException.class) 
 public class JarExceptionTest extends TestCase {
     /**
      * @tests java.util.jar.JarException#JarException(java.lang.String)
      */
+@TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Another functionality checked.",
+      targets = {
+        @TestTarget(
+          methodName = "JarException",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() throws Exception {
         try {
             new Manifest(new ByteArrayInputStream(

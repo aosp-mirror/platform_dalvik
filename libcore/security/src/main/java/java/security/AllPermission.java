@@ -19,15 +19,14 @@ package java.security;
 
 
 /**
- * Subclass of Permission whose instances imply all other permissions. Granting
- * this permission is equivalent to disabling security.
+ * {@code AllPermission} represents the permission to perform any operation.
+ * Since its {@link #implies(Permission)} method always returns {@code true},
+ * granting this permission is equivalent to disabling security.
  * 
+ * @since Android 1.0
  */
 public final class AllPermission extends Permission {
 
-    /**
-     * @serial
-     */
     private static final long serialVersionUID = -2916474571451318075L;
 
     // Permission name
@@ -37,36 +36,42 @@ public final class AllPermission extends Permission {
     private static final String ALL_ACTIONS = "<all actions>"; //$NON-NLS-1$
 
     /**
-     * Constructs a new instance of this class. The two argument version is
-     * provided for class <code>Policy</code> so that it has a consistent call
-     * pattern across all Permissions. The name and action list are both
+     * Constructs a new instance of {@code AllPermission}. The two argument
+     * version is provided for class {@code Policy} so that it has a consistent
+     * call pattern across all permissions. The name and action list are both
      * ignored.
      * 
      * @param name
-     *            java.lang.String ignored.
+     *            ignored.
      * @param actions
-     *            java.lang.String ignored.
+     *            ignored.
+     * @since Android 1.0
      */
     public AllPermission(String name, String actions) {
         super(ALL_PERMISSIONS);
     }
 
     /**
-     * Constructs a new instance of this class.
+     * Constructs a new instance of {@code AllPermission}.
+     * 
+     * @since Android 1.0
      */
     public AllPermission() {
         super(ALL_PERMISSIONS);
     }
 
     /**
-     * Compares the argument to the receiver, and returns true if they represent
-     * the <em>same</em> object using a class specific comparison. All
-     * AllPermissions are equal to each other.
+     * Compares the specified object with this {@code AllPermission} for
+     * equality and returns {@code true} if the specified object is equal,
+     * {@code false} otherwise. To be equal, the given object needs to be an
+     * instance of {@code AllPermission}.
      * 
      * @param obj
-     *            the object to compare with this object
-     * @return <code>true</code> if the object is the same as this object
-     *         <code>false</code> if it is different from this object
+     *            object to be compared for equality with this {@code
+     *            AllPermission}.
+     * @return {@code true} if the specified object is equal to this {@code
+     *         AllPermission}, otherwise {@code false}.
+     * @since Android 1.0
      * @see #hashCode
      */
     public boolean equals(Object obj) {
@@ -74,48 +79,50 @@ public final class AllPermission extends Permission {
     }
 
     /**
-     * Returns an integer hash code for the receiver. Any two objects which
-     * answer <code>true</code> when passed to <code>equals</code> must
-     * answer the same value for this method.
+     * Returns the hash code value for this {@code AllPermission}. Returns the
+     * same hash code for {@code AllPermission}s that are equal to each other as
+     * required by the general contract of {@link Object#hashCode}.
      * 
-     * @return the receiver's hash
-     * 
-     * @see #equals
+     * @return the hash code value for this {@code AllPermission}.
+     * @see Object#equals(Object)
+     * @see AllPermission#equals(Object)
+     * @since Android 1.0
      */
     public int hashCode() {
         return 1;
     }
 
     /**
-     * Returns the actions associated with the receiver. Since AllPermission
-     * objects allow all actions, answer with the string "<all actions>".
+     * Returns the actions associated with this {@code AllPermission}. Since
+     * {@code AllPermission} objects allow all actions, this method returns
+     * always the string "&lt;all actions&gt;".
      * 
-     * @return String the actions associated with the receiver.
+     * @return the actions associated with this {@code AllPermission}.
+     * @since Android 1.0
      */
     public String getActions() {
         return ALL_ACTIONS;
     }
 
     /**
-     * Indicates whether the argument permission is implied by the receiver.
-     * AllPermission objects imply all other permissions.
+     * Indicates whether the given permission is implied by this permission.
+     * {@code AllPermission} objects imply all other permissions.
      * 
-     * @return boolean <code>true</code> if the argument permission is implied
-     *         by the receiver, and <code>false</code> if it is not.
+     * @return always {@code true}.
      * @param permission
-     *            java.security.Permission the permission to check
+     *            the permission to check.
+     * @since Android 1.0
      */
     public boolean implies(Permission permission) {
         return true;
     }
 
     /**
-     * Returns a new PermissionCollection for holding permissions of this class.
-     * Answer null if any permission collection can be used.
+     * Returns a new {@code PermissionCollection} for holding permissions of
+     * this class.
      * 
-     * @return a new PermissionCollection or null
-     * 
-     * @see java.security.BasicPermissionCollection
+     * @return a new {@code PermissionCollection}.
+     * @since Android 1.0
      */
     public PermissionCollection newPermissionCollection() {
         return new AllPermissionCollection();

@@ -137,6 +137,14 @@ public class IntMath {
     }
     static void intOperCheck(int[] results) {
         System.out.println("IntMath.intOperCheck");
+
+        /* check this edge case while we're here (div-int/2addr) */
+        int minInt = -2147483648;
+        int negOne = -results[5];
+        int plusOne = 1;
+        int result = (((minInt + plusOne) - plusOne) / negOne) / negOne;
+        assert(result == minInt);
+
         assert(results[0] == 69997);
         assert(results[1] == 70003);
         assert(results[2] == -210000);
@@ -201,6 +209,12 @@ public class IntMath {
     static void lit8Check(int[] results) {
         //for (int i = 0; i < results.length; i++)
         //    System.out.println(" " + i + ": " + results[i]);
+
+        /* check this edge case while we're here (div-int/lit8) */
+        int minInt = -2147483648;
+        int result = minInt / -1;
+        assert(result == minInt);
+
         assert(results[0] == -55545);
         assert(results[1] == 55565);
         assert(results[2] == -555550);
@@ -263,6 +277,14 @@ public class IntMath {
     }
     static void longOperCheck(long[] results) {
         System.out.println("IntMath.longOperCheck");
+
+        /* check this edge case while we're here (div-long/2addr) */
+        long minLong = -9223372036854775808L;
+        long negOne = -results[5];
+        long plusOne = 1;
+        long result = (((minLong + plusOne) - plusOne) / negOne) / negOne;
+        assert(result == minLong);
+
         assert(results[0] == 69999999997L);
         assert(results[1] == 70000000003L);
         assert(results[2] == -210000000000L);
@@ -374,6 +396,28 @@ public class IntMath {
     }
 
     /*
+     * Check an edge condition: dividing the most-negative integer by -1
+     * returns the most-negative integer, and doesn't cause an exception.
+     *
+     * Pass in -1, -1L.
+     */
+    static void bigDivideOverflow(int idiv, long ldiv) {
+        System.out.println("IntMath.bigDivideOverflow");
+        int mostNegInt = (int) 0x80000000;
+        long mostNegLong = (long) 0x8000000000000000L;
+
+        int intDivResult = mostNegInt / idiv;
+        int intModResult = mostNegInt % idiv;
+        long longDivResult = mostNegLong / ldiv;
+        long longModResult = mostNegLong % ldiv;
+
+        assert(intDivResult == mostNegInt);
+        assert(intModResult == 0);
+        assert(longDivResult == mostNegLong);
+        assert(longModResult == 0);
+    }
+
+    /*
      * Check "const" instructions.  We use negative values to ensure that
      * sign-extension is happening.
      */
@@ -418,6 +462,7 @@ public class IntMath {
         truncateCheck(shorts);
 
         divideByZero(0);
+        bigDivideOverflow(-1, -1L);
 
         checkConsts((byte) 1, (short) -256, -88888, 0x9922334455667788L);
 

@@ -17,72 +17,84 @@
 package java.util;
 
 /**
- * A kind of collection provides advanced operations than other basic
+ * This kind of collection provides advanced operations compared to basic
  * collections, such as insertion, extraction, and inspection.
+ * <p>
+ * Generally, a queue orders its elements by means of first-in-first-out.
+ * However, a priority queue orders its elements according to a comparator
+ * specified or the elements' natural order. Furthermore, a stack orders its
+ * elements last-in-first out.
+ * </p>
+ * <p>
+ * A typical queue does not allow {@code null} to be inserted as its element,
+ * while some implementations such as {@code LinkedList} allow it. But {@code
+ * null} should not be inserted even in these implementations, since the method
+ * {@code poll} returns {@code null} to indicate that there is no element left
+ * in the queue.
+ * </p>
+ * <p>
+ * {@code Queue} does not provide blocking queue methods, which would block
+ * until the operation of the method is allowed. See the
+ * {@link java.util.concurrent.BlockingQueue} interface for information about
+ * blocking queue methods.
+ * </p>
  * 
- * Generally, a queue orders its elements by means of first-in-first-out. While
- * priority queue orders its elements according to a comparator specified or the
- * elements' natural order. Furthermore, a stack orders its elements
- * last-in-first out.
- * 
- * A typical queue does not allow null to be inserted as its element, while some
- * implementations such as LinkedList allow it. But null should not be inserted
- * even in these implementations, since method poll return null to indicate that
- * there is no element left in the queue.
- * 
- * Queue does not provide blocking queue methods, which will block until the
- * operation of the method is allowed. BlockingQueue interface defines such
- * methods.
+ * @since Android 1.0
  */
 public interface Queue<E> extends Collection<E> {
 
     /**
      * Inserts the specified element into the queue provided that the condition
-     * allows such an operation. The method is generally preferable to the
-     * collection.add(E), since the latter might throw an exception if the
+     * allows such an operation. The method is generally preferable to
+     * {@link Collection#add}, since the latter might throw an exception if the
      * operation fails.
      * 
      * @param o
      *            the specified element to insert into the queue.
-     * @return true if the operation succeeds and false if it fails.
+     * @return {@code true} if the operation succeeds and {@code false} if it
+     *         fails.
+     * @since Android 1.0
      */
     public boolean offer(E o);
 
     /**
-     * Gets and removes the element in the head of the queue, or returns null if
-     * there is no element in the queue.
+     * Gets and removes the element at the head of the queue, or returns {@code
+     * null} if there is no element in the queue.
      * 
-     * @return the element in the head of the queue or null if there is no
-     *         element in the queue.
+     * @return the element at the head of the queue or {@code null} if there is
+     *         no element in the queue.
+     * @since Android 1.0
      */
     public E poll();
 
     /**
-     * Gets and removes the element in the head of the queue. Throws a
+     * Gets and removes the element at the head of the queue. Throws a
      * NoSuchElementException if there is no element in the queue.
      * 
-     * @return the element in the head of the queue.
+     * @return the element at the head of the queue.
      * @throws NoSuchElementException
      *             if there is no element in the queue.
+     * @since Android 1.0
      */
     public E remove();
 
     /**
-     * Gets but not removes the element in the head of the queue, or throws
-     * exception if there is no element in the queue.
+     * Gets but does not remove the element at the head of the queue.
      * 
-     * @return the element in the head of the queue or null if there is no
-     *         element in the queue.
+     * @return the element at the head of the queue or {@code null} if there is
+     *         no element in the queue.
+     * @since Android 1.0
      */
     public E peek();
 
     /**
-     * Gets but not removes the element in the head of the queue. Throws a
-     * NoSuchElementException if there is no element in the queue.
+     * Gets but does not remove the element at the head of the queue. Throws a
+     * {@code NoSuchElementException} if there is no element in the queue.
      * 
-     * @return the element in the head of the queue.
+     * @return the element at the head of the queue.
      * @throws NoSuchElementException
      *             if there is no element in the queue.
+     * @since Android 1.0
      */
     public E element();
 

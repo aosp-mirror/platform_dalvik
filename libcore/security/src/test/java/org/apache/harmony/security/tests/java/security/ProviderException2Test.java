@@ -17,13 +17,28 @@
 
 package org.apache.harmony.security.tests.java.security;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.security.ProviderException;
 
+@TestTargetClass(ProviderException.class)
 public class ProviderException2Test extends junit.framework.TestCase {
 
     /**
      * @tests java.security.ProviderException#ProviderException()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "ProviderException",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         // Test for method java.security.ProviderException()
         ProviderException e = new ProviderException();
@@ -34,6 +49,15 @@ public class ProviderException2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.ProviderException#ProviderException(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verification with null/empty parameter is absent",
+      targets = {
+        @TestTarget(
+          methodName = "ProviderException",
+          methodArgs = {String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() {
         // Test for method java.security.ProviderException(java.lang.String)
         ProviderException e = new ProviderException("test message");

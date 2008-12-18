@@ -15,6 +15,10 @@
  *  limitations under the License.
  */
 
+// BEGIN android-note
+// address length was changed from long to int for performance reasons.
+// END android-note
+
 package org.apache.harmony.luni.platform;
 
 import java.io.FileDescriptor;
@@ -25,7 +29,9 @@ import java.net.SocketException;
 import java.net.SocketImpl;
 import java.net.UnknownHostException;
 import java.nio.channels.Channel;
-
+// BEGIN android-removed
+// import java.nio.channels.SelectableChannel;
+// END android-removed
 /*
  * 
  * This Class is used for native code wrap, the implement class of
@@ -280,7 +286,7 @@ final class OSNetworkSystem implements INetworkSystem {
     //             timeout);
     // }
     // END android-removed
-    
+
     /*
      * 
      * @param 

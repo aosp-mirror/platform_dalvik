@@ -20,7 +20,7 @@ package org.apache.harmony.tests.java.util.regex;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestStatus;
+import dalvik.annotation.TestLevel;
 
 import java.io.Serializable;
 import java.util.regex.Matcher;
@@ -86,8 +86,8 @@ public class PatternTest extends TestCase {
 
 
     @TestInfo(
-             status = TestStatus.TODO,
-             notes = "", targets = {} 
+             level = TestLevel.TODO,
+             purpose = "", targets = {} 
            )          
     public void testMatcher() {
     }
@@ -96,8 +96,8 @@ public class PatternTest extends TestCase {
      * Class under test for String[] split(CharSequence, int)
      */
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of split" +
+             level = TestLevel.PARTIAL,
+             purpose = "Verifies the functionality of split" +
                      "split(java.lang.String, int) method.",
              targets = { @TestTarget(methodName = "split",
                    methodArgs = {java.lang.String.class, int.class})      
@@ -181,8 +181,8 @@ public class PatternTest extends TestCase {
      * Class under test for String[] split(CharSequence)
      */
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of split" +
+             level = TestLevel.PARTIAL_OK,
+             purpose = "Verifies the functionality of split" +
                      "split(java.lang.String) method.",
              targets = { @TestTarget(methodName = "split",
                    methodArgs = {java.lang.String.class})      
@@ -208,8 +208,8 @@ public class PatternTest extends TestCase {
     }
 
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of pattern() method.",
+             level = TestLevel.COMPLETE,
+             purpose = "Verifies the functionality of pattern() method.",
              targets = { @TestTarget(methodName = "pattern",
                    methodArgs = {})      
              }
@@ -227,8 +227,8 @@ public class PatternTest extends TestCase {
     }
 
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of compile(java.lang.String) method.",
+             level = TestLevel.PARTIAL,
+             purpose = "Verifies the functionality of compile(java.lang.String) method.",
              targets = { @TestTarget(methodName = "compile",
                    methodArgs = {java.lang.String.class})      
              }
@@ -266,8 +266,8 @@ public class PatternTest extends TestCase {
     }
 
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of compile(java.lang.String)" +
+             level = TestLevel.PARTIAL,
+             purpose = "Verifies the functionality of compile(java.lang.String)" +
                      " method for different flags.",
              targets = { @TestTarget(methodName = "compile",
                    methodArgs = {java.lang.String.class})      
@@ -447,8 +447,8 @@ public class PatternTest extends TestCase {
      */
 
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of flags()" +
+             level = TestLevel.PARTIAL_OK,
+             purpose = "Verifies the functionality of flags()" +
                      " method for default flags.",
              targets = { @TestTarget(methodName = "flags",
                    methodArgs = {})      
@@ -472,8 +472,8 @@ public class PatternTest extends TestCase {
      */
 
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of compile(java.lang.String, int) &" +
+             level = TestLevel.PARTIAL,
+             purpose = "Verifies the functionality of compile(java.lang.String, int) &" +
                      " flags() methods. Checks that copmilation was corect.",
              targets = { @TestTarget(methodName = "flags",
                    methodArgs = {}),
@@ -499,8 +499,8 @@ public class PatternTest extends TestCase {
      */
 
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of compile(java.lang.String) method." +
+             level = TestLevel.PARTIAL,
+             purpose = "Verifies the functionality of compile(java.lang.String) method." +
                      "Checks that correct exceptions were thrown.",
              targets = { @TestTarget(methodName = "compile",
                    methodArgs = {java.lang.String.class})      
@@ -562,8 +562,8 @@ public class PatternTest extends TestCase {
      * Class under test for Pattern compile(String)
      */
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of compile(java.lang.String) method." +
+             level = TestLevel.PARTIAL,
+             purpose = "Verifies the functionality of compile(java.lang.String) method." +
                      "Checks that correct exceptions were thrown.",
              targets = { @TestTarget(methodName = "compile",
                    methodArgs = {java.lang.String.class})      
@@ -592,8 +592,8 @@ public class PatternTest extends TestCase {
     }
 
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of compile(java.lang.String) method.",
+             level = TestLevel.PARTIAL,
+             purpose = "Verifies the functionality of compile(java.lang.String) method.",
              targets = { @TestTarget(methodName = "compile",
                    methodArgs = {java.lang.String.class})      
              }
@@ -606,8 +606,8 @@ public class PatternTest extends TestCase {
     }
 
     @TestInfo(
-             status = TestStatus.TODO,
-             notes = "The test verifies the functionality of compile() method." +
+             level = TestLevel.PARTIAL,
+             purpose = "Verifies the functionality of compile() method." +
                      " Also tested methods from matcher: matches(), start(int), group(int)",
              targets = { @TestTarget(methodName = "compile",
                    methodArgs = {java.lang.String.class})      
@@ -623,9 +623,10 @@ public class PatternTest extends TestCase {
     }
 
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of matches(java.lang.String," +
-                     "java.lang.CharSequence) method.",
+             level = TestLevel.PARTIAL,
+             purpose = "Verifies the functionality of matches(java.lang.String," +
+                     "java.lang.CharSequence) method. Doesn't verify " +
+                     "PatternSyntaxException.",
              targets = { @TestTarget(methodName = "matches",
                    methodArgs = {java.lang.String.class,
                      java.lang.CharSequence.class})      
@@ -660,8 +661,8 @@ public class PatternTest extends TestCase {
     }
 
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of matches(java.lang.String," +
+             level = TestLevel.PARTIAL,
+             purpose = "The test verifies the functionality of matches(java.lang.String," +
                      "java.lang.CharSequence) method.",
              targets = { @TestTarget(methodName = "matches",
                    methodArgs = {java.lang.String.class,
@@ -681,8 +682,8 @@ public class PatternTest extends TestCase {
 // BEGIN android-changed
 // Removed one pattern that is buggy on the JDK. We don't want to duplicate that.
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of matches(java.lang.String," +
+             level = TestLevel.PARTIAL,
+             purpose = "Verifies the functionality of matches(java.lang.String," +
                      "java.lang.CharSequence) method.",
              targets = { @TestTarget(methodName = "matches",
                    methodArgs = {java.lang.String.class,
@@ -723,8 +724,8 @@ public class PatternTest extends TestCase {
     }
 
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of matches(java.lang.String," +
+             level = TestLevel.PARTIAL,
+             purpose = "Verifies the functionality of matches(java.lang.String," +
                      "java.lang.CharSequence) method for ranged patterns.",
              targets = { @TestTarget(methodName = "matches",
                    methodArgs = {java.lang.String.class,
@@ -755,8 +756,8 @@ public class PatternTest extends TestCase {
  // END android-changed
 
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of matches(java.lang.String," +
+             level = TestLevel.PARTIAL,
+             purpose = "The test verifies the functionality of matches(java.lang.String," +
                      "java.lang.CharSequence) method.",
              targets = { @TestTarget(methodName = "matches",
                    methodArgs = {java.lang.String.class,
@@ -768,8 +769,9 @@ public void testZeroSymbols() {
     }
 
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of matcher(java.lang.String) method.",
+             level = TestLevel.PARTIAL_OK,
+             purpose = "Verifies the functionality of matcher(java.lang.String) " +
+                    "method.",
              targets = { @TestTarget(methodName = "matcher",
                    methodArgs = {java.lang.String.class})      
              }
@@ -782,8 +784,8 @@ public void testZeroSymbols() {
     }
 
     @TestInfo(
-             status = TestStatus.TODO,
-             notes = "The test verifies the functionality of compile(java.lang.String) method.",
+             level = TestLevel.PARTIAL,
+             purpose = "Verifies the functionality of compile(java.lang.String) method.",
              targets = { @TestTarget(methodName = "compile",
                    methodArgs = {java.lang.String.class})      
              }
@@ -793,20 +795,20 @@ public void testZeroSymbols() {
     }
 
     @TestInfo(
-             status = TestStatus.TODO,
-             notes = "The test verifies the functionality of compile(java.lang.String) method.",
+             level = TestLevel.PARTIAL,
+             purpose = "Verifies the functionality of compile(java.lang.String) method.",
              targets = { @TestTarget(methodName = "compile",
                    methodArgs = {java.lang.String.class})      
              }
            )          
-    public void _testBug187() {
+    public void disabled_testBug187() {
         Pattern
                 .compile("|(?idmsux-idmsux)|(?idmsux-idmsux)|[^|\\[-\\0274|\\,-\\\\[^|W\\}\\nq\\x65\\002\\xFE\\05\\06\\00\\x66\\x47i\\,\\xF2\\=\\06\\u0EA4\\x9B\\x3C\\f\\|\\{\\xE5\\05\\r\\u944A\\xCA\\e|\\x19\\04\\x07\\04\\u607B\\023\\0073\\x91Tr\\0150\\x83]]?(?idmsux-idmsux:\\p{Alpha}{7}?)||(?<=[^\\uEC47\\01\\02\\u3421\\a\\f\\a\\013q\\035w\\e])(?<=\\p{Punct}{0,}?)(?=^\\p{Lower})(?!\\b{8,14})(?<![|\\00-\\0146[^|\\04\\01\\04\\060\\f\\u224DO\\x1A\\xC4\\00\\02\\0315\\0351\\u84A8\\xCBt\\xCC\\06|\\0141\\00\\=\\e\\f\\x6B\\0026Tb\\040\\x76xJ&&[\\\\-\\]\\05\\07\\02\\u2DAF\\t\\x9C\\e\\0023\\02\\,X\\e|\\u6058flY\\u954C]]]{5}?)(?<=\\p{Sc}{8}+)[^|\\026-\\u89BA|o\\u6277\\t\\07\\x50&&\\p{Punct}]{8,14}+((?<=^\\p{Punct})|(?idmsux-idmsux)||(?>[\\x3E-\\]])|(?idmsux-idmsux:\\p{Punct})|(?<![\\0111\\0371\\xDF\\u6A49\\07\\u2A4D\\00\\0212\\02Xd-\\xED[^\\a-\\0061|\\0257\\04\\f\\[\\0266\\043\\03\\x2D\\042&&[^\\f-\\]&&\\s]]])|(?>[|\\n\\042\\uB09F\\06\\u0F2B\\uC96D\\x89\\uC166\\xAA|\\04-\\][^|\\a\\|\\rx\\04\\uA770\\n\\02\\t\\052\\056\\0274\\|\\=\\07\\e|\\00-\\x1D&&[^\\005\\uB15B\\uCDAC\\n\\x74\\0103\\0147\\uD91B\\n\\062G\\u9B4B\\077\\}\\0324&&[^\\0302\\,\\0221\\04\\u6D16\\04xy\\uD193\\[\\061\\06\\045\\x0F|\\e\\xBB\\f\\u1B52\\023\\u3AD2\\033\\007\\022\\}\\x66\\uA63FJ-\\0304]]]]{0,0})||(?<![^|\\0154U\\u0877\\03\\fy\\n\\|\\0147\\07-\\=[|q\\u69BE\\0243\\rp\\053\\02\\x33I\\u5E39\\u9C40\\052-\\xBC[|\\0064-\\?|\\uFC0C\\x30\\0060\\x45\\\\\\02\\?p\\xD8\\0155\\07\\0367\\04\\uF07B\\000J[^|\\0051-\\{|\\u9E4E\\u7328\\]\\u6AB8\\06\\x71\\a\\]\\e\\|KN\\u06AA\\0000\\063\\u2523&&[\\005\\0277\\x41U\\034\\}R\\u14C7\\u4767\\x09\\n\\054Ev\\0144\\<\\f\\,Q-\\xE4]]]]]{3}+)|(?>^+)|(?![^|\\|\\nJ\\t\\<\\04E\\\\\\t\\01\\\\\\02\\|\\=\\}\\xF3\\uBEC2\\032K\\014\\uCC5F\\072q\\|\\0153\\xD9\\0322\\uC6C8[^\\t\\0342\\x34\\x91\\06\\{\\xF1\\a\\u1710\\?\\xE7\\uC106\\02pF\\<&&[^|\\]\\064\\u381D\\u50CF\\eO&&[^|\\06\\x2F\\04\\045\\032\\u8536W\\0377\\0017|\\x06\\uE5FA\\05\\xD4\\020\\04c\\xFC\\02H\\x0A\\r]]]]+?)(?idmsux-idmsux)|(?<![|\\r-\\,&&[I\\t\\r\\0201\\xDB\\e&&[^|\\02\\06\\00\\<\\a\\u7952\\064\\051\\073\\x41\\?n\\040\\0053\\031&&[\\x15-\\|]]]]{8,11}?)(?![^|\\<-\\uA74B\\xFA\\u7CD2\\024\\07n\\<\\x6A\\0042\\uE4FF\\r\\u896B\\[\\=\\042Y&&^\\p{ASCII}]++)|(?<![R-\\|&&[\\a\\0120A\\u6145\\<\\050-d[|\\e-\\uA07C|\\016-\\u80D9]]]{1,}+)|(?idmsux-idmsux)|(?idmsux-idmsux)|(?idmsux-idmsux:\\B{6,}?)|(?<=\\D{5,8}?)|(?>[\\{-\\0207|\\06-\\0276\\p{XDigit}])(?idmsux-idmsux:[^|\\x52\\0012\\]u\\xAD\\0051f\\0142\\\\l\\|\\050\\05\\f\\t\\u7B91\\r\\u7763\\{|h\\0104\\a\\f\\0234\\u2D4F&&^\\P{InGreek}]))");
     }
 
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of compile(java.lang.String) method.",
+             level = TestLevel.PARTIAL,
+             purpose = "Verifies the functionality of compile(java.lang.String) method.",
              targets = { @TestTarget(methodName = "compile",
                    methodArgs = {java.lang.String.class})      
              }
@@ -820,8 +822,8 @@ public void testZeroSymbols() {
     }
 
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of compile(java.lang.String) method.",
+             level = TestLevel.PARTIAL,
+             purpose = "Verifies the functionality of compile(java.lang.String) method.",
              targets = { @TestTarget(methodName = "compile",
                    methodArgs = {java.lang.String.class})      
              }
@@ -836,12 +838,12 @@ public void testZeroSymbols() {
 
 
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of compile(java.lang.String) method.",
+             level = TestLevel.PARTIAL,
+             purpose = "Verifies the functionality of compile(java.lang.String) method.",
              targets = { @TestTarget(methodName = "compile",
                    methodArgs = {java.lang.String.class}),
-                         @TestTarget(methodName = "toString",
-                   methodArgs = {})      
+                         @TestTarget(methodName = "compile",
+                   methodArgs = {String.class})      
              }
            )          
     public void testBug197() {
@@ -871,8 +873,8 @@ public void testZeroSymbols() {
 
 
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of compile(java.lang.String) method.",
+             level = TestLevel.PARTIAL,
+             purpose = "The test verifies the functionality of compile(java.lang.String) method.",
              targets = { @TestTarget(methodName = "compile",
                    methodArgs = {java.lang.String.class})      
              }
@@ -896,8 +898,9 @@ public void testZeroSymbols() {
     }
 
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of compile(java.lang.String) method.",
+             level = TestLevel.PARTIAL,
+             purpose = "Verifies the functionality of compile(java.lang.String) " +
+                    "method.",
              targets = { @TestTarget(methodName = "compile",
                    methodArgs = {java.lang.String.class})      
              }
@@ -911,8 +914,9 @@ public void testZeroSymbols() {
     }
 
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of compile(java.lang.String) method.",
+             level = TestLevel.PARTIAL,
+             purpose = "Verifies the functionality of compile(java.lang.String) " +
+                    "method.",
              targets = { @TestTarget(methodName = "compile",
                    methodArgs = {java.lang.String.class})      
              }
@@ -926,8 +930,9 @@ public void testZeroSymbols() {
     }
 
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of compile(java.lang.String) method.",
+             level = TestLevel.PARTIAL,
+             purpose = "Verifies the functionality of compile(java.lang.String) " +
+                    "method.",
              targets = { @TestTarget(methodName = "compile",
                    methodArgs = {java.lang.String.class})      
              }
@@ -941,8 +946,9 @@ public void testZeroSymbols() {
     }
 
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of compile(java.lang.String) method.",
+             level = TestLevel.PARTIAL,
+             purpose = "Verifies the functionality of compile(java.lang.String) " +
+                    "method.",
              targets = { @TestTarget(methodName = "compile",
                    methodArgs = {java.lang.String.class})      
              }
@@ -956,8 +962,9 @@ public void testZeroSymbols() {
     }
 
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of compile(java.lang.String) method.",
+             level = TestLevel.PARTIAL,
+             purpose = "Verifies the functionality of compile(java.lang.String) " +
+                    "method.",
              targets = { @TestTarget(methodName = "compile",
                    methodArgs = {java.lang.String.class})      
              }
@@ -974,8 +981,9 @@ public void testZeroSymbols() {
     }
 
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of compile(java.lang.String) method.",
+             level = TestLevel.PARTIAL,
+             purpose = "Verifies the functionality of compile(java.lang.String) " +
+                    "method.",
              targets = { @TestTarget(methodName = "compile",
                    methodArgs = {java.lang.String.class})      
              }
@@ -992,13 +1000,14 @@ public void testZeroSymbols() {
     }
 
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of compile(java.lang.String) method.",
+             level = TestLevel.PARTIAL,
+             purpose = "Verifies the functionality of " +
+                    "compile(java.lang.String) method.",
              targets = { @TestTarget(methodName = "compile",
                    methodArgs = {java.lang.String.class})      
              }
            )          
-    public void _testFindBoundaryCases7() {
+    public void disabled_testFindBoundaryCases7() {
         String[] res = { "", "a", "", "" };
         Pattern pat = Pattern.compile(".*");
         Matcher mat = pat.matcher("\na\n");
@@ -1011,8 +1020,8 @@ public void testZeroSymbols() {
     }
 
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of compile(java.lang.String) & " +
+             level = TestLevel.PARTIAL,
+             purpose = "Verifies the functionality of compile(java.lang.String) & " +
                      "matcher(java.lang.CharSequence) methods.",
              targets = { @TestTarget(methodName = "compile",
                    methodArgs = {java.lang.String.class}),
@@ -1038,8 +1047,8 @@ public void testZeroSymbols() {
     }
 
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of compile(java.lang.String) & " +
+             level = TestLevel.PARTIAL,
+             purpose = "Verifies the functionality of compile(java.lang.String) & " +
                      "matcher(java.lang.CharSequence) methods.",
              targets = { @TestTarget(methodName = "compile",
                    methodArgs = {java.lang.String.class}),
@@ -1047,7 +1056,7 @@ public void testZeroSymbols() {
                    methodArgs = {java.lang.CharSequence.class})
              }
            )          
-    public void _testBackReferences1() {
+    public void disabled_testBackReferences1() {
         Pattern pat = Pattern.compile("(\\((\\w*):(.*):(\\2)\\))");
         Matcher mat = pat
                 .matcher("(start1: word :start1)(start2: word :start2)");
@@ -1062,8 +1071,8 @@ public void testZeroSymbols() {
     }
 
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of compile(java.lang.String, int) & " +
+             level = TestLevel.PARTIAL,
+             purpose = "Verifies the functionality of compile(java.lang.String, int) & " +
                      "matcher(java.lang.CharSequence) methods.",
              targets = { @TestTarget(methodName = "compile",
                    methodArgs = {java.lang.String.class, java.lang.Integer.class}),
@@ -1082,8 +1091,8 @@ public void testZeroSymbols() {
     }
 
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of compile(java.lang.String, int) & " +
+             level = TestLevel.PARTIAL,
+             purpose = "Verifies the functionality of compile(java.lang.String, int) & " +
                      "matcher(java.lang.CharSequence) methods.",
              targets = { @TestTarget(methodName = "compile",
                    methodArgs = {java.lang.String.class, java.lang.Integer.class}),
@@ -1097,13 +1106,19 @@ public void testZeroSymbols() {
         mat.matches();
         assertEquals(15, mat.end());
     }
-//
-    //TODO
-    //TODO
-    //TODO
-    //TODO
-    //TODO
-    //TODO
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies serialization/deserialization.",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationSelf",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "!SerializationGolden",
+          methodArgs = {}
+        )
+    })
     public void testSerialization() throws Exception {
         Pattern pat = Pattern.compile("a*bc");
         SerializableAssert comparator = new SerializableAssert() {
@@ -1118,8 +1133,8 @@ public void testZeroSymbols() {
     }
 
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of compile(java.lang.String, int) & " +
+             level = TestLevel.PARTIAL,
+             purpose = "Verifies the functionality of compile(java.lang.String, int) & " +
                      "matcher(java.lang.CharSequence) methods.",
              targets = { @TestTarget(methodName = "compile",
                    methodArgs = {java.lang.String.class, java.lang.Integer.class}),
@@ -1139,8 +1154,9 @@ public void testZeroSymbols() {
     }
 
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of compile(java.lang.String) method.",
+             level = TestLevel.PARTIAL,
+             purpose = "Verifies the functionality of compile(java.lang.String) " +
+                    "method.",
              targets = { @TestTarget(methodName = "compile",
                    methodArgs = {java.lang.String.class})
              }
@@ -1154,8 +1170,8 @@ public void testZeroSymbols() {
     }
 
     @TestInfo(
-             status = TestStatus.TODO,
-             notes = "The test verifies the functionality of compile(java.lang.String) method.",
+             level = TestLevel.PARTIAL,
+             purpose = "Verifies the functionality of compile(java.lang.String) method.",
              targets = { @TestTarget(methodName = "compile",
                    methodArgs = {java.lang.String.class})
              }
@@ -1166,8 +1182,8 @@ public void testZeroSymbols() {
     }
 
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of compile(java.lang.String) & " +
+             level = TestLevel.PARTIAL,
+             purpose = "Verifies the functionality of compile(java.lang.String) & " +
                      "matcher(java.lang.CharSequence) methods.",
              targets = { @TestTarget(methodName = "compile",
                    methodArgs = {java.lang.String.class}),
@@ -1245,13 +1261,13 @@ public void testZeroSymbols() {
     }
 
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of compile(java.lang.String) method.",
+             level = TestLevel.PARTIAL,
+             purpose = "Verifies the functionality of compile(java.lang.String) method.",
              targets = { @TestTarget(methodName = "compile",
                    methodArgs = {java.lang.String.class})
              }
            )          
-    public void _testCorrectReplacementBackreferencedJointSet() {
+    public void disabled_testCorrectReplacementBackreferencedJointSet() {
         Pattern pat = Pattern.compile("ab(a)*\\1");
         pat = Pattern.compile("abc(cd)fg");
         pat = Pattern.compile("aba*cd");
@@ -1270,8 +1286,8 @@ public void testZeroSymbols() {
     }
 
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of compile(java.lang.String) & " +
+             level = TestLevel.PARTIAL,
+             purpose = "Verifies the functionality of compile(java.lang.String) & " +
                      "matcher(java.lang.CharSequence) methods.",
              targets = { @TestTarget(methodName = "compile",
                    methodArgs = {java.lang.String.class}),
@@ -1286,8 +1302,8 @@ public void testZeroSymbols() {
     }
 
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of compile(java.lang.String) & " +
+             level = TestLevel.PARTIAL,
+             purpose = "Verifies the functionality of compile(java.lang.String) & " +
                      "matcher(java.lang.CharSequence) methods.",
              targets = { @TestTarget(methodName = "compile",
                    methodArgs = {java.lang.String.class}),
@@ -1364,8 +1380,8 @@ public void testZeroSymbols() {
     }
 
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of compile(java.lang.String) & " +
+             level = TestLevel.PARTIAL,
+             purpose = "Verifies the functionality of compile(java.lang.String) & " +
                      "matcher(java.lang.CharSequence) methods.",
              targets = { @TestTarget(methodName = "compile",
                    methodArgs = {java.lang.String.class}),
@@ -1385,10 +1401,14 @@ public void testZeroSymbols() {
     }
 
     @TestInfo(
-             status = TestStatus.TODO,
-             notes = "",
-             targets = {}
-           )          
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies split method for empty string.",
+      targets = {
+        @TestTarget(
+          methodName = "split",
+          methodArgs = {java.lang.CharSequence.class}
+        )
+    })
     public void testSplitEmptyCharSequence() {
         String s1 = "";
         String[] arr = s1.split(":");
@@ -1396,8 +1416,8 @@ public void testZeroSymbols() {
     }
 
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of compile(java.lang.String) & " +
+             level = TestLevel.PARTIAL,
+             purpose = "The test verifies the functionality of compile(java.lang.String) & " +
                      "split(java.lang.CharSequence, int) methods.",
              targets = { @TestTarget(methodName = "compile",
                    methodArgs = {java.lang.String.class}),
@@ -1414,8 +1434,8 @@ public void testZeroSymbols() {
     }
 
     @TestInfo(
-             status = TestStatus.TODO,
-             notes = "The test verifies the functionality of matches(java.lang.String), " +
+             level = TestLevel.PARTIAL,
+             purpose = "The test verifies the functionality of matches(java.lang.String), " +
                      "java.lang.CharSequence) method for case insensitive flags.",
              targets = { @TestTarget(methodName = "matches",
                    methodArgs = {java.lang.String.class, java.lang.CharSequence.class})
@@ -1426,8 +1446,8 @@ public void testZeroSymbols() {
     }
 
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of compile(java.lang.String) & " +
+             level = TestLevel.PARTIAL,
+             purpose = "Verifies the functionality of compile(java.lang.String) & " +
                      "matcher(java.lang.CharSequence) methods.",
              targets = { @TestTarget(methodName = "compile",
                    methodArgs = {java.lang.String.class}),
@@ -1450,8 +1470,8 @@ public void testZeroSymbols() {
     }
 
     @TestInfo(
-             status = TestStatus.TODO, //isCompiled checking not needed test should fail in case of exception
-             notes = "The test verifies the functionality of compile(java.lang.String) &" +
+             level = TestLevel.PARTIAL, //isCompiled checking not needed test should fail in case of exception
+             purpose = "Verifies the functionality of compile(java.lang.String) &" +
                      " compile(java.lang.String, int) methods.",
              targets = { @TestTarget(methodName = "compile",
                    methodArgs = {java.lang.String.class}), 
@@ -1478,8 +1498,8 @@ public void testZeroSymbols() {
     }
 
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of compile(java.lang.String) & " +
+             level = TestLevel.PARTIAL,
+             purpose = "Verifies the functionality of compile(java.lang.String) & " +
                      "matcher(java.lang.CharSequence) methods.",
              targets = { @TestTarget(methodName = "compile",
                    methodArgs = {java.lang.String.class}),
@@ -1520,8 +1540,8 @@ public void testZeroSymbols() {
     }
 
     @TestInfo(
-             status = TestStatus.TODO, //isCompiled checking not needed test should fail in case of exception
-             notes = "The test verifies the functionality of compile(java.lang.String) method.",
+             level = TestLevel.PARTIAL, //isCompiled checking not needed test should fail in case of exception
+             purpose = "Verifies the functionality of compile(java.lang.String) method.",
              targets = { @TestTarget(methodName = "compile",
                    methodArgs = {java.lang.String.class})
              }
@@ -1539,8 +1559,8 @@ public void testZeroSymbols() {
     }
 
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of compile(java.lang.String) & " +
+             level = TestLevel.PARTIAL,
+             purpose = "Verifies the functionality of compile(java.lang.String) & " +
                      "matcher(java.lang.CharSequence) methods.",
              targets = { @TestTarget(methodName = "compile",
                    methodArgs = {java.lang.String.class}),
@@ -1562,8 +1582,8 @@ public void testRestoreFlagsAfterGroup() {
      * \p{javaLowerCase} \p{javaUpperCase} \p{javaWhitespace} \p{javaMirrored}
      */
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of compile(java.lang.String) method.",
+             level = TestLevel.PARTIAL,
+             purpose = "Verifies the functionality of compile(java.lang.String) method.",
              targets = { @TestTarget(methodName = "compile",
                    methodArgs = {java.lang.String.class})
              }
@@ -1890,8 +1910,8 @@ public void testRestoreFlagsAfterGroup() {
 // END android-removed
     
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of compile(java.lang.String) & " +
+             level = TestLevel.PARTIAL,
+             purpose = "Verifies the functionality of compile(java.lang.String) & " +
                      "matcher(java.lang.CharSequence) methods.",
              targets = { @TestTarget(methodName = "compile",
                    methodArgs = {java.lang.String.class}),
@@ -1966,8 +1986,8 @@ public void testRestoreFlagsAfterGroup() {
     }
 
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of compile(java.lang.String) & " +
+             level = TestLevel.PARTIAL,
+             purpose = "Verifies the functionality of compile(java.lang.String) & " +
                      "matcher(java.lang.CharSequence) methods.",
              targets = { @TestTarget(methodName = "compile",
                    methodArgs = {java.lang.String.class}),
@@ -2018,8 +2038,8 @@ public void testRestoreFlagsAfterGroup() {
      */
     
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of compile(java.lang.String) & " +
+             level = TestLevel.PARTIAL,
+             purpose = "Verifies the functionality of compile(java.lang.String) & " +
                      "matcher(java.lang.CharSequence) methods.",
              targets = { @TestTarget(methodName = "compile",
                    methodArgs = {java.lang.String.class}),
@@ -2129,8 +2149,8 @@ public void testRestoreFlagsAfterGroup() {
     }
 
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of compile(java.lang.String) & " +
+             level = TestLevel.PARTIAL,
+             purpose = "Verifies the functionality of compile(java.lang.String) & " +
                      " compile(java.lang.String, int) matcher(java.lang.CharSequence) methods.",
              targets = { @TestTarget(methodName = "compile",
                    methodArgs = {java.lang.String.class}),
@@ -2179,7 +2199,15 @@ public void testRestoreFlagsAfterGroup() {
     /**
      * s java.util.regex.Pattern.quote(String)
      */
-    
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "quote",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_quoteLjava_lang_String() {
         for (String aPattern : testPatterns) {
             Pattern p = Pattern.compile(aPattern);
@@ -2202,8 +2230,8 @@ public void testRestoreFlagsAfterGroup() {
      */
     
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of compile(java.lang.String) & " +
+             level = TestLevel.PARTIAL,
+             purpose = "Verifies the functionality of compile(java.lang.String) & " +
                      "matcher(java.lang.CharSequence) methods.",
              targets = { @TestTarget(methodName = "compile",
                    methodArgs = {java.lang.String.class}),
@@ -2240,8 +2268,8 @@ public void testRestoreFlagsAfterGroup() {
     }
 
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of compile(java.lang.String) & " +
+             level = TestLevel.PARTIAL,
+             purpose = "Verifies the functionality of compile(java.lang.String) & " +
                      "matcher(java.lang.CharSequence) methods.",
              targets = { @TestTarget(methodName = "compile",
                    methodArgs = {java.lang.String.class}),
@@ -2262,8 +2290,8 @@ public void testRestoreFlagsAfterGroup() {
     }
 
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of compile(java.lang.String) & " +
+             level = TestLevel.PARTIAL,
+             purpose = "Verifies the functionality of compile(java.lang.String) & " +
                      "matcher(java.lang.CharSequence) methods.",
              targets = { @TestTarget(methodName = "compile",
                    methodArgs = {java.lang.String.class}),
@@ -2292,8 +2320,8 @@ public void testRestoreFlagsAfterGroup() {
     }
 
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of compile(java.lang.String) & " +
+             level = TestLevel.PARTIAL,
+             purpose = "Verifies the functionality of compile(java.lang.String) & " +
                      "compile(java.lang.String, int) & matcher(java.lang.CharSequence) methods.",
              targets = { @TestTarget(methodName = "compile",
                    methodArgs = {java.lang.String.class}),
@@ -2323,8 +2351,8 @@ public void testRestoreFlagsAfterGroup() {
      * Regression test for HARMONY-688
      */
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of compile(java.lang.String) & " +
+             level = TestLevel.PARTIAL,
+             purpose = "The test verifies the functionality of compile(java.lang.String) & " +
                      "matcher(java.lang.CharSequence) methods.",
              targets = { @TestTarget(methodName = "compile",
                    methodArgs = {java.lang.String.class}),

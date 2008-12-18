@@ -17,6 +17,11 @@
 
 package tests.api.java.io;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass; 
+
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -41,6 +46,7 @@ import java.util.Vector;
 import org.apache.harmony.testframework.serialization.SerializationTest;
 import org.apache.harmony.testframework.serialization.SerializationTest.SerializableAssert;
 
+@TestTargetClass(ObjectInputStream.class) 
 public class ObjectInputStreamTest extends junit.framework.TestCase implements
         Serializable {
 
@@ -117,6 +123,13 @@ public class ObjectInputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectInputStream#readObject()
      */
+    @TestInfo(
+            level = TestLevel.COMPLETE,
+            purpose = "",
+            targets = { @TestTarget(methodName = "readObject", 
+                                    methodArgs = {})                                    
+            }
+        )     
     public void test_readObjectMissingClasses() throws Exception {
         SerializationTest.verifySelf(new A1(), new SerializableAssert() {
             public void assertDeserialized(Serializable initial,
@@ -129,6 +142,13 @@ public class ObjectInputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectInputStream#ObjectInputStream(java.io.InputStream)
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Exceptions checking missed.",
+            targets = { @TestTarget(methodName = "ObjectInputStream", 
+                                    methodArgs = {java.io.InputStream.class})                                    
+            }
+        )     
     public void test_ConstructorLjava_io_InputStream() throws IOException {
         // Test for method java.io.ObjectInputStream(java.io.InputStream)
         oos.writeDouble(Double.MAX_VALUE);
@@ -146,6 +166,13 @@ public class ObjectInputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectInputStream#ObjectInputStream(java.io.InputStream)
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Checks SecurityException and functionality.",
+            targets = { @TestTarget(methodName = "ObjectInputStream", 
+                                    methodArgs = {java.io.InputStream.class})                                    
+            }
+        )     
     public void test_ConstructorLjava_io_InputStream_subtest0() throws IOException {
         SecurityManager sm = System.getSecurityManager();
         System.setSecurityManager(new SecurityManager() {
@@ -201,6 +228,13 @@ public class ObjectInputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectInputStream#available()
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "IOException checking missed.",
+            targets = { @TestTarget(methodName = "available", 
+                                    methodArgs = {})                                    
+            }
+        )        
     public void test_available() throws IOException {
         // Test for method int java.io.ObjectInputStream.available()
         oos.writeBytes("HelloWorld");
@@ -213,6 +247,13 @@ public class ObjectInputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectInputStream#close()
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "IOException checking missed.",
+            targets = { @TestTarget(methodName = "close", 
+                                    methodArgs = {})                                    
+            }
+        )     
     public void test_close() throws IOException {
         // Test for method void java.io.ObjectInputStream.close()
         oos.writeBytes("HelloWorld");
@@ -224,6 +265,13 @@ public class ObjectInputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectInputStream#defaultReadObject()
      */
+    @TestInfo(
+            level = TestLevel.COMPLETE,
+            purpose = "",
+            targets = { @TestTarget(methodName = "defaultReadObject", 
+                                    methodArgs = {})                                    
+            }
+        )      
     public void test_defaultReadObject() throws Exception {
         // Test for method void java.io.ObjectInputStream.defaultReadObject()
         // SM. This method may as well be private, as if called directly it
@@ -245,6 +293,13 @@ public class ObjectInputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectInputStream#read()
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "IOException checking missed.",
+            targets = { @TestTarget(methodName = "read", 
+                                    methodArgs = {})                                    
+            }
+        )       
     public void test_read() throws IOException {
         // Test for method int java.io.ObjectInputStream.read()
         oos.write('T');
@@ -257,6 +312,13 @@ public class ObjectInputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectInputStream#read(byte[], int, int)
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "IOException checking missed.",
+            targets = { @TestTarget(methodName = "read", 
+                                    methodArgs = {byte[].class, int.class, int.class})                                    
+            }
+        )    
     public void test_read$BII() throws IOException {
         // Test for method int java.io.ObjectInputStream.read(byte [], int, int)
         byte[] buf = new byte[10];
@@ -272,6 +334,13 @@ public class ObjectInputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectInputStream#readBoolean()
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Exceptions checking missed.",
+            targets = { @TestTarget(methodName = "readBoolean", 
+                                    methodArgs = {})                                    
+            }
+        )      
     public void test_readBoolean() throws IOException {
         // Test for method boolean java.io.ObjectInputStream.readBoolean()
         oos.writeBoolean(true);
@@ -284,6 +353,13 @@ public class ObjectInputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectInputStream#readByte()
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Exceptions checking missed.",
+            targets = { @TestTarget(methodName = "readByte", 
+                                    methodArgs = {})                                    
+            }
+        )     
     public void test_readByte() throws IOException {
         // Test for method byte java.io.ObjectInputStream.readByte()
         oos.writeByte(127);
@@ -296,6 +372,13 @@ public class ObjectInputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectInputStream#readChar()
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Exceptions checking missed.",
+            targets = { @TestTarget(methodName = "readChar", 
+                                    methodArgs = {})                                    
+            }
+        )      
     public void test_readChar() throws IOException {
         // Test for method char java.io.ObjectInputStream.readChar()
         oos.writeChar('T');
@@ -308,6 +391,13 @@ public class ObjectInputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectInputStream#readDouble()
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Exceptions checking missed.",
+            targets = { @TestTarget(methodName = "readDouble", 
+                                    methodArgs = {})                                    
+            }
+        )    
     public void test_readDouble() throws IOException {
         // Test for method double java.io.ObjectInputStream.readDouble()
         oos.writeDouble(Double.MAX_VALUE);
@@ -321,6 +411,13 @@ public class ObjectInputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectInputStream#readFields()
      */
+    @TestInfo(
+            level = TestLevel.COMPLETE,
+            purpose = "",
+            targets = { @TestTarget(methodName = "readFields", 
+                                    methodArgs = {})                                    
+            }
+        )    
     public void test_readFields() throws Exception {
         // Test for method java.io.ObjectInputStream$GetField
         // java.io.ObjectInputStream.readFields()
@@ -348,6 +445,13 @@ public class ObjectInputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectInputStream#readFloat()
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Exceptions checking missed.",
+            targets = { @TestTarget(methodName = "readFloat", 
+                                    methodArgs = {})                                    
+            }
+        )       
     public void test_readFloat() throws IOException {
         // Test for method float java.io.ObjectInputStream.readFloat()
         oos.writeFloat(Float.MAX_VALUE);
@@ -361,6 +465,13 @@ public class ObjectInputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectInputStream#readFully(byte[])
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Exceptions checking missed.",
+            targets = { @TestTarget(methodName = "readFully", 
+                                    methodArgs = {byte[].class})                                    
+            }
+        )     
     public void test_readFully$B() throws IOException {
         // Test for method void java.io.ObjectInputStream.readFully(byte [])
         byte[] buf = new byte[10];
@@ -376,6 +487,13 @@ public class ObjectInputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectInputStream#readFully(byte[], int, int)
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Exceptions checking missed",
+            targets = { @TestTarget(methodName = "readFully", 
+                                    methodArgs = {byte[].class, int.class, int.class})                                    
+            }
+        )      
     public void test_readFully$BII() throws IOException {
         // Test for method void java.io.ObjectInputStream.readFully(byte [],
         // int, int)
@@ -392,6 +510,13 @@ public class ObjectInputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectInputStream#readInt()
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Exceptions checking missed",
+            targets = { @TestTarget(methodName = "readInt", 
+                                    methodArgs = {})                                    
+            }
+        )    
     public void test_readInt() throws IOException {
         // Test for method int java.io.ObjectInputStream.readInt()
         oos.writeInt(Integer.MAX_VALUE);
@@ -405,6 +530,13 @@ public class ObjectInputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectInputStream#readLine()
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "IOException checking missed.",
+            targets = { @TestTarget(methodName = "readLine", 
+                                    methodArgs = {})                                    
+            }
+        )       
     public void test_readLine() throws IOException {
         // Test for method java.lang.String java.io.ObjectInputStream.readLine()
         oos.writeBytes("HelloWorld\nSecondLine");
@@ -419,6 +551,13 @@ public class ObjectInputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectInputStream#readLong()
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Exceptions checking missed",
+            targets = { @TestTarget(methodName = "readLong", 
+                                    methodArgs = {})                                    
+            }
+        )    
     public void test_readLong() throws IOException {
         // Test for method long java.io.ObjectInputStream.readLong()
         oos.writeLong(Long.MAX_VALUE);
@@ -432,6 +571,13 @@ public class ObjectInputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectInputStream#readObject()
      */
+    @TestInfo(
+            level = TestLevel.COMPLETE,
+            purpose = "",
+            targets = { @TestTarget(methodName = "readObject", 
+                                    methodArgs = {})                                    
+            }
+        )     
     public void test_readObject() throws Exception {
         // Test for method java.lang.Object
         // java.io.ObjectInputStream.readObject()
@@ -515,13 +661,20 @@ public class ObjectInputStreamTest extends junit.framework.TestCase implements
         Object o = ois.readObject();
         assertEquals(C.class, o.getClass());
 
-		// Regression for HARMONY-846
+        // Regression for HARMONY-846
         assertNull(new ObjectInputStream() {}.readObject());
     }
 
     /**
      * @tests java.io.ObjectInputStream#readObjectOverride()
      */
+    @TestInfo(
+            level = TestLevel.COMPLETE,
+            purpose = "",
+            targets = { @TestTarget(methodName = "readObject", 
+                                    methodArgs = {})                                    
+            }
+        )     
     public void test_readObjectOverride() throws Exception {
         // Regression for HARMONY-846
         assertNull(new ObjectInputStream() {
@@ -551,6 +704,13 @@ public class ObjectInputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectInputStream#readObject()
      */
+    @TestInfo(
+            level = TestLevel.COMPLETE,
+            purpose = "",
+            targets = { @TestTarget(methodName = "readObject", 
+                                    methodArgs = {})                                    
+            }
+        )     
     public void test_readObjectCorrupt() {
         byte[] bytes = { 00, 00, 00, 0x64, 0x43, 0x48, (byte) 0xFD, 0x71, 00,
                 00, 0x0B, (byte) 0xB8, 0x4D, 0x65 };
@@ -573,6 +733,13 @@ public class ObjectInputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectInputStream#readShort()
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Exceptions checking missed",
+            targets = { @TestTarget(methodName = "readShort", 
+                                    methodArgs = {})                                    
+            }
+        )     
     public void test_readShort() throws IOException {
         // Test for method short java.io.ObjectInputStream.readShort()
         oos.writeShort(Short.MAX_VALUE);
@@ -586,6 +753,13 @@ public class ObjectInputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectInputStream#readUnsignedByte()
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Exceptions checking missed",
+            targets = { @TestTarget(methodName = "readUnsignedByte", 
+                                    methodArgs = {})                                    
+            }
+        )     
     public void test_readUnsignedByte() throws IOException {
         // Test for method int java.io.ObjectInputStream.readUnsignedByte()
         oos.writeByte(-1);
@@ -599,6 +773,13 @@ public class ObjectInputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectInputStream#readUnsignedShort()
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Exceptions checking missed",
+            targets = { @TestTarget(methodName = "readUnsignedShort", 
+                                    methodArgs = {})                                    
+            }
+        )    
     public void test_readUnsignedShort() throws IOException {
         // Test for method int java.io.ObjectInputStream.readUnsignedShort()
         oos.writeShort(-1);
@@ -612,6 +793,13 @@ public class ObjectInputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectInputStream#readUTF()
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Exceptions checking missed",
+            targets = { @TestTarget(methodName = "readUTF", 
+                                    methodArgs = {})                                    
+            }
+        )      
     public void test_readUTF() throws IOException {
         // Test for method java.lang.String java.io.ObjectInputStream.readUTF()
         oos.writeUTF("HelloWorld");
@@ -624,6 +812,13 @@ public class ObjectInputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectInputStream#skipBytes(int)
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Exceptions checking missed",
+            targets = { @TestTarget(methodName = "skipBytes", 
+                                    methodArgs = {int.class})                                    
+            }
+        )    
     public void test_skipBytesI() throws IOException {
         // Test for method int java.io.ObjectInputStream.skipBytes(int)
         byte[] buf = new byte[10];
@@ -643,20 +838,27 @@ public class ObjectInputStreamTest extends junit.framework.TestCase implements
     }
     
     // Regression Test for JIRA 2192
-	public void test_readObject_withPrimitiveClass() throws Exception {
-		File file = new File("test.ser");
-		file.deleteOnExit();
-		Test test = new Test();
-		ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(
-				file));
-		out.writeObject(test);
-		out.close();
+    @TestInfo(
+            level = TestLevel.COMPLETE,
+            purpose = "",
+            targets = { @TestTarget(methodName = "readObject", 
+                                    methodArgs = {})                                    
+            }
+        )    
+    public void test_readObject_withPrimitiveClass() throws Exception {
+        File file = new File("test.ser");
+        file.deleteOnExit();
+        Test test = new Test();
+        ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(
+                file));
+        out.writeObject(test);
+        out.close();
 
-		ObjectInputStream in = new ObjectInputStream(new FileInputStream(file));
-		Test another = (Test) in.readObject();
-		in.close();
-		assertEquals(test, another);
-	}
+        ObjectInputStream in = new ObjectInputStream(new FileInputStream(file));
+        Test another = (Test) in.readObject();
+        in.close();
+        assertEquals(test, another);
+    }
     
     //Regression Test for JIRA-2249
     public static class ObjectOutputStreamWithWriteDesc extends
@@ -689,54 +891,64 @@ public class ObjectInputStreamTest extends junit.framework.TestCase implements
     }
     
     static class TestClassForSerialization implements Serializable {
-		private static final long serialVersionUID = 1L;
-	}
+        private static final long serialVersionUID = 1L;
+    }
 
+    @TestInfo(
+            level = TestLevel.COMPLETE,
+            purpose = "Verifies that object can be serialized and deserialized correctly " +
+                    "with reading descriptor from serialization stream.",
+            targets = { @TestTarget(methodName = "readClassDescriptor", 
+                                    methodArgs = {}),
+                        @TestTarget(methodName = "readObject", 
+                                    methodArgs = {})                            
+            }
+        )    
     public void test_ClassDescriptor() throws IOException,
-			ClassNotFoundException {
+            ClassNotFoundException {
 
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		ObjectOutputStreamWithWriteDesc oos = new ObjectOutputStreamWithWriteDesc(
-				baos);
-		oos.writeObject(String.class);
-		oos.close();
-		Class cls = TestClassForSerialization.class;
-		ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-		ObjectIutputStreamWithReadDesc ois = new ObjectIutputStreamWithReadDesc(
-				bais, cls);
-		Object obj = ois.readObject();
-		ois.close();
-		assertEquals(cls, obj);
-	}
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ObjectOutputStreamWithWriteDesc oos = new ObjectOutputStreamWithWriteDesc(
+                baos);
+        oos.writeObject(String.class);
+        oos.close();
+        Class cls = TestClassForSerialization.class;
+        ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+        ObjectIutputStreamWithReadDesc ois = new ObjectIutputStreamWithReadDesc(
+                bais, cls);
+        Object obj = ois.readObject();
+        ois.close();
+        assertEquals(cls, obj);
+    }
         
 
-	// Regression Test for JIRA-2340
+    // Regression Test for JIRA-2340
     public static class ObjectOutputStreamWithWriteDesc1 extends
-			ObjectOutputStream {
-		public ObjectOutputStreamWithWriteDesc1(OutputStream os)
-				throws IOException {
-			super(os);
-		}
+            ObjectOutputStream {
+        public ObjectOutputStreamWithWriteDesc1(OutputStream os)
+                throws IOException {
+            super(os);
+        }
 
-		public void writeClassDescriptor(ObjectStreamClass desc)
-				throws IOException {
-			super.writeClassDescriptor(desc);
-		}
-	}
+        public void writeClassDescriptor(ObjectStreamClass desc)
+                throws IOException {
+            super.writeClassDescriptor(desc);
+        }
+    }
 
-	public static class ObjectIutputStreamWithReadDesc1 extends
-			ObjectInputStream {		
+    public static class ObjectIutputStreamWithReadDesc1 extends
+            ObjectInputStream {        
 
-		public ObjectIutputStreamWithReadDesc1(InputStream is)
-				throws IOException {
-			super(is);			
-		}
+        public ObjectIutputStreamWithReadDesc1(InputStream is)
+                throws IOException {
+            super(is);            
+        }
 
-		public ObjectStreamClass readClassDescriptor() throws IOException,
-				ClassNotFoundException {
-			return super.readClassDescriptor();
-		}
-	}
+        public ObjectStreamClass readClassDescriptor() throws IOException,
+                ClassNotFoundException {
+            return super.readClassDescriptor();
+        }
+    }
     
     // Regression test for Harmony-1921
     public static class ObjectInputStreamWithResolve extends ObjectInputStream {
@@ -753,7 +965,13 @@ public class ObjectInputStreamTest extends junit.framework.TestCase implements
             return super.resolveClass(desc);
         }
     }
-
+    @TestInfo(
+            level = TestLevel.COMPLETE,
+            purpose = "",
+            targets = { @TestTarget(methodName = "readObject", 
+                                    methodArgs = {})                                    
+            }
+        )
     public void test_resolveClass() throws Exception {
         org.apache.harmony.luni.tests.pkg1.TestClass to1 = new org.apache.harmony.luni.tests.pkg1.TestClass();
         to1.i = 555;
@@ -772,7 +990,7 @@ public class ObjectInputStreamTest extends junit.framework.TestCase implements
                     + to2.i);
         }
     }
-	
+    
     static class ObjectInputStreamWithResolveObject extends ObjectInputStream {
         
         public static Integer intObj = Integer.valueOf(1000);
@@ -793,6 +1011,13 @@ public class ObjectInputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectInputStream#resolveObject(Object)
      */
+    @TestInfo(
+            level = TestLevel.COMPLETE,
+            purpose = "",
+            targets = { @TestTarget(methodName = "resolveObject", 
+                                    methodArgs = {Object.class})                                    
+            }
+        )
     public void test_resolveObjectLjava_lang_Object() throws Exception {
         // Write an Integer object into memory
         Integer original = new Integer(10);
@@ -814,24 +1039,31 @@ public class ObjectInputStreamTest extends junit.framework.TestCase implements
         assertEquals(ObjectInputStreamWithResolveObject.intObj, actual);
     }
     
-	public void test_readClassDescriptor() throws IOException,
-			ClassNotFoundException {
+    @TestInfo(
+            level = TestLevel.COMPLETE,
+            purpose = "",
+            targets = { @TestTarget(methodName = "readClassDescriptor", 
+                                    methodArgs = {})                                    
+            }
+        )
+    public void test_readClassDescriptor() throws IOException,
+            ClassNotFoundException {
 
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		ObjectOutputStreamWithWriteDesc1 oos = new ObjectOutputStreamWithWriteDesc1(
-				baos);
-		ObjectStreamClass desc = ObjectStreamClass
-		.lookup(TestClassForSerialization.class);
-		oos.writeClassDescriptor(desc);
-		oos.close();
-		
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ObjectOutputStreamWithWriteDesc1 oos = new ObjectOutputStreamWithWriteDesc1(
+                baos);
+        ObjectStreamClass desc = ObjectStreamClass
+        .lookup(TestClassForSerialization.class);
+        oos.writeClassDescriptor(desc);
+        oos.close();
+        
         byte[] bytes = baos.toByteArray();
-		ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
-		ObjectIutputStreamWithReadDesc1 ois = new ObjectIutputStreamWithReadDesc1(
-				bais);
-		Object obj = ois.readClassDescriptor();
-		ois.close();
-		assertEquals(desc.getClass(), obj.getClass());
+        ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+        ObjectIutputStreamWithReadDesc1 ois = new ObjectIutputStreamWithReadDesc1(
+                bais);
+        Object obj = ois.readClassDescriptor();
+        ois.close();
+        assertEquals(desc.getClass(), obj.getClass());
         
         //eof
         bais = new ByteArrayInputStream(bytes);
@@ -879,7 +1111,7 @@ public class ObjectInputStreamTest extends junit.framework.TestCase implements
             ois.close();
         }
 
-	}
+    }
     
     static class ExceptionalBufferedInputStream extends BufferedInputStream {
         private boolean eof = false;
@@ -919,6 +1151,13 @@ public class ObjectInputStreamTest extends junit.framework.TestCase implements
     }
 
     // Regression Test for Harmony-2402
+    @TestInfo(
+            level = TestLevel.COMPLETE,
+            purpose = "",
+            targets = { @TestTarget(methodName = "registerValidation", 
+                                    methodArgs = {java.io.ObjectInputValidation.class, int.class})                                    
+            }
+        )        
     public void test_registerValidation() throws Exception {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         new ObjectOutputStream(baos);
@@ -946,15 +1185,15 @@ public class ObjectInputStreamTest extends junit.framework.TestCase implements
 
 
 class Test implements Serializable {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	Class classes[] = new Class[] { byte.class, short.class, int.class,
-			long.class, boolean.class, char.class, float.class, double.class };
+    Class classes[] = new Class[] { byte.class, short.class, int.class,
+            long.class, boolean.class, char.class, float.class, double.class };
 
-	public boolean equals(Object o) {
-		if (!(o instanceof Test)) {
-			return false;
-		}
-		return Arrays.equals(classes, ((Test) o).classes);
-	}
+    public boolean equals(Object o) {
+        if (!(o instanceof Test)) {
+            return false;
+        }
+        return Arrays.equals(classes, ((Test) o).classes);
+    }
 }

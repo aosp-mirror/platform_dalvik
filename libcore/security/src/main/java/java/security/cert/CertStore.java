@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package java.security.cert;
 
 import java.security.AccessController;
@@ -35,10 +30,12 @@ import org.apache.harmony.security.internal.nls.Messages;
 
 
 /**
- * @com.intel.drl.spec_ref
+ * This class provides the functionality to retrieve {@code Certificate}s and
+ * {@code CRL}s from a read-only repository. This repository may be very large
+ * and may store trusted as well as untrusted certificates.
  * 
+ * @since Android 1.0
  */
-
 public class CertStore {
 
     // Store spi implementation service name
@@ -67,7 +64,17 @@ public class CertStore {
     private final CertStoreParameters certStoreParams;
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code CertStore} instance.
+     * 
+     * @param storeSpi
+     *            the implementation delegate.
+     * @param provider
+     *            the security provider.
+     * @param type
+     *            the certificate store type.
+     * @param params
+     *            the certificate store parameters (may be {@code null}.
+     * @since Android 1.0
      */
     protected CertStore(CertStoreSpi storeSpi, Provider provider, String type,
             CertStoreParameters params) {
@@ -78,10 +85,23 @@ public class CertStore {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code CertStore} instance with the specified type and
+     * initialized with the specified parameters.
      * 
-     * throws NullPointerException if type is null (instead of
-     * NoSuchAlgorithmException as in 1.4 release)
+     * @param type
+     *            the certificate store type.
+     * @param params
+     *            the certificate store parameters (may be {@code null}).
+     * @return the new certificate store instance.
+     * @throws NoSuchAlgorithmException
+     *             if no provider can provide the specified certificate store
+     *             type.
+     * @throws InvalidAlgorithmParameterException
+     *             if the specified parameters cannot be used to initialize this
+     *             certificate store instance.
+     * @throws NullPointerException
+     *             if the {@code type} is {@code null}.
+     * @since Android 1.0
      */
     public static CertStore getInstance(String type, CertStoreParameters params)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException {
@@ -105,12 +125,29 @@ public class CertStore {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code CertStore} instance from the specified provider with
+     * the specified type and initialized with the specified parameters.
      * 
-     * throws NullPointerException if type is null (instead of
-     * NoSuchAlgorithmException as in 1.4 release)
-     * 
-     * FIXME: IllegalArgumentException when provider is empty
+     * @param type
+     *            the certificate store type.
+     * @param params
+     *            the certificate store parameters (may be {@code null}).
+     * @param provider
+     *            the name of the provider.
+     * @return the new certificate store instance.
+     * @throws NoSuchAlgorithmException
+     *             if the specified provider cannot provide the requested
+     *             certificate store type.
+     * @throws NoSuchProviderException
+     *             if no provider with the specified name can be found.
+     * @throws InvalidAlgorithmParameterException
+     *             if the specified parameters cannot be used to initialize this
+     *             certificate store instance.
+     * @throws IllegalArgumentException
+     *             if provider is null of empty.
+     * @throws NullPointerException
+     *             if {@code type} is {@code null}.
+     * @since Android 1.0
      */
     public static CertStore getInstance(String type,
             CertStoreParameters params, String provider)
@@ -127,10 +164,26 @@ public class CertStore {
     }
 
     /**
-     * @com.intel.drl.spec_ref
-     * 
-     * throws NullPointerException if type is null (instead of
-     * NoSuchAlgorithmException as in 1.4 release)
+     * Creates a new {@code CertStore} instance from the specified provider with
+     * the specified type and initialized with the specified parameters.
+     * @param type
+     *            the certificate store type.
+     * @param params
+     *            the certificate store parameters (may be {@code null}).
+     * @param provider
+     *            the name of the provider.
+     * @return the new certificate store instance.
+     * @throws NoSuchAlgorithmException
+     *             if the specified provider cannot provide the requested
+     *             certificate store type.
+     * @throws InvalidAlgorithmParameterException
+     *             if the specified parameters cannot be used to initialize this
+     *             certificate store instance.
+     * @throws IllegalArgumentException
+     *             if provider is {@code null}.
+     * @throws NullPointerException
+     *             if {@code type} is {@code null}.
+     * @since Android 1.0
      */
     public static CertStore getInstance(String type,
             CertStoreParameters params, Provider provider)
@@ -158,21 +211,32 @@ public class CertStore {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the certificate store type.
+     * 
+     * @return the certificate store type.
+     * @since Android 1.0
      */
     public final String getType() {
         return type;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the security provider.
+     * 
+     * @return the security provider.
+     * @since Android 1.0
      */
     public final Provider getProvider() {
         return provider;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns a copy of the certificate store parameters that were used to
+     * initialize this instance.
+     * 
+     * @return a copy of the certificate store parameters or {@code null} if
+     *         none were specified.
+     * @since Android 1.0
      */
     public final CertStoreParameters getCertStoreParameters() {
         if (certStoreParams == null) {
@@ -183,7 +247,17 @@ public class CertStore {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the list of {@code Certificate}s for the specified {@code
+     * CertSelector} from this certificate store.
+     * 
+     * @param selector
+     *            the selector containing the criteria to search for
+     *            certificates in this certificate store.
+     * @return the list of {@code Certificate}s that match the criteria of the
+     *         specified selector.
+     * @throws CertStoreException
+     *             if error(s) occur.
+     * @since Android 1.0
      */
     public final Collection<? extends Certificate> getCertificates(CertSelector selector)
             throws CertStoreException {
@@ -191,7 +265,17 @@ public class CertStore {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the list of {@code CRL}s for the specified {@code CRLSelector}
+     * from this certificate store.
+     * 
+     * @param selector
+     *            the selector containing the criteria to search for certificate
+     *            revocation lists in this store.
+     * @return the list of {@code CRL}s that match the criteria of the specified
+     *         selector
+     * @throws CertStoreException
+     *             if error(s) occur.
+     * @since Android 1.0
      */
     public final Collection<? extends CRL> getCRLs(CRLSelector selector)
             throws CertStoreException {
@@ -199,8 +283,14 @@ public class CertStore {
     }
 
     /**
-     * @com.intel.drl.spec_ref
-     */
+     * Returns the default {@code CertStore} type from the <i>Security
+     * Properties</i>.
+     * 
+     * @return the default {@code CertStore} type from the <i>Security
+     *         Properties</i>, or the string {@code "LDAP"} if it cannot be
+     *         determined.
+     * @since Android 1.0
+     */    
     public static final String getDefaultType() {
         String defaultType = AccessController
                 .doPrivileged(new java.security.PrivilegedAction<String>() {

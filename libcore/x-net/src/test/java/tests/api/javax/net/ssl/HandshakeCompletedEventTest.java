@@ -17,6 +17,11 @@
 
 package tests.api.javax.net.ssl;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.security.Principal;
@@ -35,6 +40,7 @@ import junit.framework.TestCase;
  * Tests for <code>HandshakeCompletedEvent</code> class constructors and methods.
  * 
  */
+@TestTargetClass(HandshakeCompletedEvent.class) 
 public class HandshakeCompletedEventTest extends TestCase {
 
     int port;
@@ -81,11 +87,20 @@ public class HandshakeCompletedEventTest extends TestCase {
         }
     }
 
-    public final void test_Constructor() {
-    	if (noFreePort || noSocket) {
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verification with null/incorrect parameters missed",
+      targets = {
+        @TestTarget(
+          methodName = "HandshakeCompletedEvent",
+          methodArgs = {SSLSocket.class, SSLSession.class}
+        )
+    })
+    public final void _test_Constructor() {
+        if (noFreePort || noSocket) {
             return;
         }
-    	SSLSession ses = new MySSLSession();
+        SSLSession ses = new MySSLSession();
         HandshakeCompletedEvent event = new HandshakeCompletedEvent(soc, ses);
         if (!ses.equals(event.getSession())) {
             fail("incorrect session");
@@ -95,7 +110,16 @@ public class HandshakeCompletedEventTest extends TestCase {
         }
     }
 
-    public final void test_getCipherSuite() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getCipherSuite",
+          methodArgs = {}
+        )
+    })
+    public final void _test_getCipherSuite() {
         if (noFreePort || noSocket) {
             return;
         }
@@ -115,21 +139,39 @@ public class HandshakeCompletedEventTest extends TestCase {
     /**
      * @tests javax.net.ssl.HandshakeCompletedEvent#getLocalPrincipal()
      */
-    public void test_getLocalPrincipal() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getLocalPrincipal",
+          methodArgs = {}
+        )
+    })
+    public void _test_getLocalPrincipal() {
         if (noFreePort || noSocket) return;
         SSLSession ses = new MySSLSession();
         HandshakeCompletedEvent event = new HandshakeCompletedEvent(soc, ses);
         Principal lp     = event.getLocalPrincipal();
         Principal ses_lp = ses.getLocalPrincipal(); 
         assertEquals("Incorrect value of local principal",
-        		lp, ses_lp);
+                lp, ses_lp);
     }
     
-    public final void test_getLocalCertificates() {
-    	if (noFreePort || noSocket) {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getLocalCertificates",
+          methodArgs = {}
+        )
+    })
+    public final void _test_getLocalCertificates() {
+        if (noFreePort || noSocket) {
             return;
         }
-    	SSLSession ses = new MySSLSession();
+        SSLSession ses = new MySSLSession();
         HandshakeCompletedEvent event = new HandshakeCompletedEvent(soc, ses);
 
         Certificate[] certs = event.getLocalCertificates();
@@ -147,11 +189,20 @@ public class HandshakeCompletedEventTest extends TestCase {
         }
     }
 
-    public final void test_getPeerCertificateChain() {
-    	if (noFreePort || noSocket) {
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Just SSLPeerUnverifiedException case was tested",
+      targets = {
+        @TestTarget(
+          methodName = "getPeerCertificateChain",
+          methodArgs = {}
+        )
+    })
+    public final void _test_getPeerCertificateChain() {
+        if (noFreePort || noSocket) {
             return;
         }
-    	SSLSession ses = new MySSLSession();
+        SSLSession ses = new MySSLSession();
         HandshakeCompletedEvent event = new HandshakeCompletedEvent(soc, ses);
         try {
             event.getPeerCertificateChain();
@@ -160,11 +211,20 @@ public class HandshakeCompletedEventTest extends TestCase {
         }
     }
 
-    public final void test_getPeerCertificates() {
-    	if (noFreePort || noSocket) {
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Just SSLPeerUnverifiedException case was tested",
+      targets = {
+        @TestTarget(
+          methodName = "getPeerCertificates",
+          methodArgs = {}
+        )
+    })
+    public final void _test_getPeerCertificates() {
+        if (noFreePort || noSocket) {
             return;
         }
-    	SSLSession ses = new MySSLSession();
+        SSLSession ses = new MySSLSession();
         HandshakeCompletedEvent event = new HandshakeCompletedEvent(soc, ses);
         try {
             event.getPeerCertificates();
@@ -176,7 +236,16 @@ public class HandshakeCompletedEventTest extends TestCase {
     /**
      * @tests javax.net.ssl.HandshakeCompletedEvent#getPeerPrincipal()
      */
-    public void test_getPeerPrincipal()
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Just SSLPeerUnverifiedException case was tested",
+      targets = {
+        @TestTarget(
+          methodName = "getPeerPrincipal",
+          methodArgs = {}
+        )
+    })
+    public void _test_getPeerPrincipal()
         throws SSLPeerUnverifiedException {
         if (noFreePort || noSocket) return;
         SSLSession ses = new MySSLSession();
@@ -184,26 +253,44 @@ public class HandshakeCompletedEventTest extends TestCase {
         Principal pp     = event.getPeerPrincipal();
         Principal ses_pp = ses.getPeerPrincipal(); 
         assertEquals("Incorrect value of peer principal",
-        		pp, ses_pp);
+                pp, ses_pp);
     }
 
     /**
      * @tests javax.net.ssl.HandshakeCompletedEvent#getSession()
      */
-    public void test_getSession() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getSession",
+          methodArgs = {}
+        )
+    })
+    public void _test_getSession() {
         if (noFreePort || noSocket) return;
         SSLSession ses = new MySSLSession();
         HandshakeCompletedEvent event = new HandshakeCompletedEvent(soc, ses);
         SSLSession s = event.getSession();
         assertEquals("Incorrect value of session", s, ses);
         assertNull("Session value is not null",
-        		new HandshakeCompletedEvent(soc, null).getSession());
+                new HandshakeCompletedEvent(soc, null).getSession());
     }
 
     /**
      * @tests javax.net.ssl.HandshakeCompletedEvent#getSocket()
      */
-    public void test_getSocket() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getSocket",
+          methodArgs = {}
+        )
+    })
+    public void _test_getSocket() {
         if (noFreePort || noSocket) return;
         SSLSession ses = new MySSLSession();
         HandshakeCompletedEvent event = new HandshakeCompletedEvent(soc, ses);

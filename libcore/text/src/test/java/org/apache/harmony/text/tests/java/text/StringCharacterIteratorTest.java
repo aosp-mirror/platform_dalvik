@@ -17,17 +17,32 @@
 
 package org.apache.harmony.text.tests.java.text;
 
-import java.text.CharacterIterator;
-import java.text.StringCharacterIterator;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
 
+import java.text.CharacterIterator;
+import java.text.StringCharacterIterator;
+
+@TestTargetClass(StringCharacterIterator.class) 
 public class StringCharacterIteratorTest extends TestCase {
 
     /**
      * @tests java.text.StringCharacterIterator.StringCharacterIterator(String,
      *        int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "StringCharacterIterator",
+          methodArgs = {java.lang.String.class, int.class}
+        )
+    })
     public void test_ConstructorI() {
         assertNotNull(new StringCharacterIterator("value", 0));
         assertNotNull(new StringCharacterIterator("value", "value".length()));
@@ -57,6 +72,15 @@ public class StringCharacterIteratorTest extends TestCase {
     /**
      * @tests java.text.StringCharacterIterator(String, int, int, int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "StringCharacterIterator",
+          methodArgs = {java.lang.String.class, int.class, int.class, int.class}
+        )
+    })
     public void test_ConstructorIII() {
         assertNotNull(new StringCharacterIterator("value", 0, "value".length(),
                 0));
@@ -117,6 +141,15 @@ public class StringCharacterIteratorTest extends TestCase {
     /**
      * @tests java.text.StringCharacterIterator.equals(Object)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "equals",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_equalsLjava_lang_Object() {
         StringCharacterIterator sci0 = new StringCharacterIterator("fixture");
         assertEquals(sci0, sci0);
@@ -145,6 +178,15 @@ public class StringCharacterIteratorTest extends TestCase {
     /**
      * @tests java.text.StringCharacterIterator.clone()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "clone",
+          methodArgs = {}
+        )
+    })
     public void test_clone() {
         StringCharacterIterator sci0 = new StringCharacterIterator("fixture");
         assertSame(sci0, sci0);
@@ -161,6 +203,16 @@ public class StringCharacterIteratorTest extends TestCase {
     /**
      * @tests java.text.StringCharacterIterator.current()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify that current() method returns DONE " +
+            "if the current position is off the end of the text.",
+      targets = {
+        @TestTarget(
+          methodName = "current",
+          methodArgs = {}
+        )
+    })
     public void test_current() {
         StringCharacterIterator fixture = new StringCharacterIterator("fixture");
         assertEquals('f', fixture.current());
@@ -175,6 +227,15 @@ public class StringCharacterIteratorTest extends TestCase {
     /**
      * @tests java.text.StringCharacterIterator.first()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "first",
+          methodArgs = {}
+        )
+    })
     public void test_first() {
         StringCharacterIterator fixture = new StringCharacterIterator("fixture");
         assertEquals('f', fixture.first());
@@ -197,6 +258,15 @@ public class StringCharacterIteratorTest extends TestCase {
     /**
      * @tests java.text.StringCharacterIterator.getBeginIndex()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getBeginIndex",
+          methodArgs = {}
+        )
+    })
     public void test_getBeginIndex() {
         StringCharacterIterator fixture = new StringCharacterIterator("fixture");
         assertEquals(0, fixture.getBeginIndex());
@@ -214,6 +284,15 @@ public class StringCharacterIteratorTest extends TestCase {
     /**
      * @tests java.text.StringCharacterIterator.getEndIndex()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getEndIndex",
+          methodArgs = {}
+        )
+    })
     public void test_getEndIndex() {
         StringCharacterIterator fixture = new StringCharacterIterator("fixture");
         assertEquals("fixture".length(), fixture.getEndIndex());
@@ -233,6 +312,15 @@ public class StringCharacterIteratorTest extends TestCase {
     /**
      * @tests java.text.StringCharacterIterator.getIndex()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getIndex",
+          methodArgs = {}
+        )
+    })
     public void testGetIndex() {
         StringCharacterIterator fixture = new StringCharacterIterator("fixture");
         assertEquals(0, fixture.getIndex());
@@ -248,6 +336,15 @@ public class StringCharacterIteratorTest extends TestCase {
     /**
      * @tests java.text.StringCharacterIterator.last()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "last",
+          methodArgs = {}
+        )
+    })
     public void testLast() {
         StringCharacterIterator fixture = new StringCharacterIterator("fixture");
         assertEquals('e', fixture.last());
@@ -265,6 +362,15 @@ public class StringCharacterIteratorTest extends TestCase {
     /**
      * @tests java.text.StringCharacterIterator.next()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "next",
+          methodArgs = {}
+        )
+    })
     public void test_next() {
         StringCharacterIterator fixture = new StringCharacterIterator("fixture");
         assertEquals(0, fixture.getIndex());
@@ -303,6 +409,15 @@ public class StringCharacterIteratorTest extends TestCase {
     /**
      * @tests java.text.StringCharacterIterator.previous()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "previous",
+          methodArgs = {}
+        )
+    })
     public void test_previous() {
         StringCharacterIterator fixture = new StringCharacterIterator("fixture");
         assertEquals(CharacterIterator.DONE, fixture.previous());
@@ -348,6 +463,15 @@ public class StringCharacterIteratorTest extends TestCase {
     /**
      * @tests java.text.StringCharacterIterator.setIndex(int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setIndex",
+          methodArgs = {int.class}
+        )
+    })
     public void test_setIndex() {
         StringCharacterIterator fixture = new StringCharacterIterator("fixture");
         while (fixture.next() != CharacterIterator.DONE) {
@@ -377,6 +501,15 @@ public class StringCharacterIteratorTest extends TestCase {
     /**
      * @tests java.text.StringCharacterIterator.setText(String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setText",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_setText() {
         StringCharacterIterator fixture = new StringCharacterIterator("fixture");
         fixture.setText("fix");
@@ -394,6 +527,15 @@ public class StringCharacterIteratorTest extends TestCase {
     /**
      * @tests java.text.StringCharacterIterator#StringCharacterIterator(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "StringCharacterIterator",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() {
         assertNotNull(new StringCharacterIterator("value"));
         assertNotNull(new StringCharacterIterator(""));
@@ -416,6 +558,15 @@ public class StringCharacterIteratorTest extends TestCase {
      * @tests java.text.StringCharacterIterator#StringCharacterIterator(java.lang.String,
      *        int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "StringCharacterIterator",
+          methodArgs = {java.lang.String.class, int.class}
+        )
+    })
     public void test_ConstructorLjava_lang_StringI() {
         StringCharacterIterator it = new StringCharacterIterator("testing", 3);
         assertEquals("Wrong begin index", 0, it.getBeginIndex());
@@ -429,6 +580,15 @@ public class StringCharacterIteratorTest extends TestCase {
      * @tests java.text.StringCharacterIterator#StringCharacterIterator(java.lang.String,
      *        int, int, int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "StringCharacterIterator",
+          methodArgs = {java.lang.String.class, int.class, int.class, int.class}
+        )
+    })
     public void test_ConstructorLjava_lang_StringIII() {
         StringCharacterIterator it = new StringCharacterIterator("testing", 2,
                 6, 4);
@@ -442,6 +602,15 @@ public class StringCharacterIteratorTest extends TestCase {
     /**
      * @tests java.text.StringCharacterIterator#getIndex()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getIndex",
+          methodArgs = {}
+        )
+    })
     public void test_getIndex() {
         StringCharacterIterator it1 = new StringCharacterIterator("testing", 2,
                 6, 4);
@@ -455,6 +624,15 @@ public class StringCharacterIteratorTest extends TestCase {
     /**
      * @tests java.text.StringCharacterIterator#hashCode()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "hashCode",
+          methodArgs = {}
+        )
+    })
     public void test_hashCode() {
         StringCharacterIterator it1 = new StringCharacterIterator("testing", 2,
                 6, 4);
@@ -485,6 +663,15 @@ public class StringCharacterIteratorTest extends TestCase {
     /**
      * @tests java.text.StringCharacterIterator#last()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "last",
+          methodArgs = {}
+        )
+    })
     public void test_last() {
         StringCharacterIterator it1 = new StringCharacterIterator("testing", 2,
                 6, 3);
@@ -497,6 +684,15 @@ public class StringCharacterIteratorTest extends TestCase {
     /**
      * @tests java.text.StringCharacterIterator#setIndex(int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setIndex",
+          methodArgs = {int.class}
+        )
+    })
     public void test_setIndexI() {
         StringCharacterIterator it1 = new StringCharacterIterator("testing", 2,
                 6, 4);
@@ -510,6 +706,15 @@ public class StringCharacterIteratorTest extends TestCase {
     /**
      * @tests java.text.StringCharacterIterator#setText(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setText",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_setTextLjava_lang_String() {
         StringCharacterIterator it1 = new StringCharacterIterator("testing", 2,
                 6, 4);

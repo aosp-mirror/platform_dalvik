@@ -17,9 +17,15 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.io.IOException;
 import java.io.InputStream;
 
+@TestTargetClass(Class.class) 
 public class ClassTest2 extends junit.framework.TestCase {
 
     /**
@@ -39,6 +45,15 @@ public class ClassTest2 extends junit.framework.TestCase {
     /**
      *  Tests loading a resource with a relative name.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Checks positive functionality.",
+      targets = {
+        @TestTarget(
+          methodName = "getResourceAsStream",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void testGetResourceAsStream1() throws IOException {
         Class clazz = getClass();
         
@@ -56,6 +71,15 @@ public class ClassTest2 extends junit.framework.TestCase {
     /**
      *  Tests loading a resource with a global name.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Checks positive functionality.",
+      targets = {
+        @TestTarget(
+          methodName = "getResourceAsStream",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void testGetResourceAsStream2() throws IOException {
         Class clazz = getClass();
         

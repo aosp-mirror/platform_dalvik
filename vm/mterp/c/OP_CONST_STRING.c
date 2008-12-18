@@ -8,9 +8,9 @@ HANDLE_OPCODE(OP_CONST_STRING /*vAA, string@BBBB*/)
         strObj = dvmDexGetResolvedString(methodClassDex, ref);
         if (strObj == NULL) {
             EXPORT_PC();
-            strObj = dvmResolveString(method->clazz, ref);
+            strObj = dvmResolveString(curMethod->clazz, ref);
             if (strObj == NULL)
-                GOTO(exceptionThrown);
+                GOTO_exceptionThrown();
         }
         SET_REGISTER(vdst, (u4) strObj);
     }

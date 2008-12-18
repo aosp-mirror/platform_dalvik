@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vladimir N. Molotkov
-* @version $Revision$
-*/
-
 package java.security.spec;
 
 import java.math.BigInteger;
@@ -27,15 +22,24 @@ import java.math.BigInteger;
 import org.apache.harmony.security.internal.nls.Messages;
 
 /**
- * @com.intel.drl.spec_ref
+ * The parameters specifying a <i>prime finite field</i> of an
+ * elliptic curve.
  * 
+ * @since Android 1.0
  */
 public class ECFieldFp implements ECField {
     // Prime
     private final BigInteger p;
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new prime finite field of an elliptic curve with the specified
+     * prime {@code p}.
+     * 
+     * @param p
+     *            the prime value {@code p}.
+     * @throws IllegalArgumentException
+     *             if {@code p <= zero}.
+     * @since Android 1.0
      */
     public ECFieldFp(BigInteger p) {
         this.p = p;
@@ -49,21 +53,33 @@ public class ECFieldFp implements ECField {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the size of the finite field (in bits).
+     * 
+     * @return the size of the finite field (in bits).
+     * @since Android 1.0
      */
     public int getFieldSize() {
         return p.bitLength();
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the prime value {@code p} for this finite field.
+     * 
+     * @return the prime value {@code p} for this finite field.
+     * @since Android 1.0
      */
     public BigInteger getP() {
         return p;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns whether the specified object is equal to this finite field.
+     * 
+     * @param obj
+     *            the object to compare to this finite field.
+     * @return {@code true} if the specified object is equal to this finite field,
+     *         otherwise {@code false}.
+     * @since Android 1.0
      */
     public boolean equals(Object obj) {
         // object equals itself
@@ -77,7 +93,10 @@ public class ECFieldFp implements ECField {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the hashcode value for this finite field.
+     * 
+     * @return the hashcode value for this finite field.
+     * @since Android 1.0
      */
     public int hashCode() {
         return p.hashCode();

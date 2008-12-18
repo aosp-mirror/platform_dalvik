@@ -17,6 +17,11 @@
 
 package org.apache.harmony.luni.tests.java.net;
 
+import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.DatagramSocket;
@@ -33,6 +38,7 @@ import org.apache.harmony.testframework.serialization.SerializationTest.Serializ
 
 import tests.support.Support_Configuration;
 
+@TestTargetClass(InetAddress.class) 
 public class InetAddressTest extends junit.framework.TestCase {
     
     private static boolean someoneDone[] = new boolean[2];
@@ -133,6 +139,15 @@ public class InetAddressTest extends junit.framework.TestCase {
     /**
      * @tests java.net.InetAddress#equals(java.lang.Object)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "equals",
+          methodArgs = {Object.class}
+        )
+    })
     public void test_equalsLjava_lang_Object() {
         // Test for method boolean java.net.InetAddress.equals(java.lang.Object)
         try {
@@ -150,6 +165,15 @@ public class InetAddressTest extends junit.framework.TestCase {
     /**
      * @tests java.net.InetAddress#getAddress()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getAddress",
+          methodArgs = {}
+        )
+    })
     public void test_getAddress() {
         // Test for method byte [] java.net.InetAddress.getAddress()
         try {
@@ -170,6 +194,15 @@ public class InetAddressTest extends junit.framework.TestCase {
     /**
      * @tests java.net.InetAddress#getAllByName(java.lang.String)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "UnknownHostException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "getAllByName",
+          methodArgs = {String.class}
+        )
+    })
     public void test_getAllByNameLjava_lang_String() throws Exception {
         // Test for method java.net.InetAddress []
         // java.net.InetAddress.getAllByName(java.lang.String)
@@ -212,6 +245,15 @@ public class InetAddressTest extends junit.framework.TestCase {
     /**
      * @tests java.net.InetAddress#getByName(java.lang.String)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions cehcking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "getByName",
+          methodArgs = {String.class}
+        )
+    })
     public void test_getByNameLjava_lang_String() throws Exception {
         // Test for method java.net.InetAddress
         // java.net.InetAddress.getByName(java.lang.String)
@@ -246,6 +288,15 @@ public class InetAddressTest extends junit.framework.TestCase {
     /**
      * @tests java.net.InetAddress#getHostAddress()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getHostAddress",
+          methodArgs = {}
+        )
+    })
     public void test_getHostAddress() {
         // Test for method java.lang.String
         // java.net.InetAddress.getHostAddress()
@@ -264,6 +315,15 @@ public class InetAddressTest extends junit.framework.TestCase {
     /**
      * @tests java.net.InetAddress#getHostName()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getHostName",
+          methodArgs = {}
+        )
+    })
     public void test_getHostName() throws Exception {
         // Test for method java.lang.String java.net.InetAddress.getHostName()
         InetAddress ia = InetAddress
@@ -356,6 +416,15 @@ public class InetAddressTest extends junit.framework.TestCase {
     /**
      * @tests java.net.InetAddress#getLocalHost()
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "UnknownHostException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "getLocalHost",
+          methodArgs = {}
+        )
+    })
     public void test_getLocalHost() {
         // Test for method java.net.InetAddress
         // java.net.InetAddress.getLocalHost()
@@ -375,6 +444,15 @@ public class InetAddressTest extends junit.framework.TestCase {
     /**
      * @tests java.net.InetAddress#hashCode()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "hashCode",
+          methodArgs = {}
+        )
+    })
     public void test_hashCode() {
         // Test for method int java.net.InetAddress.hashCode()
         try {
@@ -391,6 +469,15 @@ public class InetAddressTest extends junit.framework.TestCase {
     /**
      * @tests java.net.InetAddress#isMulticastAddress()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isMulticastAddress",
+          methodArgs = {}
+        )
+    })
     public void test_isMulticastAddress() {
         // Test for method boolean java.net.InetAddress.isMulticastAddress()
         try {
@@ -405,6 +492,15 @@ public class InetAddressTest extends junit.framework.TestCase {
     /**
      * @tests java.net.InetAddress#toString()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public void test_toString() throws Exception {
         // Test for method java.lang.String java.net.InetAddress.toString()
         InetAddress ia2 = InetAddress
@@ -420,6 +516,15 @@ public class InetAddressTest extends junit.framework.TestCase {
     /**
      * @tests java.net.InetAddress#getByAddress(java.lang.String, byte[])
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "UnknownHostException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "getByAddress",
+          methodArgs = {String.class, byte[].class}
+        )
+    })
     public void test_getByAddressLjava_lang_String$B() {
         // Check an IPv4 address with an IPv6 hostname
         byte ipAddress[] = { 127, 0, 0, 1 };
@@ -447,6 +552,15 @@ public class InetAddressTest extends junit.framework.TestCase {
     /**
      * @tests java.net.InetAddress#getCanonicalHostName()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getCanonicalHostName",
+          methodArgs = {}
+        )
+    })
     public void test_getCanonicalHostName() throws Exception {
         InetAddress theAddress = null;
         theAddress = InetAddress.getLocalHost();
@@ -472,6 +586,15 @@ public class InetAddressTest extends junit.framework.TestCase {
     /**
      * @tests java.net.InetAddress#isReachableI
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "isReachable",
+          methodArgs = {int.class}
+        )
+    })
     public void test_isReachableI() throws Exception {
         InetAddress ia = Inet4Address.getByName("127.0.0.1");
         assertTrue(ia.isReachable(10000));
@@ -487,6 +610,15 @@ public class InetAddressTest extends junit.framework.TestCase {
     /**
      * @tests java.net.InetAddress#isReachableLjava_net_NetworkInterfaceII
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "isReachable",
+          methodArgs = {NetworkInterface.class, int.class, int.class}
+        )
+    })
     public void test_isReachableLjava_net_NetworkInterfaceII() throws Exception {
         // tests local address
         InetAddress ia = Inet4Address.getByName("127.0.0.1");
@@ -543,6 +675,15 @@ public class InetAddressTest extends junit.framework.TestCase {
     };
     
     // Regression Test for Harmony-2290
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Regeression test. Functional test.",
+      targets = {
+        @TestTarget(
+          methodName = "isReachable",
+          methodArgs = {NetworkInterface.class, int.class, int.class}
+        )
+    })
     public void test_isReachableLjava_net_NetworkInterfaceII_loopbackInterface() throws IOException {
         final int TTL = 20;
         final int TIME_OUT = 3000;
@@ -580,6 +721,15 @@ public class InetAddressTest extends junit.framework.TestCase {
     /**
      * @tests serialization/deserialization compatibility.
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Checks serialization.",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationSelf",
+          methodArgs = {}
+        )
+    })
     public void testSerializationSelf() throws Exception {
 
         SerializationTest.verifySelf(InetAddress.getByName("localhost"),
@@ -589,6 +739,15 @@ public class InetAddressTest extends junit.framework.TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
+@TestInfo(
+          level = TestLevel.COMPLETE,
+          purpose = "Checks serialization.",
+          targets = {
+            @TestTarget(
+              methodName = "!SerializationGolden",
+              methodArgs = {}
+            )
+        })
     public void testSerializationCompatibility() throws Exception {
 
         SerializationTest.verifyGolden(this,
@@ -598,6 +757,15 @@ public class InetAddressTest extends junit.framework.TestCase {
     /**
      * @tests java.net.InetAddress#getByAddress(byte[])
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions checked only.",
+      targets = {
+        @TestTarget(
+          methodName = "getByAddress",
+          methodArgs = {byte[].class}
+        )
+    })
     public void test_getByAddress() {
         // Regression for HARMONY-61
         try {

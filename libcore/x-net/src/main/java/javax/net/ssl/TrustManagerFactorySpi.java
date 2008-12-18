@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package javax.net.ssl;
 
 import java.security.InvalidAlgorithmParameterException;
@@ -27,34 +22,52 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 
 /**
- * @com.intel.drl.spec_ref
+ * The <i>Service Provider Interface</i> (SPI) for the
+ * {@code TrustManagerFactory} class.
  * 
+ * @since Android 1.0
  */
-
 public abstract class TrustManagerFactorySpi {
+
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Creates a new {@code TrustManagerFactorySpi} instance.
+     * 
+     * @since Android 1.0
      */
     public TrustManagerFactorySpi() {
     }
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Initializes this factory instance with the specified keystore as source
+     * of certificate authorities and trust material.
+     * 
+     * @param ks
+     *            the keystore or {@code null}.
+     * @throws KeyStoreException
+     *             if the initialization fails.
+     * @since Android 1.0
      */
     protected abstract void engineInit(KeyStore ks) throws KeyStoreException;
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Initializes this factory instance with the specified provider-specific
+     * parameters for a source of trust material.
+     * 
+     * @param spec
+     *            the provider-specific parameters.
+     * @throws InvalidAlgorithmParameterException
+     *             if the initialization fails.
+     * @since Android 1.0
      */
     protected abstract void engineInit(ManagerFactoryParameters spec)
             throws InvalidAlgorithmParameterException;
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Returns the list of {@code TrustManager}s with one entry for each type
+     * of trust material.
+     * 
+     * @return the list of {@code TrustManager}s
+     * @since Android 1.0
      */
     protected abstract TrustManager[] engineGetTrustManagers();
 }

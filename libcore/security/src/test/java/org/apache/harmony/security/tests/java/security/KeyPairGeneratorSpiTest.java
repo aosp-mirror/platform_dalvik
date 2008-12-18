@@ -22,6 +22,11 @@
 
 package org.apache.harmony.security.tests.java.security;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidParameterException;
 import java.security.KeyPair;
@@ -32,7 +37,7 @@ import java.security.spec.AlgorithmParameterSpec;
 import org.apache.harmony.security.tests.support.MyKeyPairGeneratorSpi;
 
 import junit.framework.TestCase;
-
+@TestTargetClass(KeyPairGeneratorSpi.class)
 /**
  * Tests for <code>KeyPairGeneratorSpi</code> class constructors and methods.
  * 
@@ -53,6 +58,28 @@ public class KeyPairGeneratorSpiTest extends TestCase {
      * Test for <code>KeyPairGeneratorSpi</code> constructor 
      * Assertion: constructs KeyPairGeneratorSpi
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "InvalidAlgorithmParameterException and InvalidParameterException " +
+                  "checking missed for initialize methods",
+      targets = {
+        @TestTarget(
+          methodName = "KeyPairGeneratorSpi",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "generateKeyPair",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "initialize",
+          methodArgs = {AlgorithmParameterSpec.class, SecureRandom.class}
+        ),
+        @TestTarget(
+          methodName = "initialize",
+          methodArgs = {int.class, SecureRandom.class}
+        )
+    })
     public void testKeyPairGeneratorSpi01()
             throws InvalidAlgorithmParameterException,
             InvalidParameterException {

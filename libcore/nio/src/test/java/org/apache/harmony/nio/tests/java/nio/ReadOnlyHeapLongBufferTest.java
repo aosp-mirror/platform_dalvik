@@ -15,9 +15,16 @@
  */
 package org.apache.harmony.nio.tests.java.nio;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.nio.LongBuffer;
 
+@TestTargetClass(java.nio.LongBuffer.class)
 public class ReadOnlyHeapLongBufferTest extends ReadOnlyLongBufferTest{
+    
     protected void setUp() throws Exception {
         super.setUp();
         buf = LongBuffer.allocate(BUFFER_LENGTH);

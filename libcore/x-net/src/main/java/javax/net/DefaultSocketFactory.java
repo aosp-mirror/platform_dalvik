@@ -30,6 +30,7 @@ import java.net.UnknownHostException;
 /**
  * Default implementation of javax.net.SocketFactory
  * 
+ * @since Android 1.0
  */
 class DefaultSocketFactory extends SocketFactory {
 

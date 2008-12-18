@@ -16,66 +16,99 @@
  */
 package tests.api.java.io;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass; 
+
 import java.io.IOException;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 
+@TestTargetClass(PipedInputStream.class) 
 public class PipedInputStreamTest extends junit.framework.TestCase {
 
-	static class PWriter implements Runnable {
-		PipedOutputStream pos;
+    static class PWriter implements Runnable {
+        PipedOutputStream pos;
 
-		public byte bytes[];
+        public byte bytes[];
 
-		public void run() {
-			try {
-				pos.write(bytes);
-				synchronized (this) {
-					notify();
-				}
-			} catch (IOException e) {
-				e.printStackTrace(System.out);
-				System.out.println("Could not write bytes");
-			}
-		}
+        public void run() {
+            try {
+                pos.write(bytes);
+                synchronized (this) {
+                    notify();
+                }
+            } catch (IOException e) {
+                e.printStackTrace(System.out);
+                System.out.println("Could not write bytes");
+            }
+        }
 
-		public PWriter(PipedOutputStream pout, int nbytes) {
-			pos = pout;
-			bytes = new byte[nbytes];
-			for (int i = 0; i < bytes.length; i++)
-				bytes[i] = (byte) (System.currentTimeMillis() % 9);
-		}
-	}
+        public PWriter(PipedOutputStream pout, int nbytes) {
+            pos = pout;
+            bytes = new byte[nbytes];
+            for (int i = 0; i < bytes.length; i++)
+                bytes[i] = (byte) (System.currentTimeMillis() % 9);
+        }
+    }
 
-	Thread t;
+    Thread t;
 
-	PWriter pw;
+    PWriter pw;
 
-	PipedInputStream pis;
+    PipedInputStream pis;
 
-	PipedOutputStream pos;
+    PipedOutputStream pos;
 
-	/**
-	 * @tests java.io.PipedInputStream#PipedInputStream()
-	 */
-	public void test_Constructor() {
-		// Test for method java.io.PipedInputStream()
-		// Used in tests
-	}
+    /**
+     * @tests java.io.PipedInputStream#PipedInputStream()
+     */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Test is empty",
+      targets = {
+        @TestTarget(
+          methodName = "PipedInputStream",
+          methodArgs = {}
+        )
+    })
+    public void test_Constructor() {
+        // Test for method java.io.PipedInputStream()
+        // Used in tests
+    }
 
-	/**
-	 * @tests java.io.PipedInputStream#PipedInputStream(java.io.PipedOutputStream)
-	 */
-	public void test_ConstructorLjava_io_PipedOutputStream() throws Exception {
+    /**
+     * @tests java.io.PipedInputStream#PipedInputStream(java.io.PipedOutputStream)
+     */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "PipedInputStream",
+          methodArgs = {java.io.PipedOutputStream.class}
+        )
+    })
+    public void test_ConstructorLjava_io_PipedOutputStream() throws Exception {
         // Test for method java.io.PipedInputStream(java.io.PipedOutputStream)
         pis = new PipedInputStream(new PipedOutputStream());
         pis.available();
     }
 
-	/**
-	 * @tests java.io.PipedInputStream#available()
-	 */
-	public void test_available() throws Exception {
+    /**
+     * @tests java.io.PipedInputStream#available()
+     */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "available",
+          methodArgs = {}
+        )
+    })
+    public void test_available() throws Exception {
         // Test for method int java.io.PipedInputStream.available()
         pis = new PipedInputStream();
         pos = new PipedOutputStream();
@@ -100,31 +133,49 @@ public class PipedInputStreamTest extends junit.framework.TestCase {
         assertEquals("Incorrect available count", 1024 , pin.available());
     }
 
-	/**
-	 * @tests java.io.PipedInputStream#close()
-	 */
-	public void test_close() throws IOException {
-		// Test for method void java.io.PipedInputStream.close()
-		pis = new PipedInputStream();
-		pos = new PipedOutputStream();
+    /**
+     * @tests java.io.PipedInputStream#close()
+     */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "close",
+          methodArgs = {}
+        )
+    })
+    public void test_close() throws IOException {
+        // Test for method void java.io.PipedInputStream.close()
+        pis = new PipedInputStream();
+        pos = new PipedOutputStream();
         pis.connect(pos);
         pis.close();
-		try {
-			pos.write((byte) 127);
+        try {
+            pos.write((byte) 127);
             fail("Failed to throw expected exception");
-		} catch (IOException e) {
-			// The spec for PipedInput saya an exception should be thrown if
-			// a write is attempted to a closed input. The PipedOuput spec
-			// indicates that an exception should be thrown only when the
-			// piped input thread is terminated without closing
-			return;
-		}
-	}
+        } catch (IOException e) {
+            // The spec for PipedInput saya an exception should be thrown if
+            // a write is attempted to a closed input. The PipedOuput spec
+            // indicates that an exception should be thrown only when the
+            // piped input thread is terminated without closing
+            return;
+        }
+    }
 
-	/**
-	 * @tests java.io.PipedInputStream#connect(java.io.PipedOutputStream)
-	 */
-	public void test_connectLjava_io_PipedOutputStream() throws Exception {
+    /**
+     * @tests java.io.PipedInputStream#connect(java.io.PipedOutputStream)
+     */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "connect",
+          methodArgs = {java.io.PipedOutputStream.class}
+        )
+    })
+    public void test_connectLjava_io_PipedOutputStream() throws Exception {
         // Test for method void
         // java.io.PipedInputStream.connect(java.io.PipedOutputStream)
         pis = new PipedInputStream();
@@ -143,10 +194,19 @@ public class PipedInputStreamTest extends junit.framework.TestCase {
                 .available());
     }
 
-	/**
-	 * @tests java.io.PipedInputStream#read()
-	 */
-	public void test_read() throws Exception {
+    /**
+     * @tests java.io.PipedInputStream#read()
+     */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {}
+        )
+    })
+    public void test_read() throws Exception {
         // Test for method int java.io.PipedInputStream.read()
         pis = new PipedInputStream();
         pos = new PipedOutputStream();
@@ -164,10 +224,19 @@ public class PipedInputStreamTest extends junit.framework.TestCase {
                 .read());
     }
 
-	/**
-	 * @tests java.io.PipedInputStream#read(byte[], int, int)
-	 */
-	public void test_read$BII() throws Exception {
+    /**
+     * @tests java.io.PipedInputStream#read(byte[], int, int)
+     */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {byte[].class, int.class, int.class}
+        )
+    })
+    public void test_read$BII() throws Exception {
         // Test for method int java.io.PipedInputStream.read(byte [], int, int)
         pis = new PipedInputStream();
         pos = new PipedOutputStream();
@@ -192,6 +261,15 @@ public class PipedInputStreamTest extends junit.framework.TestCase {
      * @tests java.io.PipedInputStream#read(byte[], int, int)
      * Regression for HARMONY-387
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {byte[].class, int.class, int.class}
+        )
+    })
     public void test_read$BII_2() throws IOException {
         PipedInputStream obj = new PipedInputStream();
         try {
@@ -207,6 +285,15 @@ public class PipedInputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PipedInputStream#read(byte[], int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {byte[].class, int.class, int.class}
+        )
+    })
     public void test_read$BII_3() throws IOException {
         PipedInputStream obj = new PipedInputStream();
         try {
@@ -221,6 +308,15 @@ public class PipedInputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PipedInputStream#read(byte[], int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {byte[].class, int.class, int.class}
+        )
+    })
     public void test_read$BII_4() throws IOException {
         PipedInputStream obj = new PipedInputStream();
         try {
@@ -235,6 +331,15 @@ public class PipedInputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PipedInputStream#receive(int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "receive",
+          methodArgs = {int.class}
+        )
+    })
     public void test_receive() throws IOException {
         pis = new PipedInputStream();
         pos = new PipedOutputStream();
@@ -331,17 +436,17 @@ public class PipedInputStreamTest extends junit.framework.TestCase {
                 myRun.pass);
     }
 
-	/**
-	 * Tears down the fixture, for example, close a network connection. This
-	 * method is called after a test is executed.
-	 */
-	protected void tearDown() throws Exception {
-		try {
-			if (t != null) {
-				t.interrupt();
+    /**
+     * Tears down the fixture, for example, close a network connection. This
+     * method is called after a test is executed.
+     */
+    protected void tearDown() throws Exception {
+        try {
+            if (t != null) {
+                t.interrupt();
             }
-		} catch (Exception ignore) {
-		}
+        } catch (Exception ignore) {
+        }
         super.tearDown();
-	}
+    }
 }

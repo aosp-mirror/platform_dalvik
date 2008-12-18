@@ -324,7 +324,7 @@ final class ProcessManager {
                 super.close();
             } finally {
                 synchronized (this) {
-                    if (fd != null) {
+                    if (fd != null && fd.valid()) {
                         try {
                             ProcessManager.close(fd);
                         } finally {
@@ -352,7 +352,7 @@ final class ProcessManager {
                 super.close();
             } finally {
                 synchronized (this) {
-                    if (fd != null) {
+                    if (fd != null && fd.valid()) {
                         try {
                             ProcessManager.close(fd);
                         } finally {

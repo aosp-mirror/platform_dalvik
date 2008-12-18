@@ -25,16 +25,17 @@ import org.apache.harmony.luni.util.Msg;
 import org.apache.harmony.nio.FileChannelFactory;
 
 /**
- * FileOutputStream is a class whose underlying stream is represented by a file
- * in the operating system. The bytes that are written to this stream are passed
- * directly to the underlying operating system equivalent function. Since
- * overhead may be high in writing to the OS, FileOutputStreams are usually
- * wrapped with a BufferedOutputStream to reduce the number of times the OS is
- * called.
- * <p>
- * <code>BufferedOutputStream buf = new BufferedOutputStream(new FileOutputStream("aFile.txt"));</code>
+ * A specialized {@link OutputStream} that writes to a file in the file system.
+ * All write requests made by calling methods in this class are directly
+ * forwarded to the equivalent function of the underlying operating system.
+ * Since this may induce some performance penalty, in particular if many small
+ * write requests are made, a FileOutputStream is often wrapped by a
+ * BufferedOutputStream.
  * 
+ * @see BufferedOutputStream
  * @see FileInputStream
+ * 
+ * @since Android 1.0
  */
 public class FileOutputStream extends OutputStream implements Closeable {
 
@@ -52,39 +53,37 @@ public class FileOutputStream extends OutputStream implements Closeable {
     private IFileSystem fileSystem = Platform.getFileSystem();
 
     /**
-     * Constructs a new FileOutputStream on the File <code>file</code>. If
-     * the file exists, it is written over. See the constructor which can append
-     * to the file if so desired.
+     * Constructs a new FileOutputStream on the File {@code file}. If the file
+     * exists, it is overwritten.
      * 
      * @param file
-     *            the File on which to stream reads.
-     * 
+     *            the file to which this stream writes.
      * @throws FileNotFoundException
-     *             If the <code>file</code> cannot be opened for writing.
-     * 
-     * @see java.lang.SecurityManager#checkWrite(FileDescriptor)
+     *             if {@code file} cannot be opened for writing.
+     * @throws java.lang.SecurityException
+     *             if a {@code SecurityManager} is installed and it denies the
+     *             write request.
+     * @since Android 1.0            
      */
     public FileOutputStream(File file) throws FileNotFoundException {
         this(file, false);
     }
 
     /**
-     * Constructs a new FileOutputStream on the File <code>file</code>. If
-     * the file exists, it is written over. The parameter <code>append</code>
-     * determines whether or not the file is opened and appended to or just
-     * opened empty.
+     * Constructs a new FileOutputStream on the File {@code file}. The
+     * parameter {@code append} determines whether or not the file is opened and
+     * appended to or just opened and overwritten.
      * 
      * @param file
-     *            the File on which to stream reads.
+     *            the file to which this stream writes.
      * @param append
-     *            a boolean indicating whether or not to append to an existing
-     *            file.
-     * 
+     *            indicates whether or not to append to an existing file.
      * @throws FileNotFoundException
-     *             If the <code>file</code> cannot be opened for writing.
-     * 
-     * @see java.lang.SecurityManager#checkWrite(FileDescriptor)
-     * @see java.lang.SecurityManager#checkWrite(String)
+     *             if the {@code file} cannot be opened for writing.
+     * @throws java.lang.SecurityException
+     *             if a {@code SecurityManager} is installed and it denies the
+     *             write request.
+     * @since Android 1.0
      */
     public FileOutputStream(File file, boolean append)
             throws FileNotFoundException {
@@ -102,14 +101,18 @@ public class FileOutputStream extends OutputStream implements Closeable {
     }
 
     /**
-     * Constructs a new FileOutputStream on the FileDescriptor <code>fd</code>.
-     * The file must already be open, therefore no <code>FileIOException</code>
+     * Constructs a new FileOutputStream on the FileDescriptor {@code fd}. The
+     * file must already be open, therefore no {@code FileNotFoundException}
      * will be thrown.
      * 
      * @param fd
-     *            the FileDescriptor on which to stream writes.
-     * 
-     * @see java.lang.SecurityManager#checkWrite(FileDescriptor)
+     *            the FileDescriptor to which this stream writes.
+     * @throws NullPointerException
+     *             if {@code fd} is {@code null}.
+     * @throws java.lang.SecurityException
+     *             if a {@code SecurityManager} is installed and it denies the
+     *             write request.
+     * @since Android 1.0
      */
     public FileOutputStream(FileDescriptor fd) {
         super();
@@ -127,36 +130,39 @@ public class FileOutputStream extends OutputStream implements Closeable {
     }
 
     /**
-     * Constructs a new FileOutputStream on the file named <code>fileName</code>.
-     * If the file exists, it is written over. See the constructor which can
-     * append to the file if so desired. The <code>fileName</code> may be
-     * absolute or relative to the System property <code>"user.dir"</code>.
+     * Constructs a new FileOutputStream on the file named {@code filename}. If
+     * the file exists, it is overwritten. The {@code filename} may be absolute
+     * or relative to the system property {@code "user.dir"}.
      * 
      * @param filename
-     *            the file on which to stream writes.
-     * 
+     *            the name of the file to which this stream writes.
      * @throws FileNotFoundException
-     *             If the <code>filename</code> cannot be opened for writing.
+     *             if the file cannot be opened for writing.
+     * @throws java.lang.SecurityException
+     *             if a {@code SecurityManager} is installed and it denies the
+     *             write request.
+     * @since Android 1.0
      */
     public FileOutputStream(String filename) throws FileNotFoundException {
         this(filename, false);
     }
 
     /**
-     * Constructs a new FileOutputStream on the file named <code>filename</code>.
-     * If the file exists, it is written over. The parameter <code>append</code>
-     * determines whether or not the file is opened and appended to or just
-     * opened empty. The <code>filename</code> may be absolute or relative to
-     * the System property <code>"user.dir"</code>.
+     * Constructs a new FileOutputStream on the file named {@code filename}.
+     * The parameter {@code append} determines whether or not the file is opened
+     * and appended to or just opened and overwritten. The {@code filename} may
+     * be absolute or relative to the system property {@code "user.dir"}.
      * 
-     * @param filename
-     *            the file on which to stream writes.
      * @param append
-     *            a boolean indicating whether or not to append to an existing
-     *            file.
-     * 
+     *            indicates whether or not to append to an existing file.
+     * @param filename
+     *            the name of the file to which this stream writes.
      * @throws FileNotFoundException
-     *             If the <code>filename</code> cannot be opened for writing.
+     *             if the file cannot be opened for writing.
+     * @throws java.lang.SecurityException
+     *             if a {@code SecurityManager} is installed and it denies the
+     *             write request.
+     * @since Android 1.0
      */
     public FileOutputStream(String filename, boolean append)
             throws FileNotFoundException {
@@ -164,11 +170,12 @@ public class FileOutputStream extends OutputStream implements Closeable {
     }
 
     /**
-     * Close the FileOutputStream. This implementation closes the underlying OS
-     * resources allocated to represent this stream.
+     * Closes this stream. This implementation closes the underlying operating
+     * system resources allocated to represent this stream.
      * 
      * @throws IOException
-     *             If an error occurs attempting to close this FileOutputStream.
+     *             if an error occurs attempting to close this stream.
+     * @since Android 1.0
      */
     @Override
     public void close() throws IOException {
@@ -195,13 +202,12 @@ public class FileOutputStream extends OutputStream implements Closeable {
     }
 
     /**
-     * Frees any resources allocated to represent this FileOutputStream before
-     * it is garbage collected. This method is called from the Java Virtual
-     * Machine.
+     * Frees any resources allocated for this stream before it is garbage
+     * collected. This method is called from the Java Virtual Machine.
      * 
      * @throws IOException
-     *             If an error occurs attempting to finalize this
-     *             FileOutputStream.
+     *             if an error occurs attempting to finalize this stream.
+     * @since Android 1.0
      */
     @Override
     protected void finalize() throws IOException {
@@ -212,12 +218,13 @@ public class FileOutputStream extends OutputStream implements Closeable {
      * Returns the FileChannel equivalent to this output stream.
      * <p>
      * The file channel is write-only and has an initial position within the
-     * file that is the same as the current position of this FileOutputStream
-     * within the file. All changes made to the underlying file descriptor state
-     * via the channel are visible by the output stream and vice versa.
+     * file that is the same as the current position of this stream within the
+     * file. All changes made to the underlying file descriptor state via the
+     * channel are visible by the output stream and vice versa.
      * </p>
      * 
-     * @return the file channel representation for this FileOutputStream.
+     * @return the file channel representation for this stream.
+     * @since Android 1.0
      */
     public FileChannel getChannel() {
         return channel;
@@ -225,28 +232,28 @@ public class FileOutputStream extends OutputStream implements Closeable {
 
     /**
      * Returns a FileDescriptor which represents the lowest level representation
-     * of a OS stream resource.
+     * of an operating system stream resource.
      * 
-     * @return a FileDescriptor representing this FileOutputStream.
-     * 
+     * @return a FileDescriptor representing this stream.
      * @throws IOException
-     *             If the Stream is already closed and there is no
-     *             FileDescriptor.
+     *             if an error occurs attempting to get the FileDescriptor of
+     *             this stream.
+     * @since Android 1.0
      */
     public final FileDescriptor getFD() throws IOException {
         return fd;
     }
 
     /**
-     * Writes the entire contents of the byte array <code>buffer</code> to
-     * this FileOutputStream.
+     * Writes the entire contents of the byte array {@code buffer} to this
+     * stream.
      * 
      * @param buffer
-     *            the buffer to be written
-     * 
+     *            the buffer to be written to the file.
      * @throws IOException
-     *             If an error occurs attempting to write to this
-     *             FileOutputStream.
+     *             if this stream is closed or an error occurs attempting to
+     *             write to this stream.
+     * @since Android 1.0
      */
     @Override
     public void write(byte[] buffer) throws IOException {
@@ -254,34 +261,41 @@ public class FileOutputStream extends OutputStream implements Closeable {
     }
 
     /**
-     * Writes <code>count</code> <code>bytes</code> from the byte array
-     * <code>buffer</code> starting at <code>offset</code> to this
-     * FileOutputStream.
+     * Writes {@code count} bytes from the byte array {@code buffer} starting at
+     * {@code offset} to this stream.
      * 
      * @param buffer
-     *            the buffer to be written
+     *            the buffer to write to this stream.
      * @param offset
-     *            offset in buffer to get bytes
+     *            the index of the first byte in {@code buffer} to write.
      * @param count
-     *            number of bytes in buffer to write
-     * 
-     * @throws IOException
-     *             If an error occurs attempting to write to this
-     *             FileOutputStream.
+     *            the number of bytes from {@code buffer} to write.
      * @throws IndexOutOfBoundsException
-     *             If offset or count are outside of bounds.
+     *             if {@code count < 0} or {@code offset < 0}, or if
+     *             {@code count + offset} is greater than the length of
+     *             {@code buffer}.
+     * @throws IOException
+     *             if this stream is closed or an error occurs attempting to
+     *             write to this stream.
      * @throws NullPointerException
-     *             If buffer is <code>null</code>.
+     *             if {@code buffer} is {@code null}.
+     * @since Android 1.0
      */
     @Override
     public void write(byte[] buffer, int offset, int count) throws IOException {
+        // BEGIN android-changed
+        // Exception priorities (in case of multiple errors) differ from
+        // RI, but are spec-compliant.
+        // removed redundant check, made implicit null check explicit,
+        // used (offset | count) < 0 instead of (offset < 0) || (count < 0)
+        // to safe one operation
         if (buffer == null) {
-            throw new NullPointerException();
+            throw new NullPointerException(Msg.getString("K0047")); //$NON-NLS-1$
         }
-        if (count < 0 || offset < 0 || offset > buffer.length
-                || count > buffer.length - offset) {
-            throw new IndexOutOfBoundsException();
+        if ((count | offset) < 0 || count > buffer.length - offset) {
+            throw new IndexOutOfBoundsException(Msg.getString("K002f")); //$NON-NLS-1$
         }
+        // END android-changed
 
         if (count == 0) {
             return;
@@ -292,16 +306,15 @@ public class FileOutputStream extends OutputStream implements Closeable {
     }
 
     /**
-     * Writes the specified byte <code>oneByte</code> to this
-     * FileOutputStream. Only the low order byte of <code>oneByte</code> is
-     * written.
+     * Writes the specified byte {@code oneByte} to this stream. Only the low
+     * order byte of the integer {@code oneByte} is written.
      * 
      * @param oneByte
-     *            the byte to be written
-     * 
+     *            the byte to be written.
      * @throws IOException
-     *             If an error occurs attempting to write to this
-     *             FileOutputStream.
+     *             if this stream is closed an error occurs attempting to write
+     *             to this stream.
+     * @since Android 1.0
      */
     @Override
     public void write(int oneByte) throws IOException {

@@ -22,25 +22,34 @@
 
 package java.security;
 
-/**
- * @com.intel.drl.spec_ref
- * 
- */
 
+/**
+ * {@code UnrecoverableEntryException} indicates, that a {@code KeyStore.Entry}
+ * cannot be recovered from a {@code KeyStore}.
+ * 
+ * @see KeyStore
+ * @see KeyStore.Entry
+ * @since Android 1.0
+ */
 public class UnrecoverableEntryException extends GeneralSecurityException {
-    /**
-     * @com.intel.drl.spec_ref
-     */
+
     private static final long serialVersionUID = -4527142945246286535L;
 
     /**
-     * @com.intel.drl.spec_ref
+     * Constructs a new instance of {@code UnrecoverableEntryException}.
+     * 
+     * @since Android 1.0
      */
     public UnrecoverableEntryException() {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Constructs a new instance of {@code UnrecoverableEntryException} with the
+     * given message.
+     * 
+     * @param msg
+     *            the detail message for this exception.
+     * @since Android 1.0
      */
     public UnrecoverableEntryException(String msg) {
         super(msg);

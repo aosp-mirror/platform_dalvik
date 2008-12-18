@@ -15,26 +15,26 @@
  *  limitations under the License.
  */
 
-/**
-* @author Alexander V. Astapchuk
-* @version $Revision$
-*/
-
 package java.security.acl;
 
 /**
- * @com.intel.drl.spec_ref
+ * The exception that is thrown when an action that requires ownership is
+ * attempted by a principal that is not an owner of the object for which 
+ * ownership is required. 
  * 
+ * @see Acl
+ * @see Owner
+ * 
+ * @since Android 1.0
  */
-
 public class NotOwnerException extends Exception {
-    /**
-     * @com.intel.drl.spec_ref 
-     */
+
     private static final long serialVersionUID = -5555597911163362399L;
 
     /**
-     * @com.intel.drl.spec_ref 
+     * Creates a new {@code NotOwnerException}.
+     * 
+     * @since Android 1.0
      */
     public NotOwnerException() {
     }

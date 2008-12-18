@@ -23,7 +23,6 @@ public class AtomicReferenceArray<E> implements java.io.Serializable {
     // BEGIN android-changed
     private static final Unsafe unsafe = UnsafeAccess.THE_ONE;
     // END android-changed
-
     private static final int base = unsafe.arrayBaseOffset(Object[].class);
     private static final int scale = unsafe.arrayIndexScale(Object[].class);
     private final Object[] array;

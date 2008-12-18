@@ -17,6 +17,11 @@
 
 package tests.api.javax.net.ssl;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -37,7 +42,7 @@ import junit.framework.TestCase;
  * Tests for KeyManagerFactory class constructors and methods
  * 
  */
-
+@TestTargetClass(KeyManagerFactory.class) 
 public class KeyManagerFactory2Test extends TestCase {
     private static final String srvKeyManagerFactory = "KeyManagerFactory";
     
@@ -125,6 +130,15 @@ public class KeyManagerFactory2Test extends TestCase {
      * throws NoSuchAlgorithmException when algorithm is not correct;
      * returns KeyManagerFactory object
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getInstance",
+          methodArgs = {String.class}
+        )
+    })
     public void test_getInstanceLjava_lang_String() throws Exception {
         try {
             KeyManagerFactory.getInstance(null);
@@ -162,6 +176,15 @@ public class KeyManagerFactory2Test extends TestCase {
      * throws NoSuchProviderException when provider is available;
      * returns KeyManagerFactory object
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getInstance",
+          methodArgs = {String.class, String.class}
+        )
+    })
     public void test_getInstanceLjava_lang_StringLjava_lang_String()
         throws Exception
     {
@@ -230,6 +253,15 @@ public class KeyManagerFactory2Test extends TestCase {
      * throws IllegalArgumentException when provider is null;
      * returns KeyManagerFactory object
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getInstance",
+          methodArgs = {String.class, Provider.class}
+        )
+    })
     public void test_getInstanceLjava_lang_StringLjava_security_Provider()
         throws Exception
     {

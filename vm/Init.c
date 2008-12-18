@@ -75,7 +75,7 @@ static void dvmUsage(const char* progName)
     dvmFprintf(stderr, "The following extended options are recognized:\n");
     dvmFprintf(stderr, "  -Xrunjdwp:<options>\n");
     dvmFprintf(stderr, "  -Xbootclasspath:bootclasspath\n");
-    dvmFprintf(stderr, "  -Xcheck:tag  (e.g. 'jni', 'jni-warnonly')\n");
+    dvmFprintf(stderr, "  -Xcheck:tag  (e.g. 'jni')\n");
     dvmFprintf(stderr, "  -XmsN  (min heap, must be multiple of 1K, >= 1MB)\n");
     dvmFprintf(stderr, "  -XmxN  (max heap, must be multiple of 1K, >= 2MB)\n");
     dvmFprintf(stderr, "  -XssN  (stack size, >= %dKB, <= %dKB)\n",
@@ -91,6 +91,7 @@ static void dvmUsage(const char* progName)
     dvmFprintf(stderr, "  -Xnoquithandler\n");
     dvmFprintf(stderr,
                 "  -Xjnigreflimit:N  (must be multiple of 100, >= 200)\n");
+    dvmFprintf(stderr, "  -Xjniopts:{warnonly,forcecopy}\n");
     dvmFprintf(stderr, "  -Xdeadlockpredict:{off,warn,err,abort}\n");
     dvmFprintf(stderr, "  -Xstacktracefile:<file name>");
     dvmFprintf(stderr, "\n\n");
@@ -145,6 +146,13 @@ static void dvmUsage(const char* progName)
 #endif
 #ifdef DVM_TRACK_HEAP_MARKING
         " track_heap_marking"
+#endif
+#if DVM_RESOLVER_CACHE == DVM_RC_REDUCING
+        " resolver_cache_reducing"
+#elif DVM_RESOLVER_CACHE == DVM_RC_EXPANDING
+        " resolver_cache_expanding"
+#elif DVM_RESOLVER_CACHE == DVM_RC_NO_CACHE
+        " resolver_cache_disabled"
 #endif
     );
 #ifdef DVM_SHOW_EXCEPTION
@@ -471,6 +479,40 @@ static bool enableAssertions(const char* pkgOrClass, bool enable)
 }
 
 /*
+ * Turn assertions on when requested to do so by the Zygote.
+ *
+ * This is a bit sketchy.  We can't (easily) go back and fiddle with all
+ * of the classes that have already been initialized, so this only
+ * affects classes that have yet to be loaded.  If some or all assertions
+ * have been enabled through some other means, we don't want to mess with
+ * it here, so we do nothing.  Finally, we assume that there's room in
+ * "assertionCtrl" to hold at least one entry; this is guaranteed by the
+ * allocator.
+ *
+ * This must only be called from the main thread during zygote init.
+ */
+void dvmLateEnableAssertions(void)
+{
+    if (gDvm.assertionCtrl == NULL) {
+        LOGD("Not late-enabling assertions: no assertionCtrl array\n");
+        return;
+    } else if (gDvm.assertionCtrlCount != 0) {
+        LOGD("Not late-enabling assertions: some asserts already configured\n");
+        return;
+    }
+    LOGD("Late-enabling assertions\n");
+
+    /* global enable for all but system */
+    AssertionControl* pCtrl = gDvm.assertionCtrl;
+    pCtrl->pkgOrClass = strdup("");
+    pCtrl->pkgOrClassLen = 0;
+    pCtrl->isPackage = false;
+    pCtrl->enable = true;
+    gDvm.assertionCtrlCount = 1;
+}
+
+
+/*
  * Release memory associated with the AssertionCtrl array.
  */
 static void freeAssertionCtrl(void)
@@ -503,7 +545,11 @@ static int dvmProcessOptions(int argc, const char* const argv[],
     for (i = 0; i < argc; i++)
         LOGV("  %d: '%s'\n", i, argv[i]);
 
-    /* over-allocate AssertionControl array for convenience */
+    /*
+     * Over-allocate AssertionControl array for convenience.  If allocated,
+     * the array must be able to hold at least one entry, so that the
+     * zygote-time activation can do its business.
+     */
     assert(gDvm.assertionCtrl == NULL);
     if (argc > 0) {
         gDvm.assertionCtrl =
@@ -783,24 +829,18 @@ static void setCommandLineDefaults()
     /* allowed unless zygote config doesn't allow it */
     gDvm.jdwpAllowed = true;
 
-    /* default to standard behavior */
-    gDvm.jniWarnError = true;
-
     /* default verification and optimization modes */
     gDvm.classVerifyMode = VERIFY_MODE_ALL;
     gDvm.dexOptMode = OPTIMIZE_MODE_VERIFIED;
 
     /*
      * Default execution mode.
-     * TODO: this should be controlled by the generated code, maybe a flag
-     * in the mterp config indicating whether or not an accelerated mterp
-     * implementation exists.
+     *
+     * This should probably interact with the mterp code somehow, e.g. if
+     * we know we're using the "desktop" build we should probably be
+     * using "portable" rather than "fast".
      */
-#if defined(__arm__)
     gDvm.executionMode = kExecutionModeInterpFast;
-#else
-    gDvm.executionMode = kExecutionModeInterpPortable;
-#endif
 }
 
 

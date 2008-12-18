@@ -23,21 +23,22 @@ import org.apache.harmony.nio.internal.DirectBuffer;
 
 
 /**
- * <code>MappedByteBuffer</code> is a special kind of direct byte buffer,
- * which maps a region of file to memory.
+ * {@code MappedByteBuffer} is a special kind of direct byte buffer which maps a
+ * region of file to memory.
  * <p>
- * <code>MappedByteBuffer</code> can be created by calling
+ * {@code MappedByteBuffer} can be created by calling
  * {@link java.nio.channels.FileChannel#map(java.nio.channels.FileChannel.MapMode, long, long) FileChannel.map}.
  * Once created, the mapping between the byte buffer and the file region remains
  * valid until the byte buffer is garbage collected.
  * </p>
  * <p>
- * All or part of a <code>MappedByteBuffer</code>'s content may change or
- * become inaccessible at any time, since the mapped file region can be modified
- * by another thread or process at any time. If this happens, the behavior of
- * the <code>MappedByteBuffer</code> is undefined.
+ * All or part of a {@code MappedByteBuffer}'s content may change or become
+ * inaccessible at any time, since the mapped file region can be modified by
+ * another thread or process at any time. If this happens, the behavior of the
+ * {@code MappedByteBuffer} is undefined.
  * </p>
  * 
+ * @since Android 1.0
  */
 public abstract class MappedByteBuffer extends ByteBuffer {
 
@@ -72,18 +73,24 @@ public abstract class MappedByteBuffer extends ByteBuffer {
     }
 
     /**
-     * Returns true if this buffer's content is loaded.
+     * Indicates whether this buffer's content is loaded. If the result is true
+     * there is a high probability that the whole buffer memory is currently
+     * loaded in RAM. If it is false it is unsure if it is loaded or not.
      * 
-     * @return True if this buffer's content is loaded.
+     * @return {@code true} if this buffer's content is loaded, {@code false}
+     *         otherwise.
+     * @since Android 1.0
      */
     public final boolean isLoaded() {
         return ((MappedPlatformAddress)((DirectBuffer) wrapped).getBaseAddress()).mmapIsLoaded();
     }
 
     /**
-     * Loads this buffer's content into memory.
+     * Loads this buffer's content into memory but it is not guaranteed to
+     * succeed.
      * 
-     * @return This buffer
+     * @return this buffer.
+     * @since Android 1.0
      */
     public final MappedByteBuffer load() {
         ((MappedPlatformAddress)((DirectBuffer) wrapped).getBaseAddress()).mmapLoad();
@@ -91,12 +98,13 @@ public abstract class MappedByteBuffer extends ByteBuffer {
     }
 
     /**
-     * Writes all changes of the buffer to the mapped file.
+     * Writes all changes of the buffer to the mapped file. If the mapped file
+     * is stored on a local device, it is guaranteed that the changes are
+     * written to the file. No such guarantee is given if the file is located on
+     * a remote device.
      * 
-     * All changes must be written by invoking this method if the mapped file
-     * exists on the local device, otherwise the action can not be specified.
-     * 
-     * @return This buffer
+     * @return this buffer.
+     * @since Android 1.0
      */
     public final MappedByteBuffer force() {
         if (mapMode == IMemorySystem.MMAP_READ_WRITE) {

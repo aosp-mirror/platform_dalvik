@@ -20,28 +20,36 @@ package java.io;
 import org.apache.harmony.luni.util.Msg;
 
 /**
- * ByteArrayOutputStream is a class whose underlying stream is represented by a
- * byte array. As bytes are written to this stream, the local byte array may be
- * expanded to hold more bytes.
+ * A specialized {@link OutputStream} for class for writing content to an
+ * (internal) byte array. As bytes are written to this stream, the byte array
+ * may be expanded to hold more bytes. When the writing is considered to be
+ * finished, a copy of the byte array can be requested from the class.
  * 
  * @see ByteArrayInputStream
+ * 
+ * @since Android 1.0
  */
 public class ByteArrayOutputStream extends OutputStream {
     /**
      * The byte array containing the bytes written.
+     * 
+     * @since Android 1.0
      */
     protected byte[] buf;
 
     /**
      * The number of bytes written.
+     * 
+     * @since Android 1.0
      */
     protected int count;
 
     /**
      * Constructs a new ByteArrayOutputStream with a default size of 32 bytes.
      * If more than 32 bytes are written to this instance, the underlying byte
-     * array will expand to accommodate.
+     * array will expand.
      * 
+     * @since Android 1.0
      */
     public ByteArrayOutputStream() {
         super();
@@ -49,14 +57,16 @@ public class ByteArrayOutputStream extends OutputStream {
     }
 
     /**
-     * Constructs a new ByteArrayOutputStream with a default size of
-     * <code>size</code> bytes. If more than <code>size</code> bytes are
-     * written to this instance, the underlying byte array will expand to
-     * accommodate.
+     * Constructs a new {@code ByteArrayOutputStream} with a default size of
+     * {@code size} bytes. If more than {@code size} bytes are written to this
+     * instance, the underlying byte array will expand.
      * 
      * @param size
-     *            an non-negative integer representing the initial size for the
-     *            underlying byte array.
+     *            initial size for the underlying byte array, must be
+     *            non-negative.
+     * @throws IllegalArgumentException
+     *             if {@code size} < 0.
+     * @since Android 1.0
      */
     public ByteArrayOutputStream(int size) {
         super();
@@ -68,11 +78,11 @@ public class ByteArrayOutputStream extends OutputStream {
     }
 
     /**
-     * Close this ByteArrayOutputStream. This implementation releases System
-     * resources used for this stream.
+     * Closes this stream. This releases system resources used for this stream.
      * 
      * @throws IOException
-     *             If an error occurs attempting to close this OutputStream.
+     *             if an error occurs while attempting to close this stream.
+     * @since Android 1.0
      */
     @Override
     public void close() throws IOException {
@@ -96,30 +106,33 @@ public class ByteArrayOutputStream extends OutputStream {
     }
 
     /**
-     * Reset this ByteArrayOutputStream to the beginning of the underlying byte
-     * array. All subsequent writes will overwrite any bytes previously stored
-     * in this stream.
+     * Resets this stream to the beginning of the underlying byte array. All
+     * subsequent writes will overwrite any bytes previously stored in this
+     * stream.
      * 
+     * @since Android 1.0
      */
     public synchronized void reset() {
         count = 0;
     }
 
     /**
-     * Returns the total number of bytes written to this stream thus far.
+     * Returns the total number of bytes written to this stream so far.
      * 
-     * @return the number of bytes written to this Stream.
+     * @return the number of bytes written to this stream.
+     * @since Android 1.0
      */
     public int size() {
         return count;
     }
 
     /**
-     * Answer the contents of this ByteArrayOutputStream as a byte array. Any
+     * Returns the contents of this ByteArrayOutputStream as a byte array. Any
      * changes made to the receiver after returning will not be reflected in the
      * byte array returned to the caller.
      * 
-     * @return this streams current contents as a byte array.
+     * @return this stream's current contents as a byte array.
+     * @since Android 1.0
      */
     public synchronized byte[] toByteArray() {
         byte[] newArray = new byte[count];
@@ -128,11 +141,12 @@ public class ByteArrayOutputStream extends OutputStream {
     }
 
     /**
-     * Answer the contents of this ByteArrayOutputStream as a String. Any
+     * Returns the contents of this ByteArrayOutputStream as a string. Any
      * changes made to the receiver after returning will not be reflected in the
-     * String returned to the caller.
+     * string returned to the caller.
      * 
-     * @return this streams current contents as a String.
+     * @return this stream's current contents as a string.
+     * @since Android 1.0
      */
 
     @Override
@@ -141,19 +155,19 @@ public class ByteArrayOutputStream extends OutputStream {
     }
 
     /**
-     * Answer the contents of this ByteArrayOutputStream as a String. Each byte
-     * <code>b</code> in this stream is converted to a character
-     * <code>c</code> using the following function:
-     * <code>c == (char)(((hibyte & 0xff) << 8) | (b & 0xff))</code>. This
-     * method is deprecated and either {@link #toString()}, or {@link #toString(String)}
+     * Returns the contents of this ByteArrayOutputStream as a string. Each byte
+     * {@code b} in this stream is converted to a character {@code c} using the
+     * following function:
+     * {@code c == (char)(((hibyte & 0xff) << 8) | (b & 0xff))}. This method is
+     * deprecated and either {@link #toString()} or {@link #toString(String)}
      * should be used.
      * 
      * @param hibyte
-     *            the high byte of each resulting Unicode character
-     * @return this streams current contents as a String with the high byte set
-     *         to <code>hibyte</code>
-     * 
-     * @deprecated Use {@link #toString()}
+     *            the high byte of each resulting Unicode character.
+     * @return this stream's current contents as a string with the high byte set
+     *         to {@code hibyte}.
+     * @deprecated Use {@link #toString()}.
+     * @since Android 1.0
      */
     @Deprecated
     public String toString(int hibyte) {
@@ -165,45 +179,53 @@ public class ByteArrayOutputStream extends OutputStream {
     }
 
     /**
-     * Answer the contents of this ByteArrayOutputStream as a String converted
-     * using the encoding declared in <code>enc</code>.
+     * Returns the contents of this ByteArrayOutputStream as a string converted
+     * according to the encoding declared in {@code enc}.
      * 
      * @param enc
-     *            A String representing the encoding to use when translating
-     *            this stream to a String.
-     * @return this streams current contents as a String.
-     * 
+     *            a string representing the encoding to use when translating
+     *            this stream to a string.
+     * @return this stream's current contents as an encoded string.
      * @throws UnsupportedEncodingException
-     *             If declared encoding is not supported
+     *             if the provided encoding is not supported.
+     * @since Android 1.0
      */
     public String toString(String enc) throws UnsupportedEncodingException {
         return new String(buf, 0, count, enc);
     }
 
     /**
-     * Writes <code>count</code> <code>bytes</code> from the byte array
-     * <code>buffer</code> starting at offset <code>index</code> to the
-     * ByteArrayOutputStream.
+     * Writes {@code count} bytes from the byte array {@code buffer} starting at
+     * offset {@code index} to this stream.
      * 
      * @param buffer
-     *            the buffer to be written
+     *            the buffer to be written.
      * @param offset
-     *            offset in buffer to get bytes
+     *            the initial position in {@code buffer} to retrieve bytes.
      * @param len
-     *            number of bytes in buffer to write
-     * 
-     * @throws NullPointerException
-     *             If buffer is null.
+     *            the number of bytes of {@code buffer} to write.
      * @throws IndexOutOfBoundsException
-     *             If offset or count are outside of bounds.
+     *             if {@code offset < 0} or {@code len < 0}, or if
+     *             {@code offset + len} is greater than the length of
+     *             {@code buffer}.
+     * @since Android 1.0
      */
     @Override
     public synchronized void write(byte[] buffer, int offset, int len) {
         // avoid int overflow
-        if (offset < 0 || offset > buffer.length || len < 0
-                || len > buffer.length - offset) {
+        // BEGIN android-changed
+        // Exception priorities (in case of multiple errors) differ from
+        // RI, but are spec-compliant.
+        // removed redundant check, made implicit null check explicit,
+        // used (offset | len) < 0 instead of (offset < 0) || (len < 0)
+        // to safe one operation
+        if (buffer == null) {
+            throw new NullPointerException(Msg.getString("K0047")); //$NON-NLS-1$
+        }
+        if ((offset | len) < 0 || len > buffer.length - offset) {
             throw new IndexOutOfBoundsException(Msg.getString("K002f")); //$NON-NLS-1$
         }
+        // END android-changed
         if (len == 0) {
             return;
         }
@@ -215,29 +237,30 @@ public class ByteArrayOutputStream extends OutputStream {
     }
 
     /**
-     * Writes the specified byte <code>oneByte</code> to the OutputStream.
-     * Only the low order byte of <code>oneByte</code> is written.
+     * Writes the specified byte {@code oneByte} to the OutputStream. Only the
+     * low order byte of {@code oneByte} is written.
      * 
      * @param oneByte
-     *            the byte to be written
+     *            the byte to be written.
+     * @since Android 1.0
      */
     @Override
     public synchronized void write(int oneByte) {
         if (count == buf.length) {
             expand(1);
         }
-        buf[count++] = (byte) oneByte;
+        buf[count++] = (byte)oneByte;
     }
 
     /**
-     * Take the contents of this stream and write it to the output stream
-     * <code>out</code>.
+     * Takes the contents of this stream and writes it to the output stream
+     * {@code out}.
      * 
      * @param out
-     *            An OutputStream on which to write the contents of this stream.
-     * 
+     *            an OutputStream on which to write the contents of this stream.
      * @throws IOException
-     *             If an error occurs when writing to output stream
+     *             if an error occurs while writing to {@code out}.
+     * @since Android 1.0
      */
     public synchronized void writeTo(OutputStream out) throws IOException {
         out.write(buf, 0, count);

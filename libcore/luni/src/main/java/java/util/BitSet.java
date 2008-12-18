@@ -22,9 +22,12 @@ import java.io.Serializable;
 import org.apache.harmony.luni.util.Msg;
 
 /**
- * The BitSet class implements a bit field. Each element in a BitSet can be
- * on(1) or off(0). A BitSet is created with a given size and grows when this
- * size is exceeded. Growth is always rounded to a 64 bit boundary.
+ * The {@code BitSet} class implements a bit field. Each element in a
+ * {@code BitSet} can be on(1) or off(0). A {@code BitSet} is created with a
+ * given size and grows if this size is exceeded. Growth is always rounded to a
+ * 64 bit boundary.
+ *  
+ * @since Android 1.0
  */
 public class BitSet implements Serializable, Cloneable {
     private static final long serialVersionUID = 7997698588986878753L;
@@ -35,7 +38,7 @@ public class BitSet implements Serializable, Cloneable {
     private long[] bits;
 
     /**
-     * Create a new BitSet with size equal to 64 bits
+     * Create a new {@code BitSet} with size equal to 64 bits.
      * 
      * @see #clear(int)
      * @see #set(int)
@@ -44,21 +47,21 @@ public class BitSet implements Serializable, Cloneable {
      * @see #set(int, boolean)
      * @see #set(int, int)
      * @see #set(int, int, boolean)
+     * @since Android 1.0
      */
     public BitSet() {
         this(64);
     }
 
     /**
-     * Create a new BitSet with size equal to nbits. If nbits is not a multiple
-     * of 64, then create a BitSet with size nbits rounded to the next closest
-     * multiple of 64.
+     * Create a new {@code BitSet} with size equal to nbits. If nbits is not a
+     * multiple of 64, then create a {@code BitSet} with size nbits rounded to
+     * the next closest multiple of 64.
      * 
      * @param nbits
-     *            the size of the bit set
+     *            the size of the bit set.
      * @throws NegativeArraySizeException
-     *             if nbits < 0.
-     * 
+     *             if {@code nbits} is negative.
      * @see #clear(int)
      * @see #set(int)
      * @see #clear()
@@ -66,6 +69,7 @@ public class BitSet implements Serializable, Cloneable {
      * @see #set(int, boolean)
      * @see #set(int, int)
      * @see #set(int, int, boolean)
+     * @since Android 1.0
      */
     public BitSet(int nbits) {
         if (nbits >= 0) {
@@ -86,9 +90,10 @@ public class BitSet implements Serializable, Cloneable {
     }
 
     /**
-     * Create a copy of this BitSet
+     * Creates a copy of this {@code BitSet}.
      * 
-     * @return A copy of this BitSet.
+     * @return a copy of this {@code BitSet}.
+     * @since Android 1.0
      */
     @Override
     public Object clone() {
@@ -102,14 +107,16 @@ public class BitSet implements Serializable, Cloneable {
     }
 
     /**
-     * Compares the argument to this BitSet and answer if they are equal. The
-     * object must be an instance of BitSet with the same bits set.
+     * Compares the argument to this {@code BitSet} and returns whether they are
+     * equal. The object must be an instance of {@code BitSet} with the same
+     * bits set.
      * 
      * @param obj
-     *            the <code>BitSet</code> object to compare
-     * @return A boolean indicating whether or not this BitSet and obj are equal
-     * 
+     *            the {@code BitSet} object to compare.
+     * @return a {@code boolean} indicating whether or not this {@code BitSet} and
+     *         {@code obj} are equal.
      * @see #hashCode
+     * @since Android 1.0
      */
     @Override
     public boolean equals(Object obj) {
@@ -151,11 +158,12 @@ public class BitSet implements Serializable, Cloneable {
     }
 
     /**
-     * Increase the size of the internal array to accommodate pos bits. The new
-     * array max index will be a multiple of 64
+     * Increase the size of the internal array to accommodate {@code pos} bits.
+     * The new array max index will be a multiple of 64.
      * 
      * @param pos
-     *            the index the new array needs to be able to access
+     *            the index the new array needs to be able to access.
+     * @since Android 1.0
      */
     private void growBits(int pos) {
         pos++; // Inc to get correct bit count
@@ -166,13 +174,14 @@ public class BitSet implements Serializable, Cloneable {
     }
 
     /**
-     * Computes the hash code for this BitSet.
+     * Computes the hash code for this {@code BitSet}. If two {@code BitSet}s are equal
+     * the have to return the same result for {@code hashCode()}.
      * 
-     * @return The <code>int</code> representing the hash code for this bit
+     * @return the {@code int} representing the hash code for this bit
      *         set.
-     * 
      * @see #equals
      * @see java.util.Hashtable
+     * @since Android 1.0
      */
     @Override
     public int hashCode() {
@@ -186,15 +195,15 @@ public class BitSet implements Serializable, Cloneable {
     }
 
     /**
-     * Retrieve the bit at index pos. Grows the BitSet if pos > size.
+     * Retrieves the bit at index {@code pos}. Grows the {@code BitSet} if
+     * {@code pos > size}.
      * 
      * @param pos
-     *            the index of the bit to be retrieved
-     * @return <code>true</code> if the bit at <code>pos</code> is set,
-     *         <code>false</code> otherwise
+     *            the index of the bit to be retrieved.
+     * @return {@code true} if the bit at {@code pos} is set,
+     *         {@code false} otherwise.
      * @throws IndexOutOfBoundsException
-     *             when <code>pos</code> < 0
-     * 
+     *             if {@code pos} is negative.
      * @see #clear(int)
      * @see #set(int)
      * @see #clear()
@@ -202,6 +211,7 @@ public class BitSet implements Serializable, Cloneable {
      * @see #set(int, boolean)
      * @see #set(int, int)
      * @see #set(int, int, boolean)
+     * @since Android 1.0
      */
     public boolean get(int pos) {
         if (pos >= 0) {
@@ -215,19 +225,20 @@ public class BitSet implements Serializable, Cloneable {
     }
 
     /**
-     * Retrieves the bits starting from pos1 to pos2 and returns back a new
-     * bitset made of these bits. Grows the BitSet if pos2 > size.
+     * Retrieves the bits starting from {@code pos1} to {@code pos2} and returns
+     * back a new bitset made of these bits. Grows the {@code BitSet} if
+     * {@code pos2 > size}.
      * 
      * @param pos1
-     *            beginning position
+     *            beginning position.
      * @param pos2
-     *            ending position
-     * @return new bitset
+     *            ending position.
+     * @return new bitset of the range specified.
      * @throws IndexOutOfBoundsException
-     *             when pos1 or pos2 is negative, or when pos2 is not smaller
-     *             than pos1
-     * 
+     *             if {@code pos1} or {@code pos2} is negative, or if
+     *             {@code pos2} is smaller than {@code pos1}.
      * @see #get(int)
+     * @since Android 1.0
      */
     public BitSet get(int pos1, int pos2) {
         if (pos1 >= 0 && pos2 >= 0 && pos2 >= pos1) {
@@ -280,16 +291,17 @@ public class BitSet implements Serializable, Cloneable {
     }
 
     /**
-     * Sets the bit at index pos to 1. Grows the BitSet if pos > size.
+     * Sets the bit at index {@code pos} to 1. Grows the {@code BitSet} if
+     * {@code pos > size}.
      * 
      * @param pos
-     *            the index of the bit to set
+     *            the index of the bit to set.
      * @throws IndexOutOfBoundsException
-     *             when pos < 0
-     * 
+     *             if {@code pos} is negative.
      * @see #clear(int)
      * @see #clear()
      * @see #clear(int, int)
+     * @since Android 1.0
      */
     public void set(int pos) {
         if (pos >= 0) {
@@ -303,16 +315,17 @@ public class BitSet implements Serializable, Cloneable {
     }
 
     /**
-     * Sets the bit at index pos to the value. Grows the BitSet if pos > size.
+     * Sets the bit at index {@code pos} to {@code val}. Grows the
+     * {@code BitSet} if {@code pos > size}.
      * 
      * @param pos
-     *            the index of the bit to set
+     *            the index of the bit to set.
      * @param val
-     *            value to set the bit
+     *            value to set the bit.
      * @throws IndexOutOfBoundsException
-     *             when pos < 0
-     * 
+     *             if {@code pos} is negative.
      * @see #set(int)
+     * @since Android 1.0
      */
     public void set(int pos, boolean val) {
         if (val) {
@@ -323,18 +336,18 @@ public class BitSet implements Serializable, Cloneable {
     }
 
     /**
-     * Sets the bits starting from pos1 to pos2. Grows the BitSet if pos2 >
-     * size.
+     * Sets the bits starting from {@code pos1} to {@code pos2}. Grows the
+     * {@code BitSet} if {@code pos2 > size}.
      * 
      * @param pos1
-     *            beginning position
+     *            beginning position.
      * @param pos2
-     *            ending position
+     *            ending position.
      * @throws IndexOutOfBoundsException
-     *             when pos1 or pos2 is negative, or when pos2 is not smaller
-     *             than pos1
-     * 
+     *             if {@code pos1} or {@code pos2} is negative, or if
+     *             {@code pos2} is smaller than {@code pos1}.
      * @see #set(int)
+     * @since Android 1.0
      */
     public void set(int pos1, int pos2) {
         if (pos1 >= 0 && pos2 >= 0 && pos2 >= pos1) {
@@ -365,20 +378,20 @@ public class BitSet implements Serializable, Cloneable {
     }
 
     /**
-     * Sets the bits starting from pos1 to pos2 to the given boolean value.
-     * Grows the BitSet if pos2 > size.
+     * Sets the bits starting from {@code pos1} to {@code pos2} to the given
+     * {@code val}. Grows the {@code BitSet} if {@code pos2 > size}.
      * 
      * @param pos1
-     *            beginning position
+     *            beginning position.
      * @param pos2
-     *            ending position
+     *            ending position.
      * @param val
-     *            value to set these bits
-     * 
+     *            value to set these bits.
      * @throws IndexOutOfBoundsException
-     *             when pos1 or pos2 is negative, or when pos2 is not smaller
-     *             than pos1
+     *             if {@code pos1} or {@code pos2} is negative, or if
+     *             {@code pos2} is smaller than {@code pos1}.
      * @see #set(int,int)
+     * @since Android 1.0
      */
     public void set(int pos1, int pos2, boolean val) {
         if (val) {
@@ -389,10 +402,11 @@ public class BitSet implements Serializable, Cloneable {
     }
 
     /**
-     * Clears all the bits in this bitset.
+     * Clears all the bits in this {@code BitSet}.
      * 
      * @see #clear(int)
      * @see #clear(int, int)
+     * @since Android 1.0
      */
     public void clear() {
         for (int i = 0; i < bits.length; i++) {
@@ -401,14 +415,15 @@ public class BitSet implements Serializable, Cloneable {
     }
 
     /**
-     * Clears the bit at index pos. Grows the BitSet if pos > size.
+     * Clears the bit at index {@code pos}. Grows the {@code BitSet} if
+     * {@code pos > size}.
      * 
      * @param pos
-     *            the index of the bit to clear
+     *            the index of the bit to clear.
      * @throws IndexOutOfBoundsException
-     *             when pos < 0
-     * 
+     *             if {@code pos} is negative.
      * @see #clear(int, int)
+     * @since Android 1.0
      */
     public void clear(int pos) {
         if (pos >= 0) {
@@ -422,18 +437,18 @@ public class BitSet implements Serializable, Cloneable {
     }
 
     /**
-     * Clears the bits starting from pos1 to pos2. Grows the BitSet if pos2 >
-     * size.
+     * Clears the bits starting from {@code pos1} to {@code pos2}. Grows the
+     * {@code BitSet} if {@code pos2 > size}.
      * 
      * @param pos1
-     *            beginning position
+     *            beginning position.
      * @param pos2
-     *            ending position
+     *            ending position.
      * @throws IndexOutOfBoundsException
-     *             when pos1 or pos2 is negative, or when pos2 is not smaller
-     *             than pos1
-     * 
+     *             if {@code pos1} or {@code pos2} is negative, or if
+     *             {@code pos2} is smaller than {@code pos1}.
      * @see #clear(int)
+     * @since Android 1.0
      */
     public void clear(int pos1, int pos2) {
         if (pos1 >= 0 && pos2 >= 0 && pos2 >= pos1) {
@@ -465,14 +480,15 @@ public class BitSet implements Serializable, Cloneable {
     }
 
     /**
-     * Flips the bit at index pos. Grows the BitSet if pos > size.
+     * Flips the bit at index {@code pos}. Grows the {@code BitSet} if
+     * {@code pos > size}.
      * 
      * @param pos
-     *            the index of the bit to flip
-     * 
+     *            the index of the bit to flip.
      * @throws IndexOutOfBoundsException
-     *             when pos < 0
+     *             if {@code pos} is negative.
      * @see #flip(int, int)
+     * @since Android 1.0
      */
     public void flip(int pos) {
         if (pos >= 0) {
@@ -486,18 +502,18 @@ public class BitSet implements Serializable, Cloneable {
     }
 
     /**
-     * Flips the bits starting from pos1 to pos2. Grows the BitSet if pos2 >
-     * size.
+     * Flips the bits starting from {@code pos1} to {@code pos2}. Grows the
+     * {@code BitSet} if {@code pos2 > size}.
      * 
      * @param pos1
-     *            beginning position
+     *            beginning position.
      * @param pos2
-     *            ending position
+     *            ending position.
      * @throws IndexOutOfBoundsException
-     *             when pos1 or pos2 is negative, or when pos2 is not smaller
-     *             than pos1
-     * 
+     *             if {@code pos1} or {@code pos2} is negative, or if
+     *             {@code pos2} is smaller than {@code pos1}.
      * @see #flip(int)
+     * @since Android 1.0
      */
     public void flip(int pos1, int pos2) {
         if (pos1 >= 0 && pos2 >= 0 && pos2 >= pos1) {
@@ -528,13 +544,14 @@ public class BitSet implements Serializable, Cloneable {
     }
 
     /**
-     * Checks if these two bitsets have at least one bit set to true in the same
+     * Checks if these two {@code BitSet}s have at least one bit set to true in the same
      * position.
      * 
      * @param bs
-     *            BitSet used to calculate intersect
-     * @return <code>true</code> if bs intersects with this BitSet,
-     *         <code>false</code> otherwise
+     *            {@code BitSet} used to calculate the intersection.
+     * @return {@code true} if bs intersects with this {@code BitSet},
+     *         {@code false} otherwise.
+     * @since Android 1.0
      */
     public boolean intersects(BitSet bs) {
         long[] bsBits = bs.bits;
@@ -558,13 +575,14 @@ public class BitSet implements Serializable, Cloneable {
     }
 
     /**
-     * Performs the logical AND of this BitSet with another BitSet.
+     * Performs the logical AND of this {@code BitSet} with another 
+     * {@code BitSet}. The values of this {@code BitSet} are changed accordingly.
      * 
      * @param bs
-     *            BitSet to AND with
-     * 
+     *            {@code BitSet} to AND with.
      * @see #or
      * @see #xor
+     * @since Android 1.0
      */
 
     public void and(BitSet bs) {
@@ -586,10 +604,11 @@ public class BitSet implements Serializable, Cloneable {
 
     /**
      * Clears all bits in the receiver which are also set in the parameter
-     * BitSet.
+     * {@code BitSet}. The values of this {@code BitSet} are changed accordingly.
      * 
      * @param bs
-     *            BitSet to ANDNOT with
+     *            {@code BitSet} to ANDNOT with.
+     * @since Android 1.0
      */
     public void andNot(BitSet bs) {
         long[] bsBits = bs.bits;
@@ -600,13 +619,14 @@ public class BitSet implements Serializable, Cloneable {
     }
 
     /**
-     * Performs the logical OR of this BitSet with another BitSet.
+     * Performs the logical OR of this {@code BitSet} with another {@code BitSet}.
+     * The values of this {@code BitSet} are changed accordingly.
      * 
      * @param bs
-     *            BitSet to OR with
-     * 
+     *            {@code BitSet} to OR with.
      * @see #xor
      * @see #and
+     * @since Android 1.0
      */
     public void or(BitSet bs) {
         int nbits = bs.length();
@@ -621,13 +641,14 @@ public class BitSet implements Serializable, Cloneable {
     }
 
     /**
-     * Performs the logical XOR of this BitSet with another BitSet.
+     * Performs the logical XOR of this {@code BitSet} with another {@code BitSet}.
+     * The values of this {@code BitSet} are changed accordingly.
      * 
      * @param bs
-     *            BitSet to XOR with
-     * 
+     *            {@code BitSet} to XOR with.
      * @see #or
      * @see #and
+     * @since Android 1.0
      */
     public void xor(BitSet bs) {
         int nbits = bs.length();
@@ -643,11 +664,11 @@ public class BitSet implements Serializable, Cloneable {
     }
 
     /**
-     * Returns the number of bits this bitset has.
+     * Returns the number of bits this {@code BitSet} has.
      * 
-     * @return The number of bits contained in this BitSet.
-     * 
+     * @return the number of bits contained in this {@code BitSet}.
      * @see #length
+     * @since Android 1.0
      */
     public int size() {
         return bits.length * ELM_SIZE;
@@ -656,7 +677,8 @@ public class BitSet implements Serializable, Cloneable {
     /**
      * Returns the number of bits up to and including the highest bit set.
      * 
-     * @return the length of the BitSet
+     * @return the length of the {@code BitSet}.
+     * @since Android 1.0
      */
     public int length() {
         int idx = bits.length - 1;
@@ -678,7 +700,8 @@ public class BitSet implements Serializable, Cloneable {
      * Returns a string containing a concise, human-readable description of the
      * receiver.
      * 
-     * @return A comma delimited list of the indices of all bits that are set.
+     * @return a comma delimited list of the indices of all bits that are set.
+     * @since Android 1.0
      */
     @Override
     public String toString() {
@@ -707,11 +730,12 @@ public class BitSet implements Serializable, Cloneable {
     }
 
     /**
-     * Returns the position of the first bit that is true on or after pos
+     * Returns the position of the first bit that is {@code true} on or after {@code pos}.
      * 
      * @param pos
-     *            the starting position (inclusive)
-     * @return -1 if there is no bits that are set to true on or after pos.
+     *            the starting position (inclusive).
+     * @return -1 if there is no bits that are set to {@code true} on or after {@code pos}.
+     * @since Android 1.0
      */
     public int nextSetBit(int pos) {
         if (pos >= 0) {
@@ -751,12 +775,13 @@ public class BitSet implements Serializable, Cloneable {
     }
 
     /**
-     * Returns the position of the first bit that is false on or after pos
+     * Returns the position of the first bit that is {@code false} on or after {@code pos}.
      * 
      * @param pos
-     *            the starting position (inclusive)
-     * @return the position of the next bit set to false, even if it is further
-     *         than this bitset's size.
+     *            the starting position (inclusive).
+     * @return the position of the next bit set to {@code false}, even if it is further
+     *         than this {@code BitSet}'s size.
+     * @since Android 1.0
      */
     public int nextClearBit(int pos) {
         if (pos >= 0) {
@@ -797,10 +822,11 @@ public class BitSet implements Serializable, Cloneable {
     }
 
     /**
-     * Returns true if all the bits in this bitset are set to false.
+     * Returns true if all the bits in this {@code BitSet} are set to false.
      * 
-     * @return <code>true</code> if the BitSet is empty, <code>false</code>
-     *         otherwise
+     * @return {@code true} if the {@code BitSet} is empty,
+     *         {@code false} otherwise.
+     * @since Android 1.0
      */
     public boolean isEmpty() {
         for (int idx = 0; idx < bits.length; idx++) {
@@ -813,9 +839,10 @@ public class BitSet implements Serializable, Cloneable {
     }
 
     /**
-     * Returns the number of bits that are true in this bitset.
+     * Returns the number of bits that are {@code true} in this {@code BitSet}.
      * 
-     * @return the number of true bits in the set
+     * @return the number of {@code true} bits in the set.
+     * @since Android 1.0
      */
     public int cardinality() {
         int count = 0;

@@ -39,7 +39,7 @@ import java.io.Serializable;
  * 
  * @see String
  * @see StringBuilder
- * @since 1.0
+ * @since Android 1.0
  */
 public final class StringBuffer extends AbstractStringBuilder implements
         Appendable, Serializable, CharSequence {
@@ -52,7 +52,9 @@ public final class StringBuffer extends AbstractStringBuilder implements
             new ObjectStreamField("value", char[].class), }; //$NON-NLS-1$
 
     /**
-     * Constructs a new StringBuffer using the default capacity.
+     * Constructs a new StringBuffer using the default capacity which is 16.
+     * 
+     * @since Android 1.0
      */
     public StringBuffer() {
         super();
@@ -62,7 +64,8 @@ public final class StringBuffer extends AbstractStringBuilder implements
      * Constructs a new StringBuffer using the specified capacity.
      * 
      * @param capacity
-     *            the initial capacity
+     *            the initial capacity.
+     * @since Android 1.0
      */
     public StringBuffer(int capacity) {
         super(capacity);
@@ -70,30 +73,25 @@ public final class StringBuffer extends AbstractStringBuilder implements
 
     /**
      * Constructs a new StringBuffer containing the characters in the specified
-     * string and the default capacity.
+     * stringy. The capacity of the new buffer will be the length of the
+     * {@code String} plus the default capacity.
      * 
      * @param string
-     *            the string content with which to initialize the new
-     *            <code>StringBuffer</code> instance
-     * @throws NullPointerException
-     *             on supplying a <code>null</code> value of
-     *             <code>string</code>
+     *            the string content with which to initialize the new instance.
+     * @since Android 1.0
      */
     public StringBuffer(String string) {
         super(string);
     }
 
     /**
-     * <p>
-     * Constructs a StringBuffer and initializes it with the characters in the
-     * <code>CharSequence</code>.
-     * </p>
+     * Constructs a StringBuffer and initializes it with the content from the
+     * specified {@code CharSequence}. The capacity of the new buffer will be
+     * the length of the {@code CharSequence} plus the default capacity.
      * 
      * @param cs
-     *            The <code>CharSequence</code> to initialize the instance.
-     * @throws NullPointerException
-     *             if the <code>cs</code> parameter is <code>null</code>.
-     * @since 1.5
+     *            the content to initialize the instance.
+     * @since Android 1.0
      */
     public StringBuffer(CharSequence cs) {
         super(cs.toString());
@@ -102,21 +100,29 @@ public final class StringBuffer extends AbstractStringBuilder implements
     /**
      * Adds the string representation of the specified boolean to the end of
      * this StringBuffer.
+     * <p>
+     * If the argument is {@code true} the string {@code "true"} is appended,
+     * otherwise the string {@code "false"} is appended.
+     * </p>
      * 
      * @param b
-     *            the boolean
-     * @return this StringBuffer
+     *            the boolean to append.
+     * @return this StringBuffer.
+     * @see String#valueOf(boolean)
+     * @since Android 1.0
      */
     public StringBuffer append(boolean b) {
         return append(b ? "true" : "false"); //$NON-NLS-1$//$NON-NLS-2$
     }
 
     /**
-     * Adds the specified character to the end of this StringBuffer.
+     * Adds the specified character to the end of this buffer.
      * 
      * @param ch
-     *            a character
-     * @return this StringBuffer
+     *            the character to append.
+     * @return this StringBuffer.
+     * @see String#valueOf(char)
+     * @since Android 1.0
      */
     public synchronized StringBuffer append(char ch) {
         append0(ch);
@@ -128,8 +134,10 @@ public final class StringBuffer extends AbstractStringBuilder implements
      * StringBuffer.
      * 
      * @param d
-     *            the double
-     * @return this StringBuffer
+     *            the double to append.
+     * @return this StringBuffer.
+     * @see String#valueOf(double)
+     * @since Android 1.0
      */
     public StringBuffer append(double d) {
         return append(Double.toString(d));
@@ -140,8 +148,10 @@ public final class StringBuffer extends AbstractStringBuilder implements
      * StringBuffer.
      * 
      * @param f
-     *            the float
-     * @return this StringBuffer
+     *            the float to append.
+     * @return this StringBuffer.
+     * @see String#valueOf(float)
+     * @since Android 1.0
      */
     public StringBuffer append(float f) {
         return append(Float.toString(f));
@@ -151,9 +161,11 @@ public final class StringBuffer extends AbstractStringBuilder implements
      * Adds the string representation of the specified integer to the end of
      * this StringBuffer.
      * 
-     * @param i 
-     *            the integer
-     * @return this StringBuffer
+     * @param i
+     *            the integer to append.
+     * @return this StringBuffer.
+     * @see String#valueOf(int)
+     * @since Android 1.0
      */
     public StringBuffer append(int i) {
         return append(Integer.toString(i));
@@ -164,8 +176,10 @@ public final class StringBuffer extends AbstractStringBuilder implements
      * StringBuffer.
      * 
      * @param l
-     *            the long
-     * @return this StringBuffer
+     *            the long to append.
+     * @return this StringBuffer.
+     * @see String#valueOf(long)
+     * @since Android 1.0
      */
     public StringBuffer append(long l) {
         return append(Long.toString(l));
@@ -174,10 +188,17 @@ public final class StringBuffer extends AbstractStringBuilder implements
     /**
      * Adds the string representation of the specified object to the end of this
      * StringBuffer.
+     * <p>
+     * If the specified object is {@code null} the string {@code "null"} is
+     * appended, otherwise the objects {@code toString} is used to get its
+     * string representation.
+     * </p>
      * 
      * @param obj
-     *            the object
-     * @return this StringBuffer
+     *            the object to append (may be null).
+     * @return this StringBuffer.
+     * @see String#valueOf(Object)
+     * @since Android 1.0
      */
     public synchronized StringBuffer append(Object obj) {
         if (obj == null) {
@@ -189,11 +210,16 @@ public final class StringBuffer extends AbstractStringBuilder implements
     }
 
     /**
-     * Adds the specified string to the end of this StringBuffer.
+     * Adds the specified string to the end of this buffer.
+     * <p>
+     * If the specified string is {@code null} the string {@code "null"} is
+     * appended, otherwise the contents of the specified string is appended.
+     * </p>
      * 
      * @param string
-     *            the string
-     * @return this StringBuffer
+     *            the string to append (may be null).
+     * @return this StringBuffer.
+     * @since Android 1.0
      */
     public synchronized StringBuffer append(String string) {
         append0(string);
@@ -201,13 +227,17 @@ public final class StringBuffer extends AbstractStringBuilder implements
     }
 
     /**
-     * Adds the specified StringBuffer to the end of this StringBuffer.
+     * Adds the specified StringBuffer to the end of this buffer.
+     * <p>
+     * If the specified StringBuffer is {@code null} the string {@code "null"}
+     * is appended, otherwise the contents of the specified StringBuffer is
+     * appended.
+     * </p>
      * 
      * @param sb
-     *            the StringBuffer
-     * @return this StringBuffer
-     * 
-     * @since 1.4
+     *            the StringBuffer to append (may be null).
+     * @return this StringBuffer.
+     * @since Android 1.0
      */
     public synchronized StringBuffer append(StringBuffer sb) {
         if (sb == null) {
@@ -221,14 +251,12 @@ public final class StringBuffer extends AbstractStringBuilder implements
     }
 
     /**
-     * Adds the character array to the end of this StringBuffer.
+     * Adds the character array to the end of this buffer.
      * 
      * @param chars
-     *            the character array
-     * @return this StringBuffer
-     * 
-     * @throws NullPointerException
-     *             when chars is null
+     *            the character array to append.
+     * @return this StringBuffer.
+     * @since Android 1.0
      */
     public synchronized StringBuffer append(char chars[]) {
         append0(chars);
@@ -236,22 +264,19 @@ public final class StringBuffer extends AbstractStringBuilder implements
     }
 
     /**
-     * Adds the specified sequence of characters to the end of this
-     * StringBuffer.
+     * Adds the specified sequence of characters to the end of this buffer.
      * 
      * @param chars
-     *            a character array
+     *            the character array to append.
      * @param start
-     *            the starting offset
+     *            the starting offset.
      * @param length
-     *            the number of characters
-     * @return this StringBuffer
-     * 
+     *            the number of characters.
+     * @return this StringBuffer.
      * @throws ArrayIndexOutOfBoundsException
-     *             when <code>length < 0, start < 0</code> or
-     *             <code>start + length > chars.length</code>
-     * @throws NullPointerException
-     *             when chars is null
+     *             if {@code length < 0} , {@code start < 0} or {@code start +
+     *             length > chars.length}.
+     * @since Android 1.0
      */
     public synchronized StringBuffer append(char chars[], int start, int length) {
         append0(chars, start, length);
@@ -259,16 +284,17 @@ public final class StringBuffer extends AbstractStringBuilder implements
     }
 
     /**
+     * Appends the specified CharSequence to this buffer.
      * <p>
-     * Appends the <code>CharSequence</code> to this buffer. If the
-     * <code>CharSequence</code> is <code>null</code>, then the string
-     * <code>"null"</code> is appended.
+     * If the specified CharSequence is {@code null} the string {@code "null"}
+     * is appended, otherwise the contents of the specified CharSequence is
+     * appended.
      * </p>
      * 
      * @param s
-     *            The <code>CharSequence</code> to append.
-     * @return A reference to this object.
-     * @since 1.5
+     *            the CharSequence to append.
+     * @return this StringBuffer.
+     * @since Android 1.0
      */
     public synchronized StringBuffer append(CharSequence s) {
         if (s == null) {
@@ -280,27 +306,24 @@ public final class StringBuffer extends AbstractStringBuilder implements
     }
 
     /**
+     * Appends the specified subsequence of the CharSequence to this buffer.
      * <p>
-     * Appends the subsequence of the <code>CharSequence</code> to this
-     * buffer. If the <code>CharSequence</code> is <code>null</code>, then
-     * the string <code>"null"</code> is used to extract a subsequence.
+     * If the specified CharSequence is {@code null}, then the string {@code
+     * "null"} is used to extract a subsequence.
      * </p>
      * 
      * @param s
-     *            The <code>CharSequence</code> to append.
+     *            the CharSequence to append.
      * @param start
-     *            The inclusive start index of the subsequence of the
-     *            <code>CharSequence</code>.
+     *            the inclusive start index.
      * @param end
-     *            The exclusive end index of the subsequence of the
-     *            <code>CharSequence</code>.
-     * @return A reference to this object.
-     * @since 1.5
+     *            the exclusive end index.
+     * @return this StringBuffer.
      * @throws IndexOutOfBoundsException
-     *             if <code>start</code> or <code>end</code> are negative,
-     *             <code>start</code> is greater than <code>end</code> or
-     *             <code>end</code> is greater than the length of
-     *             <code>s</code>.
+     *             if {@code start} or {@code end} are negative, {@code start}
+     *             is greater than {@code end} or {@code end} is greater than
+     *             the length of {@code s}.
+     * @since Android 1.0
      */
     public synchronized StringBuffer append(CharSequence s, int start, int end) {
         append0(s, start, end);
@@ -308,98 +331,38 @@ public final class StringBuffer extends AbstractStringBuilder implements
     }
 
     /**
+     * Appends the string representation of the specified Unicode code point to
+     * the end of this buffer.
      * <p>
-     * Appends the encoded Unicode code point to this object. The code point is
-     * converted to a <code>char[]</code> as defined by
+     * The code point is converted to a {@code char[]} as defined by
      * {@link Character#toChars(int)}.
      * </p>
      * 
      * @param codePoint
-     *            The Unicode code point to encode and append.
-     * @return A reference to this object.
+     *            the Unicode code point to encode and append.
+     * @return this StringBuffer.
      * @see Character#toChars(int)
-     * @since 1.5
+     * @since Android 1.0
      */
     public StringBuffer appendCodePoint(int codePoint) {
         return append(Character.toChars(codePoint));
     }
 
-    /**
-     * Returns the character at the specified offset in this StringBuffer.
-     * 
-     * @param index
-     *            the zero-based index in this StringBuffer
-     * @return the character at the index
-     * 
-     * @throws IndexOutOfBoundsException
-     *             when <code>index < 0</code> or
-     *             <code>index >= length()</code>
-     */
     @Override
     public synchronized char charAt(int index) {
         return super.charAt(index);
     }
 
-    /**
-     * <p>
-     * Retrieves the Unicode code point value at the <code>index</code>.
-     * </p>
-     * 
-     * @param index
-     *            The index to the <code>char</code> code unit within this
-     *            object.
-     * @return The Unicode code point value.
-     * @throws IndexOutOfBoundsException
-     *             if <code>index</code> is negative or greater than or equal
-     *             to {@link #length()}.
-     * @see Character
-     * @see Character#codePointAt(char[], int, int)
-     * @since 1.5
-     */
     @Override
     public synchronized int codePointAt(int index) {
         return super.codePointAt(index);
     }
 
-    /**
-     * <p>
-     * Retrieves the Unicode code point value that precedes the
-     * <code>index</code>.
-     * </p>
-     * 
-     * @param index
-     *            The index to the <code>char</code> code unit within this
-     *            object.
-     * @return The Unicode code point value.
-     * @throws IndexOutOfBoundsException
-     *             if <code>index</code> is less than 1 or greater than
-     *             {@link #length()}.
-     * @see Character
-     * @see Character#codePointBefore(char[], int, int)
-     * @since 1.5
-     */
     @Override
     public synchronized int codePointBefore(int index) {
         return super.codePointBefore(index);
     }
 
-    /**
-     * <p>
-     * Calculates the number of Unicode code points between
-     * <code>beginIndex</code> and <code>endIndex</code>.
-     * </p>
-     * 
-     * @param beginIndex
-     *            The inclusive beginning index of the subsequence.
-     * @param endIndex
-     *            The exclusive end index of the subsequence.
-     * @return The number of Unicode code points in the subsequence.
-     * @throws IndexOutOfBoundsException
-     *             if <code>beginIndex</code> is negative or greater than
-     *             <code>endIndex</code> or <code>endIndex</code> is greater
-     *             than {@link #length()}.
-     * @since 1.5
-     */
     @Override
     public synchronized int codePointCount(int beginIndex, int endIndex) {
         return super.codePointCount(beginIndex, endIndex);
@@ -409,14 +372,14 @@ public final class StringBuffer extends AbstractStringBuilder implements
      * Deletes a range of characters.
      * 
      * @param start
-     *            the offset of the first character
+     *            the offset of the first character.
      * @param end
-     *            the offset one past the last character
-     * @return this StringBuffer
-     * 
+     *            the offset one past the last character.
+     * @return this StringBuffer.
      * @throws StringIndexOutOfBoundsException
-     *             when <code>start < 0, start > end</code> or
-     *             <code>end > length()</code>
+     *             if {@code start < 0}, {@code start > end} or {@code end >
+     *             length()}.
+     * @since Android 1.0
      */
     public synchronized StringBuffer delete(int start, int end) {
         delete0(start, end);
@@ -424,91 +387,63 @@ public final class StringBuffer extends AbstractStringBuilder implements
     }
 
     /**
-     * Deletes a single character
+     * Deletes the character at the specified offset.
      * 
      * @param location
-     *            the offset of the character to delete
-     * @return this StringBuffer
-     * 
+     *            the offset of the character to delete.
+     * @return this StringBuffer.
      * @throws StringIndexOutOfBoundsException
-     *             when <code>location < 0</code> or
-     *             <code>location >= length()</code>
+     *             if {@code location < 0} or {@code location >= length()}
+     * @since Android 1.0
      */
     public synchronized StringBuffer deleteCharAt(int location) {
         deleteCharAt0(location);
         return this;
     }
 
-    /**
-     * Ensures that this StringBuffer can hold the specified number of
-     * characters without growing.
-     * 
-     * @param min
-     *            the minimum number of elements that this StringBuffer will
-     *            hold before growing
-     */
     @Override
     public synchronized void ensureCapacity(int min) {
         super.ensureCapacity(min);
     }
-
     /**
-     * Copies the specified characters in this StringBuffer to the character
-     * array starting at the specified offset in the character array.
+     * Copies the requested sequence of characters to the {@code char[]} passed
+     * starting at {@code idx}.
      * 
      * @param start
-     *            the starting offset of characters to copy
+     *            the starting offset of characters to copy.
      * @param end
-     *            the ending offset of characters to copy
+     *            the ending offset of characters to copy.
      * @param buffer
-     *            the destination character array
+     *            the destination character array.
      * @param idx
-     *            the starting offset in the character array
-     * 
+     *            the starting offset in the character array.
      * @throws IndexOutOfBoundsException
-     *             when <code>start < 0, end > length(),
-     *              start > end, index < 0, end - start > buffer.length - index</code>
-     * @throws NullPointerException
-     *             when buffer is null
+     *             if {@code start < 0}, {@code end > length()}, {@code start >
+     *             end}, {@code index < 0}, {@code end - start > buffer.length -
+     *             index}
+     * @since Android 1.0
      */
     @Override
     public synchronized void getChars(int start, int end, char[] buffer, int idx) {
         super.getChars(start, end, buffer, idx);
     }
 
-    /**
-     * Searches in this StringBuffer for the index of the specified character.
-     * The search for the character starts at the specified offset and moves
-     * towards the end.
-     * 
-     * @param subString
-     *            the string to find
-     * @param start
-     *            the starting offset
-     * @return the index in this StringBuffer of the specified character, -1 if
-     *         the character isn't found
-     * 
-     * @see #lastIndexOf(String,int)
-     * 
-     * @since 1.4
-     */
     @Override
     public synchronized int indexOf(String subString, int start) {
         return super.indexOf(subString, start);
     }
 
     /**
-     * Inserts the character at the specified offset in this StringBuffer.
+     * Inserts the character into this buffer at the specified offset.
      * 
      * @param index
-     *            the index at which to insert
+     *            the index at which to insert.
      * @param ch
-     *            the character to insert
-     * @return this StringBuffer
-     * 
+     *            the character to insert.
+     * @return this buffer.
      * @throws ArrayIndexOutOfBoundsException
-     *             when <code>index < 0</code> or
-     *             <code>index > length()</code>
+     *             if {@code index < 0} or {@code index > length()}.
+     * @since Android 1.0
      */
     public synchronized StringBuffer insert(int index, char ch) {
         insert0(index, ch);
@@ -516,125 +451,127 @@ public final class StringBuffer extends AbstractStringBuilder implements
     }
 
     /**
-     * Inserts the string representation of the specified boolean at the
-     * specified offset in this StringBuffer.
+     * Inserts the string representation of the specified boolean into this
+     * buffer at the specified offset.
      * 
      * @param index
-     *            the index at which to insert
+     *            the index at which to insert.
      * @param b
-     *            the boolean to insert
-     * @return this StringBuffer
-     * 
+     *            the boolean to insert.
+     * @return this buffer.
      * @throws StringIndexOutOfBoundsException
-     *             when <code>index < 0</code> or
-     *             <code>index > length()</code>
+     *             if {@code index < 0} or {@code index > length()}.
+     * @since Android 1.0
      */
     public StringBuffer insert(int index, boolean b) {
         return insert(index, b ? "true" : "false"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     /**
-     * Inserts the string representation of the specified integer at the
-     * specified offset in this StringBuffer.
+     * Inserts the string representation of the specified integer into this
+     * buffer at the specified offset.
      * 
      * @param index
-     *            the index at which to insert
+     *            the index at which to insert.
      * @param i
-     *            the integer to insert
-     * @return this StringBuffer
-     * 
+     *            the integer to insert.
+     * @return this buffer.
      * @throws StringIndexOutOfBoundsException
-     *             when <code>index < 0</code> or
-     *             <code>index > length()</code>
+     *             if {@code index < 0} or {@code index > length()}.
+     * @since Android 1.0
      */
     public StringBuffer insert(int index, int i) {
         return insert(index, Integer.toString(i));
     }
 
     /**
-     * Inserts the string representation of the specified long at the specified
-     * offset in this StringBuffer.
+     * Inserts the string representation of the specified long into this buffer
+     * at the specified offset.
      * 
      * @param index
-     *            the index at which to insert
+     *            the index at which to insert.
      * @param l
-     *            the long to insert
-     * @return this StringBuffer
-     * 
+     *            the long to insert.
+     * @return this buffer.
      * @throws StringIndexOutOfBoundsException
-     *             when <code>index < 0</code> or
-     *             <code>index > length()</code>
+     *             if {@code index < 0} or {@code index > length()}.
+     * @since Android 1.0
      */
     public StringBuffer insert(int index, long l) {
         return insert(index, Long.toString(l));
     }
 
     /**
-     * Inserts the string representation of the specified double at the
-     * specified offset in this StringBuffer.
+     * Inserts the string representation of the specified into this buffer
+     * double at the specified offset.
      * 
      * @param index
-     *            the index at which to insert
+     *            the index at which to insert.
      * @param d
-     *            the double to insert
-     * @return this StringBuffer
-     * 
+     *            the double to insert.
+     * @return this buffer.
      * @throws StringIndexOutOfBoundsException
-     *             when <code>index < 0</code> or
-     *             <code>index > length()</code>
+     *             if {@code index < 0} or {@code index > length()}.
+     * @since Android 1.0
      */
     public StringBuffer insert(int index, double d) {
         return insert(index, Double.toString(d));
     }
 
     /**
-     * Inserts the string representation of the specified float at the specified
-     * offset in this StringBuffer.
+     * Inserts the string representation of the specified float into this buffer
+     * at the specified offset.
      * 
      * @param index
-     *            the index at which to insert
+     *            the index at which to insert.
      * @param f
-     *            the float to insert
-     * @return this StringBuffer
-     * 
+     *            the float to insert.
+     * @return this buffer.
      * @throws StringIndexOutOfBoundsException
-     *             when <code>index < 0</code> or
-     *             <code>index > length()</code>
+     *             if {@code index < 0} or {@code index > length()}.
+     * @since Android 1.0
      */
     public StringBuffer insert(int index, float f) {
         return insert(index, Float.toString(f));
     }
 
     /**
-     * Inserts the string representation of the specified object at the
-     * specified offset in this StringBuffer.
+     * Inserts the string representation of the specified object into this
+     * buffer at the specified offset.
+     * <p>
+     * If the specified object is {@code null}, the string {@code "null"} is
+     * inserted, otherwise the objects {@code toString} method is used to get
+     * its string representation.
+     * </p>
      * 
      * @param index
-     *            the index at which to insert
+     *            the index at which to insert.
      * @param obj
-     *            the object to insert
-     * @return this StringBuffer
-     * 
+     *            the object to insert (may be null).
+     * @return this buffer.
      * @throws StringIndexOutOfBoundsException
-     *             when <code>index < 0</code> or
-     *             <code>index > length()</code>
+     *             if {@code index < 0} or {@code index > length()}.
+     * @since Android 1.0
      */
     public StringBuffer insert(int index, Object obj) {
         return insert(index, obj == null ? "null" : obj.toString()); //$NON-NLS-1$
     }
 
     /**
-     * Inserts the string at the specified offset in this StringBuffer.
+     * Inserts the string into this buffer at the specified offset.
+     * <p>
+     * If the specified string is {@code null}, the string {@code "null"} is
+     * inserted, otherwise the contents of the string is inserted.
+     * </p>
      * 
      * @param index
-     *            the index at which to insert
+     *            the index at which to insert.
      * @param string
-     *            the string to insert
-     * @return this StringBuffer
-     * 
+     *            the string to insert (may be null).
+     * @return this buffer.
      * @throws StringIndexOutOfBoundsException
-     *             when <code>index < 0</code> or
-     *             <code>index > length()</code>
+     *             if {@code index < 0} or {@code index > length()}.
+     * @since Android 1.0
      */
     public synchronized StringBuffer insert(int index, String string) {
         insert0(index, string);
@@ -642,19 +579,16 @@ public final class StringBuffer extends AbstractStringBuilder implements
     }
 
     /**
-     * Inserts the character array at the specified offset in this StringBuffer.
+     * Inserts the character array into this buffer at the specified offset.
      * 
      * @param index
-     *            the index at which to insert
+     *            the index at which to insert.
      * @param chars
-     *            the character array to insert
-     * @return this StringBuffer
-     * 
+     *            the character array to insert.
+     * @return this buffer.
      * @throws StringIndexOutOfBoundsException
-     *             when <code>index < 0</code> or
-     *             <code>index > length()</code>
-     * @throws NullPointerException
-     *             when chars is null
+     *             if {@code index < 0} or {@code index > length()}.
+     * @since Android 1.0
      */
     public synchronized StringBuffer insert(int index, char[] chars) {
         insert0(index, chars);
@@ -662,25 +596,23 @@ public final class StringBuffer extends AbstractStringBuilder implements
     }
 
     /**
-     * Inserts the specified sequence of characters at the specified offset in
-     * this StringBuffer.
+     * Inserts the specified subsequence of characters into this buffer at the
+     * specified index.
      * 
      * @param index
-     *            the index at which to insert
+     *            the index at which to insert.
      * @param chars
-     *            a character array
+     *            the character array to insert.
      * @param start
-     *            the starting offset
+     *            the starting offset.
      * @param length
-     *            the number of characters
-     * @return this StringBuffer
-     * 
+     *            the number of characters.
+     * @return this buffer.
      * @throws StringIndexOutOfBoundsException
-     *             when <code>length < 0, start < 0,</code>
-     *              <code>start + length > chars.length, index < 0</code>
-     *             or <code>index > length()</code>
-     * @throws NullPointerException
-     *             when chars is null
+     *             if {@code length < 0}, {@code start < 0}, {@code start +
+     *             length > chars.length}, {@code index < 0} or {@code index >
+     *             length()}
+     * @since Android 1.0
      */
     public synchronized StringBuffer insert(int index, char chars[], int start,
             int length) {
@@ -689,20 +621,21 @@ public final class StringBuffer extends AbstractStringBuilder implements
     }
 
     /**
+     * Inserts the specified CharSequence into this buffer at the specified
+     * index.
      * <p>
-     * Inserts the <code>CharSequence</code> into this buffer at the
-     * <code>index</code>. If <code>CharSequence</code> is
-     * <code>null</code>, then the string <code>"null"</code> is inserted.
+     * If the specified CharSequence is {@code null}, the string {@code "null"}
+     * is inserted, otherwise the contents of the CharSequence.
      * </p>
      * 
      * @param index
-     *            The index of this buffer to insert the sequence.
+     *            The index at which to insert.
      * @param s
-     *            The <code>CharSequence</code> to insert.
-     * @return A reference to this object.
-     * @since 1.5
+     *            The char sequence to insert.
+     * @return this buffer.
      * @throws IndexOutOfBoundsException
-     *             if the index is invalid.
+     *             if {@code index < 0} or {@code index > length()}.
+     * @since Android 1.0
      */
     public synchronized StringBuffer insert(int index, CharSequence s) {
         insert0(index, s == null ? "null" : s.toString()); //$NON-NLS-1$
@@ -710,30 +643,28 @@ public final class StringBuffer extends AbstractStringBuilder implements
     }
 
     /**
+     * Inserts the specified subsequence into this buffer at the specified
+     * index.
      * <p>
-     * Inserts the <code>CharSequence</code> into this buffer at the
-     * <code>index</code>. If <code>CharSequence</code> is
-     * <code>null</code>, then the string <code>"null"</code> is inserted.
+     * If the specified CharSequence is {@code null}, the string {@code "null"}
+     * is inserted, otherwise the contents of the CharSequence.
      * </p>
      * 
      * @param index
-     *            The index of this buffer to insert the sequence.
+     *            The index at which to insert.
      * @param s
-     *            The <code>CharSequence</code> to insert.
+     *            The char sequence to insert.
      * @param start
-     *            The inclusive start index of the subsequence of the
-     *            <code>CharSequence</code>.
+     *            The inclusive start index in the char sequence.
      * @param end
-     *            The exclusive end index of the subsequence of the
-     *            <code>CharSequence</code>.
-     * @return A reference to this object.
-     * @since 1.5
+     *            The exclusive end index in the char sequence.
+     * @return this buffer.
      * @throws IndexOutOfBoundsException
-     *             if <code>index</code> is negative or greater than the
-     *             current length, <code>start</code> or <code>end</code>
-     *             are negative, <code>start</code> is greater than
-     *             <code>end</code> or <code>end</code> is greater than the
-     *             length of <code>s</code>.
+     *             if {@code index} is negative or greater than the current
+     *             length, {@code start} or {@code end} are negative, {@code
+     *             start} is greater than {@code end} or {@code end} is greater
+     *             than the length of {@code s}.
+     * @since Android 1.0
      */
     public synchronized StringBuffer insert(int index, CharSequence s,
             int start, int end) {
@@ -741,64 +672,32 @@ public final class StringBuffer extends AbstractStringBuilder implements
         return this;
     }
 
-    /**
-     * Searches in this StringBuffer for the index of the specified character.
-     * The search for the character starts at the specified offset and moves
-     * towards the beginning.
-     * 
-     * @param subString
-     *            the string to find
-     * @param start
-     *            the starting offset
-     * @return the index in this StringBuffer of the specified character, -1 if
-     *         the character isn't found
-     * 
-     * @see #indexOf(String,int)
-     * 
-     * @since 1.4
-     */
     @Override
     public synchronized int lastIndexOf(String subString, int start) {
         return super.lastIndexOf(subString, start);
     }
 
-    /**
-     * <p>
-     * Returns the index within this object that is offset from
-     * <code>index</code> by <code>codePointOffset</code> code points.
-     * </p>
-     * 
-     * @param index
-     *            The index within this object to calculate the offset from.
-     * @param codePointOffset
-     *            The number of code points to count.
-     * @return The index within this object that is the offset.
-     * @throws IndexOutOfBoundsException
-     *             if <code>index</code> is negative or greater than
-     *             {@link #length()} or if there aren't enough code points
-     *             before or after <code>index</code> to match
-     *             <code>codePointOffset</code>.
-     * @since 1.5
-     */
     @Override
     public synchronized int offsetByCodePoints(int index, int codePointOffset) {
         return super.offsetByCodePoints(index, codePointOffset);
     }
 
     /**
-     * Replace a range of characters with the characters in the specified
-     * String.
+     * Replaces the characters in the specified range with the contents of the
+     * specified string.
      * 
      * @param start
-     *            the offset of the first character
+     *            the inclusive begin index.
      * @param end
-     *            the offset one past the last character
+     *            the exclusive end index.
      * @param string
-     *            a String
-     * @return this StringBuffer
-     * 
+     *            the string that will replace the contents in the range.
+     * @return this buffer.
      * @throws StringIndexOutOfBoundsException
-     *             when <code>start < 0</code> or <code>start > end</code>
+     *             if {@code start} or {@code end} are negative, {@code start}
+     *             is greater than {@code end} or {@code end} is greater than
+     *             the length of {@code s}.
+     * @since Android 1.0
      */
     public synchronized StringBuffer replace(int start, int end, String string) {
         replace0(start, end, string);
@@ -806,125 +705,46 @@ public final class StringBuffer extends AbstractStringBuilder implements
     }
 
     /**
-     * Reverses the order of characters in this StringBuffer.
+     * Reverses the order of characters in this buffer.
      * 
-     * @return this StringBuffer
+     * @return this buffer.
+     * @since Android 1.0
      */
     public synchronized StringBuffer reverse() {
         reverse0();
         return this;
     }
 
-    /**
-     * Sets the character at the specified offset in this StringBuffer.
-     * 
-     * @param index
-     *            the zero-based index in this StringBuffer
-     * @param ch
-     *            the character
-     * 
-     * @throws IndexOutOfBoundsException
-     *             when <code>index < 0</code> or
-     *             <code>index >= length()</code>
-     */
     @Override
     public synchronized void setCharAt(int index, char ch) {
         super.setCharAt(index, ch);
     }
 
-    /**
-     * Sets the length of this StringBuffer to the specified length. If there
-     * are more than length characters in this StringBuffer, the characters at
-     * end are lost. If there are less than length characters in the
-     * StringBuffer, the additional characters are set to <code>\\u0000</code>.
-     * 
-     * @param length
-     *            the new length of this StringBuffer
-     * 
-     * @throws IndexOutOfBoundsException
-     *             when <code>length < 0</code>
-     * 
-     * @see #length()
-     */
     @Override
     public synchronized void setLength(int length) {
         super.setLength(length);
     }
 
-    /**
-     * Copies a range of characters into a new String.
-     * 
-     * @param start
-     *            the offset of the first character
-     * @param end
-     *            the offset one past the last character
-     * @return a new String containing the characters from start to end - 1
-     * 
-     * @throws IndexOutOfBoundsException
-     *             when <code>start < 0, start > end</code> or
-     *             <code>end > length()</code>
-     * 
-     * @since 1.4
-     */
     @Override
     public synchronized CharSequence subSequence(int start, int end) {
         return super.substring(start, end);
     }
 
-    /**
-     * Copies a range of characters into a new String.
-     * 
-     * @param start
-     *            the offset of the first character
-     * @return a new String containing the characters from start to the end of
-     *         the string
-     * 
-     * @throws StringIndexOutOfBoundsException
-     *             when <code>start < 0</code> or
-     *             <code>start > length()</code>
-     */
     @Override
     public synchronized String substring(int start) {
         return super.substring(start);
     }
 
-    /**
-     * Copies a range of characters into a new String.
-     * 
-     * @param start
-     *            the offset of the first character
-     * @param end
-     *            the offset one past the last character
-     * @return a new String containing the characters from start to end - 1
-     * 
-     * @throws StringIndexOutOfBoundsException
-     *             when <code>start < 0, start > end</code> or
-     *             <code>end > length()</code>
-     */
     @Override
     public synchronized String substring(int start, int end) {
         return super.substring(start, end);
     }
 
-    /**
-     * Returns the contents of this StringBuffer.
-     * 
-     * @return a String containing the characters in this StringBuffer
-     */
     @Override
     public synchronized String toString() {
         return super.toString();
     }
 
-    /**
-     * <p>
-     * Trims the storage capacity of this buffer down to the size of the current
-     * character sequence. Execution of this method may change the results
-     * returned by the {@link #capacity()} method, but this is not required.
-     * </p>
-     * 
-     * @since 1.5
-     */
     @Override
     public synchronized void trimToSize() {
         super.trimToSize();

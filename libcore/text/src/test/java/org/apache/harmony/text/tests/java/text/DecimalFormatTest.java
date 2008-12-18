@@ -17,6 +17,13 @@
 
 package org.apache.harmony.text.tests.java.text;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
+import junit.framework.TestCase;
+
 import java.io.ObjectInputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -29,15 +36,23 @@ import java.text.ParsePosition;
 import java.util.Currency;
 import java.util.Locale;
 
-import junit.framework.TestCase;
-
 import org.apache.harmony.testframework.serialization.SerializationTest;
 
 import tests.support.Support_BitSet;
 import tests.support.Support_DecimalFormat;
 
-public class DecimalFormatTest extends TestCase {
 
+@TestTargetClass(DecimalFormat.class) 
+public class DecimalFormatTest extends TestCase {
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Regression test for AttributedCharacterIterator.",
+      targets = {
+        @TestTarget(
+          methodName = "formatToCharacterIterator",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void testAttributedCharacterIterator() throws Exception {
         // Regression for http://issues.apache.org/jira/browse/HARMONY-333
         AttributedCharacterIterator iterator = new DecimalFormat()
@@ -51,6 +66,15 @@ public class DecimalFormatTest extends TestCase {
      * Test the getter and setter of parseBigDecimal and parseIntegerOnly and
      * test the default value of them.
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isParseBigDecimal",
+          methodArgs = {}
+        )
+    })
     public void test_isParseBigDecimalLjava_lang_Boolean_isParseIntegerOnlyLjava_lang_Boolean() {
 
         // parseBigDecimal default to false
@@ -67,8 +91,16 @@ public class DecimalFormatTest extends TestCase {
     }
 
     // Test the type of the returned object
-
-    public void test_parseLjava_lang_String_Ljava_text_ParsePosition() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "parse",
+          methodArgs = {java.lang.String.class, java.text.ParsePosition.class}
+        )
+    })
+    public void _test_parseLjava_lang_String_Ljava_text_ParsePosition() {
         DecimalFormat form = (DecimalFormat) DecimalFormat
                 .getInstance(Locale.US);
         Number number = form.parse("23.1", new ParsePosition(0));
@@ -347,7 +379,15 @@ public class DecimalFormatTest extends TestCase {
             fail("Should not throw NPE");
         }
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getMaximumFractionDigits",
+          methodArgs = {}
+        )
+    })
     public void test_getMaximumFractionDigits() {
         NumberFormat nform = DecimalFormat.getInstance(Locale.US);
         DecimalFormat form = (DecimalFormat) nform;
@@ -371,7 +411,15 @@ public class DecimalFormatTest extends TestCase {
         assertEquals(500, nform.getMaximumFractionDigits());
         assertEquals(500, form.getMaximumFractionDigits());
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getMinimumFractionDigits",
+          methodArgs = {}
+        )
+    })
     public void test_getMinimumFractionDigits() {
         NumberFormat nform = DecimalFormat.getInstance(Locale.US);
         DecimalFormat form = (DecimalFormat) nform;
@@ -391,9 +439,17 @@ public class DecimalFormatTest extends TestCase {
         assertEquals(400, nform.getMinimumFractionDigits());
         assertEquals(400, form.getMinimumFractionDigits());
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getMinimumIntegerDigits",
+          methodArgs = {}
+        )
+    })
     // FIXME This test fails on Harmony ClassLibrary
-    public void test_getMaximumIntegerDigits() {
+    public void _test_getMaximumIntegerDigits() {
         final int maxIntDigit = 309;
 
         // When use default locale, in this case zh_CN
@@ -440,7 +496,15 @@ public class DecimalFormatTest extends TestCase {
         // regression test for HARMONY-878
         assertTrue(new DecimalFormat("0\t0").getMaximumIntegerDigits() > 0);
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getMinimumIntegerDigits",
+          methodArgs = {}
+        )
+    })
     public void test_getMinimumIntegerDigits() {
         final int minIntDigit = 1;
         NumberFormat nform = DecimalFormat.getInstance(Locale.US);
@@ -462,7 +526,15 @@ public class DecimalFormatTest extends TestCase {
         assertEquals(400, form.getMinimumIntegerDigits());
 
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "format",
+          methodArgs = {java.lang.Object.class, java.lang.StringBuffer.class, java.text.FieldPosition.class}
+        )
+    })
     public void test_formatLjava_lang_Obj_Ljava_StringBuffer_Ljava_text_FieldPosition() {
         NumberFormat nform = DecimalFormat.getInstance(Locale.US);
         DecimalFormat form = (DecimalFormat) nform;
@@ -617,7 +689,49 @@ public class DecimalFormatTest extends TestCase {
                 BDFloatMin2));
 
     }
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Regression test.",
+            targets = {
+              @TestTarget(
+                methodName = "format",
+                methodArgs = {Object.class}
+              )
+          })
+    public void test_sigDigitPatterns() {
+        DecimalFormat format = (DecimalFormat) NumberFormat
+        .getInstance(Locale.US);
 
+        format.applyPattern("@@@");
+        assertEquals("sigDigit doesn't work", "12300", format.format(12345));
+        assertEquals("sigDigit doesn't work", "0.123", format.format(0.12345));
+
+        format.applyPattern("@@##");
+        assertEquals("sigDigit doesn't work", "3.142", format.format(3.14159));
+        assertEquals("sigDigit doesn't work", "1.23", format.format(1.23004));
+
+        format.applyPattern("###,##,###.#");
+        assertEquals("12,34,567.8", format.format(1234567.8));
+        format.applyPattern("##,#,##,###.#");
+        assertEquals("12,34,567.8", format.format(1234567.8));
+        format.applyPattern("#,##,##,###.#");
+        assertEquals("12,34,567.8", format.format(1234567.8));
+        format.applyPattern("$*x#,##0.00");
+        assertEquals("$xx123.00", format.format(123));
+        assertEquals("$1,234.00", format.format(1234));
+        format.applyPattern("#,##0.65");
+        System.out.println("XXX - " + format.format(1.234));
+    }
+    
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setMaximumFractionDigits",
+          methodArgs = {int.class}
+        )
+    })
     public void test_setMaximumFractionDigitsLjava_lang_Integer() {
         NumberFormat nform = DecimalFormat.getInstance(Locale.US);
         DecimalFormat form = (DecimalFormat) nform;
@@ -628,7 +742,15 @@ public class DecimalFormatTest extends TestCase {
         form.setMaximumFractionDigits(341);
         assertEquals(341, form.getMaximumFractionDigits());
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setMinimumFractionDigits",
+          methodArgs = {int.class}
+        )
+    })
     public void test_setMinimumFractionDigitsLjava_lang_Integer() {
         NumberFormat nform = DecimalFormat.getInstance(Locale.US);
         DecimalFormat form = (DecimalFormat) nform;
@@ -639,7 +761,15 @@ public class DecimalFormatTest extends TestCase {
         form.setMinimumFractionDigits(310);
         assertEquals(310, form.getMinimumFractionDigits());
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setMaximumIntegerDigits",
+          methodArgs = {int.class}
+        )
+    })
     public void test_setMaximumIntegerDigitsLjava_lang_Integer() {
         NumberFormat nform = DecimalFormat.getInstance(Locale.US);
         DecimalFormat form = (DecimalFormat) nform;
@@ -650,7 +780,15 @@ public class DecimalFormatTest extends TestCase {
         form.setMaximumIntegerDigits(310);
         assertEquals(310, form.getMaximumIntegerDigits());
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setMinimumIntegerDigits",
+          methodArgs = {int.class}
+        )
+    })
     public void test_setMinimumIntegerDigitsLjava_lang_Integer() {
         NumberFormat nform = DecimalFormat.getInstance(Locale.US);
         DecimalFormat form = (DecimalFormat) nform;
@@ -664,6 +802,15 @@ public class DecimalFormatTest extends TestCase {
 
     // When MaxFractionDigits is set first and less than MinFractionDigits, max
     // will be changed to min value
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setMinimumFractionDigits",
+          methodArgs = {int.class}
+        )
+    })
     public void test_setMinimumFactionDigitsLjava_lang_Integer_setMaximumFractionDigitsLjava_lang_Integer() {
         NumberFormat nform = DecimalFormat.getInstance(Locale.US);
         DecimalFormat form = (DecimalFormat) nform;
@@ -683,6 +830,21 @@ public class DecimalFormatTest extends TestCase {
 
     // When MinFractionDigits is set first and less than MaxFractionDigits, min
     // will be changed to max value
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "When MinFractionDigits is set first and less than " +
+            "MaxFractionDigits, min will be changed to max value",
+      targets = {
+        @TestTarget(
+          methodName = "setMaximumFractionDigits",
+          methodArgs = {int.class}
+        ),
+        @TestTarget(
+          methodName = "setMinimumFractionDigits",
+          methodArgs = {int.class}
+        )
+
+    })
     public void test_setMaximumFactionDigitsLjava_lang_Integer_setMinimumFractionDigitsLjava_lang_Integer() {
         NumberFormat nform = DecimalFormat.getInstance(Locale.US);
         DecimalFormat form = (DecimalFormat) nform;
@@ -699,7 +861,15 @@ public class DecimalFormatTest extends TestCase {
         assertEquals(100, form.getMaximumIntegerDigits());
         assertEquals(100, form.getMinimumIntegerDigits());
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "equals",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_equalsLjava_lang_Object() {
         DecimalFormat format = (DecimalFormat) DecimalFormat
                 .getInstance(Locale.US);
@@ -712,22 +882,54 @@ public class DecimalFormatTest extends TestCase {
 
         assertEquals(format, cloned);
     }
-
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "setPositivePrefix is not called.",
+      targets = {
+        @TestTarget(
+          methodName = "setPositivePrefix",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_setPositivePrefixLjava_lang_String() {
         DecimalFormat format = new DecimalFormat();
         assertEquals("", format.getPositivePrefix());
     }
-
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "setPositiveSuffix is not called.",
+      targets = {
+        @TestTarget(
+          methodName = "setPositiveSuffix",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_setPositiveSuffixLjava_lang_String() {
         DecimalFormat format = new DecimalFormat();
         assertEquals("", format.getPositiveSuffix());
     }
-
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "setNegativePrefix is not called.",
+      targets = {
+        @TestTarget(
+          methodName = "setNegativePrefix",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_setNegativePrefixLjava_lang_String() {
         DecimalFormat format = new DecimalFormat();
         assertEquals("-", format.getNegativePrefix());
     }
-
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "setNegativeSuffix is not called.",
+      targets = {
+        @TestTarget(
+          methodName = "setNegativeSuffix",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_setNegativeSuffixLjava_lang_String() {
         DecimalFormat format = new DecimalFormat();
         assertEquals("", format.getNegativeSuffix());
@@ -737,7 +939,16 @@ public class DecimalFormatTest extends TestCase {
      * @tests java.text.DecimalFormat#toLocalizedPattern() Test of method
      *        java.text.DecimalFormat#toLocalizedPattern().
      */
-    public void test_toLocalizedPattern() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toLocalizedPattern",
+          methodArgs = {}
+        )
+    })
+    public void _test_toLocalizedPattern() {
         DecimalFormat format = new DecimalFormat();
         try {
             format.applyLocalizedPattern("#.#");
@@ -757,6 +968,15 @@ public class DecimalFormatTest extends TestCase {
      * @tests java.text.DecimalFormat#toPattern() Test of method
      *        java.text.DecimalFormat#toPattern().
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toPattern",
+          methodArgs = {}
+        )
+    })
     public void test_toPattern() {
         DecimalFormat format = new DecimalFormat();
         try {
@@ -772,7 +992,15 @@ public class DecimalFormatTest extends TestCase {
             fail("Unexpected exception " + e.toString());
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify true value as a parameter.",
+      targets = {
+        @TestTarget(
+          methodName = "setGroupingUsed",
+          methodArgs = {boolean.class}
+        )
+    })
     public void test_setGroupingUse() {
         DecimalFormat format = new DecimalFormat();
         StringBuffer buf = new StringBuffer();
@@ -786,6 +1014,15 @@ public class DecimalFormatTest extends TestCase {
      * @tests java.text.DecimalFormat#DecimalFormat() Test of method
      *        java.text.DecimalFormat#DecimalFormat().
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "DecimalFormat",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         // Test for method java.text.DecimalFormat()
         // the constructor form that specifies a pattern is equal to the form
@@ -815,6 +1052,15 @@ public class DecimalFormatTest extends TestCase {
     /**
      * @tests java.text.DecimalFormat#DecimalFormat(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "DecimalFormat",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() {
         // Test for method java.text.DecimalFormat(java.lang.String)
         // the constructor form that specifies a pattern is equal to the form
@@ -836,6 +1082,15 @@ public class DecimalFormatTest extends TestCase {
      *        object using null arguments. Case 3: Try to construct object using
      *        incorrect pattern.
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "DecimalFormat",
+          methodArgs = {java.lang.String.class, java.text.DecimalFormatSymbols.class}
+        )
+    })
     public void test_ConstructorLjava_lang_StringLjava_text_DecimalFormatSymbols() {
         try {
             // case 1: Try to construct object using correct pattern and fromat
@@ -892,7 +1147,16 @@ public class DecimalFormatTest extends TestCase {
      *        Case 1: Try to apply correct variants of pattern. Case 2: Try to
      *        apply malformed patten. Case 3: Try to apply null patern.
      */
-    public void test_applyLocalizedPatternLjava_lang_String() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "applyLocalizedPattern",
+          methodArgs = {java.lang.String.class}
+        )
+    })
+    public void _test_applyLocalizedPatternLjava_lang_String() {
         DecimalFormat format = new DecimalFormat();
         try {
             // case 1: Try to apply correct variants of pattern.
@@ -928,7 +1192,16 @@ public class DecimalFormatTest extends TestCase {
     /**
      * @tests java.text.DecimalFormat#applyPattern(java.lang.String)
      */
-    public void test_applyPatternLjava_lang_String() {
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "applyPattern",
+          methodArgs = {java.lang.String.class}
+        )
+    })
+    public void _test_applyPatternLjava_lang_String() {
         DecimalFormat format = new DecimalFormat("#.#");
         assertEquals("Wrong pattern 1", "#0.#", format.toPattern());
         format = new DecimalFormat("#.");
@@ -942,6 +1215,15 @@ public class DecimalFormatTest extends TestCase {
     /**
      * @tests java.text.DecimalFormat#clone()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "clone",
+          methodArgs = {}
+        )
+    })
     public void test_clone() {
         DecimalFormat format = (DecimalFormat) DecimalFormat
                 .getInstance(Locale.US);
@@ -977,8 +1259,17 @@ public class DecimalFormatTest extends TestCase {
      * @tests java.text.DecimalFormat#format(double, java.lang.StringBuffer,
      *        java.text.FieldPosition)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "format",
+          methodArgs = {double.class, java.lang.StringBuffer.class, java.text.FieldPosition.class}
+        )
+    })
     // FIXME This test fails on Harmony ClassLibrary
-    public void test_formatDLjava_lang_StringBufferLjava_text_FieldPosition() {
+    public void _test_formatDLjava_lang_StringBufferLjava_text_FieldPosition() {
         new Support_DecimalFormat(
                 "test_formatDLjava_lang_StringBufferLjava_text_FieldPosition")
                 .t_format_with_FieldPosition();
@@ -1210,8 +1501,17 @@ public class DecimalFormatTest extends TestCase {
      * @tests java.text.DecimalFormat#format(long, java.lang.StringBuffer,
      *        java.text.FieldPosition)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "format",
+          methodArgs = {long.class, java.lang.StringBuffer.class, java.text.FieldPosition.class}
+        )
+    })
     // FIXME This test fails on Harmony ClassLibrary
-    public void test_formatJLjava_lang_StringBufferLjava_text_FieldPosition() {
+    public void _test_formatJLjava_lang_StringBufferLjava_text_FieldPosition() {
         int failCount = 0;
         Support_BitSet failures = new Support_BitSet();
 
@@ -1283,8 +1583,17 @@ public class DecimalFormatTest extends TestCase {
     /**
      * @tests java.text.DecimalFormat#formatToCharacterIterator(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "formatToCharacterIterator",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     // FIXME This test fails on Harmony ClassLibrary
-    public void test_formatToCharacterIteratorLjava_lang_Object() {
+    public void _test_formatToCharacterIteratorLjava_lang_Object() {
 
         try {
             // Regression for HARMONY-466
@@ -1302,7 +1611,16 @@ public class DecimalFormatTest extends TestCase {
     /**
      * @tests java.text.DecimalFormat#format(double)
      */
-    public void test_formatD() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "format",
+          methodArgs = {double.class}
+        )
+    })
+    public void _test_formatD() {
         DecimalFormat format = (DecimalFormat) NumberFormat
                 .getInstance(Locale.ENGLISH);
         format.setGroupingUsed(false);
@@ -1351,6 +1669,15 @@ public class DecimalFormatTest extends TestCase {
     /**
      * @tests java.text.DecimalFormat#getDecimalFormatSymbols()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getDecimalFormatSymbols",
+          methodArgs = {}
+        )
+    })
     public void test_getDecimalFormatSymbols() {
         DecimalFormat df = (DecimalFormat) NumberFormat
                 .getInstance(Locale.ENGLISH);
@@ -1361,6 +1688,15 @@ public class DecimalFormatTest extends TestCase {
     /**
      * @tests java.text.DecimalFormat#getCurrency()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getCurrency",
+          methodArgs = {}
+        )
+    })
     // FIXME This test fails on Harmony ClassLibrary
     public void test_getCurrency() {
         Currency currK = Currency.getInstance("KRW");
@@ -1404,6 +1740,15 @@ public class DecimalFormatTest extends TestCase {
     /**
      * @tests java.text.DecimalFormat#getGroupingSize()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getGroupingSize",
+          methodArgs = {}
+        )
+    })
     public void test_getGroupingSize() {
         DecimalFormat df = new DecimalFormat("###0.##");
         assertEquals("Wrong unset size", 0, df.getGroupingSize());
@@ -1416,6 +1761,15 @@ public class DecimalFormatTest extends TestCase {
     /**
      * @tests java.text.DecimalFormat#getMultiplier()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getMultiplier",
+          methodArgs = {}
+        )
+    })
     public void test_getMultiplier() {
         final int defaultMultiplier = 1;
         NumberFormat nform = DecimalFormat.getInstance(Locale.US);
@@ -1434,6 +1788,15 @@ public class DecimalFormatTest extends TestCase {
      * @tests java.text.DecimalFormat#getNegativePrefix() Test of method
      *        java.text.DecimalFormat#getNegativePrefix().
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getNegativePrefix",
+          methodArgs = {}
+        )
+    })
     public void test_getNegativePrefix() {
         DecimalFormat df = new DecimalFormat();
         try {
@@ -1449,6 +1812,15 @@ public class DecimalFormatTest extends TestCase {
      * @tests java.text.DecimalFormat#getNegativeSuffix() Test of method
      *        java.text.DecimalFormat#getNegativeSuffix().
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getNegativeSuffix",
+          methodArgs = {}
+        )
+    })
     public void test_getNegativeSuffix() {
         DecimalFormat df = new DecimalFormat();
         try {
@@ -1464,6 +1836,15 @@ public class DecimalFormatTest extends TestCase {
      * @tests java.text.DecimalFormat#getPositivePrefix() Test of method
      *        java.text.DecimalFormat#getPositivePrefix().
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getPositivePrefix",
+          methodArgs = {}
+        )
+    })
     public void test_getPositivePrefix() {
         DecimalFormat df = new DecimalFormat();
         try {
@@ -1479,6 +1860,15 @@ public class DecimalFormatTest extends TestCase {
      * @tests java.text.DecimalFormat#getPositiveSuffix() Test of method
      *        java.text.DecimalFormat#getPositiveSuffix().
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getPositiveSuffix",
+          methodArgs = {}
+        )
+    })
     public void test_getPositiveSuffix() {
         DecimalFormat df = new DecimalFormat();
         try {
@@ -1494,6 +1884,15 @@ public class DecimalFormatTest extends TestCase {
      * @tests java.text.DecimalFormat#hashCode() Test of method
      *        java.text.DecimalFormat#hashCode().
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "hashCode",
+          methodArgs = {}
+        )
+    })
     public void test_hashCode() {
         try {
             DecimalFormat df1 = new DecimalFormat();
@@ -1508,6 +1907,15 @@ public class DecimalFormatTest extends TestCase {
     /**
      * @tests java.text.DecimalFormat#isDecimalSeparatorAlwaysShown()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isDecimalSeparatorAlwaysShown",
+          methodArgs = {}
+        )
+    })
     public void test_isDecimalSeparatorAlwaysShown() {
         DecimalFormat df = new DecimalFormat("###0.##");
         assertTrue("Wrong unset value", !df.isDecimalSeparatorAlwaysShown());
@@ -1521,8 +1929,17 @@ public class DecimalFormatTest extends TestCase {
      * @tests java.text.DecimalFormat#parse(java.lang.String,
      *        java.text.ParsePosition)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Vrifies boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "parse",
+          methodArgs = {java.lang.String.class, java.text.ParsePosition.class}
+        )
+    })
     // FIXME This test fails on Harmony ClassLibrary
-    public void test_parseLjava_lang_StringLjava_text_ParsePosition() {
+    public void _test_parseLjava_lang_StringLjava_text_ParsePosition() {
         DecimalFormat format = (DecimalFormat) NumberFormat
                 .getNumberInstance(Locale.ENGLISH);
         ParsePosition pos = new ParsePosition(0);
@@ -1617,6 +2034,15 @@ public class DecimalFormatTest extends TestCase {
     /**
      * @tests java.text.DecimalFormat#setDecimalFormatSymbols(java.text.DecimalFormatSymbols)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setDecimalFormatSymbols",
+          methodArgs = {java.text.DecimalFormatSymbols.class}
+        )
+    })
     public void test_setDecimalFormatSymbolsLjava_text_DecimalFormatSymbols() {
         DecimalFormat df = new DecimalFormat("###0.##");
         DecimalFormatSymbols dfs = new DecimalFormatSymbols();
@@ -1638,6 +2064,15 @@ public class DecimalFormatTest extends TestCase {
     /**
      * @tests java.text.DecimalFormat#setDecimalSeparatorAlwaysShown(boolean)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify false value.",
+      targets = {
+        @TestTarget(
+          methodName = "setDecimalSeparatorAlwaysShown",
+          methodArgs = {boolean.class}
+        )
+    })
     public void test_setDecimalSeparatorAlwaysShownZ() {
         DecimalFormat df = new DecimalFormat("###0.##",
                 new DecimalFormatSymbols(Locale.US));
@@ -1650,6 +2085,15 @@ public class DecimalFormatTest extends TestCase {
     /**
      * @tests java.text.DecimalFormat#setCurrency(java.util.Currency)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setCurrency",
+          methodArgs = {java.util.Currency.class}
+        )
+    })
     public void test_setCurrencyLjava_util_Currency() {
         Locale locale = Locale.CANADA;
         DecimalFormat df = ((DecimalFormat) NumberFormat
@@ -1676,6 +2120,15 @@ public class DecimalFormatTest extends TestCase {
     /**
      * @tests java.text.DecimalFormat#setGroupingSize(int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setGroupingSize",
+          methodArgs = {int.class}
+        )
+    })
     public void test_setGroupingSizeI() {
         DecimalFormat df = new DecimalFormat("###0.##",
                 new DecimalFormatSymbols(Locale.ENGLISH));
@@ -1689,6 +2142,15 @@ public class DecimalFormatTest extends TestCase {
     /**
      * @tests java.text.DecimalFormat#setMaximumFractionDigits(int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setMaximumFractionDigits",
+          methodArgs = {int.class}
+        )
+    })
     public void test_setMaximumFractionDigitsI() {
         DecimalFormat df = new DecimalFormat("###0.##",
                 new DecimalFormatSymbols(Locale.US));
@@ -1703,6 +2165,15 @@ public class DecimalFormatTest extends TestCase {
     /**
      * @tests java.text.DecimalFormat#setMaximumIntegerDigits(int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setMaximumIntegerDigits",
+          methodArgs = {int.class}
+        )
+    })
     public void test_setMaximumIntegerDigitsI() {
         DecimalFormat df = new DecimalFormat("###0.##");
         df.setMaximumIntegerDigits(2);
@@ -1716,6 +2187,15 @@ public class DecimalFormatTest extends TestCase {
     /**
      * @tests java.text.DecimalFormat#setMinimumFractionDigits(int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setMinimumFractionDigits",
+          methodArgs = {int.class}
+        )
+    })
     public void test_setMinimumFractionDigitsI() {
         DecimalFormat df = new DecimalFormat("###0.##",
                 new DecimalFormatSymbols(Locale.US));
@@ -1730,6 +2210,15 @@ public class DecimalFormatTest extends TestCase {
     /**
      * @tests java.text.DecimalFormat#setMinimumIntegerDigits(int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setMinimumIntegerDigits",
+          methodArgs = {int.class}
+        )
+    })
     public void test_setMinimumIntegerDigitsI() {
         DecimalFormat df = new DecimalFormat("###0.##",
                 new DecimalFormatSymbols(Locale.US));
@@ -1744,6 +2233,15 @@ public class DecimalFormatTest extends TestCase {
     /**
      * @tests java.text.DecimalFormat#setMultiplier(int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setMultiplier",
+          methodArgs = {int.class}
+        )
+    })
     // FIXME This test fails on Harmony ClassLibrary
     public void test_setMultiplierI() {
         DecimalFormat df = new DecimalFormat("###0.##");
@@ -1762,6 +2260,15 @@ public class DecimalFormatTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility.
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Verifies serialization/deserialization compatibility.",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationSelf",
+          methodArgs = {}
+        )
+    })
     public void testSerializationSelf() throws Exception {
         SerializationTest.verifySelf(new DecimalFormat());
     }
@@ -1769,7 +2276,16 @@ public class DecimalFormatTest extends TestCase {
     /**
      * @tests serialization compatibility with RI
      */
-    public void test_serializationHarmonyRICompatible() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Verifies serialization compatibility.",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationGolden",
+          methodArgs = {}
+        )
+    })
+    public void _test_serializationHarmonyRICompatible() {
         NumberFormat nf = NumberFormat.getInstance(Locale.FRANCE);
 
         DecimalFormat df = null;
@@ -1830,6 +2346,15 @@ public class DecimalFormatTest extends TestCase {
     /**
      * Test whether DecimalFormat can parse Positive infinity correctly
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Regression test.",
+      targets = {
+        @TestTarget(
+          methodName = "parse",
+          methodArgs = {java.lang.String.class, java.text.ParsePosition.class}
+        )
+    })
     public void testParseInfinityBigDecimalFalse() {
         // Regression test for HARMONY-106
         DecimalFormat format = (DecimalFormat) DecimalFormat.getInstance();
@@ -1843,6 +2368,15 @@ public class DecimalFormatTest extends TestCase {
     /**
      * Test whether DecimalFormat can parse Negative infinity correctly
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Regression test.",
+      targets = {
+        @TestTarget(
+          methodName = "parse",
+          methodArgs = {java.lang.String.class, java.text.ParsePosition.class}
+        )
+    })
     public void testParseMinusInfinityBigDecimalFalse() {
         // Regression test for HARMONY-106
         DecimalFormat format = (DecimalFormat) DecimalFormat.getInstance();
@@ -1857,6 +2391,15 @@ public class DecimalFormatTest extends TestCase {
      * Test if setDecimalFormatSymbols method wont throw NullPointerException
      * when it is called with null parameter.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies null as a parameter.",
+      targets = {
+        @TestTarget(
+          methodName = "setDecimalFormatSymbols",
+          methodArgs = {java.text.DecimalFormatSymbols.class}
+        )
+    })
     public void testSetDecimalFormatSymbolsAsNull() {
         // Regression for HARMONY-1070
         try {

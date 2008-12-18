@@ -18,40 +18,52 @@
 package java.io;
 
 /**
- * When readObject() encounters primitive types (int, char, etc) instead of an
- * object instance in the input stream, this type of exception will be thrown.
+ * Signals that the {@link ObjectInputStream} class encountered a primitive type
+ * ({@code int}, {@code char} etc.) instead of an object instance in the input
+ * stream.
  * 
  * @see ObjectInputStream#available()
  * @see ObjectInputStream#readObject()
  * @see ObjectInputStream#skipBytes(int)
+ * 
+ * @since Android 1.0
  */
 public class OptionalDataException extends ObjectStreamException {
 
     private static final long serialVersionUID = -8011121865681257820L;
 
     /**
-     * If true it means there is no more primitive data available.
+     * {@code true} indicates that there is no more primitive data available.
+     * 
+     * @since Android 1.0
      */
     public boolean eof;
 
     /**
-     * Number of bytes of primitive data (int, char, long, etc).
+     * The number of bytes of primitive data (int, char, long etc.) that are
+     * available.
+     * 
+     * @since Android 1.0
      */
     public int length;
 
     /**
-     * Constructs a new instance of this class with its walkback filled in.
+     * Constructs a new {@code OptionalDataException} with its stack trace
+     * filled in.
+     * 
+     * @since Android 1.0
      */
     OptionalDataException() {
         super();
     }
 
     /**
-     * Constructs a new instance of this class with its walkback and message
-     * filled in.
+     * Constructs a new {@code OptionalDataException} with its stack trace and
+     * detail message filled in.
      * 
      * @param detailMessage
-     *            String The detail message for the exception.
+     *            the detail message for this exception.
+     * @since Android 1.0
      */
     OptionalDataException(String detailMessage) {
         super(detailMessage);

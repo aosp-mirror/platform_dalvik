@@ -29,11 +29,13 @@
 #include "libdex/DexFile.h"
 #include "libdex/DexProto.h"
 #include "libdex/ZipArchive.h"
+#include "analysis/ReduceConstants.h"
 #include "DvmDex.h"
 #include "RawDexFile.h"
 #include "Sync.h"
 #include "oo/Object.h"
 #include "Native.h"
+#include "native/InternalNative.h"
 
 #include "DalvikVersion.h"
 #include "Debugger.h"

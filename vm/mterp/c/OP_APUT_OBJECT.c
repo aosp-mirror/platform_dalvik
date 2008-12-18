@@ -11,16 +11,16 @@ HANDLE_OPCODE(OP_APUT_OBJECT /*vAA, vBB, vCC*/)
         ILOGV("|aput%s v%d,v%d,v%d", "-object", vdst, vsrc1, vsrc2);
         arrayObj = (ArrayObject*) GET_REGISTER(vsrc1);
         if (!checkForNull((Object*) arrayObj))
-            GOTO(exceptionThrown);
+            GOTO_exceptionThrown();
         if (GET_REGISTER(vsrc2) >= arrayObj->length) {
             dvmThrowException("Ljava/lang/ArrayIndexOutOfBoundsException;",
                 NULL);
-            GOTO(exceptionThrown);
+            GOTO_exceptionThrown();
         }
         obj = (Object*) GET_REGISTER(vdst);
         if (obj != NULL) {
             if (!checkForNull(obj))
-                GOTO(exceptionThrown);
+                GOTO_exceptionThrown();
             if (!dvmCanPutArrayElement(obj->clazz, arrayObj->obj.clazz)) {
                 LOGV("Can't put a '%s'(%p) into array type='%s'(%p)\n",
                     obj->clazz->descriptor, obj,
@@ -28,7 +28,7 @@ HANDLE_OPCODE(OP_APUT_OBJECT /*vAA, vBB, vCC*/)
                 //dvmDumpClass(obj->clazz);
                 //dvmDumpClass(arrayObj->obj.clazz);
                 dvmThrowException("Ljava/lang/ArrayStoreException;", NULL);
-                GOTO(exceptionThrown);
+                GOTO_exceptionThrown();
             }
         }
         ILOGV("+ APUT[%d]=0x%08x", GET_REGISTER(vsrc2), GET_REGISTER(vdst));

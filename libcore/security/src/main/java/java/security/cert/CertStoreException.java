@@ -15,48 +15,59 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package java.security.cert;
 
 import java.security.GeneralSecurityException;
 
 /**
- * @com.intel.drl.spec_ref
+ * The exception that is thrown when an access to a {@code CertStore} fails.
  * 
+ * @since Android 1.0
  */
 public class CertStoreException extends GeneralSecurityException {
-    /**
-     * @com.intel.drl.spec_ref
-     */
+
     private static final long serialVersionUID = 2395296107471573245L;
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code CertStoreException} with the specified message and
+     * cause.
+     * 
+     * @param msg
+     *            the detail message for this exception.
+     * @param cause
+     *            the cause why the access to the certificate store failed.
+     * @since Android 1.0
      */
     public CertStoreException(String msg, Throwable cause) {
         super(msg, cause);
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code CertStoreException} with the specified cause.
+     * 
+     * @param cause
+     *            the cause why the access to the certificate store failed.
+     * @since Android 1.0
      */
     public CertStoreException(Throwable cause) {
         super(cause);
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code CertStoreException} with the specified message.
+     * 
+     * @param msg
+     *            the detail message for this exception.
+     * @since Android 1.0
      */
     public CertStoreException(String msg) {
         super(msg);
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code CertStoreException}.
+     * 
+     * @since Android 1.0
      */
     public CertStoreException() {
     }

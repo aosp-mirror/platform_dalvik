@@ -14,22 +14,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/*
+ * Copyright (C) 2008 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package java.lang.reflect;
 
-// BEGIN android-added
+import java.lang.annotation.Annotation;
+
 import org.apache.harmony.kernel.vm.StringUtils;
 import org.apache.harmony.luni.lang.reflect.GenericSignatureParser;
 import org.apache.harmony.luni.lang.reflect.ListOfTypes;
 import org.apache.harmony.luni.lang.reflect.Types;
-//END android-added
-
-import java.lang.annotation.Annotation;
 
 /**
- * This class models a constructor. Information about the constructor can be
+ * This class represents a constructor. Information about the constructor can be
  * accessed, and the constructor can be invoked dynamically.
  * 
+ * @param <T> the class that declares this constructor
+ *
+ * @since Android 1.0
  */
 public final class Constructor<T> extends AccessibleObject implements GenericDeclaration,
         Member {
@@ -40,7 +56,6 @@ public final class Constructor<T> extends AccessibleObject implements GenericDec
     
     Class<?>[] exceptionTypes;
     
-    // BEGIN android-added
     ListOfTypes genericExceptionTypes;
     ListOfTypes genericParameterTypes;
     TypeVariable<Constructor<T>>[] formalTypeParameters;
@@ -57,12 +72,11 @@ public final class Constructor<T> extends AccessibleObject implements GenericDec
             genericTypesAreInitialized = true;
         }
     }
-    // END android-added
 
     int slot;
 
     /**
-     * Prevent this class from being instantiated
+     * Prevent this class from being instantiated.
      */
     private Constructor(){
         //do nothing
@@ -71,23 +85,23 @@ public final class Constructor<T> extends AccessibleObject implements GenericDec
     /**
      * Creates an instance of the class. Only called from native code, thus
      * private.
-     * 
-     * @param declaringClass The class this constructor object belongs to.
-     * @param ptypes The parameter types of the constructor.
-     * @param extypes The exception types of the constructor.
-     * @param slot The slot of the constructor inside the VM class structure.
+     *
+     * @param declaringClass
+     *            the class this constructor object belongs to
+     * @param ptypes
+     *            the parameter types of the constructor
+     * @param extypes
+     *            the exception types of the constructor
+     * @param slot
+     *            the slot of the constructor inside the VM class structure
      */
-    private Constructor (Class<T> declaringClass, Class<?>[] ptypes, Class<?>[] extypes, int slot)
-    {
+    private Constructor (Class<T> declaringClass, Class<?>[] ptypes, Class<?>[] extypes, int slot){
         this.declaringClass = declaringClass;
         this.parameterTypes = ptypes;
         this.exceptionTypes = extypes;          // may be null
         this.slot = slot;
     }
 
-    // BEGIN android-changed
-
-    /** {@inheritDoc} */
     @Override /*package*/ String getSignatureAttribute() {
         Object[] annotation = getSignatureAnnotation(declaringClass, slot);
 
@@ -105,31 +119,21 @@ public final class Constructor<T> extends AccessibleObject implements GenericDec
     native private Object[] getSignatureAnnotation(Class declaringClass,
             int slot);
 
-    // END android-changed
-
-    /**
-     * Returns an array of generic type variables used in this constructor.
-     * 
-     * @return The array of type parameters.
-     */
     public TypeVariable<Constructor<T>>[] getTypeParameters() {
-        // BEGIN android-changed
         initGenericTypes();
         return formalTypeParameters.clone();
-        // END android-changed
     }
 
     /**
-     * <p>
-     * Returns the String representation of the constructor's declaration,
+     * Returns the string representation of the constructor's declaration,
      * including the type parameters.
-     * </p>
+     *
+     * @return the string representation of the constructor's declaration
      * 
-     * @return An instance of String.
      * @since 1.5
+     * @since Android 1.0
      */
     public String toGenericString() {
-        // BEGIN android-changed
         StringBuilder sb = new StringBuilder(80);
         initGenericTypes();
         // append modifiers if any
@@ -163,52 +167,51 @@ public final class Constructor<T> extends AccessibleObject implements GenericDec
             appendArrayGenericType(sb, genericEceptionTypeArray);
         }
         return sb.toString();
-        // END android-changed
     }
 
     /**
-     * <p>
-     * Gets the parameter types as an array of {@link Type} instances, in
-     * declaration order. If the constructor has no parameters, then an empty
-     * array is returned.
-     * </p>
+     * Returns the generic parameter types as an array of {@code Type}
+     * instances, in declaration order. If this constructor has no generic
+     * parameters, an empty array is returned.
      * 
-     * @return An array of {@link Type} instances.
-     * @throws GenericSignatureFormatError if the generic method signature is
-     *         invalid.
-     * @throws TypeNotPresentException if the component type points to a missing
-     *         type.
-     * @throws MalformedParameterizedTypeException if the component type points
-     *         to a type that can't be instantiated for some reason.
+     * @return the parameter types
+     * 
+     * @throws GenericSignatureFormatError
+     *             if the generic constructor signature is invalid
+     * @throws TypeNotPresentException
+     *             if any parameter type points to a missing type
+     * @throws MalformedParameterizedTypeException
+     *             if any parameter type points to a type that cannot be
+     *             instantiated for some reason
+     * 
      * @since 1.5
+     * @since Android 1.0
      */
     public Type[] getGenericParameterTypes() {
-        // BEGIN android-changed
         initGenericTypes();
         return Types.getClonedTypeArray(genericParameterTypes);
-        // END android-changed
     }
 
     /**
-     * <p>
-     * Gets the exception types as an array of {@link Type} instances. If the
-     * constructor has no declared exceptions, then an empty array is returned.
-     * </p>
+     * Returns the exception types as an array of {@code Type} instances. If
+     * this constructor has no declared exceptions, an empty array will be
+     * returned.
      * 
-     * @return An array of {@link Type} instances.
-     * @throws GenericSignatureFormatError if the generic method signature is
-     *         invalid.
-     * @throws TypeNotPresentException if the component type points to a missing
-     *         type.
-     * @throws MalformedParameterizedTypeException if the component type points
-     *         to a type that can't be instantiated for some reason.
+     * @return an array of generic exception types
+     * 
+     * @throws GenericSignatureFormatError
+     *             if the generic constructor signature is invalid
+     * @throws TypeNotPresentException
+     *             if any exception type points to a missing type
+     * @throws MalformedParameterizedTypeException
+     *             if any exception type points to a type that cannot be
+     *             instantiated for some reason
      * @since 1.5
+     * @since Android 1.0
      */
     public Type[] getGenericExceptionTypes() {
-        // BEGIN android-changed
         initGenericTypes();
         return Types.getClonedTypeArray(genericExceptionTypes);
-        // END android-changed
     }
 
     @Override
@@ -219,38 +222,36 @@ public final class Constructor<T> extends AccessibleObject implements GenericDec
         int slot);
 
     /**
-     * <p>
-     * Gets an array of arrays that represent the annotations of the formal
+     * Returns an array of arrays that represent the annotations of the formal
      * parameters of this constructor. If there are no parameters on this
      * constructor, then an empty array is returned. If there are no annotations
-     * set, then and array of empty arrays is returned.
-     * </p>
+     * set, then an array of empty arrays is returned.
      * 
-     * @return An array of arrays of {@link Annotation} instances.
+     * @return an array of arrays of {@code Annotation} instances
+     * 
      * @since 1.5
+     * @since Android 1.0
      */
     public Annotation[][] getParameterAnnotations() {
-// BEGIN android-changed
         Annotation[][] parameterAnnotations
                 = getParameterAnnotations(declaringClass, slot);
         if (parameterAnnotations.length == 0) {
             return Method.noAnnotations(parameterTypes.length);
         }
-// END android-changed
         return parameterAnnotations;
     }
     native private Annotation[][] getParameterAnnotations(Class declaringClass,
         int slot);
 
     /**
-     * <p>
-     * Indicates whether or not this constructor takes a variable number
-     * argument.
-     * </p>
+     * Indicates whether or not this constructor takes a variable number of
+     * arguments.
+     *
+     * @return {@code true} if a vararg is declare, otherwise
+     *         {@code false}
      * 
-     * @return A value of <code>true</code> if a vararg is declare, otherwise
-     *         <code>false</code>.
      * @since 1.5
+     * @since Android 1.0
      */
     public boolean isVarArgs() {
         int mods = getConstructorModifiers(declaringClass, slot);
@@ -258,14 +259,13 @@ public final class Constructor<T> extends AccessibleObject implements GenericDec
     }
 
     /**
-     * <p>
-     * Indicates whether or not this constructor is synthetic.
-     * </p>
+     * Indicates whether or not this constructor is synthetic (artificially
+     * introduced by the compiler).
      * 
-     * @return A value of <code>true</code> if it is synthetic, or
-     *         <code>false</code> otherwise.
-     *         
-     * @since 1.5
+     * @return {@code true} if this constructor is synthetic, {@code false}
+     *         otherwise
+     * 
+     * @since Android 1.0
      */
     public boolean isSynthetic() {
         int mods = getConstructorModifiers(declaringClass, slot);
@@ -273,14 +273,20 @@ public final class Constructor<T> extends AccessibleObject implements GenericDec
     }
 
     /**
-     * Compares the specified object to this Constructor and answer if they are
-     * equal. The object must be an instance of Constructor with the same
-     * defining class and parameter types.
+     * Indicates whether or not the specified {@code object} is equal to this
+     * constructor. To be equal, the specified object must be an instance
+     * of {@code Constructor} with the same declaring class and parameter types
+     * as this constructor.
      * 
-     * @param object the object to compare
-     * @return true if the specified object is equal to this Constructor, false
-     *         otherwise
+     * @param object
+     *            the object to compare
+     * 
+     * @return {@code true} if the specified object is equal to this
+     *         constructor, {@code false} otherwise
+     * 
      * @see #hashCode
+     * 
+     * @since Android 1.0
      */
     @Override
     public boolean equals(Object object) {
@@ -288,22 +294,24 @@ public final class Constructor<T> extends AccessibleObject implements GenericDec
     }
 
     /**
-     * Return the {@link Class} associated with the class that defined this
-     * constructor.
-     * 
+     * Returns the class that declares this constructor.
+     *
      * @return the declaring class
+     * 
+     * @since Android 1.0
      */
     public Class<T> getDeclaringClass() {
         return declaringClass;
     }
 
     /**
-     * Return an array of the {@link Class} objects associated with the
-     * exceptions declared to be thrown by this constructor. If the constructor
-     * was not declared to throw any exceptions, the array returned will be
-     * empty.
+     * Returns the exception types as an array of {@code Class} instances. If
+     * this constructor has no declared exceptions, an empty array will be
+     * returned.
      * 
      * @return the declared exception classes
+     * 
+     * @since Android 1.0
      */
     public Class<?>[] getExceptionTypes() {
         if (exceptionTypes == null)
@@ -312,11 +320,14 @@ public final class Constructor<T> extends AccessibleObject implements GenericDec
     }
 
     /**
-     * Return the modifiers for the modeled constructor. The Modifier class
+     * Returns the modifiers for this constructor. The {@link Modifier} class
      * should be used to decode the result.
      * 
-     * @return the modifiers
-     * @see java.lang.reflect.Modifier
+     * @return the modifiers for this constructor
+     * 
+     * @see Modifier
+     * 
+     * @since Android 1.0
      */
     public int getModifiers() {
         return getConstructorModifiers(declaringClass, slot);
@@ -325,21 +336,24 @@ public final class Constructor<T> extends AccessibleObject implements GenericDec
     private native int getConstructorModifiers(Class<T> declaringClass, int slot);
     
     /**
-     * Return the name of the modeled constructor. This is the name of the
-     * declaring class.
+     * Returns the name of this constructor.
+     *
+     * @return the name of this constructor
      * 
-     * @return the name
+     * @since Android 1.0
      */
     public String getName() {
         return declaringClass.getName();
     }
 
     /**
-     * Return an array of the {@link Class} objects associated with the
+     * Returns an array of the {@code Class} objects associated with the
      * parameter types of this constructor. If the constructor was declared with
-     * no parameters, the array returned will be empty.
-     * 
+     * no parameters, an empty array will be returned.
+     *
      * @return the parameter types
+     * 
+     * @since Android 1.0
      */
     public Class<?>[] getParameterTypes() {
         return parameterTypes;
@@ -349,8 +363,8 @@ public final class Constructor<T> extends AccessibleObject implements GenericDec
      * Returns the constructor's signature in non-printable form. This is called
      * (only) from IO native code and needed for deriving the serialVersionUID
      * of the class
-     * 
-     * @return The constructor's signature.
+     *
+     * @return the constructor's signature
      */
     @SuppressWarnings("unused")
     private String getSignature() {
@@ -366,12 +380,15 @@ public final class Constructor<T> extends AccessibleObject implements GenericDec
     }
 
     /**
-     * Returns an integer hash code for the receiver. Objects which are equal
-     * answer the same value for this method. The hash code for a Constructor is
-     * the hash code of the declaring class' name.
+     * Returns an integer hash code for this constructor. Constructors which are
+     * equal return the same value for this method. The hash code for a
+     * Constructor is the hash code of the name of the declaring class.
+     *
+     * @return the hash code
      * 
-     * @return the receiver's hash
      * @see #equals
+     * 
+     * @since Android 1.0
      */
     @Override
     public int hashCode() {
@@ -379,45 +396,52 @@ public final class Constructor<T> extends AccessibleObject implements GenericDec
     }
 
     /**
-     * Return a new instance of the declaring class, initialized by dynamically
-     * invoking the modeled constructor. This reproduces the effect of
-     * <code>new declaringClass(arg1, arg2, ... , argN)</code> This method
-     * performs the following:
+     * Returns a new instance of the declaring class, initialized by dynamically
+     * invoking the constructor represented by this {@code Constructor} object.
+     * This reproduces the effect of {@code new declaringClass(arg1, arg2, ... ,
+     * argN)} This method performs the following:
      * <ul>
      * <li>A new instance of the declaring class is created. If the declaring
      * class cannot be instantiated (i.e. abstract class, an interface, an array
-     * type, or a base type) then an InstantiationException is thrown.</li>
+     * type, or a primitive type) then an InstantiationException is thrown.</li>
      * <li>If this Constructor object is enforcing access control (see
-     * AccessibleObject) and the modeled constructor is not accessible from the
+     * {@link AccessibleObject}) and this constructor is not accessible from the
      * current context, an IllegalAccessException is thrown.</li>
-     * <li>If the number of arguments passed and the number of parameters do
-     * not match, an IllegalArgumentException is thrown.</li>
+     * <li>If the number of arguments passed and the number of parameters do not
+     * match, an IllegalArgumentException is thrown.</li>
      * <li>For each argument passed:
      * <ul>
-     * <li>If the corresponding parameter type is a base type, the argument is
-     * unwrapped. If the unwrapping fails, an IllegalArgumentException is
+     * <li>If the corresponding parameter type is a primitive type, the argument
+     * is unwrapped. If the unwrapping fails, an IllegalArgumentException is
      * thrown.</li>
      * <li>If the resulting argument cannot be converted to the parameter type
      * via a widening conversion, an IllegalArgumentException is thrown.</li>
      * </ul>
-     * <li>The modeled constructor is then invoked. If an exception is thrown
-     * during the invocation, it is caught and wrapped in an
-     * InvocationTargetException. This exception is then thrown. If the
-     * invocation completes normally, the newly initialized object is returned.
+     * <li>The constructor represented by this {@code Constructor} object is
+     * then invoked. If an exception is thrown during the invocation, it is
+     * caught and wrapped in an InvocationTargetException. This exception is
+     * then thrown. If the invocation completes normally, the newly initialized
+     * object is returned.
      * </ul>
      * 
-     * @param args the arguments to the constructor
+     * @param args
+     *            the arguments to the constructor
+     * 
      * @return the new, initialized, object
-     * @exception java.lang.InstantiationException if the class cannot be
-     *            instantiated
-     * @exception java.lang.IllegalAccessException if the modeled constructor
-     *            is not accessible
-     * @exception java.lang.IllegalArgumentException if an incorrect number of
-     *            arguments are passed, or an argument could not be converted by
-     *            a widening conversion
-     * @exception java.lang.reflect.InvocationTargetException if an exception
-     *            was thrown by the invoked constructor
-     * @see java.lang.reflect.AccessibleObject
+     * 
+     * @exception InstantiationException
+     *                if the class cannot be instantiated
+     * @exception IllegalAccessException
+     *                if this constructor is not accessible
+     * @exception IllegalArgumentException
+     *                if an incorrect number of arguments are passed, or an
+     *                argument could not be converted by a widening conversion
+     * @exception InvocationTargetException
+     *                if an exception was thrown by the invoked constructor
+     * 
+     * @see AccessibleObject
+     * 
+     * @since Android 1.0
      */
     public T newInstance(Object... args) throws InstantiationException, IllegalAccessException,
             IllegalArgumentException, InvocationTargetException {
@@ -428,21 +452,32 @@ public final class Constructor<T> extends AccessibleObject implements GenericDec
             Class<?>[] parameterTypes, int slot,
             boolean noAccessCheck) throws InstantiationException, IllegalAccessException,
             InvocationTargetException;
-    
+
     /**
-     * Returns a string containing a concise, human-readable description of the
-     * receiver. The format of the string is modifiers (if any) declaring class
-     * name '(' parameter types, separated by ',' ')' If the constructor throws
-     * exceptions, ' throws ' exception types, separated by ',' For example:
-     * <code>public String(byte[],String) throws UnsupportedEncodingException</code>
+     * Returns a string containing a concise, human-readable description of this
+     * constructor. The format of the string is:
      * 
-     * @return a printable representation for the receiver
+     * <ol>
+     *   <li>modifiers (if any)
+     *   <li>declaring class name
+     *   <li>'('
+     *   <li>parameter types, separated by ',' (if any)
+     *   <li>')'
+     *   <li>'throws' plus exception types, separated by ',' (if any)
+     * </ol>
+     * 
+     * For example:
+     * {@code public String(byte[],String) throws UnsupportedEncodingException}
+     *
+     * @return a printable representation for this constructor
+     * 
+     * @since Android 1.0
      */
     @Override
     public String toString() {
         StringBuilder result = new StringBuilder(Modifier.toString(getModifiers()));
 
-        if (result.length() != 0)       // android-changed
+        if (result.length() != 0)
             result.append(' ');
         result.append(declaringClass.getName());
         result.append("(");

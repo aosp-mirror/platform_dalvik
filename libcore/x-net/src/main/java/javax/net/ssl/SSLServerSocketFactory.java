@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Boris V. Kuznetsov
-* @version $Revision$
-*/
-
 package javax.net.ssl;
 
 import java.security.AccessController;
@@ -28,8 +23,9 @@ import java.security.Security;
 import javax.net.ServerSocketFactory;
 
 /**
- * @com.intel.drl.spec_ref
+ * The factory for SSL server sockets.
  * 
+ * @since Android 1.0
  */
 public abstract class SSLServerSocketFactory extends ServerSocketFactory {
 // TODO EXPORT CONTROL
@@ -39,10 +35,23 @@ public abstract class SSLServerSocketFactory extends ServerSocketFactory {
 
     private static String defaultName;
     
+    /**
+     * Creates a new {@code SSLServerSocketFactory} instance.
+     * 
+     * @since Android 1.0
+     */
     protected SSLServerSocketFactory() {
         super();
     }
 
+    /**
+     * Returns the default {@code SSLServerSocketFactory} instance. The default
+     * implementation is defined by the security property
+     * "ssl.ServerSocketFactory.provider".
+     * 
+     * @return the default {@code SSLServerSocketFactory} instance.
+     * @since Android 1.0
+     */
     public static ServerSocketFactory getDefault() {
         if (defaultServerSocketFactory != null) {
             return defaultServerSocketFactory;
@@ -82,7 +91,21 @@ public abstract class SSLServerSocketFactory extends ServerSocketFactory {
         return defaultServerSocketFactory;
     }
     
+    /**
+     * Returns the names of the cipher suites that are enabled by default.
+     * 
+     * @return the names of the cipher suites that are enabled by default
+     * @since Android 1.0
+     */
     public abstract String[] getDefaultCipherSuites();
+    
+    /**
+     * Returns the list of supported cipher suites that could be enabled for an
+     * SSL connection created by this factory.
+     * 
+     * @return the list of supported cipher suites
+     * @since Android 1.0
+     */
     public abstract String[] getSupportedCipherSuites();
 
 }

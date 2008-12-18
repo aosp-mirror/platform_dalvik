@@ -17,9 +17,15 @@
 
 package org.apache.harmony.security.tests.java.security;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.security.BasicPermission;
 import java.security.PermissionCollection;
 
+@TestTargetClass(BasicPermission.class)
 public class BasicPermission2Test extends junit.framework.TestCase {
 
     public static class BasicPermissionSubclass extends BasicPermission {
@@ -45,6 +51,17 @@ public class BasicPermission2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.BasicPermission#BasicPermission(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Test cases, where parameter name is null (expect NullPointerException)" +
+                  " and parameter name is empty (expect IllegalArgumentException)" +
+                  " are absent",
+      targets = {
+        @TestTarget(
+          methodName = "BasicPermission",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() {
         // Test for method java.security.BasicPermission(java.lang.String)
         assertEquals("Incorrect name returned", "aName", bp.getName());
@@ -54,6 +71,17 @@ public class BasicPermission2Test extends junit.framework.TestCase {
      * @tests java.security.BasicPermission#BasicPermission(java.lang.String,
      *        java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Test cases, where parameter name is null (expect NullPointerException)" +
+                " and parameter name is empty (expect IllegalArgumentException)" +
+                " are absent",
+      targets = {
+        @TestTarget(
+          methodName = "BasicPermission",
+          methodArgs = {java.lang.String.class, java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_StringLjava_lang_String() {
         // Test for method java.security.BasicPermission(java.lang.String,
         // java.lang.String)
@@ -63,6 +91,15 @@ public class BasicPermission2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.BasicPermission#equals(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "equals",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_equalsLjava_lang_Object() {
         // Test for method boolean
         // java.security.BasicPermission.equals(java.lang.Object)
@@ -75,6 +112,15 @@ public class BasicPermission2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.BasicPermission#getActions()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getActions",
+          methodArgs = {}
+        )
+    })
     public void test_getActions() {
         // Test for method java.lang.String
         // java.security.BasicPermission.getActions()
@@ -87,6 +133,15 @@ public class BasicPermission2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.BasicPermission#hashCode()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "hashCode",
+          methodArgs = {}
+        )
+    })
     public void test_hashCode() {
         // Test for method int java.security.BasicPermission.hashCode()
         assertTrue("Equal objects should return same hash",
@@ -96,6 +151,15 @@ public class BasicPermission2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.BasicPermission#implies(java.security.Permission)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "implies",
+          methodArgs = {java.security.Permission.class}
+        )
+    })
     public void test_impliesLjava_security_Permission() {
         // Test for method boolean
         // java.security.BasicPermission.implies(java.security.Permission)
@@ -110,6 +174,15 @@ public class BasicPermission2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.BasicPermission#newPermissionCollection()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "newPermissionCollection",
+          methodArgs = {}
+        )
+    })
     public void test_newPermissionCollection() {
         // Test for method java.security.PermissionCollection
         // java.security.BasicPermission.newPermissionCollection()

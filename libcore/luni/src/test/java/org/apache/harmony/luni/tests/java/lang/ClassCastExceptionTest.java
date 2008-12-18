@@ -17,13 +17,28 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import junit.framework.TestCase;
 
+@TestTargetClass(ClassCastException.class) 
 public class ClassCastExceptionTest extends TestCase {
 
     /**
      * @tests java.lang.ClassCastException#ClassCastException()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "ClassCastException",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         ClassCastException e = new ClassCastException();
         assertNull(e.getMessage());
@@ -34,6 +49,15 @@ public class ClassCastExceptionTest extends TestCase {
     /**
      * @tests java.lang.ClassCastException#ClassCastException(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "ClassCastException",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() {
         ClassCastException e = new ClassCastException("fixture");
         assertEquals("fixture", e.getMessage());

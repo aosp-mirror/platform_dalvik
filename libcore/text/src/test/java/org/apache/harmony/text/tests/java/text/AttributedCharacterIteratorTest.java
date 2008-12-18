@@ -17,15 +17,30 @@
 
 package org.apache.harmony.text.tests.java.text;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.text.AttributedCharacterIterator;
 import java.text.AttributedString;
 import java.text.CharacterIterator;
 
+@TestTargetClass(AttributedCharacterIterator.class) 
 public class AttributedCharacterIteratorTest extends junit.framework.TestCase {
 
     /**
      * @tests java.text.AttributedCharacterIterator#current()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "current",
+          methodArgs = {}
+        )
+    })
     public void test_current() {
         String test = "Test 23ring";
         AttributedString attrString = new AttributedString(test);
@@ -46,6 +61,15 @@ public class AttributedCharacterIteratorTest extends junit.framework.TestCase {
     /**
      * @tests java.text.AttributedCharacterIterator#first()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "first",
+          methodArgs = {}
+        )
+    })
     public void test_first() {
         String test = "Test 23ring";
         AttributedString attrString = new AttributedString(test);
@@ -62,6 +86,15 @@ public class AttributedCharacterIteratorTest extends junit.framework.TestCase {
     /**
      * @tests java.text.AttributedCharacterIterator#getBeginIndex()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getBeginIndex",
+          methodArgs = {}
+        )
+    })
     public void test_getBeginIndex() {
         String test = "Test 23ring";
         AttributedString attrString = new AttributedString(test);
@@ -72,6 +105,15 @@ public class AttributedCharacterIteratorTest extends junit.framework.TestCase {
     /**
      * @tests java.text.AttributedCharacterIterator#getEndIndex()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getEndIndex",
+          methodArgs = {}
+        )
+    })
     public void test_getEndIndex() {
         String test = "Test 23ring";
         AttributedString attrString = new AttributedString(test);
@@ -82,6 +124,15 @@ public class AttributedCharacterIteratorTest extends junit.framework.TestCase {
     /**
      * @tests java.text.AttributedCharacterIterator#getIndex()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getIndex",
+          methodArgs = {}
+        )
+    })
     public void test_getIndex() {
         String test = "Test 23ring";
         AttributedString attrString = new AttributedString(test);
@@ -99,6 +150,15 @@ public class AttributedCharacterIteratorTest extends junit.framework.TestCase {
     /**
      * @tests java.text.AttributedCharacterIterator#last()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "last",
+          methodArgs = {}
+        )
+    })
     public void test_last() {
         String test = "Test 23ring";
         AttributedString attrString = new AttributedString(test);
@@ -115,6 +175,15 @@ public class AttributedCharacterIteratorTest extends junit.framework.TestCase {
     /**
      * @tests java.text.AttributedCharacterIterator#next()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "next",
+          methodArgs = {}
+        )
+    })
     public void test_next() {
         String test = "Test 23ring";
         AttributedString attrString = new AttributedString(test);
@@ -132,6 +201,15 @@ public class AttributedCharacterIteratorTest extends junit.framework.TestCase {
     /**
      * @tests java.text.AttributedCharacterIterator#previous()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "previous",
+          methodArgs = {}
+        )
+    })
     public void test_previous() {
         String test = "Test 23ring";
         AttributedString attrString = new AttributedString(test);
@@ -143,6 +221,15 @@ public class AttributedCharacterIteratorTest extends junit.framework.TestCase {
     /**
      * @tests java.text.AttributedCharacterIterator#setIndex(int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setIndex",
+          methodArgs = {int.class}
+        )
+    })
     public void test_setIndexI() {
         String test = "Test 23ring";
         AttributedString attrString = new AttributedString(test);
@@ -154,6 +241,15 @@ public class AttributedCharacterIteratorTest extends junit.framework.TestCase {
     /**
      * @tests java.text.AttributedCharacterIterator#getRunLimit(java.text.AttributedCharacterIterator$Attribute)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getRunLimit",
+          methodArgs = {java.util.Set.class}
+        )
+    })
     public void test_getRunLimitLjava_text_AttributedCharacterIterator$Attribute() {
         AttributedString as = new AttributedString("test");
         as.addAttribute(AttributedCharacterIterator.Attribute.LANGUAGE, "a", 2,

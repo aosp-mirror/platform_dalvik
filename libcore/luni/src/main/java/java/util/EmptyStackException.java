@@ -19,15 +19,19 @@ package java.util;
 
 
 /**
- * Runtime exception which is thrown when pop/peek method of stack is executed
- * on a stack which is empty
+ * An {@code EmptyStackException} is thrown if the pop/peek method of a stack is
+ * executed on an empty stack.
+ * 
+ * @see java.lang.RuntimeException
+ * @since Android 1.0
  */
 public class EmptyStackException extends RuntimeException {
 
     private static final long serialVersionUID = 5084686378493302095L;
 
     /**
-     * Constructs a new instance of this class with its walkback filled in.
+     * Constructs a new {@code EmptyStackException} with the stack trace filled
+     * in.
      */
     public EmptyStackException() {
         super();

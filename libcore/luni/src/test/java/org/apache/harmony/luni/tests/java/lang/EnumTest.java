@@ -16,14 +16,20 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import java.util.HashMap;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
+
+import java.util.HashMap;
 
 import org.apache.harmony.testframework.serialization.SerializationTest;
 
 import tests.util.SerializationTester;
 
+@TestTargetClass(Enum.class) 
 public class EnumTest extends TestCase {
 
     enum Sample {
@@ -48,6 +54,15 @@ public class EnumTest extends TestCase {
     /**
      * @tests java.lang.Enum#compareTo(java.lang.Enum) 
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "compareTo",
+          methodArgs = {java.lang.Enum.class}
+        )
+    })
     public void test_compareToLjava_lang_Enum() {
         assertTrue(0 < Sample.MOE.compareTo(Sample.LARRY));
         assertEquals(0, Sample.MOE.compareTo(Sample.MOE));
@@ -63,6 +78,15 @@ public class EnumTest extends TestCase {
     /**
      * @tests java.lang.Enum#equals(Object)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "equals",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_equalsLjava_lang_Object() {
         assertFalse(moe.equals("bob"));
         assertTrue(moe.equals(Sample.MOE));
@@ -74,6 +98,15 @@ public class EnumTest extends TestCase {
     /**
      * @tests java.lang.Enum#getDeclaringClass()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getDeclaringClass",
+          methodArgs = {}
+        )
+    })
     public void test_getDeclaringClass() {
         assertEquals(Sample.class, moe.getDeclaringClass());
     }
@@ -81,6 +114,15 @@ public class EnumTest extends TestCase {
     /**
      * @tests java.lang.Enum#hashCode()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check hash code of different objects,equal objects.",
+      targets = {
+        @TestTarget(
+          methodName = "hashCode",
+          methodArgs = {}
+        )
+    })
     public void test_hashCode() {
         assertEquals (moe.hashCode(), moe.hashCode());
     }
@@ -88,6 +130,15 @@ public class EnumTest extends TestCase {
     /**
      * @tests java.lang.Enum#name()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "name",
+          methodArgs = {}
+        )
+    })
     public void test_name() {
         assertEquals("MOE", moe.name());
     }
@@ -95,6 +146,15 @@ public class EnumTest extends TestCase {
     /**
      * @tests java.lang.Enum#ordinal()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "ordinal",
+          methodArgs = {}
+        )
+    })
     public void test_ordinal() {
         assertEquals(0, larry.ordinal());
         assertEquals(1, moe.ordinal());
@@ -104,6 +164,15 @@ public class EnumTest extends TestCase {
     /**
      * @tests java.lang.Enum#toString()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public void test_toString() {
         assertTrue(moe.toString().equals("MOE"));
     }
@@ -111,6 +180,15 @@ public class EnumTest extends TestCase {
     /**
      * @tests java.lang.Enum#valueOf(Class, String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "valueOf",
+          methodArgs = {java.lang.Class.class, java.lang.String.class}
+        )
+    })
     public void test_valueOfLjava_lang_String() {
         assertSame(Sample.CURLY, Sample.valueOf("CURLY"));
         assertSame(Sample.LARRY, Sample.valueOf("LARRY"));
@@ -172,6 +250,15 @@ public class EnumTest extends TestCase {
     /**
      * @tests java.lang.Enum#values
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "There is no such method in the specification.",
+      targets = {
+        @TestTarget(
+          methodName = "values",
+          methodArgs = {}
+        )
+    })
     public void test_values() {
         Sample[] myValues = Sample.values();
         assertEquals(3, myValues.length);
@@ -186,7 +273,16 @@ public class EnumTest extends TestCase {
     /**
      * @test Serialization/deserilazation compatibility with Harmony.
      */
-    public void test_compatibilitySerialization_inClass_Complex_Harmony() throws Exception{
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Serialization/deserilazation compatibility.",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationGolden",
+          methodArgs = {}
+        )
+    })
+    public void _test_compatibilitySerialization_inClass_Complex_Harmony() throws Exception{
         // TODO migrate to the new testing framework 
         assertTrue(SerializationTester.assertCompabilityEquals(new MockEnum2(),
             "serialization/org/apache/harmony/luni/tests/java/lang/EnumTest.harmony.ser"));
@@ -195,6 +291,15 @@ public class EnumTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility.
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Verifies serialization/deserialization compatibility.",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationSelf",
+          methodArgs = {}
+        )
+    })
     public void testSerializationSelf() throws Exception {
 
         // test a map class that has enums.
@@ -225,6 +330,15 @@ public class EnumTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies serialization/deserialization compatibility.",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationGolden",
+          methodArgs = {}
+        )
+    })
     public void testSerializationCompatibility() throws Exception {
 
         // regression test for Harmony-1163

@@ -17,53 +17,77 @@
 
 package tests.api.java.net;
 
+import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
+@TestTargetClass(java.net.UnknownHostException.class) 
 public class UnknownHostExceptionTest extends junit.framework.TestCase {
 
-	/**
-	 * @tests java.net.UnknownHostException#UnknownHostException()
-	 */
-	public void test_Constructor() {
-		// Test for method java.net.UnknownHostException()
-		try {
-			try {
-				java.net.InetAddress.getByName("a.b.c.x.y.z.com");
-			} catch (java.net.UnknownHostException e) {
-				return;
-			}
-			fail("Failed to generate Exception");
-		} catch (Exception e) {
-			fail("Exception during test : " + e.getMessage());
-		}
-	}
+    /**
+     * @tests java.net.UnknownHostException#UnknownHostException()
+     */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "UnknownHostException",
+          methodArgs = {}
+        )
+    })
+    public void test_Constructor() {
+        // Test for method java.net.UnknownHostException()
+        try {
+            try {
+                java.net.InetAddress.getByName("a.b.c.x.y.z.com");
+            } catch (java.net.UnknownHostException e) {
+                return;
+            }
+            fail("Failed to generate Exception");
+        } catch (Exception e) {
+            fail("Exception during test : " + e.getMessage());
+        }
+    }
 
-	/**
-	 * @tests java.net.UnknownHostException#UnknownHostException(java.lang.String)
-	 */
-	public void test_ConstructorLjava_lang_String() {
-		// Test for method java.net.UnknownHostException(java.lang.String)
-		try {
-			try {
-				java.net.InetAddress.getByName("a.b.c.x.y.z.com");
-			} catch (java.net.UnknownHostException e) {
-				return;
-			}
-			fail("Failed to generate Exception");
-		} catch (Exception e) {
-			fail("Exception during test : " + e.getMessage());
-		}
-	}
+    /**
+     * @tests java.net.UnknownHostException#UnknownHostException(java.lang.String)
+     */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "UnknownHostException",
+          methodArgs = {java.lang.String.class}
+        )
+    })
+    public void test_ConstructorLjava_lang_String() {
+        // Test for method java.net.UnknownHostException(java.lang.String)
+        try {
+            try {
+                java.net.InetAddress.getByName("a.b.c.x.y.z.com");
+            } catch (java.net.UnknownHostException e) {
+                return;
+            }
+            fail("Failed to generate Exception");
+        } catch (Exception e) {
+            fail("Exception during test : " + e.getMessage());
+        }
+    }
 
-	/**
-	 * Sets up the fixture, for example, open a network connection. This method
-	 * is called before a test is executed.
-	 */
-	protected void setUp() {
-	}
+    /**
+     * Sets up the fixture, for example, open a network connection. This method
+     * is called before a test is executed.
+     */
+    protected void setUp() {
+    }
 
-	/**
-	 * Tears down the fixture, for example, close a network connection. This
-	 * method is called after a test is executed.
-	 */
-	protected void tearDown() {
-	}
+    /**
+     * Tears down the fixture, for example, close a network connection. This
+     * method is called after a test is executed.
+     */
+    protected void tearDown() {
+    }
 }

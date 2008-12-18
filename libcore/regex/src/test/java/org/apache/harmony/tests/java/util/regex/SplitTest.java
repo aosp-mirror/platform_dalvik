@@ -3,7 +3,7 @@ package org.apache.harmony.tests.java.util.regex;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestStatus;
+import dalvik.annotation.TestLevel;
 
 import junit.framework.TestCase;
 import java.util.regex.*;
@@ -15,8 +15,8 @@ import java.util.regex.*;
  */
 public class SplitTest extends TestCase {
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the basic functionality of " +
+             level = TestLevel.PARTIAL,
+             purpose = "Verifies the basic functionality of " +
                      "split(java.lang.CharSequence) & compile(java.lang.String)" +
                      "methods.",
              targets = { @TestTarget(methodName = "split",
@@ -36,14 +36,11 @@ public class SplitTest extends TestCase {
     }
 
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of " +
-                     "split(java.lang.CharSequence) & compile(java.lang.String," +
-                     " int) methods. Test uses not empty pattern.",
+             level = TestLevel.PARTIAL_OK,
+             purpose = "Verifies the functionality of " +
+                     "split(java.lang.CharSequence). Test uses not empty pattern.",
              targets = { @TestTarget(methodName = "split",
-                   methodArgs = {java.lang.CharSequence.class, int.class}),
-                         @TestTarget(methodName = "compile",
-                   methodArgs = {java.lang.String.class})      
+                   methodArgs = {java.lang.CharSequence.class, int.class})
              }
            )          
     public void testSplit1() throws PatternSyntaxException {
@@ -138,14 +135,11 @@ public class SplitTest extends TestCase {
     }
 
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of " +
-                     "split(java.lang.CharSequence) & compile(java.lang.String," +
-                     " int methods. Test uses empty pattern.",
+             level = TestLevel.PARTIAL_OK,
+             purpose = "Verifies the functionality of " +
+                     "split(java.lang.CharSequence). Test uses empty pattern.",
              targets = { @TestTarget(methodName = "split",
-                   methodArgs = {java.lang.CharSequence.class, int.class}),
-                         @TestTarget(methodName = "compile",
-                   methodArgs = {java.lang.String.class})      
+                   methodArgs = {java.lang.CharSequence.class, int.class})     
              }
            )          
     public void testSplit2() {
@@ -176,8 +170,8 @@ public class SplitTest extends TestCase {
 
 
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of " +
+             level = TestLevel.PARTIAL,
+             purpose = "Verifies the functionality of " +
                      "split(java.lang.CharSequence) & compile(java.lang.String," +
                      " int) methods. Test uses empty pattern and supplementary chars.",
              targets = { @TestTarget(methodName = "split",

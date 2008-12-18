@@ -17,17 +17,32 @@
 
 package org.apache.harmony.sql.tests.java.sql;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.HashMap;
 
 import junit.framework.TestCase;
 
+@TestTargetClass(java.sql.DatabaseMetaData.class)
 public class DatabaseMetaDataTest extends TestCase {
 
     /*
      * Public statics test
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Field testing",
+      targets = {
+        @TestTarget(
+          methodName = "!Constants",
+          methodArgs = {}
+        )
+    })
     public void testPublicStatics() {
 
         HashMap<String, Number> thePublicStatics = new HashMap<String, Number>();

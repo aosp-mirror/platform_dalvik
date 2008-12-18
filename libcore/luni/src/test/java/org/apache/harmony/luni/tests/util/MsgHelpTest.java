@@ -14,12 +14,18 @@
  * limitations under the License.
  */
 
-package org.apache.harmony.luni.tests.util;
+package org.apache.harmony.luni.tests.util;  
+
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
 
 import org.apache.harmony.luni.util.MsgHelp;
 
 import junit.framework.TestCase;
 
+@TestTargetClass(MsgHelp.class)
 public class MsgHelpTest extends TestCase {
 
     public MsgHelpTest(String name) {
@@ -30,6 +36,15 @@ public class MsgHelpTest extends TestCase {
      * Test method for 'org.apache.harmony.luni.util.MsgHelp.format(String,
      * Object[])'
      */
+    @TestInfo(
+            level = TestLevel.COMPLETE,
+            purpose = "",
+            targets = {
+              @TestTarget(
+                methodName = "format",
+                methodArgs = {java.lang.String.class, Object[].class}
+              )
+          })        
     public void testFormatLjava_lang_String$Ljava_lang_Object() {
         assertEquals("empty", MsgHelp.format("empty", new Object[0]));
 

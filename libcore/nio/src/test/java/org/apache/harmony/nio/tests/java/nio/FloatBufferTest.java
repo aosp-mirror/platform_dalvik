@@ -17,9 +17,15 @@
 
 package org.apache.harmony.nio.tests.java.nio;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.nio.BufferOverflowException;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteOrder;
+import java.nio.DoubleBuffer;
 import java.nio.FloatBuffer;
 import java.nio.InvalidMarkException;
 
@@ -27,6 +33,7 @@ import java.nio.InvalidMarkException;
  * Tests java.nio.FloatBuffer
  * 
  */
+@TestTargetClass(java.nio.FloatBuffer.class)
 public class FloatBufferTest extends AbstractBufferTest {
     
     protected static final int SMALL_TEST_LENGTH = 5;
@@ -51,7 +58,15 @@ public class FloatBufferTest extends AbstractBufferTest {
      * following usecases: 1. case for check FloatBuffer testBuf properties 2.
      * case expected IllegalArgumentException
      */
-    
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify boundary case.",
+      targets = {
+        @TestTarget(
+          methodName = "allocate",
+          methodArgs = {int.class}
+        )
+    })
     public void test_AllocateI() {
         // case: FloatBuffer testBuf properties is satisfy the conditions
         // specification
@@ -68,7 +83,15 @@ public class FloatBufferTest extends AbstractBufferTest {
             // expected
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "The same test as testArrayOffset.",
+      targets = {
+        @TestTarget(
+          methodName = "array",
+          methodArgs = {}
+        )
+    })
     public void testArray() {
         float array[] = buf.array();
         assertContentEquals(buf, array, buf.arrayOffset(), buf.capacity());
@@ -85,7 +108,15 @@ public class FloatBufferTest extends AbstractBufferTest {
         loadTestData2(buf);
         assertContentEquals(buf, array, buf.arrayOffset(), buf.capacity());
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "The same test as testArray.",
+      targets = {
+        @TestTarget(
+          methodName = "arrayOffset",
+          methodArgs = {}
+        )
+    })
     public void testArrayOffset() {
         float array[] = buf.array();
         assertContentEquals(buf, array, buf.arrayOffset(), buf.capacity());
@@ -102,7 +133,15 @@ public class FloatBufferTest extends AbstractBufferTest {
         loadTestData2(buf);
         assertContentEquals(buf, array, buf.arrayOffset(), buf.capacity());
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "asReadOnlyBuffer",
+          methodArgs = {}
+        )
+    })
     public void testAsReadOnlyBuffer() {
         buf.clear();
         buf.mark();
@@ -126,7 +165,15 @@ public class FloatBufferTest extends AbstractBufferTest {
         buf.reset();
         assertEquals(buf.position(), 0);
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "compact",
+          methodArgs = {}
+        )
+    })
     public void testCompact() {
 
         // case: buffer is full
@@ -178,7 +225,15 @@ public class FloatBufferTest extends AbstractBufferTest {
             // expected
         }
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "compareTo",
+          methodArgs = {java.nio.FloatBuffer.class}
+        )
+    })
     public void testCompareTo() {
         try {
             buf.compareTo(null);    
@@ -207,8 +262,28 @@ public class FloatBufferTest extends AbstractBufferTest {
         other.limit(5);
         assertTrue(buf.compareTo(other) > 0);
         assertTrue(other.compareTo(buf) < 0);
-    }
+        
+        FloatBuffer fbuffer1 = FloatBuffer.wrap(new float[] { Float.NaN });
+        FloatBuffer fbuffer2 = FloatBuffer.wrap(new float[] { Float.NaN });
+        FloatBuffer fbuffer3 = FloatBuffer.wrap(new float[] { 42f });
 
+        assertEquals("Failed equal comparison with NaN entry", 0, fbuffer1
+                .compareTo(fbuffer2));
+        assertEquals("Failed greater than comparison with NaN entry", 1, fbuffer3
+                .compareTo(fbuffer1));
+        assertEquals("Failed greater than comparison with NaN entry", 1, fbuffer1
+                .compareTo(fbuffer3));
+
+    }
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "duplicate",
+          methodArgs = {}
+        )
+    })
     public void testDuplicate() {
         buf.clear();
         buf.mark();
@@ -240,7 +315,15 @@ public class FloatBufferTest extends AbstractBufferTest {
             assertContentEquals(buf, duplicate);
         }
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "equals",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void testEquals() {
         // equal to self
         assertTrue(buf.equals(buf));
@@ -266,6 +349,15 @@ public class FloatBufferTest extends AbstractBufferTest {
     /*
      * Class under test for float get()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "get",
+          methodArgs = {}
+        )
+    })
     public void testGet() {
         buf.clear();
         for (int i = 0; i < buf.capacity(); i++) {
@@ -283,6 +375,15 @@ public class FloatBufferTest extends AbstractBufferTest {
     /*
      * Class under test for java.nio.FloatBuffer get(float[])
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "get",
+          methodArgs = {float[].class}
+        )
+    })
     public void testGetfloatArray() {
         float array[] = new float[1];
         buf.clear();
@@ -311,6 +412,15 @@ public class FloatBufferTest extends AbstractBufferTest {
     /*
      * Class under test for java.nio.FloatBuffer get(float[], int, int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "get",
+          methodArgs = {float[].class, int.class, int.class}
+        )
+    })
     public void testGetfloatArrayintint() {
         buf.clear();
         float array[] = new float[buf.capacity()];
@@ -378,6 +488,15 @@ public class FloatBufferTest extends AbstractBufferTest {
     /*
      * Class under test for float get(int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "get",
+          methodArgs = {int.class}
+        )
+    })
     public void testGetint() {
         buf.clear();
         for (int i = 0; i < buf.capacity(); i++) {
@@ -397,11 +516,27 @@ public class FloatBufferTest extends AbstractBufferTest {
             // expected
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies that array method doesn't return null.",
+      targets = {
+        @TestTarget(
+          methodName = "array",
+          methodArgs = {}
+        )
+    })
     public void testHasArray() {
         assertNotNull(buf.array());
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "hashCode",
+          methodArgs = {}
+        )
+    })
     public void testHashCode() {
         buf.clear();
         FloatBuffer readonly = buf.asReadOnlyBuffer();
@@ -412,11 +547,27 @@ public class FloatBufferTest extends AbstractBufferTest {
         duplicate.position(buf.capacity() / 2);
         assertTrue(buf.hashCode() != duplicate.hashCode());
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify direct buffer.",
+      targets = {
+        @TestTarget(
+          methodName = "isDirect",
+          methodArgs = {}
+        )
+    })
     public void testIsDirect() {
         assertFalse(buf.isDirect());
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "order",
+          methodArgs = {}
+        )
+    })
     public void testOrder() {
         buf.order();
         if (buf.hasArray()) {
@@ -427,6 +578,15 @@ public class FloatBufferTest extends AbstractBufferTest {
     /*
      * Class under test for java.nio.FloatBuffer put(float)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify ReadOnlyBufferException.",
+      targets = {
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {float.class}
+        )
+    })
     public void testPutfloat() {
         buf.clear();
         for (int i = 0; i < buf.capacity(); i++) {
@@ -446,6 +606,15 @@ public class FloatBufferTest extends AbstractBufferTest {
     /*
      * Class under test for java.nio.FloatBuffer put(float[])
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify ReadOnlyBufferException.",
+      targets = {
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {float[].class}
+        )
+    })
     public void testPutfloatArray() {
         float array[] = new float[1];
         buf.clear();
@@ -474,6 +643,15 @@ public class FloatBufferTest extends AbstractBufferTest {
     /*
      * Class under test for java.nio.FloatBuffer put(float[], int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify ReadOnlyBufferException.",
+      targets = {
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {float[].class, int.class, int.class}
+        )
+    })
     public void testPutfloatArrayintint() {
         buf.clear();
         float array[] = new float[buf.capacity()];
@@ -540,6 +718,15 @@ public class FloatBufferTest extends AbstractBufferTest {
     /*
      * Class under test for java.nio.FloatBuffer put(java.nio.FloatBuffer)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify ReadOnlyBufferException.",
+      targets = {
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {java.nio.FloatBuffer.class}
+        )
+    })
     public void testPutFloatBuffer() {
         FloatBuffer other = FloatBuffer.allocate(buf.capacity());
         try {
@@ -575,6 +762,15 @@ public class FloatBufferTest extends AbstractBufferTest {
     /*
      * Class under test for java.nio.FloatBuffer put(int, float)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify ReadOnlyBufferException.",
+      targets = {
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {int.class, float.class}
+        )
+    })
     public void testPutintfloat() {
         buf.clear();
         for (int i = 0; i < buf.capacity(); i++) {
@@ -596,7 +792,15 @@ public class FloatBufferTest extends AbstractBufferTest {
             // expected
         }
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "slice",
+          methodArgs = {}
+        )
+    })
     public void testSlice() {
         assertTrue(buf.capacity() > 5);
         buf.position(1);
@@ -624,7 +828,15 @@ public class FloatBufferTest extends AbstractBufferTest {
             assertEquals(slice.get(1), 500, 0.0);
         }
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public void testToString() {
         String str = buf.toString();
         assertTrue(str.indexOf("Float") >= 0 || str.indexOf("float") >= 0);
@@ -639,7 +851,15 @@ public class FloatBufferTest extends AbstractBufferTest {
      * for check equal between buf2 and float array[] 3. case for check a buf2
      * dependens to array[]
      */
-    
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "wrap",
+          methodArgs = {float[].class}
+        )
+    })
     public void test_Wrap$S() {
         float array[] = new float[BUFFER_LENGTH];
         loadTestData1(array, 0, BUFFER_LENGTH);
@@ -666,7 +886,15 @@ public class FloatBufferTest extends AbstractBufferTest {
      * case for check a buf2 dependens to array[] 4. case expected
      * IndexOutOfBoundsException
      */
-    
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "wrap",
+          methodArgs = {float[].class, int.class, int.class}
+        )
+    })
     public void test_Wrap$SII() {
         float array[] = new float[BUFFER_LENGTH];
         int offset = 5;

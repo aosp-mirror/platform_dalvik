@@ -45,6 +45,7 @@ public class AllTests {
         suite.addTestSuite(DateFormatTest.class);
         suite.addTestSuite(DecimalFormatSymbolsTest.class);
         suite.addTestSuite(DecimalFormatTest.class);
+        suite.addTestSuite(DecimalFormatTestICU.class);
         suite.addTestSuite(FieldPositionTest.class);
         suite.addTestSuite(FormatFieldTest.class);
         suite.addTestSuite(FormatTest.class);

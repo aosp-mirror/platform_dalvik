@@ -24,15 +24,15 @@ import java.nio.channels.SocketChannel;
 import java.security.AccessController;
 
 import org.apache.harmony.luni.net.NetUtil;
-//import android.net.SocketImplProvider;
 import org.apache.harmony.luni.net.SocketImplProvider;
 import org.apache.harmony.luni.platform.Platform;
 import org.apache.harmony.luni.util.Msg;
 import org.apache.harmony.luni.util.PriviAction;
 
 /**
- * This class represents sockets to be used in connection-oriented (streaming)
- * protocols.
+ * Provides a client-side TCP socket.
+ * 
+ * @since Android 1.0
  */
 public class Socket {
 
@@ -72,10 +72,13 @@ public class Socket {
     }
 
     /**
-     * Construct a connection-oriented Socket. The Socket is created in the
-     * <code>factory</code> if declared, or otherwise of the default type.
+     * Creates a new unconnected socket. When a SocketImplFactory is defined it
+     * creates the internal socket implementation, otherwise the default socket
+     * implementation will be used for this socket.
      * 
      * @see SocketImplFactory
+     * @see SocketImpl
+     * @since Android 1.0
      */
     public Socket() {
         impl = factory != null ? factory.createSocketImpl()
@@ -83,19 +86,28 @@ public class Socket {
     }
 
     /**
-     * Constructs a connection-oriented Socket with specified <code>proxy</code>.
-     * 
-     * Method <code>checkConnect</code> is called if a security manager
-     * exists, and the proxy host address and port number are passed as
-     * parameters.
+     * Creates a new unconnected socket using the given proxy type. When a
+     * {@code SocketImplFactory} is defined it creates the internal socket
+     * implementation, otherwise the default socket implementation will be used
+     * for this socket.
+     * <p>
+     * Example that will create a socket connection through a {@code SOCKS}
+     * proxy server: <br>
+     * {@code Socket sock = new Socket(new Proxy(Proxy.Type.SOCKS, new
+     * InetSocketAddress("test.domain.org", 2130)));}
+     * </p>
      * 
      * @param proxy
-     *            the specified proxy for this Socket.
+     *            the specified proxy for this socket.
      * @throws IllegalArgumentException
-     *             if the proxy is null or of an invalid type.
+     *             if the argument {@code proxy} is {@code null} or of an
+     *             invalid type.
      * @throws SecurityException
      *             if a security manager exists and it denies the permission to
-     *             connect to proxy.
+     *             connect to the given proxy.
+     * @see SocketImplFactory
+     * @see SocketImpl
+     * @since Android 1.0
      */
     public Socket(Proxy proxy) {
         if (null == proxy || Proxy.Type.HTTP == proxy.type()) {
@@ -120,19 +132,19 @@ public class Socket {
     }
 
     /**
-     * Construct a stream socket connected to the nominated destination
-     * host/port. By default, the socket binds it to any available port on the
-     * default localhost.
+     * Creates a new streaming socket connected to the target host specified by
+     * the parameters {@code dstName} and {@code dstPort}. The socket is bound
+     * to any available port on the local host.
      * 
      * @param dstName
-     *            the destination host to connect to
+     *            the target host name or IP address to connect to.
      * @param dstPort
-     *            the port on the destination host to connect to
-     * 
+     *            the port on the target host to connect to.
      * @throws UnknownHostException
-     *             if the host cannot be resolved
+     *             if the host name could not be resolved into an IP address.
      * @throws IOException
-     *             if an error occurs while instantiating the socket
+     *             if an error occurs while creating the socket.
+     * @since Android 1.0
      */
     public Socket(String dstName, int dstPort) throws UnknownHostException,
             IOException {
@@ -143,22 +155,24 @@ public class Socket {
     }
 
     /**
-     * Construct a stream socket connected to the nominated destination
-     * host/port. The socket is bound it to the nominated localAddress/port.
+     * Creates a new streaming socket connected to the target host specified by
+     * the parameters {@code dstName} and {@code dstPort}. On the local endpoint
+     * the socket is bound to the given address {@code localAddress} on port
+     * {@code localPort}.
      * 
      * @param dstName
-     *            the destination host to connect to
+     *            the target host name or IP address to connect to.
      * @param dstPort
-     *            the port on the destination host to connect to
+     *            the port on the target host to connect to.
      * @param localAddress
-     *            the local host address to bind to
+     *            the address on the local host to bind to.
      * @param localPort
-     *            the local port to bind to
-     * 
+     *            the port on the local host to bind to.
      * @throws UnknownHostException
-     *             if the host cannot be resolved
+     *             if the host name could not be resolved into an IP address.
      * @throws IOException
-     *             if an error occurs while instantiating the socket
+     *             if an error occurs while creating the socket.
+     * @since Android 1.0
      */
     public Socket(String dstName, int dstPort, InetAddress localAddress,
             int localPort) throws IOException {
@@ -169,23 +183,25 @@ public class Socket {
     }
 
     /**
-     * Answer a new socket. This constructor is deprecated.
+     * Creates a new streaming or datagram socket connected to the target host
+     * specified by the parameters {@code hostName} and {@code port}. The socket
+     * is bound to any available port on the local host.
      * 
      * @param hostName
-     *            the host name
+     *            the target host name or IP address to connect to.
      * @param port
-     *            the port on the host
+     *            the port on the target host to connect to.
      * @param streaming
-     *            if true, answer a stream socket, else answer a a datagram
-     *            socket.
-     * 
+     *            if {@code true} a streaming socket is returned, a datagram
+     *            socket otherwise.
      * @throws UnknownHostException
-     *             if the host cannot be resolved
+     *             if the host name could not be resolved into an IP address.
      * @throws IOException
-     *             if an error occurs while instantiating the socket
-     * 
-     * @deprecated As of JDK 1.1, replaced by Socket
-     * @see #Socket(String,int)
+     *             if an error occurs while creating the socket.
+     * @deprecated Use {@code Socket(String, int)} instead of this for streaming
+     *             sockets or an appropriate constructor of {@code
+     *             DatagramSocket} for UDP transport.
+     * @since Android 1.0
      */
     @Deprecated
     public Socket(String hostName, int port, boolean streaming)
@@ -197,17 +213,17 @@ public class Socket {
     }
 
     /**
-     * Construct a stream socket connected to the nominated destination host
-     * address/port. By default, the socket binds it to any available port on
-     * the default localhost.
+     * Creates a new streaming socket connected to the target host specified by
+     * the parameters {@code dstAddress} and {@code dstPort}. The socket is
+     * bound to any available port on the local host.
      * 
      * @param dstAddress
-     *            the destination host address to connect to
+     *            the target host address to connect to.
      * @param dstPort
-     *            the port on the destination host to connect to
-     * 
+     *            the port on the target host to connect to.
      * @throws IOException
-     *             if an error occurs while instantiating the socket
+     *             if an error occurs while creating the socket.
+     * @since Android 1.0
      */
     public Socket(InetAddress dstAddress, int dstPort) throws IOException {
         this();
@@ -216,20 +232,22 @@ public class Socket {
     }
 
     /**
-     * Construct a stream socket connected to the nominated destination host
-     * address/port. The socket is bound it to the nominated localAddress/port.
+     * Creates a new streaming socket connected to the target host specified by
+     * the parameters {@code dstAddress} and {@code dstPort}. On the local
+     * endpoint the socket is bound to the given address {@code localAddress} on
+     * port {@code localPort}.
      * 
      * @param dstAddress
-     *            the destination host address to connect to
+     *            the target host address to connect to.
      * @param dstPort
-     *            the port on the destination host to connect to
+     *            the port on the target host to connect to.
      * @param localAddress
-     *            the local host address to bind to
+     *            the address on the local host to bind to.
      * @param localPort
-     *            the local port to bind to
-     * 
+     *            the port on the local host to bind to.
      * @throws IOException
-     *             if an error occurs while instantiating the socket
+     *             if an error occurs while creating the socket.
+     * @since Android 1.0
      */
     public Socket(InetAddress dstAddress, int dstPort,
             InetAddress localAddress, int localPort) throws IOException {
@@ -239,23 +257,23 @@ public class Socket {
     }
 
     /**
-     * Answer a new socket. This constructor is deprecated.
+     * Creates a new streaming or datagram socket connected to the target host
+     * specified by the parameters {@code addr} and {@code port}. The socket is
+     * bound to any available port on the local host.
      * 
      * @param addr
-     *            the internet address
+     *            the Internet address to connect to.
      * @param port
-     *            the port on the host
+     *            the port on the target host to connect to.
      * @param streaming
-     *            if true, answer a stream socket, else answer a datagram
-     *            socket.
-     * 
-     * @throws UnknownHostException
-     *             if the host cannot be resolved
+     *            if {@code true} a streaming socket is returned, a datagram
+     *            socket otherwise.
      * @throws IOException
-     *             if an error occurs while instantiating the socket
-     * 
-     * @deprecated As of JDK 1.1, replaced by Socket
-     * @see #Socket(InetAddress,int)
+     *             if an error occurs while creating the socket.
+     * @deprecated Use {@code Socket(InetAddress, int)} instead of this for
+     *             streaming sockets or an appropriate constructor of {@code
+     *             DatagramSocket} for UDP transport.
+     * @since Android 1.0
      */
     @Deprecated
     public Socket(InetAddress addr, int port, boolean streaming)
@@ -266,27 +284,26 @@ public class Socket {
     }
 
     /**
-     * Creates an unconnected socket, wrapping the <code>socketImpl</code>
-     * argument.
+     * Creates an unconnected socket with the given socket implementation.
      * 
      * @param anImpl
-     *            the socket to wrap
-     * 
+     *            the socket implementation to be used.
      * @throws SocketException
-     *             if an error occurs assigning the implementation
+     *             if an error occurs while creating the socket.
+     * @since Android 1.0
      */
     protected Socket(SocketImpl anImpl) throws SocketException {
         impl = anImpl;
     }
 
     /**
-     * Check the connection destination satisfies the security policy and is in
-     * the valid port range.
+     * Checks whether the connection destination satisfies the security policy
+     * and the validity of the port range.
      * 
      * @param destAddr
-     *            the destination host address
+     *            the destination host address.
      * @param dstPort
-     *            the port on the destination host
+     *            the port on the destination host.
      */
     void checkDestination(InetAddress destAddr, int dstPort) {
         if (dstPort < 0 || dstPort > 65535) {
@@ -295,11 +312,13 @@ public class Socket {
         checkConnectPermission(destAddr.getHostName(), dstPort);
     }
 
-    /*
-     * Checks the connection destination satisfies the security policy.
+    /**
+     * Checks whether the connection destination satisfies the security policy.
      * 
-     * @param hostname the destination hostname @param dstPort the port on the
-     * destination host
+     * @param hostname
+     *            the destination hostname.
+     * @param dstPort
+     *            the port on the destination host.
      */
     private void checkConnectPermission(String hostname, int dstPort) {
         SecurityManager security = System.getSecurityManager();
@@ -309,10 +328,12 @@ public class Socket {
     }
 
     /**
-     * Close the socket. It is not valid to use the socket thereafter.
+     * Closes the socket. It is not possible to reconnect or rebind to this
+     * socket thereafter which means a new socket instance has to be created.
      * 
      * @throws IOException
-     *             if an error occurs during the close
+     *             if an error occurs while closing the socket.
+     * @since Android 1.0
      */
     public synchronized void close() throws IOException {
         isClosed = true;
@@ -320,11 +341,11 @@ public class Socket {
     }
 
     /**
-     * Returns an {@link InetAddress} instance representing the address this
-     * socket has connected to.
+     * Gets the IP address of the target host this socket is connected to.
      * 
-     * @return if this socket is connected, the address it is connected to. A
-     *         <code>null</code> return signifies no connection has been made.
+     * @return the IP address of the connected target host or {@code null} if
+     *         this socket is not yet connected.
+     * @since Android 1.0
      */
     public InetAddress getInetAddress() {
         if (!isConnected()) {
@@ -334,15 +355,13 @@ public class Socket {
     }
 
     /**
-     * Answer the socket input stream, to read byte data off the socket. Note,
-     * multiple input streams may be created on a single socket.
+     * Gets an input stream to read data from this socket.
      * 
-     * @return a byte oriented read stream for this socket
-     * 
+     * @return the byte-oriented input stream.
      * @throws IOException
-     *             if an error occurs creating the stream
-     * 
-     * @see org.apache.harmony.luni.net.SocketInputStream
+     *             if an error occurs while creating the input stream or the
+     *             socket is in an invalid state.
+     * @since Android 1.0
      */
     public InputStream getInputStream() throws IOException {
         checkClosedAndCreate(false);
@@ -353,12 +372,14 @@ public class Socket {
     }
 
     /**
-     * Answer the SO_KEEPALIVE option for this socket.
+     * Gets the setting of the socket option {@code SocketOptions.SO_KEEPALIVE}.
      * 
-     * @return the socket SO_KEEPALIVE option setting
-     * 
+     * @return {@code true} if the {@code SocketOptions.SO_KEEPALIVE} is
+     *         enabled, {@code false} otherwise.
      * @throws SocketException
-     *             if an error occurs on the option access
+     *             if an error occurs while reading the socket option.
+     * @see SocketOptions#SO_KEEPALIVE
+     * @since Android 1.0
      */
     public boolean getKeepAlive() throws SocketException {
         checkClosedAndCreate(true);
@@ -367,10 +388,11 @@ public class Socket {
     }
 
     /**
-     * Returns an {@link InetAddress} instance representing the <i>local</i>
-     * address this socket is bound to.
+     * Gets the local IP address this socket is bound to.
      * 
-     * @return the local address that this socket has bound to
+     * @return the local IP address of this socket or {@code InetAddress.ANY} if
+     *         the socket is unbound.
+     * @since Android 1.0
      */
     public InetAddress getLocalAddress() {
         if (!isBound()) {
@@ -381,9 +403,11 @@ public class Socket {
     }
 
     /**
-     * Answer the local port to which the socket is bound.
+     * Gets the local port this socket is bound to.
      * 
-     * @return the local port to which the socket is bound
+     * @return the local port of this socket or {@code -1} if the socket is
+     *         unbound.
+     * @since Android 1.0
      */
     public int getLocalPort() {
         if (!isBound()) {
@@ -393,15 +417,13 @@ public class Socket {
     }
 
     /**
-     * Answer the socket output stream, for writing byte data on the socket.
-     * Note, multiplie output streams may be created on a single socket.
+     * Gets an output stream to write data into this socket.
      * 
-     * @return OutputStream a byte oriented write stream for this socket
-     * 
+     * @return the byte-oriented output stream.
      * @throws IOException
-     *             if an error occurs creating the stream
-     * 
-     * @see org.apache.harmony.luni.net.SocketOutputStream
+     *             if an error occurs while creating the output stream or the
+     *             socket is in an invalid state.
+     * @since Android 1.0
      */
     public OutputStream getOutputStream() throws IOException {
         checkClosedAndCreate(false);
@@ -412,11 +434,11 @@ public class Socket {
     }
 
     /**
-     * Returns the number of the remote port this socket is connected to.
+     * Gets the port number of the target host this socket is connected to.
      * 
-     * @return int the remote port number that this socket has connected to. A
-     *         return of <code>0</code> (zero) indicates that there is no
-     *         connection in place.
+     * @return the port number of the connected target host or {@code 0} if this
+     *         socket is not yet connected.
+     * @since Android 1.0
      */
     public int getPort() {
         if (!isConnected()) {
@@ -426,13 +448,14 @@ public class Socket {
     }
 
     /**
-     * Answer the linger-on-close timeout for this socket (the SO_LINGER value).
+     * Gets the value of the socket option {@code SocketOptions.SO_LINGER}.
      * 
-     * @return this socket's SO_LINGER value. A value of <code>-1</code> will
-     *         be returned if the option is not enabled.
-     * 
+     * @return the current value of the option {@code SocketOptions.SO_LINGER}
+     *         or {@code -1} if this option is disabled.
      * @throws SocketException
-     *             if an error occurs on querying this property
+     *             if an error occurs while reading the socket option.
+     * @see SocketOptions#SO_LINGER
+     * @since Android 1.0
      */
     public int getSoLinger() throws SocketException {
         checkClosedAndCreate(true);
@@ -440,12 +463,13 @@ public class Socket {
     }
 
     /**
-     * Answer the socket receive buffer size (SO_RCVBUF).
+     * Gets the receive buffer size of this socket.
      * 
-     * @return socket receive buffer size
-     * 
+     * @return the current value of the option {@code SocketOptions.SO_RCVBUF}.
      * @throws SocketException
-     *             if an error occurs on the option access
+     *             if an error occurs while reading the socket option.
+     * @see SocketOptions#SO_RCVBUF
+     * @since Android 1.0
      */
     public synchronized int getReceiveBufferSize() throws SocketException {
         checkClosedAndCreate(true);
@@ -453,12 +477,13 @@ public class Socket {
     }
 
     /**
-     * Answer the socket send buffer size (SO_SNDBUF).
+     * Gets the send buffer size of this socket.
      * 
-     * @return socket send buffer size
-     * 
+     * @return the current value of the option {@code SocketOptions.SO_SNDBUF}.
      * @throws SocketException
-     *             if an error occurs on the option access
+     *             if an error occurs while reading the socket option.
+     * @see SocketOptions#SO_SNDBUF
+     * @since Android 1.0
      */
     public synchronized int getSendBufferSize() throws SocketException {
         checkClosedAndCreate(true);
@@ -466,14 +491,15 @@ public class Socket {
     }
 
     /**
-     * Answer the socket read timeout. The SO_TIMEOUT option, a value of 0
-     * indicates it is disabled and a read operation will block indefinitely
-     * waiting for data.
+     * Gets the timeout for this socket during which a reading operation shall
+     * block while waiting for data.
      * 
-     * @return the socket read timeout
-     * 
+     * @return the current value of the option {@code SocketOptions.SO_TIMEOUT}
+     *         or {@code 0} which represents an infinite timeout.
      * @throws SocketException
-     *             if an error occurs on the option access
+     *             if an error occurs while reading the socket option.
+     * @see SocketOptions#SO_TIMEOUT
+     * @since Android 1.0
      */
     public synchronized int getSoTimeout() throws SocketException {
         checkClosedAndCreate(true);
@@ -481,13 +507,14 @@ public class Socket {
     }
 
     /**
-     * Answer true if the socket is using Nagle's algorithm. The TCP_NODELAY
-     * option setting.
+     * Gets the setting of the socket option {@code SocketOptions.TCP_NODELAY}.
      * 
-     * @return the socket TCP_NODELAY option setting
-     * 
+     * @return {@code true} if the {@code SocketOptions.TCP_NODELAY} is enabled,
+     *         {@code false} otherwise.
      * @throws SocketException
-     *             if an error occurs on the option access
+     *             if an error occurs while reading the socket option.
+     * @see SocketOptions#TCP_NODELAY
+     * @since Android 1.0
      */
     public boolean getTcpNoDelay() throws SocketException {
         checkClosedAndCreate(true);
@@ -496,13 +523,14 @@ public class Socket {
     }
 
     /**
-     * Set the SO_KEEPALIVE option for this socket.
+     * Sets the state of the {@code SocketOptions.SO_KEEPALIVE} for this socket.
      * 
      * @param value
-     *            the socket SO_KEEPALIVE option setting
-     * 
+     *            the state whether this option is enabled or not.
      * @throws SocketException
-     *             if an error occurs setting the option
+     *             if an error occurs while setting the option.
+     * @see SocketOptions#SO_KEEPALIVE
+     * @since Android 1.0
      */
     public void setKeepAlive(boolean value) throws SocketException {
         if (impl != null) {
@@ -513,13 +541,14 @@ public class Socket {
     }
 
     /**
-     * Specifies the application's socket implementation factory. This may only
-     * be executed the once over the lifetime of the application.
+     * Sets the internal factory for creating socket implementations. This may
+     * only be executed once during the lifetime of the application.
      * 
      * @param fac
-     *            the socket factory to set
-     * @exception IOException
-     *                thrown if the factory has already been set
+     *            the socket implementation factory to be set.
+     * @throws IOException
+     *             if the factory has been already set.
+     * @since Android 1.0
      */
     public static synchronized void setSocketImplFactory(SocketImplFactory fac)
             throws IOException {
@@ -534,14 +563,16 @@ public class Socket {
     }
 
     /**
-     * Set the socket send buffer size.
+     * Sets the send buffer size of this socket.
      * 
      * @param size
-     *            the buffer size, in bytes
-     * 
+     *            the buffer size in bytes. This value must be a positive number
+     *            greater than {@code 0}.
      * @throws SocketException
-     *             if an error occurs while setting the size or the size is
-     *             invalid.
+     *             if an error occurs while setting the size or the given value
+     *             is an invalid size.
+     * @see SocketOptions#SO_SNDBUF
+     * @since Android 1.0
      */
     public synchronized void setSendBufferSize(int size) throws SocketException {
         checkClosedAndCreate(true);
@@ -552,14 +583,16 @@ public class Socket {
     }
 
     /**
-     * Set the socket receive buffer size.
+     * Sets the receive buffer size of this socket.
      * 
      * @param size
-     *            the buffer size, in bytes
-     * 
+     *            the buffer size in bytes. This value must be a positive number
+     *            greater than {@code 0}.
      * @throws SocketException
-     *             tf an error occurs while setting the size or the size is
-     *             invalid.
+     *             if an error occurs while setting the size or the given value
+     *             is an invalid size.
+     * @see SocketOptions#SO_RCVBUF
+     * @since Android 1.0
      */
     public synchronized void setReceiveBufferSize(int size)
             throws SocketException {
@@ -571,16 +604,18 @@ public class Socket {
     }
 
     /**
-     * Set the SO_LINGER option, with the specified time, in seconds. The
-     * SO_LINGER option is silently limited to 65535 seconds.
+     * Sets the state of the {@code SocketOptions.SO_LINGER} with the given
+     * timeout in seconds. The timeout value for this option is silently limited
+     * to the maximum of {@code 65535}.
      * 
      * @param on
-     *            if linger is enabled
+     *            the state whether this option is enabled or not.
      * @param timeout
-     *            the linger timeout value, in seconds
-     * 
+     *            the linger timeout value in seconds.
      * @throws SocketException
-     *             if an error occurs setting the option
+     *             if an error occurs while setting the option.
+     * @see SocketOptions#SO_LINGER
+     * @since Android 1.0
      */
     public void setSoLinger(boolean on, int timeout) throws SocketException {
         checkClosedAndCreate(true);
@@ -604,15 +639,18 @@ public class Socket {
     }
 
     /**
-     * Set the read timeout on this socket. The SO_TIMEOUT option, is specified
-     * in milliseconds. The read operation will block indefinitely for a zero
-     * value.
+     * Sets the reading timeout in milliseconds for this socket. The read
+     * operation will block indefinitely if this option value is set to {@code
+     * 0}. The timeout must be set before calling the read operation. A
+     * {@code SocketTimeoutException} is thrown when this timeout expires.
      * 
      * @param timeout
-     *            the read timeout value
-     * 
+     *            the reading timeout value as number greater than {@code 0} or
+     *            {@code 0} for an infinite timeout.
      * @throws SocketException
-     *             if an error occurs setting the option
+     *             if an error occurs while setting the option.
+     * @see SocketOptions#SO_TIMEOUT
+     * @since Android 1.0
      */
     public synchronized void setSoTimeout(int timeout) throws SocketException {
         checkClosedAndCreate(true);
@@ -623,14 +661,14 @@ public class Socket {
     }
 
     /**
-     * Set whether the socket is to use Nagle's algorithm. The TCP_NODELAY
-     * option setting.
+     * Sets the state of the {@code SocketOptions.TCP_NODELAY} for this socket.
      * 
      * @param on
-     *            the socket TCP_NODELAY option setting
-     * 
+     *            the state whether this option is enabled or not.
      * @throws SocketException
-     *             if an error occurs setting the option
+     *             if an error occurs while setting the option.
+     * @see SocketOptions#TCP_NODELAY
+     * @since Android 1.0
      */
     public void setTcpNoDelay(boolean on) throws SocketException {
         checkClosedAndCreate(true);
@@ -642,17 +680,16 @@ public class Socket {
      * then connects it to the nominated destination address/port.
      * 
      * @param dstAddress
-     *            the destination host address
+     *            the destination host address.
      * @param dstPort
-     *            the port on the destination host
+     *            the port on the destination host.
      * @param localAddress
-     *            the address on the local machine to bind
+     *            the address on the local machine to bind.
      * @param localPort
-     *            the port on the local machine to bind
-     * 
+     *            the port on the local machine to bind.
      * @throws IOException
-     *             thrown if a error occurs during the bind or connect
-     *             operations
+     *             thrown if an error occurs during the bind or connect
+     *             operations.
      */
     void startupSocket(InetAddress dstAddress, int dstPort,
             InetAddress localAddress, int localPort, boolean streaming)
@@ -682,10 +719,11 @@ public class Socket {
     }
 
     /**
-     * Returns a string containing a concise, human-readable description of the
+     * Returns a {@code String} containing a concise, human-readable description of the
      * socket.
      * 
-     * @return the description
+     * @return the textual representation of this socket.
+     * @since Android 1.0
      */
     @Override
     public String toString() {
@@ -696,12 +734,15 @@ public class Socket {
     }
 
     /**
-     * Shutdown the input portion of the socket.
+     * Closes the input stream of this socket. Any further data sent to this
+     * socket will be discarded. Reading from this socket after this method has
+     * been called will return the value {@code EOF}.
      * 
      * @throws IOException
-     *             if an error occurs while closing the socket input
+     *             if an error occurs while closing the socket input stream.
      * @throws SocketException
-     *             if the socket is closed
+     *             if the input stream is already closed.
+     * @since Android 1.0
      */
     public void shutdownInput() throws IOException {
         if (isInputShutdown()) {
@@ -713,12 +754,15 @@ public class Socket {
     }
 
     /**
-     * Shutdown the output portion of the socket.
+     * Closes the output stream of this socket. All buffered data will be sent
+     * followed by the termination sequence. Writing to the closed output stream
+     * will cause an {@code IOException}.
      * 
      * @throws IOException
-     *             if an error occurs while closing the socket output
+     *             if an error occurs while closing the socket output stream.
      * @throws SocketException
-     *             if the socket is closed
+     *             if the output stream is already closed.
+     * @since Android 1.0
      */
     public void shutdownOutput() throws IOException {
         if (isOutputShutdown()) {
@@ -730,11 +774,11 @@ public class Socket {
     }
 
     /**
-     * Check if the socket is closed, and throw an exception. Otherwise create
-     * the underlying SocketImpl.
+     * Checks whether the socket is closed, and throws an exception. Otherwise
+     * creates the underlying SocketImpl.
      * 
      * @throws SocketException
-     *             if the socket is closed
+     *             if the socket is closed.
      */
     private void checkClosedAndCreate(boolean create) throws SocketException {
         if (isClosed()) {
@@ -771,12 +815,12 @@ public class Socket {
     }
 
     /**
-     * Answer the local SocketAddress for this socket, or null if the socket is
-     * not bound.
-     * <p>
-     * This is useful on multihomed hosts.
+     * Gets the local address and port of this socket as a SocketAddress or
+     * {@code null} if the socket is unbound. This is useful on multihomed
+     * hosts.
      * 
-     * @return the local socket address
+     * @return the bound local socket address and port.
+     * @since Android 1.0
      */
     public SocketAddress getLocalSocketAddress() {
         if (!isBound()) {
@@ -786,10 +830,11 @@ public class Socket {
     }
 
     /**
-     * Answer the remote SocketAddress for this socket, or null if the socket is
-     * not connected.
+     * Gets the remote address and port of this socket as a {@code
+     * SocketAddress} or {@code null} if the socket is not connected.
      * 
-     * @return the remote socket address
+     * @return the remote socket address and port.
+     * @since Android 1.0
      */
     public SocketAddress getRemoteSocketAddress() {
         if (!isConnected()) {
@@ -799,53 +844,57 @@ public class Socket {
     }
 
     /**
-     * Return if the socket is bound to a local address and port.
+     * Returns whether this socket is bound to a local address and port.
      * 
-     * @return <code>true</code> if the socket is bound to a local address,
-     *         <code>false</code> otherwise.
+     * @return {@code true} if the socket is bound to a local address, {@code
+     *         false} otherwise.
+     * @since Android 1.0
      */
     public boolean isBound() {
         return isBound;
     }
 
     /**
-     * Return if the socket is connected.
+     * Returns whether this socket is connected to a remote host.
      * 
-     * @return <code>true</code> if the socket is connected,
-     *         <code>false</code> otherwise.
+     * @return {@code true} if the socket is connected, {@code false} otherwise.
+     * @since Android 1.0
      */
     public boolean isConnected() {
         return isConnected;
     }
 
     /**
-     * Return if the socket is closed.
+     * Returns whether this socket is closed.
      * 
-     * @return <code>true</code> if the socket is closed, <code>false</code>
-     *         otherwise.
+     * @return {@code true} if the socket is closed, {@code false} otherwise.
+     * @since Android 1.0
      */
     public boolean isClosed() {
         return isClosed;
     }
 
     /**
-     * Bind the Socket to the nominated local host/port.
+     * Binds this socket to the given local host address and port specified by
+     * the SocketAddress {@code localAddr}. If {@code localAddr} is set to
+     * {@code null}, this socket will be bound to an available local address on
+     * any free port.
      * 
      * @param localAddr
-     *            the local machine address and port to bind on
-     * 
+     *            the specific address and port on the local machine to bind to.
      * @throws IllegalArgumentException
-     *             if the SocketAddress is not supported
+     *             if the given SocketAddress is invalid or not supported.
      * @throws IOException
-     *             if the socket is already bound, or a problem occurs during
-     *             the bind
+     *             if the socket is already bound or an error occurs while
+     *             binding.
+     * @since Android 1.0
      */
     public void bind(SocketAddress localAddr) throws IOException {
         checkClosedAndCreate(true);
         if (isBound()) {
             throw new BindException(Msg.getString("K0315")); //$NON-NLS-1$
         }
-        
+
         int port = 0;
         InetAddress addr = InetAddress.ANY;
         if (localAddr != null) {
@@ -873,37 +922,40 @@ public class Socket {
     }
 
     /**
-     * Connect the Socket to the host/port specified by the SocketAddress.
+     * Connects this socket to the given remote host address and port specified
+     * by the SocketAddress {@code remoteAddr}.
      * 
      * @param remoteAddr
-     *            the remote machine address and port to connect to
-     * 
+     *            the address and port of the remote host to connect to.
      * @throws IllegalArgumentException
-     *             if the SocketAddress is not supported
+     *             if the given SocketAddress is invalid or not supported.
      * @throws IOException
-     *             if the socket is already connected, or a problem occurs
-     *             during the connect
+     *             if the socket is already connected or an error occurs while
+     *             connecting.
+     * @since Android 1.0
      */
     public void connect(SocketAddress remoteAddr) throws IOException {
         connect(remoteAddr, 0);
     }
 
     /**
-     * Connect the Socket to the host/port specified by the SocketAddress with a
-     * specified timeout.
+     * Connects this socket to the given remote host address and port specified
+     * by the SocketAddress {@code remoteAddr} with the specified timeout. The
+     * connecting method will block until the connection is established or an
+     * error occurred.
      * 
      * @param remoteAddr
-     *            the remote machine address and port to connect to
+     *            the address and port of the remote host to connect to.
      * @param timeout
-     *            the millisecond timeout value, the connect will block
-     *            indefinitely for a zero value.
-     * 
+     *            the timeout value in milliseconds or {@code 0} for an infinite
+     *            timeout.
      * @throws IllegalArgumentException
-     *             if the timeout is negative, or the SocketAddress is not
-     *             supported
+     *             if the given SocketAddress is invalid or not supported or the
+     *             timeout value is negative.
      * @throws IOException
-     *             if the socket is already connected, or a problem occurs
-     *             during the connect
+     *             if the socket is already connected or an error occurs while
+     *             connecting.
+     * @since Android 1.0
      */
     public void connect(SocketAddress remoteAddr, int timeout)
             throws IOException {
@@ -952,33 +1004,38 @@ public class Socket {
     }
 
     /**
-     * Return if {@link #shutdownInput} has been called.
+     * Returns whether the incoming channel of the socket has already been
+     * closed.
      * 
-     * @return <code>true</code> if <code>shutdownInput</code> has been
-     *         called, <code>false</code> otherwise.
+     * @return {@code true} if reading from this socket is not possible anymore,
+     *         {@code false} otherwise.
+     * @since Android 1.0
      */
     public boolean isInputShutdown() {
         return isInputShutdown;
     }
 
     /**
-     * Return if {@link #shutdownOutput} has been called.
+     * Returns whether the outgoing channel of the socket has already been 
+     * closed.
      * 
-     * @return <code>true</code> if <code>shutdownOutput</code> has been
-     *         called, <code>false</code> otherwise.
+     * @return {@code true} if writing to this socket is not possible anymore,
+     *         {@code false} otherwise.
+     * @since Android 1.0
      */
     public boolean isOutputShutdown() {
         return isOutputShutdown;
     }
 
     /**
-     * Set the SO_REUSEADDR socket option.
+     * Sets the state of the {@code SocketOptions.SO_REUSEADDR} for this socket.
      * 
      * @param reuse
-     *            the socket SO_REUSEADDR option setting
-     * 
+     *            the state whether this option is enabled or not.
      * @throws SocketException
-     *             if the socket is closed or the option is invalid.
+     *             if an error occurs while setting the option.
+     * @see SocketOptions#SO_REUSEADDR
+     * @since Android 1.0
      */
     public void setReuseAddress(boolean reuse) throws SocketException {
         checkClosedAndCreate(true);
@@ -987,13 +1044,14 @@ public class Socket {
     }
 
     /**
-     * Get the state of the SO_REUSEADDR socket option.
+     * Gets the setting of the socket option {@code SocketOptions.SO_REUSEADDR}.
      * 
-     * @return <code>true</code> if the SO_REUSEADDR is enabled,
-     *         <code>false</code> otherwise.
-     * 
+     * @return {@code true} if the {@code SocketOptions.SO_REUSEADDR} is
+     *         enabled, {@code false} otherwise.
      * @throws SocketException
-     *             if the socket is closed or the option is invalid.
+     *             if an error occurs while reading the socket option.
+     * @see SocketOptions#SO_REUSEADDR
+     * @since Android 1.0
      */
     public boolean getReuseAddress() throws SocketException {
         checkClosedAndCreate(true);
@@ -1002,14 +1060,16 @@ public class Socket {
     }
 
     /**
-     * Set the SO_OOBINLINE socket option. When this option is enabled, out of
-     * band data is recieved in the normal data stream.
+     * Sets the state of the {@code SocketOptions.SO_OOBINLINE} for this socket.
+     * When this option is enabled urgent data can be received in-line with
+     * normal data.
      * 
      * @param oobinline
-     *            the socket SO_OOBINLINE option setting
-     * 
+     *            whether this option is enabled or not.
      * @throws SocketException
-     *             if the socket is closed or the option is invalid.
+     *             if an error occurs while setting the option.
+     * @see SocketOptions#SO_OOBINLINE
+     * @since Android 1.0
      */
     public void setOOBInline(boolean oobinline) throws SocketException {
         checkClosedAndCreate(true);
@@ -1018,13 +1078,14 @@ public class Socket {
     }
 
     /**
-     * Get the state of the SO_OOBINLINE socket option.
+     * Gets the setting of the socket option {@code SocketOptions.SO_OOBINLINE}.
      * 
-     * @return <code>true</code> if the SO_OOBINLINE is enabled,
-     *         <code>false</code> otherwise.
-     * 
+     * @return {@code true} if the {@code SocketOptions.SO_OOBINLINE} is
+     *         enabled, {@code false} otherwise.
      * @throws SocketException
-     *             if the socket is closed or the option is invalid.
+     *             if an error occurs while reading the socket option.
+     * @see SocketOptions#SO_OOBINLINE
+     * @since Android 1.0
      */
     public boolean getOOBInline() throws SocketException {
         checkClosedAndCreate(true);
@@ -1033,13 +1094,17 @@ public class Socket {
     }
 
     /**
-     * Set the IP_TOS socket option.
+     * Sets the value of the {@code SocketOptions.IP_TOS} for this socket. See
+     * the specification RFC 1349 for more information about the type of service
+     * field.
      * 
      * @param value
-     *            the socket IP_TOS setting
-     * 
+     *            the value to be set for this option with a valid range of
+     *            {@code 0-255}.
      * @throws SocketException
-     *             if the socket is closed or the option is invalid.
+     *             if an error occurs while setting the option.
+     * @see SocketOptions#IP_TOS
+     * @since Android 1.0
      */
     public void setTrafficClass(int value) throws SocketException {
         checkClosedAndCreate(true);
@@ -1050,12 +1115,13 @@ public class Socket {
     }
 
     /**
-     * Get the IP_TOS socket option.
+     * Gets the value of the socket option {@code SocketOptions.IP_TOS}.
      * 
-     * @return the IP_TOS socket option value
-     * 
+     * @return the value which represents the type of service.
      * @throws SocketException
-     *             if the option is invalid
+     *             if an error occurs while reading the socket option.
+     * @see SocketOptions#IP_TOS
+     * @since Android 1.0
      */
     public int getTrafficClass() throws SocketException {
         checkClosedAndCreate(true);
@@ -1063,13 +1129,14 @@ public class Socket {
     }
 
     /**
-     * Send the single byte of urgent data on the socket.
+     * Sends the given single byte data which is represented by the lowest octet
+     * of {@code value} as "TCP urgent data".
      * 
      * @param value
-     *            the byte of urgent data
-     * 
-     * @exception IOException
-     *                when an error occurs sending urgent data
+     *            the byte of urgent data to be sent.
+     * @throws IOException
+     *             if an error occurs while sending urgent data.
+     * @since Android 1.0
      */
     public void sendUrgentData(int value) throws IOException {
         if (!impl.supportsUrgentData()) {
@@ -1079,7 +1146,8 @@ public class Socket {
     }
 
     /**
-     * Set the appropriate flags for a Socket created by ServerSocket.accept().
+     * Set the appropriate flags for a socket created by {@code
+     * ServerSocket.accept()}.
      * 
      * @see ServerSocket#implAccept
      */
@@ -1094,28 +1162,34 @@ public class Socket {
     }
 
     /**
-     * if Socket is created by a SocketChannel, returns the related
-     * SocketChannel
+     * Gets the SocketChannel of this socket, if one is available. The current
+     * implementation of this method returns always {@code null}.
      * 
-     * @return the related SocketChannel
+     * @return the related SocketChannel or {@code null} if no channel exists.
+     * @since Android 1.0
      */
     public SocketChannel getChannel() {
         return null;
     }
 
     /**
-     * sets performance preference for connectionTime,latency and bandwidth
+     * Sets performance preferences for connectionTime, latency and bandwidth.
+     * <p>
+     * This method does currently nothing.
+     * </p>
      * 
      * @param connectionTime
-     *            the importance of connect time
+     *            the value representing the importance of a short connecting
+     *            time.
      * @param latency
-     *            the importance of latency
+     *            the value representing the importance of low latency.
      * @param bandwidth
-     *            the importance of bandwidth
+     *            the value representing the importance of high bandwidth.
+     * @since Android 1.0
      */
     public void setPerformancePreferences(int connectionTime, int latency,
             int bandwidth) {
-        // Our socket implementation only provides one protocol: TCP/IP, so
+        // Our socket implementation only provide one protocol: TCP/IP, so
         // we do nothing for this method
     }
 }

@@ -1,91 +1,28 @@
-/*
- * Redefine what used to be local variable accesses into MterpGlue struct
- * references.  (These are undefined down in "footer.c".)
- */
-#define retval                  glue->retval
-#define pc                      glue->pc
-#define fp                      glue->fp
-#define method                  glue->method
-#define methodClassDex          glue->methodClassDex
-#define self                    glue->self
-//#define entryPoint              glue->entryPoint
-#define debugTrackedRefStart    glue->debugTrackedRefStart
-
-
-/*
- * Replace the opcode definition macros.  Here, each opcode is a separate
- * function that takes a "glue" argument and returns void.  We can't declare
- * these "static" because they may be called from an assembly stub.
- */
-#undef HANDLE_OPCODE
-#undef OP_END
-#undef FINISH
-
-#define HANDLE_OPCODE(_op)                                                  \
-    void dvmMterp_##_op(MterpGlue* glue) {                                  \
-        u2 ref, vsrc1, vsrc2, vdst;                                         \
-        u2 inst = FETCH(0);
-
-#define OP_END }
-
-/*
- * Like standard FINISH, but don't reload "inst", and return to caller
- * when done.
- */
-#define FINISH(_offset) {                                                   \
-        ADJUST_PC(_offset);                                                 \
-        CHECK_DEBUG_AND_PROF();                                             \
-        CHECK_TRACKED_REFS();                                               \
-        return;                                                             \
-    }
-
-
-/*
- * The "goto label" statements turn into function calls followed by
- * return statements.  Some of the functions take arguments.
- */
-#define GOTO(_target, ...)                                                  \
-    do {                                                                    \
-        dvmMterp_##_target(glue, ## __VA_ARGS__);                           \
-        return;                                                             \
-    } while(false)
-
-/*
- * As a special case, "goto bail" turns into a longjmp.  "_switch" should be
- * "true" if we need to switch to the other interpreter upon our return.
- */
-#define GOTO_BAIL(_switch)                                                  \
-    dvmMterpStdBail(glue, _switch);
-
-/* for now, mterp is always a "standard" interpreter */
-#define INTERP_TYPE INTERP_STD
-
-/*
- * Periodic checks macro, slightly modified.
- */
-#define PERIODIC_CHECKS(_entryPoint, _pcadj) {                              \
-        dvmCheckSuspendQuick(self);                                         \
-        if (NEED_INTERP_SWITCH(INTERP_TYPE)) {                              \
-            ADJUST_PC(_pcadj);                                              \
-            glue->entryPoint = _entryPoint;                                 \
-            LOGVV("threadid=%d: switch to STD ep=%d adj=%d\n",              \
-                glue->self->threadId, (_entryPoint), (_pcadj));             \
-            GOTO_BAIL(true);                                                \
-        }                                                                   \
-    }
-
+/* forward declarations of goto targets */
+GOTO_TARGET_DECL(filledNewArray, bool methodCallRange);
+GOTO_TARGET_DECL(invokeVirtual, bool methodCallRange);
+GOTO_TARGET_DECL(invokeSuper, bool methodCallRange);
+GOTO_TARGET_DECL(invokeInterface, bool methodCallRange);
+GOTO_TARGET_DECL(invokeDirect, bool methodCallRange);
+GOTO_TARGET_DECL(invokeStatic, bool methodCallRange);
+GOTO_TARGET_DECL(invokeVirtualQuick, bool methodCallRange);
+GOTO_TARGET_DECL(invokeSuperQuick, bool methodCallRange);
+GOTO_TARGET_DECL(invokeMethod, bool methodCallRange, const Method* methodToCall,
+    u2 count, u2 regs);
+GOTO_TARGET_DECL(returnFromMethod);
+GOTO_TARGET_DECL(exceptionThrown);
 
 /*
  * ===========================================================================
  *
- * What follows are the "common" opcode definitions copied & pasted from the
- * basic interpreter.  The only changes that need to be made to the original
- * sources are:
- *  - replace "goto exceptionThrown" with "GOTO(exceptionThrown)"
+ * What follows are opcode definitions shared between multiple opcodes with
+ * minor substitutions handled by the C pre-processor.  These should probably
+ * use the mterp substitution mechanism instead, with the code here moved
+ * into common fragment files (like the asm "binop.S"), although it's hard
+ * to give up the C preprocessor in favor of the much simpler text subst.
  *
  * ===========================================================================
  */
-
 
 #define HANDLE_NUMCONV(_opcode, _opname, _fromtype, _totype)                \
     HANDLE_OPCODE(_opcode /*vA, vB*/)                                       \
@@ -206,16 +143,30 @@
         vsrc1 = srcRegs & 0xff;                                             \
         vsrc2 = srcRegs >> 8;                                               \
         ILOGV("|%s-int v%d,v%d", (_opname), vdst, vsrc1);                   \
-        if (_chkdiv) {                                                      \
-            if (GET_REGISTER(vsrc2) == 0) {                                 \
+        if (_chkdiv != 0) {                                                 \
+            s4 firstVal, secondVal, result;                                 \
+            firstVal = GET_REGISTER(vsrc1);                                 \
+            secondVal = GET_REGISTER(vsrc2);                                \
+            if (secondVal == 0) {                                           \
                 EXPORT_PC();                                                \
                 dvmThrowException("Ljava/lang/ArithmeticException;",        \
                     "divide by zero");                                      \
-                GOTO(exceptionThrown);                                      \
+                GOTO_exceptionThrown();                                     \
             }                                                               \
+            if ((u4)firstVal == 0x80000000 && secondVal == -1) {            \
+                if (_chkdiv == 1)                                           \
+                    result = firstVal;  /* division */                      \
+                else                                                        \
+                    result = 0;         /* remainder */                     \
+            } else {                                                        \
+                result = firstVal _op secondVal;                            \
+            }                                                               \
+            SET_REGISTER(vdst, result);                                     \
+        } else {                                                            \
+            /* non-div/rem case */                                          \
+            SET_REGISTER(vdst,                                              \
+                (s4) GET_REGISTER(vsrc1) _op (s4) GET_REGISTER(vsrc2));     \
         }                                                                   \
-        SET_REGISTER(vdst,                                                  \
-            (s4) GET_REGISTER(vsrc1) _op (s4) GET_REGISTER(vsrc2));         \
     }                                                                       \
     FINISH(2);
 
@@ -233,23 +184,36 @@
     }                                                                       \
     FINISH(2);
 
-#define HANDLE_OP_X_INT_LIT16(_opcode, _opname, _cast, _op, _chkdiv)        \
+#define HANDLE_OP_X_INT_LIT16(_opcode, _opname, _op, _chkdiv)               \
     HANDLE_OPCODE(_opcode /*vA, vB, #+CCCC*/)                               \
         vdst = INST_A(inst);                                                \
         vsrc1 = INST_B(inst);                                               \
         vsrc2 = FETCH(1);                                                   \
         ILOGV("|%s-int/lit16 v%d,v%d,#+0x%04x",                             \
             (_opname), vdst, vsrc1, vsrc2);                                 \
-        if (_chkdiv) {                                                      \
+        if (_chkdiv != 0) {                                                 \
+            s4 firstVal, result;                                            \
+            firstVal = GET_REGISTER(vsrc1);                                 \
             if ((s2) vsrc2 == 0) {                                          \
                 EXPORT_PC();                                                \
                 dvmThrowException("Ljava/lang/ArithmeticException;",        \
                     "divide by zero");                                      \
-                GOTO(exceptionThrown);                                      \
+                GOTO_exceptionThrown();                                      \
             }                                                               \
+            if ((u4)firstVal == 0x80000000 && ((s2) vsrc2) == -1) {         \
+                /* won't generate /lit16 instr for this; check anyway */    \
+                if (_chkdiv == 1)                                           \
+                    result = firstVal;  /* division */                      \
+                else                                                        \
+                    result = 0;         /* remainder */                     \
+            } else {                                                        \
+                result = firstVal _op (s2) vsrc2;                           \
+            }                                                               \
+            SET_REGISTER(vdst, result);                                     \
+        } else {                                                            \
+            /* non-div/rem case */                                          \
+            SET_REGISTER(vdst, GET_REGISTER(vsrc1) _op (s2) vsrc2);         \
         }                                                                   \
-        SET_REGISTER(vdst,                                                  \
-            _cast GET_REGISTER(vsrc1) _op (s2) vsrc2);                      \
         FINISH(2);
 
 #define HANDLE_OP_X_INT_LIT8(_opcode, _opname, _op, _chkdiv)                \
@@ -262,16 +226,28 @@
         vsrc2 = litInfo >> 8;       /* constant */                          \
         ILOGV("|%s-int/lit8 v%d,v%d,#+0x%02x",                              \
             (_opname), vdst, vsrc1, vsrc2);                                 \
-        if (_chkdiv) {                                                      \
+        if (_chkdiv != 0) {                                                 \
+            s4 firstVal, result;                                            \
+            firstVal = GET_REGISTER(vsrc1);                                 \
             if ((s1) vsrc2 == 0) {                                          \
                 EXPORT_PC();                                                \
                 dvmThrowException("Ljava/lang/ArithmeticException;",        \
                     "divide by zero");                                      \
-                GOTO(exceptionThrown);                                      \
+                GOTO_exceptionThrown();                                     \
             }                                                               \
+            if ((u4)firstVal == 0x80000000 && ((s1) vsrc2) == -1) {         \
+                if (_chkdiv == 1)                                           \
+                    result = firstVal;  /* division */                      \
+                else                                                        \
+                    result = 0;         /* remainder */                     \
+            } else {                                                        \
+                result = firstVal _op ((s1) vsrc2);                         \
+            }                                                               \
+            SET_REGISTER(vdst, result);                                     \
+        } else {                                                            \
+            SET_REGISTER(vdst,                                              \
+                (s4) GET_REGISTER(vsrc1) _op (s1) vsrc2);                   \
         }                                                                   \
-        SET_REGISTER(vdst,                                                  \
-            (s4) GET_REGISTER(vsrc1) _op (s1) vsrc2);                       \
     }                                                                       \
     FINISH(2);
 
@@ -295,16 +271,29 @@
         vdst = INST_A(inst);                                                \
         vsrc1 = INST_B(inst);                                               \
         ILOGV("|%s-int-2addr v%d,v%d", (_opname), vdst, vsrc1);             \
-        if (_chkdiv) {                                                      \
-            if (GET_REGISTER(vsrc1) == 0) {                                 \
+        if (_chkdiv != 0) {                                                 \
+            s4 firstVal, secondVal, result;                                 \
+            firstVal = GET_REGISTER(vdst);                                  \
+            secondVal = GET_REGISTER(vsrc1);                                \
+            if (secondVal == 0) {                                           \
                 EXPORT_PC();                                                \
                 dvmThrowException("Ljava/lang/ArithmeticException;",        \
                     "divide by zero");                                      \
-                GOTO(exceptionThrown);                                      \
+                GOTO_exceptionThrown();                                     \
             }                                                               \
+            if ((u4)firstVal == 0x80000000 && secondVal == -1) {            \
+                if (_chkdiv == 1)                                           \
+                    result = firstVal;  /* division */                      \
+                else                                                        \
+                    result = 0;         /* remainder */                     \
+            } else {                                                        \
+                result = firstVal _op secondVal;                            \
+            }                                                               \
+            SET_REGISTER(vdst, result);                                     \
+        } else {                                                            \
+            SET_REGISTER(vdst,                                              \
+                (s4) GET_REGISTER(vdst) _op (s4) GET_REGISTER(vsrc1));      \
         }                                                                   \
-        SET_REGISTER(vdst,                                                  \
-            (s4) GET_REGISTER(vdst) _op (s4) GET_REGISTER(vsrc1));          \
         FINISH(1);
 
 #define HANDLE_OP_SHX_INT_2ADDR(_opcode, _opname, _cast, _op)               \
@@ -325,16 +314,31 @@
         vsrc1 = srcRegs & 0xff;                                             \
         vsrc2 = srcRegs >> 8;                                               \
         ILOGV("|%s-long v%d,v%d,v%d", (_opname), vdst, vsrc1, vsrc2);       \
-        if (_chkdiv) {                                                      \
-            if (GET_REGISTER_WIDE(vsrc2) == 0) {                            \
+        if (_chkdiv != 0) {                                                 \
+            s8 firstVal, secondVal, result;                                 \
+            firstVal = GET_REGISTER_WIDE(vsrc1);                            \
+            secondVal = GET_REGISTER_WIDE(vsrc2);                           \
+            if (secondVal == 0LL) {                                         \
                 EXPORT_PC();                                                \
                 dvmThrowException("Ljava/lang/ArithmeticException;",        \
                     "divide by zero");                                      \
-                GOTO(exceptionThrown);                                      \
+                GOTO_exceptionThrown();                                     \
             }                                                               \
+            if ((u8)firstVal == 0x8000000000000000ULL &&                    \
+                secondVal == -1LL)                                          \
+            {                                                               \
+                if (_chkdiv == 1)                                           \
+                    result = firstVal;  /* division */                      \
+                else                                                        \
+                    result = 0;         /* remainder */                     \
+            } else {                                                        \
+                result = firstVal _op secondVal;                            \
+            }                                                               \
+            SET_REGISTER_WIDE(vdst, result);                                \
+        } else {                                                            \
+            SET_REGISTER_WIDE(vdst,                                         \
+                (s8) GET_REGISTER_WIDE(vsrc1) _op (s8) GET_REGISTER_WIDE(vsrc2)); \
         }                                                                   \
-        SET_REGISTER_WIDE(vdst,                                             \
-            (s8) GET_REGISTER_WIDE(vsrc1) _op (s8) GET_REGISTER_WIDE(vsrc2)); \
     }                                                                       \
     FINISH(2);
 
@@ -357,16 +361,31 @@
         vdst = INST_A(inst);                                                \
         vsrc1 = INST_B(inst);                                               \
         ILOGV("|%s-long-2addr v%d,v%d", (_opname), vdst, vsrc1);            \
-        if (_chkdiv) {                                                      \
-            if (GET_REGISTER_WIDE(vsrc1) == 0) {                            \
+        if (_chkdiv != 0) {                                                 \
+            s8 firstVal, secondVal, result;                                 \
+            firstVal = GET_REGISTER_WIDE(vdst);                             \
+            secondVal = GET_REGISTER_WIDE(vsrc1);                           \
+            if (secondVal == 0LL) {                                         \
                 EXPORT_PC();                                                \
                 dvmThrowException("Ljava/lang/ArithmeticException;",        \
                     "divide by zero");                                      \
-                GOTO(exceptionThrown);                                      \
+                GOTO_exceptionThrown();                                     \
             }                                                               \
+            if ((u8)firstVal == 0x8000000000000000ULL &&                    \
+                secondVal == -1LL)                                          \
+            {                                                               \
+                if (_chkdiv == 1)                                           \
+                    result = firstVal;  /* division */                      \
+                else                                                        \
+                    result = 0;         /* remainder */                     \
+            } else {                                                        \
+                result = firstVal _op secondVal;                            \
+            }                                                               \
+            SET_REGISTER_WIDE(vdst, result);                                \
+        } else {                                                            \
+            SET_REGISTER_WIDE(vdst,                                         \
+                (s8) GET_REGISTER_WIDE(vdst) _op (s8)GET_REGISTER_WIDE(vsrc1));\
         }                                                                   \
-        SET_REGISTER_WIDE(vdst,                                             \
-            (s8) GET_REGISTER_WIDE(vdst) _op (s8)GET_REGISTER_WIDE(vsrc1)); \
         FINISH(1);
 
 #define HANDLE_OP_SHX_LONG_2ADDR(_opcode, _opname, _cast, _op)              \
@@ -437,13 +456,13 @@
         ILOGV("|aget%s v%d,v%d,v%d", (_opname), vdst, vsrc1, vsrc2);        \
         arrayObj = (ArrayObject*) GET_REGISTER(vsrc1);                      \
         if (!checkForNull((Object*) arrayObj))                              \
-            GOTO(exceptionThrown);                                          \
+            GOTO_exceptionThrown();                                         \
         if (GET_REGISTER(vsrc2) >= arrayObj->length) {                      \
             LOGV("Invalid array access: %p %d (len=%d)\n",                  \
                 arrayObj, vsrc2, arrayObj->length);                         \
             dvmThrowException("Ljava/lang/ArrayIndexOutOfBoundsException;", \
                 NULL);                                                      \
-            GOTO(exceptionThrown);                                          \
+            GOTO_exceptionThrown();                                         \
         }                                                                   \
         SET_REGISTER##_regsize(vdst,                                        \
             ((_type*) arrayObj->contents)[GET_REGISTER(vsrc2)]);            \
@@ -464,11 +483,11 @@
         ILOGV("|aput%s v%d,v%d,v%d", (_opname), vdst, vsrc1, vsrc2);        \
         arrayObj = (ArrayObject*) GET_REGISTER(vsrc1);                      \
         if (!checkForNull((Object*) arrayObj))                              \
-            GOTO(exceptionThrown);                                          \
+            GOTO_exceptionThrown();                                         \
         if (GET_REGISTER(vsrc2) >= arrayObj->length) {                      \
             dvmThrowException("Ljava/lang/ArrayIndexOutOfBoundsException;", \
                 NULL);                                                      \
-            GOTO(exceptionThrown);                                          \
+            GOTO_exceptionThrown();                                         \
         }                                                                   \
         ILOGV("+ APUT[%d]=0x%08x", GET_REGISTER(vsrc2), GET_REGISTER(vdst));\
         ((_type*) arrayObj->contents)[GET_REGISTER(vsrc2)] =                \
@@ -505,12 +524,12 @@
         ILOGV("|iget%s v%d,v%d,field@0x%04x", (_opname), vdst, vsrc1, ref); \
         obj = (Object*) GET_REGISTER(vsrc1);                                \
         if (!checkForNull(obj))                                             \
-            GOTO(exceptionThrown);                                          \
+            GOTO_exceptionThrown();                                         \
         ifield = (InstField*) dvmDexGetResolvedField(methodClassDex, ref);  \
         if (ifield == NULL) {                                               \
-            ifield = dvmResolveInstField(method->clazz, ref);               \
+            ifield = dvmResolveInstField(curMethod->clazz, ref);            \
             if (ifield == NULL)                                             \
-                GOTO(exceptionThrown);                                      \
+                GOTO_exceptionThrown();                                     \
         }                                                                   \
         SET_REGISTER##_regsize(vdst,                                        \
             dvmGetField##_ftype(obj, ifield->byteOffset));                  \
@@ -531,7 +550,7 @@
             (_opname), vdst, vsrc1, ref);                                   \
         obj = (Object*) GET_REGISTER(vsrc1);                                \
         if (!checkForNullExportPC(obj, fp, pc))                             \
-            GOTO(exceptionThrown);                                          \
+            GOTO_exceptionThrown();                                         \
         SET_REGISTER##_regsize(vdst, dvmGetField##_ftype(obj, ref));        \
         ILOGV("+ IGETQ %d=0x%08llx", ref,                                   \
             (u8) GET_REGISTER##_regsize(vdst));                             \
@@ -550,12 +569,12 @@
         ILOGV("|iput%s v%d,v%d,field@0x%04x", (_opname), vdst, vsrc1, ref); \
         obj = (Object*) GET_REGISTER(vsrc1);                                \
         if (!checkForNull(obj))                                             \
-            GOTO(exceptionThrown);                                          \
+            GOTO_exceptionThrown();                                         \
         ifield = (InstField*) dvmDexGetResolvedField(methodClassDex, ref);  \
         if (ifield == NULL) {                                               \
-            ifield = dvmResolveInstField(method->clazz, ref);               \
+            ifield = dvmResolveInstField(curMethod->clazz, ref);            \
             if (ifield == NULL)                                             \
-                GOTO(exceptionThrown);                                      \
+                GOTO_exceptionThrown();                                     \
         }                                                                   \
         dvmSetField##_ftype(obj, ifield->byteOffset,                        \
             GET_REGISTER##_regsize(vdst));                                  \
@@ -576,7 +595,7 @@
             (_opname), vdst, vsrc1, ref);                                   \
         obj = (Object*) GET_REGISTER(vsrc1);                                \
         if (!checkForNullExportPC(obj, fp, pc))                             \
-            GOTO(exceptionThrown);                                          \
+            GOTO_exceptionThrown();                                         \
         dvmSetField##_ftype(obj, ref, GET_REGISTER##_regsize(vdst));        \
         ILOGV("+ IPUTQ %d=0x%08llx", ref,                                   \
             (u8) GET_REGISTER##_regsize(vdst));                             \
@@ -593,9 +612,9 @@
         sfield = (StaticField*)dvmDexGetResolvedField(methodClassDex, ref); \
         if (sfield == NULL) {                                               \
             EXPORT_PC();                                                    \
-            sfield = dvmResolveStaticField(method->clazz, ref);             \
+            sfield = dvmResolveStaticField(curMethod->clazz, ref);          \
             if (sfield == NULL)                                             \
-                GOTO(exceptionThrown);                                      \
+                GOTO_exceptionThrown();                                     \
         }                                                                   \
         SET_REGISTER##_regsize(vdst, dvmGetStaticField##_ftype(sfield));    \
         ILOGV("+ SGET '%s'=0x%08llx",                                       \
@@ -614,9 +633,9 @@
         sfield = (StaticField*)dvmDexGetResolvedField(methodClassDex, ref); \
         if (sfield == NULL) {                                               \
             EXPORT_PC();                                                    \
-            sfield = dvmResolveStaticField(method->clazz, ref);             \
+            sfield = dvmResolveStaticField(curMethod->clazz, ref);          \
             if (sfield == NULL)                                             \
-                GOTO(exceptionThrown);                                      \
+                GOTO_exceptionThrown();                                     \
         }                                                                   \
         dvmSetStaticField##_ftype(sfield, GET_REGISTER##_regsize(vdst));    \
         ILOGV("+ SPUT '%s'=0x%08llx",                                       \

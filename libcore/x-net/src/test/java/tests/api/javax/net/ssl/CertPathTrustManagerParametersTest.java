@@ -17,6 +17,11 @@
 
 package tests.api.javax.net.ssl;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.security.cert.CertPathParameters;
 import javax.net.ssl.CertPathTrustManagerParameters;
 
@@ -27,38 +32,57 @@ import junit.framework.TestCase;
  * and methods.
  *  
  */
+@TestTargetClass(CertPathTrustManagerParameters.class) 
 public class CertPathTrustManagerParametersTest extends TestCase {
 
-	/**
-	 * @tests javax.net.ssl.CertPathTrustManagerParameters#
-	 *     CertPathTrustManagerParameters(java.security.cert.CertPathParameters)
-	 * Case 1: Try to construct object.
-	 * Case 2: Check NullPointerException.
-	 */
-	public void test_ConstructorLjava_security_cert_CertPathParameters() {
-		// case 1: Try to construct object.
-		try {
-	        CertPathParameters parameters = new MyCertPathParameters();
-	        CertPathTrustManagerParameters p =
-	        	new CertPathTrustManagerParameters(parameters);
-	        assertNotSame("Parameters were cloned incorrectly",
-	        		parameters, p.getParameters());
-		} catch (Exception e) {
-			fail("Unexpected exception " + e.toString());
-		}
-		
-		// case 2: Check NullPointerException.
-		try {
-			new CertPathTrustManagerParameters(null);
-			fail("Expected CertPathTrustManagerParameters was not thrown");
-		} catch (NullPointerException npe) {
-			// expected
-		}
-	}
-	
-	/**
-	 * @tests javax.net.ssl.CertPathTrustManagerParameters#getParameters()
-	 */
+    /**
+     * @tests javax.net.ssl.CertPathTrustManagerParameters#
+     *     CertPathTrustManagerParameters(java.security.cert.CertPathParameters)
+     * Case 1: Try to construct object.
+     * Case 2: Check NullPointerException.
+     */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "CertPathTrustManagerParameters",
+          methodArgs = {CertPathParameters.class}
+        )
+    })
+    public void test_ConstructorLjava_security_cert_CertPathParameters() {
+        // case 1: Try to construct object.
+        try {
+            CertPathParameters parameters = new MyCertPathParameters();
+            CertPathTrustManagerParameters p =
+                new CertPathTrustManagerParameters(parameters);
+            assertNotSame("Parameters were cloned incorrectly",
+                    parameters, p.getParameters());
+        } catch (Exception e) {
+            fail("Unexpected exception " + e.toString());
+        }
+        
+        // case 2: Check NullPointerException.
+        try {
+            new CertPathTrustManagerParameters(null);
+            fail("Expected CertPathTrustManagerParameters was not thrown");
+        } catch (NullPointerException npe) {
+            // expected
+        }
+    }
+    
+    /**
+     * @tests javax.net.ssl.CertPathTrustManagerParameters#getParameters()
+     */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getParameters",
+          methodArgs = {}
+        )
+    })
     public void test_getParameters() {
         CertPathParameters parameters = new MyCertPathParameters();
         CertPathTrustManagerParameters p = new CertPathTrustManagerParameters(
@@ -67,7 +91,7 @@ public class CertPathTrustManagerParametersTest extends TestCase {
             fail("incorrect parameters");
         }
         assertNotSame("Parameters were cloned incorrectly",
-        		parameters, p.getParameters());
+                parameters, p.getParameters());
     }
 }
 

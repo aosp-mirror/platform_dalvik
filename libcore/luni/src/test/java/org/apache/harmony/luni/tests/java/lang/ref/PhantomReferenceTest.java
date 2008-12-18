@@ -17,13 +17,19 @@
 
 package org.apache.harmony.luni.tests.java.lang.ref;
 
-import java.lang.ref.Reference;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.lang.ref.PhantomReference;
+import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
 
 //TODO: write a test to verify that the referent's finalize() happens
 //      before the PhantomReference is enqueued.
 
+@TestTargetClass(PhantomReference.class) 
 public class PhantomReferenceTest extends junit.framework.TestCase {
     static Boolean bool;
 
@@ -34,6 +40,15 @@ public class PhantomReferenceTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.ref.PhantomReference#get()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "get",
+          methodArgs = {}
+        )
+    })
     public void test_get() {
         ReferenceQueue rq = new ReferenceQueue();
         bool = new Boolean(false);
@@ -44,6 +59,15 @@ public class PhantomReferenceTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Runtime#gc()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Interaction test with Runtime.getRuntime().gc().",
+      targets = {
+        @TestTarget(
+          methodName = "PhantomReference",
+          methodArgs = {Object.class, java.lang.ref.ReferenceQueue.class}
+        )
+    })
     public void test_gcInteraction() {
         class TestPhantomReference<T> extends PhantomReference<T> {
             public TestPhantomReference(T referent,
@@ -100,6 +124,15 @@ public class PhantomReferenceTest extends junit.framework.TestCase {
      * @tests java.lang.ref.PhantomReference#PhantomReference(java.lang.Object,
      *        java.lang.ref.ReferenceQueue)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "PhantomReference",
+          methodArgs = {Object.class, java.lang.ref.ReferenceQueue.class}
+        )
+    })
     public void test_ConstructorLjava_lang_ObjectLjava_lang_ref_ReferenceQueue() {
         ReferenceQueue rq = new ReferenceQueue();
         bool = new Boolean(true);

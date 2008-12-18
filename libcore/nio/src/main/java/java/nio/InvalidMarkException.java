@@ -18,16 +18,19 @@ package java.nio;
 
 
 /**
- * A <code>InvalidMarkException</code> is thrown when <code>reset()</code>
- * is called on a buffer, but there is no mark set previously.
+ * An {@code InvalidMarkException} is thrown when {@code reset()} is called on a
+ * buffer, but no mark has been set previously.
  * 
+ * @since Android 1.0
  */
 public class InvalidMarkException extends IllegalStateException {
 
     private static final long serialVersionUID = 1698329710438510774L;
 
     /**
-     * Constructs an <code>InvalidMarkException</code>.
+     * Constructs an {@code InvalidMarkException}.
+     * 
+     * @since Android 1.0
      */
     public InvalidMarkException() {
         super();

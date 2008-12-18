@@ -70,6 +70,10 @@ not passed in, and JNI checks will be disabled.
 <p>To enable JNI checking:
 <pre>adb shell setprop dalvik.vm.checkjni true</pre>
 
+<p>You can also pass JNI-checking options into the VM through a system
+property.  The value set for <code>dalvik.vm.jniopts</code> will
+be passed in as the <code>-Xjniopts</code> argument.
+
 <p>For more information about JNI checks, see
 <a href="jni-tips.html">JNI Tips</a>.
 
@@ -206,7 +210,7 @@ hung process by sending a <code>kill -3</code> and examining the stack
 trace written to the log.
 
 <p>This only takes monitors into account.  Native mutexes and other resources
-can also be the cause of deadlocks.
+can also be the cause of deadlocks, but will not be detected by this.
 
 
 <h2><a name="stackdump">Stack Dumps</a></h2>

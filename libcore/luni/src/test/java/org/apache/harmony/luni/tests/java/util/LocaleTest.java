@@ -16,15 +16,30 @@
 
 package org.apache.harmony.luni.tests.java.util;
 
-import java.util.Locale;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
 
+import java.util.Locale;
+
+@TestTargetClass(Locale.class) 
 public class LocaleTest extends TestCase {
 
     /**
      * @tests java.util.Locale#getAvailableLocales()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getAvailableLocales",
+          methodArgs = {}
+        )
+    })
     public void test_getAvailableLocales() {
         Locale[] locales = Locale.getAvailableLocales();
         // Assumes that there will be a decent number of locales

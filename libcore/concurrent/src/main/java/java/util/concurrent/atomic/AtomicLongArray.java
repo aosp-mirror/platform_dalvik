@@ -22,7 +22,6 @@ public class AtomicLongArray implements java.io.Serializable {
     // BEGIN android-changed
     private static final Unsafe unsafe = UnsafeAccess.THE_ONE;
     // END android-changed
-
     private static final int base = unsafe.arrayBaseOffset(long[].class);
     private static final int scale = unsafe.arrayIndexScale(long[].class);
     private final long[] array;

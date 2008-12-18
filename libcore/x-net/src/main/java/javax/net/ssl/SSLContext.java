@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package javax.net.ssl;
 
 import java.security.KeyManagementException;
@@ -33,8 +28,10 @@ import org.apache.harmony.security.fortress.Engine;
 
 
 /**
- * @com.intel.drl.spec_ref
+ * The public API for secure socket protocol implementations. It acts as factory
+ * for {@code SSLSocketFactory}'s and {@code SSLEngine}s.
  * 
+ * @since Android 1.0
  */
 
 public class SSLContext {
@@ -53,9 +50,16 @@ public class SSLContext {
     // Storeused protocol
     private final String protocol;
 
-    /*
-     * @com.intel.drl.spec_ref
-     *  
+    /**
+     * Creates a new {@code SSLContext}.
+     * 
+     * @param contextSpi
+     *            the implementation delegate.
+     * @param provider
+     *            the provider.
+     * @param protocol
+     *            the protocol name.
+     * @since Android 1.0
      */
     protected SSLContext(SSLContextSpi contextSpi, Provider provider,
             String protocol) {
@@ -65,10 +69,17 @@ public class SSLContext {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code SSLContext} instance for the specified protocol.
      * 
-     * throws NullPointerException if protocol is null (instead of
-     * NoSuchAlgorithmException as in 1.4 release)
+     * @param protocol
+     *            the requested protocol to create a context for.
+     * @return the created {@code SSLContext} instance.
+     * @throws NoSuchAlgorithmException
+     *             if no installed provider can provide the requested protocol
+     * @throws NullPointerException
+     *             if {@code protocol} is {@code null} (instead of
+     *             NoSuchAlgorithmException as in 1.4 release)
+     * @since Android 1.0
      */
     public static SSLContext getInstance(String protocol)
             throws NoSuchAlgorithmException {
@@ -83,10 +94,23 @@ public class SSLContext {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code SSLContext} instance for the specified protocol from
+     * the specified provider.
      * 
-     * throws NullPointerException if protocol is null (instead of
-     * NoSuchAlgorithmException as in 1.4 release)
+     * @param protocol
+     *            the requested protocol to create a context for.
+     * @param provider
+     *            the name of the provider that provides the requested protocol.
+     * @return an {@code SSLContext} for the requested protocol.
+     * @throws NoSuchAlgorithmException
+     *             if the specified provider cannot provider the requested
+     *             protocol.
+     * @throws NoSuchProviderException
+     *             if the specified provider does not exits.
+     * @throws NullPointerException
+     *             if {@code protocol} is {@code null} (instead of
+     *             NoSuchAlgorithmException as in 1.4 release)
+     * @since Android 1.0
      */
     public static SSLContext getInstance(String protocol, String provider)
             throws NoSuchAlgorithmException, NoSuchProviderException {
@@ -104,10 +128,21 @@ public class SSLContext {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code SSLContext} instance for the specified protocol from
+     * the specified provider.
      * 
-     * throws NullPointerException if protocol is null (instead of
-     * NoSuchAlgorithmException as in 1.4 release)
+     * @param protocol
+     *            the requested protocol to create a context for
+     * @param provider
+     *            the provider that provides the requested protocol.
+     * @return an {@code SSLContext} for the requested protocol.
+     * @throws NoSuchAlgorithmException
+     *             if the specified provider cannot provide the requested
+     *             protocol.
+     * @throws NullPointerException
+     *             if {@code protocol} is {@code null} (instead of
+     *             NoSuchAlgorithmException as in 1.4 release)
+     * @since Android 1.0
      */
     public static SSLContext getInstance(String protocol, Provider provider)
             throws NoSuchAlgorithmException {
@@ -124,25 +159,39 @@ public class SSLContext {
     }
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Returns the name of the secure socket protocol of this instance.
+     * 
+     * @return the name of the secure socket protocol of this instance.
+     * @since Android 1.0
      */
     public final String getProtocol() {
         return protocol;
     }
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Returns the provider of this {@code SSLContext} instance.
+     * 
+     * @return the provider of this {@code SSLContext} instance.
+     * @since Android 1.0
      */
     public final Provider getProvider() {
         return provider;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Initializes this {@code SSLContext} instance. All of the arguments are
+     * optional, and the security providers will be searched for the required
+     * implementations of the needed algorithms.
      * 
-     * FIXME: check what exception will be thrown when parameters are null
+     * @param km
+     *            the key sources or {@code null}.
+     * @param tm
+     *            the trust decision sources or {@code null}.
+     * @param sr
+     *            the randomness source or {@code null.}
+     * @throws KeyManagementException
+     *             if initializing this instance fails.
+     * @since Android 1.0 
      */
     public final void init(KeyManager[] km, TrustManager[] tm, SecureRandom sr)
             throws KeyManagementException {
@@ -150,48 +199,75 @@ public class SSLContext {
     }
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Returns a socket factory for this instance.
+     * 
+     * @return a socket factory for this instance.
+     * @since Android 1.0
      */
     public final SSLSocketFactory getSocketFactory() {
         return spiImpl.engineGetSocketFactory();
     }
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Returns a server socket factory for this instance.
+     * 
+     * @return a server socket factory for this instance.
+     * @since Android 1.0
      */
     public final SSLServerSocketFactory getServerSocketFactory() {
         return spiImpl.engineGetServerSocketFactory();
     }
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Creates an {@code SSLEngine} instance from this context.
+     * 
+     * @return an {@code SSLEngine} instance from this context.
+     * @throws UnsupportedOperationException
+     *             if the provider does not support the operation.
+     * @since Android 1.0
      */
     public final SSLEngine createSSLEngine() {
         return spiImpl.engineCreateSSLEngine();
     }
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Creates an {@code SSLEngine} instance from this context with the
+     * specified hostname and port.
+     * 
+     * @param peerHost
+     *            the name of the host
+     * @param peerPort
+     *            the port
+     * @return an {@code SSLEngine} instance from this context.
+     * @throws UnsupportedOperationException
+     *             if the provider does not support the operation.
+     * @since Android 1.0
      */
     public final SSLEngine createSSLEngine(String peerHost, int peerPort) {
         return spiImpl.engineCreateSSLEngine(peerHost, peerPort);
     }
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Returns the SSL session context that encapsulates the set of SSL sessions
+     * that can be used for handshake of server-side SSL sockets.
+     * 
+     * @return the SSL server session context for this context or {@code null}
+     *         if the underlying provider does not provide an implementation of
+     *         the {@code SSLSessionContext} interface.
+     * @since Android 1.0
      */
     public final SSLSessionContext getServerSessionContext() {
         return spiImpl.engineGetServerSessionContext();
     }
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Returns the SSL session context that encapsulates the set of SSL sessions
+     * that can be used for handshake of client-side SSL sockets.
+     * 
+     * @return the SSL client session context for this context or {@code null}
+     *         if the underlying provider does not provide an implementation of
+     *         the {@code SSLSessionContext} interface.
+     * @since Android 1.0
      */
     public final SSLSessionContext getClientSessionContext() {
         return spiImpl.engineGetClientSessionContext();

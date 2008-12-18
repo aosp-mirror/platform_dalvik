@@ -17,6 +17,11 @@
 
 package tests.api.java.io;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass; 
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -28,6 +33,7 @@ import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Locale;
 
+@TestTargetClass(PrintStream.class) 
 public class PrintStreamTest extends junit.framework.TestCase {
 
     ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -42,45 +48,72 @@ public class PrintStreamTest extends junit.framework.TestCase {
     
     private static class MockPrintStream extends PrintStream {
 
-		public MockPrintStream(String fileName) throws FileNotFoundException {
-			super(fileName);
-		}
-		
-		public MockPrintStream(String fileName, String csn) throws FileNotFoundException, UnsupportedEncodingException {
-			super(fileName, csn);
-		}
-		
-		public MockPrintStream(OutputStream os) {
-			super(os);
-		}
-		
-		@Override
-		public void setError() {
-			super.setError();
-		}
+        public MockPrintStream(String fileName) throws FileNotFoundException {
+            super(fileName);
+        }
+        
+        public MockPrintStream(String fileName, String csn) throws FileNotFoundException, UnsupportedEncodingException {
+            super(fileName, csn);
+        }
+        
+        public MockPrintStream(OutputStream os) {
+            super(os);
+        }
+        
+        @Override
+        public void setError() {
+            super.setError();
+        }
     }
     
     /**
      * @tests {@link java.io.PrintStream#PrintStream(String)}
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "PrintStream",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_Constructor_Ljava_lang_String() throws IOException {
-    	MockPrintStream os = new MockPrintStream(testFilePath);
-    	assertNotNull(os);
-    	os.close();
-	}
+        MockPrintStream os = new MockPrintStream(testFilePath);
+        assertNotNull(os);
+        os.close();
+    }
     
     /**
      * @tests {@link java.io.PrintStream#PrintStream(String, String)}
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "PrintStream",
+          methodArgs = {java.lang.String.class, java.lang.String.class}
+        )
+    })
     public void test_Constructor_Ljava_lang_String_Ljava_lang_String() throws Exception {
-    	MockPrintStream os = new MockPrintStream(testFilePath, "utf-8");
-    	assertNotNull(os);
-    	os.close();
+        MockPrintStream os = new MockPrintStream(testFilePath, "utf-8");
+        assertNotNull(os);
+        os.close();
     }
 
     /**
      * @tests java.io.PrintStream#PrintStream(java.io.OutputStream)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "PrintStream",
+          methodArgs = {java.io.OutputStream.class}
+        )
+    })
     public void test_ConstructorLjava_io_OutputStream() throws Exception {
         // Test for method java.io.PrintStream(java.io.OutputStream)
         PrintStream os = new PrintStream(bos);
@@ -97,6 +130,15 @@ public class PrintStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintStream#PrintStream(java.io.OutputStream, boolean)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "PrintStream",
+          methodArgs = {java.io.OutputStream.class, boolean.class}
+        )
+    })
     public void test_ConstructorLjava_io_OutputStreamZ() {
         // Test for method java.io.PrintStream(java.io.OutputStream, boolean)
         PrintStream os = new PrintStream(bos);
@@ -109,6 +151,15 @@ public class PrintStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintStream#checkError()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "checkError",
+          methodArgs = {}
+        )
+    })
     public void test_checkError() throws Exception {
         // Test for method boolean java.io.PrintStream.checkError()
         PrintStream os = new PrintStream(new OutputStream() {
@@ -129,6 +180,15 @@ public class PrintStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintStream#close()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "close",
+          methodArgs = {}
+        )
+    })
     public void test_close() throws Exception {
         // Test for method void java.io.PrintStream.close()
         PrintStream os = new PrintStream(bos);
@@ -139,6 +199,15 @@ public class PrintStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintStream#flush()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "flush",
+          methodArgs = {}
+        )
+    })
     public void test_flush() throws Exception {
         // Test for method void java.io.PrintStream.flush()
         PrintStream os = new PrintStream(bos);
@@ -152,6 +221,15 @@ public class PrintStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintStream#print(char[])
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "print",
+          methodArgs = {char[].class}
+        )
+    })
     public void test_print$C() {
         // Test for method void java.io.PrintStream.print(char [])
         PrintStream os = new PrintStream(bos, true);
@@ -176,6 +254,15 @@ public class PrintStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintStream#print(char)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "print",
+          methodArgs = {char.class}
+        )
+    })
     public void test_printC() {
         // Test for method void java.io.PrintStream.print(char)
         PrintStream os = new PrintStream(bos, true);
@@ -187,6 +274,15 @@ public class PrintStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintStream#print(double)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "print",
+          methodArgs = {double.class}
+        )
+    })
     public void test_printD() {
         // Test for method void java.io.PrintStream.print(double)
         byte[] rbuf = new byte[100];
@@ -201,6 +297,15 @@ public class PrintStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintStream#print(float)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "print",
+          methodArgs = {float.class}
+        )
+    })
     public void test_printF() {
         // Test for method void java.io.PrintStream.print(float)
         PrintStream os = new PrintStream(bos, true);
@@ -217,6 +322,15 @@ public class PrintStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintStream#print(int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "print",
+          methodArgs = {int.class}
+        )
+    })
     public void test_printI() {
         // Test for method void java.io.PrintStream.print(int)
         PrintStream os = new PrintStream(bos, true);
@@ -231,6 +345,15 @@ public class PrintStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintStream#print(long)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "print",
+          methodArgs = {long.class}
+        )
+    })
     public void test_printJ() {
         // Test for method void java.io.PrintStream.print(long)
         byte[] rbuf = new byte[100];
@@ -246,6 +369,15 @@ public class PrintStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintStream#print(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "print",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_printLjava_lang_Object() throws Exception {
         // Test for method void java.io.PrintStream.print(java.lang.Object)
         PrintStream os = new PrintStream(bos, true);
@@ -273,6 +405,15 @@ public class PrintStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintStream#print(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "print",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_printLjava_lang_String() throws Exception {
         // Test for method void java.io.PrintStream.print(java.lang.String)
         PrintStream os = new PrintStream(bos, true);
@@ -300,6 +441,15 @@ public class PrintStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintStream#print(boolean)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "print",
+          methodArgs = {boolean.class}
+        )
+    })
     public void test_printZ() throws Exception {
         // Test for method void java.io.PrintStream.print(boolean)
         PrintStream os = new PrintStream(bos, true);
@@ -313,6 +463,15 @@ public class PrintStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintStream#println()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "println",
+          methodArgs = {}
+        )
+    })
     public void test_println() {
         // Test for method void java.io.PrintStream.println()
         char c;
@@ -326,6 +485,15 @@ public class PrintStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintStream#println(char[])
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "println",
+          methodArgs = {char[].class}
+        )
+    })
     public void test_println$C() {
         // Test for method void java.io.PrintStream.println(char [])
         PrintStream os = new PrintStream(bos, true);
@@ -355,6 +523,15 @@ public class PrintStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintStream#println(char)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "println",
+          methodArgs = {char.class}
+        )
+    })
     public void test_printlnC() {
         // Test for method void java.io.PrintStream.println(char)
         int c;
@@ -368,6 +545,15 @@ public class PrintStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintStream#println(double)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "println",
+          methodArgs = {double.class}
+        )
+    })
     public void test_printlnD() {
         // Test for method void java.io.PrintStream.println(double)
         int c;
@@ -384,6 +570,15 @@ public class PrintStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintStream#println(float)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "println",
+          methodArgs = {float.class}
+        )
+    })
     public void test_printlnF() {
         // Test for method void java.io.PrintStream.println(float)
         int c;
@@ -400,6 +595,15 @@ public class PrintStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintStream#println(int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "println",
+          methodArgs = {int.class}
+        )
+    })
     public void test_printlnI() {
         // Test for method void java.io.PrintStream.println(int)
         int c;
@@ -416,6 +620,15 @@ public class PrintStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintStream#println(long)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "println",
+          methodArgs = {long.class}
+        )
+    })
     public void test_printlnJ() {
         // Test for method void java.io.PrintStream.println(long)
         int c;
@@ -432,6 +645,15 @@ public class PrintStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintStream#println(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "println",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_printlnLjava_lang_Object() {
         // Test for method void java.io.PrintStream.println(java.lang.Object)
         char c;
@@ -448,6 +670,15 @@ public class PrintStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintStream#println(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "println",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_printlnLjava_lang_String() {
         // Test for method void java.io.PrintStream.println(java.lang.String)
         char c;
@@ -465,6 +696,15 @@ public class PrintStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintStream#println(boolean)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "println",
+          methodArgs = {boolean.class}
+        )
+    })
     public void test_printlnZ() {
         // Test for method void java.io.PrintStream.println(boolean)
         int c;
@@ -481,6 +721,15 @@ public class PrintStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintStream#write(byte[], int, int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "write",
+          methodArgs = {byte[].class, int.class, int.class}
+        )
+    })
     public void test_write$BII() {
         // Test for method void java.io.PrintStream.write(byte [], int, int)
         PrintStream os = new PrintStream(bos, true);
@@ -495,6 +744,15 @@ public class PrintStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintStream#write(int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "write",
+          methodArgs = {int.class}
+        )
+    })
     public void test_writeI() {
         // Test for method void java.io.PrintStream.write(int)
         PrintStream os = new PrintStream(bos, true);
@@ -506,6 +764,15 @@ public class PrintStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintStream#append(char)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "append",
+          methodArgs = {char.class}
+        )
+    })
     public void test_appendChar() throws IOException {
         char testChar = ' ';
         ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -519,6 +786,15 @@ public class PrintStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintStream#append(CharSequence)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "append",
+          methodArgs = {java.lang.CharSequence.class}
+        )
+    })
     public void test_appendCharSequence() {
         String testString = "My Test String";
         ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -532,6 +808,15 @@ public class PrintStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintStream#append(CharSequence, int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IndexOutOfBoundsException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "append",
+          methodArgs = {java.lang.CharSequence.class, int.class, int.class}
+        )
+    })
     public void test_appendCharSequenceIntInt() {
         String testString = "My Test String";
         ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -545,6 +830,15 @@ public class PrintStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintStream#format(java.lang.String, java.lang.Object...)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "format",
+          methodArgs = {java.lang.String.class, java.lang.Object[].class}
+        )
+    })
     public void test_formatLjava_lang_String$Ljava_lang_Object() {
         PrintStream os = new PrintStream(bos, false);
         os.format("%s %s", "Hello", "World");
@@ -561,6 +855,15 @@ public class PrintStreamTest extends junit.framework.TestCase {
      * @tests java.io.PrintStream#format(java.util.Locale, java.lang.String,
      *        java.lang.Object...)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "format",
+          methodArgs = {java.util.Locale.class, java.lang.String.class, java.lang.Object[].class}
+        )
+    })
     public void test_formatLjava_util_Locale_Ljava_lang_String_$Ljava_lang_Object() {
         PrintStream os = new PrintStream(bos, false);
         os.format(Locale.US, "%s %s", "Hello", "World");
@@ -575,6 +878,15 @@ public class PrintStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintStream#printf(java.lang.String, java.lang.Object...)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "printf",
+          methodArgs = {java.lang.String.class, java.lang.Object[].class}
+        )
+    })
     public void test_printfLjava_lang_String$Ljava_lang_Object() {
         PrintStream os = new PrintStream(bos, false);
         os.printf("%s %s", "Hello", "World");
@@ -590,6 +902,15 @@ public class PrintStreamTest extends junit.framework.TestCase {
      * @tests java.io.PrintStream#printf(java.util.Locale, java.lang.String,
      *        java.lang.Object...)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "printf",
+          methodArgs = {java.util.Locale.class, java.lang.String.class, java.lang.Object[].class}
+        )
+    })
     public void test_printfLjava_util_Locale_Ljava_lang_String_$Ljava_lang_Object() {
         PrintStream os = new PrintStream(bos, false);
         os.printf(Locale.US, "%s %s", "Hello", "World");
@@ -601,20 +922,20 @@ public class PrintStreamTest extends junit.framework.TestCase {
                 new String(rbytes));
     }
 
-	@Override
-	protected void setUp() throws Exception {		
-		super.setUp();
-		testFile = File.createTempFile("test", null);
-		testFilePath = testFile.getAbsolutePath();
-	}
+    @Override
+    protected void setUp() throws Exception {        
+        super.setUp();
+        testFile = File.createTempFile("test", null);
+        testFilePath = testFile.getAbsolutePath();
+    }
 
-	@Override
-	protected void tearDown() throws Exception {
-		testFile.delete();
-		testFile = null;
-		testFilePath = null;
-		super.tearDown();
-	}
+    @Override
+    protected void tearDown() throws Exception {
+        testFile.delete();
+        testFile = null;
+        testFilePath = null;
+        super.tearDown();
+    }
     
     
 }

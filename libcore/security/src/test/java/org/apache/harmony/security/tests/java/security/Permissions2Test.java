@@ -17,11 +17,17 @@
 
 package org.apache.harmony.security.tests.java.security;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.File;
 import java.io.FilePermission;
 import java.security.Permissions;
 import java.util.Enumeration;
 
+@TestTargetClass(Permissions.class)
 public class Permissions2Test extends junit.framework.TestCase {
     FilePermission readAllFiles = new FilePermission("<<ALL FILES>>", "read");
 
@@ -38,6 +44,15 @@ public class Permissions2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.Permissions#Permissions()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Permissions",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         // Test for method java.security.Permissions()
         new Permissions();
@@ -46,6 +61,16 @@ public class Permissions2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.Permissions#add(java.security.Permission)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verification of method with null parameter is missed." +
+                  "SecurityException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "add",
+          methodArgs = {java.security.Permission.class}
+        )
+    })
     public void test_addLjava_security_Permission() {
         // Test for method void
         // java.security.Permissions.add(java.security.Permission)
@@ -79,6 +104,15 @@ public class Permissions2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.Permissions#elements()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Case when no added elements is missed",
+      targets = {
+        @TestTarget(
+          methodName = "elements",
+          methodArgs = {}
+        )
+    })
     public void test_elements() {
         // Test for method java.util.Enumeration
         // java.security.Permissions.elements()
@@ -112,6 +146,15 @@ public class Permissions2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.Permissions#implies(java.security.Permission)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verification of method with null parameter is missed.",
+      targets = {
+        @TestTarget(
+          methodName = "implies",
+          methodArgs = {java.security.Permission.class}
+        )
+    })
     public void test_impliesLjava_security_Permission() {
         // Test for method boolean
         // java.security.Permissions.implies(java.security.Permission)

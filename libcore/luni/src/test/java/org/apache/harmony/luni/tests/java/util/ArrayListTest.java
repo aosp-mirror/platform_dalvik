@@ -1,11 +1,26 @@
 package org.apache.harmony.luni.tests.java.util;
 
-import java.util.ArrayList;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
 
+import java.util.ArrayList;
+
+@TestTargetClass(ArrayList.class) 
 public class ArrayListTest extends TestCase {
 
+     @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Regression test.",
+      targets = {
+        @TestTarget(
+          methodName = "add",
+          methodArgs = {Object.class}
+        )
+    })
     public void test_addAllCollectionOfQextendsE() {
         // Regression for HARMONY-539
         // https://issues.apache.org/jira/browse/HARMONY-539

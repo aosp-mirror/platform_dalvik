@@ -107,6 +107,10 @@ bool dvmExceptionStartup(void)
 {
     gDvm.classJavaLangThrowable =
         dvmFindSystemClassNoInit("Ljava/lang/Throwable;");
+    gDvm.classJavaLangRuntimeException =
+        dvmFindSystemClassNoInit("Ljava/lang/RuntimeException;");
+    gDvm.classJavaLangError =
+        dvmFindSystemClassNoInit("Ljava/lang/Error;");
     gDvm.classJavaLangStackTraceElement =
         dvmFindSystemClassNoInit("Ljava/lang/StackTraceElement;");
     gDvm.classJavaLangStackTraceElementArray =
@@ -380,7 +384,7 @@ static bool initException(Object* exception, const char* msg, Object* cause,
      *  (3) Throwable(String message, Throwable cause)  (added in 1.4)
      *  (4) Throwable(Throwable cause)                  (added in 1.4)
      *
-     * The first two are part of the original design, and all exception
+     * The first two are part of the original design, and most exception
      * classes should support them.  The third prototype was used by
      * individual exceptions. e.g. ClassNotFoundException added it in 1.2.
      * The general "cause" mechanism was added in 1.4.  Some classes,
@@ -398,6 +402,11 @@ static bool initException(Object* exception, const char* msg, Object* cause,
      * for "message" into Throwable(String, Throwable) is allowed, but we
      * prefer to use the Throwable-only version because it has different
      * behavior.
+     *
+     * java.lang.TypeNotPresentException is a strange case -- it has #3 but
+     * not #2.  (Some might argue that the constructor is actually not #3,
+     * because it doesn't take the message string as an argument, but it
+     * has the same effect and we can work with it here.)
      */
     if (cause == NULL) {
         if (msgStr == NULL) {
@@ -406,7 +415,15 @@ static bool initException(Object* exception, const char* msg, Object* cause,
         } else {
             initMethod = dvmFindDirectMethodByDescriptor(excepClass, "<init>",
                             "(Ljava/lang/String;)V");
-            initKind = kInitMsg;
+            if (initMethod != NULL) {
+                initKind = kInitMsg;
+            } else {
+                /* no #2, try #3 */
+                initMethod = dvmFindDirectMethodByDescriptor(excepClass, "<init>",
+                                "(Ljava/lang/String;Ljava/lang/Throwable;)V");
+                if (initMethod != NULL)
+                    initKind = kInitMsgThrow;
+            }
         }
     } else {
         if (msgStr == NULL) {
@@ -470,7 +487,7 @@ static bool initException(Object* exception, const char* msg, Object* cause,
         break;
     case kInitMsgThrow:
         LOGVV("+++ exc msg+throw");
-        assert(cause != NULL && !needInitCause);
+        assert(!needInitCause);
         dvmCallMethod(self, initMethod, exception, &unused, msgStr, cause);
         break;
     default:
@@ -538,6 +555,73 @@ void dvmClearOptException(Thread* self)
 {
     self->exception = NULL;
     gDvm.initExceptionCount = 0;
+}
+
+/*
+ * Returns "true" if this is a "checked" exception, i.e. it's a subclass
+ * of Throwable (assumed) but not a subclass of RuntimeException or Error.
+ */
+bool dvmIsCheckedException(const Object* exception)
+{
+    if (dvmInstanceof(exception->clazz, gDvm.classJavaLangError) ||
+        dvmInstanceof(exception->clazz, gDvm.classJavaLangRuntimeException))
+    {
+        return false;
+    } else {
+        return true;
+    }
+}
+
+/*
+ * Wrap the now-pending exception in a different exception.  This is useful
+ * for reflection stuff that wants to hand a checked exception back from a
+ * method that doesn't declare it.
+ *
+ * If something fails, an (unchecked) exception related to that failure
+ * will be pending instead.
+ */
+void dvmWrapException(const char* newExcepStr)
+{
+    Thread* self = dvmThreadSelf();
+    Object* origExcep;
+    ClassObject* iteClass;
+
+    origExcep = dvmGetException(self);
+    dvmAddTrackedAlloc(origExcep, self);    // don't let the GC free it
+
+    dvmClearException(self);                // clear before class lookup
+    iteClass = dvmFindSystemClass(newExcepStr);
+    if (iteClass != NULL) {
+        Object* iteExcep;
+        Method* initMethod;
+
+        iteExcep = dvmAllocObject(iteClass, ALLOC_DEFAULT);
+        if (iteExcep != NULL) {
+            initMethod = dvmFindDirectMethodByDescriptor(iteClass, "<init>",
+                            "(Ljava/lang/Throwable;)V");
+            if (initMethod != NULL) {
+                JValue unused;
+                dvmCallMethod(self, initMethod, iteExcep, &unused,
+                    origExcep);
+
+                /* if <init> succeeded, replace the old exception */
+                if (!dvmCheckException(self))
+                    dvmSetException(self, iteExcep);
+            }
+            dvmReleaseTrackedAlloc(iteExcep, NULL);
+
+            /* if initMethod doesn't exist, or failed... */
+            if (!dvmCheckException(self))
+                dvmSetException(self, origExcep);
+        } else {
+            /* leave OutOfMemoryError pending */
+        }
+    } else {
+        /* leave ClassNotFoundException pending */
+    }
+
+    assert(dvmCheckException(self));
+    dvmReleaseTrackedAlloc(origExcep, self);
 }
 
 /*
@@ -719,9 +803,11 @@ int dvmFindCatchBlock(Thread* self, int relPc, Object* exception,
          * them as we unroll.  Dalvik uses what amount to generated
          * "finally" blocks to take care of this for us.
          */
-        // if (!scanOnly) ...
 
-        TRACE_METHOD_UNROLL(self, SAVEAREA_FROM_FP(fp)->method);
+        /* output method profiling info */
+        if (!scanOnly) {
+            TRACE_METHOD_UNROLL(self, saveArea->method);
+        }
 
         /*
          * Move up one frame.  If the next thing up is a break frame,

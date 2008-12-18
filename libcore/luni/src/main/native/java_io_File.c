@@ -130,7 +130,6 @@ static jboolean java_io_File_deleteFileImpl(JNIEnv* env, jobject obj,
     cc = unlink(pathCopy);
     if(cc < 0) {
         int err = errno;
-        LOGD(" unable to unlink '%s' (errno=%d)\n", pathCopy, err);
 
         /*
          * According to the man pages, Linux uses EISDIR and Mac OS X
@@ -143,9 +142,12 @@ static jboolean java_io_File_deleteFileImpl(JNIEnv* env, jobject obj,
             cc = rmdir(pathCopy);
             if(cc < 0) {
                 /* probably ENOTEMPTY */
-                LOGD("   unable to rmdir '%s' (errno=%d)\n",
-                    pathCopy, errno);
+                LOGD("unable to rmdir '%s': %s (errno=%d)\n",
+                    pathCopy, strerror(err), err);
             }
+        } else {
+            LOGD("unable to unlink '%s': %s (errno=%d)\n", 
+                    pathCopy, strerror(err), err);
         }
     }
 
@@ -361,6 +363,8 @@ static jboolean java_io_File_writable(JNIEnv* env, jobject recv,
     return cc == 0;
 }
 
+// BEGIN android-deleted
+#if 0
 static jboolean java_io_File_isReadOnlyImpl(JNIEnv* env, jobject recv, 
         jbyteArray path) {
 
@@ -374,6 +378,8 @@ static jboolean java_io_File_isWriteOnlyImpl(JNIEnv* env, jobject recv,
     return (!java_io_File_readable(env, recv, path) 
             && java_io_File_writable(env, recv, path));
 }
+#endif
+// END android-deleted
 
 static jbyteArray java_io_File_getLinkImpl(JNIEnv* env, jobject recv, 
         jbyteArray path) {
@@ -674,8 +680,10 @@ static JNINativeMethod gMethods[] = {
     { "isDirectoryImpl",    "([B)Z",  (void*) java_io_File_isDirectoryImpl },
     { "isFileImpl",         "([B)Z",  (void*) java_io_File_isFileImpl },
     { "isHiddenImpl",       "([B)Z",  (void*) java_io_File_isHiddenImpl },
-    { "isReadOnlyImpl",     "([B)Z",  (void*) java_io_File_isReadOnlyImpl },
-    { "isWriteOnlyImpl",    "([B)Z",  (void*) java_io_File_isWriteOnlyImpl },
+    // BEGIN android-changed
+    { "isReadableImpl",     "([B)Z",  (void*) java_io_File_readable },
+    { "isWriteableImpl",    "([B)Z",  (void*) java_io_File_writable },
+    // END android-changed
     { "getLinkImpl",        "([B)[B", (void*) java_io_File_getLinkImpl },
     { "lastModifiedImpl",   "([B)J",  (void*) java_io_File_lastModifiedImpl },
     { "setReadOnlyImpl",    "([B)Z",  (void*) java_io_File_setReadOnlyImpl },

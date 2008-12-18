@@ -19,96 +19,108 @@ package java.util;
 
 
 /**
- * SortedSet is a Set which iterates its elements in sorted order.
+ * SortedSet is a Set which iterates over its elements in a sorted order. The
+ * order is determined either by the elements natural ordering, or by a
+ * {@link Comparator} which is passed into a concrete implementation at
+ * construction time. All elements in this set must be mutually comparable. The
+ * ordering in this set must be consistent with {@code equals} of its elements.
+ * 
+ * @see Comparator
+ * @see Comparable
+ * @since Android 1.0
  */
 public interface SortedSet<E> extends Set<E> {
     
     /**
-     * Returns the Comparator used to compare elements in this SortedSet.
+     * Returns the comparator used to compare elements in this {@code SortedSet}.
      * 
-     * @return a Comparator or null if the natural order is used
+     * @return a comparator or null if the natural ordering is used.
+     * @since Android 1.0
      */
     public Comparator<? super E> comparator();
 
     /**
-     * Answer the first sorted element in this SortedSet.
+     * Returns the first element in this {@code SortedSet}. The first element
+     * is the lowest element.
      * 
-     * @return the first sorted element
-     * 
-     * @exception NoSuchElementException
-     *                when this SortedSet is empty
+     * @return the first element.
+     * @throws NoSuchElementException
+     *             when this {@code SortedSet} is empty.
+     * @since Android 1.0
      */
     public E first();
 
     /**
-     * Returns a SortedSet of the specified portion of this SortedSet which
-     * contains elements less than the end element. The returned SortedSet is
-     * backed by this SortedSet so changes to one are reflected by the other.
+     * Returns a {@code SortedSet} of the specified portion of this
+     * {@code SortedSet} which contains elements less than the end element. The
+     * returned {@code SortedSet} is backed by this {@code SortedSet} so changes
+     * to one set are reflected by the other.
      * 
      * @param end
-     *            the end element
-     * @return a subset where the elements are less than <code>end</code>
-     * 
-     * @exception ClassCastException
-     *                when the class of the end element is inappropriate for
-     *                this SubSet
-     * @exception NullPointerException
-     *                when the end element is null and this SortedSet does not
-     *                support null elements
+     *            the end element.
+     * @return a subset where the elements are less than {@code end}.
+     * @throws ClassCastException
+     *             when the class of the end element is inappropriate for this
+     *             SubSet.
+     * @throws NullPointerException
+     *             when the end element is null and this {@code SortedSet} does
+     *             not support null elements.
+     * @since Android 1.0
      */
     public SortedSet<E> headSet(E end);
 
     /**
-     * Answer the last sorted element in this SortedSet.
+     * Returns the last element in this {@code SortedSet}. The last element is
+     * the highest element.
      * 
-     * @return the last sorted element
-     * 
-     * @exception NoSuchElementException
-     *                when this SortedSet is empty
+     * @return the last element.
+     * @throws NoSuchElementException
+     *             when this {@code SortedSet} is empty.
+     * @since Android 1.0
      */
     public E last();
 
     /**
-     * Returns a SortedSet of the specified portion of this SortedSet which
-     * contains elements greater or equal to the start element but less than the
-     * end element. The returned SortedSet is backed by this SortedMap so
-     * changes to one are reflected by the other.
+     * Returns a {@code SortedSet} of the specified portion of this
+     * {@code SortedSet} which contains elements greater or equal to the start
+     * element but less than the end element. The returned {@code SortedSet} is
+     * backed by this SortedMap so changes to one set are reflected by the
+     * other.
      * 
      * @param start
-     *            the start element
+     *            the start element.
      * @param end
-     *            the end element
-     * @return a subset where the elements are greater or equal to
-     *         <code>start</code> and less than <code>end</code>
-     * 
-     * @exception ClassCastException
-     *                when the class of the start or end element is
-     *                inappropriate for this SubSet
-     * @exception NullPointerException
-     *                when the start or end element is null and this SortedSet
-     *                does not support null elements
-     * @exception IllegalArgumentException
-     *                when the start element is greater than the end element
+     *            the end element.
+     * @return a subset where the elements are greater or equal to {@code start}
+     *         and less than {@code end}.
+     * @throws ClassCastException
+     *             when the class of the start or end element is inappropriate
+     *             for this SubSet.
+     * @throws NullPointerException
+     *             when the start or end element is null and this
+     *             {@code SortedSet} does not support null elements.
+     * @throws IllegalArgumentException
+     *             when the start element is greater than the end element.
+     * @since Android 1.0
      */
     public SortedSet<E> subSet(E start, E end);
 
     /**
-     * Returns a SortedSet of the specified portion of this SortedSet which
-     * contains elements greater or equal to the start element. The returned
-     * SortedSet is backed by this SortedSet so changes to one are reflected by
-     * the other.
+     * Returns a {@code SortedSet} of the specified portion of this
+     * {@code SortedSet} which contains elements greater or equal to the start
+     * element. The returned {@code SortedSet} is backed by this
+     * {@code SortedSet} so changes to one set are reflected by the other.
      * 
      * @param start
-     *            the start element
-     * @return a subset where the elements are greater or equal to
-     *         <code>start</code>
-     * 
-     * @exception ClassCastException
-     *                when the class of the start element is inappropriate for
-     *                this SubSet
-     * @exception NullPointerException
-     *                when the start element is null and this SortedSet does not
-     *                support null elements
+     *            the start element.
+     * @return a subset where the elements are greater or equal to {@code start} .
+     * @throws ClassCastException
+     *             when the class of the start element is inappropriate for this
+     *             SubSet.
+     * @throws NullPointerException
+     *             when the start element is null and this {@code SortedSet}
+     *             does not support null elements.
+     * @since Android 1.0
      */
     public SortedSet<E> tailSet(E start);
 }

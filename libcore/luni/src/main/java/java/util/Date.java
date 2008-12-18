@@ -28,13 +28,14 @@ import java.text.SimpleDateFormat;
 import org.apache.harmony.luni.internal.nls.Messages;
 
 /**
- * Date represents a specific moment in time, to the millisecond.
+ * {@code Date} represents a specific moment in time, to the millisecond.
  * 
  * @see System#currentTimeMillis
  * @see Calendar
  * @see GregorianCalendar
  * @see SimpleTimeZone
  * @see TimeZone
+ * @since Android 1.0
  */
 public class Date implements Serializable, Cloneable, Comparable<Date> {
 
@@ -46,25 +47,28 @@ public class Date implements Serializable, Cloneable, Comparable<Date> {
     private transient long milliseconds;
 
     /**
-     * Initializes this Date instance to the current date and time.
+     * Initializes this {@code Date} instance to the current date and time.
      * 
+     * @since Android 1.0
      */
     public Date() {
         this(System.currentTimeMillis());
     }
 
     /**
-     * Constructs a new Date initialized to midnight in the default TimeZone on
+     * Constructs a new {@code Date} initialized to midnight in the default {@code TimeZone} on
      * the specified date.
      * 
      * @param year
-     *            the year, 0 is 1900
+     *            the year, 0 is 1900.
      * @param month
-     *            the month, 0 - 11
+     *            the month, 0 - 11.
      * @param day
-     *            the day of the month, 1 - 31
+     *            the day of the month, 1 - 31.
      * 
-     * @deprecated use {@link GregorianCalendar#GregorianCalendar(int, int, int)}
+     * @deprecated use
+     *             {@link GregorianCalendar#GregorianCalendar(int, int, int)}
+     * @since Android 1.0
      */
     @Deprecated
     public Date(int year, int month, int day) {
@@ -74,21 +78,23 @@ public class Date implements Serializable, Cloneable, Comparable<Date> {
     }
 
     /**
-     * Constructs a new Date initialized to the specified date and time in the
-     * default TimeZone.
+     * Constructs a new {@code Date} initialized to the specified date and time in the
+     * default {@code TimeZone}.
      * 
      * @param year
-     *            the year, 0 is 1900
+     *            the year, 0 is 1900.
      * @param month
-     *            the month, 0 - 11
+     *            the month, 0 - 11.
      * @param day
-     *            the day of the month, 1 - 31
+     *            the day of the month, 1 - 31.
      * @param hour
-     *            the hour of day, 0 - 23
+     *            the hour of day, 0 - 23.
      * @param minute
-     *            the minute of the hour, 0 - 59
+     *            the minute of the hour, 0 - 59.
      * 
-     * @deprecated use {@link GregorianCalendar#GregorianCalendar(int, int, int, int, int)}
+     * @deprecated use
+     *             {@link GregorianCalendar#GregorianCalendar(int, int, int, int, int)}
+     * @since Android 1.0
      */
     @Deprecated
     public Date(int year, int month, int day, int hour, int minute) {
@@ -98,23 +104,25 @@ public class Date implements Serializable, Cloneable, Comparable<Date> {
     }
 
     /**
-     * Constructs a new Date initialized to the specified date and time in the
-     * default TimeZone.
+     * Constructs a new {@code Date} initialized to the specified date and time in the
+     * default {@code TimeZone}.
      * 
      * @param year
-     *            the year, 0 is 1900
+     *            the year, 0 is 1900.
      * @param month
-     *            the month, 0 - 11
+     *            the month, 0 - 11.
      * @param day
-     *            the day of the month, 1 - 31
+     *            the day of the month, 1 - 31.
      * @param hour
-     *            the hour of day, 0 - 23
+     *            the hour of day, 0 - 23.
      * @param minute
-     *            the minute of the hour, 0 - 59
+     *            the minute of the hour, 0 - 59.
      * @param second
-     *            the second of the minute, 0 - 59
+     *            the second of the minute, 0 - 59.
      * 
-     * @deprecated use {@link GregorianCalendar#GregorianCalendar(int, int, int, int, int, int)}
+     * @deprecated use
+     *             {@link GregorianCalendar#GregorianCalendar(int, int, int, int, int, int)}
+     * @since Android 1.0
      */
     @Deprecated
     public Date(int year, int month, int day, int hour, int minute, int second) {
@@ -124,24 +132,26 @@ public class Date implements Serializable, Cloneable, Comparable<Date> {
     }
 
     /**
-     * Initializes this Date instance using the specified millisecond value. The
+     * Initializes this {@code Date} instance using the specified millisecond value. The
      * value is the number of milliseconds since Jan. 1, 1970 GMT.
      * 
      * @param milliseconds
-     *            the number of milliseconds since Jan. 1, 1970 GMT
+     *            the number of milliseconds since Jan. 1, 1970 GMT.
+     * @since Android 1.0
      */
     public Date(long milliseconds) {
         this.setTime(milliseconds);
     }
 
     /**
-     * Constructs a new Date initialized to the date and time parsed from the
+     * Constructs a new {@code Date} initialized to the date and time parsed from the
      * specified String.
      * 
      * @param string
-     *            the String to parse
+     *            the String to parse.
      * 
      * @deprecated use {@link DateFormat}
+     * @since Android 1.0
      */
     @Deprecated
     public Date(String string) {
@@ -149,35 +159,38 @@ public class Date implements Serializable, Cloneable, Comparable<Date> {
     }
 
     /**
-     * Returns if this Date is after the specified Date.
+     * Returns if this {@code Date} is after the specified Date.
      * 
      * @param date
-     *            a Date instance to compare
-     * @return true if this Date is after the specified Date, false otherwise
+     *            a Date instance to compare.
+     * @return {@code true} if this {@code Date} is after the specified {@code Date},
+     *         {@code false} otherwise.
+     * @since Android 1.0
      */
     public boolean after(Date date) {
         return milliseconds > date.milliseconds;
     }
 
     /**
-     * Boolean indication of whether or not this <code>Date</code> occurs
-     * earlier than the <code>Date</code> argument.
+     * Returns if this {@code Date} is before the specified Date.
      * 
      * @param date
-     *            a Date instance to compare
-     * @return <code>true</code> if this <code>Date</code> occurs earlier
-     *         than <code>date</code>, otherwise <code>false</code>
+     *            a {@code Date} instance to compare.
+     * @return {@code true} if this {@code Date} is before the specified {@code Date},
+     *         {@code false} otherwise.
+     * @since Android 1.0
      */
     public boolean before(Date date) {
         return milliseconds < date.milliseconds;
     }
 
     /**
-     * Returns a new Date with the same millisecond value as this Date.
+     * Returns a new {@code Date} with the same millisecond value as this {@code Date}.
      * 
-     * @return a shallow copy of this Date
+     * @return a shallow copy of this {@code Date}.
      * 
      * @see java.lang.Cloneable
+     * @since Android 1.0
      */
     @Override
     public Object clone() {
@@ -189,13 +202,14 @@ public class Date implements Serializable, Cloneable, Comparable<Date> {
     }
 
     /**
-     * Compare the receiver to the specified Date to determine the relative
+     * Compare the receiver to the specified {@code Date} to determine the relative
      * ordering.
      * 
      * @param date
-     *            a Date
-     * @return an int < 0 if this Date is less than the specified Date, 0 if
-     *         they are equal, and > 0 if this Date is greater
+     *            a {@code Date} to compare against.
+     * @return an {@code int < 0} if this {@code Date} is less than the specified {@code Date}, {@code 0} if
+     *         they are equal, and an {@code int > 0} if this {@code Date} is greater.
+     * @since Android 1.0
      */
     public int compareTo(Date date) {
         if (milliseconds < date.milliseconds) {
@@ -208,16 +222,17 @@ public class Date implements Serializable, Cloneable, Comparable<Date> {
     }
 
     /**
-     * Compares the specified object to this Date and answer if they are equal.
-     * The object must be an instance of Date and have the same millisecond
+     * Compares the specified object to this {@code Date} and returns if they are equal.
+     * To be equal, the object must be an instance of {@code Date} and have the same millisecond
      * value.
      * 
      * @param object
-     *            the object to compare with this object
-     * @return true if the specified object is equal to this Date, false
-     *         otherwise
+     *            the object to compare with this object.
+     * @return {@code true} if the specified object is equal to this {@code Date}, {@code false}
+     *         otherwise.
      * 
      * @see #hashCode
+     * @since Android 1.0
      */
     @Override
     public boolean equals(Object object) {
@@ -226,11 +241,12 @@ public class Date implements Serializable, Cloneable, Comparable<Date> {
     }
 
     /**
-     * Returns the gregorian calendar day of the month for this Date object.
+     * Returns the gregorian calendar day of the month for this {@code Date} object.
      * 
-     * @return the day of the month
+     * @return the day of the month.
      * 
-     * @deprecated use Calendar.get(Calendar.DATE)
+     * @deprecated use {@code Calendar.get(Calendar.DATE)}
+     * @since Android 1.0
      */
     @Deprecated
     public int getDate() {
@@ -238,11 +254,12 @@ public class Date implements Serializable, Cloneable, Comparable<Date> {
     }
 
     /**
-     * Returns the gregorian calendar day of the week for this Date object.
+     * Returns the gregorian calendar day of the week for this {@code Date} object.
      * 
-     * @return the day of the week
+     * @return the day of the week.
      * 
-     * @deprecated use Calendar.get(Calendar.DAY_OF_WEEK)
+     * @deprecated use {@code Calendar.get(Calendar.DAY_OF_WEEK)}
+     * @since Android 1.0
      */
     @Deprecated
     public int getDay() {
@@ -250,11 +267,12 @@ public class Date implements Serializable, Cloneable, Comparable<Date> {
     }
 
     /**
-     * Returns the gregorian calendar hour of the day for this Date object.
+     * Returns the gregorian calendar hour of the day for this {@code Date} object.
      * 
-     * @return the hour of the day
+     * @return the hour of the day.
      * 
-     * @deprecated use Calendar.get(Calendar.HOUR_OF_DAY)
+     * @deprecated use {@code Calendar.get(Calendar.HOUR_OF_DAY)}
+     * @since Android 1.0
      */
     @Deprecated
     public int getHours() {
@@ -262,11 +280,12 @@ public class Date implements Serializable, Cloneable, Comparable<Date> {
     }
 
     /**
-     * Returns the gregorian calendar minute of the hour for this Date object.
+     * Returns the gregorian calendar minute of the hour for this {@code Date} object.
      * 
-     * @return the minutes
+     * @return the minutes.
      * 
-     * @deprecated use Calendar.get(Calendar.MINUTE)
+     * @deprecated use {@code Calendar.get(Calendar.MINUTE)}
+     * @since Android 1.0
      */
     @Deprecated
     public int getMinutes() {
@@ -274,11 +293,12 @@ public class Date implements Serializable, Cloneable, Comparable<Date> {
     }
 
     /**
-     * Returns the gregorian calendar month for this Date object.
+     * Returns the gregorian calendar month for this {@code Date} object.
      * 
-     * @return the month
+     * @return the month.
      * 
-     * @deprecated use Calendar.get(Calendar.MONTH)
+     * @deprecated use {@code Calendar.get(Calendar.MONTH)}
+     * @since Android 1.0
      */
     @Deprecated
     public int getMonth() {
@@ -286,11 +306,12 @@ public class Date implements Serializable, Cloneable, Comparable<Date> {
     }
 
     /**
-     * Returns the gregorian calendar second of the minute for this Date object.
+     * Returns the gregorian calendar second of the minute for this {@code Date} object.
      * 
-     * @return the seconds
+     * @return the seconds.
      * 
-     * @deprecated use Calendar.get(Calendar.SECOND)
+     * @deprecated use {@code Calendar.get(Calendar.SECOND)}
+     * @since Android 1.0
      */
     @Deprecated
     public int getSeconds() {
@@ -298,22 +319,24 @@ public class Date implements Serializable, Cloneable, Comparable<Date> {
     }
 
     /**
-     * Returns this Date as a millisecond value. The value is the number of
-     * milliseconds since Jan. 1, 1970 GMT.
+     * Returns this {@code Date} as a millisecond value. The value is the number of
+     * milliseconds since Jan. 1, 1970, midnight GMT.
      * 
-     * @return the number of milliseconds since Jan. 1, 1970 GMT.
+     * @return the number of milliseconds since Jan. 1, 1970, midnight GMT.
+     * @since Android 1.0
      */
     public long getTime() {
         return milliseconds;
     }
 
     /**
-     * Returns the timezone offset in minutes of the default TimeZone.
+     * Returns the timezone offset in minutes of the default {@code TimeZone}.
      * 
-     * @return the timezone offset in minutes of the default TimeZone
+     * @return the timezone offset in minutes of the default {@code TimeZone}.
      * 
      * @deprecated use
-     *             <code>(Calendar.get(Calendar.ZONE_OFFSET) + Calendar.get(Calendar.DST_OFFSET)) / 60000</code>
+     *             {@code (Calendar.get(Calendar.ZONE_OFFSET) + Calendar.get(Calendar.DST_OFFSET)) / 60000}
+     * @since Android 1.0
      */
     @Deprecated
     public int getTimezoneOffset() {
@@ -322,11 +345,12 @@ public class Date implements Serializable, Cloneable, Comparable<Date> {
     }
 
     /**
-     * Returns the gregorian calendar year since 1900 for this Date object.
+     * Returns the gregorian calendar year since 1900 for this {@code Date} object.
      * 
-     * @return the year - 1900
+     * @return the year - 1900.
      * 
-     * @deprecated use <code>Calendar.get(Calendar.YEAR) - 1900</code>
+     * @deprecated use {@code Calendar.get(Calendar.YEAR) - 1900}
+     * @since Android 1.0
      */
     @Deprecated
     public int getYear() {
@@ -335,11 +359,12 @@ public class Date implements Serializable, Cloneable, Comparable<Date> {
 
     /**
      * Returns an integer hash code for the receiver. Objects which are equal
-     * answer the same value for this method.
+     * return the same value for this method.
      * 
-     * @return the receiver's hash
+     * @return this {@code Date}'s hash.
      * 
      * @see #equals
+     * @since Android 1.0
      */
     @Override
     public int hashCode() {
@@ -357,14 +382,15 @@ public class Date implements Serializable, Cloneable, Comparable<Date> {
 
     /**
      * Returns the millisecond value of the date and time parsed from the
-     * specified String. Many date/time formats are recognized, including IETF
+     * specified {@code String}. Many date/time formats are recognized, including IETF
      * standard syntax, i.e. Tue, 22 Jun 1999 12:16:00 GMT-0500
      * 
      * @param string
-     *            the String to parse
-     * @return the millisecond value parsed from the String
+     *            the String to parse.
+     * @return the millisecond value parsed from the String.
      * 
      * @deprecated use {@link DateFormat}
+     * @since Android 1.0
      */
     @Deprecated
     public static long parse(String string) {
@@ -547,12 +573,13 @@ public class Date implements Serializable, Cloneable, Comparable<Date> {
     }
 
     /**
-     * Sets the gregorian calendar day of the month for this Date object.
+     * Sets the gregorian calendar day of the month for this {@code Date} object.
      * 
      * @param day
-     *            the day of the month
+     *            the day of the month.
      * 
-     * @deprecated use Calendar.set(Calendar.DATE, day)
+     * @deprecated use {@code Calendar.set(Calendar.DATE, day)}
+     * @since Android 1.0
      */
     @Deprecated
     public void setDate(int day) {
@@ -562,12 +589,13 @@ public class Date implements Serializable, Cloneable, Comparable<Date> {
     }
 
     /**
-     * Sets the gregorian calendar hour of the day for this Date object.
+     * Sets the gregorian calendar hour of the day for this {@code Date} object.
      * 
      * @param hour
-     *            the hour of the day
+     *            the hour of the day.
      * 
-     * @deprecated use Calendar.set(Calendar.HOUR_OF_DAY, hour)
+     * @deprecated use {@code Calendar.set(Calendar.HOUR_OF_DAY, hour)}
+     * @since Android 1.0
      */
     @Deprecated
     public void setHours(int hour) {
@@ -577,12 +605,13 @@ public class Date implements Serializable, Cloneable, Comparable<Date> {
     }
 
     /**
-     * Sets the gregorian calendar minute of the hour for this Date object.
+     * Sets the gregorian calendar minute of the hour for this {@code Date} object.
      * 
      * @param minute
-     *            the minutes
+     *            the minutes.
      * 
-     * @deprecated use Calendar.set(Calendar.MINUTE, minute)
+     * @deprecated use {@code Calendar.set(Calendar.MINUTE, minute)}
+     * @since Android 1.0
      */
     @Deprecated
     public void setMinutes(int minute) {
@@ -592,12 +621,13 @@ public class Date implements Serializable, Cloneable, Comparable<Date> {
     }
 
     /**
-     * Sets the gregorian calendar month for this Date object.
+     * Sets the gregorian calendar month for this {@code Date} object.
      * 
      * @param month
-     *            the month
+     *            the month.
      * 
-     * @deprecated use Calendar.set(Calendar.MONTH, month)
+     * @deprecated use {@code Calendar.set(Calendar.MONTH, month)}
+     * @since Android 1.0
      */
     @Deprecated
     public void setMonth(int month) {
@@ -607,12 +637,13 @@ public class Date implements Serializable, Cloneable, Comparable<Date> {
     }
 
     /**
-     * Sets the gregorian calendar second of the minute for this Date object.
+     * Sets the gregorian calendar second of the minute for this {@code Date} object.
      * 
      * @param second
-     *            the seconds
+     *            the seconds.
      * 
-     * @deprecated use Calendar.set(Calendar.SECOND, second)
+     * @deprecated use {@code Calendar.set(Calendar.SECOND, second)}
+     * @since Android 1.0
      */
     @Deprecated
     public void setSeconds(int second) {
@@ -622,23 +653,25 @@ public class Date implements Serializable, Cloneable, Comparable<Date> {
     }
 
     /**
-     * Sets this Date to the specified millisecond value. The value is the
+     * Sets this {@code Date} to the specified millisecond value. The value is the
      * number of milliseconds since Jan. 1, 1970 GMT.
      * 
      * @param milliseconds
      *            the number of milliseconds since Jan. 1, 1970 GMT.
+     * @since Android 1.0
      */
     public void setTime(long milliseconds) {
         this.milliseconds = milliseconds;
     }
 
     /**
-     * Sets the gregorian calendar year since 1900 for this Date object.
+     * Sets the gregorian calendar year since 1900 for this {@code Date} object.
      * 
      * @param year
-     *            the year since 1900
+     *            the year since 1900.
      * 
-     * @deprecated use Calendar.set(Calendar.YEAR, year + 1900)
+     * @deprecated use {@code Calendar.set(Calendar.YEAR, year + 1900)}
+     * @since Android 1.0
      */
     @Deprecated
     public void setYear(int year) {
@@ -648,12 +681,13 @@ public class Date implements Serializable, Cloneable, Comparable<Date> {
     }
 
     /**
-     * Returns the string representation of this Date in GMT in the format: 22
+     * Returns the string representation of this {@code Date} in GMT in the format: 22
      * Jun 1999 13:02:00 GMT
      * 
-     * @return the string representation of this Date in GMT
+     * @return the string representation of this {@code Date} in GMT.
      * 
      * @deprecated use {@link DateFormat}
+     * @since Android 1.0
      */
     @Deprecated
     public String toGMTString() {
@@ -670,11 +704,12 @@ public class Date implements Serializable, Cloneable, Comparable<Date> {
     }
 
     /**
-     * Returns the string representation of this Date for the current Locale.
+     * Returns the string representation of this {@code Date} for the default {@code Locale}.
      * 
-     * @return the string representation of this Date for the current Locale
+     * @return the string representation of this {@code Date} for the default {@code Locale}.
      * 
      * @deprecated use {@link DateFormat}
+     * @since Android 1.0
      */
     @Deprecated
     public String toLocaleString() {
@@ -682,10 +717,11 @@ public class Date implements Serializable, Cloneable, Comparable<Date> {
     }
 
     /**
-     * Returns the string representation of this Date in the format: Tue Jun 22
+     * Returns the string representation of this {@code Date} in the format: Tue Jun 22
      * 13:07:00 GMT 1999
      * 
-     * @return the string representation of this Date
+     * @return the string representation of this {@code Date}.
+     * @since Android 1.0
      */
     @Override
     public String toString() {
@@ -698,23 +734,24 @@ public class Date implements Serializable, Cloneable, Comparable<Date> {
      * Returns the millisecond value of the specified date and time in GMT.
      * 
      * @param year
-     *            the year, 0 is 1900
+     *            the year, 0 is 1900.
      * @param month
-     *            the month, 0 - 11
+     *            the month, 0 - 11.
      * @param day
-     *            the day of the month, 1 - 31
+     *            the day of the month, 1 - 31.
      * @param hour
-     *            the hour of day, 0 - 23
+     *            the hour of day, 0 - 23.
      * @param minute
-     *            the minute of the hour, 0 - 59
+     *            the minute of the hour, 0 - 59.
      * @param second
-     *            the second of the minute, 0 - 59
-     * @return long
+     *            the second of the minute, 0 - 59.
+     * @return the date and time in GMT in milliseconds.
      * 
      * @deprecated use: <code>
      *  Calendar cal = new GregorianCalendar(TimeZone.getTimeZone("GMT"));
      *  cal.set(year + 1900, month, day, hour, minute, second);
      *  cal.getTime().getTime();</code>
+     * @since Android 1.0
      */
     @Deprecated
     public static long UTC(int year, int month, int day, int hour, int minute,

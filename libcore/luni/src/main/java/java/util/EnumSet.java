@@ -15,15 +15,22 @@
  */
 package java.util;
 
+// BEGIN android-added
 import org.apache.harmony.kernel.vm.LangAccess;
+// END android-added
 
 import java.io.Serializable;
 
+/**
+ * An EnumSet is a specialized Set to be used with enums as keys.
+ * 
+ * @since Android 1.0
+ */
 public abstract class EnumSet<E extends Enum<E>> extends AbstractSet<E>
         implements Cloneable, Serializable {
     // BEGIN android-added
-    /**
-     * null-ok; package access to <code>java.lang</code>, set during
+    /*
+     * null-ok; package access to {@code java.lang}, set during
      * first need. This shouldn't be used directly. Instead, use {@link
      * SpecialAccess#LANG}, which is guaranteed to be initialized.
      */
@@ -39,14 +46,16 @@ public abstract class EnumSet<E extends Enum<E>> extends AbstractSet<E>
     }
 
     /**
-     * Creates an empty enum set. The permitted elements are of type Class<E>.
+     * Creates an empty enum set. The permitted elements are of type
+     * Class&lt;E&gt;.
      * 
      * @param elementType
-     *            the class object for the elements contained
-     * @return an empty enum set, with permitted elements of the specified
-     *         elementType
-     * @throws NullPointerException
-     *             if the specified elementType is null
+     *            the class object for the elements contained.
+     * @return an empty enum set, with permitted elements of type {@code
+     *         elementType}.
+     * @throws ClassCastException
+     *             if the specified element type is not and enum type.
+     * @since Android 1.0
      */
     public static <E extends Enum<E>> EnumSet<E> noneOf(Class<E> elementType) {
         if (!elementType.isEnum()) {
@@ -62,14 +71,15 @@ public abstract class EnumSet<E extends Enum<E>> extends AbstractSet<E>
     }
 
     /**
-     * Creates an enum set. Element is contained in this enum set if and only if
-     * it is a member of the specified element type.
+     * Creates an enum set filled with all the enum elements of the specified
+     * {@code elementType}.
      * 
      * @param elementType
-     *            the class object for the elements contained
-     * @return an enum set with elements solely from the specified element type
-     * @throws NullPointerException
-     *             if the specified elementType is null
+     *            the class object for the elements contained.
+     * @return an enum set with elements solely from the specified element type.
+     * @throws ClassCastException
+     *             if the specified element type is not and enum type.
+     * @since Android 1.0
      */
     public static <E extends Enum<E>> EnumSet<E> allOf(Class<E> elementType) {
         EnumSet<E> set = noneOf(elementType);
@@ -78,14 +88,16 @@ public abstract class EnumSet<E extends Enum<E>> extends AbstractSet<E>
     }
 
     /**
-     * Creates an enum set. All the contained elements are of type Class<E>,
-     * and the contained elements are the same as those contained in s.
+     * Creates an enum set. All the contained elements are of type
+     * Class&lt;E&gt;, and the contained elements are the same as those
+     * contained in {@code s}.
      * 
      * @param s
-     *            the enum set from which to copy
-     * @return an enum set with all the elements from the specified enum set
-     * @throws NullPointerException
-     *             if the specified enum set is null
+     *            the enum set from which to copy.
+     * @return an enum set with all the elements from the specified enum set.
+     * @throws ClassCastException
+     *             if the specified element type is not and enum type.
+     * @since Android 1.0
      */
     public static <E extends Enum<E>> EnumSet<E> copyOf(EnumSet<E> s) {
         EnumSet<E> set = EnumSet.noneOf(s.elementClass);
@@ -95,16 +107,16 @@ public abstract class EnumSet<E extends Enum<E>> extends AbstractSet<E>
 
     /**
      * Creates an enum set. The contained elements are the same as those
-     * contained in collection c. If c is an enum set, invoking this method is
-     * the same as invoking {@link #copyOf(EnumSet)}.
+     * contained in collection {@code c}. If c is an enum set, invoking this
+     * method is the same as invoking {@link #copyOf(EnumSet)}.
      * 
      * @param c
-     *            the collection from which to copy
-     * @return an enum set with all the elements from the specified collection
+     *            the collection from which to copy. if it is not an enum set,
+     *            it must not be empty.
+     * @return an enum set with all the elements from the specified collection.
      * @throws IllegalArgumentException
-     *             if c is not an enum set and contains no elements at all
-     * @throws NullPointerException
-     *             if the specified collection is null
+     *             if c is not an enum set and contains no elements at all.
+     * @since Android 1.0
      */
     public static <E extends Enum<E>> EnumSet<E> copyOf(Collection<E> c) {
         if (c instanceof EnumSet) {
@@ -128,11 +140,10 @@ public abstract class EnumSet<E extends Enum<E>> extends AbstractSet<E>
      * specified enum set.
      * 
      * @param s
-     *            the specified enum set
-     * @return an enum set with all the elements complement those from the
-     *         specified enum set
-     * @throws NullPointerException
-     *             if the specified enum set is null
+     *            the specified enum set.
+     * @return an enum set with all the elements complementary to those from the
+     *         specified enum set.
+     * @since Android 1.0
      */
     public static <E extends Enum<E>> EnumSet<E> complementOf(EnumSet<E> s) {
         EnumSet<E> set = EnumSet.noneOf(s.elementClass);
@@ -146,14 +157,13 @@ public abstract class EnumSet<E extends Enum<E>> extends AbstractSet<E>
     /**
      * Creates a new enum set, containing only the specified element. There are
      * six overloadings of the method. They accept from one to five elements
-     * respectively. The sixth one receives arbitrary number of elements, and
-     * runs slower than those only receive fixed number of elements.
+     * respectively. The sixth one receives an arbitrary number of elements, and
+     * runs slower than those that only receive a fixed number of elements.
      * 
      * @param e
-     *            the initially contained element
-     * @return an enum set containing the specified element
-     * @throws NullPointerException
-     *             if the specified element is null
+     *            the element to be initially contained.
+     * @return an enum set containing the specified element.
+     * @since Android 1.0
      */
     public static <E extends Enum<E>> EnumSet<E> of(E e) {
         EnumSet<E> set = EnumSet.noneOf(e.getDeclaringClass());
@@ -162,18 +172,17 @@ public abstract class EnumSet<E extends Enum<E>> extends AbstractSet<E>
     }
 
     /**
-     * Creates a new enum set, containing only the specified elements. There are
+     * Creates a new enum set, containing only the specified element. There are
      * six overloadings of the method. They accept from one to five elements
-     * respectively. The sixth one receives arbitrary number of elements, and
-     * runs slower than those only receive fixed number of elements.
+     * respectively. The sixth one receives an arbitrary number of elements, and
+     * runs slower than those that only receive a fixed number of elements.
      * 
      * @param e1
-     *            the initially contained element
+     *            the initially contained element.
      * @param e2
-     *            another initially contained element
-     * @return an enum set containing the specified elements
-     * @throws NullPointerException
-     *             if any of the specified elements is null
+     *            another initially contained element.
+     * @return an enum set containing the specified element.
+     * @since Android 1.0
      */
     public static <E extends Enum<E>> EnumSet<E> of(E e1, E e2) {
         EnumSet<E> set = of(e1);
@@ -182,20 +191,19 @@ public abstract class EnumSet<E extends Enum<E>> extends AbstractSet<E>
     }
 
     /**
-     * Creates a new enum set, containing only the specified elements. There are
+     * Creates a new enum set, containing only the specified element. There are
      * six overloadings of the method. They accept from one to five elements
-     * respectively. The sixth one receives arbitrary number of elements, and
-     * runs slower than those only receive fixed number of elements.
+     * respectively. The sixth one receives an arbitrary number of elements, and
+     * runs slower than those that only receive a fixed number of elements.
      * 
      * @param e1
-     *            the initially contained element
+     *            the initially contained element.
      * @param e2
-     *            another initially contained element
+     *            another initially contained element.
      * @param e3
-     *            another initially contained element
-     * @return an enum set containing the specified elements
-     * @throws NullPointerException
-     *             if any of the specified elements is null
+     *            another initially contained element.
+     * @return an enum set containing the specified element.
+     * @since Android 1.0
      */
     public static <E extends Enum<E>> EnumSet<E> of(E e1, E e2, E e3) {
         EnumSet<E> set = of(e1, e2);
@@ -204,22 +212,21 @@ public abstract class EnumSet<E extends Enum<E>> extends AbstractSet<E>
     }
 
     /**
-     * Creates a new enum set, containing only the specified elements. There are
+     * Creates a new enum set, containing only the specified element. There are
      * six overloadings of the method. They accept from one to five elements
-     * respectively. The sixth one receives arbitrary number of elements, and
-     * runs slower than those only receive fixed number of elements.
+     * respectively. The sixth one receives an arbitrary number of elements, and
+     * runs slower than those that only receive a fixed number of elements.
      * 
      * @param e1
-     *            the initially contained element
+     *            the initially contained element.
      * @param e2
-     *            another initially contained element
+     *            another initially contained element.
      * @param e3
-     *            another initially contained element
+     *            another initially contained element.
      * @param e4
-     *            another initially contained element
-     * @return an enum set containing the specified elements
-     * @throws NullPointerException
-     *             if any of the specified elements is null
+     *            another initially contained element.
+     * @return an enum set containing the specified element.
+     * @since Android 1.0
      */
     public static <E extends Enum<E>> EnumSet<E> of(E e1, E e2, E e3, E e4) {
         EnumSet<E> set = of(e1, e2, e3);
@@ -228,24 +235,23 @@ public abstract class EnumSet<E extends Enum<E>> extends AbstractSet<E>
     }
 
     /**
-     * Creates a new enum set, containing only the specified elements. There are
+     * Creates a new enum set, containing only the specified element. There are
      * six overloadings of the method. They accept from one to five elements
-     * respectively. The sixth one receives arbitrary number of elements, and
-     * runs slower than those only receive fixed number of elements.
+     * respectively. The sixth one receives an arbitrary number of elements, and
+     * runs slower than those that only receive a fixed number of elements.
      * 
      * @param e1
-     *            the initially contained element
+     *            the initially contained element.
      * @param e2
-     *            another initially contained element
+     *            another initially contained element.
      * @param e3
-     *            another initially contained element
+     *            another initially contained element.
      * @param e4
-     *            another initially contained element
+     *            another initially contained element.
      * @param e5
-     *            another initially contained element
-     * @return an enum set containing the specified elements
-     * @throws NullPointerException
-     *             if any of the specified elements is null
+     *            another initially contained element.
+     * @return an enum set containing the specified element.
+     * @since Android 1.0
      */
     public static <E extends Enum<E>> EnumSet<E> of(E e1, E e2, E e3, E e4, E e5) {
         EnumSet<E> set = of(e1, e2, e3, e4);
@@ -254,17 +260,16 @@ public abstract class EnumSet<E extends Enum<E>> extends AbstractSet<E>
     }
 
     /**
-     * Creates a new enum set, containing only the specified elements. It
-     * receives arbitrary number of elements, and runs slower than those only
-     * receive fixed number of elements.
+     * Creates a new enum set, containing only the specified elements. It can
+     * receive an arbitrary number of elements, and runs slower than those only
+     * receiving a fixed number of elements.
      * 
      * @param start
-     *            the first initially contained element
+     *            the first initially contained element.
      * @param others
-     *            the other initially contained elements
-     * @return an enum set containing the specified elements
-     * @throws NullPointerException
-     *             if any of the specified elements is null
+     *            the other initially contained elements.
+     * @return an enum set containing the specified elements.
+     * @since Android 1.0
      */
     public static <E extends Enum<E>> EnumSet<E> of(E start, E... others) {
         EnumSet<E> set = of(start);
@@ -276,17 +281,17 @@ public abstract class EnumSet<E extends Enum<E>> extends AbstractSet<E>
 
     /**
      * Creates an enum set containing all the elements within the range defined
-     * by start and end (inclusive). All the elements must be in order.
+     * by {@code start} and {@code end} (inclusive). All the elements must be in
+     * order.
      * 
      * @param start
-     *            the element used to define the beginning of the range
+     *            the element used to define the beginning of the range.
      * @param end
-     *            the element used to define the end of the range
-     * @return an enum set with elements in the range from start to end
-     * @throws NullPointerException
-     *             if any one of start or end is null
+     *            the element used to define the end of the range.
+     * @return an enum set with elements in the range from start to end.
      * @throws IllegalArgumentException
-     *             if start is behind end
+     *             if {@code start} is behind {@code end}.
+     * @since Android 1.0
      */
     public static <E extends Enum<E>> EnumSet<E> range(E start, E end) {
         if (start.compareTo(end) > 0) {
@@ -304,7 +309,8 @@ public abstract class EnumSet<E extends Enum<E>> extends AbstractSet<E>
      * enum set.
      * 
      * @return a new enum set with the same elements as those contained in this
-     *         enum set
+     *         enum set.
+     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     @Override

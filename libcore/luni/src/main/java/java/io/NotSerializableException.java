@@ -18,34 +18,38 @@
 package java.io;
 
 /**
- * When an implementation of ObjectOutput.writeObject() is passed an object that
- * is not serializable, it will throw this type of exception. This can happen if
- * the object does not implement Serializable or Externalizable, or if it is
- * Serializable but it overrides writeObject(ObjectOutputStream) and explicitely
- * decides it wants to prevent serialization, by throwing this type of
- * exception.
+ * Signals that an object that is not serializable has been passed into the
+ * {@code ObjectOutput.writeObject()} mthod. This can happen if the object does
+ * not implement {@code Serializable} or {@code Externalizable}, or if it is
+ * serializable but it overrides {@code writeObject(ObjectOutputStream)} and
+ * explicitly prevents serialization by throwing this type of exception.
  * 
- * @see ObjectOutputStream#writeObject(Object)
  * @see ObjectOutput#writeObject(Object)
+ * @see ObjectOutputStream#writeObject(Object)
+ * 
+ * @since Android 1.0
  */
 public class NotSerializableException extends ObjectStreamException {
 
     private static final long serialVersionUID = 2906642554793891381L;
 
     /**
-     * Constructs a new instance of this class with its walkback filled in.
+     * Constructs a new {@code NotSerializableException} with its stack trace
+     * filled in.
      * 
+     * @since Android 1.0
      */
     public NotSerializableException() {
         super();
     }
 
     /**
-     * Constructs a new instance of this class with its walkback and message
-     * filled in.
+     * Constructs a new {@link NotSerializableException} with its stack trace
+     * and detail message filled in.
      * 
      * @param detailMessage
-     *            The detail message for the exception.
+     *            the detail message for this exception.
+     * @since Android 1.0
      */
     public NotSerializableException(String detailMessage) {
         super(detailMessage);

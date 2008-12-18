@@ -17,13 +17,18 @@
 
 package org.apache.harmony.text.tests.java.text;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
+import junit.framework.TestCase;
+
 import java.text.CollationElementIterator;
 import java.text.Collator;
 import java.text.RuleBasedCollator;
 import java.text.StringCharacterIterator;
 import java.util.Locale;
-
-import junit.framework.TestCase;
 
 /**
  * Test CollationElementIterator
@@ -31,6 +36,7 @@ import junit.framework.TestCase;
  * Only test normal condition.
  * 
  */
+@TestTargetClass(CollationElementIterator.class) 
 public class CollationElementIteratorTest extends TestCase {
 
     private RuleBasedCollator coll;
@@ -38,7 +44,15 @@ public class CollationElementIteratorTest extends TestCase {
     protected void setUp() {
         coll = (RuleBasedCollator) Collator.getInstance(Locale.US);
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getOffset",
+          methodArgs = {}
+        )
+    })
     public void testGetOffset() {
         String text = "abc";
         CollationElementIterator iterator = coll
@@ -53,7 +67,15 @@ public class CollationElementIteratorTest extends TestCase {
             assertEquals(offsets[i++], offset);
         }
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "next",
+          methodArgs = {}
+        )
+    })
     public void testNext() {
         String text = "abc";
         CollationElementIterator iterator = coll
@@ -82,6 +104,15 @@ public class CollationElementIteratorTest extends TestCase {
      * @tests java.text.CollationElementIterator#previous() Test of method
      *        java.text.CollationElementIterator#previous().
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "previous",
+          methodArgs = {}
+        )
+    })
     public void testPrevious() {
         String text = "abc";
         CollationElementIterator iterator = coll
@@ -105,7 +136,15 @@ public class CollationElementIteratorTest extends TestCase {
 
         assertEquals(0, iterator.getOffset());
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "reset",
+          methodArgs = {}
+        )
+    })
     public void testReset() {
         String text = "abc";
         CollationElementIterator iterator = coll
@@ -124,7 +163,15 @@ public class CollationElementIteratorTest extends TestCase {
         iterator.reset();
         assertEquals(0, iterator.getOffset());
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getMaxExpansion",
+          methodArgs = {int.class}
+        )
+    })
     public void testGetMaxExpansion() {
         String text = "cha";
         RuleBasedCollator rbColl = (RuleBasedCollator) Collator
@@ -138,7 +185,15 @@ public class CollationElementIteratorTest extends TestCase {
         }
 
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "primaryOrder",
+          methodArgs = {int.class}
+        )
+    })
     public void testPrimaryOrder() {
         RuleBasedCollator rbColl = (RuleBasedCollator) Collator
                 .getInstance(new Locale("de", "DE"));
@@ -153,7 +208,15 @@ public class CollationElementIteratorTest extends TestCase {
         int pOrder2 = CollationElementIterator.primaryOrder(order2);
         assertEquals(pOrder, pOrder2);
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "secondaryOrder",
+          methodArgs = {int.class}
+        )
+    })
     public void testSecondaryOrder() {
         RuleBasedCollator rbColl = (RuleBasedCollator) Collator
                 .getInstance(new Locale("fr", "FR"));
@@ -168,7 +231,15 @@ public class CollationElementIteratorTest extends TestCase {
 
         assertEquals(sOrder1, sOrder2);
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "tertiaryOrder",
+          methodArgs = {int.class}
+        )
+    })
     public void testTertiaryOrder() {
         RuleBasedCollator rbColl = (RuleBasedCollator) Collator
                 .getInstance(new Locale("fr", "FR"));
@@ -187,7 +258,15 @@ public class CollationElementIteratorTest extends TestCase {
         tOrder2 = CollationElementIterator.tertiaryOrder(order);
         assertEquals(tOrder1, tOrder2);
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setOffset",
+          methodArgs = {int.class}
+        )
+    })
     public void testSetOffset() {
         RuleBasedCollator rbColl = (RuleBasedCollator) Collator
                 .getInstance(new Locale("es", "", "TRADITIONAL"));
@@ -201,6 +280,15 @@ public class CollationElementIteratorTest extends TestCase {
     /*
      * Class under test for void setText(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setText",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void testSetTextString() {
         RuleBasedCollator rbColl = (RuleBasedCollator) Collator
                 .getInstance(new Locale("es", "", "TRADITIONAL"));
@@ -217,6 +305,15 @@ public class CollationElementIteratorTest extends TestCase {
     /*
      * Class under test for void setText(java.text.CharacterIterator)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setText",
+          methodArgs = {java.text.CharacterIterator.class}
+        )
+    })
     public void testSetTextCharacterIterator() {
         RuleBasedCollator rbColl = (RuleBasedCollator) Collator
                 .getInstance(new Locale("es", "", "TRADITIONAL"));

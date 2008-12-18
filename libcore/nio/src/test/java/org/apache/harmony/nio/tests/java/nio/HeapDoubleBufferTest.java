@@ -15,8 +15,14 @@
  */
 package org.apache.harmony.nio.tests.java.nio;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.nio.DoubleBuffer;
 
+@TestTargetClass(java.nio.DoubleBuffer.class)
 public class HeapDoubleBufferTest extends DoubleBufferTest {
     protected void setUp() throws Exception {
         super.setUp();
@@ -30,7 +36,15 @@ public class HeapDoubleBufferTest extends DoubleBufferTest {
         buf = null;
         baseBuf = null;
     }
-    
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies IllegalArgumentException.",
+      targets = {
+        @TestTarget(
+          methodName = "allocate",
+          methodArgs = {int.class}
+        )
+    })
     public void testAllocatedDoubleBuffer_IllegalArg() {
         try {
             DoubleBuffer.allocate(-1);

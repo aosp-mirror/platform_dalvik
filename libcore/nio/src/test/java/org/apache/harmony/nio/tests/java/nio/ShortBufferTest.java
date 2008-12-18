@@ -17,6 +17,11 @@
 
 package org.apache.harmony.nio.tests.java.nio;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.nio.BufferOverflowException;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteOrder;
@@ -27,6 +32,7 @@ import java.nio.ShortBuffer;
  * Tests java.nio.ShortBuffer
  *
  */
+@TestTargetClass(java.nio.ShortBuffer.class)
 public class ShortBufferTest extends AbstractBufferTest {
     
     protected static final int SMALL_TEST_LENGTH = 5;
@@ -51,7 +57,15 @@ public class ShortBufferTest extends AbstractBufferTest {
      * following usecases: 1. case for check ShortBuffer testBuf properties 2.
      * case expected IllegalArgumentException
      */
-    
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify boundary value.",
+      targets = {
+        @TestTarget(
+          methodName = "allocate",
+          methodArgs = {int.class}
+        )
+    })
     public void test_AllocateI() {
         // case: ShortBuffer testBuf properties is satisfy the conditions
         // specification
@@ -68,7 +82,15 @@ public class ShortBufferTest extends AbstractBufferTest {
             // expected
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "The same test as testArrayOffset.",
+      targets = {
+        @TestTarget(
+          methodName = "array",
+          methodArgs = {}
+        )
+    })
     public void testArray() {
         short array[] = buf.array();
         assertContentEquals(buf, array, buf.arrayOffset(), buf.capacity());
@@ -85,7 +107,15 @@ public class ShortBufferTest extends AbstractBufferTest {
         loadTestData2(buf);
         assertContentEquals(buf, array, buf.arrayOffset(), buf.capacity());
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "The same test as testArray.",
+      targets = {
+        @TestTarget(
+          methodName = "arrayOffset",
+          methodArgs = {}
+        )
+    })
     public void testArrayOffset() {
         short array[] = buf.array();
         assertContentEquals(buf, array, buf.arrayOffset(), buf.capacity());
@@ -102,7 +132,15 @@ public class ShortBufferTest extends AbstractBufferTest {
         loadTestData2(buf);
         assertContentEquals(buf, array, buf.arrayOffset(), buf.capacity());
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "asReadOnlyBuffer",
+          methodArgs = {}
+        )
+    })
     public void testAsReadOnlyBuffer() {
         buf.clear();
         buf.mark();
@@ -126,7 +164,15 @@ public class ShortBufferTest extends AbstractBufferTest {
         buf.reset();
         assertEquals(buf.position(), 0);
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "compact",
+          methodArgs = {}
+        )
+    })
     public void testCompact() {
         // case: buffer is full
         buf.clear();
@@ -177,7 +223,15 @@ public class ShortBufferTest extends AbstractBufferTest {
             // expected
         }
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "compareTo",
+          methodArgs = {java.nio.ShortBuffer.class}
+        )
+    })
     public void testCompareTo() {
         // compare to self
         assertEquals(0, buf.compareTo(buf));
@@ -200,7 +254,15 @@ public class ShortBufferTest extends AbstractBufferTest {
         assertTrue(buf.compareTo(other) > 0);
         assertTrue(other.compareTo(buf) < 0);
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "duplicate",
+          methodArgs = {}
+        )
+    })
     public void testDuplicate() {
         buf.clear();
         buf.mark();
@@ -232,7 +294,15 @@ public class ShortBufferTest extends AbstractBufferTest {
             assertContentEquals(buf, duplicate);
         }
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "equals",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void testEquals() {
         // equal to self
         assertTrue(buf.equals(buf));
@@ -258,6 +328,15 @@ public class ShortBufferTest extends AbstractBufferTest {
     /*
      * Class under test for short get()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "get",
+          methodArgs = {}
+        )
+    })
     public void testGet() {
         buf.clear();
         for (int i = 0; i < buf.capacity(); i++) {
@@ -275,6 +354,15 @@ public class ShortBufferTest extends AbstractBufferTest {
     /*
      * Class under test for java.nio.ShortBuffer get(short[])
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "get",
+          methodArgs = {short[].class}
+        )
+    })
     public void testGetshortArray() {
         short array[] = new short[1];
         buf.clear();
@@ -295,6 +383,15 @@ public class ShortBufferTest extends AbstractBufferTest {
     /*
      * Class under test for java.nio.ShortBuffer get(short[], int, int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "get",
+          methodArgs = {short[].class, int.class, int.class}
+        )
+    })
     public void testGetshortArrayintint() {
         buf.clear();
         short array[] = new short[buf.capacity()];
@@ -356,6 +453,15 @@ public class ShortBufferTest extends AbstractBufferTest {
     /*
      * Class under test for short get(int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "get",
+          methodArgs = {int.class}
+        )
+    })
     public void testGetint() {
         buf.clear();
         for (int i = 0; i < buf.capacity(); i++) {
@@ -375,11 +481,27 @@ public class ShortBufferTest extends AbstractBufferTest {
             // expected
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies that array method doesn't return null.",
+      targets = {
+        @TestTarget(
+          methodName = "array",
+          methodArgs = {}
+        )
+    })
     public void testHasArray() {
         assertNotNull(buf.array());
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "hashCode",
+          methodArgs = {}
+        )
+    })
     public void testHashCode() {
         buf.clear();
         ShortBuffer readonly = buf.asReadOnlyBuffer();
@@ -390,11 +512,27 @@ public class ShortBufferTest extends AbstractBufferTest {
         duplicate.position(buf.capacity() / 2);
         assertTrue(buf.hashCode() != duplicate.hashCode());
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies isDirect method for non direct ShortBuffer.",
+      targets = {
+        @TestTarget(
+          methodName = "isDirect",
+          methodArgs = {}
+        )
+    })
     public void testIsDirect() {
         assertFalse(buf.isDirect());
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "order",
+          methodArgs = {}
+        )
+    })
     public void testOrder() {
         buf.order();
         assertEquals(ByteOrder.nativeOrder(), buf.order());
@@ -403,6 +541,15 @@ public class ShortBufferTest extends AbstractBufferTest {
     /*
      * Class under test for java.nio.ShortBuffer put(short)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify ReadOnlyBufferException.",
+      targets = {
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {short.class}
+        )
+    })
     public void testPutshort() {
         buf.clear();
         for (int i = 0; i < buf.capacity(); i++) {
@@ -422,6 +569,15 @@ public class ShortBufferTest extends AbstractBufferTest {
     /*
      * Class under test for java.nio.ShortBuffer put(short[])
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify ReadOnlyBufferException.",
+      targets = {
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {short[].class}
+        )
+    })
     public void testPutshortArray() {
         short array[] = new short[1];
         buf.clear();
@@ -450,6 +606,15 @@ public class ShortBufferTest extends AbstractBufferTest {
     /*
      * Class under test for java.nio.ShortBuffer put(short[], int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify ReadOnlyBufferException.",
+      targets = {
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {short[].class, int.class, int.class}
+        )
+    })
     public void testPutshortArrayintint() {
         buf.clear();
         short array[] = new short[buf.capacity()];
@@ -516,6 +681,15 @@ public class ShortBufferTest extends AbstractBufferTest {
     /*
      * Class under test for java.nio.ShortBuffer put(java.nio.ShortBuffer)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify ReadOnlyBufferException.",
+      targets = {
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {java.nio.ShortBuffer.class}
+        )
+    })
     public void testPutShortBuffer() {
         ShortBuffer other = ShortBuffer.allocate(buf.capacity());
         try {
@@ -551,6 +725,15 @@ public class ShortBufferTest extends AbstractBufferTest {
     /*
      * Class under test for java.nio.ShortBuffer put(int, short)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify ReadOnlyBufferException.",
+      targets = {
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {int.class, short.class}
+        )
+    })
     public void testPutintshort() {
         buf.clear();
         for (int i = 0; i < buf.capacity(); i++) {
@@ -572,7 +755,15 @@ public class ShortBufferTest extends AbstractBufferTest {
             // expected
         }
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "slice",
+          methodArgs = {}
+        )
+    })
     public void testSlice() {
         assertTrue(buf.capacity() > 5);
         buf.position(1);
@@ -600,7 +791,15 @@ public class ShortBufferTest extends AbstractBufferTest {
             assertEquals(slice.get(1), 500);
         }
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public void testToString() {
         String str = buf.toString();
         assertTrue(str.indexOf("Short") >= 0 || str.indexOf("short") >= 0);
@@ -615,7 +814,15 @@ public class ShortBufferTest extends AbstractBufferTest {
      * for check equal between buf2 and short array[] 3. case for check a buf2
      * dependens to array[]
      */
-    
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "wrap",
+          methodArgs = {short[].class}
+        )
+    })
     public void test_Wrap$S() {
         short array[] = new short[BUFFER_LENGTH];
         loadTestData1(array, 0, BUFFER_LENGTH);
@@ -642,7 +849,15 @@ public class ShortBufferTest extends AbstractBufferTest {
      * case for check a buf2 dependens to array[] 4. case expected
      * IndexOutOfBoundsException
      */
-    
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "wrap",
+          methodArgs = {short[].class, int.class, int.class}
+        )
+    })
     public void test_Wrap$SII() {
         short array[] = new short[BUFFER_LENGTH];
         int offset = 5;

@@ -270,13 +270,11 @@ int dexProtoComputeArgsSize(const DexProto* pProto) {
 }
 
 /*
- * Compare the two prototypes. The two prototypes are compared
- * with the return type as the major order, then the first arguments,
- * then second, etc. If two prototypes are identical except that one
- * has extra arguments, then the shorter argument is considered the
- * earlier one in sort order (similar to strcmp()).
+ * Common implementation for dexProtoCompare() and dexProtoCompareParameters().
  */
-int dexProtoCompare(const DexProto* pProto1, const DexProto* pProto2) {
+static int protoCompare(const DexProto* pProto1, const DexProto* pProto2,
+        bool compareReturnType) {
+
     if (pProto1 == pProto2) {
         // Easy out.
         return 0;
@@ -300,12 +298,14 @@ int dexProtoCompare(const DexProto* pProto1, const DexProto* pProto2) {
 
         // Compare return types.
 
-        int result = 
-            strcmp(dexStringByTypeIdx(dexFile1, protoId1->returnTypeIdx),
-                    dexStringByTypeIdx(dexFile2, protoId2->returnTypeIdx));
+        if (compareReturnType) {
+            int result = 
+                strcmp(dexStringByTypeIdx(dexFile1, protoId1->returnTypeIdx),
+                        dexStringByTypeIdx(dexFile2, protoId2->returnTypeIdx));
 
-        if (result != 0) {
-            return result;
+            if (result != 0) {
+                return result;
+            }
         }
 
         // Compare parameters.
@@ -334,6 +334,29 @@ int dexProtoCompare(const DexProto* pProto1, const DexProto* pProto2) {
         }
     }
 }
+
+/*
+ * Compare the two prototypes. The two prototypes are compared
+ * with the return type as the major order, then the first arguments,
+ * then second, etc. If two prototypes are identical except that one
+ * has extra arguments, then the shorter argument is considered the
+ * earlier one in sort order (similar to strcmp()).
+ */
+int dexProtoCompare(const DexProto* pProto1, const DexProto* pProto2) {
+    return protoCompare(pProto1, pProto2, true);
+}
+
+/*
+ * Compare the two prototypes. The two prototypes are compared
+ * with the first argument as the major order, then second, etc. If two
+ * prototypes are identical except that one has extra arguments, then the
+ * shorter argument is considered the earlier one in sort order (similar
+ * to strcmp()).
+ */
+int dexProtoCompareParameters(const DexProto* pProto1, const DexProto* pProto2){
+    return protoCompare(pProto1, pProto2, false);
+}
+
 
 /*
  * Helper for dexProtoCompareToDescriptor(), which gets the return type

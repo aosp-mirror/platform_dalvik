@@ -15,6 +15,11 @@
  *  limitations under the License.
  */
 
+// BEGIN android-note
+// This class and some helper classes where copied from a newer version of harmony
+// to improve reusability of URLConnections
+// END android-note
+
 package org.apache.harmony.luni.internal.net.www.protocol.http;
 
 import java.io.ByteArrayOutputStream;

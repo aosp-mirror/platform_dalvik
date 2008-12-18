@@ -731,6 +731,9 @@ INLINE bool dvmIsStaticMethod(const Method* method) {
 INLINE bool dvmIsSynchronizedMethod(const Method* method) {
     return (method->accessFlags & ACC_SYNCHRONIZED) != 0;
 }
+INLINE bool dvmIsDeclaredSynchronizedMethod(const Method* method) {
+    return (method->accessFlags & ACC_DECLARED_SYNCHRONIZED) != 0;
+}
 INLINE bool dvmIsFinalMethod(const Method* method) {
     return (method->accessFlags & ACC_FINAL) != 0;
 }

@@ -17,37 +17,43 @@
 package java.net;
 
 /**
- * This class is used to hold information about failed name lookups
+ * This class is used to hold information about failed host name lookups.
+ * 
+ * @see NegativeCache
+ * @since Android 1.0
  */
 class NegCacheElement {
 
     // we need the time to figure out when the entry is stale
+    // BEGIN android-changed
     long nanoTimeAdded = System.nanoTime();
+    // END android-changed
 
     // holds the name of the host for which the lookup failed
     String hostName;
 
     /**
-     * default constructor
+     * default constructor.
      */
     public NegCacheElement() {
         super();
     }
 
     /**
-     * Constructor used to set the hostname for the failed entry
+     * Constructor used to set the hostname for the entry for which the lookup
+     * failed.
      * 
      * @param hostName
-     *            name of the host on which the lookup failed
+     *            name of the host for which the lookup failed.
      */
     public NegCacheElement(String hostName) {
         this.hostName = hostName;
     }
 
     /**
-     * Returns the hostname for the cache element
+     * Returns the hostname for the cached element.
      * 
-     * @return hostName name of the host on which the lookup failed
+     * @return hostName name of the host for which the lookup failed.
      */
     String hostName() {
         return hostName;

@@ -250,16 +250,19 @@ public abstract class WrapCipherSpi extends CipherSpi
         return null;
     }
 
+    // BEGIN android-changed
+    // added ShortBufferException to throws statement
     protected int engineDoFinal(
         byte[]  input,
         int     inputOffset,
         int     inputLen,
         byte[]  output,
         int     outputOffset)
-        throws IllegalBlockSizeException, BadPaddingException
+        throws IllegalBlockSizeException, BadPaddingException, ShortBufferException
     {
         return 0;
     }
+    // END android-changed
 
     protected byte[] engineWrap(
         Key     key)
@@ -292,8 +295,11 @@ public abstract class WrapCipherSpi extends CipherSpi
         byte[]  wrappedKey,
         String  wrappedKeyAlgorithm,
         int     wrappedKeyType)
-    throws InvalidKeyException
+    throws InvalidKeyException, NoSuchAlgorithmException
     {
+        // BEGIN android-note
+        // added ShortBufferException to throws statement
+        // END android-note
         byte[] encoded = null;
         try
         {
@@ -395,10 +401,12 @@ public abstract class WrapCipherSpi extends CipherSpi
             {
                 throw new InvalidKeyException("Unknown key type " + e.getMessage());
             }
-            catch (NoSuchAlgorithmException e)
-            {
-                throw new InvalidKeyException("Unknown key type " + e.getMessage());
-            }
+            // BEGIN android-removed
+            // catch (NoSuchAlgorithmException e)
+            // {
+            //     throw new InvalidKeyException("Unknown key type " + e.getMessage());
+            // }
+            // END android-removed
             catch (InvalidKeySpecException e2)
             {
                 throw new InvalidKeyException("Unknown key type " + e2.getMessage());

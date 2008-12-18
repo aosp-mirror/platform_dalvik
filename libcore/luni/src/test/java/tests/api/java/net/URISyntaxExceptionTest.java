@@ -16,107 +16,168 @@
 
 package tests.api.java.net;
 
+import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.net.URISyntaxException;
 import java.util.Locale;
 
+@TestTargetClass(URISyntaxException.class) 
 public class URISyntaxExceptionTest extends junit.framework.TestCase {
 
-	/**
-	 * @tests java.net.URISyntaxException#URISyntaxException(java.lang.String,
-	 *        java.lang.String, int)
-	 */
-	public void test_ConstructorLjava_lang_StringLjava_lang_StringI() {
-		// test for Constructor(String str, String problem, int index);
-		try {
-			new URISyntaxException(null, "problem", 2);
-			fail("Expected NullPointerException");
-		} catch (NullPointerException npe) {
-		}
+    /**
+     * @tests java.net.URISyntaxException#URISyntaxException(java.lang.String,
+     *        java.lang.String, int)
+     */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "URISyntaxException",
+          methodArgs = {java.lang.String.class, java.lang.String.class, int.class}
+        )
+    })
+    public void test_ConstructorLjava_lang_StringLjava_lang_StringI() {
+        // test for Constructor(String str, String problem, int index);
+        try {
+            new URISyntaxException(null, "problem", 2);
+            fail("Expected NullPointerException");
+        } catch (NullPointerException npe) {
+        }
 
-		try {
-			new URISyntaxException("str", null, 2);
-			fail("Expected NullPointerException");
-		} catch (NullPointerException npe) {
-		}
+        try {
+            new URISyntaxException("str", null, 2);
+            fail("Expected NullPointerException");
+        } catch (NullPointerException npe) {
+        }
 
-		try {
-			new URISyntaxException("str", "problem", -2);
-			fail("Expected IllegalArgumentException");
-		} catch (IllegalArgumentException iae) {
-		}
+        try {
+            new URISyntaxException("str", "problem", -2);
+            fail("Expected IllegalArgumentException");
+        } catch (IllegalArgumentException iae) {
+        }
 
-		URISyntaxException e = new URISyntaxException("str", "problem", 2);
-		assertEquals("returned incorrect reason", "problem", e.getReason());
-		assertEquals("returned incorrect input", "str", e.getInput());
-		assertEquals("returned incorrect index", 2, e.getIndex());
-	}
+        URISyntaxException e = new URISyntaxException("str", "problem", 2);
+        assertEquals("returned incorrect reason", "problem", e.getReason());
+        assertEquals("returned incorrect input", "str", e.getInput());
+        assertEquals("returned incorrect index", 2, e.getIndex());
+    }
 
-	/**
-	 * @tests java.net.URISyntaxException#URISyntaxException(java.lang.String,
-	 *        java.lang.String)
-	 */
-	public void test_ConstructorLjava_lang_StringLjava_lang_String() {
-		// test for Constructor(String str, String problem);
-		try {
-			new URISyntaxException(null, "problem");
-			fail("Expected NullPointerException");
-		} catch (NullPointerException npe) {
-		}
+    /**
+     * @tests java.net.URISyntaxException#URISyntaxException(java.lang.String,
+     *        java.lang.String)
+     */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "URISyntaxException",
+          methodArgs = {java.lang.String.class, java.lang.String.class}
+        )
+    })
+    public void test_ConstructorLjava_lang_StringLjava_lang_String() {
+        // test for Constructor(String str, String problem);
+        try {
+            new URISyntaxException(null, "problem");
+            fail("Expected NullPointerException");
+        } catch (NullPointerException npe) {
+        }
 
-		try {
-			new URISyntaxException("str", null);
-			fail("Expected NullPointerException");
-		} catch (NullPointerException npe) {
-		}
+        try {
+            new URISyntaxException("str", null);
+            fail("Expected NullPointerException");
+        } catch (NullPointerException npe) {
+        }
 
-		URISyntaxException e = new URISyntaxException("str", "problem");
-		assertEquals("returned incorrect reason", "problem", e.getReason());
-		assertEquals("returned incorrect input", "str", e.getInput());
-		assertEquals("returned incorrect index", -1, e.getIndex());
-	}
+        URISyntaxException e = new URISyntaxException("str", "problem");
+        assertEquals("returned incorrect reason", "problem", e.getReason());
+        assertEquals("returned incorrect input", "str", e.getInput());
+        assertEquals("returned incorrect index", -1, e.getIndex());
+    }
 
-	/**
-	 * @tests java.net.URISyntaxException#getIndex()
-	 */
-	public void test_getIndex() {
-		// see constructor tests
-	}
+    /**
+     * @tests java.net.URISyntaxException#getIndex()
+     */
+@TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Test is empty",
+      targets = {
+        @TestTarget(
+          methodName = "getIndex",
+          methodArgs = {}
+        )
+    })
+    public void test_getIndex() {
+        // see constructor tests
+    }
 
-	/**
-	 * @tests java.net.URISyntaxException#getReason()
-	 */
-	public void test_getReason() {
-		// see constructor tests
-	}
+    /**
+     * @tests java.net.URISyntaxException#getReason()
+     */
+@TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Test is empty",
+      targets = {
+        @TestTarget(
+          methodName = "getReason",
+          methodArgs = {}
+        )
+    })
+    public void test_getReason() {
+        // see constructor tests
+    }
 
-	/**
-	 * @tests java.net.URISyntaxException#getInput()
-	 */
-	public void test_getInput() {
-		// see constructor tests
-	}
+    /**
+     * @tests java.net.URISyntaxException#getInput()
+     */
+@TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Test is empty",
+      targets = {
+        @TestTarget(
+          methodName = "getInput",
+          methodArgs = {}
+        )
+    })
+    public void test_getInput() {
+        // see constructor tests
+    }
 
-	/**
-	 * @tests java.net.URISyntaxException#getMessage()
-	 */
-	public void test_getMessage() {
-		// tests for java.lang.String getMessage()
-		Locale.setDefault(Locale.US);
-		URISyntaxException e = new URISyntaxException("str", "problem", 3);
-		assertEquals("Returned incorrect message", "problem at index 3: str", e
-				.getMessage());
+    /**
+     * @tests java.net.URISyntaxException#getMessage()
+     */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getMessage",
+          methodArgs = {}
+        )
+    })
+    public void test_getMessage() {
+    
+        // tests for java.lang.String getMessage()
+        Locale.setDefault(Locale.US);
+        URISyntaxException e = new URISyntaxException("str", "problem", 3);
+        assertEquals("Returned incorrect message", "problem at index 3: str", e
+                .getMessage());
 
-		e = new URISyntaxException("str", "problem");
-		assertEquals("Returned incorrect message", "problem: str", e
-				.getMessage());
-	}
+        e = new URISyntaxException("str", "problem");
+        assertEquals("Returned incorrect message", "problem: str", e
+                .getMessage());
+    }
 
-	protected void setUp() {
-	}
+    protected void setUp() {
+    }
 
-	protected void tearDown() {
-	}
+    protected void tearDown() {
+    }
 
-	protected void doneSuite() {
-	}
+    protected void doneSuite() {
+    }
 }

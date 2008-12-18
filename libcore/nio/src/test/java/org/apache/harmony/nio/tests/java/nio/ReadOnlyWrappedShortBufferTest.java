@@ -15,9 +15,16 @@
  */
 package org.apache.harmony.nio.tests.java.nio;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.nio.ShortBuffer;
 
+@TestTargetClass(java.nio.ShortBuffer.class)
 public class ReadOnlyWrappedShortBufferTest extends ReadOnlyShortBufferTest {
+
     protected void setUp() throws Exception {
         super.setUp();
         buf = ShortBuffer.wrap(new short[BUFFER_LENGTH]);

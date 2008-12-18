@@ -19,16 +19,19 @@ package java.util;
 import java.io.Serializable;
 
 /**
- * The unchecked exception will be thrown out if the formatter has been closed.
+ * A {@code FormatterClosedException} will be thrown if the formatter has been
+ * closed.
  * 
+ * @see java.lang.RuntimeException
+ * @since Android 1.0
  */
 public class FormatterClosedException extends IllegalStateException implements
         Serializable {
     private static final long serialVersionUID = 18111216L;
 
     /**
-     * Constucts an instance of FormatterClosedException.
-     * 
+     * Constructs a new {@code FormatterClosedException} with the stack trace
+     * filled in.
      */
     public FormatterClosedException() {
     }

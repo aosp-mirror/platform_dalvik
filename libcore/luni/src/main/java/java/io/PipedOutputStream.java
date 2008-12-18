@@ -20,11 +20,13 @@ package java.io;
 import org.apache.harmony.luni.util.Msg;
 
 /**
- * PipedOutputStream is a class which places information on a communications
- * pipe. When two threads want to pass data back and forth, one creates a piped
- * output stream and the other creates a piped input stream.
+ * Places information on a communications pipe. When two threads want to pass
+ * data back and forth, one creates a piped output stream and the other one
+ * creates a piped input stream.
  * 
  * @see PipedInputStream
+ * 
+ * @since Android 1.0
  */
 public class PipedOutputStream extends OutputStream {
 
@@ -34,23 +36,26 @@ public class PipedOutputStream extends OutputStream {
     private PipedInputStream dest;
 
     /**
-     * Constructs a new unconnected PipedOutputStream. The resulting Stream must
-     * be connected to a PipedInputStream before data may be written to it.
+     * Constructs a new unconnected {@code PipedOutputStream}. The resulting
+     * stream must be connected to a {@link PipedInputStream} before data can be
+     * written to it.
+     * 
+     * @since Android 1.0
      */
     public PipedOutputStream() {
         super();
     }
 
     /**
-     * Constructs a new PipedOutputStream connected to the PipedInputStream
-     * <code>dest</code>. Any data written to this stream can be read from
-     * the <code>dest</code>.
+     * Constructs a new {@code PipedOutputStream} connected to the
+     * {@link PipedInputStream} {@code dest}. Any data written to this stream
+     * can be read from the target stream.
      * 
      * @param dest
-     *            the PipedInputStream to connect to.
-     * 
+     *            the piped input stream to connect to.
      * @throws IOException
-     *             if <code>dest</code> is already connected.
+     *             if this stream or {@code dest} are already connected.
+     * @since Android 1.0
      */
     public PipedOutputStream(PipedInputStream dest) throws IOException {
         super();
@@ -58,13 +63,12 @@ public class PipedOutputStream extends OutputStream {
     }
 
     /**
-     * Close this PipedOutputStream. Any data buffered in the corresponding
-     * PipedInputStream can be read, then -1 will be returned to the reader. If
-     * this OutputStream is not connected, this method does nothing.
+     * Closes this stream. If this stream is connected to an input stream, the
+     * input stream is closed and the pipe is disconnected.
      * 
      * @throws IOException
-     *             If an error occurs attempting to close this
-     *             PipedOutputStream.
+     *             if an error occurs while closing this stream.
+     * @since Android 1.0
      */
     @Override
     public void close() throws IOException {
@@ -76,14 +80,14 @@ public class PipedOutputStream extends OutputStream {
     }
 
     /**
-     * Connects this PipedOutputStream to a PipedInputStream. Any data written
-     * to this OutputStream becomes readable in the InputStream.
+     * Connects this stream to a {@link PipedInputStream}. Any data written to
+     * this output stream becomes readable in the input stream.
      * 
      * @param stream
-     *            the destination PipedInputStream.
-     * 
+     *            the destination input stream.
      * @throws IOException
-     *             If this Stream or the dest is already connected.
+     *             if either stream is already connected.
+     * @since Android 1.0
      */
     public void connect(PipedInputStream stream) throws IOException {
         if (null == stream) {
@@ -103,11 +107,12 @@ public class PipedOutputStream extends OutputStream {
     }
 
     /**
-     * Notifies the readers on the PipedInputStream that bytes can be read. This
-     * method does nothing if this Stream is not connected.
+     * Notifies the readers of this {@link PipedInputStream} that bytes can be
+     * read. This method does nothing if this stream is not connected.
      * 
      * @throws IOException
-     *             If an IO error occurs during the flush.
+     *             if an I/O error occurs while flushing this stream.
+     * @since Android 1.0
      */
     @Override
     public void flush() throws IOException {
@@ -119,34 +124,40 @@ public class PipedOutputStream extends OutputStream {
     }
 
     /**
-     * Writes <code>count</code> <code>bytes</code> from this byte array
-     * <code>buffer</code> starting at offset <code>index</code> to this
-     * PipedOutputStream. The written data can now be read from the destination
-     * PipedInputStream. Separate threads should be used for the reader of the
-     * PipedInputStream and the PipedOutputStream. There may be undesirable
-     * results if more than one Thread interacts a input or output pipe.
+     * Writes {@code count} bytes from the byte array {@code buffer} starting at
+     * {@code offset} to this stream. The written data can then be read from the
+     * connected input stream.
+     * <p>
+     * Separate threads should be used to write to a {@code PipedOutputStream}
+     * and to read from the connected {@link PipedInputStream}. If the same
+     * thread is used, a deadlock may occur.
+     * </p>
      * 
      * @param buffer
-     *            the buffer to be written
+     *            the buffer to write.
      * @param offset
-     *            offset in buffer to get bytes
+     *            the index of the first byte in {@code buffer} to write.
      * @param count
-     *            number of bytes in buffer to write
-     * 
-     * @throws IOException
-     *             If the receiving thread was terminated without closing the
-     *             pipe. This case is not currently handled correctly.
+     *            the number of bytes from {@code buffer} to write to this
+     *            stream.
+     * @throws IndexOutOfBoundsException
+     *             if {@code offset < 0} or {@code count < 0}, or if {@code
+     *             offset + count} is bigger than the length of {@code buffer}.
      * @throws InterruptedIOException
-     *             If the pipe is full and the current thread is interrupted
+     *             if the pipe is full and the current thread is interrupted
      *             waiting for space to write data. This case is not currently
      *             handled correctly.
-     * @throws NullPointerException
-     *             If the receiver has not been connected yet.
-     * @throws IllegalArgumentException
-     *             If any of the arguments are out of bounds.
+     * @throws IOException
+     *             if this stream is not connected, if the target stream is
+     *             closed or if the thread reading from the target stream is no
+     *             longer alive. This case is currently not handled correctly.
+     * @since Android 1.0
      */
     @Override
-    public void write(byte buffer[], int offset, int count) throws IOException {
+    public void write(byte[] buffer, int offset, int count) throws IOException {
+        // BEGIN android-note
+        // changed array notation to be consistent with the rest of harmony
+        // END android-note
         if (dest == null) {
             // K007b=Pipe Not Connected
             throw new IOException(Msg.getString("K007b")); //$NON-NLS-1$
@@ -155,25 +166,26 @@ public class PipedOutputStream extends OutputStream {
     }
 
     /**
-     * Writes the specified byte <code>oneByte</code> to this
-     * PipedOutputStream. Only the low order byte of <code>oneByte</code> is
-     * written. The data can now be read from the destination PipedInputStream.
-     * Separate threads should be used for the reader of the PipedInputStream
-     * and the PipedOutputStream. There may be undesirable results if more than
-     * one Thread interacts a input or output pipe.
+     * Writes a single byte to this stream. Only the least significant byte of
+     * the integer {@code oneByte} is written. The written byte can then be read
+     * from the connected input stream.
+     * <p>
+     * Separate threads should be used to write to a {@code PipedOutputStream}
+     * and to read from the connected {@link PipedInputStream}. If the same
+     * thread is used, a deadlock may occur.
+     * </p>
      * 
      * @param oneByte
-     *            the byte to be written
-     * 
-     * @throws IOException
-     *             If the receiving thread was terminated without closing the
-     *             pipe. This case is not currently handled correctly.
+     *            the byte to write.
      * @throws InterruptedIOException
-     *             If the pipe is full and the current thread is interrupted
+     *             if the pipe is full and the current thread is interrupted
      *             waiting for space to write data. This case is not currently
      *             handled correctly.
-     * @throws NullPointerException
-     *             If the receiver has not been connected yet.
+     * @throws IOException
+     *             if this stream is not connected, if the target stream is
+     *             closed or if the thread reading from the target stream is no
+     *             longer alive. This case is currently not handled correctly.
+     * @since Android 1.0
      */
     @Override
     public void write(int oneByte) throws IOException {

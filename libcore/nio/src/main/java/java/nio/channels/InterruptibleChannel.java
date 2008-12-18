@@ -20,38 +20,38 @@ package java.nio.channels;
 import java.io.IOException;
 
 /**
- * Channels that implement this interface are both asynchronously closable and
- * interruptible.
+ * Channels that implement this interface can be asynchronously closed and
+ * interrupted.
  * <p>
- * A channel that is asynchronously closable permits a thread blocked on an IO
- * operation (the IO thread) to be released by another thread calling the
- * channel's <code>close()</code> method. The IO thread will throw an
- * <code>AsynchronousCloseException</code> and the channel will be closed.
+ * A channel that can be asynchronously closed permits that a thread blocked on
+ * an I/O operation (the I/O thread) can be released by another thread calling
+ * the channel's {@link #close()} method. The I/O thread will throw an
+ * {@link AsynchronousCloseException} and the channel will be closed.
  * </p>
  * <p>
- * A channel that is interruptible permits a thread blocked on an IO operation
- * (the IO thread) to be interrupted by another thread (by invoking
- * <code>interrupt()</code> on the IO thread). When the IO thread is
- * interrupted it will throw a <code>ClosedByInterruptException</code>
- * exception, it will have its interrupted status set, and the channel will be
- * closed. If the IO thread attempts to make an IO call with the interrupt
- * status set the call will immediately fail with a
- * <code>ClosedByInterruptException</code>.
+ * A channel that is interruptible permits a thread blocked on an I/O operation
+ * (the I/O thread) to be interrupted by another thread (by invoking
+ * {@link Thread#interrupt()} on the I/O thread). When the I/O thread is
+ * interrupted it will throw a {@link ClosedByInterruptException}, it will have
+ * its interrupted status set and the channel will be closed. If the I/O thread
+ * attempts to make an I/O call with the interrupt status set the call will
+ * immediately fail with a {@link ClosedByInterruptException}.
  * 
+ * @since Android 1.0
  */
 public interface InterruptibleChannel extends Channel {
 
     /**
-     * Closes an InterruptibleChannel. This method is precisely the same as the
-     * super-interface <code>close()</code>.
+     * Closes the channel.
      * <p>
-     * Any threads that are blocked on IO operations on this channel will be
-     * interrupted with an <code>AsynchronousCloseException
-     * </code>.
+     * Any threads that are blocked on I/O operations on this channel will be
+     * interrupted with an {@link AsynchronousCloseException}. Otherwise, this
+     * method behaves the same as defined in the {@code Channel} interface.
      * </p>
      * 
      * @throws IOException
-     *             if an IO problem occurs closing the channel.
+     *             if an I/O error occurs while closing the channel.
+     * @since Android 1.0
      */
     public void close() throws IOException;
 

@@ -25,16 +25,29 @@ import java.security.PrivilegedAction;
 import org.apache.harmony.luni.util.Msg;
 
 /**
- * The class FilePermission is responsible for granting access to files or
- * directories. The FilePermission is made up of a pathname and a set of actions
- * which are valid for the pathname.
- * <P>
- * The <code>File.separatorChar</code> must be used in all pathnames when
+ * A permission for accessing a file or directory. The FilePermission is made up
+ * of a pathname and a set of actions which are valid for the pathname.
+ * <p>
+ * The {@code File.separatorChar} must be used in all pathnames when
  * constructing a FilePermission. The following descriptions will assume the
- * char is </code>/</code>. A pathname which ends in "/*", implies all the
- * files and directories contained in that directory. If the pathname ends in
- * "/-", it indicates all the files and directories in that directory
- * <b>recursively</b>.
+ * char is {@code /}. A pathname that ends in {@code /*} includes all the files
+ * and directories contained in that directory. If the pathname
+ * ends in {@code /-}, it includes all the files and directories in that
+ * directory <i>recursively</i>. The following pathnames have a special meaning:
+ * </p>
+ * <ul>
+ *   <li>
+ *     "*": all files in the current directory;
+ *   </li>
+ *   <li>
+ *     "-": recursively all files and directories in the current directory;
+ *   </li>
+ *   <li>
+ *     "&lt;&lt;ALL FILES&gt;&gt;": any file and directory in the file system.
+ *   </li>
+ * </ul>
+ * 
+ * @since Android 1.0
  */
 public final class FilePermission extends Permission implements Serializable {
     
@@ -65,10 +78,17 @@ public final class FilePermission extends Permission implements Serializable {
      * Constructs a new FilePermission with the path and actions specified.
      * 
      * @param path
-     *            the path to apply the actions to.
+     *            the pathname of the file or directory to apply the actions to.
      * @param actions
-     *            the actions for the <code>path<code>. May be any
-     *            combination of read, write, execute, or delete.
+     *            the actions for the {@code path}. May be any combination of
+     *            "read", "write", "execute" and "delete".
+     * @throws IllegalArgumentException
+     *             if {@code actions} is {@code null} or an empty string, or if
+     *             it contains a string other than "read", "write", "execute"
+     *             and "delete".
+     * @throws NullPointerException
+     *             if {@code path} is null.
+     * @since Android 1.0
      */
     public FilePermission(String path, String actions) {
         super(path);
@@ -107,7 +127,7 @@ public final class FilePermission extends Permission implements Serializable {
     }
 
     /**
-     * Answer the string representing this permissions actions. It must be of
+     * Returns the string representing this permission's actions. It must be of
      * the form "read,write,execute,delete", all lower case and in the correct
      * order if there is more than one action.
      * 
@@ -174,9 +194,10 @@ public final class FilePermission extends Permission implements Serializable {
     }
 
     /**
-     * Returns the actions associated with the receiver.
+     * Returns the actions associated with this file permission.
      * 
-     * @return the actions associated with the receiver.
+     * @return the actions associated with this file permission.
+     * @since Android 1.0
      */
     @Override
     public String getActions() {
@@ -184,14 +205,15 @@ public final class FilePermission extends Permission implements Serializable {
     }
 
     /**
-     * Check to see if this permission is equal to another. The two are equal if
-     * <code>obj</code> is a FilePermission, they have the same path, and they
+     * Indicates if this file permission is equal to another. The two are equal
+     * if {@code obj} is a FilePermission, they have the same path, and they
      * have the same actions.
      * 
      * @param obj
      *            the object to check equality with.
-     * @return <code>true</code> if the two are equal, <code>false</code>
-     *         otherwise.
+     * @return {@code true} if this file permission is equal to {@code obj},
+     *         {@code false} otherwise.
+     * @since Android 1.0
      */
     @Override
     public boolean equals(Object obj) {
@@ -213,12 +235,17 @@ public final class FilePermission extends Permission implements Serializable {
     }
 
     /**
-     * Indicates whether the argument permission is implied by the receiver.
+     * Indicates whether the permission {@code p} is implied by this file
+     * permission. This is the case if {@code p} is an instance of
+     * {@code FilePermission}, if {@code p}'s actions are a subset of this
+     * file permission's actions and if {@code p}'s path is implied by this
+     * file permission's path.
      * 
      * @param p
-     *            java.security.Permission the permission to check.
-     * @return <code>true</code> if the argument permission is implied by the
-     *         receiver, and <code>false</code> if it is not.
+     *            the permission to check.
+     * @return {@code true} if the argument permission is implied by the
+     *         receiver, and {@code false} if it is not.
+     * @since Android 1.0
      */
     @Override
     public boolean implies(Permission p) {
@@ -330,10 +357,11 @@ public final class FilePermission extends Permission implements Serializable {
 
     /**
      * Returns a new PermissionCollection in which to place FilePermission
-     * Objects.
+     * objects.
      * 
-     * @return A new PermissionCollection suitable for storing FilePermission
-     *         objects.
+     * @return A new PermissionCollection object suitable for storing
+     *         FilePermission objects.
+     * @since Android 1.0
      */
     @Override
     public PermissionCollection newPermissionCollection() {
@@ -341,9 +369,10 @@ public final class FilePermission extends Permission implements Serializable {
     }
 
     /**
-     * Returns an int representing the hash code value for this FilePermission.
+     * Calculates the hash code value for this file permission.
      * 
-     * @return int the hash code value for this FilePermission.
+     * @return the hash code value for this file permission.
+     * @since Android 1.0
      */
     @Override
     public int hashCode() {

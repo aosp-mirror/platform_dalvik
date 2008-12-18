@@ -1,3 +1,3 @@
 HANDLE_OPCODE(OP_INVOKE_VIRTUAL_QUICK_RANGE/*{vCCCC..v(CCCC+AA-1)}, meth@BBBB*/)
-    GOTO(invokeVirtualQuick, true);
+    GOTO_invoke(invokeVirtualQuick, true);
 OP_END

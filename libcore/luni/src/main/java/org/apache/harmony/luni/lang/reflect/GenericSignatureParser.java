@@ -142,7 +142,7 @@ public class GenericSignatureParser {
             String signature) {
         setInput(genericDecl, signature);
         if (!eof) {
-            parseMethodTypeSignature(false);
+            parseMethodTypeSignature();
         } else {
             if(genericDecl instanceof Method) {
                 Method m = (Method) genericDecl;
@@ -170,7 +170,7 @@ public class GenericSignatureParser {
             String signature) {
         setInput(genericDecl, signature);
         if (!eof) {
-            parseMethodTypeSignature(true);
+            parseMethodTypeSignature();
         } else {
             if(genericDecl instanceof Constructor) {
                 Constructor c = (Constructor) genericDecl;
@@ -381,7 +381,7 @@ public class GenericSignatureParser {
         }
     }
 
-    void parseMethodTypeSignature(boolean isContructor) {
+    void parseMethodTypeSignature() {
         // MethodTypeSignature ::= [FormalTypeParameters] 
         //         "(" {TypeSignature} ")" ReturnType {ThrowsSignature}.
 
@@ -394,9 +394,7 @@ public class GenericSignatureParser {
         }
         expect(')');
 
-        if (!isContructor) {
-            returnType = parseReturnType();
-        }
+        returnType = parseReturnType();
 
         exceptionTypes = new ListOfTypes(8);
         while (symbol == '^') {

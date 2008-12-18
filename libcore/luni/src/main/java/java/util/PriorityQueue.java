@@ -21,16 +21,18 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
 /**
- * PriorityQueue holds elements on a priority heap, which orders elements
- * according to the comparator specified at construction or their natural order.
- * If the queue uses natural order, any element that is not comparable is not
- * permitted to insert to the queue.
- * 
+ * A PriorityQueue holds elements on a priority heap, which orders the elements
+ * according to their natural order or according to the comparator specified at
+ * construction time. If the queue uses natural ordering, only elements that are
+ * comparable are permitted to be inserted into the queue.
+ * <p>
  * The least element of the specified ordering is stored at the head of the
  * queue and the greatest element is stored at the tail of the queue.
+ * <p>
+ * A PriorityQueue is not synchronized. If multiple threads will have to access
+ * it concurrently, use the {@link java.util.concurrent.PriorityBlockingQueue}.
  * 
- * PriorityQueue is not synchronized. If multiple threads will access it
- * concurrently, use the PriorityBlockingQueue.
+ * @since Android 1.0
  */
 public class PriorityQueue<E> extends AbstractQueue<E> implements Serializable {
 
@@ -49,29 +51,40 @@ public class PriorityQueue<E> extends AbstractQueue<E> implements Serializable {
     private transient E[] elements;
 
     /**
-     * Constructs a priority queue with the capacity of 11 and natural ordering.
+     * Constructs a priority queue with an initial capacity of 11 and natural
+     * ordering.
+     * 
+     * @since Android 1.0
      */
     public PriorityQueue() {
         this(DEFAULT_CAPACITY);
     }
 
     /**
-     * Constructs a priority queue with specified capacity and natural ordering.
+     * Constructs a priority queue with the specified capacity and natural
+     * ordering.
      * 
-     * @param initialCapacity the specified capacity.
-     * @throws IllegalArgumentException if the initialCapacity is less than 1
+     * @param initialCapacity
+     *            the specified capacity.
+     * @throws IllegalArgumentException
+     *             if the initialCapacity is less than 1.
+     * @since Android 1.0
      */
     public PriorityQueue(int initialCapacity) {
         this(initialCapacity, null);
     }
 
     /**
-     * Constructs a priority queue with specified capacity and comparator.
+     * Constructs a priority queue with the specified capacity and comparator.
      * 
-     * @param initialCapacity the specified capacity.
-     * @param comparator the specified comparator. If it is null, the natural
-     *        ordering will be used.
-     * @throws IllegalArgumentException if the initialCapacity is less than 1
+     * @param initialCapacity
+     *            the specified capacity.
+     * @param comparator
+     *            the specified comparator. If it is null, the natural ordering
+     *            will be used.
+     * @throws IllegalArgumentException
+     *             if the initialCapacity is less than 1.
+     * @since Android 1.0
      */
     public PriorityQueue(int initialCapacity, Comparator<? super E> comparator) {
         if (initialCapacity < 1) {
@@ -83,16 +96,18 @@ public class PriorityQueue<E> extends AbstractQueue<E> implements Serializable {
 
     /**
      * Constructs a priority queue that contains the elements of a collection.
-     * The constructed priority queue has the initial capacity of 110% the
-     * collection. And the priority queue uses natural ordering to order its
+     * The constructed priority queue has the initial capacity of 110% of the
+     * size of the collection. The queue uses natural ordering to order its
      * elements.
      * 
-     * @param c the collection whose elements will be added to the priority
-     *        queue to be constructed.
-     * @throws ClassCastException if any of the elements in the collection is
-     *         not comparable.
-     * @throws NullPointerExcepiton if any of the elements in the collection is
-     *         null.
+     * @param c
+     *            the collection whose elements will be added to the priority
+     *            queue to be constructed.
+     * @throws ClassCastException
+     *             if any of the elements in the collection are not comparable.
+     * @throws NullPointerException
+     *             if any of the elements in the collection are null.
+     * @since Android 1.0
      */
     public PriorityQueue(Collection<? extends E> c) {
         if (c instanceof PriorityQueue) {
@@ -108,11 +123,13 @@ public class PriorityQueue<E> extends AbstractQueue<E> implements Serializable {
     /**
      * Constructs a priority queue that contains the elements of another
      * priority queue. The constructed priority queue has the initial capacity
-     * of 110% the latter one. And the two priority queue has the same
+     * of 110% of the specified one. Both priority queues have the same
      * comparator.
      * 
-     * @param c the priority queue whose elements will be added to the priority
-     *        queue to be constructed.
+     * @param c
+     *            the priority queue whose elements will be added to the
+     *            priority queue to be constructed.
+     * @since Android 1.0
      */
     public PriorityQueue(PriorityQueue<? extends E> c) {
         getFromPriorityQueue(c);
@@ -120,12 +137,14 @@ public class PriorityQueue<E> extends AbstractQueue<E> implements Serializable {
 
     /**
      * Constructs a priority queue that contains the elements of a sorted set.
-     * The constructed priority queue has the initial capacity of 110% the
-     * sorted set. And the priority queue has the same comparator of the sorted
-     * set.
+     * The constructed priority queue has the initial capacity of 110% of the
+     * size of the sorted set. The priority queue will have the same comparator
+     * as the sorted set.
      * 
-     * @param c the sorted set whose elements will be added to the priority
-     *        queue to be constructed.
+     * @param c
+     *            the sorted set whose elements will be added to the priority
+     *            queue to be constructed.
+     * @since Android 1.0
      */
     public PriorityQueue(SortedSet<? extends E> c) {
         getFromSortedSet(c);
@@ -136,6 +155,7 @@ public class PriorityQueue<E> extends AbstractQueue<E> implements Serializable {
      * in any specified ordering.
      * 
      * @return the iterator of the priority queue.
+     * @since Android 1.0
      */
     @Override
     public Iterator<E> iterator() {
@@ -147,6 +167,7 @@ public class PriorityQueue<E> extends AbstractQueue<E> implements Serializable {
      * than the Integer.MAX, then it returns Integer.MAX.
      * 
      * @return the size of the priority queue.
+     * @since Android 1.0
      */
     @Override
     public int size() {
@@ -155,6 +176,8 @@ public class PriorityQueue<E> extends AbstractQueue<E> implements Serializable {
 
     /**
      * Removes all the elements of the priority queue.
+     * 
+     * @since Android 1.0
      */
     @Override
     public void clear() {
@@ -165,11 +188,13 @@ public class PriorityQueue<E> extends AbstractQueue<E> implements Serializable {
     /**
      * Inserts the element to the priority queue.
      * 
-     * @return true
-     * @throws ClassCastException if the element cannot be compared with the
-     *         elements in the priority queue using the ordering of the priority
-     *         queue.
-     * @throws NullPointerExcepiton if the element is null.
+     * @param o
+     *            the element to add to the priority queue.
+     * @return always true
+     * @throws ClassCastException
+     *             if the element cannot be compared with the elements in the
+     *             priority queue using the ordering of the priority queue.
+     * @since Android 1.0
      */
     public boolean offer(E o) {
         if (null == o) {
@@ -184,7 +209,8 @@ public class PriorityQueue<E> extends AbstractQueue<E> implements Serializable {
     /**
      * Gets and removes the head of the queue.
      * 
-     * @return the head of the queue. Null if the queue is empty.
+     * @return the head of the queue or null if the queue is empty.
+     * @since Android 1.0
      */
     public E poll() {
         if (isEmpty()) {
@@ -196,9 +222,10 @@ public class PriorityQueue<E> extends AbstractQueue<E> implements Serializable {
     }
 
     /**
-     * Gets but not removes the head of the queue.
+     * Gets but does not remove the head of the queue.
      * 
-     * @return the head of the queue. Null if the queue is empty.
+     * @return the head of the queue or null if the queue is empty.
+     * @since Android 1.0
      */
     public E peek() {
         if (isEmpty()) {
@@ -210,19 +237,22 @@ public class PriorityQueue<E> extends AbstractQueue<E> implements Serializable {
     /**
      * Gets the comparator of the priority queue.
      * 
-     * @return the comparator of the priority queue. Null if the natural
+     * @return the comparator of the priority queue or null if the natural
      *         ordering is used.
+     * @since Android 1.0
      */
     public Comparator<? super E> comparator() {
         return comparator;
     }
 
     /**
-     * Removes the specified object of the priority queue.
+     * Removes the specified object from the priority queue.
      * 
-     * @param o the object to be removed.
-     * @return true if the object is in the priority queue, false if the object
-     *         is not in the priority queue.
+     * @param o
+     *            the object to be removed.
+     * @return true if the object was in the priority queue, false if the object
+     *         was not in the priority queue.
+     * @since Android 1.0
      */
     @Override
     @SuppressWarnings("unchecked")
@@ -246,12 +276,13 @@ public class PriorityQueue<E> extends AbstractQueue<E> implements Serializable {
     /**
      * Adds the specified object to the priority queue.
      * 
-     * @param o the object to be added.
-     * @return true.
-     * @throws ClassCastException if the element cannot be compared with the
-     *         elements in the priority queue using the ordering of the priority
-     *         queue.
-     * @throws NullPointerExcepiton if the element is null.
+     * @param o
+     *            the object to be added.
+     * @return always true.
+     * @throws ClassCastException
+     *             if the element cannot be compared with the elements in the
+     *             priority queue using the ordering of the priority queue.
+     * @since Android 1.0
      */
     @Override
     public boolean add(E o) {

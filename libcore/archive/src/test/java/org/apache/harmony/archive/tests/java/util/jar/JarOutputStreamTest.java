@@ -16,6 +16,11 @@
  */
 package org.apache.harmony.archive.tests.java.util.jar;
 
+import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -28,11 +33,21 @@ import java.util.jar.Manifest;
 import tests.support.Support_Exec;
 import tests.support.resource.Support_Resources;
 
+@TestTargetClass(JarOutputStream.class) 
 public class JarOutputStreamTest extends junit.framework.TestCase {
 
     /**
      * @tests java.util.jar.JarOutputStream#putNextEntry(java.util.zip.ZipEntry)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "putNextEntry",
+          methodArgs = {java.util.zip.ZipEntry.class}
+        )
+    })
     public void test_putNextEntryLjava_util_zip_ZipEntry() {
         // testClass file`s actual extension is .class, since having .class
         // extension files in source dir causes

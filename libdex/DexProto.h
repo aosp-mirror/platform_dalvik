@@ -165,6 +165,15 @@ int dexProtoComputeArgsSize(const DexProto* pProto);
 int dexProtoCompare(const DexProto* pProto1, const DexProto* pProto2);
 
 /*
+ * Compare the two prototypes. The two prototypes are compared
+ * with the first argument as the major order, then second, etc. If two
+ * prototypes are identical except that one has extra arguments, then the
+ * shorter argument is considered the earlier one in sort order (similar
+ * to strcmp()).
+ */
+int dexProtoCompareParameters(const DexProto* pProto1, const DexProto* pProto2);
+
+/*
  * Compare a prototype and a string method descriptor. The comparison
  * is done as if the descriptor were converted to a prototype and compared
  * with dexProtoCompare().

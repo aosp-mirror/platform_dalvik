@@ -19,9 +19,12 @@ package java.util;
 import java.io.Serializable;
 
 /**
- * The unchecked exception will be thrown out if an invalid Unicode code point,
- * which is Character.isValidCodePoint(int), is passed as a parameter to
- * Formatter.
+ * An {@code IllegalFormatCodePointException} will be thrown if an invalid
+ * Unicode code point (defined by {@link Character#isValidCodePoint(int)}) is
+ * passed as a parameter to a Formatter.
+ * 
+ * @see java.lang.RuntimeException
+ * @since Android 1.0
  */
 public class IllegalFormatCodePointException extends IllegalFormatException
         implements Serializable {
@@ -30,29 +33,29 @@ public class IllegalFormatCodePointException extends IllegalFormatException
     private int c;
 
     /**
-     * Constructs an IllegalFormatCodePointException which is specified by the
-     * invalid Unicode code point.
+     * Constructs a new {@code IllegalFormatCodePointException} which is
+     * specified by the invalid Unicode code point.
      * 
      * @param c
-     *            The invalid Unicode code point.
+     *           the invalid Unicode code point.
      */
     public IllegalFormatCodePointException(int c) {
         this.c = c;
     }
 
     /**
-     * Return the invalid Unicode code point.
+     * Returns the invalid Unicode code point.
      * 
-     * @return The invalid Unicode code point.
+     * @return the invalid Unicode code point.
      */
     public int getCodePoint() {
         return c;
     }
 
     /**
-     * Return the message string of the IllegalFormatCodePointException.
+     * Returns the message string of the IllegalFormatCodePointException.
      * 
-     * @return The message string of the IllegalFormatCodePointException.
+     * @return the message string of the IllegalFormatCodePointException.
      */
     @Override
     public String getMessage() {

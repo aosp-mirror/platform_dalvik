@@ -17,15 +17,29 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import junit.framework.TestCase;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
 
+import junit.framework.TestCase;
 import org.apache.harmony.testframework.serialization.SerializationTest;
 
+@TestTargetClass(IllegalStateException.class) 
 public class IllegalStateExceptionTest extends TestCase {
 
     /**
      * @tests java.lang.IllegalStateException#IllegalStateException()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "IllegalStateException",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         IllegalStateException e = new IllegalStateException();
         assertNull(e.getMessage());
@@ -36,6 +50,15 @@ public class IllegalStateExceptionTest extends TestCase {
     /**
      * @tests java.lang.IllegalStateException#IllegalStateException(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "IllegalStateException",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() {
         IllegalStateException e = new IllegalStateException("fixture");
         assertEquals("fixture", e.getMessage());
@@ -45,6 +68,15 @@ public class IllegalStateExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization.
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Verifies serialization/deserialization.",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationSelf",
+          methodArgs = {}
+        )
+    })
     public void testSerializationSelf() throws Exception {
 
         SerializationTest.verifySelf(new IllegalStateException());
@@ -53,6 +85,15 @@ public class IllegalStateExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Verifies serialization/deserialization.",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationGolden",
+          methodArgs = {}
+        )
+    })
     public void testSerializationCompatibility() throws Exception {
 
         SerializationTest.verifyGolden(this, new IllegalStateException());

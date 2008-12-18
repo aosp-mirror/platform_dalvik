@@ -17,11 +17,26 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
+@TestTargetClass(OutOfMemoryError.class) 
 public class OutOfMemoryErrorTest extends junit.framework.TestCase {
 
     /**
      * @tests java.lang.OutOfMemoryError#OutOfMemoryError()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "OutOfMemoryError",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         // Test for method java.lang.OutOfMemoryError()
         Error e = new OutOfMemoryError();
@@ -32,6 +47,15 @@ public class OutOfMemoryErrorTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.OutOfMemoryError#OutOfMemoryError(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "OutOfMemoryError",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() {
         // Test for method java.lang.OutOfMemoryError(java.lang.String)
         Error e = new OutOfMemoryError(null);

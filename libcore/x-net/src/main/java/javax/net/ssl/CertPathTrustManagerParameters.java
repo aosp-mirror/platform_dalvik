@@ -15,27 +15,37 @@
  *  limitations under the License.
  */
 
-/**
-* @author Boris V. Kuznetsov
-* @version $Revision$
-*/
-
 package javax.net.ssl;
 
 import java.security.cert.CertPathParameters;
 
 /**
- * @com.intel.drl.spec_ref
- * 
+ * Certification path parameters to provide to certification path
+ * based {@link TrustManager}.
+ * @since Android 1.0
  */
 public class CertPathTrustManagerParameters implements ManagerFactoryParameters {
 
     private CertPathParameters param;
 
+    /**
+     * Creates a new {@code CertPathTrustManagerParameters} with the specified
+     * certification path parameters.
+     * 
+     * @param parameters
+     *            the certification path parameters.
+     * @since Android 1.0
+     */
     public CertPathTrustManagerParameters(CertPathParameters parameters) {
         param = (CertPathParameters) parameters.clone();
     }
 
+    /**
+     * Returns a copy of the certification path parameters.
+     * 
+     * @return a copy of the certification path parameters.
+     * @since Android 1.0
+     */
     public CertPathParameters getParameters() {
         return (CertPathParameters) param.clone();
     }

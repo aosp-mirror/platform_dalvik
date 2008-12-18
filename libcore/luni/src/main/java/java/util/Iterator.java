@@ -19,41 +19,50 @@ package java.util;
 
 
 /**
- * An Iterator is used to sequence over a collection of objects.
+ * An Iterator is used to sequence over a collection of objects. Conceptual, an
+ * iterator is always positioned between two elements of a collection. A fresh
+ * iterator is always positioned in front of the first element.
+ * 
+ * If a collection has been changed since its creation, methods {@code next} and
+ * {@code hasNext()} may throw a {@code ConcurrentModificationException}.
+ * Iterators with this behavior are called fail-fast iterators.
+ * 
+ * @since Android 1.0
  */
 public interface Iterator<E> {
     /**
-     * Returns if there are more elements to iterate.
+     * Returns whether there are more elements to iterate, i.e. whether the
+     * iterator is positioned in front of an element.
      * 
-     * @return true if there are more elements, false otherwise
-     * 
+     * @return {@code true} if there are more elements, {@code false} otherwise.
      * @see #next
+     * @since Android 1.0
      */
     public boolean hasNext();
 
     /**
-     * Returns the next object in the iteration.
+     * Returns the next object in the iteration, i.e. returns the element in
+     * front of the iterator and advances the iterator by one position.
      * 
-     * @return the next object
-     * 
-     * @exception NoSuchElementException
-     *                when there are no more elements
-     * 
+     * @return the next object.
+     * @throws NoSuchElementException
+     *             if there are no more elements.
      * @see #hasNext
+     * @since Android 1.0
      */
     public E next();
 
     /**
-     * Removes the last object returned by <code>next</code> from the
-     * collection.
+     * Removes the last object returned by {@code next} from the collection.
+     * This method can only be called once after {@code next} was called.
      * 
-     * @exception UnsupportedOperationException
-     *                when removing is not supported by the collection being
-     *                iterated
-     * @exception IllegalStateException
-     *                when <code>next</code> has not been called, or
-     *                <code>remove</code> has already been called after the
-     *                last call to <code>next</code>
+     * @throws UnsupportedOperationException
+     *             if removing is not supported by the collection being
+     *             iterated.
+     * @throws IllegalStateException
+     *             if {@code next} has not been called, or {@code remove} has
+     *             already been called after the last call to {@code next}.
+     * @since Android 1.0
      */
     public void remove();
 }

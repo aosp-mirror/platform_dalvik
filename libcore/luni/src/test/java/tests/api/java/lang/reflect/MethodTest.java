@@ -17,10 +17,16 @@
 
 package tests.api.java.lang.reflect;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
+@TestTargetClass(Method.class) 
 public class MethodTest extends junit.framework.TestCase {
 
     static class TestMethod {
@@ -136,6 +142,15 @@ public class MethodTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Method#equals(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "equals",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_equalsLjava_lang_Object() {
         // Test for method boolean
         // java.lang.reflect.Method.equals(java.lang.Object)
@@ -163,6 +178,15 @@ public class MethodTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Method#getDeclaringClass()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getDeclaringClass",
+          methodArgs = {}
+        )
+    })
     public void test_getDeclaringClass() {
         // Test for method java.lang.Class
         // java.lang.reflect.Method.getDeclaringClass()
@@ -183,6 +207,15 @@ public class MethodTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Method#getExceptionTypes()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getExceptionTypes",
+          methodArgs = {}
+        )
+    })
     public void test_getExceptionTypes() {
         // Test for method java.lang.Class []
         // java.lang.reflect.Method.getExceptionTypes()
@@ -207,6 +240,15 @@ public class MethodTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Method#getModifiers()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getModifiers",
+          methodArgs = {}
+        )
+    })
     public void test_getModifiers() {
         // Test for method int java.lang.reflect.Method.getModifiers()
 
@@ -261,6 +303,15 @@ public class MethodTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Method#getName()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getName",
+          methodArgs = {}
+        )
+    })
     public void test_getName() {
         // Test for method java.lang.String java.lang.reflect.Method.getName()
         Method mth = null;
@@ -276,6 +327,15 @@ public class MethodTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Method#getParameterTypes()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getParameterTypes",
+          methodArgs = {}
+        )
+    })
     public void test_getParameterTypes() {
         // Test for method java.lang.Class []
         // java.lang.reflect.Method.getParameterTypes()
@@ -330,6 +390,15 @@ public class MethodTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Method#getReturnType()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getReturnType",
+          methodArgs = {}
+        )
+    })
     public void test_getReturnType() {
         // Test for method java.lang.Class
         // java.lang.reflect.Method.getReturnType()
@@ -405,6 +474,15 @@ public class MethodTest extends junit.framework.TestCase {
      * @tests java.lang.reflect.Method#invoke(java.lang.Object,
      *        java.lang.Object[])
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Not all exceptions are verified.",
+      targets = {
+        @TestTarget(
+          methodName = "invoke",
+          methodArgs = {java.lang.Object.class, java.lang.Object[].class}
+        )
+    })
     public void test_invokeLjava_lang_Object$Ljava_lang_Object() {
         // Test for method java.lang.Object
         // java.lang.reflect.Method.invoke(java.lang.Object, java.lang.Object
@@ -646,6 +724,15 @@ public class MethodTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Method#toString()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public void test_toString() {
         // Test for method java.lang.String java.lang.reflect.Method.toString()
         Method mth = null;

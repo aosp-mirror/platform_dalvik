@@ -22,6 +22,11 @@
 
 package org.apache.harmony.security.tests.java.security;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -39,7 +44,7 @@ import java.util.Map.Entry;
 
 
 import junit.framework.TestCase;
-
+@TestTargetClass(Provider.class)
 /**
  * Tests for <code>Provider</code> constructor and methods
  * 
@@ -59,6 +64,15 @@ public class ProviderTest extends TestCase {
     /*
      * Class under test for void Provider()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies provider object",
+      targets = {
+        @TestTarget(
+          methodName = "Provider",
+          methodArgs = {String.class, double.class, String.class}
+        )
+    })
     public final void testProvider() {
         if (!p.getProperty("Provider.id name").equals(
                 String.valueOf(p.getName()))) {
@@ -78,6 +92,15 @@ public class ProviderTest extends TestCase {
         }
     }
 
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SecurityException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "clear",
+          methodArgs = {}
+        )
+    })
     public final void testClear() {
         p.clear();
         if (p.getProperty("MessageDigest.SHA-1") != null) {
@@ -88,6 +111,15 @@ public class ProviderTest extends TestCase {
     /*
      * Class under test for void Provider(String, double, String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies constructor with non null parameters",
+      targets = {
+        @TestTarget(
+          methodName = "Provider",
+          methodArgs = {String.class, double.class, String.class}
+        )
+    })
     public final void testProviderStringdoubleString() {
         Provider p = new MyProvider("Provider name", 123.456, "Provider info");
         if (!p.getName().equals("Provider name") || p.getVersion() != 123.456
@@ -96,18 +128,45 @@ public class ProviderTest extends TestCase {
         }
     }
 
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getName",
+          methodArgs = {}
+        )
+    })
     public final void testGetName() {
         if (!p.getName().equals("MyProvider")) {
             fail("Incorrect provider name");
         }
     }
 
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getVersion",
+          methodArgs = {}
+        )
+    })
     public final void testGetVersion() {
         if (p.getVersion() != 1.0) {
             fail("Incorrect provider version");
         }
     }
 
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getInfo",
+          methodArgs = {}
+        )
+    })
     public final void testGetInfo() {
         if (!p.getInfo().equals("Provider for testing")) {
             fail("Incorrect provider info");
@@ -117,6 +176,15 @@ public class ProviderTest extends TestCase {
     /*
      * Class under test for void putAll(Map)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "putAll",
+          methodArgs = {java.util.Map.class}
+        )
+    })
     public final void testPutAllMap() {
         HashMap<String, String> hm = new HashMap<String, String>();
         hm.put("MessageDigest.SHA-1", "aaa.bbb.ccc.ddd");
@@ -138,6 +206,15 @@ public class ProviderTest extends TestCase {
     /*
      * Class under test for Set entrySet()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "entrySet",
+          methodArgs = {}
+        )
+    })
     public final void testEntrySet() {
         p.put("MessageDigest.SHA-256", "aaa.bbb.ccc.ddd");
 
@@ -190,6 +267,15 @@ public class ProviderTest extends TestCase {
     /*
      * Class under test for Set keySet()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "keySet",
+          methodArgs = {}
+        )
+    })
     public final void testKeySet() {
         p.put("MessageDigest.SHA-256", "aaa.bbb.ccc.ddd");
 
@@ -220,6 +306,15 @@ public class ProviderTest extends TestCase {
     /*
      * Class under test for Collection values()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "values",
+          methodArgs = {}
+        )
+    })
     public final void testValues() {
         p.put("MessageDigest.SHA-256", "aaa.bbb.ccc.ddd");
 
@@ -246,6 +341,15 @@ public class ProviderTest extends TestCase {
     /*
      * Class under test for Object put(Object, Object)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SecurityException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {Object.class, Object.class}
+        )
+    })
     public final void testPutObjectObject() {
         p.put("MessageDigest.SHA-1", "aaa.bbb.ccc.ddd");
         p.put("Type.Algorithm", "className");
@@ -282,6 +386,16 @@ public class ProviderTest extends TestCase {
     /*
      * Class under test for Object remove(Object)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SecurityException checking missed." +
+                  "Verification with null parameter missed",
+      targets = {
+        @TestTarget(
+          methodName = "remove",
+          methodArgs = {Object.class}
+        )
+    })
     public final void testRemoveObject() {
         Object o = p.remove("MessageDigest.SHA-1");
         if (!"SomeClassName".equals(o)) {
@@ -295,6 +409,15 @@ public class ProviderTest extends TestCase {
         }
     }
 
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NullPointerException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getService",
+          methodArgs = {String.class, String.class}
+        )
+    })
     public final void testService1() {
         p.put("MessageDigest.SHA-1", "AnotherClassName");
         Provider.Service s = p.getService("MessageDigest", "SHA-1");
@@ -327,6 +450,15 @@ public class ProviderTest extends TestCase {
     // }
 
     // Regression for HARMONY-2760.
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Regression test: verifies constructor with two null parameters.",
+      targets = {
+        @TestTarget(
+          methodName = "Provider",
+          methodArgs = {String.class, double.class, String.class}
+        )
+    })
     public void testConstructor() {
         MyProvider myProvider = new MyProvider(null, 1, null);
         assertNull(myProvider.getName());
@@ -335,6 +467,15 @@ public class ProviderTest extends TestCase {
         assertEquals("null", myProvider.getProperty("Provider.id info"));
     }
 
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Regression test: method was used for special provider object",
+      targets = {
+        @TestTarget(
+          methodName = "getServices",
+          methodArgs = {}
+        )
+    })
     public final void testGetServices() {
         MyProvider myProvider = new MyProvider(null, 1, null);
         Set<Provider.Service> services = myProvider.getServices();
@@ -373,6 +514,15 @@ public class ProviderTest extends TestCase {
         assertTrue(actual.contains(s[2]));
     }
 
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Regression test: method was used for special provider object",
+      targets = {
+        @TestTarget(
+          methodName = "putService",
+          methodArgs = {Provider.Service.class}
+        )
+    })
     public final void testPutService() {
         MyProvider myProvider = new MyProvider(null, 1, null);
         Provider.Service s[] = new Provider.Service[3];
@@ -422,6 +572,15 @@ public class ProviderTest extends TestCase {
         }
     }
 
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Regression test: method was used for special provider object",
+      targets = {
+        @TestTarget(
+          methodName = "removeService",
+          methodArgs = {Provider.Service.class}
+        )
+    })
     public final void testRemoveService() {
         MyProvider myProvider = new MyProvider(null, 1, null);
         try {
@@ -491,6 +650,15 @@ public class ProviderTest extends TestCase {
     /*
      * Class under test for void load(InputStream)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "load",
+          methodArgs = {InputStream.class}
+        )
+    })
     public final void testLoad() throws IOException {
         InputStream is = new ByteArrayInputStream(writeProperties());
         MyProvider myProvider = new MyProvider("name", 1, "info");

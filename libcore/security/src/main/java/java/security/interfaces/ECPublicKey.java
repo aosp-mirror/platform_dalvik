@@ -15,28 +15,30 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package java.security.interfaces;
 
 import java.security.spec.ECPoint;
 import java.security.PublicKey;
 
 /**
- * @com.intel.drl.spec_ref
+ * The interface for an Elliptic Curve (EC) public key.
  * 
+ * @since Android 1.0
  */
 public interface ECPublicKey extends PublicKey, ECKey {
+
     /**
-     * @com.intel.drl.spec_ref
+     * The serial version identifier.
+     * 
+     * @since Android 1.0
      */
     public static final long serialVersionUID = -3314988629879632826L;
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the public point {@code W} on an elliptic curve (EC).
+     * 
+     * @return the public point {@code W} on an elliptic curve (EC).
+     * @since Android 1.0
      */
     public ECPoint getW();
 }

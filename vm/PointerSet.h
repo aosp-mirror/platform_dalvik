@@ -36,6 +36,11 @@ PointerSet* dvmPointerSetAlloc(int initialSize);
 void dvmPointerSetFree(PointerSet* pSet);
 
 /*
+ * Clear the contents of a pointer set.
+ */
+void dvmPointerSetClear(PointerSet* pSet);
+
+/*
  * Get the number of pointers currently stored in the list.
  */
 int dvmPointerSetGetCount(const PointerSet* pSet);
@@ -72,6 +77,13 @@ INLINE int dvmPointerSetFind(const PointerSet* pSet, const void* ptr) {
         idx = -1;
     return idx;
 }
+
+/*
+ * Compute the intersection of the set and the array of pointers passed in.
+ *
+ * Any pointer in "pSet" that does not appear in "ptrArray" is removed.
+ */
+void dvmPointerSetIntersect(PointerSet* pSet, const void** ptrArray, int count);
 
 /*
  * Print the list contents to stdout.  For debugging.

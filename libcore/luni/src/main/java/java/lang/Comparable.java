@@ -17,35 +17,42 @@
 
 package java.lang;
 
-
 /**
- * This interface should be implemented by all classes which wish to define a
- * <em>natural ordering</em> of their instances. The ordering rule must be
- * transitive and invertable (i.e. the sign of the result of x.compareTo(y) must
- * equal the negation of the sign of the result of y.compareTo(x) for all x and
- * y).
+ * This interface should be implemented by all classes that wish to define a
+ * <em>natural order</em> of their instances.
+ * {@link java.util.Collections#sort} and {@code java.util.Arrays#sort} can then
+ * be used to automatically sort lists of classes that implement this interface.
  * <p>
- * In addition, it is desireable (but not required) that when the result of
- * x.compareTo(y) is zero (and only then) the result of x.equals(y) should be
- * true.
+ * The order rule must be both transitive (if {@code x.compareTo(y) < 0} and
+ * {@code y.compareTo(z) < 0}, then {@code x.compareTo(z) < 0} must hold) and
+ * invertible (the sign of the result of x.compareTo(y) must be equal to the
+ * negation of the sign of the result of y.compareTo(x) for all combinations of
+ * x and y).
+ * </p>
+ * <p>
+ * In addition, it is recommended (but not required) that if and only if the
+ * result of x.compareTo(y) is zero, then the result of x.equals(y) should be
+ * {@code true}.
+ * </p>
  * 
+ * @since Android 1.0
  */
 public interface Comparable<T> {
     
     /**
-     * Returns an integer indicating the relative positions of the receiver and
-     * the argument in the natural order of elements of the receiver's class.
+     * Compares this object to the specified object to determine their relative
+     * order.
      * 
-     * 
-     * @return int which should be <0 if the receiver should sort before the
-     *         argument, 0 if the receiver should sort in the same position as
-     *         the argument, and >0 if the receiver should sort after the
-     *         argument.
      * @param another
-     *            Object an object to compare the receiver to
+     *            the object to compare to this instance.
+     * @return a negative integer if this instance is less than {@code another};
+     *         a positive integer if this instance is greater than
+     *         {@code another}; 0 if this instance has the same order as
+     *         {@code another}.
      * @throws ClassCastException
-     *             if the argument can not be converted into something
-     *             comparable with the receiver.
+     *             if {@code another} cannot be converted into something
+     *             comparable to {@code this} instance.
+     * @since Android 1.0
      */
     int compareTo(T another);
 }

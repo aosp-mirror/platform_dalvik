@@ -17,18 +17,41 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import junit.framework.TestCase;
 
+@TestTargetClass(InheritableThreadLocal.class) 
 public class InheritableThreadLocalTest extends TestCase {
 
     /**
      * @tests java.lang.InheritableThreadLocal#InheritableThreadLocal()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "InheritableThreadLocal",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         InheritableThreadLocal<String> itl = new InheritableThreadLocal<String>();
         assertNull(itl.get());
     }
-    
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "initialValue",
+          methodArgs = {}
+        )
+    })
     public void test_initialValue() {
         InheritableThreadLocal<String> itl = new InheritableThreadLocal<String>() {
             @Override

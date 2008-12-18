@@ -3,5 +3,5 @@ HANDLE_OPCODE(OP_RETURN_VOID /**/)
 #ifndef NDEBUG
     retval.j = 0xababababULL;    // placate valgrind
 #endif
-    GOTO(returnFromMethod);
+    GOTO_returnFromMethod();
 OP_END

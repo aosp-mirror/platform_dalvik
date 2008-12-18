@@ -18,21 +18,22 @@
 package java.io;
 
 /**
- * This IO exception is thrown when the method <code>sync()</code> in
- * FileDescriptor failed to complete.
+ * Signals that the {@link FileDescriptor#sync()} method has failed to
+ * complete.
  * 
- * @see FileDescriptor#sync()
+ * @since Android 1.0
  */
 public class SyncFailedException extends IOException {
 
     private static final long serialVersionUID = -2353342684412443330L;
 
     /**
-     * Constructs a new instance of this class with its walkback and message
-     * filled in.
+     * Constructs a new {@code SyncFailedException} with its stack trace and
+     * detail message filled in.
      * 
      * @param detailMessage
-     *            the detail message for the exception.
+     *            the detail message for this exception.
+     * @since Android 1.0
      */
     public SyncFailedException(String detailMessage) {
         super(detailMessage);

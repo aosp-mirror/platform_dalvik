@@ -16,13 +16,19 @@
 
 package org.apache.harmony.luni.tests.java.util;
 
-import java.util.HashMap;
-import java.util.Map;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.harmony.testframework.serialization.SerializationTest;
 
+@TestTargetClass(HashMap.class) 
 public class HashMapTest extends TestCase {
     class SubMap<K, V> extends HashMap<K, V> {
         public SubMap(Map<? extends K, ? extends V> m) {
@@ -37,6 +43,15 @@ public class HashMapTest extends TestCase {
     /**
      * @tests java.util.HashMap#HashMap(java.util.Map)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NullPointerException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "HashMap",
+          methodArgs = {java.util.Map.class}
+        )
+    })
     public void test_ConstructorLjava_util_Map() {
         HashMap map = new HashMap();
         map.put("a", "a");
@@ -48,6 +63,15 @@ public class HashMapTest extends TestCase {
     /**
      * @tests serialization/deserialization.
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationSelf",
+          methodArgs = {}
+        )
+    })
     public void testSerializationSelf() throws Exception {
         HashMap<String, String> hm = new HashMap<String, String>();
         hm.put("key", "value");
@@ -62,6 +86,15 @@ public class HashMapTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationGolden",
+          methodArgs = {}
+        )
+    })
     public void testSerializationCompatibility() throws Exception {
         HashMap<String, String> hm = new HashMap<String, String>();
         hm.put("key", "value");

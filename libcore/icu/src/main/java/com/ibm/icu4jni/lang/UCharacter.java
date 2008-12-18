@@ -141,6 +141,9 @@ public class UCharacter {
     private static native boolean isLowerCaseImpl(int codePoint);
 
     public static int forName(String blockName) {
+        if (blockName == null) {
+            throw new NullPointerException();
+        }
         return forname(blockName);
     }
 

@@ -16,6 +16,11 @@
  */
 package org.apache.harmony.archive.tests.java.util.zip;
 
+import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -27,6 +32,7 @@ import java.util.zip.ZipOutputStream;
 import junit.framework.TestCase;
 import tests.support.resource.Support_Resources;
 
+@TestTargetClass(ZipInputStream.class) 
 public class ZipInputStreamTest extends TestCase {
     // the file hyts_zipFile.zip used in setup needs to included as a resource
     private ZipEntry zentry;
@@ -73,6 +79,15 @@ public class ZipInputStreamTest extends TestCase {
     /**
      * @tests java.util.zip.ZipInputStream#ZipInputStream(java.io.InputStream)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "ZipInputStream",
+          methodArgs = {java.io.InputStream.class}
+        )
+    })
     public void test_ConstructorLjava_io_InputStream() throws Exception {
         zentry = zis.getNextEntry();
         zis.closeEntry();
@@ -81,6 +96,15 @@ public class ZipInputStreamTest extends TestCase {
     /**
      * @tests java.util.zip.ZipInputStream#close()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "close",
+          methodArgs = {}
+        )
+    })
     public void test_close() {
         try {
             zis.close();
@@ -95,6 +119,15 @@ public class ZipInputStreamTest extends TestCase {
     /**
      * @tests java.util.zip.ZipInputStream#close()
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Checks calling method two times",
+      targets = {
+        @TestTarget(
+          methodName = "close",
+          methodArgs = {}
+        )
+    })
     public void test_close2() throws Exception {
         // Regression for HARMONY-1101
         zis.close();
@@ -105,6 +138,15 @@ public class ZipInputStreamTest extends TestCase {
     /**
      * @tests java.util.zip.ZipInputStream#closeEntry()
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "closeEntry",
+          methodArgs = {}
+        )
+    })
     public void test_closeEntry() throws Exception {
         zentry = zis.getNextEntry();
         zis.closeEntry();
@@ -113,6 +155,15 @@ public class ZipInputStreamTest extends TestCase {
     /**
      * @tests java.util.zip.ZipInputStream#getNextEntry()
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "getNextEntry",
+          methodArgs = {}
+        )
+    })
     public void test_getNextEntry() throws Exception {
         assertNotNull("getNextEntry failed", zis.getNextEntry());
     }
@@ -120,6 +171,15 @@ public class ZipInputStreamTest extends TestCase {
     /**
      * @tests java.util.zip.ZipInputStream#read(byte[], int, int)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {byte[].class, int.class, int.class}
+        )
+    })
     public void test_read$BII() throws Exception {
         zentry = zis.getNextEntry();
         byte[] rbuf = new byte[(int) zentry.getSize()];
@@ -131,6 +191,15 @@ public class ZipInputStreamTest extends TestCase {
     /**
      * @tests java.util.zip.ZipInputStream#skip(long)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "ZipException IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "skip",
+          methodArgs = {long.class}
+        )
+    })
     public void test_skipJ() throws Exception {
         zentry = zis.getNextEntry();
         byte[] rbuf = new byte[(int) zentry.getSize()];

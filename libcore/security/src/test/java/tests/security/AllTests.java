@@ -34,9 +34,16 @@ public class AllTests {
         suite.addTest(org.apache.harmony.security.tests.java.security.AllTests.suite());
         suite.addTest(tests.api.java.security.AllTests.suite());
         suite.addTest(tests.java.security.AllTests.suite());
+    
+    suite.addTest(tests.security.acl.AllTests.suite());
+    suite.addTest(tests.security.cert.AllTests.suite());
+    suite.addTest(tests.security.interfaces.AllTests.suite());
+    suite.addTest(tests.security.spec.AllTests.suite());
 
-        suite.addTest(tests.security.SecurityPermissionsTest.suite());
+//        suite.addTestSuite(tests.security.SecurityPermissionsTest.class);
         suite.addTestSuite(tests.security.AccessControllerTest.class);
+    
+        suite.addTest(tests.api.javax.security.cert.AllTests.suite());
         // $JUnit-END$
         return suite;
     }

@@ -18,34 +18,40 @@
 package java.io;
 
 /**
- * This IO exception is thrown when a program reading or writing to a stream is
- * interrupted. This is also thrown when a socket timeout occurs before the
- * request has completed.
+ * Signals that a blocking I/O operation has been interrupted. The number of
+ * bytes that were transferred successfully before the interruption took place
+ * is stored in a field of the exception.
+ * 
+ * @since Android 1.0
  */
 public class InterruptedIOException extends IOException {
 
     private static final long serialVersionUID = 4020568460727500567L;
 
     /**
-     * The number of bytes transferred before the IO interrupt occurred. The
-     * default is 0 but the value may be filled in by the caller of the
-     * constructor.
+     * The number of bytes transferred before the I/O interrupt occurred.
+     * 
+     * @since Android 1.0
      */
     public int bytesTransferred;
 
     /**
-     * Constructs a new instance of this class with its walkback filled in.
+     * Constructs a new {@code InterruptedIOException} with its stack trace
+     * filled in.
+     * 
+     * @since Android 1.0
      */
     public InterruptedIOException() {
         super();
     }
 
     /**
-     * Constructs a new instance of this class with its walkback and message
-     * filled in.
+     * Constructs a new {@code InterruptedIOException} with its stack trace and
+     * detail message filled in.
      * 
      * @param detailMessage
-     *            The detail message for the exception.
+     *            the detail message for this exception.
+     * @since Android 1.0
      */
     public InterruptedIOException(String detailMessage) {
         super(detailMessage);

@@ -22,6 +22,11 @@
 
 package tests.api.javax.net;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
@@ -36,22 +41,41 @@ import junit.framework.TestCase;
 /**
  * Tests for <code>SocketFactory</code> class methods.
  */
+@TestTargetClass(SocketFactory.class) 
 public class SocketFactoryTest extends TestCase {
 
-	/**
-	 * @tests javax.net.SocketFactory#SocketFactory()
-	 */
-	public void test_Constructor() {
-		try {
-			new MySocketFactory();
-		} catch (Exception e) {
-			fail("Unexpected exception " + e.toString());
-		}
-	}
-	
+    /**
+     * @tests javax.net.SocketFactory#SocketFactory()
+     */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "SocketFactory",
+          methodArgs = {}
+        )
+    })
+    public void test_Constructor() {
+        try {
+            new MySocketFactory();
+        } catch (Exception e) {
+            fail("Unexpected exception " + e.toString());
+        }
+    }
+    
     /**
      * @tests javax.net.SocketFactory#createSocket()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions cases are not tested",
+      targets = {
+        @TestTarget(
+          methodName = "createSocket",
+          methodArgs = {}
+        )
+    })
     public final void test_createSocket() {
         SocketFactory sf = new MySocketFactory();
         try {
@@ -66,6 +90,15 @@ public class SocketFactoryTest extends TestCase {
     /**
      * @tests javax.net.SocketFactory#getDefault()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getDefault",
+          methodArgs = {}
+        )
+    })
     public final void test_getDefault() {
         SocketFactory sf = SocketFactory.getDefault();
         Socket s;
@@ -93,11 +126,11 @@ public class SocketFactoryTest extends TestCase {
 }
 
 class MySocketFactory extends SocketFactory {
-	
-	public MySocketFactory() {
-		super();
-	}
-	
+    
+    public MySocketFactory() {
+        super();
+    }
+    
     public Socket createSocket(String host, int port) throws IOException, UnknownHostException {
         throw new IOException();
     }

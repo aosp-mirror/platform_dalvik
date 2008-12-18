@@ -22,8 +22,8 @@
  * Open an unoptimized DEX file.  This finds the optimized version in the
  * cache, constructing it if necessary.
  */
-int dvmRawDexFileOpen(const char* fileName, RawDexFile** ppRawDexFile,
-    bool isBootstrap)
+int dvmRawDexFileOpen(const char* fileName, const char* odexOutputName,
+    RawDexFile** ppRawDexFile, bool isBootstrap)
 {
     // TODO - should be very similar to what JarFile does
     return -1;

@@ -17,32 +17,41 @@
 package dalvik.system;
 
 /**
- * VM-internal classes for examining a stack.
+ * Provides a limited interface to the Dalvik VM stack. This class is mostly
+ * used for implementing security checks.
+ * 
+ * @since Android 1.0
  */
 public final class VMStack {
     /**
-     * Return the defining class loader of the caller's caller.
+     * Returns the defining class loader of the caller's caller.
+     * 
+     * @return the requested class loader, or {@code null} if this is the
+     *         bootstrap class loader.
      */
     native public static ClassLoader getCallingClassLoader();
 
     /**
-     * Return the defining class loader of the caller's caller's caller.
+     * Returns the defining class loader of the caller's caller's caller.
+     * 
+     * @return the requested class loader, or {@code null} if this is the
+     *         bootstrap class loader.
      */
     native public static ClassLoader getCallingClassLoader2();
 
     /**
-     * Create an array of classes from the methods at the top of the stack.
+     * Creates an array of classes from the methods at the top of the stack.
      * We continue until we reach the bottom of the stack or exceed the
      * specified maximum depth.  If stopAtPrivileged is set, the last
      * element of the array will be the caller of the most-recent privileged
      * method.
-     *
+     * <p>
      * The topmost stack frame (this method) and the one above that (the
      * caller) are excluded from the array.  Frames with java.lang.reflect
      * classes are skipped over.
-     *
+     * <p>
      * The classes in the array are the defining classes of the methods.
-     *
+     * <p>
      * This is expected to be identical to Harmony's VMStack.getClasses.
      *
      * @param maxDepth
@@ -55,7 +64,7 @@ public final class VMStack {
         boolean stopAtPrivileged);
 
     /**
-     * Retrieve the stack trace from the specified thread.
+     * Retrieves the stack trace from the specified thread.
      *
      * @param t
      *      thread of interest

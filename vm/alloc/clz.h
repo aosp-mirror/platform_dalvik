@@ -14,19 +14,31 @@
  * limitations under the License.
  */
 
+/*
+ * Implementation of clz(), which returns the number of leading zero bits,
+ * starting at the most significant bit position.  If the argument is zero,
+ * the result is undefined.
+ *
+ * On some platforms, gcc provides a __builtin_clz() function that uses
+ * an optimized implementation (e.g. the CLZ instruction on ARM).
+ *
+ * This gets a little tricky for ARM, because it's only available in ARMv5
+ * and above, and even on ARMv5 it's not available for THUMB code.  So we
+ * need to tailor this for every source file.
+ */
 #ifndef _DALVIK_CLZ
 
-#include <stdint.h>
-
 #if defined(__arm__) && !defined(__thumb__)
+# include <machine/cpu-features.h>
+# if defined(__ARM_HAVE_CLZ)
+#  define CLZ(x) __builtin_clz(x)
+#  define HAVE_BUILTIN_CLZ
+# endif
+#endif
 
-#define CLZ(x) __builtin_clz(x)
-
-#else
-
-int clz_impl(unsigned long int x);
-#define CLZ(x) clz_impl(x)
-
+#ifndef HAVE_BUILTIN_CLZ
+# define CLZ(x) dvmClzImpl(x)
+int dvmClzImpl(unsigned int x);
 #endif
 
 #endif // _DALVIK_CLZ

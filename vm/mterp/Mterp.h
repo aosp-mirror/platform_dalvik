@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Some declarations used throughout mterp.
  */
@@ -36,11 +37,14 @@ typedef InterpState MterpGlue;
 bool dvmCheckAsmConstants(void);
 
 /*
- * Local entry and exit points.  All implementations must provide these two.
+ * Local entry and exit points.  The platform-specific implementation must
+ * provide these two.
  *
  * dvmMterpStdRun() returns the "changeInterp" argument from dvmMterpStdBail(),
  * indicating whether we want to bail out of the interpreter or just switch
  * between "standard" and "debug" mode.
+ *
+ * The "mterp" interpreter is always "standard".
  */
 bool dvmMterpStdRun(MterpGlue* glue);
 void dvmMterpStdBail(MterpGlue* glue, bool changeInterp);

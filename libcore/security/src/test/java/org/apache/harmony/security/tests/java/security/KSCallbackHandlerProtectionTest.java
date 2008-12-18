@@ -22,6 +22,11 @@
 
 package org.apache.harmony.security.tests.java.security;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.security.KeyStore;
 
 import javax.security.auth.callback.CallbackHandler;
@@ -29,7 +34,7 @@ import javax.security.auth.callback.CallbackHandler;
 import org.apache.harmony.security.tests.support.tmpCallbackHandler;
 
 import junit.framework.TestCase;
-
+@TestTargetClass(KeyStore.CallbackHandlerProtection.class)
 /**
  * Tests for <code>KeyStore.CallbackHandlerProtection> class constructor and methods
  * 
@@ -50,6 +55,15 @@ public class KSCallbackHandlerProtectionTest extends TestCase {
      * constructor
      * Assertion: throws NullPointerException when handler is null
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "CallbackHandlerProtection",
+          methodArgs = {CallbackHandler.class}
+        )
+    })
     public void testCallbackHandlerProtection() {
         try {
             new KeyStore.CallbackHandlerProtection(null);
@@ -62,6 +76,19 @@ public class KSCallbackHandlerProtectionTest extends TestCase {
      * Test for <code>getCallbackHandler()</code> method
      * Assertion: returns CallbackHandler 
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "CallbackHandlerProtection",
+          methodArgs = {CallbackHandler.class}
+        ),
+        @TestTarget(
+          methodName = "getCallbackHandler",
+          methodArgs = {}
+        )
+    })
     public void testGetCallBackHandler() {
         CallbackHandler cbh = new tmpCallbackHandler();
         KeyStore.CallbackHandlerProtection ksCBH = new KeyStore.CallbackHandlerProtection(cbh);

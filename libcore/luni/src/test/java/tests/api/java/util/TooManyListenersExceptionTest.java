@@ -17,13 +17,28 @@
 
 package tests.api.java.util;
 
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass; 
+
 import java.util.TooManyListenersException;
 
+@TestTargetClass(TooManyListenersException.class) 
 public class TooManyListenersExceptionTest extends junit.framework.TestCase {
 
     /**
      * @tests java.util.TooManyListenersException#TooManyListenersException()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "TooManyListenersException",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         // Test for method java.util.TooManyListenersException()
         try {
@@ -38,6 +53,15 @@ public class TooManyListenersExceptionTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TooManyListenersException#TooManyListenersException(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "TooManyListenersException",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() {
         // Test for method java.util.TooManyListenersException(java.lang.String)
         try {

@@ -20,7 +20,10 @@ package java.net;
 import org.apache.harmony.luni.util.Msg;
 
 /**
- * Represents an exception that occurred during parsing of a URI.
+ * A {@code URISyntaxException} will be thrown if some information could not be parsed
+ * while creating a URI.
+ * 
+ * @since Android 1.0
  */
 public class URISyntaxException extends Exception {
 
@@ -31,17 +34,22 @@ public class URISyntaxException extends Exception {
     private int index;
 
     /**
-     * Constructs a URISyntaxException, containing the input that caused the
-     * exception, a description of the problem, and the index at which the error
-     * occurred.
+     * Constructs a new {@code URISyntaxException} instance containing the
+     * string that caused the exception, a description of the problem and the
+     * index at which the error occurred.
      * 
      * @param input
+     *            the string that caused the exception.
      * @param reason
+     *            the reason why the exception occurred.
      * @param index
-     * @exception NullPointerException
-     *                if input or reason is null
-     * @exception IllegalArgumentException
-     *                if index < -1
+     *            the position where the exception occurred.
+     * @throws NullPointerException
+     *             if one of the arguments {@code input} or {@code reason} is
+     *             {@code null}.
+     * @throws IllegalArgumentException
+     *             if the value for {@code index} is lesser than {@code -1}.
+     * @since Android 1.0
      */
     public URISyntaxException(String input, String reason, int index) {
         super(reason);
@@ -59,14 +67,17 @@ public class URISyntaxException extends Exception {
     }
 
     /**
-     * Constructs a URISyntaxException containing the string that caused the
-     * exception and a description of the error.
+     * Constructs a new {@code URISyntaxException} instance containing the
+     * string that caused the exception and a description of the problem.
      * 
-     * @param input
+     *@param input
+     *            the string that caused the exception.
      * @param reason
-     * 
-     * @exception NullPointerException
-     *                if input or reason is null
+     *            the reason why the exception occurred.
+     * @throws NullPointerException
+     *             if one of the arguments {@code input} or {@code reason} is
+     *             {@code null}.
+     * @since Android 1.0
      */
     public URISyntaxException(String input, String reason) {
         super(reason);
@@ -80,40 +91,44 @@ public class URISyntaxException extends Exception {
     }
 
     /**
-     * Returns the index at which the syntax error was found, or -1 if the index
-     * is unknown/unavailable.
+     * Gets the index at which the syntax error was found or {@code -1} if the
+     * index is unknown/unavailable.
      * 
-     * @return the index of the syntax error
+     * @return the index of the syntax error.
+     * @since Android 1.0
      */
     public int getIndex() {
         return index;
     }
 
     /**
-     * Returns a String describing the syntax error in the URI string
+     * Gets a description of the syntax error.
      * 
-     * @return a String describing the syntax error
+     * @return the string describing the syntax error.
+     * @since Android 1.0
      */
     public String getReason() {
         return super.getMessage();
     }
 
     /**
-     * Returns the String that contained the syntax error
+     * Gets the initial string that contains an invalid syntax.
      * 
-     * @return the String that caused the exception
+     * @return the string that caused the exception.
+     * @since Android 1.0
      */
     public String getInput() {
         return input;
     }
 
     /**
-     * Returns a description of the exception, including the reason, the string
-     * that had the syntax error, and the index of the syntax error if
+     * Gets a description of the exception, including the reason, the string
+     * that caused the syntax error and the position of the syntax error if
      * available.
      * 
-     * @return a String containing information about the exception.
+     * @return a sting containing information about the exception.
      * @see java.lang.Throwable#getMessage()
+     * @since Android 1.0
      */
     @Override
     public String getMessage() {

@@ -16,6 +16,11 @@
 
 package tests.java.sql;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -31,6 +36,7 @@ import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
+@TestTargetClass(Statement.class)
 public class UpdateFunctionalityTest extends TestCase {
 
     private static final int numberOfRecords = 20;
@@ -119,6 +125,19 @@ public class UpdateFunctionalityTest extends TestCase {
      * @tests UpdateFunctionalityTest#testUpdate1(). Updates all values in one
      *        column in the table
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Functionality test: Updates all values in one column in the table",
+      targets = {
+        @TestTarget(
+          methodName = "executeUpdate",
+          methodArgs = {String.class}
+        ),
+        @TestTarget(
+          methodName = "executeQuery",
+          methodArgs = {String.class}
+        )
+    })
     public void testUpdate1() {
         String newValue = "newValue";
         String updateQuery = "UPDATE " + DatabaseCreator.TEST_TABLE1
@@ -144,6 +163,19 @@ public class UpdateFunctionalityTest extends TestCase {
      * @tests UpdateFunctionalityTest#testUpdate2(). Updates values in one
      *        column in the table using where condition in update command
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Functionality test: Updates values in one column in the table using where condition in update command",
+      targets = {
+        @TestTarget(
+          methodName = "executeUpdate",
+          methodArgs = {String.class}
+        ),
+        @TestTarget(
+          methodName = "executeQuery",
+          methodArgs = {String.class}
+        )
+    })
     public void testUpdate2() {
         String newValue = "newValue";
         String updateQuery = "UPDATE " + DatabaseCreator.TEST_TABLE1
@@ -176,6 +208,19 @@ public class UpdateFunctionalityTest extends TestCase {
      * @tests UpdateFunctionalityTest#testUpdate3(). Updates values in a several
      *        columns in the table
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Functionality test: Updates values in a several columns in the table",
+      targets = {
+        @TestTarget(
+          methodName = "executeUpdate",
+          methodArgs = {String.class}
+        ),
+        @TestTarget(
+          methodName = "executeQuery",
+          methodArgs = {String.class}
+        )
+    })
     public void testUpdate3() {
         int newValue1 = -1;
         int newValue2 = -2;
@@ -205,6 +250,20 @@ public class UpdateFunctionalityTest extends TestCase {
      * @tests UpdateFunctionalityTest#testUpdate4(). Updates values in a several
      *        columns in the table using where condition in update command
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Functionality test: Updates values in a several " + 
+                  "columns in the table using where condition in update command",
+      targets = {
+        @TestTarget(
+          methodName = "executeUpdate",
+          methodArgs = {String.class}
+        ),
+        @TestTarget(
+          methodName = "executeQuery",
+          methodArgs = {String.class}
+        )
+    })
     public void testUpdate4() {
         int newValue1 = -1;
         int newValue2 = -2;
@@ -244,6 +303,19 @@ public class UpdateFunctionalityTest extends TestCase {
      * @tests UpdateFunctionalityTest#testUpdate5(). Updates values in one
      *        columns in the table using condition
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Functionality test: Updates values in one columns in the table using condition",
+      targets = {
+        @TestTarget(
+          methodName = "executeUpdate",
+          methodArgs = {String.class}
+        ),
+        @TestTarget(
+          methodName = "executeQuery",
+          methodArgs = {String.class}
+        )
+    })
     public void testUpdate5() {
         int factor = 3;
         String updateQuery = "UPDATE " + DatabaseCreator.TEST_TABLE1
@@ -282,6 +354,19 @@ public class UpdateFunctionalityTest extends TestCase {
      * @tests UpdateFunctionalityTest#testUpdate6(). Sets value of field2 to
      *        default
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Functionality test: Sets value of field2 to default",
+      targets = {
+        @TestTarget(
+          methodName = "executeUpdate",
+          methodArgs = {String.class}
+        ),
+        @TestTarget(
+          methodName = "executeQuery",
+          methodArgs = {String.class}
+        )
+    })
     public void testUpdate6() {
         String updateQuery = "UPDATE " + DatabaseCreator.TEST_TABLE1
                 + " SET field2='1'";
@@ -309,6 +394,19 @@ public class UpdateFunctionalityTest extends TestCase {
      * @tests UpdateFunctionalityTest#testUpdate7(). Updates records in the
      *        table using subquery in update command
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Functionality test: Updates records in the table using subquery in update command",
+      targets = {
+        @TestTarget(
+          methodName = "executeUpdate",
+          methodArgs = {String.class}
+        ),
+        @TestTarget(
+          methodName = "executeQuery",
+          methodArgs = {String.class}
+        )
+    })
     public void testUpdate7() {
         String updateQuery = "UPDATE " + DatabaseCreator.TEST_TABLE1
                 + " SET field2='1' WHERE id < ( SELECT COUNT(*) FROM "
@@ -342,6 +440,19 @@ public class UpdateFunctionalityTest extends TestCase {
      * @tests UpdateFunctionalityTest#testUpdate8(). Sets value of field2 to
      *        NULL
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Functionality test: Sets value of field2 to NULL",
+      targets = {
+        @TestTarget(
+          methodName = "executeUpdate",
+          methodArgs = {String.class}
+        ),
+        @TestTarget(
+          methodName = "executeQuery",
+          methodArgs = {String.class}
+        )
+    })
     public void testUpdate8() {
         String updateQuery = "UPDATE " + DatabaseCreator.TEST_TABLE1
                 + " SET field2=NULL";

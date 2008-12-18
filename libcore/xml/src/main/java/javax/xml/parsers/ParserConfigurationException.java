@@ -17,21 +17,28 @@
 package javax.xml.parsers;
 
 /**
- * Represents an exception that occured during the configuration of parser.
+ * Represents an exception that occurred during the configuration of parser.
+ * 
+ * @since Android 1.0
  */
 public class ParserConfigurationException extends Exception {
 
     /**
-     * Creates a new ParserConfigurationException with no error message.
+     * Creates a new {@code ParserConfigurationException} with no error message.
+     * 
+     * @since Android 1.0
      */
     public ParserConfigurationException() {
         super();
     }
 
     /**
-     * Creates a new ParserConfigurationException with a given error message.
+     * Creates a new {@code ParserConfigurationException} with a given error
+     * message.
      * 
-     * @param msg The error message.
+     * @param msg the error message.
+     * 
+     * @since Android 1.0
      */
     public ParserConfigurationException(String msg) {
         super(msg);

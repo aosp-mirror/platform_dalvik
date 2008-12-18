@@ -16,6 +16,20 @@
 
 package tests.api.javax.xml.parsers;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
+import junit.framework.TestCase;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.ErrorHandler;
+import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -27,15 +41,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.ErrorHandler;
-import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
-
-import junit.framework.TestCase;
-
+@TestTargetClass(DocumentBuilderFactory.class) 
 public class DocumentBuilderFactoryTest extends TestCase {
 
     DocumentBuilderFactory dbf;
@@ -66,6 +72,15 @@ public class DocumentBuilderFactoryTest extends TestCase {
     /**
      * @tests javax.xml.parsers.DocumentBuilderFactory#DocumentBuilderFactory().
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "DocumentBuilderFactory",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         try {
             new DocumentBuilderFactoryChild();
@@ -184,6 +199,15 @@ public class DocumentBuilderFactoryTest extends TestCase {
     /**
      * @tests javax.xml.parsers.DocumentBuilderFactory#isCoalescing().
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isCoalescing",
+          methodArgs = {}
+        )
+    })
     public void test_isCoalescing() {
         dbf.setCoalescing(true);
         assertTrue(dbf.isCoalescing());
@@ -195,6 +219,15 @@ public class DocumentBuilderFactoryTest extends TestCase {
     /**
      * @tests javax.xml.parsers.DocumentBuilderFactory#isExpandEntityReferences().
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isExpandEntityReferences",
+          methodArgs = {}
+        )
+    })
     public void test_isExpandEntityReferences() {
         dbf.setExpandEntityReferences(true);
         assertTrue(dbf.isExpandEntityReferences());
@@ -206,6 +239,15 @@ public class DocumentBuilderFactoryTest extends TestCase {
     /**
      * @tests javax.xml.parsers.DocumentBuilderFactory#isIgnoringComments().
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isIgnoringComments",
+          methodArgs = {}
+        )
+    })
     public void test_isIgnoringComments() {
         dbf.setIgnoringComments(true);
         assertTrue(dbf.isIgnoringComments());
@@ -217,6 +259,15 @@ public class DocumentBuilderFactoryTest extends TestCase {
     /**
      * @tests javax.xml.parsers.DocumentBuilderFactory#isIgnoringElementContentWhitespace().
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isIgnoringElementContentWhitespace",
+          methodArgs = {}
+        )
+    })
     public void test_isIgnoringElementContentWhitespace() {
         dbf.setIgnoringElementContentWhitespace(true);
         assertTrue(dbf.isIgnoringElementContentWhitespace());
@@ -228,6 +279,15 @@ public class DocumentBuilderFactoryTest extends TestCase {
     /**
      * @tests javax.xml.parsers.DocumentBuilderFactory#isNamespaceAware().
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isNamespaceAware",
+          methodArgs = {}
+        )
+    })
     public void test_isNamespaceAware() {
         dbf.setNamespaceAware(true);
         assertTrue(dbf.isNamespaceAware());
@@ -239,6 +299,15 @@ public class DocumentBuilderFactoryTest extends TestCase {
     /**
      * @tests javax.xml.parsers.DocumentBuilderFactory#isValidating().
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isValidating",
+          methodArgs = {}
+        )
+    })
     public void test_isValidating() {
         dbf.setValidating(true);
         assertTrue(dbf.isValidating());
@@ -261,6 +330,15 @@ public class DocumentBuilderFactoryTest extends TestCase {
     /**
      * @tests javax.xml.parsers.DocumentBuilderFactory#newInstance().
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "newInstance",
+          methodArgs = {}
+        )
+    })
     public void test_newInstance() {
         String className = null;
         try {
@@ -355,7 +433,16 @@ public class DocumentBuilderFactoryTest extends TestCase {
     /**
      * @tests javax.xml.parsers.DocumentBuilderFactory#setCoalescing(boolean).
      */
-    public void test_setCoalescingZ() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setCoalescing",
+          methodArgs = {boolean.class}
+        )
+    })
+    public void _test_setCoalescingZ() {
         dbf.setCoalescing(true);
         assertTrue(dbf.isCoalescing());
 
@@ -420,6 +507,15 @@ public class DocumentBuilderFactoryTest extends TestCase {
     /**
      * @tests javax.xml.parsers.DocumentBuilderFactory#setExpandEntityReferences(boolean).
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setExpandEntityReferences",
+          methodArgs = {boolean.class}
+        )
+    })
     public void test_setExpandEntityReferencesZ() {
         dbf.setExpandEntityReferences(true);
         assertTrue(dbf.isExpandEntityReferences());
@@ -475,6 +571,15 @@ public class DocumentBuilderFactoryTest extends TestCase {
     /**
      * @tests javax.xml.parsers.DocumentBuilderFactory#setFeature(java.lang.String).
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setFeature",
+          methodArgs = {java.lang.String.class, boolean.class}
+        )
+    })
     public void test_setFeatureLjava_lang_String() {
         String[] features = { "http://xml.org/sax/features/namespaces",
                 "http://xml.org/sax/features/validation" };
@@ -521,6 +626,15 @@ public class DocumentBuilderFactoryTest extends TestCase {
     /**
      * @tests javax.xml.parsers.DocumentBuilderFactory#setIgnoringComments(boolean).
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setIgnoringComments",
+          methodArgs = {boolean.class}
+        )
+    })
     public void test_setIgnoringCommentsZ() {
         commentElements.clear();
 
@@ -572,6 +686,15 @@ public class DocumentBuilderFactoryTest extends TestCase {
     /**
      * @tests javax.xml.parsers.DocumentBuilderFactory#setIgnoringElementContentWhitespace(boolean).
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setIgnoringElementContentWhitespace",
+          methodArgs = {boolean.class}
+        )
+    })
     public void test_setIgnoringElementContentWhitespaceZ() {
         dbf.setIgnoringElementContentWhitespace(true);
         assertTrue(dbf.isIgnoringElementContentWhitespace());
@@ -615,6 +738,15 @@ public class DocumentBuilderFactoryTest extends TestCase {
     /**
      * @tests javax.xml.parsers.DocumentBuilderFactory#setNamespaceAware(boolean).
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setNamespaceAware",
+          methodArgs = {boolean.class}
+        )
+    })
     public void test_setNamespaceAwareZ() {
         dbf.setNamespaceAware(true);
         assertTrue(dbf.isNamespaceAware());

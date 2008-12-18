@@ -17,13 +17,28 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import junit.framework.TestCase;
 
+@TestTargetClass(NegativeArraySizeException.class) 
 public class NegativeArraySizeExceptionTest extends TestCase {
 
     /**
      * @tests java.lang.NegativeArraySizeException#NegativeArraySizeException()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "NegativeArraySizeException",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         NegativeArraySizeException e = new NegativeArraySizeException();
         assertNull(e.getMessage());
@@ -34,6 +49,15 @@ public class NegativeArraySizeExceptionTest extends TestCase {
     /**
      * @tests java.lang.NegativeArraySizeException#NegativeArraySizeException(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "NegativeArraySizeException",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() {
         NegativeArraySizeException e = new NegativeArraySizeException("fixture");
         assertEquals("fixture", e.getMessage());

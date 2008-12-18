@@ -17,19 +17,34 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import java.io.Serializable;
-import java.util.Arrays;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
+
+import java.io.Serializable;
+import java.util.Arrays;
 
 import org.apache.harmony.testframework.serialization.SerializationTest;
 import org.apache.harmony.testframework.serialization.SerializationTest.SerializableAssert;
 
+@TestTargetClass(StringBuilder.class) 
 public class StringBuilderTest extends TestCase {
 
     /**
      * @tests java.lang.StringBuilder.StringBuilder()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "StringBuilder",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         StringBuilder sb = new StringBuilder();
         assertNotNull(sb);
@@ -39,6 +54,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.StringBuilder(int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "StringBuilder",
+          methodArgs = {int.class}
+        )
+    })
     public void test_ConstructorI() {
         StringBuilder sb = new StringBuilder(24);
         assertNotNull(sb);
@@ -57,6 +81,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.StringBuilder(CharSequence)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "StringBuilder",
+          methodArgs = {java.lang.CharSequence.class}
+        )
+    })
     @SuppressWarnings("cast")
     public void test_ConstructorLjava_lang_CharSequence() {
         StringBuilder sb = new StringBuilder((CharSequence) "fixture");
@@ -78,6 +111,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.StringBuilder(String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "StringBuilder",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() {
         StringBuilder sb = new StringBuilder("fixture");
         assertEquals("fixture", sb.toString());
@@ -93,6 +135,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.append(boolean)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "append",
+          methodArgs = {boolean.class}
+        )
+    })
     public void test_appendZ() {
         StringBuilder sb = new StringBuilder();
         assertSame(sb, sb.append(true));
@@ -105,6 +156,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.append(char)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "append",
+          methodArgs = {char.class}
+        )
+    })
     public void test_appendC() {
         StringBuilder sb = new StringBuilder();
         assertSame(sb, sb.append('a'));
@@ -117,6 +177,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.append(char[])
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "append",
+          methodArgs = {char[].class}
+        )
+    })
     public void test_append$C() {
         StringBuilder sb = new StringBuilder();
         assertSame(sb, sb.append(new char[] { 'a', 'b' }));
@@ -135,6 +204,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.append(char[], int, int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "append",
+          methodArgs = {char[].class, int.class, int.class}
+        )
+    })
     public void test_append$CII() {
         StringBuilder sb = new StringBuilder();
         assertSame(sb, sb.append(new char[] { 'a', 'b' }, 0, 2));
@@ -187,6 +265,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.append(CharSequence)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "append",
+          methodArgs = {java.lang.CharSequence.class}
+        )
+    })
     public void test_appendLjava_lang_CharSequence() {
         StringBuilder sb = new StringBuilder();
         assertSame(sb, sb.append((CharSequence) "ab"));
@@ -202,6 +289,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.append(CharSequence, int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IndexOutOfBoundsException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "append",
+          methodArgs = {java.lang.CharSequence.class, int.class, int.class}
+        )
+    })
     @SuppressWarnings("cast")
     public void test_appendLjava_lang_CharSequenceII() {
         StringBuilder sb = new StringBuilder();
@@ -224,6 +320,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.append(double)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "append",
+          methodArgs = {double.class}
+        )
+    })
     public void test_appendD() {
         StringBuilder sb = new StringBuilder();
         assertSame(sb, sb.append(1D));
@@ -254,6 +359,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.append(float)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "append",
+          methodArgs = {float.class}
+        )
+    })
     public void test_appendF() {
         StringBuilder sb = new StringBuilder();
         assertSame(sb, sb.append(1F));
@@ -284,6 +398,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.append(int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "append",
+          methodArgs = {int.class}
+        )
+    })
     public void test_appendI() {
         StringBuilder sb = new StringBuilder();
         assertSame(sb, sb.append(1));
@@ -305,6 +428,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.append(long)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "append",
+          methodArgs = {long.class}
+        )
+    })
     public void test_appendL() {
         StringBuilder sb = new StringBuilder();
         assertSame(sb, sb.append(1L));
@@ -326,6 +458,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.append(Object)'
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "append",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_appendLjava_lang_Object() {
         StringBuilder sb = new StringBuilder();
         assertSame(sb, sb.append(Fixture.INSTANCE));
@@ -339,6 +480,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.append(String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "append",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_appendLjava_lang_String() {
         StringBuilder sb = new StringBuilder();
         assertSame(sb, sb.append("ab"));
@@ -354,6 +504,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.append(StringBuffer)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "append",
+          methodArgs = {java.lang.StringBuffer.class}
+        )
+    })
     public void test_appendLjava_lang_StringBuffer() {
         StringBuilder sb = new StringBuilder();
         assertSame(sb, sb.append(new StringBuffer("ab")));
@@ -369,6 +528,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.appendCodePoint(int)'
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "appendCodePoint",
+          methodArgs = {int.class}
+        )
+    })
     public void test_appendCodePointI() {
         StringBuilder sb = new StringBuilder();
         sb.appendCodePoint(0x10000);
@@ -382,6 +550,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.capacity()'
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "capacity",
+          methodArgs = {}
+        )
+    })
     public void test_capacity() {
         StringBuilder sb = new StringBuilder();
         assertEquals(16, sb.capacity());
@@ -392,6 +569,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.charAt(int)'
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "charAt",
+          methodArgs = {int.class}
+        )
+    })
     public void test_charAtI() {
         final String fixture = "0123456789";
         StringBuilder sb = new StringBuilder(fixture);
@@ -422,6 +608,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.codePointAt(int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "codePointAt",
+          methodArgs = {int.class}
+        )
+    })
     public void test_codePointAtI() {
         StringBuilder sb = new StringBuilder("abc");
         assertEquals('a', sb.codePointAt(0));
@@ -459,6 +654,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.codePointBefore(int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "codePointBefore",
+          methodArgs = {int.class}
+        )
+    })
     public void test_codePointBeforeI() {
         StringBuilder sb = new StringBuilder("abc");
         assertEquals('a', sb.codePointBefore(1));
@@ -497,6 +701,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.codePointCount(int, int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "codePointCount",
+          methodArgs = {int.class, int.class}
+        )
+    })
     public void test_codePointCountII() {
         assertEquals(1, new StringBuilder("\uD800\uDC00").codePointCount(0, 2));
         assertEquals(1, new StringBuilder("\uD800\uDC01").codePointCount(0, 2));
@@ -533,6 +746,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.delete(int, int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "delete",
+          methodArgs = {int.class, int.class}
+        )
+    })
     public void test_deleteII() {
         final String fixture = "0123456789";
         StringBuilder sb = new StringBuilder(fixture);
@@ -577,6 +799,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.deleteCharAt(int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "deleteCharAt",
+          methodArgs = {int.class}
+        )
+    })
     public void test_deleteCharAtI() {
         final String fixture = "0123456789";
         StringBuilder sb = new StringBuilder(fixture);
@@ -617,6 +848,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.ensureCapacity(int)'
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "ensureCapacity",
+          methodArgs = {int.class}
+        )
+    })
     public void test_ensureCapacityI() {
         StringBuilder sb = new StringBuilder(5);
         assertEquals(5, sb.capacity());
@@ -631,6 +871,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.getChars(int, int, char[], int)'
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getChars",
+          methodArgs = {int.class, int.class, char[].class, int.class}
+        )
+    })
     public void test_getCharsII$CI() {
         final String fixture = "0123456789";
         StringBuilder sb = new StringBuilder(fixture);
@@ -702,6 +951,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.indexOf(String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "indexOf",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_indexOfLjava_lang_String() {
         final String fixture = "0123456789";
         StringBuilder sb = new StringBuilder(fixture);
@@ -721,6 +979,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.indexOf(String, int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "indexOf",
+          methodArgs = {java.lang.String.class, int.class}
+        )
+    })
     public void test_IndexOfStringInt() {
         final String fixture = "0123456789";
         StringBuilder sb = new StringBuilder(fixture);
@@ -750,6 +1017,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.insert(int, boolean)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "insert",
+          methodArgs = {int.class, boolean.class}
+        )
+    })
     public void test_insertIZ() {
         final String fixture = "0000";
         StringBuilder sb = new StringBuilder(fixture);
@@ -792,6 +1068,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.insert(int, char)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "IndexOutOfBoundsException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "insert",
+          methodArgs = {int.class, char.class}
+        )
+    })
     public void test_insertIC() {
         final String fixture = "0000";
         StringBuilder sb = new StringBuilder(fixture);
@@ -839,6 +1124,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.insert(int, char)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies ArrayIndexOutOfBoundsException.",
+      targets = {
+        @TestTarget(
+          methodName = "insert",
+          methodArgs = {int.class, char.class}
+        )
+    })
     public void test_insertIC_2() {
         StringBuilder obj = new StringBuilder();
         try {
@@ -852,6 +1146,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.insert(int, char[])'
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "insert",
+          methodArgs = {int.class, char[].class}
+        )
+    })
     public void test_insertI$C() {
         final String fixture = "0000";
         StringBuilder sb = new StringBuilder(fixture);
@@ -903,6 +1206,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.insert(int, char[], int, int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "insert",
+          methodArgs = {int.class, char[].class, int.class, int.class}
+        )
+    })
     public void test_insertI$CII() {
         final String fixture = "0000";
         StringBuilder sb = new StringBuilder(fixture);
@@ -993,6 +1305,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.insert(int, CharSequence)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "insert",
+          methodArgs = {int.class, java.lang.CharSequence.class}
+        )
+    })
     public void test_insertILjava_lang_CharSequence() {
         final String fixture = "0000";
         StringBuilder sb = new StringBuilder(fixture);
@@ -1035,6 +1356,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.insert(int, CharSequence, int, int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "insert",
+          methodArgs = {int.class, java.lang.CharSequence.class, int.class, int.class}
+        )
+    })
     @SuppressWarnings("cast")
     public void test_insertILjava_lang_CharSequenceII() {
         final String fixture = "0000";
@@ -1117,6 +1447,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.insert(int, double)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "insert",
+          methodArgs = {int.class, double.class}
+        )
+    })
     public void test_insertID() {
         final String fixture = "0000";
         StringBuilder sb = new StringBuilder(fixture);
@@ -1159,6 +1498,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.insert(int, float)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "insert",
+          methodArgs = {int.class, float.class}
+        )
+    })
     public void test_insertIF() {
         final String fixture = "0000";
         StringBuilder sb = new StringBuilder(fixture);
@@ -1201,6 +1549,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.insert(int, int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "insert",
+          methodArgs = {int.class, int.class}
+        )
+    })
     public void test_insertII() {
         final String fixture = "0000";
         StringBuilder sb = new StringBuilder(fixture);
@@ -1243,6 +1600,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.insert(int, long)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "insert",
+          methodArgs = {int.class, long.class}
+        )
+    })
     public void test_insertIJ() {
         final String fixture = "0000";
         StringBuilder sb = new StringBuilder(fixture);
@@ -1285,6 +1651,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.insert(int, Object)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "insert",
+          methodArgs = {int.class, java.lang.Object.class}
+        )
+    })
     public void test_insertILjava_lang_Object() {
         final String fixture = "0000";
         StringBuilder sb = new StringBuilder(fixture);
@@ -1327,6 +1702,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.insert(int, String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "insert",
+          methodArgs = {int.class, java.lang.String.class}
+        )
+    })
     public void test_insertILjava_lang_String() {
         final String fixture = "0000";
         StringBuilder sb = new StringBuilder(fixture);
@@ -1369,6 +1753,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.lastIndexOf(String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "lastIndexOf",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_lastIndexOfLjava_lang_String() {
         final String fixture = "0123456789";
         StringBuilder sb = new StringBuilder(fixture);
@@ -1388,6 +1781,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.lastIndexOf(String, int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "lastIndexOf",
+          methodArgs = {java.lang.String.class, int.class}
+        )
+    })
     public void test_lastIndexOfLjava_lang_StringI() {
         final String fixture = "0123456789";
         StringBuilder sb = new StringBuilder(fixture);
@@ -1417,6 +1819,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.length()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "length",
+          methodArgs = {}
+        )
+    })
     public void test_length() {
         StringBuilder sb = new StringBuilder();
         assertEquals(0, sb.length());
@@ -1427,6 +1838,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.offsetByCodePoints(int, int)'
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "offsetByCodePoints",
+          methodArgs = {int.class, int.class}
+        )
+    })
     public void test_offsetByCodePointsII() {
         int result = new StringBuilder("a\uD800\uDC00b").offsetByCodePoints(0, 2);
         assertEquals(3, result);
@@ -1493,6 +1913,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.replace(int, int, String)'
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "replace",
+          methodArgs = {int.class, int.class, java.lang.String.class}
+        )
+    })
     public void test_replaceIILjava_lang_String() {
         final String fixture = "0000";
         StringBuilder sb = new StringBuilder(fixture);
@@ -1556,6 +1985,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.reverse()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "reverse",
+          methodArgs = {}
+        )
+    })
     public void test_reverse() {
         final String fixture = "0123456789";
         StringBuilder sb = new StringBuilder(fixture);
@@ -1578,6 +2016,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.setCharAt(int, char)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setCharAt",
+          methodArgs = {int.class, char.class}
+        )
+    })
     public void test_setCharAtIC() {
         final String fixture = "0000";
         StringBuilder sb = new StringBuilder(fixture);
@@ -1615,6 +2062,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.setLength(int)'
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setLength",
+          methodArgs = {int.class}
+        )
+    })
     public void test_setLengthI() {
         final String fixture = "0123456789";
         StringBuilder sb = new StringBuilder(fixture);
@@ -1639,6 +2095,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.subSequence(int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "subSequence",
+          methodArgs = {int.class, int.class}
+        )
+    })
     public void test_subSequenceII() {
         final String fixture = "0123456789";
         StringBuilder sb = new StringBuilder(fixture);
@@ -1680,6 +2145,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.substring(int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "substring",
+          methodArgs = {int.class}
+        )
+    })
     public void test_substringI() {
         final String fixture = "0123456789";
         StringBuilder sb = new StringBuilder(fixture);
@@ -1714,6 +2188,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.substring(int, int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "substring",
+          methodArgs = {int.class, int.class}
+        )
+    })
     public void test_substringII() {
         final String fixture = "0123456789";
         StringBuilder sb = new StringBuilder(fixture);
@@ -1755,6 +2238,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.toString()'
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public void test_toString() {
         final String fixture = "0123456789";
         StringBuilder sb = new StringBuilder(fixture);
@@ -1764,6 +2256,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests java.lang.StringBuilder.trimToSize()'
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "trimToSize",
+          methodArgs = {}
+        )
+    })
     public void test_trimToSize() {
         final String fixture = "0123456789";
         StringBuilder sb = new StringBuilder(fixture);
@@ -1792,6 +2293,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests serialization/deserialization.
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Verifies serialization/deserialization.",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationSelf",
+          methodArgs = {}
+        )
+    })
     public void testSerializationSelf() throws Exception {
 
         SerializationTest.verifySelf(new StringBuilder("0123456789"),
@@ -1801,6 +2311,15 @@ public class StringBuilderTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Verifies serialization/deserialization compatibility.",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationGolden",
+          methodArgs = {}
+        )
+    })
     public void testSerializationCompatibility() throws Exception {
 
         SerializationTest.verifyGolden(this, new StringBuilder("0123456789"),

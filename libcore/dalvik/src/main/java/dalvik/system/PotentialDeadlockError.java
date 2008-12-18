@@ -17,18 +17,22 @@
 package dalvik.system;
 
 /**
- * This is thrown when the VM identifies a potential deadlock.
+ * Is thrown when the VM identifies a potential deadlock.
+ * 
+ * @since Android 1.0
  */
 public class PotentialDeadlockError extends VirtualMachineError {
     /**
-     * Initialize exception with default values.
+     * Creates a new exception instance and initializes it with default values.
      */
     public PotentialDeadlockError() {
         super();
     }
 
     /**
-     * Initialize exception with the supplied message string.
+     * Creates a new exception instance and initializes it with a given message.
+     * 
+     * @param detailMessage the error message
      */
     public PotentialDeadlockError(String detailMessage) {
         super(detailMessage);

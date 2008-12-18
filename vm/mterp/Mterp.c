@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Mterp entry point and support functions.
  */
@@ -63,6 +64,8 @@ bool dvmCheckAsmConstants(void)
 /*
  * "Standard" mterp entry point.  This sets up a "glue" structure and then
  * calls into the assembly interpreter implementation.
+ *
+ * (There is presently no "debug" entry point.)
  */
 bool dvmMterpStd(Thread* self, InterpState* glue)
 {

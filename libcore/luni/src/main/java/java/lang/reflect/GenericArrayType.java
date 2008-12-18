@@ -18,21 +18,26 @@
 package java.lang.reflect;
 
 /**
- * Represents an array type with a component type that is parameterized or a
- * type variable.
+ * This interface represents an array type with a component type that is either
+ * a parameterized type or a type variable.
  * 
  * @since 1.5
+ * @since Android 1.0
  */
 public interface GenericArrayType extends Type {
+
     /**
-     * The {@link Type} that represents the component type of the array.
+     * Returns the component type of this array.
+     *
+     * @return the component type of this array
      * 
-     * @return A {@link Type} instance.
      * @throws TypeNotPresentException
-     *             if the component type points to a missing type.
+     *             if the component type points to a missing type
      * @throws MalformedParameterizedTypeException
-     *             if the component type points to a type that can't be
-     *             instantiated for some reason.
+     *             if the component type points to a type that cannot be
+     *             instantiated for some reason
+     * 
+     * @since Android 1.0
      */
     Type getGenericComponentType();
 }

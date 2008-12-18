@@ -14,7 +14,12 @@
  * limitations under the License.
  */
 
-package tests.sql;
+package tests.sql;     
+
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
 
 import java.sql.BatchUpdateException;
 import java.sql.ResultSet;
@@ -23,11 +28,21 @@ import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.Vector;
 
+@TestTargetClass(Statement.class)
 public class StatementTest extends SQLTest {
     
     /**
      * @test java.sql.Statement#addBatch(String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "addBatch",
+          methodArgs = {String.class}
+        )
+    })
     public void testAddBatch() throws SQLException {
         
         Statement st = null;
@@ -81,6 +96,15 @@ public class StatementTest extends SQLTest {
     /**
      * @test java.sql.Statement#clearWarnings()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "clearWarnings",
+          methodArgs = {}
+        )
+    })
     public void testClearWarnings() {
         Statement st = null;
         try {
@@ -159,6 +183,15 @@ public class StatementTest extends SQLTest {
     /**
      * @test java.sql.Statement#clearBatch(String)
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "addBatch tested instead of clearBatch method",
+      targets = {
+        @TestTarget(
+          methodName = "clearBatch",
+          methodArgs = {}
+        )
+    })
     public void testClearBatch() throws SQLException {
         
         Statement st = null;
@@ -216,6 +249,15 @@ public class StatementTest extends SQLTest {
      * TODO not pass on SQLite and RI.
      * 
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "execute",
+          methodArgs = {String.class}
+        )
+    })
     public void testExecute() throws SQLException {
 
         String[] queries = {
@@ -306,6 +348,15 @@ public class StatementTest extends SQLTest {
     /**
      * @test java.sql.Statement#getConnection()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getConnection",
+          methodArgs = {}
+        )
+    })
     public void testGetConnection() {
         Statement st = null;
         try {
@@ -324,6 +375,15 @@ public class StatementTest extends SQLTest {
     /**
      * @test java.sql.Statement#getFetchDirection()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getFetchDirection",
+          methodArgs = {}
+        )
+    })
     public void testGetFetchDirection() {
         Statement st = null;
         try {
@@ -387,6 +447,15 @@ public class StatementTest extends SQLTest {
     /**
      * @test java.sql.Statement#getFetchSize()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getFetchSize",
+          methodArgs = {}
+        )
+    })
     public void testGetFetchSize() {
         Statement st = null;
         try {
@@ -560,7 +629,16 @@ public class StatementTest extends SQLTest {
      * @test java.sql.Statement#close()
      * TODO not passed but according to Java Docs
      */
-    public void testClose() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "close",
+          methodArgs = {}
+        )
+    })
+    public void _testClose() {
         Statement st = null;
         try {
             String[] queries = {
@@ -657,6 +735,15 @@ public class StatementTest extends SQLTest {
     /**
      * @test java.sql.Statement#executeBatch()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException, BatchUpdateException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "executeBatch",
+          methodArgs = {}
+        )
+    })
     public void testExecuteBatch() {
 
         String[] queries = {
@@ -706,7 +793,16 @@ public class StatementTest extends SQLTest {
     /**
      * @test java.sql.Statement#executeQuery(String sql)
      */
-    public void testExecuteQuery_String() {
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Null/empty parameter checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "executeQuery",
+          methodArgs = {String.class}
+        )
+    })
+    public void _testExecuteQuery_String() {
 
         String[] queries1 = { "select * from zoo",
                 "select name, family from zoo where id = 1" };
@@ -765,7 +861,16 @@ public class StatementTest extends SQLTest {
     /**
      * @test java.sql.Statement#executeUpdate(String sql)
      */
-    public void testExecuteUpdate_String() {
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Null/empty parameter checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "executeUpdate",
+          methodArgs = {String.class}
+        )
+    })
+    public void _testExecuteUpdate_String() {
 
         String[] queries1 = {
                 "update zoo set name='Masha', family='cat' where id=2;",
@@ -932,6 +1037,15 @@ public class StatementTest extends SQLTest {
     /**
      * @test java.sql.Statement#getUpdateCount()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getUpdateCount",
+          methodArgs = {}
+        )
+    })
     public void testGetUpdateCount() {
         Statement st = null;
         try {

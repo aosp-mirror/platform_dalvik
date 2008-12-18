@@ -412,7 +412,7 @@ public abstract class FileChannelImpl extends FileChannel {
         }
         
         ByteBuffer buffer = null;
-
+        // BEGIN android-changed
         try {
             if (src instanceof FileChannel) {
                 FileChannel fileSrc = (FileChannel) src;
@@ -435,6 +435,7 @@ public abstract class FileChannelImpl extends FileChannel {
                ((DirectBuffer) buffer).free();
             }
         }
+        // END android-changed
     }
 
     public long transferTo(long position, long count, WritableByteChannel target)
@@ -461,7 +462,7 @@ public abstract class FileChannelImpl extends FileChannel {
             return kernelTransfer(handle, ((SocketChannelImpl) target).getFD(),
                     position, count);
         }
-
+        // BEGIN android-changed
         try {
             buffer = map(MapMode.READ_ONLY, position, count);
             return target.write(buffer);
@@ -473,6 +474,7 @@ public abstract class FileChannelImpl extends FileChannel {
                 ((DirectBuffer) buffer).free();
             }
         }
+        // END android-changed
     }
 
     private long kernelTransfer(int l, FileDescriptor fd, long position,
@@ -593,7 +595,7 @@ public abstract class FileChannelImpl extends FileChannel {
         int[] handles = new int[length];
         int[] offsets = new int[length];
         int[] lengths = new int[length];
-
+        // BEGIN android-changed
         // list of allocated direct ByteBuffers to prevent them from being GC-ed
         DirectBuffer[] allocatedBufs = new DirectBuffer[length];
 
@@ -614,6 +616,7 @@ public abstract class FileChannelImpl extends FileChannel {
             handles[i] = ((DirectBuffer) buffer).getEffectiveAddress().toInt();
             lengths[i] = buffer.remaining();
         }
+        // END android-changed
 
         long bytesWritten = 0;
         boolean completed = false;
@@ -625,13 +628,14 @@ public abstract class FileChannelImpl extends FileChannel {
                 completed = true;
             } finally {
                 end(completed);
-
+                // BEGIN android-added
                 // free temporary direct buffers
                 for (int i = 0; i < length; ++i) {
                     if (allocatedBufs[i] != null) {
                         allocatedBufs[i].free();
                     }
                 }
+                // END android-added
             }
         }
 

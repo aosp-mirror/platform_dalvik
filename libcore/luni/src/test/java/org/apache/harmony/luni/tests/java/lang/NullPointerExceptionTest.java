@@ -16,13 +16,28 @@
  */
 package org.apache.harmony.luni.tests.java.lang;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import junit.framework.TestCase;
 
+@TestTargetClass(NullPointerException.class) 
 public class NullPointerExceptionTest extends TestCase {
 
     /**
      * @tests java.lang.NullPointerException#NullPointerException()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "NullPointerException",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         NullPointerException e = new NullPointerException();
         assertNull(e.getMessage());
@@ -33,6 +48,15 @@ public class NullPointerExceptionTest extends TestCase {
     /**
      * @tests java.lang.NullPointerException#NullPointerException(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "NullPointerException",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() {
         NullPointerException e = new NullPointerException("fixture");
         assertEquals("fixture", e.getMessage());

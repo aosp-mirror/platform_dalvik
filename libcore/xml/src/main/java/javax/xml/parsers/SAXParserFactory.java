@@ -23,10 +23,12 @@ import org.xml.sax.SAXNotSupportedException;
 import org.xml.sax.SAXException;
 
 /**
- * Provides a factory for SAXParser instances. The class first needs to be
- * instantiated using the newInstance() method. The instance can be
- * configured as desired. A call to newSAXParser() then provides a SAXParser
- * instance matching this configuration. 
+ * Provides a factory for {@link SAXParser} instances. The class first needs to
+ * be instantiated using the {@link #newInstance()} method. The instance can be
+ * configured as desired. A call to its {@link #newSAXParser()} then provides a
+ * {@code SAXParser} instance matching this configuration, if possible.
+ * 
+ * @since Android 1.0
  */
 public abstract class SAXParserFactory {
 
@@ -39,6 +41,8 @@ public abstract class SAXParserFactory {
     /**
      * Do-nothing constructor. Prevents instantiation. To be overridden by
      * concrete subclasses.
+     * 
+     * @since Android 1.0
      */
     protected SAXParserFactory() {
         // Does nothing.
@@ -48,7 +52,8 @@ public abstract class SAXParserFactory {
      * Queries a feature from the underlying implementation.
      * 
      * @param name The name of the feature. The default Android implementation
-     *             of SAXParser supports only the following three features:
+     *             of {@link SAXParser} supports only the following three
+     *             features:
      *             
      *             <dl>
      *               <dt>{@code http://xml.org/sax/features/namespaces}</dt>
@@ -69,35 +74,40 @@ public abstract class SAXParserFactory {
      *             namespace prefixes can be enabled, but not both at the same 
      *             time.
      *             
-     * @return The status of the feature.
+     * @return the status of the feature.
      * 
-     * @throws ParserConfigurationException if no SAXParser matching the given
-     *         criteria is available.
-     * @throws SAXNotRecognizedException If the given feature is not known to
+     * @throws ParserConfigurationException if no {@code SAXParser} matching the
+     *         given criteria is available.
+     * @throws SAXNotRecognizedException if the given feature is not known to
      *         the underlying implementation.
-     * @throws SAXNotSupportedException If the given features is known, but not
+     * @throws SAXNotSupportedException if the given features is known, but not
      *         supported by the underlying implementation.
+     *         
+     * @since Android 1.0
      */
     public abstract boolean getFeature(String name)
             throws ParserConfigurationException, SAXNotRecognizedException,
             SAXNotSupportedException;
 
-    /**
-     * Queries the desired XML Schema object.
-     * 
-     * @return The XML Schema object, if it has been set by a call to setSchema,
-     *         or null otherwise.
-     */
-    // TODO Do we want the validation package in?
-    // public javax.xml.validation.Schema getSchema() {
-    // return schema;
-    // }
+// TODO No XSchema support in Android 1.0. Maybe later.
+//    /**
+//     * Queries the desired XML Schema object.
+//     * 
+//     * @return The XML Schema object, if it has been set by a call to setSchema,
+//     *         or null otherwise.
+//     */
+//    public javax.xml.validation.Schema getSchema() {
+//        return schema;
+//    }
     
     /**
      * Queries whether the factory is configured to deliver parsers that are
      * namespace-aware.
      * 
-     * @return true if namespace-awareness is desired, false otherwise.
+     * @return {@code true} if namespace-awareness is desired, {@code false}
+     *         otherwise.
+     * 
+     * @since Android 1.0
      */
     public boolean isNamespaceAware() {
         return namespaceAware;
@@ -107,7 +117,9 @@ public abstract class SAXParserFactory {
      * Queries whether the factory is configured to deliver parsers that are
      * validating.
      * 
-     * @return true if validating is desired, false otherwise.
+     * @return {@code true} if validating is desired, {@code false} otherwise.
+     * 
+     * @since Android 1.0
      */
     public boolean isValidating() {
         return validating;
@@ -117,19 +129,30 @@ public abstract class SAXParserFactory {
      * Queries whether the factory is configured to deliver parsers that are
      * XInclude-aware.
      * 
-     * @return true if XInclude-awareness is desired, false otherwise.
+     * @return {@code true} if XInclude-awareness is desired, {@code false}
+     *         otherwise.
+     * 
+     * @since Android 1.0
      */
     public boolean isXIncludeAware() {
         throw new UnsupportedOperationException();
     }
 
     /**
-     * Creates a new SAXParserFactory that can be configured and then be used
-     * for creating SAXPArser objects.
+     * Creates a new {@code SAXParserFactory} that can be configured and then be
+     * used for creating {@link SAXParser} objects. The method first checks the
+     * value of the {@code SAXParserFactory} property. If this
+     * is non-{@code null}, it is assumed to be the name of a class that serves
+     * as the factory. The class is instantiated, and the instance is returned.
+     * If the property value is {@code null}, the system's default factory
+     * implementation is returned. 
      * 
-     * @return The SAXParserFactory.
+     * @return the {@code SAXParserFactory}.
      * 
-     * @throws FactoryConfigurationError If no SAXParserFactory can be created.
+     * @throws FactoryConfigurationError if no {@code SAXParserFactory} can be
+     *         created.
+     *         
+     * @since Android 1.0
      */
     public static SAXParserFactory newInstance()
             throws FactoryConfigurationError {
@@ -154,13 +177,17 @@ public abstract class SAXParserFactory {
     }
 
     /**
-     * Creates a new SAXParser that matches the current configuration.
+     * Creates a new {@link SAXParser} that matches the current configuration of
+     * the factory.
      * 
-     * @return The SAXParser.
+     * @return the {@code SAXParser}.
      * 
-     * @throws ParserConfigurationException if no matching SAXParser could be
-     *         found.
-     * @throws SAXException If a problem occurs during SAX parsing.
+     * @throws ParserConfigurationException if no matching {@code SAXParser}
+     *         could be found.
+     * @throws SAXException if creating the {@code SAXParser} failed due to some
+     *         other reason.
+     * 
+     * @since Android 1.0
      */
     public abstract SAXParser newSAXParser()
             throws ParserConfigurationException, SAXException;
@@ -168,20 +195,21 @@ public abstract class SAXParserFactory {
     /**
      * Sets a feature in the underlying implementation.
      * 
-     * @param name The name of the feature. The default Android implementation
-     *             of SAXParser supports only the following three features:
+     * @param name the name of the feature. The default Android implementation
+     *             of {@link SAXParser} supports only the following three
+     *             features:
      *             
      *             <dl>
      *               <dt>{@code http://xml.org/sax/features/namespaces}</dt>
-     *               <dd>Queries the state of namespace-awareness.</dd>
+     *               <dd>Sets the state of namespace-awareness.</dd>
      *
      *               <dt>
      *                 {@code http://xml.org/sax/features/namespace-prefixes}
      *               </dt>
-     *               <dd>Queries the state of namespace prefix processing</dd>
+     *               <dd>Sets the state of namespace prefix processing</dd>
      *
      *               <dt>{@code http://xml.org/sax/features/validation}</dt>
-     *               <dd>Queries the state of validation.</dd>
+     *               <dd>Sets the state of validation.</dd>
      *             </dl>
      *             
      *             Note that despite the ability to query the validation
@@ -190,14 +218,16 @@ public abstract class SAXParserFactory {
      *             namespace prefixes can be enabled, but not both at the same 
      *             time.
      *             
-     * @param value The status of the feature.
+     * @param value the status of the feature.
      * 
-     * @throws ParserConfigurationException if no SAXParser matching the given
-     *         criteria is available.
-     * @throws SAXNotRecognizedException If the given feature is not known to
+     * @throws ParserConfigurationException if no {@code SAXParser} matching
+     *         the given criteria is available.
+     * @throws SAXNotRecognizedException if the given feature is not known to
      *         the underlying implementation.
-     * @throws SAXNotSupportedException If the given features is known, but not
+     * @throws SAXNotSupportedException if the given features is known, but not
      *         supported by the underlying implementation.
+     *         
+     * @since Android 1.0
      */
     public abstract void setFeature(String name, boolean value)
             throws ParserConfigurationException, SAXNotRecognizedException,
@@ -207,26 +237,31 @@ public abstract class SAXParserFactory {
      * Determines whether the factory is configured to deliver parsers that are
      * namespace-aware.
      * 
-     * @param value Turns namespace-awareness on or off.
+     * @param value turns namespace-awareness on or off.
+     * 
+     * @since Android 1.0
      */
     public void setNamespaceAware(boolean value) {
         namespaceAware = value;
     }
 
-    /**
-     * Sets the desired XML Schema object.
-     * 
-     * @param schema The XML Schema object.
-     */
-    // TODO Do we want the validation package in?
-    // public void setSchema(Schema schema) {
-    // this.schema = schema;
-    // }
+// TODO No XSchema support in Android 1.0. Maybe later.
+//    /**
+//     * Sets the desired XML Schema object.
+//     * 
+//     * @param schema The XML Schema object.
+//     */
+//    public void setSchema(Schema schema) {
+//       this.schema = schema;
+//    }
+
     /**
      * Determines whether the factory is configured to deliver parsers that are
      * validating.
      * 
-     * @param value Turns validation on or off.
+     * @param value turns validation on or off.
+     * 
+     * @since Android 1.0
      */
     public void setValidating(boolean value) {
         validating = value;
@@ -236,7 +271,9 @@ public abstract class SAXParserFactory {
      * Determines whether the factory is configured to deliver parsers that are
      * XInclude-aware.
      * 
-     * @param value Turns XInclude-awareness on or off.
+     * @param value turns XInclude-awareness on or off.
+     * 
+     * @since Android 1.0
      */
     public void setXIncludeAware(boolean value) {
         throw new UnsupportedOperationException();

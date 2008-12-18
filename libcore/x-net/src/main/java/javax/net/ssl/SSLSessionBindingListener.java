@@ -15,30 +15,33 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package javax.net.ssl;
 
 import java.util.EventListener;
 
 /**
- * @com.intel.drl.spec_ref
+ * The interface to be implemented by any object that requires notification when
+ * data objects are bound to (or unbound from) an {@code SSLSession}. 
  * 
+ * @since Android 1.0
  */
 public interface SSLSessionBindingListener extends EventListener {
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Notifies this listener when a value is bound to an {@code SSLSession}.
+     * 
+     * @param event
+     *            the event data.
+     * @since Android 1.0
      */
     public void valueBound(SSLSessionBindingEvent event);
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Notifies this listener when a value is unbound from an {@code SSLSession}.
+     * 
+     * @param event
+     *            the event data.
+     * @since Android 1.0
      */
     public void valueUnbound(SSLSessionBindingEvent event);
 

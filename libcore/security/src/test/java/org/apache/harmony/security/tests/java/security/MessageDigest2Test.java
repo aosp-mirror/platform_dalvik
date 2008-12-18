@@ -17,6 +17,11 @@
 
 package org.apache.harmony.security.tests.java.security;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -30,6 +35,7 @@ import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Vector;
 
+@TestTargetClass(MessageDigest.class)
 public class MessageDigest2Test extends junit.framework.TestCase {
 
     private static final String MESSAGEDIGEST_ID = "MessageDigest.";
@@ -62,6 +68,15 @@ public class MessageDigest2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.MessageDigest#MessageDigest(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "MessageDigest",
+          methodArgs = {String.class}
+        )
+    })
     public void test_constructor() {
         for (int i = 0; i < digestAlgs.length; i++) {
             MessageDigestStub md = new MessageDigestStub(digestAlgs[i]);
@@ -74,6 +89,15 @@ public class MessageDigest2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.MessageDigest#clone()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "clone",
+          methodArgs = {}
+        )
+    })
     public void test_clone() {
         for (int i = 0; i < digestAlgs.length; i++) {
             try {
@@ -221,6 +245,15 @@ public class MessageDigest2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.MessageDigest#digest()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "digest",
+          methodArgs = {}
+        )
+    })
     public void test_digest() {
         MessageDigest sha = null;
         try {
@@ -267,6 +300,15 @@ public class MessageDigest2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.MessageDigest#digest(byte[])
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "digest",
+          methodArgs = {byte[].class}
+        )
+    })
     public void test_digest$B() {
         for (int i = 0; i < digestAlgs.length; i++) {
             try {
@@ -285,6 +327,15 @@ public class MessageDigest2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.MessageDigest#digest(byte[], int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verification of different variants of offset and len parameters missed",
+      targets = {
+        @TestTarget(
+          methodName = "digest",
+          methodArgs = {byte[].class, int.class, int.class}
+        )
+    })
     public void test_digest$BII() {
         for (int i = 0; i < digestAlgs.length; i++) {
             try {
@@ -318,6 +369,15 @@ public class MessageDigest2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.MessageDigest#update(byte[], int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verification of different variants of offset and len parameters missed",
+      targets = {
+        @TestTarget(
+          methodName = "update",
+          methodArgs = {byte[].class, int.class, int.class}
+        )
+    })
     public void test_update$BII() {
         try {
             MessageDigest.getInstance("SHA").update(new byte[] {},
@@ -332,6 +392,15 @@ public class MessageDigest2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.MessageDigest#getAlgorithm()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getAlgorithm",
+          methodArgs = {}
+        )
+    })
     public void test_getAlgorithm() {
         for (int i = 0; i < digestAlgs.length; i++) {
             try {
@@ -349,6 +418,15 @@ public class MessageDigest2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.MessageDigest#getDigestLength()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getDigestLength",
+          methodArgs = {}
+        )
+    })
     public void test_getDigestLength() {
         for (int i = 0; i < digestAlgs.length; i++) {
             try {
@@ -367,6 +445,15 @@ public class MessageDigest2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.MessageDigest#getInstance(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NoSuchAlgorithmException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getInstance",
+          methodArgs = {String.class}
+        )
+    })
     public void test_getInstanceLjava_lang_String() {
         for (int i = 0; i < digestAlgs.length; i++) {
             try {
@@ -381,6 +468,15 @@ public class MessageDigest2Test extends junit.framework.TestCase {
      * @tests java.security.MessageDigest#getInstance(java.lang.String,
      *        java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NoSuchAlgorithmException, NoSuchProviderException, IllegalArgumentException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getInstance",
+          methodArgs = {String.class, String.class}
+        )
+    })
     public void test_getInstanceLjava_lang_StringLjava_lang_String() {
         for (int i = 0; i < digestAlgs.length; i++) {
             try {
@@ -397,6 +493,15 @@ public class MessageDigest2Test extends junit.framework.TestCase {
      * @tests java.security.MessageDigest#getInstance(java.lang.String,
      *        java.security.Provider)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NoSuchAlgorithmException, IllegalArgumentException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getInstance",
+          methodArgs = {String.class, Provider.class}
+        )
+    })
     public void test_getInstanceLjava_lang_StringLjava_security_Provider() {
         Provider[] providers = Security.getProviders("MessageDigest.SHA");
         for (int i = 0; i < digestAlgs.length; i++) {
@@ -414,6 +519,15 @@ public class MessageDigest2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.MessageDigest#getProvider()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getProvider",
+          methodArgs = {}
+        )
+    })
     public void test_getProvider() {
         for (int i = 0; i < digestAlgs.length; i++) {
             try {
@@ -431,6 +545,15 @@ public class MessageDigest2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.MessageDigest#isEqual(byte[], byte[])
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Otherwise case is not checked",
+      targets = {
+        @TestTarget(
+          methodName = "isEqual",
+          methodArgs = {byte[].class, byte[].class}
+        )
+    })
     public void test_isEqual$B$B() {
         assertTrue("isEqual is not correct", MessageDigest.isEqual(AR1, AR2));
     }
@@ -438,6 +561,15 @@ public class MessageDigest2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.MessageDigest#toString()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public void test_toString() {
         try {
             String str = MessageDigest.getInstance("SHA").toString();

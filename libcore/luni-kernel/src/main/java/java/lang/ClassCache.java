@@ -68,6 +68,18 @@ import java.util.HashSet;
     /** null-ok; list of all public methods, both direct and inherited */
     private volatile Method[] allPublicMethods;
 
+    /** null-ok; list of all declared fields */
+    private volatile Field[] declaredFields;
+
+    /** null-ok; list of all public declared fields */
+    private volatile Field[] declaredPublicFields;
+
+    /** null-ok; list of all fields, both direct and inherited */
+    private volatile Field[] allFields;
+
+    /** null-ok; list of all public fields, both direct and inherited */
+    private volatile Field[] allPublicFields;
+
     /**
      * null-ok; array of enumerated values in their original order, if this
      * instance's class is an enumeration
@@ -125,6 +137,10 @@ import java.util.HashSet;
         this.allPublicMethods = null;
         this.enumValuesInOrder = null;
         this.enumValuesByName = null;
+        this.declaredFields = null;
+        this.declaredPublicFields = null;
+        this.allFields = null;
+        this.allPublicFields = null;
     }
 
     /**
@@ -204,7 +220,7 @@ import java.util.HashSet;
         ArrayList<Method> methods = new ArrayList<Method>();
         HashSet<String> seen = new HashSet<String>();
 
-        getFullListOfMethods(clazz, methods, seen, publicOnly);
+        findAllMethods(clazz, methods, seen, publicOnly);
         
         return methods.toArray(new Method[methods.size()]);
     }
@@ -222,7 +238,7 @@ import java.util.HashSet;
      * @param publicOnly reflects whether we want only public methods
      * or all of them
      */
-    private static void getFullListOfMethods(Class<?> clazz,
+    private static void findAllMethods(Class<?> clazz,
             ArrayList<Method> methods, HashSet<String> seen,
             boolean publicOnly) {
         StringBuilder builder = new StringBuilder();
@@ -234,11 +250,11 @@ import java.util.HashSet;
                 clazz.getClassCache().getDeclaredMethods(publicOnly);
             int length = declaredMethods.length;
             if (length != 0) {
-                for (int i = 0; i < length; i++) {
+                for (Method method : declaredMethods) {
                     builder.setLength(0);
-                    builder.append(declaredMethods[i].getName());
+                    builder.append(method.getName());
                     builder.append('(');
-                    Class<?>[] types = declaredMethods[i].getParameterTypes();
+                    Class<?>[] types = method.getParameterTypes();
                     if (types.length != 0) {
                         builder.append(types[0].getName());
                         for (int j = 1; j < types.length; j++) {
@@ -250,7 +266,7 @@ import java.util.HashSet;
                     
                     String signature = builder.toString();
                     if (!seen.contains(signature)) {
-                        methods.add(declaredMethods[i]);
+                        methods.add(method);
                         seen.add(signature);
                     }
                 }
@@ -261,8 +277,8 @@ import java.util.HashSet;
         
         // Traverse all interfaces, and do the same recursively.
         Class<?>[] interfaces = origClass.getInterfaces();
-        for (int i = 0; i < interfaces.length; i++) {
-            getFullListOfMethods(interfaces[i], methods, seen, publicOnly);
+        for (Class<?> intf : interfaces) {
+            findAllMethods(intf, methods, seen, publicOnly);
         }
     }
 
@@ -273,10 +289,13 @@ import java.util.HashSet;
      * @param list non-null; the list of methods to search through
      * @param parameterTypes non-null; the formal parameter list
      * @return non-null; the matching method
-     * @throws NoSuchMethodExcpetion thrown if the method does not exist
+     * @throws NoSuchMethodException thrown if the method does not exist
      */
-    public static Method getMatchingMethod(Method[] list, String name,
+    public static Method findMethodByName(Method[] list, String name,
             Class<?>[] parameterTypes) throws NoSuchMethodException {
+        if (name == null) {
+            throw new NullPointerException("Method name must not be null.");
+        }
         for (int i = list.length - 1; i >= 0; i--) {
             Method method = list[i];
             if (method.getName().equals(name) 
@@ -339,6 +358,173 @@ import java.util.HashSet;
     public static Method[] deepCopy(Method[] orig) {
         int length = orig.length;
         Method[] result = new Method[length];
+
+        for (int i = length - 1; i >= 0; i--) {
+            result[i] = REFLECT.clone(orig[i]);
+        }
+
+        return result;
+    }
+
+    /**
+     * Gets the list of all declared fields.
+     * 
+     * @return non-null; the list of all declared fields
+     */
+    public Field[] getDeclaredFields() {
+        if (declaredFields == null) {
+            declaredFields = Class.getDeclaredFields(clazz, false);
+        }
+
+        return declaredFields;
+    }
+
+    /**
+     * Gets the list of all declared public fields.
+     * 
+     * @return non-null; the list of all declared public fields
+     */
+    public Field[] getDeclaredPublicFields() {
+        if (declaredPublicFields == null) {
+            declaredPublicFields = Class.getDeclaredFields(clazz, true);
+        }
+
+        return declaredPublicFields;
+    }
+
+    /**
+     * Gets either the list of declared fields or the list of declared
+     * public fields.
+     * 
+     * @param publicOnly whether to only return public fields
+     */
+    public Field[] getDeclaredFields(boolean publicOnly) {
+        return publicOnly ? getDeclaredPublicFields() : getDeclaredFields();
+    }
+
+    /**
+     * Gets the list of all fields, both directly
+     * declared and inherited.
+     * 
+     * @return non-null; the list of all fields
+     */
+    public Field[] getAllFields() {
+        if (allFields == null) {
+            allFields = getFullListOfFields(false);
+        }
+
+        return allFields;
+    }
+
+    /**
+     * Gets the list of all public fields, both directly
+     * declared and inherited.
+     * 
+     * @return non-null; the list of all public fields
+     */
+    public Field[] getAllPublicFields() {
+        if (allPublicFields == null) {
+            allPublicFields = getFullListOfFields(true);
+        }
+
+        return allPublicFields;
+    }
+
+    /*
+     * Returns the list of fields without performing any security checks
+     * first. This includes the fields inherited from superclasses. If no
+     * fields exist at all, an empty array is returned.
+     * 
+     * @param publicOnly reflects whether we want only public fields
+     * or all of them
+     * @return the list of fields 
+     */
+    private Field[] getFullListOfFields(boolean publicOnly) {
+        ArrayList<Field> fields = new ArrayList<Field>();
+        HashSet<String> seen = new HashSet<String>();
+
+        findAllfields(clazz, fields, seen, publicOnly);
+        
+        return fields.toArray(new Field[fields.size()]);
+    }
+
+    /**
+     * Collects the list of fields without performing any security checks
+     * first. This includes the fields inherited from superclasses and from
+     * all implemented interfaces. The latter may also implement multiple
+     * interfaces, so we (potentially) recursively walk through a whole tree of
+     * classes. If no fields exist at all, an empty array is returned.
+     * 
+     * @param clazz non-null; class to inspect
+     * @param fields non-null; the target list to add the results to
+     * @param seen non-null; a set of signatures we've already seen
+     * @param publicOnly reflects whether we want only public fields
+     * or all of them
+     */
+    private static void findAllfields(Class<?> clazz,
+            ArrayList<Field> fields, HashSet<String> seen,
+            boolean publicOnly) {
+        
+        // Traverse class and superclasses, get rid of dupes by signature
+        while (clazz != null) {
+            Field[] declaredFields =
+                    clazz.getClassCache().getDeclaredFields(publicOnly);
+            for (Field field : declaredFields) {                    
+                String signature = field.toString();
+                if (!seen.contains(signature)) {
+                    fields.add(field);
+                    seen.add(signature);
+                }
+            }
+            
+            // Traverse all interfaces, and do the same recursively.
+            Class<?>[] interfaces = clazz.getInterfaces();
+            for (Class<?> intf : interfaces) {
+                findAllfields(intf, fields, seen, publicOnly);
+            }
+            
+            clazz = clazz.getSuperclass();
+        }
+    }
+
+    /**
+     * Finds and returns a field with a given name and signature. Use
+     * this with one of the field lists returned by instances of this class.
+     * 
+     * @param list non-null; the list of fields to search through
+     * @return non-null; the matching field
+     * @throws NoSuchFieldException thrown if the field does not exist
+     */
+    public static Field findFieldByName(Field[] list, String name)
+            throws NoSuchFieldException {
+        if (name == null) {
+            throw new NullPointerException("Field name must not be null.");
+        }
+        for (int i = 0; i < list.length; i++) {
+            Field field = list[i];
+            if (field.getName().equals(name)) {
+                return field;
+            }
+        }
+        
+        throw new NoSuchFieldException(name);
+    }
+
+    /**
+     * Makes a deep copy of the given array of fields. This is useful
+     * when handing out arrays from the public API.
+     * 
+     * <p><b>Note:</b> In such cases, it is insufficient to just make
+     * a shallow copy of the array, since field objects aren't
+     * immutable due to the existence of {@link
+     * AccessibleObject#setAccessible}.</p>
+     *
+     * @param orig non-null; array to copy
+     * @return non-null; a deep copy of the given array
+     */
+    public static Field[] deepCopy(Field[] orig) {
+        int length = orig.length;
+        Field[] result = new Field[length];
 
         for (int i = length - 1; i >= 0; i--) {
             result[i] = REFLECT.clone(orig[i]);
@@ -444,7 +630,7 @@ import java.util.HashSet;
 
         try {
             Method[] methods = getDeclaredPublicMethods();
-            method = getMatchingMethod(methods, "values", (Class[]) null);
+            method = findMethodByName(methods, "values", (Class[]) null);
             method = REFLECT.accessibleClone(method);
         } catch (NoSuchMethodException ex) {
             // This shouldn't happen if the class is a well-formed enum.
@@ -485,7 +671,7 @@ import java.util.HashSet;
             Class.getDeclaredMethods(AccessibleObject.class, false);
 
         try {
-            Method method = getMatchingMethod(methods, "getReflectionAccess",
+            Method method = findMethodByName(methods, "getReflectionAccess",
                     (Class[]) null);
             Class.setAccessibleNoCheck(method, true);
             return (ReflectionAccess) method.invoke((Object[]) null);

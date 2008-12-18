@@ -18,32 +18,35 @@
 package java.util;
 
 /**
- * AbstractSet is an abstract implementation of the Set interface. This
- * Implementation does not support adding. A subclass must implement the
+ * An AbstractSet is an abstract implementation of the Set interface. This
+ * implementation does not support adding. A subclass must implement the
  * abstract methods iterator() and size().
  * 
- * @since 1.2
+ * @since Android 1.0
  */
 public abstract class AbstractSet<E> extends AbstractCollection<E> implements
         Set<E> {
 
     /**
      * Constructs a new instance of this AbstractSet.
+     * 
+     * @since Android 1.0
      */
     protected AbstractSet() {
         super();
     }
 
     /**
-     * Compares the specified object to this Set and answer if they are equal.
-     * The object must be an instance of Set and contain the same objects.
+     * Compares the specified object to this Set and returns true if they are
+     * equal. The object must be an instance of Set and contain the same
+     * objects.
      * 
      * @param object
-     *            the object to compare with this object
-     * @return true if the specified object is equal to this Set, false
-     *         otherwise
-     * 
+     *            the object to compare with this set.
+     * @return {@code true} if the specified object is equal to this set,
+     *         {@code false} otherwise
      * @see #hashCode
+     * @since Android 1.0
      */
     @Override
     public boolean equals(Object object) {
@@ -52,25 +55,26 @@ public abstract class AbstractSet<E> extends AbstractCollection<E> implements
         }
         if (object instanceof Set) {
             Set<?> s = (Set<?>) object;
-            // BEGIN android-updated
-            // (Taken from newer Harmony revision)
+            // BEGIN android-changed
+            // copied from a newer version of harmony
             try {
                 return size() == s.size() && containsAll(s);
             } catch (ClassCastException cce) {
                 return false;
             }
-            // END android-updated
+            // END android-changed
         }
         return false;
     }
 
     /**
-     * Returns an integer hash code for the receiver. Objects which are equal
-     * answer the same value for this method.
+     * Returns the hash code for this set. Two set which are equal must return
+     * the same value. This implementation calculates the hash code by adding
+     * each element's hash code.
      * 
-     * @return the receiver's hash
-     * 
+     * @return the hash code of this set.
      * @see #equals
+     * @since Android 1.0
      */
     @Override
     public int hashCode() {
@@ -84,15 +88,16 @@ public abstract class AbstractSet<E> extends AbstractCollection<E> implements
     }
 
     /**
-     * Removes all occurrences in this Collection of each object in the
-     * specified Collection.
+     * Removes all occurrences in this collection which are contained in the
+     * specified collection.
      * 
      * @param collection
-     *            the Collection of objects to remove
-     * @return true if this Collection is modified, false otherwise
-     * 
+     *            the collection of objects to remove.
+     * @return {@code true} if this collection was modified, {@code false}
+     *         otherwise.
      * @exception UnsupportedOperationException
-     *                when removing from this Collection is not supported
+     *                when removing from this collection is not supported.
+     * @since Android 1.0
      */
     @Override
     public boolean removeAll(Collection<?> collection) {

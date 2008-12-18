@@ -17,28 +17,33 @@
 
 package java.lang;
 
-
 /**
- * This error is thrown when the VM is unable to locate a class which it has
- * been asked to load.
+ * Thrown when the virtual machine is unable to locate a class which it has been
+ * asked to load.
+ * 
+ * @since Android 1.0
  */
 public class NoClassDefFoundError extends LinkageError {
 
     private static final long serialVersionUID = 9095859863287012458L;
 
     /**
-     * Constructs a new instance of this class with its walkback filled in.
+     * Constructs a new {@code NoClassDefFoundError} that includes the current
+     * stack trace.
+     * 
+     * @since Android 1.0
      */
     public NoClassDefFoundError() {
         super();
     }
 
     /**
-     * Constructs a new instance of this class with its walkback and message
-     * filled in.
+     * Constructs a new {@code NoClassDefFoundError} with the current stack
+     * trace and the specified detail message.
      * 
      * @param detailMessage
-     *            String The detail message for the exception.
+     *            the detail message for this error.
+     * @since Android 1.0
      */
     public NoClassDefFoundError(String detailMessage) {
         super(detailMessage);

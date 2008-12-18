@@ -25,33 +25,45 @@ package java.security;
 import java.io.Serializable;
 
 /**
- * This class is a Service Provider Interface (therefore the Spi suffix) for
- * secure random number generation algorithms to be supplied by providers.
+ * {@code SecureRandomSpi} is the <i>Service Provider Interface</i> (<b>SPI</b>) definition
+ * for {@link SecureRandom}. 
  * 
+ * @see SecureRandom
+ * @since Android 1.0
  */
 public abstract class SecureRandomSpi implements Serializable {
     
-    /**
-     * @com.intel.drl.spec_ref
-     * 
-     */
     private static final long serialVersionUID = -2991854161009191830L;
                 
     /**
-     * @com.intel.drl.spec_ref
+     * Reseeds this {@code SecureRandomSpi} instance with the specified {@code
+     * seed}. The seed of this {@code SecureRandomSpi} instance is supplemented,
+     * not replaced.
      * 
+     * @param seed
+     *            the new seed.
+     * @since Android 1.0
      */
     protected abstract void engineSetSeed(byte[] seed);
     
     /**
-     * @com.intel.drl.spec_ref
+     * Generates and stores random bytes in the given {@code byte[]} for each
+     * array element.
      * 
+     * @param bytes
+     *            the {@code byte[]} to be filled with random bytes.
+     * @since Android 1.0
      */
     protected abstract void engineNextBytes(byte[] bytes);
     
     /**
-     * @com.intel.drl.spec_ref
+     * Generates and returns the specified number of seed bytes, computed using
+     * the seed generation algorithm used by this {@code SecureRandomSpi}.
      * 
+     * @param numBytes
+     *            the number of seed bytes.
+     * @return the seed bytes
+     * @since Android 1.0
      */
     protected abstract byte[] engineGenerateSeed(int numBytes);
 }

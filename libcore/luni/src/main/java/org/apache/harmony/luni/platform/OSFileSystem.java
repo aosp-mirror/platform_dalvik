@@ -1,19 +1,23 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements. See the NOTICE file distributed with this
- * work for additional information regarding copyright ownership. The ASF
- * licenses this file to You under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations under
- * the License.
+ *  Licensed to the Apache Software Foundation (ASF) under one or more
+ *  contributor license agreements.  See the NOTICE file distributed with
+ *  this work for additional information regarding copyright ownership.
+ *  The ASF licenses this file to You under the Apache License, Version 2.0
+ *  (the "License"); you may not use this file except in compliance with
+ *  the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
  */
+
+// BEGIN android-note
+// address length was changed from long to int for performance reasons.
+// END android-note
 
 package org.apache.harmony.luni.platform;
 
@@ -57,9 +61,9 @@ class OSFileSystem extends OSComponent implements IFileSystem {
             int type, boolean wait);
 
     /**
-     * Returns the granularity for virtual memory allocation. Note that this
-     * value for Windows differs from the one for the page size (64K and 4K
-     * respectively).
+     * Returns the granularity for virtual memory allocation.
+     * Note that this value for Windows differs from the one for the
+     * page size (64K and 4K respectively).
      */
     public native int getAllocGranularity() throws IOException;
 
@@ -242,19 +246,18 @@ class OSFileSystem extends OSComponent implements IFileSystem {
             FileDescriptor socketDescriptor, long offset, long count);
 
     // BEGIN android-deleted
-//     public long ttyAvailable() throws IOException {
-//         long nChar = ttyAvailableImpl();
-//         if (nChar < 0) {
-//             throw new IOException();
-//         }
-//         return nChar;
-//     }
-//
-//     private native long ttyAvailableImpl();
+    // public long ttyAvailable() throws IOException {
+    //     long nChar = ttyAvailableImpl();
+    //     if (nChar < 0) {
+    //         throw new IOException();
+    //     }
+    //     return nChar;
+    // }
+    //
+    // private native long ttyAvailableImpl();
     // END android-deleted
 
-    public long ttyRead(byte[] bytes, int offset, int length)
-            throws IOException {
+    public long ttyRead(byte[] bytes, int offset, int length) throws IOException {
         long nChar = ttyReadImpl(bytes, offset, length);
         // BEGIN android-changed
         if (nChar < -1) {

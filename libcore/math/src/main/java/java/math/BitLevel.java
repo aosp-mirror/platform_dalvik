@@ -1,20 +1,4 @@
 /*
- * Copyright (C) 2008 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/*
  *  Licensed to the Apache Software Foundation (ASF) under one or more
  *  contributor license agreements.  See the NOTICE file distributed with
  *  this work for additional information regarding copyright ownership.
@@ -29,12 +13,6 @@
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
- */
-
-/*
- * Since the original Harmony Code of the BigInteger class was strongly modified,
- * in order to use the more efficient OpenSSL BIGNUM implementation,
- * no android-modification-tags were placed, at all.
  */
 
 package java.math;
@@ -65,7 +43,9 @@ class BitLevel {
 
     /** @see BigInteger#bitLength() */
     static int bitLength(BigInteger val) {
+        // BEGIN android-added
         val.establishOldRepresentation("BitLevel.bitLength");
+        // END android-added
         if (val.sign == 0) {
             return 0;
         }
@@ -86,7 +66,9 @@ class BitLevel {
 
     /** @see BigInteger#bitCount() */
     static int bitCount(BigInteger val) {
+        // BEGIN android-added
         val.establishOldRepresentation("BitLevel.bitCount");
+        // END android-added
         int bCount = 0;
 
         if (val.sign == 0) {
@@ -115,7 +97,9 @@ class BitLevel {
      * must be in the range {@code [0, val.bitLength()-1]}
      */
     static boolean testBit(BigInteger val, int n) {
+        // BEGIN android-added
         val.establishOldRepresentation("BitLevel.testBit");
+        // END android-added
         // PRE: 0 <= n < val.bitLength()
         return ((val.digits[n >> 5] & (1 << (n & 31))) != 0);
     }
@@ -137,10 +121,70 @@ class BitLevel {
         return ((i != intCount) || (digits[i] << (32 - bitCount) != 0));
     }
 
+    // BEGIN android-removed
+    //  /** @see BigInteger#shiftLeft(int) */
+    //  static BigInteger shiftLeft(BigInteger source, int count) {
+    //      int intCount = count >> 5;
+    //      count &= 31; // %= 32
+    //      int resLength = source.numberLength + intCount
+    //              + ( ( count == 0 ) ? 0 : 1 );
+    //      int resDigits[] = new int[resLength];
+    // 
+    //      shiftLeft(resDigits, source.digits, intCount, count);
+    //         BigInteger result = new BigInteger(source.sign, resLength, resDigits);
+    //         result.cutOffLeadingZeroes();
+    //     return result;
+    // }
+    // 
+    // /**
+    //  * Performs {@code val <<= count}.
+    //  */
+    // // val should have enough place (and one digit more)
+    // static void inplaceShiftLeft(BigInteger val, int count) {
+    //     int intCount = count >> 5; // count of integers
+    //     val.numberLength += intCount
+    //             + ( Integer
+    //             .numberOfLeadingZeros(val.digits[val.numberLength - 1])
+    //             - ( count & 31 ) >= 0 ? 0 : 1 );
+    //     shiftLeft(val.digits, val.digits, intCount, count & 31);
+    //     val.cutOffLeadingZeroes();
+    //     val.unCache();
+    // }
+    // 
+    // /**
+    //  * Abstractly shifts left an array of integers in little endian (i.e. shift
+    //  * it right). Total shift distance in bits is intCount * 32 + count
+    //  * 
+    //  * @param result the destination array
+    //  * @param source the source array
+    //  * @param intCount the shift distance in integers
+    //  * @param count an additional shift distance in bits
+    //  */
+    // static void shiftLeft(int result[], int source[], int intCount, int count) {
+    //     if (count == 0) {
+    //         System.arraycopy(source, 0, result, intCount, result.length
+    //                 - intCount);
+    //     } else {
+    //         int rightShiftCount = 32 - count;
+    // 
+    //         result[result.length - 1] = 0;
+    //         for (int i = result.length - 1; i > intCount; i--) {
+    //             result[i] |= source[i - intCount - 1] >>> rightShiftCount;
+    //             result[i - 1] = source[i - intCount - 1] << count;
+    //         }
+    //     }
+    //     
+    //     for (int i = 0; i < intCount; i++) {
+    //         result[i] = 0;
+    //     }
+    // }
+    // END android-removed
 
     /** @see BigInteger#shiftRight(int) */
     static BigInteger shiftRight(BigInteger source, int count) {
+        // BEGIN android-added
         source.establishOldRepresentation("BitLevel.shiftRight");
+        // END android-added
         int intCount = count >> 5; // count of integers
         count &= 31; // count of remaining bits
         if (intCount >= source.numberLength) {
@@ -178,7 +222,9 @@ class BitLevel {
      * Performs {@code val >>= count} where {@code val} is a positive number.
      */
     static void inplaceShiftRight(BigInteger val, int count) {
+        // BEGIN android-added
         val.establishOldRepresentation("BitLevel.inplaceShiftRight");
+        // END android-added
         int sign = val.signum();
         if (count == 0 || val.signum() == 0)
             return;
@@ -249,7 +295,9 @@ class BitLevel {
      * @param bitNumber: the bit's position in the intCount element
      */
     static BigInteger flipBit(BigInteger val, int n){
+        // BEGIN android-added
         val.establishOldRepresentation("BitLevel.flipBit");
+        // END android-added
         int resSign = (val.sign == 0) ? 1 : val.sign;
         int intCount = n >> 5;
         int bitN = n & 31;

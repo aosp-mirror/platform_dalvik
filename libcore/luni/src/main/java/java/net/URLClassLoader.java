@@ -56,8 +56,10 @@ import org.apache.harmony.luni.util.Msg;
 /**
  * This class loader is responsible for loading classes and resources from a
  * list of URLs which can refer to either directories or JAR files. Classes
- * loaded by this <code>URLClassLoader</code> are granted permission to access
- * the URLs contained in the URL search list.
+ * loaded by this {@code URLClassLoader} are granted permission to access the
+ * URLs contained in the URL search list.
+ * 
+ * @since Android 1.0
  */
 public class URLClassLoader extends SecureClassLoader {
 
@@ -98,8 +100,8 @@ public class URLClassLoader extends SecureClassLoader {
         }
 
         /**
-         * Overrides the loadClass() of <code>ClassLoader</code>. It calls
-         * the security manager's <code>checkPackageAccess()</code> before
+         * Overrides the {@code loadClass()} of {@code ClassLoader}. It calls
+         * the security manager's {@code checkPackageAccess()} before
          * attempting to load the class.
          * 
          * @return the Class object.
@@ -131,35 +133,39 @@ public class URLClassLoader extends SecureClassLoader {
     }
 
     /**
-     * Constructs a new instance of this class. The newly created instance will
-     * have the system ClassLoader as its parent. URLs that end with "/" are
-     * assumed to be directories, otherwise they are assumed to be Jar files.
+     * Constructs a new {@code URLClassLoader} instance. The newly created
+     * instance will have the system ClassLoader as its parent. URLs that end
+     * with "/" are assumed to be directories, otherwise they are assumed to be
+     * JAR files.
      * 
      * @param urls
-     *            the URLs to search
-     * 
+     *            the list of URLs where a specific class or file could be
+     *            found.
      * @throws SecurityException
-     *             if a security manager exists and its checkCreateClassLoader
-     *             method doesn't allow creation of new ClassLoaders
+     *             if a security manager exists and its {@code
+     *             checkCreateClassLoader()} method doesn't allow creation of
+     *             new ClassLoaders.
+     * @since Android 1.0
      */
     public URLClassLoader(URL[] urls) {
         this(urls, ClassLoader.getSystemClassLoader(), null);
     }
 
     /**
-     * Constructs a new instance of this class. The newly created instance will
-     * have the specified ClassLoader as its parent. URLs that end with "/" are
-     * assumed to be directories, otherwise they are assumed to be Jar files.
+     * Constructs a new URLClassLoader instance. The newly created instance will
+     * have the system ClassLoader as its parent. URLs that end with "/" are
+     * assumed to be directories, otherwise they are assumed to be JAR files.
      * 
      * @param urls
-     *            the URLs to search
-     * 
+     *            the list of URLs where a specific class or file could be
+     *            found.
      * @param parent
-     *            the ClassLoader to assign as this loader's parent.
-     * 
+     *            the class loader to assign as this loader's parent.
      * @throws SecurityException
-     *             if a security manager exists and its checkCreateClassLoader
-     *             method doesn't allow creation of new ClassLoaders
+     *             if a security manager exists and its {@code
+     *             checkCreateClassLoader()} method doesn't allow creation of
+     *             new class loaders.
+     * @since Android 1.0
      */
     public URLClassLoader(URL[] urls, ClassLoader parent) {
         this(urls, parent, null);
@@ -169,7 +175,8 @@ public class URLClassLoader extends SecureClassLoader {
      * Adds the specified URL to the search list.
      * 
      * @param url
-     *            java.net.URL the new URL
+     *            the URL which is to add.
+     * @since Android 1.0
      */
     protected void addURL(URL url) {
         try {
@@ -187,9 +194,9 @@ public class URLClassLoader extends SecureClassLoader {
      * Returns an array with the given URL added to the given array.
      * 
      * @param urlArray
-     *            java.net.URL[] the source array
+     *            {@code java.net.URL[]} the source array
      * @param url
-     *            java.net.URL the URL to be added
+     *            {@code java.net.URL} the URL to be added
      * @return java.net.URL[] an array made of the given array and the new URL
      */
     URL[] addURL(URL[] urlArray, URL url) {
@@ -203,14 +210,14 @@ public class URLClassLoader extends SecureClassLoader {
     }
 
     /**
-     * Returns an enumeration of URLs that contain the specified resource.
+     * Returns all known URLs which point to the specified resource.
      * 
-     * @return Enumeration the enumeration of URLs that contain the specified
-     *         resource.
      * @param name
-     *            java.lang.String the name of the requested resource
+     *            the name of the requested resource.
+     * @return the enumeration of URLs which point to the specified resource.
      * @throws IOException
-     *             thrown if an IO Exception occurs while attempting to connect
+     *             if an I/O error occurs while attempting to connect.
+     * @since Android 1.0
      */
     @Override
     public Enumeration<URL> findResources(final String name) throws IOException {
@@ -248,9 +255,9 @@ public class URLClassLoader extends SecureClassLoader {
      * @return Vector the enumeration of URLs that contain the specified
      *         resource.
      * @param searchURLs
-     *            java.net.URL[] the array to be searched
+     *            {@code java.net.URL[]} the array to be searched.
      * @param name
-     *            java.lang.String the name of the requested resource
+     *            {@code java.lang.String} the name of the requested resource.
      */
     Vector<URL> findResources(URL[] searchURLs, String name, Vector<URL> result) {
         boolean findInExtensions = searchURLs == urls;
@@ -273,24 +280,23 @@ public class URLClassLoader extends SecureClassLoader {
     }
 
     /**
-     * Returns an Object[] containing a Class, a URL, and a Vector of URLs, 2 of
-     * which are null, according to the caller, which is identified by the int
-     * type.
+     * Returns an {@code Object[]} containing a class, a URL, and a vector of
+     * URLs, two of which are {@code null}, according to the caller, which is
+     * identified by the {@code int} type.
      * 
      * @return Object[] a 3-element array : {Class, URL, Vector}. The non-null
      *         element contains the resource(s) found, which are searched in in
-     *         indexes[i].
+     *         {@code indexes[i]}.
      * @param i
-     *            int the index of 'indexes' array to use.
+     *            the index of 'indexes' array to use.
      * @param name
-     *            String the resource to look for : either a resource or a
-     *            class.
+     *            the resource to look for : either a resource or a class.
      * @param resources
-     *            boolean indicates that a Vector of URL should be returned as
-     *            the non-null element in Object[].
+     *            {@code boolean} indicates that a vector of URL should be
+     *            returned as the non {@code null} element in {@code Object[]}.
      * @param url
-     *            boolean if true a URL should be returned as the non null
-     *            element, if false a Class should be returned.
+     *            if {@code true} a URL should be returned as the non-null
+     *            element, if {@code false} a class should be returned.
      */
     Object findInIndex(int i, String name, Vector<URL> resources, boolean url) {
         Hashtable<String, URL[]> index = indexes[i];
@@ -339,9 +345,9 @@ public class URLClassLoader extends SecureClassLoader {
     }
 
     /**
-     * Returns an Object[] containing a Class, a URL, and a Vector of URLs, 2 of
-     * which are null, according to the caller, which is identified by the int
-     * type.
+     * Returns an {@code Object[]} containing a Class, a URL, and a Vector of
+     * URLs, two of which are {@code null}, according to the caller, which is
+     * identified by the {@code int} type.
      * 
      * @return Object[] a 3-element array : {Class, URL, Vector}. The non-null
      *         element contains the resource(s) found, which are searched in
@@ -349,16 +355,15 @@ public class URLClassLoader extends SecureClassLoader {
      * @param newExtensions
      *            URL[] the URLs to look in for.
      * @param name
-     *            String the resource to look for : either a resource or a
-     *            class.
+     *            the resource to look for : either a resource or a class.
      * @param i
-     *            int the index of 'indexes' array to use.
+     *            the index of 'indexes' array to use.
      * @param resources
-     *            boolean indicates that a Vector of URL should be returned as
-     *            the non-null element in Object[].
+     *            indicates that a Vector of URL should be returned as the
+     *            non-null element in {@code Object[]}.
      * @param url
-     *            boolean if true a URL should be returned as the non null
-     *            element, if false a Class should be returned.
+     *            if {@code true} a URL should be returned as the non-null
+     *            element, if {@code false} a class should be returned.
      */
     Object findInExtensions(URL[] newExtensions, String name, int i,
             Vector<URL> resources, boolean url) {
@@ -437,16 +442,17 @@ public class URLClassLoader extends SecureClassLoader {
     }
 
     /**
-     * Returns the permissions for the given code source. First this method
-     * retrieves the permissions from the system policy. If the protocol is
-     * "file:/" then a new permission, <code>FilePermission</code>, granting
-     * the read permission to the file is added to the permission collection.
+     * Gets all permissions for the specified {@code codesource}. First, this
+     * method retrieves the permissions from the system policy. If the protocol
+     * is "file:/" then a new permission, {@code FilePermission}, granting the
+     * read permission to the file is added to the permission collection.
      * Otherwise, connecting to and accepting connections from the URL is
      * granted.
      * 
-     * @return PermissionCollection
      * @param codesource
-     *            CodeSource
+     *            the code source object whose permissions have to be known.
+     * @return the list of permissions according to the code source object.
+     * @since Android 1.0
      */
     @Override
     protected PermissionCollection getPermissions(final CodeSource codesource) {
@@ -487,9 +493,10 @@ public class URLClassLoader extends SecureClassLoader {
     }
 
     /**
-     * Returns the search list of this URLClassLoader
+     * Returns the search list of this {@code URLClassLoader}.
      * 
-     * @return java.net.URL[]
+     * @return the list of all known URLs of this instance.
+     * @since Android 1.0
      */
     public URL[] getURLs() {
         return orgUrls.clone();
@@ -497,10 +504,6 @@ public class URLClassLoader extends SecureClassLoader {
 
     /**
      * Determines if the URL is pointing to a directory.
-     * 
-     * @return boolean
-     * @param url
-     *            java.net.URL
      */
     private static boolean isDirectory(URL url) {
         String file = url.getFile();
@@ -508,16 +511,16 @@ public class URLClassLoader extends SecureClassLoader {
     }
 
     /**
-     * Returns an instance of <code>URLClassLoader</code>.
-     * <code>loadClass()</code> of the new instance will call the
-     * SecurityManager's <code>checkPackageAccess()</code> before loading a
-     * class.
+     * Returns a new {@code URLClassLoader} instance for the given URLs and the
+     * system {@code ClassLoader} as its parent. The method {@code loadClass()}
+     * of the new instance will call {@code
+     * SecurityManager.checkPackageAccess()} before loading a class.
      * 
-     * @return java.net.URLClassLoader the new instance of
-     *         <code>URLClassLoader</code>
      * @param urls
-     *            java.net.URL[] a list of URLs that is passed to the new
-     *            URLClassloader
+     *            the list of URLs that is passed to the new {@code
+     *            URLClassloader}.
+     * @return the created {@code URLClassLoader} instance.
+     * @since Android 1.0
      */
     public static URLClassLoader newInstance(final URL[] urls) {
         URLClassLoader sub = AccessController
@@ -531,18 +534,18 @@ public class URLClassLoader extends SecureClassLoader {
     }
 
     /**
-     * Returns an instance of <code>URLClassLoader</code>.
-     * <code>loadClass()</code> of the new instance will call security
-     * manager's <code>checkPackageAccess()</code> before loading a class.
-     * 
-     * @return URLClassLoader the new instance of <code>URLClassLoader</code>
+     * Returns a new {@code URLClassLoader} instance for the given URLs and the
+     * specified {@code ClassLoader} as its parent. The method {@code
+     * loadClass()} of the new instance will call the SecurityManager's {@code
+     * checkPackageAccess()} before loading a class.
      * 
      * @param urls
-     *            URL[] the list of URLs that is passed to the new
-     *            <code>URLClassloader</code>
+     *            the list of URLs that is passed to the new URLClassloader.
      * @param parentCl
-     *            ClassLoader the parent class loader that is passed to the new
-     *            <code>URLClassloader</code>
+     *            the parent class loader that is passed to the new
+     *            URLClassloader.
+     * @return the created {@code URLClassLoader} instance.
+     * @since Android 1.0
      */
     public static URLClassLoader newInstance(final URL[] urls,
             final ClassLoader parentCl) {
@@ -557,24 +560,25 @@ public class URLClassLoader extends SecureClassLoader {
     }
 
     /**
-     * Constructs a new instance of this class. The newly created instance will
-     * have the specified ClassLoader as its parent and use the specified
-     * factory to create stream handlers. URLs that end with "/" are assumed to
-     * be directories, otherwise they are assumed to be Jar files.
+     * Constructs a new {@code URLClassLoader} instance. The newly created
+     * instance will have the specified {@code ClassLoader} as its parent and
+     * use the specified factory to create stream handlers. URLs that end with
+     * "/" are assumed to be directories, otherwise they are assumed to be JAR
+     * files.
      * 
      * @param searchUrls
-     *            java.net.URL[] the URLs that will be searched in the order
-     *            they were specified for resource
-     * 
+     *            the list of URLs where a specific class or file could be
+     *            found.
      * @param parent
-     *            ClassLoader the ClassLoader name of the resource to find.
-     * 
+     *            the {@code ClassLoader} to assign as this loader's parent.
      * @param factory
-     *            java.net.URLStreamHandlerFactory the factory that will used to
-     *            create stream (protocol) handlers
+     *            the factory that will be used to create protocol-specific
+     *            stream handlers.
      * @throws SecurityException
-     *             if a security manager exists and its checkCreateClassLoader
-     *             method doesn't allow creation of new ClassLoaders
+     *             if a security manager exists and its {@code
+     *             checkCreateClassLoader()} method doesn't allow creation of
+     *             new {@code ClassLoader}s.
+     * @since Android 1.0
      */
     public URLClassLoader(URL[] searchUrls, ClassLoader parent,
             URLStreamHandlerFactory factory) {
@@ -605,16 +609,16 @@ public class URLClassLoader extends SecureClassLoader {
     }
 
     /**
-     * Locates and loads the specified class, searching this URLClassLoader's
-     * list of URLS.
+     * Tries to locate and load the specified class using the known URLs. If the
+     * class could be found, a class object representing the loaded class will
+     * be returned.
      * 
-     * @return Class the class that has been loaded.
-     * 
+     * @return the class that has been loaded.
      * @param clsName
-     *            String the name of the class.
-     * 
-     * @throws java.lang.ClassNotFoundException
-     *             if the class cannot be loaded
+     *            the name of the class which has to be found.
+     * @throws ClassNotFoundException
+     *             if the specified class cannot be loaded.
+     * @since Android 1.0
      */
     @Override
     protected Class<?> findClass(final String clsName)
@@ -658,12 +662,13 @@ public class URLClassLoader extends SecureClassLoader {
     }
 
     /**
-     * Returns a URL referencing the specified resource or null if no resource
-     * could be found.
+     * Returns an URL referencing the specified resource or {@code null} if the
+     * resource could not be found.
      * 
-     * @return URL URL for the resource.
      * @param name
-     *            java.lang.String the name of the requested resource
+     *            the name of the requested resource.
+     * @return the URL which points to the given resource.
+     * @since Android 1.0
      */
     @Override
     public URL findResource(final String name) {
@@ -851,19 +856,20 @@ public class URLClassLoader extends SecureClassLoader {
     }
 
     /**
-     * Define a new Package using information extracted from the specified
-     * Manifest.
+     * Defines a new package using the information extracted from the specified
+     * manifest.
      * 
      * @param packageName
-     *            The name of the package
+     *            the name of the new package.
      * @param manifest
-     *            The Manifest for the Package
+     *            the manifest containing additional information for the new
+     *            package.
      * @param url
-     *            The code source for the Package
-     * @return The Package created
-     * 
+     *            the URL to the code source for the new package.
+     * @return the created package.
      * @throws IllegalArgumentException
-     *             if the Package already exists
+     *             if a package with the given name already exists.
+     * @since Android 1.0
      */
     protected Package definePackage(String packageName, Manifest manifest,
             URL url) throws IllegalArgumentException {

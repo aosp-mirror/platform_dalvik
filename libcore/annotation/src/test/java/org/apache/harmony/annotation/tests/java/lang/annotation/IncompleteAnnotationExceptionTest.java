@@ -17,19 +17,31 @@
 
 package org.apache.harmony.annotation.tests.java.lang.annotation;
 
-import java.lang.annotation.IncompleteAnnotationException;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
 
-/**
- * 
- */
+import java.lang.annotation.IncompleteAnnotationException;
+
+@TestTargetClass(IncompleteAnnotationException.class)
 public class IncompleteAnnotationExceptionTest extends TestCase {
 
     /*
      * Class under test for void IncompleteAnnotationException(String)
      * Regression for HARMONY-2477
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "IncompleteAnnotationException",
+          methodArgs = {java.lang.Class.class, java.lang.String.class}
+        )
+    })
     public void testNullType() {
         try {
             new IncompleteAnnotationException(null, "str");
@@ -44,6 +56,15 @@ public class IncompleteAnnotationExceptionTest extends TestCase {
      * @tests java.lang.annotation.IncompleteAnnotationException#IncompleteAnnotationException(Class,
      *        String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "IncompleteAnnotationException",
+          methodArgs = {java.lang.Class.class, java.lang.String.class}
+        )
+    })
     @SuppressWarnings("nls")
     public void test_constructorLjava_lang_Class_Ljava_lang_String()
             throws Exception {

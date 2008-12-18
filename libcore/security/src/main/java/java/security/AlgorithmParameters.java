@@ -31,10 +31,11 @@ import org.apache.harmony.security.internal.nls.Messages;
 
 
 /**
- * @com.intel.drl.spec_ref
+ * {@code AlgorithmParameters} is an engine class which provides algorithm
+ * parameters.
  * 
+ * @since Android 1.0
  */
-
 public class AlgorithmParameters {
     /**
      * The service name.
@@ -42,12 +43,12 @@ public class AlgorithmParameters {
     private static final String SEVICE = "AlgorithmParameters"; //$NON-NLS-1$
 
     /**
-     * Used to access common engine functionality
+     * Used to access common engine functionality.
      */
     private static Engine engine = new Engine(SEVICE);
 
     /**
-     * The provider
+     * The security provider.
      */
     private Provider provider;
 
@@ -57,29 +58,50 @@ public class AlgorithmParameters {
     private AlgorithmParametersSpi spiImpl;
 
     /**
-     * The algorithm.
+     * The security algorithm.
      */
     private String algorithm;
 
     /**
-     * The initialization state
+     * The initialization state.
      */
     private boolean initialized; // = false;
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Constructs a new instance of {@code AlgorithmParameters} with the given
+     * arguments.
+     * 
+     * @param algPramSpi
+     *            the concrete implementation.
+     * @param provider
+     *            the security provider.
+     * @param algorithm
+     *            the name of the algorithm.
+     * @since Android 1.0
      */
-    protected AlgorithmParameters(AlgorithmParametersSpi keyFacSpi,
+    protected AlgorithmParameters(AlgorithmParametersSpi algPramSpi,
             Provider provider, String algorithm) {
+        // BEGIN android-note
+        // renamed parameter
+        // END android-note
         this.provider = provider;
         this.algorithm = algorithm;
-        this.spiImpl = keyFacSpi;
+        this.spiImpl = algPramSpi;
     }
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Returns a new instance of {@code AlgorithmParameters} for the specified
+     * algorithm.
+     * 
+     * @param algorithm
+     *            the name of the algorithm to use.
+     * @return a new instance of {@code AlgorithmParameters} for the specified
+     *         algorithm.
+     * @throws NoSuchAlgorithmException
+     *             if the specified algorithm is not available.
+     * @throws NullPointerException
+     *             if {@code algorithm} is {@code null}.
+     * @since Android 1.0
      */
     public static AlgorithmParameters getInstance(String algorithm)
             throws NoSuchAlgorithmException {
@@ -94,8 +116,24 @@ public class AlgorithmParameters {
     }
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Returns a new instance of {@code AlgorithmParameters} from the specified
+     * provider for the specified algorithm.
+     * 
+     * @param algorithm
+     *            the name of the algorithm to use.
+     * @param provider
+     *            name of the provider of the {@code AlgorithmParameters}.
+     * @return a new instance of {@code AlgorithmParameters} for the specified
+     *         algorithm.
+     * @throws NoSuchAlgorithmException
+     *             if the specified algorithm is not available.
+     * @throws NoSuchProviderException
+     *             if the specified provider is not available.
+     * @throws IllegalArgumentException
+     *             if {@code provider} is {@code null} or of length zero.
+     * @throws NullPointerException
+     *             if {@code algorithm} is {@code null}.
+     * @since Android 1.0
      */
     public static AlgorithmParameters getInstance(String algorithm,
             String provider) throws NoSuchAlgorithmException,
@@ -112,8 +150,22 @@ public class AlgorithmParameters {
     }
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Returns a new instance of {@code AlgorithmParameters} from the specified
+     * provider for the specified algorithm.
+     * 
+     * @param algorithm
+     *            the name of the algorithm to use.
+     * @param provider
+     *            the provider of the {@code AlgorithmParameters}.
+     * @return a new instance of {@code AlgorithmParameters} for the specified
+     *         algorithm.
+     * @throws NoSuchAlgorithmException
+     *             if the specified algorithm is not available.
+     * @throws NullPointerException
+     *             if {@code algorithm} is {@code null}.
+     * @throws IllegalArgumentException
+     *             if {@code provider} is {@code null}.
+     * @since Android 1.0
      */
     public static AlgorithmParameters getInstance(String algorithm,
             Provider provider) throws NoSuchAlgorithmException {
@@ -131,24 +183,36 @@ public class AlgorithmParameters {
     }
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Returns the provider associated with this {@code AlgorithmParameters}.
+     * 
+     * @return the provider associated with this {@code AlgorithmParameters}.
+     * @since Android 1.0
      */
     public final Provider getProvider() {
         return provider;
     }
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Returns the name of the algorithm.
+     * 
+     * @return the name of the algorithm.
+     * @since Android 1.0
      */
     public final String getAlgorithm() {
         return algorithm;
     }
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Initializes this {@code AlgorithmParameters} with the specified {@code
+     * AlgorithmParameterSpec}.
+     * 
+     * @param paramSpec
+     *            the parameter specification.
+     * @throws InvalidParameterSpecException
+     *             if this {@code AlgorithmParameters} has already been
+     *             initialized or the given {@code paramSpec} is not appropriate
+     *             for initializing this {@code AlgorithmParameters}.
+     * @since Android 1.0
      */
     public final void init(AlgorithmParameterSpec paramSpec)
             throws InvalidParameterSpecException {
@@ -161,8 +225,16 @@ public class AlgorithmParameters {
     }
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Initializes this {@code AlgorithmParameters} with the specified {@code
+     * byte[]} using the default decoding format for parameters. The default
+     * encoding format is ASN.1.
+     * 
+     * @param params
+     *            the encoded parameters.
+     * @throws IOException
+     *             if this {@code AlgorithmParameters} has already been
+     *             initialized, or the parameter could not be encoded.
+     * @since Android 1.0
      */
     public final void init(byte[] params) throws IOException {
         if (initialized) {
@@ -173,8 +245,17 @@ public class AlgorithmParameters {
     }
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Initializes this {@code AlgorithmParameters} with the specified {@code
+     * byte[]} using the specified decoding format.
+     * 
+     * @param params
+     *            the encoded parameters.
+     * @param format
+     *            the name of the decoding format.
+     * @throws IOException
+     *             if this {@code AlgorithmParameters} has already been
+     *             initialized, or the parameter could not be encoded.
+     * @since Android 1.0
      */
     public final void init(byte[] params, String format) throws IOException {
         if (initialized) {
@@ -185,8 +266,19 @@ public class AlgorithmParameters {
     }
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Returns the {@code AlgorithmParameterSpec} for this {@code
+     * AlgorithmParameters}.
+     * 
+     * @param paramSpec
+     *            the type of the parameter specification in which this
+     *            parameters should be converted.
+     * @return the {@code AlgorithmParameterSpec} for this {@code
+     *         AlgorithmParameters}.
+     * @throws InvalidParameterSpecException
+     *             if this {@code AlgorithmParameters} has already been
+     *             initialized, or if this parameters could not be converted to
+     *             the specified class.
+     * @since Android 1.0
      */
     public final <T extends AlgorithmParameterSpec> T getParameterSpec(Class<T> paramSpec)
             throws InvalidParameterSpecException {
@@ -198,8 +290,14 @@ public class AlgorithmParameters {
     }
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Returns this {@code AlgorithmParameters} in their default encoding
+     * format. The default encoding format is ASN.1.
+     * 
+     * @return the encoded parameters.
+     * @throws IOException
+     *             if this {@code AlgorithmParameters} has already been
+     *             initialized, or if this parameters could not be encoded.
+     * @since Android 1.0
      */
     public final byte[] getEncoded() throws IOException {
         if (!initialized) {
@@ -209,8 +307,16 @@ public class AlgorithmParameters {
     }
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Returns this {@code AlgorithmParameters} in the specified encoding
+     * format.
+     * 
+     * @param format
+     *            the name of the encoding format.
+     * @return the encoded parameters.
+     * @throws IOException
+     *             if this {@code AlgorithmParameters} has already been
+     *             initialized, or if this parameters could not be encoded.
+     * @since Android 1.0
      */
     public final byte[] getEncoded(String format) throws IOException {
         if (!initialized) {
@@ -220,8 +326,11 @@ public class AlgorithmParameters {
     }
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Returns a string containing a concise, human-readable description of this
+     * {@code AlgorithmParameters}.
+     * 
+     * @return a printable representation for this {@code AlgorithmParameters}.
+     * @since Android 1.0
      */
     public final String toString() {
         if (!initialized) {

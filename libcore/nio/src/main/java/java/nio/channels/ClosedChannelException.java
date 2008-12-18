@@ -20,16 +20,19 @@ package java.nio.channels;
 import java.io.IOException;
 
 /**
- * This exception is thrown when a channel is closed for the type of operation
- * attempted.
+ * A {@code ClosedChannelException} is thrown when a channel is closed for the
+ * type of operation attempted.
  * 
+ * @since Android 1.0
  */
 public class ClosedChannelException extends IOException {
 
     private static final long serialVersionUID = 882777185433553857L;
 
     /**
-     * Default constructor. 
+     * Constructs a {@code ClosedChannelException}.
+     * 
+     * @since Android 1.0
      */
     public ClosedChannelException() {
         super();

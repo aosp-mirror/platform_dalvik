@@ -120,8 +120,11 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
     // At first, uninitialized.
     int status = SOCKET_STATUS_UNINIT;
 
+    // BEGIN android-changed
+    // copied from a newer version of harmony
     // whether the socket is bound
-    boolean isBound = false;
+    volatile boolean isBound = false;
+    // END adroid-changed
 
     private final Object readLock = new Object();
 
@@ -228,6 +231,13 @@ class SocketChannelImpl extends SocketChannel implements FileDescriptorHandler {
     synchronized void setConnected() {
         status = SOCKET_STATUS_CONNECTED;
     }
+
+    // BEGIN android-added
+    // copied from a newer version of harmony
+    void setBound(boolean flag) {
+        isBound = flag;
+    }
+    // END android-added
 
     /*
      * @see java.nio.channels.SocketChannel#isConnectionPending()

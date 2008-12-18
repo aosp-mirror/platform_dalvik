@@ -45,7 +45,7 @@ public class KXmlParser implements XmlPullParser {
 
     private boolean processNsp;
     private boolean relaxed;
-    private HashMap entityMap;
+    private Hashtable entityMap;
     private int depth;
     private String[] elementStack = new String[16];
     private String[] nspStack = new String[8];
@@ -95,10 +95,12 @@ public class KXmlParser implements XmlPullParser {
     private boolean token;
 
     public KXmlParser() {
-//        srcBuf = new char[Runtime.getRuntime().freeMemory() >= 1048576 ? 8192 : 128];
-
-        //  XXX: We don't have a Runtime class at this time.
+        // BEGIN android-changed
+        // We don't have a Runtime class at this time.
+        // srcBuf =
+        //         new char[Runtime.getRuntime().freeMemory() >= 1048576 ? 8192 : 128];
         srcBuf = new char[8192];
+        // END android-changed
     }
 
     private final boolean isProp(String n1, boolean prop, String n2) {
@@ -964,7 +966,7 @@ public class KXmlParser implements XmlPullParser {
         peekCount = 0;
         depth = 0;
 
-        entityMap = new HashMap();
+        entityMap = new Hashtable();
         entityMap.put("amp", "&");
         entityMap.put("apos", "'");
         entityMap.put("gt", ">");

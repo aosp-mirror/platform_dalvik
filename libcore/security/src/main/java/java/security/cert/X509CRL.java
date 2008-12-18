@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Alexander Y. Kleymenov
-* @version $Revision$
-*/
-
 package java.security.cert;
 
 import java.io.ByteArrayInputStream;
@@ -42,19 +37,36 @@ import javax.security.auth.x500.X500Principal;
 import org.apache.harmony.security.internal.nls.Messages;
 
 /**
- * @com.intel.drl.spec_ref
+ * Abstract base class for X.509 certificate revocation lists (CRL).
+ * <p>
+ * More information regarding CRL can be found in RFC 2459,
+ * "Internet X.509 Public Key Infrastructure Certificate and CRL Profile" at <a
+ * href
+ * ="http://www.ietf.org/rfc/rfc2459.txt">http://www.ietf.org/rfc/rfc2459.txt
+ * </a>.
+ * </p>
+ * 
+ * @since Android 1.0
  */
 public abstract class X509CRL extends CRL implements X509Extension {
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code X509CRL} instance.
+     * 
+     * @since Android 1.0
      */
     protected X509CRL() {
         super("X.509"); //$NON-NLS-1$
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns whether the specified object equals to this instance.
+     * 
+     * @param other
+     *            the object to compare.
+     * @return {@code true} if the specified object is equal to this, otherwise
+     *         {@code false}.
+     * @since Android 1.0
      */
     public boolean equals(Object other) {
         if (other == this) {
@@ -72,7 +84,10 @@ public abstract class X509CRL extends CRL implements X509Extension {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the hashcode of this CRL instance.
+     * 
+     * @return the hashcode.
+     * @since Android 1.0
      */
     public int hashCode() {
         try {
@@ -88,13 +103,33 @@ public abstract class X509CRL extends CRL implements X509Extension {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns this CRL in ASN.1 DER encoded form.
+     * 
+     * @return this CRL in ASN.1 DER encoded form.
+     * @throws CRLException
+     *             if encoding fails.
+     * @since Android 1.0
      */
     public abstract byte[] getEncoded() throws CRLException;
 
 
     /**
-     * @com.intel.drl.spec_ref
+     * Verifies this CRL by verifying that this CRL was signed with the
+     * corresponding private key to the specified public key.
+     * 
+     * @param key
+     *            the public key to verify this CRL with.
+     * @throws CRLException
+     *             if encoding or decoding fails.
+     * @throws NoSuchAlgorithmException
+     *             if a needed algorithm is not present.
+     * @throws InvalidKeyException
+     *             if the specified key is invalid.
+     * @throws NoSuchProviderException
+     *             if no provider can be found.
+     * @throws SignatureException
+     *             if errors occur on signatures.
+     * @since Android 1.0
      */
     public abstract void verify(PublicKey key)
                      throws CRLException, NoSuchAlgorithmException,
@@ -102,7 +137,25 @@ public abstract class X509CRL extends CRL implements X509Extension {
                             SignatureException;
 
     /**
-     * @com.intel.drl.spec_ref
+     * Verifies this CRL by verifying that this CRL was signed with the
+     * corresponding private key to the specified public key. The signature
+     * verification engine of the specified provider will be used.
+     * 
+     * @param key
+     *            the public key to verify this CRL with.
+     * @param sigProvider
+     *            the name of the provider for the signature algorithm.
+     * @throws CRLException
+     *             if encoding decoding fails.
+     * @throws NoSuchAlgorithmException
+     *             if a needed algorithm is not present.
+     * @throws InvalidKeyException
+     *             if the specified key is invalid.
+     * @throws NoSuchProviderException
+     *             if the specified provider cannot be found.
+     * @throws SignatureException
+     *             if errors occur on signatures.
+     * @since Android 1.0
      */
     public abstract void verify(PublicKey key, String sigProvider)
                      throws CRLException, NoSuchAlgorithmException,
@@ -110,17 +163,27 @@ public abstract class X509CRL extends CRL implements X509Extension {
                             SignatureException;
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the version number of this CRL.
+     * 
+     * @return the version number of this CRL.
+     * @since Android 1.0
      */
     public abstract int getVersion();
 
     /**
-     * @com.intel.drl.spec_ref
+     * <b>Do not use</b>, use {@link #getIssuerX500Principal()} instead. Returns
+     * the issuer as an implementation specific Principal object.
+     * 
+     * @return the issuer distinguished name.
+     * @since Android 1.0
      */
     public abstract Principal getIssuerDN();
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the issuer distinguished name of this CRL.
+     * 
+     * @return the issuer distinguished name of this CRL.
+     * @since Android 1.0
      */
     public X500Principal getIssuerX500Principal() {
         try {
@@ -140,22 +203,41 @@ public abstract class X509CRL extends CRL implements X509Extension {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the {@code thisUpdate} value of this CRL.
+     * 
+     * @return the {@code thisUpdate} value of this CRL.
+     * @since Android 1.0
      */
     public abstract Date getThisUpdate();
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the {@code nextUpdate} value of this CRL.
+     * 
+     * @return the {@code nextUpdate} value of this CRL, or {@code null} if none
+     *         is present.
+     * @since Android 1.0
      */
     public abstract Date getNextUpdate();
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the CRL entry with the specified certificate serial number.
+     * 
+     * @param serialNumber
+     *            the certificate serial number to search for a CRL entry.
+     * @return the entry for the specified certificate serial number, or {@code
+     *         null} if not found.
+     * @since Android 1.0
      */
     public abstract X509CRLEntry getRevokedCertificate(BigInteger serialNumber);
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the CRL entry for the specified certificate.
+     * 
+     * @param certificate
+     *            the certificate to search a CRL entry for.
+     * @return the entry for the specified certificate, or {@code null} if not
+     *         found.
+     * @since Android 1.0
      */
     public X509CRLEntry getRevokedCertificate(X509Certificate certificate) {
         if (certificate == null) {
@@ -165,32 +247,55 @@ public abstract class X509CRL extends CRL implements X509Extension {
     }
         
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the set of revoked certificates.
+     * 
+     * @return the set of revoked certificates, or {@code null} if no revoked
+     *         certificates are in this CRL.
+     * @since Android 1.0
      */
     public abstract Set<? extends X509CRLEntry> getRevokedCertificates();
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the {@code tbsCertList} information of this CRL in DER encoded
+     * form.
+     * 
+     * @return the CRL information in DER encoded form.
+     * @throws CRLException
+     *             if encoding fails.
+     * @since Android 1.0
      */
     public abstract byte[] getTBSCertList() throws CRLException;
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the signature bytes of this CRL.
+     * 
+     * @return the signature bytes of this CRL.
+     * @since Android 1.0
      */
     public abstract byte[] getSignature();
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the name of the signature algorithm.
+     * 
+     * @return the name of the signature algorithm.
+     * @since Android 1.0
      */
     public abstract String getSigAlgName();
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the OID of the signature algorithm.
+     * 
+     * @return the OID of the signature algorithm.
+     * @since Android 1.0
      */
     public abstract String getSigAlgOID();
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the parameters of the signature algorithm in DER encoded form.
+     * 
+     * @return the parameters of the signature algorithm in DER encoded form, or
+     *         {@code null} if not present.
+     * @since Android 1.0
      */
     public abstract byte[] getSigAlgParams();
 }

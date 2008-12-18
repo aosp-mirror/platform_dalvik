@@ -15,24 +15,23 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package javax.net.ssl;
 
 /**
- * @com.intel.drl.spec_ref
+ * The exception that is thrown when an invalid SSL key is encountered.  
  * 
+ * @since Android 1.0
  */
 public class SSLKeyException extends SSLException {
 
     private static final long serialVersionUID = -8071664081941937874L;
     
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Creates a new {@code SSLKeyException} with the specified message.
+     * 
+     * @param reason
+     *            the detail message for the exception.
+     * @since Android 1.0
      */
     public SSLKeyException(String reason) {
         super(reason);

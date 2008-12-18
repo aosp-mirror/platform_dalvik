@@ -16,6 +16,11 @@
  */
 package org.apache.harmony.archive.tests.java.util.jar;
 
+import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -29,6 +34,7 @@ import java.util.zip.ZipEntry;
 
 import tests.support.resource.Support_Resources;
 
+@TestTargetClass(JarInputStream.class) 
 public class JarInputStreamTest extends junit.framework.TestCase {
     // a 'normal' jar file
     private String jarName;
@@ -53,6 +59,15 @@ public class JarInputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.util.jar.JarInputStream#JarInputStream(java.io.InputStream)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "JarInputStream",
+          methodArgs = {java.io.InputStream.class}
+        )
+    })
     public void test_ConstructorLjava_io_InputStream() {
         // Test for method java.util.jar.JarInputStream(java.io.InputStream)
         try {
@@ -81,6 +96,15 @@ public class JarInputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.util.jar.JarInputStream#getManifest()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getManifest",
+          methodArgs = {}
+        )
+    })
     public void test_getManifest() {
         // Test for method java.util.jar.Manifest
         // java.util.jar.JarInputStream.getManifest()
@@ -107,6 +131,15 @@ public class JarInputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.util.jar.JarInputStream#getNextJarEntry()
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions checking missed. Case1",
+      targets = {
+        @TestTarget(
+          methodName = "getNextJarEntry",
+          methodArgs = {}
+        )
+    })
     public void test_getNextJarEntry() throws Exception {
         final Set<String> desired = new HashSet<String>(Arrays.asList(new String[] { "foo/",
                 "foo/bar/", "foo/bar/A.class", "Blah.txt" }));
@@ -121,6 +154,15 @@ public class JarInputStreamTest extends junit.framework.TestCase {
         assertEquals(actual, desired);
     }
 
+@TestInfo(
+          level = TestLevel.PARTIAL,
+          purpose = "Exceptions checking missed. Case2",
+          targets = {
+            @TestTarget(
+              methodName = "getNextJarEntry",
+              methodArgs = {}
+            )
+        })
     public void test_JarInputStream_Integrate_Jar_getNextEntry()
             throws IOException {
         String intJarName = Support_Resources.getURL("Integrate.jar");
@@ -137,6 +179,15 @@ public class JarInputStreamTest extends junit.framework.TestCase {
         jin.close();
     }
 
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException & ZipException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "getNextEntry",
+          methodArgs = {}
+        )
+    })
     public void test_JarInputStream_Modified_Class_getNextEntry()
             throws IOException {
         String modJarName = Support_Resources.getURL("Modified_Class.jar");
@@ -164,6 +215,15 @@ public class JarInputStreamTest extends junit.framework.TestCase {
         jin.close();
     }
 
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException & ZipException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "getNextEntry",
+          methodArgs = {}
+        )
+    })
     public void test_JarInputStream_Modified_Manifest_MainAttributes_getNextEntry()
             throws IOException {
         String modJarName = Support_Resources.getURL("Modified_Manifest_MainAttributes.jar");
@@ -192,6 +252,15 @@ public class JarInputStreamTest extends junit.framework.TestCase {
         jin.close();
     }
 
+@TestInfo(
+          level = TestLevel.PARTIAL,
+          purpose = "IOException & ZipException checking missed.",
+          targets = {
+            @TestTarget(
+              methodName = "getNextEntry",
+              methodArgs = {}
+            )
+        })
     public void test_JarInputStream_Modified_Manifest_EntryAttributes_getNextEntry()
             throws IOException {
         String modJarName = Support_Resources
@@ -219,6 +288,15 @@ public class JarInputStreamTest extends junit.framework.TestCase {
         jin.close();
     }
 
+@TestInfo(
+          level = TestLevel.PARTIAL,
+          purpose = "IOException & ZipException checking missed.",
+          targets = {
+            @TestTarget(
+              methodName = "getNextEntry",
+              methodArgs = {}
+            )
+        })
     public void test_JarInputStream_Modified_SF_EntryAttributes_getNextEntry()
             throws IOException {
         String modJarName = Support_Resources
@@ -246,6 +324,15 @@ public class JarInputStreamTest extends junit.framework.TestCase {
         jin.close();
     }
 
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException & ZipException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {byte[].class}
+        )
+    })
     public void test_JarInputStream_Modified_Class_read() throws IOException {
         String modJarName = Support_Resources.getURL("Modified_Class.jar");
         InputStream is = new URL(modJarName).openConnection()
@@ -275,6 +362,15 @@ public class JarInputStreamTest extends junit.framework.TestCase {
         jin.close();
     }
 
+@TestInfo(
+          level = TestLevel.PARTIAL,
+          purpose = "Exception checking missed.",
+          targets = {
+            @TestTarget(
+              methodName = "read",
+              methodArgs = {byte[].class}
+            )
+        })
     public void test_Integrate_Jar_read() throws IOException {
         String intJarName = Support_Resources.getURL("Integrate.jar");
         InputStream is = new URL(intJarName).openConnection()
@@ -296,6 +392,15 @@ public class JarInputStreamTest extends junit.framework.TestCase {
         jin.close();
     }
 
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "IOException & ZipException checking missed.",
+              targets = {
+                @TestTarget(
+                  methodName = "read",
+                  methodArgs = {byte[].class}
+                )
+            })
     public void test_JarInputStream_Modified_Manifest_MainAttributes_read()
             throws IOException {
         String modJarName = Support_Resources
@@ -327,6 +432,15 @@ public class JarInputStreamTest extends junit.framework.TestCase {
         jin.close();
     }
 
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "IOException & ZipException checking missed.",
+              targets = {
+                @TestTarget(
+                  methodName = "read",
+                  methodArgs = {byte[].class}
+                )
+            })
     public void test_JarInputStream_Modified_SF_EntryAttributes_read()
             throws IOException {
         String modJarName = Support_Resources

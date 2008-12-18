@@ -1,20 +1,4 @@
 /*
- * Copyright (C) 2008 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/*
  *  Licensed to the Apache Software Foundation (ASF) under one or more
  *  contributor license agreements.  See the NOTICE file distributed with
  *  this work for additional information regarding copyright ownership.
@@ -31,12 +15,6 @@
  *  limitations under the License.
  */
 
-/*
- * Since the original Harmony Code of the BigInteger class was strongly modified,
- * in order to use the more efficient OpenSSL BIGNUM implementation,
- * no android-modification-tags were placed, at all.
- */
-
 package java.math;
 
 import org.apache.harmony.math.internal.nls.Messages;
@@ -51,6 +29,14 @@ class Multiplication {
 
     /** Just to denote that this class can't be instantiated. */
     private Multiplication() {}
+
+    // BEGIN android-removed
+    // /**
+    //  * Break point in digits (number of {@code int} elements)
+    //  * between Karatsuba and Pencil and Paper multiply.
+    //  */
+    // static final int whenUseKaratsuba = 63; // an heuristic value
+    // END android-removed
 
     /**
      * An array with powers of ten that fit in the type {@code int}.
@@ -81,10 +67,12 @@ class Multiplication {
      */
     static final BigInteger bigFivePows[] = new BigInteger[32];
     
+    
 
     static {
         int i;
         long fivePow = 1L;
+        
         for (i = 0; i <= 18; i++) {
             bigFivePows[i] = BigInteger.valueOf(fivePow);
             bigTenPows[i] = BigInteger.valueOf(fivePow << i);
@@ -96,6 +84,10 @@ class Multiplication {
         }
     }
 
+    // BEGIN android-note
+    // The method multiply has been removed in favor of using OpenSSL BIGNUM
+    // END android-note
+
     /**
      * Multiplies a number by a positive integer.
      * @param val an arbitrary {@code BigInteger}
@@ -103,9 +95,11 @@ class Multiplication {
      * @return {@code val * factor}
      */
     static BigInteger multiplyByPositiveInt(BigInteger val, int factor) {
+        // BEGIN android-changed
         BigInt bi = val.bigInt.copy();
         bi.multiplyByPositiveInt(factor);
         return new BigInteger(bi);
+        // END android-changed
     }
 
     /**

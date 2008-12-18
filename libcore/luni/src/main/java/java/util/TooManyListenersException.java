@@ -19,29 +19,30 @@ package java.util;
 
 
 /**
- * This exception is thrown when an attempt is made to add more than one
- * listener to an event source which only supports a single listener. It is also
- * thrown when the same listener is added more than once.
+ * A {@code TooManyListenersException} is thrown when an attempt is made to add
+ * more than one listener to an event source which only supports a single
+ * listener. It is also thrown when the same listener is added more than once.
  * 
- * @see java.lang.Exception
+ * @since Android 1.0
  */
 public class TooManyListenersException extends Exception {
 
     private static final long serialVersionUID = 5074640544770687831L;
 
     /**
-     * Constructs a new instance of this class with its walkback filled in.
+     * Constructs a new {@code TooManyListenersException} with the current stack
+     * trace filled in.
      */
     public TooManyListenersException() {
         super();
     }
 
     /**
-     * Constructs a new instance of this class with its walkback and message
-     * filled in.
+     * Constructs a new {@code TooManyListenersException} with the stack trace
+     * and message filled in.
      * 
      * @param detailMessage
-     *            String The detail message for the exception.
+     *            the detail message for the exception.
      */
     public TooManyListenersException(String detailMessage) {
         super(detailMessage);

@@ -18,17 +18,20 @@
 package java.lang.reflect;
 
 /**
- * Indicates that a malformed parameterized type has been accessed by a
- * reflected method.
+ * Indicates that a malformed parameterized type has been encountered by a
+ * reflective method.
  * 
  * @since 1.5
+ * @since Android 1.0
  */
 public class MalformedParameterizedTypeException extends RuntimeException {
 
     private static final long serialVersionUID = -5696557788586220964L;
 
     /**
-     * Constructs an instance.
+     * Constructs a new {@code MalformedParameterizedTypeException} instance.
+     * 
+     * @since Android 1.0
      */
     public MalformedParameterizedTypeException() {
         super();

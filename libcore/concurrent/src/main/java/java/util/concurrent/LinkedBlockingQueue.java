@@ -56,7 +56,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
      * items have been entered since the signal. And symmetrically for
      * takes signalling puts. Operations such as remove(Object) and
      * iterators acquire both locks.
-     */
+    */
 
     /**
      * Linked list node class
@@ -346,6 +346,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         return c >= 0;
     }
 
+
     public E take() throws InterruptedException {
         E x;
         int c = -1;
@@ -428,6 +429,7 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
             signalNotFull();
         return x;
     }
+
 
     public E peek() {
         if (count.get() == 0)

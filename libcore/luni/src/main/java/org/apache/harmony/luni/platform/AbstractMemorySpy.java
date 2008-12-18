@@ -67,10 +67,11 @@ abstract class AbstractMemorySpy implements IMemorySpy {
         AddressWrapper wrapper;
         synchronized (this) {
             wrapper = memoryInUse.remove(address);
-
+            // BEGIN android-added
             if (wrapper != null) {
                 refToShadow.remove(wrapper.wrAddress);
             }
+            // END android-added
         }
         if (wrapper == null) {
             // Attempt to free memory we didn't alloc
@@ -102,6 +103,8 @@ abstract class AbstractMemorySpy implements IMemorySpy {
 
     protected void orphanedMemory(Reference ref) {
         AddressWrapper wrapper;
+        // BEGIN android-changed
+        // copied from newer version of harmony
         synchronized (this) {
             PlatformAddress shadow = refToShadow.remove(ref);
             wrapper = memoryInUse.get(shadow);
@@ -115,5 +118,6 @@ abstract class AbstractMemorySpy implements IMemorySpy {
             }
         }
         ref.clear();
+        // END android-changed
     }
 }

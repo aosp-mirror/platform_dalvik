@@ -16,20 +16,25 @@
 
 package tests.security.permissions;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
+import junit.framework.TestCase;
+
 import java.security.Permission;
 import java.security.Provider;
 import java.security.Security;
 import java.security.SecurityPermission;
 import java.util.HashSet;
 import java.util.Set;
-
-import junit.framework.TestCase;
-
 /*
  * This class tests the secrity permissions which are documented in
  * http://java.sun.com/j2se/1.5.0/docs/guide/security/permissions.html#PermsAndMethods
  * for class java.security.Security
  */
+@TestTargetClass(SecurityManager.class)
 public class JavaSecuritySecurityTest extends TestCase {
     
     SecurityManager old;
@@ -45,7 +50,16 @@ public class JavaSecuritySecurityTest extends TestCase {
         System.setSecurityManager(old);
         super.tearDown();
     }
-    
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies that getProperty() method calls checkPermission " +
+            "method of security permissions.",
+      targets = {
+        @TestTarget(
+          methodName = "checkPermission",
+          methodArgs = {java.security.Permission.class}
+        )
+    })
     public void test_getProperty() {
         class TestSecurityManager extends SecurityManager {
             boolean called = false;
@@ -69,6 +83,16 @@ public class JavaSecuritySecurityTest extends TestCase {
         assertTrue("java.security.Security.getProperty() must call checkPermission on security permissions", s.called);
     }
     
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies that setProperty() method calls checkSecurityAccess " +
+            "method of security manager.",
+      targets = {
+        @TestTarget(
+          methodName = "checkSecurityAccess",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_setProperty() {
         class TestSecurityManager extends SecurityManager {
             boolean called = false;
@@ -93,7 +117,16 @@ public class JavaSecuritySecurityTest extends TestCase {
         assertTrue("java.security.Security.setProperty() must call checkSecurityAccess on security manager", s.called);
         assertEquals("Argument of checkSecurityAccess is not correct", "setProperty.key", s.target);
     }
-    
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies that addProvider(), removeProvider() methods call " +
+            "checkSecurityAccess method of security manager.",
+      targets = {
+        @TestTarget(
+          methodName = "checkSecurityAccess",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_Provider() {
         class TestSecurityManager extends SecurityManager {
             boolean called = false;

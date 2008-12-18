@@ -23,62 +23,76 @@ import org.apache.harmony.sql.internal.nls.Messages;
 
 /**
  * An exception class that holds information about Database access warnings.
+ * 
+ * @since Android 1.0
  */
 public class SQLWarning extends SQLException implements Serializable {
 
     private static final long serialVersionUID = 3917336774604784856L;
 
     /**
-     * Creates an SQLWarning object. The Reason string is set to null, the
-     * SQLState string is set to null and the Error Code is set to 0.
+     * Creates an {@code SQLWarning} object. The reason string is set to {@code
+     * null}, the {@code SQLState} string is set to {@code null} and the error
+     * code is set to 0.
+     * 
+     * @since Android 1.0
      */
     public SQLWarning() {
         super();
     }
 
     /**
-     * Creates an SQLWarning object. The Reason string is set to the given
-     * reason string, the SQLState string is set to null and the Error Code is
-     * set to 0.
+     * Creates an {@code SQLWarning} object. The reason string is set to the
+     * given reason string, the {@code SQLState} string is set to {@code null}
+     * and the error code is set to 0.
      * 
      * @param theReason
+     *            the reason why this warning is issued.
+     * @since Android 1.0
      */
     public SQLWarning(String theReason) {
         super(theReason);
     }
 
     /**
-     * Creates an SQLWarning object. The Reason string is set to the given
-     * reason string, the SQLState string is set to the given SQLState string
-     * and the Error Code is set to 0.
+     * Creates an {@code SQLWarning} object. The reason string is set to the
+     * given reason string, the {@code SQLState} string is set to the given
+     * {@code SQLState} string and the error code is set to 0.
      * 
      * @param theReason
-     *            the string to use as the Reason string
+     *            the reason why this warning is issued.
      * @param theSQLState
-     *            the string to use as the SQLState string
+     *            the string to use as the {@code SQLState} string.
      */
     public SQLWarning(String theReason, String theSQLState) {
         super(theReason, theSQLState);
     }
 
     /**
-     * Creates an SQLWarning object. The Reason string is set to the given
-     * reason string, the SQLState string is set to the given SQLState string
-     * and the Error Code is set to the given ErrorCode value.
+     * Creates an {@code SQLWarning} object. The reason string is set to the
+     * given reason string, the {@code SQLState} string is set to the given
+     * {@code SQLState} string and the error code is set to the given error code
+     * value.
      * 
      * @param theReason
+     *            the reason why this warning is issued.
      * @param theSQLState
+     *            the X/Open standard specifc error code.
      * @param theErrorCode
+     *            a vendor specific error code.
+     * @since Android 1.0
      */
     public SQLWarning(String theReason, String theSQLState, int theErrorCode) {
         super(theReason, theSQLState, theErrorCode);
     }
 
     /**
-     * Gets the SQLWarning chained to this SQLWarning object.
+     * Gets the next {@code SQLWarning} chained to this {@code SQLWarning} object.
      * 
-     * @return the SQLWarning chained to this SQLWarning. null if no SQLWarning
-     *         is chained to this SQLWarning.
+     * @return the {@code SQLWarning} chained to this {@code SQLWarning}.
+     *         {@code null} if no {@code SQLWarning} is chained to this {@code
+     *         SQLWarning}.
+     * @since Android 1.0
      */
     public SQLWarning getNextWarning() {
         SQLException next = super.getNextException();
@@ -92,10 +106,11 @@ public class SQLWarning extends SQLException implements Serializable {
     }
 
     /**
-     * Chains a supplied SQLWarning to this SQLWarning.
+     * Chains a supplied {@code SQLWarning} to this {@code SQLWarning}.
      * 
      * @param w
-     *            the SQLWarning to chain to this SQLWarning.
+     *            the {@code SQLWarning} linked to this {@code SQLWarning}.
+     * @since Android 1.0
      */
     public void setNextWarning(SQLWarning w) {
         super.setNextException(w);

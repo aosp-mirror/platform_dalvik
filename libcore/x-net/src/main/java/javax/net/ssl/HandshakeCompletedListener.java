@@ -15,22 +15,24 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package javax.net.ssl;
 
 import java.util.EventListener;
 
 /**
- * @com.intel.drl.spec_ref
+ * The listener to be implemented to receive event notifications on completion
+ * of SSL handshake on an SSL connection.
  * 
+ * @since Android 1.0
  */
 public interface HandshakeCompletedListener extends EventListener {
+
     /**
-     * @com.intel.drl.spec_ref
+     * The callback method that is invoked when a SSL handshake is completed.
+     * 
+     * @param event
+     *            the information on the completed SSL handshake event.
+     * @since Android 1.0
      */
     public void handshakeCompleted(HandshakeCompletedEvent event);
 }

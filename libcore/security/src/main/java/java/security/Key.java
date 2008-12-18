@@ -25,36 +25,48 @@ package java.security;
 import java.io.Serializable;
 
 /**
- * Defines the basic properties of all key objects.
+ * {@code Key} is the common interface for all keys.
  * 
  * @see PublicKey
+ * @see PrivateKey
+ * @since Android 1.0
  */
 public interface Key extends Serializable {
+
     /**
-     * @com.intel.drl.spec_ref
+     * The {@code serialVersionUID} to be compatible with JDK1.1.
+     * 
+     * @since Android 1.0
      */
     public static final long serialVersionUID = 6603384152749567654L;
 
     /**
-     * Returns the name of the algorithm that this key will work
-     * with. If the algorithm is unknown, it returns null.
+     * Returns the name of the algorithm of this key. If the algorithm is
+     * unknown, {@code null} is returned.
      * 
-     * @return String the receiver's algorithm
+     * @return the name of the algorithm of this key or {@code null} if the
+     *         algorithm is unknown.
+     * @since Android 1.0
      */
     public String getAlgorithm();
 
     /**
-     * Returns the name of the format used to encode the key, or null
+     * Returns the name of the format used to encode this key, or {@code null}
      * if it can not be encoded.
      * 
-     * @return String the receiver's encoding format
+     * @return the name of the format used to encode this key, or {@code null}
+     *         if it can not be encoded.
+     * @since Android 1.0
      */
     public String getFormat();
 
     /**
-     * Returns the encoded form of the receiver.
+     * Returns the encoded form of this key, or {@code null} if encoding is not
+     * supported by this key.
      * 
-     * @return byte[] the encoded form of the receiver
+     * @return the encoded form of this key, or {@code null} if encoding is not
+     *         supported by this key.
+     * @since Android 1.0
      */
     public byte[] getEncoded();
 }

@@ -15,38 +15,56 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vladimir N. Molotkov
-* @version $Revision$
-*/
-
 package java.security.cert;
 
 import java.util.Collection;
 import java.util.Collections;
 
 /**
- * @com.intel.drl.spec_ref
+ * The parameters to initialize a <i>Collection</i> type {@code CertStore} instance.
+ * <p>
+ * It is used to specify the {@code Collection} where the {@code CertStore} will
+ * retrieve the certificates and CRLs from. 
+ * </p>
  * 
+ * @since Android 1.0
  */
 public class CollectionCertStoreParameters implements CertStoreParameters {
+    // BEGIN android-changed
     // Default empty and immutable collection.
     // Used if <code>CollectionCertStoreParameters</code>instance
     // created by the no arg constructor
-    private static final Collection defaultCollection = Collections.EMPTY_SET;
+    private static final Collection<?> defaultCollection = Collections.EMPTY_SET;
     // A <code>Collection</code> of <code>Certificate</code>s
     // and <code>CRL</code>s
-    private final Collection collection;
+    private final Collection<?> collection;
+    // END android-changed
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code CollectionCertStoreParameters} without a collection.
+     * <p>
+     * The default collection is an empty and unmodifiable {@code Collection}.
+     * </p>
+     * @since Android 1.0
      */
     public CollectionCertStoreParameters() {
         this.collection = defaultCollection;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code CollectionCertStoreParameters} with the specified
+     * collection.
+     * <p>
+     * The specified collection is not copied and therefore may be modified at
+     * any time.
+     * </p>
+     * 
+     * @param collection
+     *            the collection where the {@code Certificate}s and {@code CRL}s
+     *            will be retrieved from.
+     * @throws NullPointerException
+     *             if {@code collection is null}.
+     * @since Android 1.0
      */
     public CollectionCertStoreParameters(Collection<?> collection) {
         this.collection = collection;
@@ -56,21 +74,33 @@ public class CollectionCertStoreParameters implements CertStoreParameters {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Clones this {@code CollectionCertStoreParameters} instance, but not the
+     * underlying collection.
+     * 
+     * @return the cloned instance.
+     * @since Android 1.0
      */
     public Object clone() {
         return new CollectionCertStoreParameters(collection);
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the collection where the {@code Certificate}s and {@code CRL}s
+     * are retrieved from.
+     * 
+     * @return the collection where the {@code Certificate}s and {@code CRL}s
+     *         will be retrieved from.
+     * @since Android 1.0
      */
     public Collection<?> getCollection() {
         return collection;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the string representation of this instance.
+     * 
+     * @return the string representation of this instance.
+     * @since Android 1.0
      */
     public String toString() {
         StringBuffer sb =

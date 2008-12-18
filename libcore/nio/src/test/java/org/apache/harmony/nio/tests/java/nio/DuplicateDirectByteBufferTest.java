@@ -16,7 +16,9 @@
 
 package org.apache.harmony.nio.tests.java.nio;
 
+import dalvik.annotation.TestTargetClass;
 
+@TestTargetClass(java.nio.ByteBuffer.class)
 public class DuplicateDirectByteBufferTest extends DirectByteBufferTest {
 
     protected void setUp() throws Exception {

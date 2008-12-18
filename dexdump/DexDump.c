@@ -17,8 +17,7 @@
  * The "dexdump" tool is intended to mimic "objdump".  When possible, use
  * similar command-line arguments.
  *
- * This links against and takes advantage of VM-internal headers and
- * code fragments.
+ * TODO: rework the output format to be more regexp-friendly
  */
 #include "libdex/DexFile.h"
 #include "libdex/DexCatch.h"
@@ -417,11 +416,12 @@ void dumpLocals(DexFile* pDexFile, const DexCode* pCode,
 /*
  * Get information about a method.
  */
-void getMethodInfo(DexFile* pDexFile, u4 methodIdx, FieldMethodInfo* pMethInfo)
+bool getMethodInfo(DexFile* pDexFile, u4 methodIdx, FieldMethodInfo* pMethInfo)
 {
     const DexMethodId* pMethodId;
 
-    assert(methodIdx < pDexFile->pHeader->methodIdsSize);
+    if (methodIdx >= pDexFile->pHeader->methodIdsSize)
+        return false;
 
     pMethodId = dexGetMethodId(pDexFile, methodIdx);
     pMethInfo->name = dexStringById(pDexFile, pMethodId->nameIdx);
@@ -429,21 +429,25 @@ void getMethodInfo(DexFile* pDexFile, u4 methodIdx, FieldMethodInfo* pMethInfo)
 
     pMethInfo->classDescriptor = 
             dexStringByTypeIdx(pDexFile, pMethodId->classIdx);
+    return true;
 }
+
 /*
  * Get information about a field.
  */
-void getFieldInfo(DexFile* pDexFile, u4 fieldIdx, FieldMethodInfo* pFieldInfo)
+bool getFieldInfo(DexFile* pDexFile, u4 fieldIdx, FieldMethodInfo* pFieldInfo)
 {
     const DexFieldId* pFieldId;
 
-    assert(fieldIdx < pDexFile->pHeader->fieldIdsSize);
+    if (fieldIdx >= pDexFile->pHeader->fieldIdsSize)
+        return false;
 
     pFieldId = dexGetFieldId(pDexFile, fieldIdx);
     pFieldInfo->name = dexStringById(pDexFile, pFieldId->nameIdx);
     pFieldInfo->signature = dexStringByTypeIdx(pDexFile, pFieldId->typeIdx);
     pFieldInfo->classDescriptor =
         dexStringByTypeIdx(pDexFile, pFieldId->classIdx);
+    return true;
 }
 
 
@@ -564,10 +568,13 @@ void dumpInstruction(DexFile* pDexFile, const DexCode* pCode, int insnIdx,
                 getClassDescriptor(pDexFile, pDecInsn->vB), pDecInsn->vB);
         } else /* OP_SGET* */ {
             FieldMethodInfo fieldInfo;
-            getFieldInfo(pDexFile, pDecInsn->vB, &fieldInfo);
-            printf(" v%d, %s.%s:%s // field@%04x", pDecInsn->vA,
-                fieldInfo.classDescriptor, fieldInfo.name,
-                fieldInfo.signature, pDecInsn->vB);
+            if (getFieldInfo(pDexFile, pDecInsn->vB, &fieldInfo)) {
+                printf(" v%d, %s.%s:%s // field@%04x", pDecInsn->vA,
+                    fieldInfo.classDescriptor, fieldInfo.name,
+                    fieldInfo.signature, pDecInsn->vB);
+            } else {
+                printf(" v%d, ??? // field@%04x", pDecInsn->vA, pDecInsn->vB);
+            }
         }
         break;
     case kFmt23x:        // op vAA, vBB, vCC
@@ -593,10 +600,14 @@ void dumpInstruction(DexFile* pDexFile, const DexCode* pCode, int insnIdx,
     case kFmt22c:        // op vA, vB, thing@CCCC
         if (pDecInsn->opCode >= OP_IGET && pDecInsn->opCode <= OP_IPUT_SHORT) {
             FieldMethodInfo fieldInfo;
-            getFieldInfo(pDexFile, pDecInsn->vC, &fieldInfo);
-            printf(" v%d, v%d, %s.%s:%s // field@%04x", pDecInsn->vA,
-                pDecInsn->vB, fieldInfo.classDescriptor, fieldInfo.name,
-                fieldInfo.signature, pDecInsn->vC);
+            if (getFieldInfo(pDexFile, pDecInsn->vC, &fieldInfo)) {
+                printf(" v%d, v%d, %s.%s:%s // field@%04x", pDecInsn->vA,
+                    pDecInsn->vB, fieldInfo.classDescriptor, fieldInfo.name,
+                    fieldInfo.signature, pDecInsn->vC);
+            } else {
+                printf(" v%d, v%d, ??? // field@%04x", pDecInsn->vA,
+                    pDecInsn->vB, pDecInsn->vC);
+            }
         } else {
             printf(" v%d, v%d, %s // class@%04x",
                 pDecInsn->vA, pDecInsn->vB,
@@ -648,10 +659,13 @@ void dumpInstruction(DexFile* pDexFile, const DexCode* pCode, int insnIdx,
                     getClassDescriptor(pDexFile, pDecInsn->vB), pDecInsn->vB);
             } else {
                 FieldMethodInfo methInfo;
-                getMethodInfo(pDexFile, pDecInsn->vB, &methInfo);
-                printf("}, %s.%s:%s // method@%04x",
-                    methInfo.classDescriptor, methInfo.name,
-                    methInfo.signature, pDecInsn->vB);
+                if (getMethodInfo(pDexFile, pDecInsn->vB, &methInfo)) {
+                    printf("}, %s.%s:%s // method@%04x",
+                        methInfo.classDescriptor, methInfo.name,
+                        methInfo.signature, pDecInsn->vB);
+                } else {
+                    printf("}, ??? // method@%04x", pDecInsn->vB);
+                }
             }
         }
         break;
@@ -686,10 +700,13 @@ void dumpInstruction(DexFile* pDexFile, const DexCode* pCode, int insnIdx,
                     getClassDescriptor(pDexFile, pDecInsn->vB), pDecInsn->vB);
             } else {
                 FieldMethodInfo methInfo;
-                getMethodInfo(pDexFile, pDecInsn->vB, &methInfo);
-                printf("}, %s.%s:%s // method@%04x",
-                    methInfo.classDescriptor, methInfo.name,
-                    methInfo.signature, pDecInsn->vB);
+                if (getMethodInfo(pDexFile, pDecInsn->vB, &methInfo)) {
+                    printf("}, %s.%s:%s // method@%04x",
+                        methInfo.classDescriptor, methInfo.name,
+                        methInfo.signature, pDecInsn->vB);
+                } else {
+                    printf("}, ??? // method@%04x", pDecInsn->vB);
+                }
             }
         }
         break;
@@ -1060,7 +1077,7 @@ int process(const char* fileName)
         goto bail;
     mapped = true;
 
-    pDexFile = dexFileParse(map.addr, map.length);
+    pDexFile = dexFileParse(map.addr, map.length, kDexParseVerifyChecksum);
     if (pDexFile == NULL) {
         fprintf(stderr, "ERROR: DEX parse failed\n");
         goto bail;
@@ -1111,7 +1128,7 @@ int main(int argc, char* const argv[])
             break;
 
         switch (ic) {
-        case 'd':       // disassemble
+        case 'd':       // disassemble Dalvik instructions
             gOptions.disassemble = true;
             break;
         case 'f':       // dump outer file header

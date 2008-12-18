@@ -17,13 +17,28 @@
 
 package org.apache.harmony.security.tests.java.security;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.security.InvalidKeyException;
 
+@TestTargetClass(InvalidKeyException.class)
 public class InvalidKeyException2Test extends junit.framework.TestCase {
 
     /**
      * @tests java.security.InvalidKeyException#InvalidKeyException()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "InvalidKeyException",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         // Test for method java.security.InvalidKeyException()
         InvalidKeyException e = new InvalidKeyException();
@@ -35,6 +50,15 @@ public class InvalidKeyException2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.InvalidKeyException#InvalidKeyException(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies constructor with one string parameter",
+      targets = {
+        @TestTarget(
+          methodName = "InvalidKeyException",
+          methodArgs = {String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() {
         // Test for method java.security.InvalidKeyException(java.lang.String)
         InvalidKeyException e = new InvalidKeyException("test message");

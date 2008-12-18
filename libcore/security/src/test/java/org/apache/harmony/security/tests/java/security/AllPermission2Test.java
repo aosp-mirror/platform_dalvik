@@ -17,17 +17,32 @@
 
 package org.apache.harmony.security.tests.java.security;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.security.AllPermission;
 import java.security.Permission;
 import java.security.PermissionCollection;
 import java.security.SecurityPermission;
 import java.util.Enumeration;
 
+@TestTargetClass(AllPermission.class)
 public class AllPermission2Test extends junit.framework.TestCase {
 
     /**
      * @tests java.security.AllPermission#AllPermission()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "AllPermission",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         // Test for method java.security.AllPermission()
         AllPermission ap = new AllPermission();
@@ -39,6 +54,15 @@ public class AllPermission2Test extends junit.framework.TestCase {
      * @tests java.security.AllPermission#AllPermission(java.lang.String,
      *        java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Null/empty parameters checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "AllPermission",
+          methodArgs = {java.lang.String.class, java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_StringLjava_lang_String() {
         // Test for method java.security.AllPermission(java.lang.String,
         // java.lang.String)
@@ -54,6 +78,16 @@ public class AllPermission2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.AllPermission#equals(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Update comment for first assertTrue method." +
+                  "Because: Two AllPermission objects are always equal",
+      targets = {
+        @TestTarget(
+          methodName = "equals",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_equalsLjava_lang_Object() {
         // Test for method boolean
         // java.security.AllPermission.equals(java.lang.Object)
@@ -66,6 +100,15 @@ public class AllPermission2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.AllPermission#getActions()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getActions",
+          methodArgs = {}
+        )
+    })
     public void test_getActions() {
         AllPermission ap = new AllPermission();
         // Test for method java.lang.String
@@ -77,6 +120,15 @@ public class AllPermission2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.AllPermission#hashCode()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "hashCode",
+          methodArgs = {}
+        )
+    })
     public void test_hashCode() {
         final int ALLPERMISSION_HASH = 1;
         // Test for method int java.security.AllPermission.hashCode()
@@ -90,6 +142,15 @@ public class AllPermission2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.AllPermission#implies(java.security.Permission)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Null parameter checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "implies",
+          methodArgs = {java.security.Permission.class}
+        )
+    })
     public void test_impliesLjava_security_Permission() {
         // Test for method boolean
         // java.security.AllPermission.implies(java.security.Permission)
@@ -104,6 +165,15 @@ public class AllPermission2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.AllPermission#newPermissionCollection()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "newPermissionCollection",
+          methodArgs = {}
+        )
+    })
     public void test_newPermissionCollection() {
         AllPermission ap1 = new AllPermission();
         AllPermission ap2 = new AllPermission("Don't remember this stupid name",

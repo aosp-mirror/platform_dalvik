@@ -17,6 +17,11 @@
 
 package tests.api.java.util;
 
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass; 
+
 import java.io.Serializable;
 import java.util.Enumeration;
 import java.util.PropertyPermission;
@@ -24,6 +29,7 @@ import java.util.PropertyPermission;
 import org.apache.harmony.testframework.serialization.SerializationTest;
 import org.apache.harmony.testframework.serialization.SerializationTest.SerializableAssert;
 
+@TestTargetClass(PropertyPermission.class) 
 public class PropertyPermissionTest extends junit.framework.TestCase {
 
     static PropertyPermission javaPP = new PropertyPermission("java.*", "read");
@@ -35,6 +41,15 @@ public class PropertyPermissionTest extends junit.framework.TestCase {
      * @tests java.util.PropertyPermission#PropertyPermission(java.lang.String,
      *        java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "PropertyPermission",
+          methodArgs = {java.lang.String.class, java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_StringLjava_lang_String() {
         // Test for method java.util.PropertyPermission(java.lang.String,
         // java.lang.String)
@@ -44,6 +59,15 @@ public class PropertyPermissionTest extends junit.framework.TestCase {
     /**
      * @tests java.util.PropertyPermission#equals(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "equals",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_equalsLjava_lang_Object() {
         // Test for method boolean
         // java.util.PropertyPermission.equals(java.lang.Object)
@@ -66,6 +90,15 @@ public class PropertyPermissionTest extends junit.framework.TestCase {
     /**
      * @tests java.util.PropertyPermission#getActions()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getActions",
+          methodArgs = {}
+        )
+    })
     public void test_getActions() {
         // Test for method java.lang.String
         // java.util.PropertyPermission.getActions()
@@ -78,6 +111,15 @@ public class PropertyPermissionTest extends junit.framework.TestCase {
     /**
      * @tests java.util.PropertyPermission#hashCode()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "hashCode",
+          methodArgs = {}
+        )
+    })
     public void test_hashCode() {
         // Test for method int java.util.PropertyPermission.hashCode()
         assertTrue("javaPP returned wrong hashCode",
@@ -89,6 +131,15 @@ public class PropertyPermissionTest extends junit.framework.TestCase {
     /**
      * @tests java.util.PropertyPermission#implies(java.security.Permission)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "implies",
+          methodArgs = {java.security.Permission.class}
+        )
+    })
     public void test_impliesLjava_security_Permission() {
         // Test for method boolean
         // java.util.PropertyPermission.implies(java.security.Permission)
@@ -113,6 +164,15 @@ public class PropertyPermissionTest extends junit.framework.TestCase {
     /**
      * @tests java.util.PropertyPermission#newPermissionCollection()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "newPermissionCollection",
+          methodArgs = {}
+        )
+    })
     public void test_newPermissionCollection() {
         // Test for method java.security.PermissionCollection
         // java.util.PropertyPermission.newPermissionCollection()
@@ -128,6 +188,19 @@ public class PropertyPermissionTest extends junit.framework.TestCase {
      * @tests java.util.PropertyPermission#readObject(ObjectInputStream)
      * @tests java.util.PropertyPermission#writeObject(ObjectOutputStream)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Verifies serialization/deserialization.",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationSelf",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "!SerializationGolden",
+          methodArgs = {}
+        )
+    })
     public void test_serialization() throws Exception{
         PropertyPermission pp = new PropertyPermission("test", "read");
         SerializationTest.verifySelf(pp, comparator);

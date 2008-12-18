@@ -17,13 +17,28 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import junit.framework.TestCase;
 
+@TestTargetClass(Character.Subset.class) 
 public class Character_SubsetTest extends TestCase {
 
     /**
      * @tests java.lang.Character.Subset#Character.Subset(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Checks null parameter.",
+      targets = {
+        @TestTarget(
+          methodName = "Subset",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_Ctor() {
 
         try {
@@ -38,6 +53,15 @@ public class Character_SubsetTest extends TestCase {
     /**
      * @tests java.lang.Character.Subset#toString()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public void test_toString() {
 
         String name = "name";

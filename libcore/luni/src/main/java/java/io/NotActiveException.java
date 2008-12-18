@@ -18,37 +18,41 @@
 package java.io;
 
 /**
- * Some methods in ObjectInputStream and ObjectOutputStream can only be called
- * from a nested call to readObject() or writeObject(). Any attempt to call them
- * from another context will cause this exception to be thrown. The list of
- * methods that are protected this way is:
+ * Signals that a serialization-related method has been invoked in the wrong
+ * place. Some methods in {@code ObjectInputStream} and {@code
+ * ObjectOutputStream} can only be called from a nested call to readObject() or
+ * writeObject(). Any attempt to call them from another context will cause a
+ * {@code NotActiveException} to be thrown. The list of methods that are
+ * protected this way is:
  * <ul>
- * <li>ObjectInputStream.defaultReadObject()</li>
- * <li>ObjectInputStream.registerValidation()</li>
- * <li>ObjectOutputStream.defaultWriteObject()</li>
+ * <li>{@link ObjectInputStream#defaultReadObject()}</li>
+ * <li>{@link ObjectInputStream#registerValidation(ObjectInputValidation, int)}</li>
+ * <li>{@link ObjectOutputStream#defaultWriteObject()}</li>
  * </ul>
  * 
- * @see ObjectInputStream#defaultReadObject()
- * @see ObjectInputStream#registerValidation(ObjectInputValidation, int)
- * @see ObjectOutputStream#defaultWriteObject()
+ * @since Android 1.0
  */
 public class NotActiveException extends ObjectStreamException {
 
     private static final long serialVersionUID = -3893467273049808895L;
 
     /**
-     * Constructs a new instance of this class with its walkback filled in.
+     * Constructs a new {@code NotActiveException} with its stack trace filled
+     * in.
+     * 
+     * @since Android 1.0
      */
     public NotActiveException() {
         super();
     }
 
     /**
-     * Constructs a new instance of this class with its walkback and message
-     * filled in.
+     * Constructs a new {@code NotActiveException} with its stack trace and
+     * detail message filled in.
      * 
      * @param detailMessage
-     *            The detail message for the exception.
+     *            the detail message for this exception.
+     * @since Android 1.0
      */
     public NotActiveException(String detailMessage) {
         super(detailMessage);

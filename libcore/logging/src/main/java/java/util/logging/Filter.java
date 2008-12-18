@@ -18,17 +18,21 @@
 package java.util.logging;
 
 /**
- * <p>A Filter provides a mechanism for exercising fine-grained control over
- * what records get logged.</p> 
+ * A {@code Filter} provides a mechanism for exercising fine-grained control
+ * over which records get logged.
+ * 
+ * @since Android 1.0
  */
 public interface Filter {
 
     /**
-     * <p>Checks the {@link LogRecord} to determine if it should be logged.</p>
+     * Checks {@code record} to determine if it should be logged.
      * 
-     * @param record The {@link LogRecord} to be checked.
-     * @return <code>true</code> if the supplied log record needs to be
-     *         logged, otherwise <code>false</code>
+     * @param record
+     *            the {@link LogRecord} to be checked.
+     * @return {@code true} if the supplied log record needs to be logged,
+     *         {@code false} otherwise.
+     * @since Android 1.0
      */
     boolean isLoggable(LogRecord record);
 }

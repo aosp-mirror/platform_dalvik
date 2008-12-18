@@ -13,7 +13,9 @@ import java.nio.charset.Charset;
 import java.nio.charset.spi.CharsetProvider;
 import java.util.*;
 import java.util.Iterator;
-import com.ibm.icu4jni.converters.NativeConverter;
+// BEGIN android-removed
+// import com.ibm.icu4jni.converters.NativeConverter;
+// END android-removed
 
 public final class CharsetProviderICU extends CharsetProvider{
     

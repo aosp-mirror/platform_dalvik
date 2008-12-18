@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Alexander Y. Kleymenov
-* @version $Revision$
-*/
-
 package java.security.cert;
 
 import java.math.BigInteger;
@@ -31,17 +26,28 @@ import java.util.Date;
 import javax.security.auth.x500.X500Principal;
 
 /**
- * @com.intel.drl.spec_ref
+ * Abstract base class for entries in a certificate revocation list (CRL).
+ * 
+ * @see X509CRL
+ * @since Android 1.0
  */
 public abstract class X509CRLEntry implements X509Extension {
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code X509CRLEntry} instance.
+     * 
+     * @since Android 1.0
      */
     public X509CRLEntry() {}
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns whether the specified object equals to this instance.
+     * 
+     * @param other
+     *            the object to compare.
+     * @return {@code true} if the specified object equals to this instance,
+     *         otherwise {@code false}.
+     * @since Android 1.0
      */
     public boolean equals(Object other) {
         if (other == this) {
@@ -59,7 +65,10 @@ public abstract class X509CRLEntry implements X509Extension {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the hashcode of this instance.
+     * 
+     * @return the hashcode of this instance.
+     * @since Android 1.0
      */
     public int hashCode() {
         int res = 0;
@@ -74,31 +83,56 @@ public abstract class X509CRLEntry implements X509Extension {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns this entry in ASN.1 DER encoded form.
+     * 
+     * @return the encoded form of this entry.
+     * @throws CRLException
+     *             if encoding fails.
+     * @since Android 1.0
      */
     public abstract byte[] getEncoded() throws CRLException;
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the serial number of the revoked certificate.
+     * 
+     * @return the serial number of the revoked certificate.
+     * @since Android 1.0
      */
     public abstract BigInteger getSerialNumber();
 
+    /**
+     * Returns the issuer of the revoked certificate.
+     * 
+     * @return the issuer of the revoked certificate, or {@code null} if the
+     *         issuer is equal to the CRL issuer.
+     * @since Android 1.0
+     */
     public X500Principal getCertificateIssuer() {
         return null;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the date when the certificate is revoked.
+     * 
+     * @return the date when the certificate is revoked.
+     * @since Android 1.0
      */
     public abstract Date getRevocationDate();
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns whether this CRL entry has extensions.
+     * 
+     * @return {@code true} is this CRL entry has extensions, otherwise {@code
+     *         false}.
+     * @since Android 1.0
      */
     public abstract boolean hasExtensions();
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns a string representation of this instance.
+     * 
+     * @return a string representation of this instance.
+     * @since Android 1.0
      */
     public abstract String toString();
 }

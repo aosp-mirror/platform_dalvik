@@ -36,7 +36,8 @@ typedef struct JarFile {
  * On success, returns 0 and sets "*ppJarFile" to a newly-allocated JarFile.
  * On failure, returns a meaningful error code [currently just -1].
  */
-int dvmJarFileOpen(const char* fileName, JarFile** ppJarFile, bool isBootstrap);
+int dvmJarFileOpen(const char* fileName, const char* odexOutputName,
+    JarFile** ppJarFile, bool isBootstrap);
 
 /*
  * Free a JarFile structure, along with any associated structures.

@@ -16,9 +16,15 @@
  */
 package tests.api.java.lang.ref;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
 
+@TestTargetClass(SoftReference.class) 
 public class SoftReferenceTest extends junit.framework.TestCase {
     static Boolean bool;
 
@@ -30,6 +36,15 @@ public class SoftReferenceTest extends junit.framework.TestCase {
      * @tests java.lang.ref.SoftReference#SoftReference(java.lang.Object,
      *        java.lang.ref.ReferenceQueue)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "SoftReference",
+          methodArgs = {Object.class, java.lang.ref.ReferenceQueue.class}
+        )
+    })
     public void test_ConstructorLjava_lang_ObjectLjava_lang_ref_ReferenceQueue() {
         ReferenceQueue rq = new ReferenceQueue();
         bool = new Boolean(true);
@@ -53,6 +68,15 @@ public class SoftReferenceTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.ref.SoftReference#SoftReference(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "SoftReference",
+          methodArgs = {Object.class}
+        )
+    })
     public void test_ConstructorLjava_lang_Object() {
         bool = new Boolean(true);
         try {
@@ -67,6 +91,15 @@ public class SoftReferenceTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.ref.SoftReference#get()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verified that get() can return null.",
+      targets = {
+        @TestTarget(
+          methodName = "get",
+          methodArgs = {}
+        )
+    })
     public void test_get() {
         bool = new Boolean(false);
         SoftReference sr = new SoftReference(bool);

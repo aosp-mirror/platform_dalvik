@@ -17,10 +17,16 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.security.Permission;
 import java.util.Map;
 
+@TestTargetClass(Thread.class) 
 public class ThreadTest extends junit.framework.TestCase {
 
     static class SimpleThread implements Runnable {
@@ -138,6 +144,15 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#Thread()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Thread",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         // Test for method java.lang.Thread()
 
@@ -173,6 +188,15 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#Thread(java.lang.Runnable)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Thread",
+          methodArgs = {java.lang.Runnable.class}
+        )
+    })
     public void test_ConstructorLjava_lang_Runnable() {
         // Test for method java.lang.Thread(java.lang.Runnable)
         try {
@@ -186,6 +210,15 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#Thread(java.lang.Runnable, java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Thread",
+          methodArgs = {java.lang.Runnable.class, java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_RunnableLjava_lang_String() {
         // Test for method java.lang.Thread(java.lang.Runnable,
         // java.lang.String)
@@ -198,6 +231,15 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#Thread(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Thread",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() {
         // Test for method java.lang.Thread(java.lang.String)
         Thread t = new Thread("Testing");
@@ -209,6 +251,15 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#Thread(java.lang.ThreadGroup, java.lang.Runnable)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Thread",
+          methodArgs = {java.lang.ThreadGroup.class, java.lang.Runnable.class}
+        )
+    })
     public void test_ConstructorLjava_lang_ThreadGroupLjava_lang_Runnable() {
         // Test for method java.lang.Thread(java.lang.ThreadGroup,
         // java.lang.Runnable)
@@ -227,6 +278,15 @@ public class ThreadTest extends junit.framework.TestCase {
      * @tests java.lang.Thread#Thread(java.lang.ThreadGroup, java.lang.Runnable,
      *        java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Thread",
+          methodArgs = {java.lang.ThreadGroup.class, java.lang.Runnable.class, java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_ThreadGroupLjava_lang_RunnableLjava_lang_String() {
         // Test for method java.lang.Thread(java.lang.ThreadGroup,
         // java.lang.Runnable, java.lang.String)
@@ -261,6 +321,15 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#Thread(java.lang.ThreadGroup, java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Thread",
+          methodArgs = {java.lang.ThreadGroup.class, java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_ThreadGroupLjava_lang_String() {
         // Test for method java.lang.Thread(java.lang.ThreadGroup,
         // java.lang.String)
@@ -273,6 +342,15 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#activeCount()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "activeCount",
+          methodArgs = {}
+        )
+    })
     public void test_activeCount() {
         // Test for method int java.lang.Thread.activeCount()
         Thread t = new Thread(new SimpleThread(1));
@@ -288,6 +366,15 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#checkAccess()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SecurityException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "checkAccess",
+          methodArgs = {}
+        )
+    })
     public void test_checkAccess() {
         // Test for method void java.lang.Thread.checkAccess()
         ThreadGroup tg = new ThreadGroup("Test Group3");
@@ -309,6 +396,16 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#countStackFrames()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "if this thread is not suspended, countStackFrames() method " +
+            "should throw IllegalThreadStateException.",
+      targets = {
+        @TestTarget(
+          methodName = "countStackFrames",
+          methodArgs = {}
+        )
+    })
     @SuppressWarnings("deprecation")
     public void test_countStackFrames() {
         /*
@@ -325,6 +422,15 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#currentThread()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "currentThread",
+          methodArgs = {}
+        )
+    })
     public void test_currentThread() {
         assertNotNull(Thread.currentThread());
     }
@@ -332,6 +438,15 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#destroy()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NoSuchMethodError should be thrown. Need to add verification.",
+      targets = {
+        @TestTarget(
+          methodName = "destroy",
+          methodArgs = {}
+        )
+    })
     @SuppressWarnings("deprecation")
     public void test_destroy() {
         try {
@@ -345,7 +460,16 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#enumerate(java.lang.Thread[])
      */
-    public void test_enumerate$Ljava_lang_Thread() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "enumerate",
+          methodArgs = {java.lang.Thread[].class}
+        )
+    })
+    public void _test_enumerate$Ljava_lang_Thread() {
         // Test for method int java.lang.Thread.enumerate(java.lang.Thread [])
         // The test has been updated according to HARMONY-1974 JIRA issue.
 
@@ -430,6 +554,15 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#getContextClassLoader()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SecurityException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "getContextClassLoader",
+          methodArgs = {}
+        )
+    })
     public void test_getContextClassLoader() {
         // Test for method java.lang.ClassLoader
         // java.lang.Thread.getContextClassLoader()
@@ -444,6 +577,15 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#getName()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getName",
+          methodArgs = {}
+        )
+    })
     public void test_getName() {
         // Test for method java.lang.String java.lang.Thread.getName()
         st = new Thread(new SimpleThread(1), "SimpleThread6");
@@ -455,6 +597,15 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#getPriority()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getPriority",
+          methodArgs = {}
+        )
+    })
     public void test_getPriority() {
         // Test for method int java.lang.Thread.getPriority()
         st = new Thread(new SimpleThread(1));
@@ -467,6 +618,15 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#getThreadGroup()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getThreadGroup",
+          methodArgs = {}
+        )
+    })
     public void test_getThreadGroup() {
         // Test for method java.lang.ThreadGroup
         // java.lang.Thread.getThreadGroup()
@@ -508,6 +668,15 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#interrupt()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SecurityException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "interrupt",
+          methodArgs = {}
+        )
+    })
     public void test_interrupt() {
         // Test for method void java.lang.Thread.interrupt()
         final Object lock = new Object();
@@ -569,6 +738,15 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#interrupted()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "interrupted",
+          methodArgs = {}
+        )
+    })
     public void test_interrupted() {
         assertFalse("Interrupted returned true for non-interrupted thread", Thread
                 .interrupted());
@@ -580,6 +758,15 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#isAlive()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Need to check after interrupt(), etc...",
+      targets = {
+        @TestTarget(
+          methodName = "isAlive",
+          methodArgs = {}
+        )
+    })
     public void test_isAlive() {
         // Test for method boolean java.lang.Thread.isAlive()
         SimpleThread simple;
@@ -604,6 +791,15 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#isDaemon()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isDaemon",
+          methodArgs = {}
+        )
+    })
     public void test_isDaemon() {
         // Test for method boolean java.lang.Thread.isDaemon()
         st = new Thread(new SimpleThread(1), "SimpleThread10");
@@ -616,6 +812,15 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#isInterrupted()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isInterrupted",
+          methodArgs = {}
+        )
+    })
     public void test_isInterrupted() {
         // Test for method boolean java.lang.Thread.isInterrupted()
         class SpinThread implements Runnable {
@@ -649,6 +854,15 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#join()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "InterruptedException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "join",
+          methodArgs = {}
+        )
+    })
     public void test_join() {
         // Test for method void java.lang.Thread.join()
         SimpleThread simple;
@@ -680,6 +894,15 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#join(long)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "InterruptedException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "join",
+          methodArgs = {long.class}
+        )
+    })
     public void test_joinJ() {
         // Test for method void java.lang.Thread.join(long)
         SimpleThread simple;
@@ -746,6 +969,15 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#join(long, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "InterruptedException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "join",
+          methodArgs = {long.class, int.class}
+        )
+    })
     public void test_joinJI() {
         // Test for method void java.lang.Thread.join(long, int)
         SimpleThread simple;
@@ -803,8 +1035,17 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#resume()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SecurityException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "resume",
+          methodArgs = {}
+        )
+    })
     @SuppressWarnings("deprecation")
-    public void test_resume() {
+    public void _test_resume() {
         // Test for method void java.lang.Thread.resume()
         int orgval;
         ResSupThread t;
@@ -835,6 +1076,15 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#run()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "run",
+          methodArgs = {}
+        )
+    })
     public void test_run() {
         // Test for method void java.lang.Thread.run()
         class RunThread implements Runnable {
@@ -864,6 +1114,15 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#setDaemon(boolean)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions are not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "setDaemon",
+          methodArgs = {boolean.class}
+        )
+    })
     public void test_setDaemonZ() {
         // Test for method void java.lang.Thread.setDaemon(boolean)
         st = new Thread(new SimpleThread(1), "SimpleThread14");
@@ -886,6 +1145,15 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#setName(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SecurityException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "setName",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_setNameLjava_lang_String() {
         // Test for method void java.lang.Thread.setName(java.lang.String)
         st = new Thread(new SimpleThread(1), "SimpleThread15");
@@ -905,6 +1173,15 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#setPriority(int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions are not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "setPriority",
+          methodArgs = {int.class}
+        )
+    })
     public void test_setPriorityI() {
         // Test for method void java.lang.Thread.setPriority(int)
         st = new Thread(new SimpleThread(1));
@@ -917,6 +1194,15 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#sleep(long)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "InterruptedException is not verified. Test needs enhancing.",
+      targets = {
+        @TestTarget(
+          methodName = "sleep",
+          methodArgs = {long.class}
+        )
+    })
     public void test_sleepJ() {
         // Test for method void java.lang.Thread.sleep(long)
 
@@ -935,6 +1221,15 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#sleep(long, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions are not verified. Test needs revisiting.",
+      targets = {
+        @TestTarget(
+          methodName = "sleep",
+          methodArgs = {long.class, int.class}
+        )
+    })
     public void test_sleepJI() {
         // Test for method void java.lang.Thread.sleep(long, int)
 
@@ -955,6 +1250,16 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#start()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IllegalThreadStateException is not verified. " +
+            "Test needs revisiting.",
+      targets = {
+        @TestTarget(
+          methodName = "start",
+          methodArgs = {}
+        )
+    })
     public void test_start() {
         // Test for method void java.lang.Thread.start()
         try {
@@ -978,8 +1283,17 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#stop()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "SecurityException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "stop",
+          methodArgs = {}
+        )
+    })
     @SuppressWarnings("deprecation")
-    public void test_stop() {
+    public void _test_stop() {
         // Test for method void java.lang.Thread.stop()
         try {
             Runnable r = new ResSupThread(null);
@@ -1006,6 +1320,15 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#stop()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies security.",
+      targets = {
+        @TestTarget(
+          methodName = "stop",
+          methodArgs = {}
+        )
+    })
     @SuppressWarnings("deprecation")
     public void test_stop_subtest0() {
         Thread t = new Thread("t");
@@ -1059,6 +1382,15 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#stop(java.lang.Throwable)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies security.",
+      targets = {
+        @TestTarget(
+          methodName = "stop",
+          methodArgs = {java.lang.Throwable.class}
+        )
+    })
     @SuppressWarnings("deprecation")
     public void test_stopLjava_lang_Throwable_subtest0() {
         Thread t = new Thread("t");
@@ -1116,8 +1448,17 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#stop(java.lang.Throwable)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "SecurityException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "stop",
+          methodArgs = {java.lang.Throwable.class}
+        )
+    })
     @SuppressWarnings("deprecation")
-    public void test_stopLjava_lang_Throwable() {
+    public void _test_stopLjava_lang_Throwable() {
         // Test for method void java.lang.Thread.stop(java.lang.Throwable)
         ResSupThread t = new ResSupThread(Thread.currentThread());
         synchronized (t) {
@@ -1144,8 +1485,17 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#suspend()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SecurityException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "suspend",
+          methodArgs = {}
+        )
+    })
     @SuppressWarnings("deprecation")
-    public void test_suspend() {
+    public void _test_suspend() {
         // Test for method void java.lang.Thread.suspend()
         int orgval;
         ResSupThread t = new ResSupThread(Thread.currentThread());
@@ -1197,6 +1547,15 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#toString()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public void test_toString() {
         // Test for method java.lang.String java.lang.Thread.toString()
         ThreadGroup tg = new ThreadGroup("Test Group5");
@@ -1216,6 +1575,15 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#getAllStackTraces()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SecurityException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "getAllStackTraces",
+          methodArgs = {}
+        )
+    })
     public void test_getAllStackTraces() {
         Map<Thread, StackTraceElement[]> stMap = Thread.getAllStackTraces();
         assertNotNull(stMap);
@@ -1226,6 +1594,19 @@ public class ThreadTest extends junit.framework.TestCase {
      * @tests java.lang.Thread#getDefaultUncaughtExceptionHandler
      * @tests java.lang.Thread#setDefaultUncaughtExceptionHandler
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SecurityException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "setUncaughtExceptionHandler",
+          methodArgs = {java.lang.Thread.UncaughtExceptionHandler.class}
+        ),
+        @TestTarget(
+          methodName = "getDefaultUncaughtExceptionHandler",
+          methodArgs = {}
+        )
+    })
     public void test_get_setDefaultUncaughtExceptionHandler() {
         class Handler implements UncaughtExceptionHandler {
             public void uncaughtException(Thread thread, Throwable ex) {
@@ -1244,6 +1625,15 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#getStackTrace()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SecurityException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "getStackTrace",
+          methodArgs = {}
+        )
+    })
     public void test_getStackTrace() {
         StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
         
@@ -1267,6 +1657,15 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#getState()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "add additional state tests.",
+      targets = {
+        @TestTarget(
+          methodName = "getState",
+          methodArgs = {}
+        )
+    })
     public void test_getState() {
         Thread.State state = Thread.currentThread().getState();
         assertNotNull(state);
@@ -1278,6 +1677,19 @@ public class ThreadTest extends junit.framework.TestCase {
      * @tests java.lang.Thread#getUncaughtExceptionHandler
      * @tests java.lang.Thread#setUncaughtExceptionHandler
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SecurityException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "getDefaultUncaughtExceptionHandler",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "setDefaultUncaughtExceptionHandler",
+          methodArgs = {java.lang.Thread.UncaughtExceptionHandler.class}
+        )
+    })
     public void test_get_setUncaughtExceptionHandler() {
         class Handler implements UncaughtExceptionHandler {
             public void uncaughtException(Thread thread, Throwable ex) {
@@ -1296,6 +1708,15 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#getId()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getId",
+          methodArgs = {}
+        )
+    })
     public void test_getId() {
         assertTrue("current thread's ID is not positive", Thread.currentThread().getId() > 0);
         
@@ -1309,6 +1730,15 @@ public class ThreadTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Thread#holdLock()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NullPointerException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "holdsLock",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_holdsLock() {
         MonitoredClass monitor = new MonitoredClass();
         

@@ -17,52 +17,72 @@
 
 package tests.api.java.io;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass; 
+
+@TestTargetClass(java.io.CharConversionException.class) 
 public class CharConversionExceptionTest extends junit.framework.TestCase {
 
-	/**
-	 * @tests java.io.CharConversionException#CharConversionException()
-	 */
-	public void test_Constructor() {
-		// Test for method java.io.CharConversionException()
-		// Currently, there are no refs to CharConversionException so this is
-		// the best test we can do
-		try {
-			if (true) // BB: getting around LF
-				throw new java.io.CharConversionException();
-			fail("Exception not thrown");
-		} catch (java.io.CharConversionException e) {
-			assertNull(
-					"Exception defined with no message answers non-null to getMessage()",
-					e.getMessage());
-		}
-	}
+    /**
+     * @tests java.io.CharConversionException#CharConversionException()
+     */
+    @TestInfo(
+            level = TestLevel.COMPLETE,
+            purpose = "Verifies CharConversionException() constructor.",
+            targets = { @TestTarget(methodName = "CharConversionException", 
+                                    methodArgs = {})                         
+            }
+    )     
+    public void test_Constructor() {
+        // Test for method java.io.CharConversionException()
+        // Currently, there are no refs to CharConversionException so this is
+        // the best test we can do
+        try {
+            if (true) // BB: getting around LF
+                throw new java.io.CharConversionException();
+            fail("Exception not thrown");
+        } catch (java.io.CharConversionException e) {
+            assertNull(
+                    "Exception defined with no message answers non-null to getMessage()",
+                    e.getMessage());
+        }
+    }
 
-	/**
-	 * @tests java.io.CharConversionException#CharConversionException(java.lang.String)
-	 */
-	public void test_ConstructorLjava_lang_String() {
-		// Test for method java.io.CharConversionException(java.lang.String)
-		try {
-			if (true) // getting around LF
-				throw new java.io.CharConversionException("Blah");
-			fail("Exception not thrown");
-		} catch (java.io.CharConversionException e) {
-			assertEquals("Exception defined with no message answers non-null to getMessage()",
-					"Blah", e.getMessage());
-		}
-	}
+    /**
+     * @tests java.io.CharConversionException#CharConversionException(java.lang.String)
+     */
+    @TestInfo(
+            level = TestLevel.COMPLETE,
+            purpose = "Verifies CharConversionException(java.lang.String) constructor.",
+            targets = { @TestTarget(methodName = "CharConversionException", 
+                                    methodArgs = {java.lang.String.class})                         
+            }
+    )     
+    public void test_ConstructorLjava_lang_String() {
+        // Test for method java.io.CharConversionException(java.lang.String)
+        try {
+            if (true) // getting around LF
+                throw new java.io.CharConversionException("Blah");
+            fail("Exception not thrown");
+        } catch (java.io.CharConversionException e) {
+            assertEquals("Exception defined with no message answers non-null to getMessage()",
+                    "Blah", e.getMessage());
+        }
+    }
 
-	/**
-	 * Sets up the fixture, for example, open a network connection. This method
-	 * is called before a test is executed.
-	 */
-	protected void setUp() {
-	}
+    /**
+     * Sets up the fixture, for example, open a network connection. This method
+     * is called before a test is executed.
+     */
+    protected void setUp() {
+    }
 
-	/**
-	 * Tears down the fixture, for example, close a network connection. This
-	 * method is called after a test is executed.
-	 */
-	protected void tearDown() {
-	}
+    /**
+     * Tears down the fixture, for example, close a network connection. This
+     * method is called after a test is executed.
+     */
+    protected void tearDown() {
+    }
 }

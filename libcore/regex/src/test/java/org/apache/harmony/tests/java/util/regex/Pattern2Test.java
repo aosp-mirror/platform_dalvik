@@ -19,7 +19,7 @@ package org.apache.harmony.tests.java.util.regex;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestStatus;
+import dalvik.annotation.TestLevel;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -34,8 +34,8 @@ import junit.framework.TestCase;
 public class Pattern2Test extends TestCase {
     
     @TestInfo(
-            status = TestStatus.TODO,
-            notes = "The test verifies " +
+            level = TestLevel.PARTIAL,
+            purpose = "Verifies " +
                     "matches(String regex, CharSequence input) method.",
             targets = { @TestTarget(methodName = "matches", 
                                     methodArgs = { java.lang.String.class,
@@ -63,8 +63,8 @@ public class Pattern2Test extends TestCase {
         assertTrue(Pattern.matches("", ""));
     }
     @TestInfo(
-            status = TestStatus.TODO,
-            notes = "The test verifies compile(String regex) method and matcher " +
+            level = TestLevel.PARTIAL,
+            purpose = "Verifies compile(String regex) method and matcher " +
                     "for created pattern.",
             targets = { @TestTarget(methodName = "compile", 
                                     methodArgs = {java.lang.String.class}),
@@ -127,8 +127,8 @@ public class Pattern2Test extends TestCase {
         }
     }
     @TestInfo(
-            status = TestStatus.TODO,
-            notes = "The test verifies compile(String regex) method and matcher " +
+            level = TestLevel.PARTIAL,
+            purpose = "Verifies compile(String regex) method and matcher " +
                     "for created pattern.",
             targets = { @TestTarget(methodName = "compile", 
                                     methodArgs = {java.lang.String.class}),
@@ -190,8 +190,8 @@ public class Pattern2Test extends TestCase {
     }
 
     @TestInfo(
-            status = TestStatus.TODO,
-            notes = "The test verifies compile(String regex) method and matcher " +
+            level = TestLevel.PARTIAL,
+            purpose = "Verifies compile(String regex) method and matcher " +
                     "for created pattern.",
             targets = { @TestTarget(methodName = "compile", 
                                     methodArgs = {java.lang.String.class}),
@@ -247,8 +247,8 @@ public class Pattern2Test extends TestCase {
     }
 
     @TestInfo(
-            status = TestStatus.TODO,
-            notes = "The test verifies compile(String regex) method and matcher " +
+            level = TestLevel.PARTIAL,
+            purpose = "Verifies compile(String regex) method and matcher " +
                     "for created pattern.",
             targets = { @TestTarget(methodName = "compile", 
                                     methodArgs = {java.lang.String.class}),
@@ -453,8 +453,8 @@ public class Pattern2Test extends TestCase {
 //        }
     }
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies patterns with different ranges of characters.",
+            level = TestLevel.PARTIAL,
+            purpose = "Verifies patterns with different ranges of characters.",
             targets = { @TestTarget(methodName = "compile", 
                                     methodArgs = {java.lang.String.class}),
                         @TestTarget(methodName = "matcher", 
@@ -728,8 +728,8 @@ public class Pattern2Test extends TestCase {
         // TODO
     }
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies compile(String regex) method and matcher " +
+            level = TestLevel.PARTIAL,
+            purpose = "Verifies compile(String regex) method and matcher " +
                     "for patterns with POSIX characters.",
             targets = { @TestTarget(methodName = "compile", 
                                     methodArgs = {java.lang.String.class}),
@@ -880,8 +880,8 @@ public class Pattern2Test extends TestCase {
         // TODO
     }
     @TestInfo(
-            status = TestStatus.TODO,
-            notes = "TODO empty test.",
+            level = TestLevel.TODO,
+            purpose = "TODO empty test.",
             targets = { @TestTarget(methodName = "", 
                                     methodArgs = {})
                }
@@ -934,8 +934,8 @@ public class Pattern2Test extends TestCase {
         // Cn
     }
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies matcher(CharSequence input) method " +
+            level = TestLevel.PARTIAL,
+            purpose = "Verifies matcher(CharSequence input) method " +
                     "for input specified by Unicode blocks.",
             targets = { @TestTarget(methodName = "matcher", 
                                     methodArgs = { java.lang.CharSequence.class })
@@ -1011,8 +1011,8 @@ public class Pattern2Test extends TestCase {
         }
     }
     @TestInfo(
-            status = TestStatus.TODO,
-            notes = "TODO empty test",
+            level = TestLevel.TODO,
+            purpose = "TODO empty test",
             targets = { @TestTarget(methodName = "", 
                                     methodArgs = {})                                    
             }
@@ -1034,8 +1034,8 @@ public class Pattern2Test extends TestCase {
         // TODO
     }
     @TestInfo(
-            status = TestStatus.TODO,
-            notes = "TODO empty test.",
+            level = TestLevel.TODO,
+            purpose = "TODO empty test.",
             targets = { @TestTarget(methodName = "", 
                                     methodArgs = {})
             }
@@ -1060,8 +1060,8 @@ public class Pattern2Test extends TestCase {
         // TODO
     }
     @TestInfo(
-            status = TestStatus.TODO,
-            notes = "TODO empty test",
+            level = TestLevel.TODO,
+            purpose = "TODO empty test",
             targets = { @TestTarget(methodName = "", 
                                     methodArgs = {})                                    
             }
@@ -1104,8 +1104,8 @@ public class Pattern2Test extends TestCase {
         // TODO
     }
     @TestInfo(
-            status = TestStatus.TODO,
-            notes = "The test verifies compile(String regex) method and matcher " +
+            level = TestLevel.PARTIAL,
+            purpose = "Verifies compile(String regex) method and matcher " +
                     "for created pattern.",
             targets = { @TestTarget(methodName = "compile", 
                                     methodArgs = {java.lang.String.class}),
@@ -1173,8 +1173,8 @@ public class Pattern2Test extends TestCase {
         // TODO
     }
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies compile(String regex) method.",
+            level = TestLevel.PARTIAL,
+            purpose = "Verifies compile(String regex) method.",
             targets = { @TestTarget(methodName = "compile", 
                                     methodArgs = {java.lang.String.class})
             }
@@ -1186,8 +1186,8 @@ public class Pattern2Test extends TestCase {
         assertTrue(pattern.matcher(name).matches());
     }
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies compile(String regex, int flag) method.",
+            level = TestLevel.PARTIAL,
+            purpose = "Verifies compile(String regex, int flag) method.",
             targets = { @TestTarget(methodName = "compile", 
                                     methodArgs = {java.lang.String.class, 
                                                   int.class})
@@ -1203,9 +1203,9 @@ public class Pattern2Test extends TestCase {
         assertTrue(matcher.find(0));
     }
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies compile(String regex) and " +
-                    "compile(String regex, int flag) method for" +
+            level = TestLevel.PARTIAL,
+            purpose = "Verifies compile(String regex) and " +
+                    "compile(String regex, int flag) method for " +
                     "specific patterns.",
             targets = { @TestTarget(methodName = "compile", 
                                     methodArgs = { java.lang.String.class }),
@@ -1296,8 +1296,8 @@ public class Pattern2Test extends TestCase {
         assertFalse(m.find());
     }
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies compile(String regex, int flag) method" +
+            level = TestLevel.PARTIAL,
+            purpose = "Verifies compile(String regex, int flag) method " +
                     "for specific string.",
             targets = { @TestTarget(methodName = "compile", 
                                     methodArgs = {java.lang.String.class, 
@@ -1326,8 +1326,8 @@ public class Pattern2Test extends TestCase {
         assertFalse(found);
     }
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies compile(String regex) method" +
+            level = TestLevel.PARTIAL,
+            purpose = "Verifies compile(String regex) method" +
                     "for specific string.",
             targets = { @TestTarget(methodName = "compile", 
                                     methodArgs = {java.lang.String.class})

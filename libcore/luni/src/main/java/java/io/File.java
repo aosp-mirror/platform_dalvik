@@ -22,26 +22,34 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.AccessController;
 import java.util.ArrayList;
+// BEGIN android-added
 import java.util.Collections;
+// END android-added
 import java.util.List;
 
+// BEGIN android-removed
+// import org.apache.harmony.luni.util.DeleteOnExit;
+// END android-removed
 import org.apache.harmony.luni.util.Msg;
 import org.apache.harmony.luni.util.PriviAction;
 import org.apache.harmony.luni.util.Util;
 
 /**
- * File is a class which represents a file name or directory. The file may be
- * absolute relative to the root directory of the file system or relative to the
- * current directory in which the program is running.
+ * An "abstract" representation of a file system entity identified by a
+ * pathname. The pathname may be absolute (relative to the root directory
+ * of the file system) or relative to the current directory in which the program
+ * is running.
  * <p>
  * This class provides methods for querying/changing information about the file
- * and also directory listing capabilities if the File represents a directory.
+ * as well as directory listing capabilities if the file represents a directory.
  * <p>
  * When manipulating file paths, the static fields of this class may be used to
  * determine the platform specific separators.
  * 
  * @see java.io.Serializable
  * @see java.lang.Comparable
+ * 
+ * @since Android 1.0
  */
 public class File implements Serializable, Comparable<File> {
     private static final long serialVersionUID = 301077366599181567L;
@@ -51,24 +59,36 @@ public class File implements Serializable, Comparable<File> {
     transient byte[] properPath;
 
     /**
-     * System dependent file separator character.
+     * The system dependent file separator character. Since Android is a Unix-
+     * based system, this defaults to '/'.
+     * 
+     * @since Android 1.0
      */
     public static final char separatorChar;
 
     /**
-     * System dependent file separator String. The initial value of this field
-     * is the System property "file.separator".
+     * The system dependent file separator string. The initial value of this
+     * field is the system property "file.separator". Since Android is a Unix-
+     * based system, this defaults to "/".
+     * 
+     * @since Android 1.0
      */
     public static final String separator;
 
     /**
-     * System dependent path separator character.
+     * The system dependent path separator character. Since Android is a Unix-
+     * based system, this defaults to ':'.
+     * 
+     * @since Android 1.0
      */
     public static final char pathSeparatorChar;
 
     /**
-     * System dependent path separator String. The initial value of this field
-     * is the System property "path.separator".
+     * The system dependent path separator string. The initial value of this
+     * field is the system property "path.separator". Since Android is a Unix-
+     * based system, this defaults to ':'.
+     * 
+     * @since Android 1.0
      */
     public static final String pathSeparator;
 
@@ -83,23 +103,26 @@ public class File implements Serializable, Comparable<File> {
         oneTimeInitialization();
 
         // The default protection domain grants access to these properties
+        // BEGIN android-changed
+        // We're on linux so the filesystem is case sensitive and the separator is /.
         separatorChar = System.getProperty("file.separator", "/").charAt(0); //$NON-NLS-1$ //$NON-NLS-2$
         pathSeparatorChar = System.getProperty("path.separator", ";").charAt(0); //$NON-NLS-1$//$NON-NLS-2$
         separator = new String(new char[] { separatorChar }, 0, 1);
         pathSeparator = new String(new char[] { pathSeparatorChar }, 0, 1);
-        // BEGIN android-changed
-        // We're on linux so the filesystem is case sensitive.
         caseSensitive = true;
         // END android-changed
     }
 
     /**
-     * Constructs a new File using the specified directory and name.
+     * Constructs a new file using the specified directory and name.
      * 
      * @param dir
-     *            the directory for the file name
+     *            the directory where the file is stored.
      * @param name
-     *            the file name to be contained in the dir
+     *            the file's name.
+     * @throws NullPointerException
+     *             if {@code name} is null.
+     * @since Android 1.0
      */
     public File(File dir, String name) {
         if (name == null) {
@@ -113,10 +136,11 @@ public class File implements Serializable, Comparable<File> {
     }
 
     /**
-     * Constructs a new File using the specified path.
+     * Constructs a new file using the specified path.
      * 
      * @param path
-     *            the path to be used for the file
+     *            the path to be used for the file.
+     * @since Android 1.0
      */
     public File(String path) {
         // path == null check & NullPointerException thrown by fixSlashes
@@ -124,13 +148,16 @@ public class File implements Serializable, Comparable<File> {
     }
 
     /**
-     * Constructs a new File using the specified directory and name placing a
-     * path separator between the two.
+     * Constructs a new File using the specified directory path and file name,
+     * placing a path separator between the two.
      * 
      * @param dirPath
-     *            the directory for the file name
+     *            the path to the directory where the file is stored.
      * @param name
-     *            the file name to be contained in the dir
+     *            the file's name.
+     * @throws NullPointerException
+     *             if {@code name} is null.
+     * @since Android 1.0
      */
     public File(String dirPath, String name) {
         if (name == null) {
@@ -144,21 +171,19 @@ public class File implements Serializable, Comparable<File> {
     }
 
     /**
-     * Constructs a new File using the path of the specified URI
-     * 
-     * <code>uri</code> needs to be an absolute and hierarchical
-     * <code>URI </code> with file scheme, and non-empty path component, but
-     * with undefined authority, query or fragment components.
+     * Constructs a new File using the path of the specified URI. {@code uri}
+     * needs to be an absolute and hierarchical Unified Resource Identifier with
+     * file scheme and non-empty path component, but with undefined authority,
+     * query or fragment components.
      * 
      * @param uri
-     *            the URI instance which will be used to construct this file
-     * 
+     *            the Unified Resource Identifier that is used to construct this
+     *            file.
      * @throws IllegalArgumentException
-     *             if <code>uri</code> does not comply with the conditions
-     *             above.
-     * 
+     *             if {@code uri} does not comply with the conditions above.
      * @see #toURI
      * @see java.net.URI
+     * @since Android 1.0
      */
     public File(URI uri) {
         // check pre-conditions
@@ -230,13 +255,13 @@ public class File implements Serializable, Comparable<File> {
     private static native boolean isCaseSensitiveImpl();
 
     /**
-     * Lists the filesystem roots.
+     * Lists the file system roots. The Java platform may support zero or more
+     * file systems, each with its own platform-dependent root. Further, the
+     * canonical pathname of any file on the system will always begin with one
+     * of the returned file system roots.
      * 
-     * The Java platform may support zero or more filesystems, each with its own
-     * platform-dependent root. Further, the canonical pathname of any file on
-     * the system will always begin with one of the returned filesystem roots.
-     * 
-     * @return the array of filesystem roots
+     * @return the array of file system roots.
+     * @since Android 1.0
      */
     public static File[] listRoots() {
         byte[][] rootsList = rootsImpl();
@@ -303,30 +328,33 @@ public class File implements Serializable, Comparable<File> {
     }
 
     /**
-     * Returns a boolean indicating whether or not the current context is
-     * allowed to read this File.
+     * Indicates whether the current context is allowed to read from this file.
      * 
-     * @return <code>true</code> if this File can be read, <code>false</code>
-     *         otherwise.
-     * 
-     * @see java.lang.SecurityManager#checkRead(FileDescriptor)
+     * @return {@code true} if this file can be read, {@code false} otherwise.
+     * @throws java.lang.SecurityException
+     *             if a {@code SecurityManager} is installed and it denies the
+     *             read request.
+     * @since Android 1.0
      */
     public boolean canRead() {
         SecurityManager security = System.getSecurityManager();
         if (security != null) {
             security.checkRead(path);
         }
-        return exists() && !isWriteOnlyImpl(properPath(true));
+        // BEGIN android-changed
+        return exists() && isReadableImpl(properPath(true));
+        // END android-changed
     }
 
     /**
-     * Returns a boolean indicating whether or not the current context is
-     * allowed to write to this File.
+     * Indicates whether the current context is allowed to write to this file.
      * 
-     * @return <code>true</code> if this File can be written,
-     *         <code>false</code> otherwise.
-     * 
-     * @see java.lang.SecurityManager#checkWrite(FileDescriptor)
+     * @return {@code true} if this file can be written, {@code false}
+     *         otherwise.
+     * @throws java.lang.SecurityException
+     *             if a {@code SecurityManager} is installed and it denies the
+     *             write request.
+     * @since Android 1.0
      */
     public boolean canWrite() {
         SecurityManager security = System.getSecurityManager();
@@ -339,18 +367,21 @@ public class File implements Serializable, Comparable<File> {
         if (path.length() > 0) {
             exists = existsImpl(properPath(true));
         }
-        return exists && !isReadOnlyImpl(properPath(true));
+        // BEGIN android-changed
+        return exists && isWriteableImpl(properPath(true));
+        // END android-changed
     }
 
     /**
-     * Returns the relative sort ordering of paths for the receiver and given
-     * argument. The ordering is platform dependent.
+     * Returns the relative sort ordering of the paths for this file and the
+     * file {@code another}. The ordering is platform dependent.
      * 
      * @param another
-     *            a File to compare the receiver to
-     * @return an int determined by comparing the two paths. The meaning is
+     *            a file to compare this file to
+     * @return an int determined by comparing the two paths. Possible values are
      *         described in the Comparable interface.
      * @see Comparable
+     * @since Android 1.0
      */
     public int compareTo(File another) {
         if (caseSensitive) {
@@ -360,16 +391,14 @@ public class File implements Serializable, Comparable<File> {
     }
 
     /**
-     * Deletes the file specified by this File. Directories must be empty before
-     * they will be deleted.
+     * Deletes this file. Directories must be empty before they will be deleted.
      * 
-     * @return <code>true</code> if this File was deleted, <code>false</code>
-     *         otherwise.
-     * 
-     * @throws java.lang.SecurityException in case a <code>SecurityManager</code>
-     *         is installed, and it denies the request.
-     * 
+     * @return {@code true} if this file was deleted, {@code false} otherwise.
+     * @throws java.lang.SecurityException
+     *             if a {@code SecurityManager} is installed and it denies the
+     *             request.
      * @see java.lang.SecurityManager#checkDelete
+     * @since Android 1.0
      */
     public boolean delete() {
         SecurityManager security = System.getSecurityManager();
@@ -388,32 +417,34 @@ public class File implements Serializable, Comparable<File> {
     private native boolean deleteFileImpl(byte[] filePath);
 
     /**
-     * When the virtual machine terminates, any abstract files which have been
-     * sent <code>deleteOnExit()</code> will be deleted. This will only happen
-     * when the virtual machine terminates normally as described by the Java
-     * Language Specification section 12.9.
+     * Schedules this file to be automatically deleted once the virtual machine
+     * terminates. This will only happen when the virtual machine terminates 
+     * normally as described by the Java Language Specification section 12.9.
      * 
-     * @throws java.lang.SecurityException in case a <code>SecurityManager</code>
-     *         is installed, and it denies the request.
+     * @throws java.lang.SecurityException
+     *             if a {@code SecurityManager} is installed and it denies the
+     *             request.
+     * @since Android 1.0
      */
     public void deleteOnExit() {
         SecurityManager security = System.getSecurityManager();
         if (security != null) {
             security.checkDelete(path);
         }
-
+        // BEGIN android-changed
         DeleteOnExit.getInstance().addFile(getAbsoluteName());
+        // END android-changed
     }
 
     /**
-     * Compares the argument <code>obj</code> to the receiver, and returns
-     * <code>true</code> if they represent the <em>same</em> object using a
-     * path specific comparison.
+     * Compares {@code obj} to this file and returns {@code true} if they
+     * represent the <em>same</em> object using a path specific comparison.
      * 
      * @param obj
-     *            the Object to compare with this Object
-     * @return <code>true</code> if the object is the same as this object,
-     *         <code>false</code> otherwise.
+     *            the object to compare this file with.
+     * @return {@code true} if {@code obj} is the same as this object,
+     *         {@code false} otherwise.
+     * @since Android 1.0
      */
     @Override
     public boolean equals(Object obj) {
@@ -427,14 +458,15 @@ public class File implements Serializable, Comparable<File> {
     }
 
     /**
-     * Returns a boolean indicating whether or not this File can be found on the
+     * Returns a boolean indicating whether this file can be found on the
      * underlying file system.
      * 
-     * @return <code>true</code> if this File exists, <code>false</code>
-     *         otherwise.
-     * 
+     * @return {@code true} if this file exists, {@code false} otherwise.
+     * @throws java.lang.SecurityException
+     *             if a {@code SecurityManager} is installed and it denies read
+     *             access to this file.
      * @see #getPath
-     * @see java.lang.SecurityManager#checkRead(FileDescriptor)
+     * @since Android 1.0
      */
     public boolean exists() {
         if (path.length() == 0) {
@@ -450,11 +482,11 @@ public class File implements Serializable, Comparable<File> {
     private native boolean existsImpl(byte[] filePath);
 
     /**
-     * Returns the absolute file path of this File.
+     * Returns the absolute path of this file.
      * 
-     * @return the absolute file path
-     * 
+     * @return the absolute file path.
      * @see java.lang.SecurityManager#checkPropertyAccess
+     * @since Android 1.0
      */
     public String getAbsolutePath() {
         byte[] absolute = properPath(false);
@@ -462,32 +494,31 @@ public class File implements Serializable, Comparable<File> {
     }
 
     /**
-     * Returns a new File constructed using the absolute file path of this File.
+     * Returns a new file constructed using the absolute path of this file.
      * 
-     * @return a new File from this absolute file path
-     * 
+     * @return a new file from this file's absolute path.
      * @see java.lang.SecurityManager#checkPropertyAccess
+     * @since Android 1.0
      */
     public File getAbsoluteFile() {
         return new File(this.getAbsolutePath());
     }
 
     /**
-     * Returns the absolute file path of this File with all references resolved.
-     * An <em>absolute</em> file path is one which begins at the root of the
-     * file system. The canonical path is one in which all references have been
-     * resolved. For the cases of '..' and '.' where the file system supports
-     * parent and working directory respectively, these should be removed and
-     * replaced with a direct directory reference. If the File does not exist,
-     * getCanonicalPath() may not resolve any references and simply return an
-     * absolute path name or throw an IOException.
+     * Returns the absolute path of this file with all references resolved. An
+     * <em>absolute</em> path is one that begins at the root of the file
+     * system. The canonical path is one in which all references have been
+     * resolved. For the cases of '..' and '.', where the file system supports
+     * parent and working directory respectively, these are removed and replaced
+     * with a direct directory reference. If the file does not exist,
+     * getCanonicalPath() may not resolve any references and simply returns an
+     * absolute path name or throws an IOException.
      * 
-     * @return the canonical file path
-     * 
+     * @return the canonical path of this file.
      * @throws IOException
-     *             if an IO error occurs
-     * 
+     *             if an I/O error occurs.
      * @see java.lang.SecurityManager#checkPropertyAccess
+     * @since Android 1.0
      */
     public String getCanonicalPath() throws IOException {
         byte[] result = properPath(false);
@@ -587,15 +618,14 @@ public class File implements Serializable, Comparable<File> {
     }
 
     /**
-     * Returns a new File created using the canonical file path of this File.
-     * Equivalent to <code>new File(this.getCanonicalPath())</code>.
+     * Returns a new file created using the canonical path of this file.
+     * Equivalent to {@code new File(this.getCanonicalPath())}.
      * 
-     * @return the canonical file path
-     * 
+     * @return the new file constructed from this file's canonical path.
      * @throws IOException
-     *             If an IO error occurs
-     * 
+     *             if an I/O error occurs.
      * @see java.lang.SecurityManager#checkPropertyAccess
+     * @since Android 1.0
      */
     public File getCanonicalFile() throws IOException {
         return new File(getCanonicalPath());
@@ -604,9 +634,11 @@ public class File implements Serializable, Comparable<File> {
     private native byte[] getCanonImpl(byte[] filePath);
 
     /**
-     * Returns the filename (not directory) of this File.
+     * Returns the name of the file or directory represented by this file.
      * 
-     * @return the filename or empty string
+     * @return this file's name or an empty string if there is no name part in
+     *         the file's path.
+     * @since Android 1.0
      */
     public String getName() {
         int separatorIndex = path.lastIndexOf(separator);
@@ -615,11 +647,12 @@ public class File implements Serializable, Comparable<File> {
     }
 
     /**
-     * Returns the pathname of the parent of this File. This is the path up to
-     * but not including the last name. <code>null</code> is returned when
-     * there is no parent.
+     * Returns the pathname of the parent of this file. This is the path up to
+     * but not including the last name. {@code null} is returned if there is no
+     * parent.
      * 
-     * @return the parent name or <code>null</code>
+     * @return this file's parent pathname or {@code null}.
+     * @since Android 1.0
      */
     public String getParent() {
         int length = path.length(), firstInPath = 0;
@@ -641,11 +674,12 @@ public class File implements Serializable, Comparable<File> {
     }
 
     /**
-     * Returns a new File made from the pathname of the parent of this File.
-     * This is the path up to but not including the last name. <code>null</code>
-     * is returned when there is no parent.
+     * Returns a new file made from the pathname of the parent of this file.
+     * This is the path up to but not including the last name. {@code null} is
+     * returned when there is no parent.
      * 
-     * @return a new File representing parent or <code>null</code>
+     * @return a new file representing this file's parent or {@code null}.
+     * @since Android 1.0
      */
     public File getParentFile() {
         String tempParent = getParent();
@@ -656,22 +690,22 @@ public class File implements Serializable, Comparable<File> {
     }
 
     /**
-     * Returns the file path of this File.
+     * Returns the path of this file.
      * 
-     * @return the file path
+     * @return this file's path.
+     * @since Android 1.0
      */
     public String getPath() {
         return path;
     }
 
     /**
-     * Returns an integer hash code for the receiver. Any two objects which
-     * answer <code>true</code> when passed to <code>equals</code> must
-     * answer the same value for this method.
+     * Returns an integer hash code for the receiver. Any two objects for which
+     * {@code equals} returns {@code true} must return the same hash code.
      * 
-     * @return the receiver's hash
-     * 
+     * @return this files's hash value.
      * @see #equals
+     * @since Android 1.0
      */
     @Override
     public int hashCode() {
@@ -681,33 +715,39 @@ public class File implements Serializable, Comparable<File> {
         return path.toLowerCase().hashCode() ^ 1234321;
     }
 
-    // BEGIN android-changed
-    // Removing platform independent code because we're always on linux.
     /**
-     * Returns if this File is an absolute pathname. Whether a pathname is
-     * absolute is platform specific. On UNIX it is if the path starts with the
-     * character '/', on Windows it is absolute if either it starts with '\',
-     * '/', '\\' (to represent a file server), or a letter followed by a colon.
+     * Indicates if this file's pathname is absolute. Whether a pathname is
+     * absolute is platform specific. On UNIX, absolute paths must start with
+     * the character '/'; on Windows it is absolute if either it starts with
+     * '\', '/', '\\' (to represent a file server), or a letter followed by a
+     * colon.
      * 
-     * @return <code>true</code> if this File is absolute, <code>false</code>
+     * @return {@code true} if this file's pathname is absolute, {@code false}
      *         otherwise.
-     * 
      * @see #getPath
+     * @since Android 1.0
      */
     public boolean isAbsolute() {
+        // BEGIN android-changed
+        // Removing platform independent code because we're always on linux.
         return path.length() > 0 && path.charAt(0) == separatorChar;
+        // END android-changed
     }
-    // END android-changed
+
+    // BEGIN android-removed
+    // private native boolean isAbsoluteImpl(byte[] filePath);
+    // END android-removed
 
     /**
-     * Returns if this File represents a <em>directory</em> on the underlying
-     * file system.
+     * Indicates if this file represents a <em>directory</em> on the
+     * underlying file system.
      * 
-     * @return <code>true</code> if this File is a directory,
-     *         <code>false</code> otherwise.
-     * 
-     * @see #getPath
-     * @see java.lang.SecurityManager#checkRead(FileDescriptor)
+     * @return {@code true} if this file is a directory, {@code false}
+     *         otherwise.
+     * @throws java.lang.SecurityException
+     *             if a {@code SecurityManager} is installed and it denies read
+     *             access to this file.
+     * @since Android 1.0
      */
     public boolean isDirectory() {
         if (path.length() == 0) {
@@ -723,14 +763,14 @@ public class File implements Serializable, Comparable<File> {
     private native boolean isDirectoryImpl(byte[] filePath);
 
     /**
-     * Returns if this File represents a <em>file</em> on the underlying file
-     * system.
+     * Indicates if this file represents a <em>file</em> on the underlying
+     * file system.
      * 
-     * @return <code>true</code> if this File is a file, <code>false</code>
-     *         otherwise.
-     * 
-     * @see #getPath
-     * @see java.lang.SecurityManager#checkRead(FileDescriptor)
+     * @return {@code true} if this file is a file, {@code false} otherwise.
+     * @throws java.lang.SecurityException
+     *             if a {@code SecurityManager} is installed and it denies read
+     *             access to this file.
+     * @since Android 1.0
      */
     public boolean isFile() {
         if (path.length() == 0) {
@@ -747,10 +787,16 @@ public class File implements Serializable, Comparable<File> {
 
     /**
      * Returns whether or not this file is a hidden file as defined by the
-     * operating system.
+     * operating system. The notion of "hidden" is system-dependent. For
+     * Unix systems (like Android) a file is considered hidden if its name
+     * starts with a ".". For Windows systems there is an explicit flag in the
+     * file system for this purpose.
      * 
-     * @return <code>true</code> if the file is hidden, <code>false</code>
-     *         otherwise.
+     * @return {@code true} if the file is hidden, {@code false} otherwise.
+     * @throws java.lang.SecurityException
+     *             if a {@code SecurityManager} is installed and it denies read
+     *             access to this file.
+     * @since Android 1.0
      */
     public boolean isHidden() {
         if (path.length() == 0) {
@@ -765,19 +811,23 @@ public class File implements Serializable, Comparable<File> {
 
     private native boolean isHiddenImpl(byte[] filePath);
 
-    private native boolean isReadOnlyImpl(byte[] filePath);
+    // BEGIN android-changed
+    private native boolean isReadableImpl(byte[] filePath);
 
-    private native boolean isWriteOnlyImpl(byte[] filePath);
+    private native boolean isWriteableImpl(byte[] filePath);
+    // END android-changed
 
     private native byte[] getLinkImpl(byte[] filePath);
 
     /**
-     * Returns the time this File was last modified.
+     * Returns the time when this file was last modified, measured in
+     * milliseconds since January 1st, 1970, midnight.
      * 
-     * @return the time this File was last modified.
-     * 
-     * @see #getPath
-     * @see java.lang.SecurityManager#checkRead(FileDescriptor)
+     * @return the time when this file was last modified.
+     * @throws java.lang.SecurityException
+     *             if a {@code SecurityManager} is installed and it denies read
+     *             access to this file.
+     * @since Android 1.0
      */
     public long lastModified() {
         SecurityManager security = System.getSecurityManager();
@@ -795,13 +845,19 @@ public class File implements Serializable, Comparable<File> {
     private native long lastModifiedImpl(byte[] filePath);
 
     /**
-     * Sets the time this File was last modified.
+     * Sets the time this file was last modified, measured in milliseconds since
+     * January 1st, 1970, midnight.
      * 
      * @param time
-     *            The time to set the file as last modified.
-     * @return the time this File was last modified.
-     * 
-     * @see java.lang.SecurityManager#checkWrite(FileDescriptor)
+     *            the last modification time for this file.
+     * @return {@code true} if the operation is successful, {@code false}
+     *         otherwise.
+     * @throws IllegalArgumentException
+     *             if {@code time < 0}.
+     * @throws java.lang.SecurityException
+     *             if a {@code SecurityManager} is installed and it denies write
+     *             access to this file.
+     * @since Android 1.0
      */
     public boolean setLastModified(long time) {
         if (time < 0) {
@@ -820,8 +876,12 @@ public class File implements Serializable, Comparable<File> {
      * Marks this file or directory to be read-only as defined by the operating
      * system.
      * 
-     * @return <code>true</code> if the operation was a success,
-     *         <code>false</code> otherwise
+     * @return {@code true} if the operation is successful, {@code false}
+     *         otherwise.
+     * @throws java.lang.SecurityException
+     *             if a {@code SecurityManager} is installed and it denies write
+     *             access to this file.
+     * @since Android 1.0
      */
     public boolean setReadOnly() {
         SecurityManager security = System.getSecurityManager();
@@ -834,12 +894,13 @@ public class File implements Serializable, Comparable<File> {
     private native boolean setReadOnlyImpl(byte[] path);
 
     /**
-     * Returns the length of this File in bytes.
+     * Returns the length of this file in bytes.
      * 
-     * @return the number of bytes in the file.
-     * 
-     * @see #getPath
-     * @see java.lang.SecurityManager#checkRead(FileDescriptor)
+     * @return the number of bytes in this file.
+     * @throws java.lang.SecurityException
+     *             if a {@code SecurityManager} is installed and it denies read
+     *             access to this file.
+     * @since Android 1.0
      */
     public long length() {
         SecurityManager security = System.getSecurityManager();
@@ -852,18 +913,20 @@ public class File implements Serializable, Comparable<File> {
     private native long lengthImpl(byte[] filePath);
 
     /**
-     * Returns an array of Strings representing the file names in the directory
-     * represented by this File. If this File is not a directory the result is
-     * <code>null</code>.
+     * Returns an array of strings with the file names in the directory
+     * represented by this file. The result is {@ null} if this file is not a
+     * directory.
      * <p>
-     * The entries <code>.</code> and <code>..</code> representing current
-     * directory and parent directory are not returned as part of the list.
+     * The entries {@code .} and {@code ..} representing the current and parent
+     * directory are not returned as part of the list.
+     * </p>
      * 
-     * @return an array of Strings or <code>null</code>.
-     * 
-     * @see #getPath
+     * @return an array of strings with file names or {@code null}.
+     * @throws java.lang.SecurityException
+     *             if a {@code SecurityManager} is installed and it denies read
+     *             access to this file.
      * @see #isDirectory
-     * @see java.lang.SecurityManager#checkRead(FileDescriptor)
+     * @since Android 1.0
      */
     public java.lang.String[] list() {
         SecurityManager security = System.getSecurityManager();
@@ -885,16 +948,17 @@ public class File implements Serializable, Comparable<File> {
     }
 
     /**
-     * Returns an array of Files representing the file names in the directory
-     * represented by this File. If this File is not a directory the result is
-     * <code>null</code>. The Files returned will be absolute if this File is
-     * absolute, relative otherwise.
+     * Returns an array of files contained in the directory represented by this
+     * file. The result is {@code null} if this file is not a directory. The
+     * paths of the files in the array are absolute if the path of this file is
+     * absolute, they are relative otherwise.
      * 
-     * @return an array of Files or <code>null</code>.
-     * 
-     * @see #getPath
-     * @see #list()
-     * @see #isDirectory
+     * @return an array of files or {@code null}.
+     * @throws java.lang.SecurityException
+     *             if a {@code SecurityManager} is installed and it denies read
+     *             access to this file.
+     * @see #list
+     * @since Android 1.0
      */
     public File[] listFiles() {
         String[] tempNames = list();
@@ -910,22 +974,24 @@ public class File implements Serializable, Comparable<File> {
     }
 
     /**
-     * Returns an array of Files representing the file names in the directory
-     * represented by this File that match a specific filter. If this File is
-     * not a directory the result is <code>null</code>. If the filter is
-     * <code>null</code> then all filenames match.
+     * Gets a list of the files in the directory represented by this file. This
+     * list is then filtered through a FilenameFilter and files with matching
+     * names are returned as an array of files. Returns {@code null} if this
+     * file is not a directory. If {@code filter} is {@code null} then all
+     * filenames match.
      * <p>
-     * The entries <code>.</code> and <code>..</code> representing current
-     * directory and parent directory are not returned as part of the list.
+     * The entries {@code .} and {@code ..} representing the current and parent
+     * directories are not returned as part of the list.
+     * </p>
      * 
      * @param filter
-     *            the filter to match names to or <code>null</code>.
-     * @return an array of Files or <code>null</code>.
-     * 
+     *            the filter to match names against, may be {@code null}.
+     * @return an array of files or {@code null}.
+     * @throws java.lang.SecurityException
+     *             if a {@code SecurityManager} is installed and it denies read
+     *             access to this file.
      * @see #list(FilenameFilter filter)
-     * @see #getPath
-     * @see #isDirectory
-     * @see java.lang.SecurityManager#checkRead(FileDescriptor)
+     * @since Android 1.0
      */
     public File[] listFiles(FilenameFilter filter) {
         String[] tempNames = list(filter);
@@ -941,21 +1007,22 @@ public class File implements Serializable, Comparable<File> {
     }
 
     /**
-     * Returns an array of Files representing the file names in the directory
-     * represented by this File that match a specific filter. If this File is
-     * not a directory the result is <code>null</code>. If the filter is
-     * <code>null</code> then all filenames match.
+     * Gets a list of the files in the directory represented by this file. This
+     * list is then filtered through a FileFilter and matching files are
+     * returned as an array of files. Returns {@code null} if this file is not a
+     * directory. If {@code filter} is {@code null} then all files match.
      * <p>
-     * The entries <code>.</code> and <code>..</code> representing current
-     * directory and parent directory are not returned as part of the list.
+     * The entries {@code .} and {@code ..} representing the current and parent
+     * directories are not returned as part of the list.
+     * </p>
      * 
      * @param filter
-     *            the filter to match names to or <code>null</code>.
-     * @return an array of Files or <code>null</code>.
-     * 
-     * @see #getPath
-     * @see #isDirectory
-     * @see java.lang.SecurityManager#checkRead(FileDescriptor)
+     *            the filter to match names against, may be {@code null}.
+     * @return an array of files or {@code null}.
+     * @throws java.lang.SecurityException
+     *             if a {@code SecurityManager} is installed and it denies read
+     *             access to this file.
+     * @since Android 1.0
      */
     public File[] listFiles(FileFilter filter) {
         SecurityManager security = System.getSecurityManager();
@@ -981,21 +1048,23 @@ public class File implements Serializable, Comparable<File> {
     }
 
     /**
-     * Returns an array of Strings representing the file names in the directory
-     * represented by this File that match a specific filter. If this File is
-     * not a directory the result is <code>null</code>. If the filter is
-     * <code>null</code> then all filenames match.
+     * Gets a list of the files in the directory represented by this file. This
+     * list is then filtered through a FilenameFilter and the names of files
+     * with matching names are returned as an array of strings. Returns
+     * {@code null} if this file is not a directory. If {@code filter} is
+     * {@code null} then all filenames match.
      * <p>
-     * The entries <code>.</code> and <code>..</code> representing current
-     * directory and parent directory are not returned as part of the list.
+     * The entries {@code .} and {@code ..} representing the current and parent
+     * directories are not returned as part of the list.
+     * </p>
      * 
      * @param filter
-     *            the filter to match names to or <code>null</code>.
-     * @return an array of Strings or <code>null</code>.
-     * 
-     * @see #getPath
-     * @see #isDirectory
-     * @see java.lang.SecurityManager#checkRead(FileDescriptor)
+     *            the filter to match names against, may be {@code null}.
+     * @return an array of files or {@code null}.
+     * @throws java.lang.SecurityException
+     *             if a {@code SecurityManager} is installed and it denies read
+     *             access to this file.
+     * @since Android 1.0
      */
     public java.lang.String[] list(FilenameFilter filter) {
         SecurityManager security = System.getSecurityManager();
@@ -1024,14 +1093,16 @@ public class File implements Serializable, Comparable<File> {
     private synchronized static native byte[][] listImpl(byte[] path);
 
     /**
-     * Creates the directory named by the trailing filename of this File. Not
-     * all directories required to create this File are created.
+     * Creates the directory named by the trailing filename of this file. Does
+     * not create the complete path required to create this directory.
      * 
-     * @return <code>true</code> if the directory was created,
-     *         <code>false</code> otherwise.
-     * 
-     * @see #getPath
-     * @see java.lang.SecurityManager#checkWrite(FileDescriptor)
+     * @return {@code true} if the directory has been created, {@code false}
+     *         otherwise.
+     * @throws java.lang.SecurityException
+     *             if a {@code SecurityManager} is installed and it denies write
+     *             access for this file.
+     * @see #mkdirs
+     * @since Android 1.0
      */
     public boolean mkdir() {
         SecurityManager security = System.getSecurityManager();
@@ -1044,13 +1115,17 @@ public class File implements Serializable, Comparable<File> {
     private native boolean mkdirImpl(byte[] filePath);
 
     /**
-     * Create all the directories needed for this File. If the terminal
-     * directory already exists, answer false. If the directories were created
-     * successfully, answer <code>true</code>.
+     * Creates the directory named by the trailing filename of this file,
+     * including the complete directory path required to create this directory.
      * 
-     * @return <code>true</code> if the necessary directories were created,
-     *         <code>false</code> otherwise.
-     * 
+     * @return {@code true} if the necessary directories have been created,
+     *         {@code false} if the target directory already exists or one of
+     *         the directories can not be created.
+     * @throws java.lang.SecurityException
+     *             if a {@code SecurityManager} is installed and it denies write
+     *             access for this file.
+     * @see #mkdir
+     * @since Android 1.0
      */
     public boolean mkdirs() {
         /* If the terminal directory already exists, answer false */
@@ -1074,18 +1149,18 @@ public class File implements Serializable, Comparable<File> {
     }
 
     /**
-     * Creates the file specified by this File. If the file already exists this
-     * method returns <code>false</code>. Otherwise, if the file is created
-     * successfully, the result is <code>true</code>. An IOException will be
-     * thrown if the directory to contain this file does not exist.
+     * Creates a new, empty file on the file system according to the path
+     * information stored in this file.
      * 
-     * @return <code>true</code> if this File was created, <code>false</code>
-     *         otherwise.
-     * 
+     * @return {@code true} if the file has been created, {@code false} if it
+     *         already exists.
      * @throws IOException
-     *             if an I/O error occurs or the directory does not exist.
-     * 
-     * @see java.lang.SecurityManager#checkWrite(FileDescriptor)
+     *             if an I/O error occurs or the directory does not exist where
+     *             the file should have been created.
+     * @throws java.lang.SecurityException
+     *             if a {@code SecurityManager} is installed and it denies write
+     *             access for this file.
+     * @since Android 1.0
      */
     public boolean createNewFile() throws IOException {
         SecurityManager security = System.getSecurityManager();
@@ -1140,16 +1215,18 @@ public class File implements Serializable, Comparable<File> {
 
     /**
      * Creates an empty temporary file using the given prefix and suffix as part
-     * of the file name. If suffix is null, <code>.tmp</code> is used.
+     * of the file name. If suffix is null, {@code .tmp} is used. This method
+     * is a convenience method that calls {@link #createTempFile(String, String,
+     * File)} with the third argument being {@code null}.
      * 
      * @param prefix
-     *            the prefix to the temp file name
+     *            the prefix to the temp file name.
      * @param suffix
-     *            the suffix to the temp file name
-     * @return the temporary file
-     * 
+     *            the suffix to the temp file name.
+     * @return the temporary file.
      * @throws IOException
-     *             If an error occurs when writing the file
+     *             if an error occurs when writing the file.
+     * @since Android 1.0
      */
     public static File createTempFile(String prefix, String suffix)
             throws IOException {
@@ -1161,16 +1238,21 @@ public class File implements Serializable, Comparable<File> {
      * prefix and suffix as part of the file name.
      * 
      * @param prefix
-     *            the prefix to the temp file name
+     *            the prefix to the temp file name.
      * @param suffix
-     *            the suffix to the temp file name
+     *            the suffix to the temp file name.
      * @param directory
-     *            the location to which the temp file is to be written, or null
-     *            for the default temp location
-     * @return the temporary file
-     * 
+     *            the location to which the temp file is to be written, or
+     *            {@code null} for the default location for temporary files,
+     *            which is taken from the "java.io.tmpdir" system property. It
+     *            may be necessary to set this property to an existing, writable
+     *            directory for this method to work properly. 
+     * @return the temporary file.
+     * @throws IllegalArgumentException
+     *             if the length of {@code prefix} is less than 3.
      * @throws IOException
-     *             If an error occurs when writing the file
+     *             if an error occurs when writing the file.
+     * @since Android 1.0
      */
     public static File createTempFile(String prefix, String suffix,
             File directory) throws IOException {
@@ -1205,12 +1287,13 @@ public class File implements Serializable, Comparable<File> {
     // BEGIN android-changed
     // Removing platform independent code because we're always on linux.
     /**
-     * Answer a String representing the proper path for the receiver. If the
-     * receiver is absolute do not prepend the user.dir property, otherwise do.
+     * Returns a string representing the proper path for this file. If this file
+     * path is absolute, the user.dir property is not prepended, otherwise it
+     * is.
      * 
      * @param internal
-     *            is user.dir internal
-     * @return the proper path
+     *            is user.dir internal.
+     * @return the proper path.
      */
     byte[] properPath(boolean internal) {
         if (properPath != null) {
@@ -1237,19 +1320,22 @@ public class File implements Serializable, Comparable<File> {
         return properPath = Util.getBytes(userdir + separator + path);
     }
     // END android-changed
-    
+
+    // BEGIN android-removed
+    // private static native byte[] properPathImpl(byte[] path);
+    // END android-removed
+
     /**
-     * Renames this File to the name represented by the File <code>dest</code>.
-     * This works for both normal files and directories.
+     * Renames this file to the name represented by the {@code dest} file. This
+     * works for both normal files and directories.
      * 
      * @param dest
-     *            the File containing the new name.
-     * @return <code>true</code> if the File was renamed, <code>false</code>
-     *         otherwise.
-     * 
-     * @see #getPath
-     * @see java.lang.SecurityManager#checkRead(FileDescriptor)
-     * @see java.lang.SecurityManager#checkWrite(FileDescriptor)
+     *            the file containing the new name.
+     * @return {@code true} if the File was renamed, {@code false} otherwise.
+     * @throws java.lang.SecurityException
+     *             if a {@code SecurityManager} is installed and it denies write
+     *             access for this file or the {@code dest} file.
+     * @since Android 1.0
      */
     public boolean renameTo(java.io.File dest) {
         SecurityManager security = System.getSecurityManager();
@@ -1263,10 +1349,11 @@ public class File implements Serializable, Comparable<File> {
     private native boolean renameToImpl(byte[] pathExist, byte[] pathNew);
 
     /**
-     * Returns a string containing a concise, human-readable description of the
-     * receiver.
+     * Returns a string containing a concise, human-readable description of this
+     * file.
      * 
-     * @return a printable representation for the receiver.
+     * @return a printable representation of this file.
+     * @since Android 1.0
      */
     @Override
     public String toString() {
@@ -1274,11 +1361,12 @@ public class File implements Serializable, Comparable<File> {
     }
 
     /**
-     * Returns a <code>file</code> URI for this File. The URI is System
-     * dependent and may not be transferable between different operating/file
+     * Returns a Uniform Resource Identifier for this file. The URI is system
+     * dependent and may not be transferable between different operating / file
      * systems.
      * 
-     * @return a <code>file</code> URI for this File.
+     * @return an URI for this file.
+     * @since Android 1.0
      */
     public URI toURI() {
         String name = getAbsoluteName();
@@ -1299,14 +1387,14 @@ public class File implements Serializable, Comparable<File> {
     }
 
     /**
-     * Returns a <code>file</code> URL for this File. The URL is System
-     * dependent and may not be transferable between different operating/file
+     * Returns a Uniform Resource Locator for this file. The URL is system
+     * dependent and may not be transferable between different operating / file
      * systems.
      * 
-     * @return a <code>file</code> URL for this File.
-     * 
+     * @return an URL for this file.
      * @throws java.net.MalformedURLException
-     *             if the path cannot be transformed into an URL
+     *             if the path cannot be transformed into an URL.
+     * @since Android 1.0
      */
     public URL toURL() throws java.net.MalformedURLException {
         String name = getAbsoluteName();
@@ -1349,6 +1437,7 @@ public class File implements Serializable, Comparable<File> {
     }
 }
 
+// BEGIN android-added
 /**
  * Implements the actual DeleteOnExit mechanism. Is registered as a shutdown
  * hook in the Runtime, once it is actually being used.
@@ -1403,3 +1492,4 @@ class DeleteOnExit extends Thread {
         }
     }
 }
+// END android-added

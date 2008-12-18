@@ -20,46 +20,53 @@ package java.sql;
 import java.util.Map;
 
 /**
- * An interface which provides facilities for mapping an SQL structured type to
- * Java. The Struct object has a value for each attribute of the SQL structured
- * type
+ * An interface which provides facilities for manipulating an SQL structured type 
+ * as a Java object. The {@code Struct} object has a value for each attribute of the SQL structured
+ * type.
+ * 
+ * @since Android 1.0
  */
 public interface Struct {
 
     /**
-     * Gets the SQL Type name of the SQL structured type that this Struct
-     * represents
+     * Gets the SQL Type name of the SQL structured type that this {@code
+     * Struct} represents.
      * 
-     * @return the fully qualified name of SQL structured type
+     * @return the fully qualified name of SQL structured type.
      * @throws SQLException
-     *             if a database error occurs
+     *             if a database error occurs.
+     * @since Android 1.0
      */
     public String getSQLTypeName() throws SQLException;
 
     /**
      * Gets the values of the attributes of this SQL structured type. This
-     * method uses the type map associated with the Connection for customized
-     * type mappings. Where there is no entry in the Type Map which matches the
-     * this structured type, the JDBC driver uses the standard mapping.
+     * method uses the type map associated with the {@link Connection} for
+     * customized type mappings. Where there is no entry in the type mapping
+     * which matches this structured type, the JDBC driver uses the standard
+     * mapping.
      * 
-     * @return an Object array containing the attributes, in order
+     * @return an {@code Object} array containing the ordered attributes.
      * @throws SQLException
-     *             if a database error occurs
+     *             if a database error occurs.
+     * @since Android 1.0
      */
     public Object[] getAttributes() throws SQLException;
 
     /**
      * Gets the values of the attributes of this SQL structured type. This
-     * method uses the supplied type map for customized type mappings. Where
-     * there is no entry in the Type Map which matches the this structured type,
-     * the JDBC driver uses the default mapping. The Connection type map is
-     * never utilized by this method.
+     * method uses the supplied type mapping to determine how to map SQL types
+     * to their corresponding Java objects. In the
+     * case where there is no entry in the type mapping which matches this
+     * structured type, the JDBC driver uses the default mapping. The {@code
+     * Connection} type map is <i>never</i> utilized by this method.
      * 
      * @param theMap
      *            a Map describing how SQL Type names are mapped to classes.
-     * @return an Object array containing the attributes, in order
+     * @return an Object array containing the ordered attributes,.
      * @throws SQLException
-     *             if a database error occurs
+     *             if a database error occurs.
+     * @since Android 1.0
      */
     public Object[] getAttributes(Map<String, Class<?>> theMap)
             throws SQLException;

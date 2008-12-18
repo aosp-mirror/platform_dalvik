@@ -19,8 +19,11 @@ package java.util;
 import java.io.Serializable;
 
 /**
- * The unchecked exception will be thrown out if a conversion and flags are
- * incompatible.
+ * A {@code FormatFlagsConversionMismatchException} will be thrown if a
+ * conversion and the flags are incompatible.
+ * 
+ * @see java.lang.RuntimeException
+ * @since Android 1.0
  */
 public class FormatFlagsConversionMismatchException extends
         IllegalFormatException implements Serializable {
@@ -32,13 +35,13 @@ public class FormatFlagsConversionMismatchException extends
     private char c;
 
     /**
-     * Construct a FormatFlagsConversionMismatchException with the flags and
-     * conversion specified.
+     * Constructs a new {@code FormatFlagsConversionMismatchException} with the
+     * flags and conversion specified.
      * 
      * @param f
-     *            The flags
+     *           the flags.
      * @param c
-     *            The conversion
+     *           the conversion.
      */
     public FormatFlagsConversionMismatchException(String f, char c) {
         if (null == f) {
@@ -51,25 +54,25 @@ public class FormatFlagsConversionMismatchException extends
     /**
      * Returns the incompatible format flag.
      * 
-     * @return The incompatible format flag.
+     * @return the incompatible format flag.
      */
     public String getFlags() {
         return f;
     }
 
     /**
-     * Returns the incompatible Conversion.
+     * Returns the incompatible conversion.
      * 
-     * @return The incompatible Conversion.
+     * @return the incompatible conversion.
      */
     public char getConversion() {
         return c;
     }
 
     /**
-     * Returns the message string of the FormatFlagsConversionMismatchException.
+     * Returns the message string of the {@code FormatFlagsConversionMismatchException}.
      * 
-     * @return The message string of the FormatFlagsConversionMismatchException.
+     * @return the message string of the {@code FormatFlagsConversionMismatchException}.
      */
     @Override
     public String getMessage() {

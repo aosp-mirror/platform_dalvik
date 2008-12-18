@@ -16,6 +16,11 @@
 
 package tests.java.sql;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
@@ -30,7 +35,7 @@ import junit.extensions.TestSetup;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-
+@TestTargetClass(Statement.class)
 public class DeleteFunctionalityTest extends TestCase {
 
     private static Connection conn = null;
@@ -121,6 +126,15 @@ public class DeleteFunctionalityTest extends TestCase {
      * @tests DeleteFunctionalityTest#testDelete1(). Deletes row with no
      *        referencing ones and RESTRICT action
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Functionality test: Deletes row with no referencing ones and RESTRICT action",
+      targets = {
+        @TestTarget(
+          methodName = "execute",
+          methodArgs = {String.class}
+        )
+    })
     public void testDelete1() throws SQLException {
         DatabaseCreator.fillFKStrictTable(conn);
         statement.execute("DELETE FROM " + DatabaseCreator.PARENT_TABLE
@@ -147,6 +161,15 @@ public class DeleteFunctionalityTest extends TestCase {
      * @tests DeleteFunctionalityTest#testDelete3(). Deletes all referencing
      *        rows and then deletes referenced one
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Functionality test: Deletes all referencing rows and then deletes referenced one",
+      targets = {
+        @TestTarget(
+          methodName = "execute",
+          methodArgs = {String.class}
+        )
+    })
     public void testDelete3() throws SQLException {
         statement.execute("DELETE FROM " + DatabaseCreator.FKSTRICT_TABLE
                 + " WHERE name_id = 1;");
@@ -158,6 +181,15 @@ public class DeleteFunctionalityTest extends TestCase {
      * @tests DeleteFunctionalityTest#testDelete4(). Deletes row with no
      *        referencing ones and CASCADE action
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Functionality test: Deletes row with no referencing ones and CASCADE action",
+      targets = {
+        @TestTarget(
+          methodName = "execute",
+          methodArgs = {String.class}
+        )
+    })
     public void testDelete4() throws SQLException {
         DatabaseCreator.fillFKCascadeTable(conn);
         statement.execute("DELETE FROM " + DatabaseCreator.PARENT_TABLE
@@ -169,6 +201,21 @@ public class DeleteFunctionalityTest extends TestCase {
      *        referencing ones and CASCADE action - expecting all referencing
      *        rows will also be deleted
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Functionality test: Attempts to delete row with referencing " +
+                "ones and CASCADE action - expecting all referencing rows " +
+                "will also be deleted",
+      targets = {
+        @TestTarget(
+          methodName = "execute",
+          methodArgs = {String.class}
+        ),
+        @TestTarget(
+          methodName = "executeQuery",
+          methodArgs = {String.class}
+        )
+    })
     public void testDelete5() throws SQLException {
         statement.execute("DELETE FROM " + DatabaseCreator.PARENT_TABLE
                 + " WHERE id = 1;");
@@ -201,6 +248,15 @@ public class DeleteFunctionalityTest extends TestCase {
      * @tests DeleteFunctionalityTest#testDelete7(). Deletes rows using
      *        PreparedStatement
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Functionality test: Deletes rows using PreparedStatement",
+      targets = {
+        @TestTarget(
+          methodName = "executeQuery",
+          methodArgs = {String.class}
+        )
+    })
     public void testDelete7() throws SQLException {
         DatabaseCreator.fillTestTable5(conn);
         PreparedStatement stat = conn.prepareStatement("DELETE FROM "

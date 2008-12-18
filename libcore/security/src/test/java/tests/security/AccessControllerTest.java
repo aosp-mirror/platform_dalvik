@@ -16,6 +16,8 @@
 
 package tests.security;
 
+import dalvik.annotation.TestTargetClass;
+
 import java.lang.reflect.Field;
 import java.security.AccessController;
 import java.security.BasicPermission;
@@ -26,7 +28,7 @@ import java.security.PrivilegedAction;
 import java.security.ProtectionDomain;
 
 import junit.framework.TestCase;
-
+@TestTargetClass(AccessController.class)
 public class AccessControllerTest extends TestCase {
     
     private static void setProtectionDomain(Class c, ProtectionDomain pd){

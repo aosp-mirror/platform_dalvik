@@ -17,6 +17,11 @@
 package tests.api.java.lang.reflect;
 
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -26,6 +31,7 @@ import java.lang.reflect.WildcardType;
 /**
  * Tests bounded type parameters declared on methods and bounded wildcards.
  */
+@TestTargetClass(Method.class) 
 public class BoundedWildcardsGenericMethodsTests extends GenericReflectionTestsBase {
     @SuppressWarnings({"unchecked", "hiding"})
     static class BoundedWildcardsGenericMethods<T> {
@@ -45,6 +51,15 @@ public class BoundedWildcardsGenericMethodsTests extends GenericReflectionTestsB
     /**
      * Tests that there are is one Type Parameter on the Class itself.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check GenericSignatureFormatError.",
+      targets = {
+        @TestTarget(
+          methodName = "getTypeParameters",
+          methodArgs = {}
+        )
+    })
     public void testBoundedGenericMethods() {
         assertLenghtOne(clazz.getTypeParameters());
     }
@@ -121,27 +136,59 @@ public class BoundedWildcardsGenericMethodsTests extends GenericReflectionTestsB
 
         assertEquals(BoundedWildcardsGenericMethods.class, bound);
     }
-    
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check GenericSignatureFormatError.",
+      targets = {
+        @TestTarget(
+          methodName = "getTypeParameters",
+          methodArgs = {}
+        )
+    })
     public void testUpperBoundedParamNoReturn() throws Exception {
         Method method = clazz.getMethod("upperBoundedParamNoReturn", BoundedWildcardsGenericMethods.class);
         checkBoundedTypeParameter(method);
         checkUpperBoundedParameter(method);
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check GenericSignatureFormatError.",
+      targets = {
+        @TestTarget(
+          methodName = "getTypeParameters",
+          methodArgs = {}
+        )
+    })
     public void testLowerBoundedParamReturn() throws Exception {
         Method method = clazz.getMethod("lowerBoundedParamReturn", BoundedWildcardsGenericMethods.class);
         checkBoundedTypeParameter(method);
         checkLowerBoundedParameter(method);
         checkReturnType(method);
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check GenericSignatureFormatError.",
+      targets = {
+        @TestTarget(
+          methodName = "getTypeParameters",
+          methodArgs = {}
+        )
+    })
     public void testUpperBoundedParamReturn() throws Exception {
         Method method = clazz.getMethod("upperBoundedParamReturn", BoundedWildcardsGenericMethods.class);
         checkBoundedTypeParameter(method);
         checkUpperBoundedParameter(method);
         checkReturnType(method);
     }
-    
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "getGenericParameterTypes",
+          methodArgs = {}
+        )
+    })
     public void testLowerBoundedParamNoReturn() throws Exception {
         Method method = clazz.getMethod("lowerBoundedParamNoReturn", BoundedWildcardsGenericMethods.class);
         checkBoundedTypeParameter(method);

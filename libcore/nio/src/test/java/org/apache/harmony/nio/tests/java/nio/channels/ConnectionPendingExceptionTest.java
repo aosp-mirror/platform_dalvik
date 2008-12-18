@@ -15,6 +15,11 @@
  */
 package org.apache.harmony.nio.tests.java.nio.channels;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestLevel;
+
 import java.nio.channels.ConnectionPendingException;
 
 import junit.framework.TestCase;
@@ -24,11 +29,21 @@ import org.apache.harmony.testframework.serialization.SerializationTest;
 /**
  * Tests for ConnectionPendingException
  */
+@TestTargetClass(ConnectionPendingException.class)
 public class ConnectionPendingExceptionTest extends TestCase {
 
     /**
      * @tests serialization/deserialization compatibility.
      */
+    @TestInfo(
+              level = TestLevel.COMPLETE,
+              purpose = "Verifies serialization/deserialization compatibility.",
+              targets = {
+                @TestTarget(
+                  methodName = "!SerializationSelf",
+                  methodArgs = {}
+                )
+            })    
     public void testSerializationSelf() throws Exception {
 
         SerializationTest.verifySelf(new ConnectionPendingException());
@@ -37,6 +52,15 @@ public class ConnectionPendingExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
+    @TestInfo(
+              level = TestLevel.COMPLETE,
+              purpose = "Verifies serialization/deserialization compatibility.",
+              targets = {
+                @TestTarget(
+                  methodName = "!SerializationGolden",
+                  methodArgs = {}
+                )
+            })    
     public void testSerializationCompatibility() throws Exception {
 
         SerializationTest.verifyGolden(this, new ConnectionPendingException());

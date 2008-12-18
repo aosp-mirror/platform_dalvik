@@ -16,15 +16,21 @@
 
 package tests.security.permissions;
 
-import java.security.Permission;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
+
+import java.security.Permission;
 
 /*
  * This class tests the secrity permissions which are documented in
  * http://java.sun.com/j2se/1.5.0/docs/guide/security/permissions.html#PermsAndMethods
  * for class java.lang.Class
  */
+@TestTargetClass(java.lang.SecurityManager.class)
 public class JavaLangClassTest extends TestCase {
     
     SecurityManager old;
@@ -41,7 +47,16 @@ public class JavaLangClassTest extends TestCase {
         super.tearDown();
     }
     
-    
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies that Class.getProtectionDomain() checks " +
+            "RuntimePermission of security manager.",
+      targets = {
+        @TestTarget(
+          methodName = "checkPermission",
+          methodArgs = {java.security.Permission.class}
+        )
+    })
     public void test_getProtectionDomain () {
         class TestSecurityManager extends SecurityManager {
             boolean called;
@@ -67,7 +82,16 @@ public class JavaLangClassTest extends TestCase {
         c.getProtectionDomain();
         assertTrue("Class.getProtectionDomain() must check RuntimePermission(\"getProtectionDomain\") on security manager", s.called);
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies that forName(String,boolean,Classloader) method " +
+            "checks RuntimePermission(getClassLoader) of security manager.",
+      targets = {
+        @TestTarget(
+          methodName = "checkPermission",
+          methodArgs = {java.security.Permission.class}
+        )
+    })
     public void test_Class() throws ClassNotFoundException {
         class TestSecurityManager extends SecurityManager {
             boolean called;

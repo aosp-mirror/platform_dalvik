@@ -16,12 +16,18 @@
 
 package tests.sql;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
 
+@TestTargetClass(ResultSetMetaData.class)
 public class ResultSetMetaDataTest extends SQLTest {
 
     ResultSetMetaData rsmd = null;
@@ -54,6 +60,16 @@ public class ResultSetMetaDataTest extends SQLTest {
     /**
      * @test java.sql.ResultSetMetaData#getCatalogName(int column)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "1. SQLException checking missed. " +
+                  "2. MAX/MIN/negative/valid parameters checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getCatalogName",
+          methodArgs = {int.class}
+        )
+    })
     public void testGetCatalogName() throws SQLException {
         try {
             assertNull(rsmd.getCatalogName(0));
@@ -65,6 +81,16 @@ public class ResultSetMetaDataTest extends SQLTest {
     /**
      * @test java.sql.ResultSetMetaData#getColumnClassName(int column)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "1. SQLException checking missed. " +
+                "2. MAX/MIN/zero parameters checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getColumnClassName",
+          methodArgs = {int.class}
+        )
+    })
     public void testGetColumnClassName() {
         try {
             assertNotNull(rsmd);
@@ -93,6 +119,15 @@ public class ResultSetMetaDataTest extends SQLTest {
     /**
      * @test java.sql.ResultSetMetaData#getColumnCount()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getColumnCount",
+          methodArgs = {}
+        )
+    })
     public void testGetColumnCount() {
         try {
             assertEquals(3, rsmd.getColumnCount());
@@ -104,6 +139,16 @@ public class ResultSetMetaDataTest extends SQLTest {
     /**
      * @test java.sql.ResultSetMetaData#getColumnLabel(int column)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "1. SQLException checking missed. " +
+                "2. MAX/MIN/negative/zero parameters checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getColumnLabel",
+          methodArgs = {int.class}
+        )
+    })
     public void testGetColumnLabel() {
         String[] labels = { "zoo.id", "zoo.name", "zoo.family" };
         try {
@@ -119,6 +164,15 @@ public class ResultSetMetaDataTest extends SQLTest {
     /**
      * @test java.sql.ResultSetMetaData#getColumnName(int column)
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "getColumnLable was tested instead of getColumnName",
+      targets = {
+        @TestTarget(
+          methodName = "getColumnName",
+          methodArgs = {int.class}
+        )
+    })
     public void testGetColumnName() {
         String[] labels = { "zoo.id", "zoo.name", "zoo.family" };
         try {
@@ -148,6 +202,15 @@ public class ResultSetMetaDataTest extends SQLTest {
     /**
      * @test java.sql.ResultSetMetaData#getColumnType(int column)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "MAX/MIN/zero parameters checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getColumnType",
+          methodArgs = {int.class}
+        )
+    })
     public void testGetColumnType() {
         int[] types = { Types.SMALLINT, Types.VARCHAR, Types.VARCHAR};
         try {
@@ -176,6 +239,15 @@ public class ResultSetMetaDataTest extends SQLTest {
     /**
      * @test java.sql.ResultSetMetaData#getColumnTypeName(int column)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "MAX/MIN/zero parameters checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getColumnTypeName",
+          methodArgs = {int.class}
+        )
+    })
     public void testGetColumnTypeName() {
         try {
             assertEquals("smallint", rsmd.getColumnTypeName(1));
@@ -202,6 +274,15 @@ public class ResultSetMetaDataTest extends SQLTest {
     /**
      * @test java.sql.ResultSetMetaData#getTableName(int column)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "MAX/MIN/zero parameters checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getTableName",
+          methodArgs = {int.class}
+        )
+    })
     public void testGetTableName() {
         try {
             assertEquals("zoo", rsmd.getTableName(1));

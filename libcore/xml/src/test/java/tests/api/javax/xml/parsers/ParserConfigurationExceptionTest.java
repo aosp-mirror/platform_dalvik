@@ -16,15 +16,30 @@
 
 package tests.api.javax.xml.parsers;
 
-import javax.xml.parsers.ParserConfigurationException;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
 
+import javax.xml.parsers.ParserConfigurationException;
+
+@TestTargetClass(ParserConfigurationException.class) 
 public class ParserConfigurationExceptionTest extends TestCase{
 
     /**
      * @tests javax.xml.parsers.ParserConfigurationException#ParserConfigurationException()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "ParserConfigurationException",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         ParserConfigurationException pce = new ParserConfigurationException();
         assertNull(pce.getMessage());
@@ -36,6 +51,15 @@ public class ParserConfigurationExceptionTest extends TestCase{
      * @tests javax.xml.parsers.ParserConfigurationException
      *     #ParserConfigurationException(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "ParserConfigurationException",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() {
         ParserConfigurationException pce =
             new ParserConfigurationException("fixture");

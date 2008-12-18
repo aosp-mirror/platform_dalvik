@@ -16,14 +16,29 @@
  */
 package org.apache.harmony.text.tests.java.text;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.text.DateFormat;
 import java.text.FieldPosition;
 
+@TestTargetClass(FieldPosition.class) 
 public class FieldPositionTest extends junit.framework.TestCase {
 
     /**
      * @tests java.text.FieldPosition#FieldPosition(int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "FieldPosition",
+          methodArgs = {int.class}
+        )
+    })
     public void test_ConstructorI() {
         // Test for constructor java.text.FieldPosition(int)
         FieldPosition fpos = new FieldPosition(DateFormat.MONTH_FIELD);
@@ -36,6 +51,15 @@ public class FieldPositionTest extends junit.framework.TestCase {
     /**
      * @tests java.text.FieldPosition#FieldPosition(java.text.Format$Field)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "FieldPosition",
+          methodArgs = {java.text.Format.Field.class}
+        )
+    })
     public void test_ConstructorLjava_text_Format$Field() {
         // Test for constructor java.text.FieldPosition(Format.Field)
         FieldPosition fpos = new FieldPosition(DateFormat.Field.MONTH);
@@ -48,6 +72,15 @@ public class FieldPositionTest extends junit.framework.TestCase {
     /**
      * @tests java.text.FieldPosition#FieldPosition(java.text.Format$Field, int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "FieldPosition",
+          methodArgs = {java.text.Format.Field.class, int.class}
+        )
+    })
     public void test_ConstructorLjava_text_Format$FieldI() {
         // Test for constructor java.text.FieldPosition(Format.Field, int)
         FieldPosition fpos = new FieldPosition(DateFormat.Field.MONTH,
@@ -76,6 +109,15 @@ public class FieldPositionTest extends junit.framework.TestCase {
     /**
      * @tests java.text.FieldPosition#equals(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "equals",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_equalsLjava_lang_Object() {
         // Test for method boolean
         // java.text.FieldPosition.equals(java.lang.Object)
@@ -107,6 +149,15 @@ public class FieldPositionTest extends junit.framework.TestCase {
     /**
      * @tests java.text.FieldPosition#getBeginIndex()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getBeginIndex",
+          methodArgs = {}
+        )
+    })
     public void test_getBeginIndex() {
         // Test for method int java.text.FieldPosition.getBeginIndex()
         FieldPosition fpos = new FieldPosition(1);
@@ -119,6 +170,15 @@ public class FieldPositionTest extends junit.framework.TestCase {
     /**
      * @tests java.text.FieldPosition#getEndIndex()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getEndIndex",
+          methodArgs = {}
+        )
+    })
     public void test_getEndIndex() {
         // Test for method int java.text.FieldPosition.getEndIndex()
         FieldPosition fpos = new FieldPosition(1);
@@ -131,6 +191,15 @@ public class FieldPositionTest extends junit.framework.TestCase {
     /**
      * @tests java.text.FieldPosition#getField()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getField",
+          methodArgs = {}
+        )
+    })
     public void test_getField() {
         // Test for method int java.text.FieldPosition.getField()
         FieldPosition fpos = new FieldPosition(65);
@@ -146,6 +215,15 @@ public class FieldPositionTest extends junit.framework.TestCase {
     /**
      * @tests java.text.FieldPosition#getFieldAttribute()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getFieldAttribute",
+          methodArgs = {}
+        )
+    })
     public void test_getFieldAttribute() {
         // Test for method int java.text.FieldPosition.getFieldAttribute()
         FieldPosition fpos = new FieldPosition(DateFormat.Field.TIME_ZONE);
@@ -162,6 +240,15 @@ public class FieldPositionTest extends junit.framework.TestCase {
     /**
      * @tests java.text.FieldPosition#hashCode()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "hashCode",
+          methodArgs = {}
+        )
+    })
     public void test_hashCode() {
         // Test for method int java.text.FieldPosition.hashCode()
         FieldPosition fpos = new FieldPosition(1);
@@ -180,6 +267,15 @@ public class FieldPositionTest extends junit.framework.TestCase {
     /**
      * @tests java.text.FieldPosition#setBeginIndex(int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify boundary values for the field type.",
+      targets = {
+        @TestTarget(
+          methodName = "setBeginIndex",
+          methodArgs = {int.class}
+        )
+    })
     public void test_setBeginIndexI() {
         // Test for method void java.text.FieldPosition.setBeginIndex(int)
         FieldPosition fpos = new FieldPosition(1);
@@ -192,6 +288,15 @@ public class FieldPositionTest extends junit.framework.TestCase {
     /**
      * @tests java.text.FieldPosition#setEndIndex(int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify boundary values for the field type.",
+      targets = {
+        @TestTarget(
+          methodName = "setEndIndex",
+          methodArgs = {int.class}
+        )
+    })
     public void test_setEndIndexI() {
         // Test for method void java.text.FieldPosition.setEndIndex(int)
         FieldPosition fpos = new FieldPosition(1);
@@ -204,6 +309,15 @@ public class FieldPositionTest extends junit.framework.TestCase {
     /**
      * @tests java.text.FieldPosition#toString()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public void test_toString() {
         // Test for method java.lang.String java.text.FieldPosition.toString()
         FieldPosition fpos = new FieldPosition(1);

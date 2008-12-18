@@ -1,2 +1,2 @@
-HANDLE_OP_X_INT_LIT16(OP_AND_INT_LIT16, "and", (s4), &, false)
+HANDLE_OP_X_INT_LIT16(OP_AND_INT_LIT16, "and", &, 0)
 OP_END

@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Dalvik classfile verification.  This file contains the verifier entry
  * points and the static constraint checks.
@@ -36,8 +37,6 @@ static bool setTryFlags(const Method* meth, InsnFlags* insnFlags);
 static bool verifyMethod(Method* meth, int verifyFlags);
 static bool verifyInstructions(const Method* meth, InsnFlags* insnFlags,
     int verifyFlags);
-static bool checkNewInstance(const Method* meth, int insnIdx);
-static bool checkNewArray(const Method* meth, int insnIdx);
 
 
 /*
@@ -90,7 +89,7 @@ bool dvmVerifyAllClasses(DexFile* pDexFile)
         const DexClassDef* pClassDef;
         const char* classDescriptor;
         ClassObject* clazz;
-        
+
         pClassDef = dexGetClassDef(pDexFile, idx);
         classDescriptor = dexStringByTypeIdx(pDexFile, pClassDef->classIdx);
 
@@ -197,7 +196,17 @@ static bool verifyMethod(Method* meth, int verifyFlags)
 
         goto success;
     }
-        
+
+    /*
+     * Sanity-check the register counts.  ins + locals = registers, so make
+     * sure that ins <= registers.
+     */
+    if (meth->insSize > meth->registersSize) {
+        LOG_VFY_METH(meth, "VFY: bad register counts (ins=%d regs=%d)\n",
+            meth->insSize, meth->registersSize);
+        goto bail;
+    }
+
     /*
      * Allocate and populate an array to hold instruction data.
      *
@@ -281,16 +290,14 @@ static bool computeCodeWidths(const Method* meth, InsnFlags* insnFlags,
         int width;
 
         /*
-         * Switch tables are identified with "extended NOP" opcodes.  They
-         * contain no executable code, so we can just skip past them.
+         * Switch tables and array data tables are identified with
+         * "extended NOP" opcodes.  They contain no executable code,
+         * so we can just skip past them.
          */
         if (*insns == kPackedSwitchSignature) {
             width = 4 + insns[1] * 2;
         } else if (*insns == kSparseSwitchSignature) {
             width = 2 + insns[1] * 4;
-        /*
-         * Array data table is identified with similar extended NOP opcode.
-         */
         } else if (*insns == kArrayDataSignature) {
             u4 size = insns[2] | (((u4)insns[3]) << 16);
             width = 4 + (insns[1] * size + 1) / 2;
@@ -396,7 +403,7 @@ static bool setTryFlags(const Method* meth, InsnFlags* insnFlags)
         for (;;) {
             DexCatchHandler* handler = dexCatchIteratorNext(&iterator);
             u4 addr;
-            
+
             if (handler == NULL) {
                 break;
             }
@@ -408,7 +415,7 @@ static bool setTryFlags(const Method* meth, InsnFlags* insnFlags)
                     addr);
                 return false;
             }
-        
+
             dvmInsnSetBranchTarget(insnFlags, addr, true);
         }
 
@@ -481,7 +488,7 @@ static bool checkSwitchTargets(const Method* meth, InsnFlags* insnFlags,
     /* for a sparse switch, verify the keys are in ascending order */
     if (offsetToKeys > 0 && switchCount > 1) {
         s4 lastKey;
-        
+
         lastKey = switchInsns[offsetToKeys] |
                   (switchInsns[offsetToKeys+1] << 16);
         for (targ = 1; targ < switchCount; targ++) {
@@ -625,6 +632,162 @@ static bool checkBranchTarget(const Method* meth, InsnFlags* insnFlags,
     return true;
 }
 
+
+/*
+ * Decode the current instruction.
+ */
+static void decodeInstruction(const Method* meth, int insnIdx,
+    DecodedInstruction* pDecInsn)
+{
+    dexDecodeInstruction(gDvm.instrFormat, meth->insns + insnIdx, pDecInsn);
+}
+
+
+/*
+ * Perform static checks on a "new-instance" instruction.  Specifically,
+ * make sure the class reference isn't for an array class.
+ *
+ * We don't need the actual class, just a pointer to the class name.
+ */
+static bool checkNewInstance(const Method* meth, int insnIdx)
+{
+    DexFile* pDexFile = meth->clazz->pDvmDex->pDexFile;
+    DecodedInstruction decInsn;
+    const char* classDescriptor;
+
+    decodeInstruction(meth, insnIdx, &decInsn);
+    classDescriptor = dexStringByTypeIdx(pDexFile, decInsn.vB); // 2nd item
+
+    if (classDescriptor[0] != 'L') {
+        LOG_VFY_METH(meth, "VFY: can't call new-instance on type '%s'\n",
+            classDescriptor);
+        return false;
+    }
+
+    return true;
+}
+
+/*
+ * Perform static checks on a "new-array" instruction.  Specifically, make
+ * sure they aren't creating an array of arrays that causes the number of
+ * dimensions to exceed 255.
+ */
+static bool checkNewArray(const Method* meth, int insnIdx)
+{
+    DexFile* pDexFile = meth->clazz->pDvmDex->pDexFile;
+    DecodedInstruction decInsn;
+    const char* classDescriptor;
+
+    decodeInstruction(meth, insnIdx, &decInsn);
+    classDescriptor = dexStringByTypeIdx(pDexFile, decInsn.vC); // 3rd item
+
+    int bracketCount = 0;
+    const char* cp = classDescriptor;
+    while (*cp++ == '[')
+        bracketCount++;
+
+    if (bracketCount == 0) {
+        /* The given class must be an array type. */
+        LOG_VFY_METH(meth, "VFY: can't new-array class '%s' (not an array)\n",
+            classDescriptor);
+        return false;
+    } else if (bracketCount > 255) {
+        /* It is illegal to create an array of more than 255 dimensions. */
+        LOG_VFY_METH(meth, "VFY: can't new-array class '%s' (exceeds limit)\n",
+            classDescriptor);
+        return false;
+    }
+
+    return true;
+}
+
+/*
+ * Perform static checks on an instruction that takes a class constant.
+ * Ensure that the class index is in the valid range.
+ */
+static bool checkTypeIndex(const Method* meth, int insnIdx, bool useB)
+{
+    DvmDex* pDvmDex = meth->clazz->pDvmDex;
+    DecodedInstruction decInsn;
+    u4 idx;
+
+    decodeInstruction(meth, insnIdx, &decInsn);
+    if (useB)
+        idx = decInsn.vB;
+    else
+        idx = decInsn.vC;
+    if (idx >= pDvmDex->pHeader->typeIdsSize) {
+        LOG_VFY_METH(meth, "VFY: bad type index %d (max %d)\n",
+            idx, pDvmDex->pHeader->typeIdsSize);
+        return false;
+    }
+
+    return true;
+}
+
+/*
+ * Perform static checks on a field get or set instruction.  All we do
+ * here is ensure that the field index is in the valid range.
+ */
+static bool checkFieldIndex(const Method* meth, int insnIdx, bool useB)
+{
+    DvmDex* pDvmDex = meth->clazz->pDvmDex;
+    DecodedInstruction decInsn;
+    u4 idx;
+
+    decodeInstruction(meth, insnIdx, &decInsn);
+    if (useB)
+        idx = decInsn.vB;
+    else
+        idx = decInsn.vC;
+    if (idx >= pDvmDex->pHeader->fieldIdsSize) {
+        LOG_VFY_METH(meth,
+            "VFY: bad field index %d (max %d) at offset 0x%04x\n",
+            idx, pDvmDex->pHeader->fieldIdsSize, insnIdx);
+        return false;
+    }
+
+    return true;
+}
+
+/*
+ * Perform static checks on a method invocation instruction.  All we do
+ * here is ensure that the method index is in the valid range.
+ */
+static bool checkMethodIndex(const Method* meth, int insnIdx)
+{
+    DvmDex* pDvmDex = meth->clazz->pDvmDex;
+    DecodedInstruction decInsn;
+
+    decodeInstruction(meth, insnIdx, &decInsn);
+    if (decInsn.vB >= pDvmDex->pHeader->methodIdsSize) {
+        LOG_VFY_METH(meth, "VFY: bad method index %d (max %d)\n",
+            decInsn.vB, pDvmDex->pHeader->methodIdsSize);
+        return false;
+    }
+
+    return true;
+}
+
+/*
+ * Perform static checks on a string constant instruction.  All we do
+ * here is ensure that the string index is in the valid range.
+ */
+static bool checkStringIndex(const Method* meth, int insnIdx)
+{
+    DvmDex* pDvmDex = meth->clazz->pDvmDex;
+    DecodedInstruction decInsn;
+
+    decodeInstruction(meth, insnIdx, &decInsn);
+    if (decInsn.vB >= pDvmDex->pHeader->stringIdsSize) {
+        LOG_VFY_METH(meth, "VFY: bad string index %d (max %d)\n",
+            decInsn.vB, pDvmDex->pHeader->stringIdsSize);
+        return false;
+    }
+
+    return true;
+}
+
 /*
  * Perform static verification on instructions.
  *
@@ -659,6 +822,10 @@ static bool checkBranchTarget(const Method* meth, InsnFlags* insnFlags,
  *   end at the start of an instruction (end can be at the end of the code)
  * - (earlier) for each exception handler, the handler must start at a valid
  *   instruction
+ *
+ * TODO: move some of the "CF" items in here for better performance (the
+ * code-flow analysis sometimes has to process the same instruction several
+ * times).
  */
 static bool verifyInstructions(const Method* meth, InsnFlags* insnFlags,
     int verifyFlags)
@@ -678,6 +845,22 @@ static bool verifyInstructions(const Method* meth, InsnFlags* insnFlags,
             /* plain no-op or switch table data; nothing to do here */
             break;
 
+        case OP_CONST_STRING:
+        case OP_CONST_STRING_JUMBO:
+            if (!checkStringIndex(meth, i))
+                return false;
+            break;
+
+        case OP_CONST_CLASS:
+        case OP_CHECK_CAST:
+            if (!checkTypeIndex(meth, i, true))
+                return false;
+            break;
+        case OP_INSTANCE_OF:
+            if (!checkTypeIndex(meth, i, false))
+                return false;
+            break;
+
         case OP_PACKED_SWITCH:
         case OP_SPARSE_SWITCH:
             /* verify the associated table */
@@ -690,7 +873,7 @@ static bool verifyInstructions(const Method* meth, InsnFlags* insnFlags,
             if (!checkArrayData(meth, i))
                 return false;
             break;
-            
+
         case OP_GOTO:
         case OP_GOTO_16:
         case OP_IF_EQ:
@@ -722,6 +905,67 @@ static bool verifyInstructions(const Method* meth, InsnFlags* insnFlags,
 
         case OP_NEW_ARRAY:
             if (!checkNewArray(meth, i))
+                return false;
+            break;
+
+        case OP_FILLED_NEW_ARRAY:
+            if (!checkTypeIndex(meth, i, false))
+                return false;
+            break;
+        case OP_FILLED_NEW_ARRAY_RANGE:
+            if (!checkTypeIndex(meth, i, true))
+                return false;
+            break;
+
+        case OP_IGET:
+        case OP_IGET_WIDE:
+        case OP_IGET_OBJECT:
+        case OP_IGET_BOOLEAN:
+        case OP_IGET_BYTE:
+        case OP_IGET_CHAR:
+        case OP_IGET_SHORT:
+        case OP_IPUT:
+        case OP_IPUT_WIDE:
+        case OP_IPUT_OBJECT:
+        case OP_IPUT_BOOLEAN:
+        case OP_IPUT_BYTE:
+        case OP_IPUT_CHAR:
+        case OP_IPUT_SHORT:
+            /* check the field index */
+            if (!checkFieldIndex(meth, i, false))
+                return false;
+            break;
+        case OP_SGET:
+        case OP_SGET_WIDE:
+        case OP_SGET_OBJECT:
+        case OP_SGET_BOOLEAN:
+        case OP_SGET_BYTE:
+        case OP_SGET_CHAR:
+        case OP_SGET_SHORT:
+        case OP_SPUT:
+        case OP_SPUT_WIDE:
+        case OP_SPUT_OBJECT:
+        case OP_SPUT_BOOLEAN:
+        case OP_SPUT_BYTE:
+        case OP_SPUT_CHAR:
+        case OP_SPUT_SHORT:
+            /* check the field index */
+            if (!checkFieldIndex(meth, i, true))
+                return false;
+            break;
+
+        case OP_INVOKE_VIRTUAL:
+        case OP_INVOKE_SUPER:
+        case OP_INVOKE_DIRECT:
+        case OP_INVOKE_STATIC:
+        case OP_INVOKE_INTERFACE:
+        case OP_INVOKE_VIRTUAL_RANGE:
+        case OP_INVOKE_SUPER_RANGE:
+        case OP_INVOKE_DIRECT_RANGE:
+        case OP_INVOKE_STATIC_RANGE:
+        case OP_INVOKE_INTERFACE_RANGE:
+            /* check the method index */
+            if (!checkMethodIndex(meth, i))
                 return false;
             break;
 
@@ -758,64 +1002,6 @@ static bool verifyInstructions(const Method* meth, InsnFlags* insnFlags,
         LOG_VFY_METH(meth,
             "VFY: code did not end when expected (end at %d, count %d)\n",
             i, insnCount);
-        return false;
-    }
-
-    return true;
-}
-
-/*
- * Perform static checks on a "new-instance" instruction.  Specifically,
- * make sure the class reference isn't for an array class.
- *
- * We don't need the actual class, just a pointer to the class name.
- */
-static bool checkNewInstance(const Method* meth, int insnIdx)
-{
-    DexFile* pDexFile = meth->clazz->pDvmDex->pDexFile;
-    DecodedInstruction decInsn;
-    const char* classDescriptor;
-
-    dexDecodeInstruction(gDvm.instrFormat, meth->insns + insnIdx, &decInsn);
-    classDescriptor = dexStringByTypeIdx(pDexFile, decInsn.vB); // 2nd item
-
-    if (classDescriptor[0] != 'L') {
-        LOG_VFY_METH(meth, "VFY: can't call new-instance on type '%s'\n",
-            classDescriptor);
-        return false;
-    }
-
-    return true;
-}
-
-/*
- * Perform static checks on a "new-array" instruction.  Specifically, make
- * sure they aren't creating an array of arrays that causes the number of
- * dimensions to exceed 255.
- */
-static bool checkNewArray(const Method* meth, int insnIdx)
-{
-    DexFile* pDexFile = meth->clazz->pDvmDex->pDexFile;
-    DecodedInstruction decInsn;
-    const char* classDescriptor;
-
-    dexDecodeInstruction(gDvm.instrFormat, meth->insns + insnIdx, &decInsn);
-    classDescriptor = dexStringByTypeIdx(pDexFile, decInsn.vC); // 3rd item
-
-    int bracketCount = 0;
-    const char* cp = classDescriptor;
-    while (*cp++ == '[')
-        bracketCount++;
-
-    if (bracketCount == 0) {
-        /* The given class must be an array type. */
-        LOG_VFY_METH(meth, "VFY: can't new-array class '%s' (not an array)\n",
-            classDescriptor);
-        return false;
-    } else if (bracketCount > 255) {
-        /* It is illegal to create an array of more than 255 dimensions. */
-        LOG_VFY_METH(meth, "VFY: can't new-array class '%s' (exceeds limit)\n",
-            classDescriptor);
         return false;
     }
 

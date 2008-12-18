@@ -16,16 +16,30 @@
 
 package org.apache.harmony.luni.tests.java.io;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.io.File;
 import java.io.FileInputStream;
 
 import junit.framework.TestCase;
-
+@TestTargetClass(FileInputStream.class)
 public class FileInputStreamTest extends TestCase {
 
     /**
      * @tests java.io.FileInputStream#read(byte[], int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Checking NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {byte[].class, int.class, int.class}
+        )
+    })
     public void test_read$BII() throws Exception {
         // Regression test for HARMONY-285
         File file = new File("FileInputStream.tmp");

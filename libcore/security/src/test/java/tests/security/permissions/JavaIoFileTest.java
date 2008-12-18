@@ -16,18 +16,24 @@
 
 package tests.security.permissions;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
+import junit.framework.TestCase;
+
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FilenameFilter;
 import java.io.IOException;
-
-import junit.framework.TestCase;
 
 /*
  * This class tests the secrity permissions which are documented in
  * http://java.sun.com/j2se/1.5.0/docs/guide/security/permissions.html#PermsAndMethods
  * for class java.io.File.
  */
+@TestTargetClass(SecurityManager.class)
 public class JavaIoFileTest extends TestCase {
     
     SecurityManager old;
@@ -44,7 +50,16 @@ public class JavaIoFileTest extends TestCase {
         super.tearDown();
     }
     
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies that File.delete and File.deleteOnExit methods " +
+            "call checkDelete method of security manager.",
+      targets = {
+        @TestTarget(
+          methodName = "checkDelete",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_File1() throws IOException {
         class TestSecurityManager extends SecurityManager {
             boolean called;
@@ -83,7 +98,18 @@ public class JavaIoFileTest extends TestCase {
         assertEquals("Argument of checkDelete is not correct", filename, s.filename);
     }
     
-    
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies that File.exists(), File.canRead(), File.isFile(), " +
+            "File.isDirectory(), File.isHidden(), File.lastModified(), " +
+            "File.length(), File.list(...), File.listFiles(...) methods " +
+            "call  checkRead method of security manager.",
+      targets = {
+        @TestTarget(
+          methodName = "checkRead",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_File2() throws IOException {
         class TestSecurityManager extends SecurityManager {
             boolean called;
@@ -170,7 +196,16 @@ public class JavaIoFileTest extends TestCase {
         assertEquals("Argument of checkRead is not correct", filename, s.file);
     }
 
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies that write/create methods of File class call " +
+            "checkWrite method of security manager.",
+      targets = {
+        @TestTarget(
+          methodName = "checkWrite",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_File3() throws IOException {
         class TestSecurityManager extends SecurityManager {
             boolean called;

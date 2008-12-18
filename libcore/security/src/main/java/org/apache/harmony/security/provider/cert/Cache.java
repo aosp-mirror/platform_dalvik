@@ -138,25 +138,25 @@ public class Cache {
         cache = new Object[cache_size];
     }
 
-// BEGIN android-removed
-//    /**
-//     * Creates the Cache object of size of 900.
-//     * @param pref_size specifies how many leading/trailing bytes of object's
-//     * encoded form will be used for hash computation
-//     */
-//    public Cache(int pref_size) {
-//        this(pref_size, 900);
-//    }
-//
-//    /**
-//     * Creates the Cache object of size of 900.
-//     */
-//    public Cache() {
-//        this(28, 900);
-//    }
-// END android-removed
+    // BEGIN android-removed
+    // /**
+    //  * Creates the Cache object of size of 900.
+    //  * @param pref_size specifies how many leading/trailing bytes of object's
+    //  * encoded form will be used for hash computation
+    //  */
+    // public Cache(int pref_size) {
+    //     this(pref_size, 900);
+    // }
+    //
+    // /**
+    //  * Creates the Cache object of size of 900.
+    //  */
+    // public Cache() {
+    //     this(28, 900);
+    // }
+    // END android-removed
 
-// BEGIN android-added
+    // BEGIN android-added
    /**
      * Creates the Cache object of size of 9.
      * @param pref_size specifies how many leading/trailing bytes of object's
@@ -172,7 +172,7 @@ public class Cache {
     public Cache() {
         this(28, 9);
     }
-// END android-added
+    // END android-added
     
     /**
      * Returns the hash code for the array. This code is used to

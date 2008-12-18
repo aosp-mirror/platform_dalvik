@@ -17,15 +17,29 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import junit.framework.TestCase;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
 
+import junit.framework.TestCase;
 import org.apache.harmony.testframework.serialization.SerializationTest;
 
+@TestTargetClass(UnsupportedOperationException.class) 
 public class UnsupportedOperationExceptionTest extends TestCase {
 
     /**
      * @tests java.lang.UnsupportedOperationException#UnsupportedOperationException()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "UnsupportedOperationException",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         UnsupportedOperationException e = new UnsupportedOperationException();
         assertNull(e.getMessage());
@@ -36,6 +50,15 @@ public class UnsupportedOperationExceptionTest extends TestCase {
     /**
      * @tests java.lang.UnsupportedOperationException#UnsupportedOperationException(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "UnsupportedOperationException",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() {
         UnsupportedOperationException e = new UnsupportedOperationException("fixture");
         assertEquals("fixture", e.getMessage());
@@ -45,6 +68,15 @@ public class UnsupportedOperationExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization.
      */
+    @TestInfo(
+       level = TestLevel.COMPLETE,
+       purpose = "Verifies serialization/deserialization compatibility.",
+       targets = {
+              @TestTarget(
+                methodName = "!SerializationSelf",
+                methodArgs = {}
+              )
+    })    
     public void testSerializationSelf() throws Exception {
 
         SerializationTest.verifySelf(new UnsupportedOperationException());
@@ -53,6 +85,15 @@ public class UnsupportedOperationExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Verifies serialization/deserialization compatibility.",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationGolden",
+          methodArgs = {}
+        )
+    })
     public void testSerializationCompatibility() throws Exception {
 
         SerializationTest.verifyGolden(this,

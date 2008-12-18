@@ -22,6 +22,11 @@
 
 package org.apache.harmony.security.tests.java.security;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+
 import java.security.Timestamp;
 import java.security.cert.CertPath;
 import java.util.Date;
@@ -29,7 +34,7 @@ import java.util.Date;
 import org.apache.harmony.security.tests.support.cert.MyCertPath;
 
 import junit.framework.TestCase;
-
+@TestTargetClass(Timestamp.class)
 /**
  * Tests for <code>Timestamp</code> class fields and methods
  * 
@@ -47,6 +52,15 @@ public class TimestampTest extends TestCase {
 
     private CertPath cpath = new MyCertPath(encoding);
 
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Non null parameters checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "Timestamp",
+          methodArgs = {Date.class, CertPath.class}
+        )
+    })
     public void testTimestamp() {
         try {
             new Timestamp(null, cpath);
@@ -65,6 +79,15 @@ public class TimestampTest extends TestCase {
     /*
      * Class under test for boolean equals(Object)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "equals",
+          methodArgs = {Object.class}
+        )
+    })
     public void testEqualsObject() {
         Timestamp one = new Timestamp(now, cpath);
         Timestamp two = new Timestamp(now, cpath);
@@ -80,10 +103,28 @@ public class TimestampTest extends TestCase {
         assertTrue(two1.equals(two1));
     }
 
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getSignerCertPath",
+          methodArgs = {}
+        )
+    })
     public void testGetSignerCertPath() {
         assertSame(new Timestamp(now, cpath).getSignerCertPath(), cpath);
     }
 
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getTimestamp",
+          methodArgs = {}
+        )
+    })
     public void testGetTimestamp() {
         Timestamp t = new Timestamp(now, cpath);
         assertEquals(now, t.getTimestamp());
@@ -93,6 +134,15 @@ public class TimestampTest extends TestCase {
     /*
      * Class under test for String toString()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Test result is not verivied",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public void testToString() {
         new Timestamp(now, cpath).toString();
     }
@@ -100,6 +150,15 @@ public class TimestampTest extends TestCase {
     /*
      * Class under test for String hashCode()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "hashCode",
+          methodArgs = {}
+        )
+    })
     public void testHashCode() {
         Timestamp one = new Timestamp(now, cpath);
         Timestamp two = new Timestamp(now, cpath);

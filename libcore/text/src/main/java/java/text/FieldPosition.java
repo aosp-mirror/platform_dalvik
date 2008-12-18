@@ -18,7 +18,20 @@
 package java.text;
 
 /**
- * FieldPosition is used to identify fields in formatted Strings.
+ * Identifies fields in formatted strings. If a {@code FieldPosition} is passed
+ * to the format method with such a parameter, then the indices will be set to
+ * the start and end indices of the field in the formatted string.
+ * <p>
+ * A {@code FieldPosition} can be created by using the integer constants in the
+ * various format classes (for example {@code NumberFormat.INTEGER_FIELD}) or
+ * one of the fields of type {@code Format.Field}.
+ * </p>
+ * <p>
+ * If more than one field information is needed, the method
+ * {@link NumberFormat#formatToCharacterIterator(Object)} should be used.
+ * </p>
+ * 
+ * @since Android 1.0
  */
 public class FieldPosition {
 
@@ -27,20 +40,23 @@ public class FieldPosition {
     private Format.Field myAttribute;
 
     /**
-     * Constructs a new FieldPosition on the specified field.
+     * Constructs a new {@code FieldPosition} for the specified field.
      * 
      * @param field
-     *            the field to identify
+     *            the field to identify.
+     * @since Android 1.0
      */
     public FieldPosition(int field) {
         myField = field;
     }
 
     /**
-     * Constructs a new FieldPosition on the specified Field attribute.
+     * Constructs a new {@code FieldPosition} for the specified {@code Field}
+     * attribute.
      * 
      * @param attribute
-     *            the field attribute to identify
+     *            the field attribute to identify.
+     * @since Android 1.0
      */
     public FieldPosition(Format.Field attribute) {
         myAttribute = attribute;
@@ -48,13 +64,14 @@ public class FieldPosition {
     }
 
     /**
-     * Constructs a new FieldPosition on the specified Field attribute and field
-     * id.
+     * Constructs a new {@code FieldPosition} for the specified {@code Field}
+     * attribute and field id.
      * 
      * @param attribute
-     *            the field attribute to identify
+     *            the field attribute to identify.
      * @param field
-     *            the field to identify
+     *            the field to identify.
+     * @since Android 1.0
      */
     public FieldPosition(Format.Field attribute, int field) {
         myAttribute = attribute;
@@ -66,16 +83,16 @@ public class FieldPosition {
     }
 
     /**
-     * Compares the specified object to this FieldPosition and answer if they
-     * are equal. The object must be an instance of FieldPosition with the same
-     * field, begin index and end index.
+     * Compares the specified object to this field position and indicates if
+     * they are equal. In order to be equal, {@code object} must be an instance
+     * of {@code FieldPosition} with the same field, begin index and end index.
      * 
      * @param object
-     *            the object to compare with this object
-     * @return true if the specified object is equal to this fieldPosition,
-     *         false otherwise
-     * 
+     *            the object to compare with this object.
+     * @return {@code true} if the specified object is equal to this field
+     *         position; {@code false} otherwise.
      * @see #hashCode
+     * @since Android 1.0
      */
     @Override
     public boolean equals(Object object) {
@@ -90,7 +107,8 @@ public class FieldPosition {
     /**
      * Returns the index of the beginning of the field.
      * 
-     * @return the first index of the field
+     * @return the first index of the field.
+     * @since Android 1.0
      */
     public int getBeginIndex() {
         return beginIndex;
@@ -99,7 +117,8 @@ public class FieldPosition {
     /**
      * Returns the index one past the end of the field.
      * 
-     * @return one past the index of the last character in the field
+     * @return one past the index of the last character in the field.
+     * @since Android 1.0
      */
     public int getEndIndex() {
         return endIndex;
@@ -108,7 +127,8 @@ public class FieldPosition {
     /**
      * Returns the field which is being identified.
      * 
-     * @return the field
+     * @return the field constant.
+     * @since Android 1.0
      */
     public int getField() {
         return myField;
@@ -117,20 +137,13 @@ public class FieldPosition {
     /**
      * Returns the attribute which is being identified.
      * 
-     * @return the field
+     * @return the field.
+     * @since Android 1.0
      */
     public Format.Field getFieldAttribute() {
         return myAttribute;
     }
 
-    /**
-     * Returns an integer hash code for the receiver. Objects which are equal
-     * answer the same value for this method.
-     * 
-     * @return the receiver's hash
-     * 
-     * @see #equals
-     */
     @Override
     public int hashCode() {
         int attributeHash = (myAttribute == null) ? 0 : myAttribute.hashCode();
@@ -141,7 +154,8 @@ public class FieldPosition {
      * Sets the index of the beginning of the field.
      * 
      * @param index
-     *            the index of the first character in the field
+     *            the index of the first character in the field.
+     * @since Android 1.0
      */
     public void setBeginIndex(int index) {
         beginIndex = index;
@@ -151,16 +165,18 @@ public class FieldPosition {
      * Sets the index of the end of the field.
      * 
      * @param index
-     *            one past the index of the last character in the field
+     *            one past the index of the last character in the field.
+     * @since Android 1.0
      */
     public void setEndIndex(int index) {
         endIndex = index;
     }
 
     /**
-     * Returns the string representation of this FieldPosition.
+     * Returns the string representation of this field position.
      * 
-     * @return the string representation of this FieldPosition
+     * @return the string representation of this field position.
+     * @since Android 1.0
      */
     @Override
     public String toString() {

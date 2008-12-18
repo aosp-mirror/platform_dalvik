@@ -102,12 +102,14 @@ public class Header implements Cloneable {
         if (key == null) {
             throw new NullPointerException();
         }
+        // BEGIN android-changed
         key = key.toLowerCase();
         LinkedList<String> list = keyTable.get(key);
         if (list == null) {
             list = new LinkedList<String>();
             keyTable.put(key, list);
         }
+        // END android-changed
         list.add(value);
         props.add(key);
         props.add(value);
@@ -124,7 +126,9 @@ public class Header implements Cloneable {
         if (key == null) {
             throw new NullPointerException();
         }
+        // BEGIN android-added
         key = key.toLowerCase();
+        // END android-added
         LinkedList<String> list = keyTable.get(key);
         if (list == null) {
             add(key, value);

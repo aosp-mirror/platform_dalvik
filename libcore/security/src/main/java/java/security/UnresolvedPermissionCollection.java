@@ -41,15 +41,12 @@ import java.util.Vector;
 import org.apache.harmony.security.internal.nls.Messages;
 
 /**
- * Specific PermissionCollection for storing UnresolvedPermissions. Contained
- * elements are grouped by their target type.
- * 
+ * {@code UnresolvedPermissionCollection} represents a specific {@code
+ * PermissionCollection} for storing {@link UnresolvedPermission} instances.
+ * Contained elements are grouped by their target type.
  */
 final class UnresolvedPermissionCollection extends PermissionCollection {
 
-    /** 
-     * @com.intel.drl.spec_ref 
-     */
     private static final long serialVersionUID = -7176153071733132400L;
 
     private static final ObjectStreamField[] serialPersistentFields = { 
@@ -59,9 +56,17 @@ final class UnresolvedPermissionCollection extends PermissionCollection {
     private transient Map klasses = new HashMap();
 
     /**
-     * Adds an unresolved permission to the collection.
+     * Adds an unresolved permission to this {@code
+     * UnresolvedPermissionCollection}.
      * 
-     * @see java.security.PermissionCollection#add(java.security.Permission)
+     * @param permission
+     *            the permission to be added.
+     * @throws SecurityException
+     *             if this collection is read only.
+     * @throws IllegalArgumentException
+     *             if {@code permission} is {@code null} or not an {@code
+     *             UnresolvedPermission}.
+     * @since Android 1.0
      */
     public void add(Permission permission) {
         if (isReadOnly()) {
@@ -83,11 +88,6 @@ final class UnresolvedPermissionCollection extends PermissionCollection {
         }
     }
 
-    /**
-     * Returns enumeration over collection elements.
-     * 
-     * @see java.security.PermissionCollection#elements()
-     */
     public Enumeration elements() {
         Collection all = new ArrayList();
         for (Iterator iter = klasses.values().iterator(); iter.hasNext();) {
@@ -97,9 +97,11 @@ final class UnresolvedPermissionCollection extends PermissionCollection {
     }
 
     /**
-     * Always returns false.
+     * Always returns {@code false}.
      * 
-     * @see java.security.UnresolvedPermission#implies(Permission)
+     * @return always {@code false}
+     * @see UnresolvedPermission#implies(Permission).
+     * @since Android 1.0
      */
     public boolean implies(Permission permission) {
         return false;
@@ -116,13 +118,15 @@ final class UnresolvedPermissionCollection extends PermissionCollection {
     /**
      * Resolves all permissions of the same class as the specified target
      * permission and adds them to the specified collection. If passed
-     * collection is <code>null</code> and some unresolved permissions were
-     * resolved, an appropriate new collection is instantiated and used. All
-     * resolved permissions are removed from this unresolved collection, and
-     * collection with resolved ones is returned.
+     * collection is {@code null} and some unresolved permissions were resolved,
+     * an appropriate new collection is instantiated and used. All resolved
+     * permissions are removed from this unresolved collection, and collection
+     * with resolved ones is returned.
      * 
-     * @param target - a kind of permissions to be resolved
-     * @param holder - an existing collection for storing resolved permissions
+     * @param target
+     *            a kind of permissions to be resolved.
+     * @param holder
+     *            an existing collection for storing resolved permissions.
      * @return a collection containing resolved permissions (if any found)
      */
     PermissionCollection resolveCollection(Permission target,

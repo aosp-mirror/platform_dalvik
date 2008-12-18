@@ -24,87 +24,99 @@ import java.sql.Connection;
  * An interface which provides facilities for handling connections to a database
  * which are pooled.
  * <p>
- * Typically, a PooledConnection is recycled when it is no longer required by an
- * application, rather than being closed and discarded. The reason for treating
- * connections in this way is that it can be an expensive process both to
- * establish a connection to a database and to destroy the connection. Reusing
- * connections through a pool is a way of improving system performance and
- * reducing overhead.
+ * Typically, a {@code PooledConnection} is recycled when it is no longer
+ * required by an application, rather than being closed and discarded. The
+ * reason for treating connections in this way is that it can be an expensive
+ * process both to establish a connection to a database and to destroy the
+ * connection. Reusing connections through a pool is a way of improving system
+ * performance and reducing overhead.
+ * </p>
  * <p>
- * It is not intended that an application use the PooledConnection interface
- * directly. The PooledConnection interface is intended for use by a component
- * called a Connection Pool Manager, typically part of the infrastructure that
- * supports use of the database by applications.
+ * It is not intended that an application uses the {@code PooledConnection}
+ * interface directly. The {@code PooledConnection} interface is intended for
+ * use by a component called a connection pool manager, typically part of the
+ * infrastructure that supports use of the database by applications.
+ * </p>
  * <p>
  * Applications obtain connections to the database by calling the
- * <code>DataSource.getConnection</code> method. Under the covers, the
- * Connection Pool Manager will get a PooledConnection object from its
- * connection pool and passes back a Connection object that wraps or references
- * the PooledConnection object. A new PooledConnection object will only be
+ * {@link DataSource#getConnection} method. Behind the scenes, the connection
+ * pool manager will get a {@code PooledConnection} object from its connection
+ * pool and passes back a connection object that wraps or references the {@code
+ * PooledConnection} object. A new {@code PooledConnection} object will only be
  * created if the pool is empty.
+ * </p>
  * <p>
- * When the application is finished using a PooledConnection, the application
- * calls the <code>Connection.close</code> method. The Connection Pool Manager
- * is notified via a ConnectionEvent from the Connection that this has happened
- * (the Pool Manager registers itself with the Connection before the Connection
- * is given to the application). The Pool Manager removes the underlying
- * PooledConnection object from the Connection and returns it to the pool for
- * reuse - the PooledConnection is thus recycled rather than being destroyed.
+ * When the application is finished using a {@code PooledConnection}, the
+ * application calls the {@link Connection#close} method. The connection pool
+ * manager is notified via a {@link ConnectionEvent} from the connection that
+ * this has happened (the pool manager registers itself with the connection
+ * before the connection is given to the application). The pool manager removes
+ * the underlying {@code PooledConnection} object from the connection and
+ * returns it to the pool for reuse - the {@code PooledConnection} is thus
+ * recycled rather than being destroyed.
+ * </p>
  * <p>
- * The connection to the database represented by the PooledConnection is kept
- * open until the PooledConnection object itself is deactivated by the
- * Connection Pool Manager, which calls the <code>PooledConnection.close</code>
- * method. This is typically done if there are too many inactive connections in
- * the pool, if the PooledConnection encounters a problem that makes it unusable
- * or if the whole system is being shut down.
+ * The connection to the database represented by the {@code PooledConnection} is
+ * kept open until the {@code PooledConnection} object itself is deactivated by
+ * the connection pool manager, which calls {@code PooledConnection.close()}.
+ * This is typically done if there are too many inactive connections in the
+ * pool, if the {@code PooledConnection} encounters a problem that makes it
+ * unusable or if the whole system is being shut down.
+ * </p>
  * 
+ * @since Android 1.0
  */
 public interface PooledConnection {
 
     /**
-     * Registers the supplied ConnectionEventListener with this
-     * PooledConnection. Once registered, the ConnectionEventListener will
-     * receive ConnectionEvent events when they occur in the PooledConnection.
+     * Registers the supplied {@code ConnectionEventListener} with this {@code
+     * PooledConnection}. Once registered, the {@code ConnectionEventListener}
+     * will receive {@link ConnectionEvent} events when they occur in the
+     * {@code PooledConnection}.
      * 
      * @param theListener
-     *            an object which implements the ConnectionEventListener
+     *            an object which implements the {@code ConnectionEventListener}
      *            interface.
+     * @since Android 1.0
      */
     public void addConnectionEventListener(ConnectionEventListener theListener);
 
     /**
-     * Closes the connection to the database held by this PooledConnection. This
-     * method should not be called directly by application code - it is intended
-     * for use by the Connection Pool manager component.
+     * Closes the connection to the database held by this {@code
+     * PooledConnection}. This method should not be called directly by
+     * application code - it is intended only for the connection pool manager
+     * component.
      * 
      * @throws SQLException
      *             if there is a problem accessing the database.
+     * @since Android 1.0
      */
     public void close() throws SQLException;
 
     /**
      * Creates a connection to the database. This method is typically called by
-     * the Connection Pool manager when an application invokes the method
-     * <code>DataSource.getConnection</code> and there are no PooledConnection
-     * objects available in the connection pool.
+     * the connection pool manager when an application invokes the method
+     * {@code DataSource.getConnection()} and there are no {@code
+     * PooledConnection} objects available in the connection pool.
      * 
-     * @return a Connection object that is a handle to this PooledConnection
-     *         object.
+     * @return a {@code Connection} object.
      * @throws SQLException
      *             if there is a problem accessing the database.
+     * @since Android 1.0
      */
     public Connection getConnection() throws SQLException;
 
     /**
-     * Deregister the supplied ConnectionEventListener from this
-     * PooledConnection. Once deregistered, the ConnectionEventListener will not
-     * longer receive events occurring in the PooledConnection.
+     * Unregisters the supplied {@code ConnectionEventListener} from this {@code
+     * PooledConnection}. Once unregistered, the {@code ConnectionEventListener}
+     * will no longer receive events occurring in the {@code PooledConnection}.
      * 
      * @param theListener
-     *            an object which implements the ConnectionEventListener
+     *            an object which implements the {@code ConnectionEventListener}
      *            interface. This object should have previously been registered
-     *            with the PooledConnection using the
-     *            <code>addConnectionEventListener</code> method.
+     *            with the {@code PooledConnection} using the {@code
+     *            addConnectionEventListener} method.
+     * @since Android 1.0
      */
     public void removeConnectionEventListener(
             ConnectionEventListener theListener);

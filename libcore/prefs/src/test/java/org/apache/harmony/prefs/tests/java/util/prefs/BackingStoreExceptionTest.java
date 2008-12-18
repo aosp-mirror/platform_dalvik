@@ -16,6 +16,11 @@
 
 package org.apache.harmony.prefs.tests.java.util.prefs;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.util.prefs.BackingStoreException;
 
 import junit.framework.TestCase;
@@ -26,11 +31,21 @@ import org.apache.harmony.testframework.serialization.SerializationTest;
  * 
  * 
  */
+@TestTargetClass(BackingStoreException.class)
 public class BackingStoreExceptionTest extends TestCase {
 
     /*
      * Class under test for void BackingStoreException(String)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "BackingStoreException",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void testBackingStoreExceptionString() {
         BackingStoreException e = new BackingStoreException("msg");
         assertNull(e.getCause());
@@ -40,6 +55,15 @@ public class BackingStoreExceptionTest extends TestCase {
     /*
      * Class under test for void BackingStoreException(Throwable)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "BackingStoreException",
+          methodArgs = {java.lang.Throwable.class}
+        )
+    })
     public void testBackingStoreExceptionThrowable() {
         Throwable t = new Throwable("msg");
         BackingStoreException e = new BackingStoreException(t);
@@ -51,6 +75,15 @@ public class BackingStoreExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization.
      */
+@TestInfo(
+          level = TestLevel.COMPLETE,
+          purpose = "Verifies serialization",
+          targets = {
+            @TestTarget(
+              methodName = "!SerializationSelf",
+              methodArgs = {}
+            )
+        })
     public void testSerializationSelf() throws Exception {
 
         SerializationTest.verifySelf(new BackingStoreException("msg"));
@@ -59,6 +92,15 @@ public class BackingStoreExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
+@TestInfo(
+          level = TestLevel.COMPLETE,
+          purpose = "Verifies serialization",
+          targets = {
+            @TestTarget(
+              methodName = "!SerializationGolden",
+              methodArgs = {}
+            )
+        })
     public void testSerializationCompatibility() throws Exception {
 
         SerializationTest.verifyGolden(this, new BackingStoreException("msg"));

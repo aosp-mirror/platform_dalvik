@@ -17,9 +17,15 @@
 
 package tests.api.java.lang.reflect;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
 
+@TestTargetClass(Constructor.class) 
 public class ConstructorTest extends junit.framework.TestCase {
 
     static class ConstructorTestHelper extends Object {
@@ -46,6 +52,15 @@ public class ConstructorTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Constructor#equals(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "equals",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_equalsLjava_lang_Object() {
         // Test for method boolean
         // java.lang.reflect.Constructor.equals(java.lang.Object)
@@ -69,6 +84,15 @@ public class ConstructorTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Constructor#getDeclaringClass()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getDeclaringClass",
+          methodArgs = {}
+        )
+    })
     public void test_getDeclaringClass() {
         // Test for method java.lang.Class
         // java.lang.reflect.Constructor.getDeclaringClass()
@@ -86,6 +110,15 @@ public class ConstructorTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Constructor#getExceptionTypes()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getExceptionTypes",
+          methodArgs = {}
+        )
+    })
     public void test_getExceptionTypes() {
         // Test for method java.lang.Class []
         // java.lang.reflect.Constructor.getExceptionTypes()
@@ -107,6 +140,15 @@ public class ConstructorTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Constructor#getModifiers()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getModifiers",
+          methodArgs = {}
+        )
+    })
     public void test_getModifiers() {
         // Test for method int java.lang.reflect.Constructor.getModifiers()
         int mod = 0;
@@ -147,6 +189,15 @@ public class ConstructorTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Constructor#getName()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getName",
+          methodArgs = {}
+        )
+    })
     public void test_getName() {
         // Test for method java.lang.String
         // java.lang.reflect.Constructor.getName()
@@ -167,6 +218,15 @@ public class ConstructorTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Constructor#getParameterTypes()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getParameterTypes",
+          methodArgs = {}
+        )
+    })
     public void test_getParameterTypes() {
         // Test for method java.lang.Class []
         // java.lang.reflect.Constructor.getParameterTypes()
@@ -198,6 +258,15 @@ public class ConstructorTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Constructor#newInstance(java.lang.Object[])
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "newInstance",
+          methodArgs = {java.lang.Object[].class}
+        )
+    })
     public void test_newInstance$Ljava_lang_Object() {
         // Test for method java.lang.Object
         // java.lang.reflect.Constructor.newInstance(java.lang.Object [])
@@ -216,6 +285,15 @@ public class ConstructorTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Constructor#toString()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public void test_toString() {
         // Test for method java.lang.String
         // java.lang.reflect.Constructor.toString()

@@ -22,24 +22,27 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
- * PropertyResourceBundle loads resources from an InputStream. All resources are
- * Strings. The resources must be of the form <code>key=value</code>, one
- * resource per line.
+ * {@code PropertyResourceBundle} loads resources from an {@code InputStream}. All resources are
+ * Strings. The resources must be of the form {@code key=value}, one
+ * resource per line (see Properties).
  * 
  * @see ResourceBundle
  * @see Properties
- * @since 1.1
+ * @since Android 1.0
  */
 public class PropertyResourceBundle extends ResourceBundle {
     Properties resources;
 
     /**
-     * Constructs a new instance of PropertyResourceBundle and loads the
-     * properties file from the specified input stream.
+     * Constructs a new instance of {@code PropertyResourceBundle} and loads the
+     * properties file from the specified {@code InputStream}.
      * 
      * @param stream
-     *            the input stream
-     * @throws IOException 
+     *            the {@code InputStream}.
+     * @throws IOException
+     *             if an error occurs during a read operation on the
+     *             {@code InputStream}.
+     * @since Android 1.0
      */
     public PropertyResourceBundle(InputStream stream) throws IOException {
         resources = new Properties();
@@ -51,12 +54,6 @@ public class PropertyResourceBundle extends ResourceBundle {
         return (Enumeration<String>)resources.propertyNames();
     }
 
-    /**
-     * Returns the names of the resources contained in this
-     * PropertyResourceBundle.
-     * 
-     * @return an Enumeration of the resource names
-     */
     @Override
     public Enumeration<String> getKeys() {
         if (parent == null) {
@@ -105,14 +102,6 @@ public class PropertyResourceBundle extends ResourceBundle {
         };
     }
 
-    /**
-     * Returns the named resource from this PropertyResourceBundle, or null if
-     * the resource is not found.
-     * 
-     * @param key
-     *            the name of the resource
-     * @return the resource object
-     */
     @Override
     public Object handleGetObject(String key) {
         return resources.get(key);

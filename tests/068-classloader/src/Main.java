@@ -1,4 +1,18 @@
-// Copyright 2008 Google Inc. All Rights Reserved.
+/*
+ * Copyright (C) 2008 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 /**
  * Class loader test.
@@ -14,18 +28,20 @@ public class Main {
 
         /*
          * This statement has no effect on this program, but it can
-         * change the point where the LinkageException is thrown.  When
-         * this is present the "reference implementation" throws an
-         * exception from Class.newInstance(), when it's absent the
-         * exception is deferred until the first time we call a method
-         * that isn't actually implemented.
+         * change the point where a LinkageException is thrown in
+         * testImplement().  When this is present the "reference
+         * implementation" throws an exception from Class.newInstance(),
+         * when it's absent the exception is deferred until the first time
+         * we call a method that isn't actually implemented.
          *
-         * This isn't the class that fails, but the VM thinks it has a
+         * This isn't the class that fails -- it's a class with the same
+         * name in the "fancy" class loader --  but the VM thinks it has a
          * reference to one of these; presumably the difference is that
          * without this the VM finds itself holding a reference to an
          * instance of an uninitialized class.
          */
         System.out.println("base: " + DoubledImplement.class);
+        System.out.println("base2: " + DoubledImplement2.class);
 
         /*
          * Run tests.
@@ -36,6 +52,7 @@ public class Main {
 
         testExtend(loader);
         testImplement(loader);
+        testIfaceImplement(loader);
     }
 
     /**
@@ -119,6 +136,8 @@ public class Main {
         /* get the "alternate" version of DoubledExtend */
         try {
             doubledExtendClass = loader.loadClass("DoubledExtend");
+            //System.out.println("+++ DoubledExtend is " + doubledExtendClass
+            //    + " in " + doubledExtendClass.getClassLoader());
         } catch (ClassNotFoundException cnfe) {
             System.err.println("loadClass failed: " + cnfe);
             return;
@@ -132,6 +151,9 @@ public class Main {
             return;
         } catch (IllegalAccessException iae) {
             System.err.println("newInstance failed: " + iae);
+            return;
+        } catch (LinkageError le) {
+            System.out.println("Got expected LinkageError on DE");
             return;
         }
 
@@ -206,6 +228,54 @@ public class Main {
                 throw le;
             }
         }
+    }
+
+
+    /**
+     * Test a class that implements an interface with a super-interface
+     * that refers to a doubled class.
+     */
+    static void testIfaceImplement(ClassLoader loader) {
+        Class ifaceImplClass;
+        Object obj;
+
+        /*
+         * Create an instance of IfaceImpl.  We also pull in
+         * DoubledImplement2 from the other class loader; without this
+         * we don't fail in some implementations.
+         */
+        try {
+            ifaceImplClass = loader.loadClass("IfaceImpl");
+            ifaceImplClass = loader.loadClass("DoubledImplement2");
+        } catch (ClassNotFoundException cnfe) {
+            System.err.println("loadClass failed: " + cnfe);
+            return;
+        }
+
+        /* instantiate */
+        try {
+            obj = ifaceImplClass.newInstance();
+        } catch (InstantiationException ie) {
+            System.err.println("newInstance failed: " + ie);
+            return;
+        } catch (IllegalAccessException iae) {
+            System.err.println("newInstance failed: " + iae);
+            return;
+        } catch (LinkageError le) {
+            System.out.println("Got LinkageError on IDI (early)");
+            //System.out.println(le);
+            return;
+        }
+
+        /*
+         * Without the pre-load of FancyLoader->DoubledImplement2, some
+         * implementations will happily execute through this part.  "obj"
+         * comes from FancyLoader, but the di2 returned from ifaceSuper
+         * comes from the application class loader.
+         */
+        IfaceSuper ifaceSuper = (IfaceSuper) obj;
+        DoubledImplement2 di2 = ifaceSuper.getDoubledInstance2();
+        di2.one();
     }
 }
 

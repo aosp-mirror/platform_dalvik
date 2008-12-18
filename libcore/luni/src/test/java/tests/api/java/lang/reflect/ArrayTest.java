@@ -17,13 +17,28 @@
 
 package tests.api.java.lang.reflect;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.lang.reflect.Array;
 
+@TestTargetClass(Array.class) 
 public class ArrayTest extends junit.framework.TestCase {
 
     /**
      * @tests java.lang.reflect.Array#get(java.lang.Object, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies only int array.",
+      targets = {
+        @TestTarget(
+          methodName = "get",
+          methodArgs = {java.lang.Object.class, int.class}
+        )
+    })
     public void test_getLjava_lang_ObjectI() {
         // Test for method java.lang.Object
         // java.lang.reflect.Array.get(java.lang.Object, int)
@@ -62,6 +77,15 @@ public class ArrayTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Array#getBoolean(java.lang.Object, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "getBoolean",
+          methodArgs = {java.lang.Object.class, int.class}
+        )
+    })
     public void test_getBooleanLjava_lang_ObjectI() {
         // Test for method boolean
         // java.lang.reflect.Array.getBoolean(java.lang.Object, int)
@@ -98,6 +122,15 @@ public class ArrayTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Array#getByte(java.lang.Object, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "getByte",
+          methodArgs = {java.lang.Object.class, int.class}
+        )
+    })
     public void test_getByteLjava_lang_ObjectI() {
         // Test for method byte
         // java.lang.reflect.Array.getByte(java.lang.Object, int)
@@ -134,6 +167,15 @@ public class ArrayTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Array#getChar(java.lang.Object, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "getChar",
+          methodArgs = {java.lang.Object.class, int.class}
+        )
+    })
     public void test_getCharLjava_lang_ObjectI() {
         // Test for method char
         // java.lang.reflect.Array.getChar(java.lang.Object, int)
@@ -170,6 +212,15 @@ public class ArrayTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Array#getDouble(java.lang.Object, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "getDouble",
+          methodArgs = {java.lang.Object.class, int.class}
+        )
+    })
     public void test_getDoubleLjava_lang_ObjectI() {
         // Test for method double
         // java.lang.reflect.Array.getDouble(java.lang.Object, int)
@@ -207,6 +258,15 @@ public class ArrayTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Array#getFloat(java.lang.Object, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "getFloat",
+          methodArgs = {java.lang.Object.class, int.class}
+        )
+    })
     public void test_getFloatLjava_lang_ObjectI() {
         // Test for method float
         // java.lang.reflect.Array.getFloat(java.lang.Object, int)
@@ -243,6 +303,15 @@ public class ArrayTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Array#getInt(java.lang.Object, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check any boundary value.",
+      targets = {
+        @TestTarget(
+          methodName = "getInt",
+          methodArgs = {java.lang.Object.class, int.class}
+        )
+    })
     public void test_getIntLjava_lang_ObjectI() {
         // Test for method int java.lang.reflect.Array.getInt(java.lang.Object,
         // int)
@@ -279,6 +348,15 @@ public class ArrayTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Array#getLength(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getLength",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_getLengthLjava_lang_Object() {
         // Test for method int
         // java.lang.reflect.Array.getLength(java.lang.Object)
@@ -299,6 +377,15 @@ public class ArrayTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Array#getLong(java.lang.Object, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NullPointerException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "getLong",
+          methodArgs = {java.lang.Object.class, int.class}
+        )
+    })
     public void test_getLongLjava_lang_ObjectI() {
         // Test for method long
         // java.lang.reflect.Array.getLong(java.lang.Object, int)
@@ -335,6 +422,15 @@ public class ArrayTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Array#getShort(java.lang.Object, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NullPointerException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "getShort",
+          methodArgs = {java.lang.Object.class, int.class}
+        )
+    })
     public void test_getShortLjava_lang_ObjectI() {
         // Test for method short
         // java.lang.reflect.Array.getShort(java.lang.Object, int)
@@ -371,6 +467,15 @@ public class ArrayTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Array#newInstance(java.lang.Class, int[])
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions are not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "newInstance",
+          methodArgs = {java.lang.Class.class, int[].class}
+        )
+    })
     public void test_newInstanceLjava_lang_Class$I() {
         // Test for method java.lang.Object
         // java.lang.reflect.Array.newInstance(java.lang.Class, int [])
@@ -385,6 +490,15 @@ public class ArrayTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Array#newInstance(java.lang.Class, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions are not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "newInstance",
+          methodArgs = {java.lang.Class.class, int.class}
+        )
+    })
     public void test_newInstanceLjava_lang_ClassI() {
         // Test for method java.lang.Object
         // java.lang.reflect.Array.newInstance(java.lang.Class, int)
@@ -398,6 +512,15 @@ public class ArrayTest extends junit.framework.TestCase {
      * @tests java.lang.reflect.Array#set(java.lang.Object, int,
      *        java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NullPointerException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "set",
+          methodArgs = {java.lang.Object.class, int.class, java.lang.Object.class}
+        )
+    })
     public void test_setLjava_lang_ObjectILjava_lang_Object() {
         // Test for method void java.lang.reflect.Array.set(java.lang.Object,
         // int, java.lang.Object)
@@ -444,6 +567,15 @@ public class ArrayTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Array#setBoolean(java.lang.Object, int, boolean)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NullPointerException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "setBoolean",
+          methodArgs = {java.lang.Object.class, int.class, boolean.class}
+        )
+    })
     public void test_setBooleanLjava_lang_ObjectIZ() {
         // Test for method void
         // java.lang.reflect.Array.setBoolean(java.lang.Object, int, boolean)
@@ -479,6 +611,15 @@ public class ArrayTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Array#setByte(java.lang.Object, int, byte)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NullPointerException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "setByte",
+          methodArgs = {java.lang.Object.class, int.class, byte.class}
+        )
+    })
     public void test_setByteLjava_lang_ObjectIB() {
         // Test for method void
         // java.lang.reflect.Array.setByte(java.lang.Object, int, byte)
@@ -514,6 +655,15 @@ public class ArrayTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Array#setChar(java.lang.Object, int, char)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NullPointerException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "setChar",
+          methodArgs = {java.lang.Object.class, int.class, char.class}
+        )
+    })
     public void test_setCharLjava_lang_ObjectIC() {
         // Test for method void
         // java.lang.reflect.Array.setChar(java.lang.Object, int, char)
@@ -549,6 +699,15 @@ public class ArrayTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Array#setDouble(java.lang.Object, int, double)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NullPointerException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "setDouble",
+          methodArgs = {java.lang.Object.class, int.class, double.class}
+        )
+    })
     public void test_setDoubleLjava_lang_ObjectID() {
         // Test for method void
         // java.lang.reflect.Array.setDouble(java.lang.Object, int, double)
@@ -584,6 +743,15 @@ public class ArrayTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Array#setFloat(java.lang.Object, int, float)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NullPointerException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "setFloat",
+          methodArgs = {java.lang.Object.class, int.class, float.class}
+        )
+    })
     public void test_setFloatLjava_lang_ObjectIF() {
         // Test for method void
         // java.lang.reflect.Array.setFloat(java.lang.Object, int, float)
@@ -619,6 +787,15 @@ public class ArrayTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Array#setInt(java.lang.Object, int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NullPointerException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "setInt",
+          methodArgs = {java.lang.Object.class, int.class, int.class}
+        )
+    })
     public void test_setIntLjava_lang_ObjectII() {
         // Test for method void java.lang.reflect.Array.setInt(java.lang.Object,
         // int, int)
@@ -654,6 +831,15 @@ public class ArrayTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Array#setLong(java.lang.Object, int, long)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NullPointerException isnot verified.",
+      targets = {
+        @TestTarget(
+          methodName = "setLong",
+          methodArgs = {java.lang.Object.class, int.class, long.class}
+        )
+    })
     public void test_setLongLjava_lang_ObjectIJ() {
         // Test for method void
         // java.lang.reflect.Array.setLong(java.lang.Object, int, long)
@@ -689,6 +875,15 @@ public class ArrayTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Array#setShort(java.lang.Object, int, short)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NullPointerException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "setShort",
+          methodArgs = {java.lang.Object.class, int.class, short.class}
+        )
+    })
     public void test_setShortLjava_lang_ObjectIS() {
         // Test for method void
         // java.lang.reflect.Array.setShort(java.lang.Object, int, short)

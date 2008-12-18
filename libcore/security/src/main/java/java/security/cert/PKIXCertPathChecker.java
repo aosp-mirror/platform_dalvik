@@ -26,18 +26,42 @@ import java.util.Collection;
 import java.util.Set;
 
 /**
- * @com.intel.drl.spec_ref
+ * The class specifying the interface to extend the certification path
+ * validation algorithm by checks to perform on an {@code X509Certificate}.
+ * <p>
+ * The checks are added to a certification path validation using the
+ * {@link PKIXParameters#setCertPathCheckers(java.util.List)
+ * setCertPathCheckers} or
+ * {@link PKIXBuilderParameters#addCertPathChecker(PKIXCertPathChecker)
+ * addCertPathChecker} of the {@code PKIXParameters} and {@code
+ * PKIXBuilderParameters} class respectively. The
+ * {@link #check(Certificate, Collection) check} method will be called for each
+ * certificate processed by a {@code CertPathBuilder} of {@code
+ * CertPathValidator}.
+ * </p>
+ * <p>
+ * A {@code PKIXCertPathChecker} implementation <u>must</u> support reverse
+ * checking (from trusted CA to target) and <u>may</u> support forward checking
+ * (from target to trusted CA). The return value of {@code
+ * isForwardCheckingSupported} indicates whether forward checking is supported.
+ * </p>
  * 
+ * @since Android 1.0
  */
 public abstract class PKIXCertPathChecker implements Cloneable {
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code PKIXCertPathChecker} instance.
+     * 
+     * @since Android 1.0
      */
     protected PKIXCertPathChecker() {}
 
     /**
-     * @com.intel.drl.spec_ref
+     * Clones this {@code PKIXCertPathChecker} instance.
+     * 
+     * @return the cloned instance.
+     * @since Android 1.0
      */
     public Object clone() {
         try {
@@ -48,23 +72,55 @@ public abstract class PKIXCertPathChecker implements Cloneable {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Initializes this {@code PKIXCertPathChecker} instance for specified
+     * <i>checking direction</i>.
+     * 
+     * @param forward
+     *            the direction of the certification path processing, {@code
+     *            true} if the certificates are processed in forward direction
+     *            (from target to trusted CA), {@code false} if processed in
+     *            reverse direction (from trusted CA to target).
+     * @throws CertPathValidatorException
+     *             if initialization of this {@code PKIXCertPathChecker}
+     *             instance fails, or if it cannot process certificates in the
+     *             specified order.
+     * @since Android 1.0
      */
     public abstract void init(boolean forward)
         throws CertPathValidatorException;
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns whether this {@code PKIXCertPathChecker} instance supports
+     * <i>forward checking</i>.
+     * 
+     * @return {@code true} if this {@code PKIXCertPathChecker} instance
+     *         supports forward checking, otherwise {@code false}.
+     * @since Android 1.0
      */
     public abstract boolean isForwardCheckingSupported();
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the list of extensions of X.509 certificates that this {@code
+     * PKIXCertPathChecker} is able to process.
+     * 
+     * @return the list of extensions of X.509 certificates that this {@code
+     *         PKIXCertPathChecker} is able to process, or {@code null} if there
+     *         are none.
+     * @since Android 1.0
      */
     public abstract Set<String> getSupportedExtensions();
 
     /**
-     * @com.intel.drl.spec_ref
+     * Checks the specified certificate and removes the processed critical
+     * extensions from the specified list of X.509 extension <i>OID</i>s.
+     * 
+     * @param cert
+     *            the certificate.
+     * @param unresolvedCritExts
+     *            the list of critical X.509 extension OID strings.
+     * @throws CertPathValidatorException
+     *             if check(s) fail on the specified certificate.
+     * @since Android 1.0
      */
     public abstract void check(Certificate cert, Collection<String> unresolvedCritExts)
         throws CertPathValidatorException;

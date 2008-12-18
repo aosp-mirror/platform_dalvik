@@ -19,7 +19,7 @@ package org.apache.harmony.tests.java.util.regex;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestStatus;
+import dalvik.annotation.TestLevel;
 
 import junit.framework.TestCase;
 import java.util.regex.Pattern;
@@ -29,8 +29,8 @@ import java.util.regex.PatternSyntaxException;
 @TestTargetClass(Matcher.class)
 public class ReplaceTest extends TestCase {
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the basic functionality of " +
+             level = TestLevel.PARTIAL_OK,
+             purpose = "Verifies the basic functionality of " +
                      "replaceFirst(java.lang.String) & replaceAll(java.lang.String)" +
                      " methods.",
              targets = { @TestTarget(methodName = "replaceFirst",
@@ -54,8 +54,8 @@ public class ReplaceTest extends TestCase {
     }
 
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of " +
+             level = TestLevel.PARTIAL_OK,
+             purpose = "Verifies the functionality of " +
                      "replaceFirst(java.lang.String) & replaceAll(java.lang.String)" +
                      " methods.",
              targets = { @TestTarget(methodName = "replaceFirst",
@@ -96,8 +96,8 @@ public class ReplaceTest extends TestCase {
     }
 
     @TestInfo(
-             status = TestStatus.LGTM,
-             notes = "The test verifies the functionality of " +
+             level = TestLevel.PARTIAL_OK,
+             purpose = "Verifies the functionality of " +
                      "replaceAll(java.lang.String) method with backslash chars.",
              targets = { @TestTarget(methodName = "replaceAll",
                    methodArgs = {java.lang.String.class})      

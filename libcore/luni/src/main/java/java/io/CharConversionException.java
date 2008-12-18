@@ -18,26 +18,31 @@
 package java.io;
 
 /**
- * This is the top level class for character conversion exceptions.
+ * The top level class for character conversion exceptions.
+ * 
+ * @since Android 1.0
  */
 public class CharConversionException extends IOException {
 
     private static final long serialVersionUID = -8680016352018427031L;
 
     /**
-     * Constructs a new instance of this class with its walkback filled in.
+     * Constructs a new {@code CharConversionException} with its stack trace
+     * filled in.
      * 
+     * @since Android 1.0
      */
     public CharConversionException() {
         super();
     }
 
     /**
-     * Constructs a new instance of this class with its walkback and message
-     * filled in.
+     * Constructs a new {@code CharConversionException} with its stack trace and
+     * detail message filled in.
      * 
      * @param detailMessage
-     *            The detail message for the exception.
+     *            the detail message for this exception.
+     * @since Android 1.0
      */
     public CharConversionException(String detailMessage) {
         super(detailMessage);

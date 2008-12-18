@@ -16,8 +16,14 @@
 
 package tests.java.sql;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -32,6 +38,7 @@ import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
+@TestTargetClass(Connection.class)
 public class StressTest extends TestCase {
     Vector<Connection> vc = new Vector<Connection>();
 
@@ -108,6 +115,15 @@ public class StressTest extends TestCase {
      * @tests StressTest#testManyConnectionsUsingOneThread(). Create many
      *        connections to the DataBase using one thread.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Stress test: Create many connections to the DataBase using one thread",
+      targets = {
+        @TestTarget(
+          methodName = "getMetaData",
+          methodArgs = {}
+        )
+    })
     public void testManyConnectionsUsingOneThread() {
         try {
             int maxConnections = getConnectionNum();
@@ -123,6 +139,15 @@ public class StressTest extends TestCase {
      * @tests StressTest#testManyConnectionsUsingManyThreads(). Create many
      *        connections to the DataBase using some threads.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Stress test: Create many connections to the DataBase using some threads",
+      targets = {
+        @TestTarget(
+          methodName = "DriverManager.getConnection",
+          methodArgs = {String.class, String.class, String.class}
+        )
+    })
     public void testManyConnectionsUsingManyThreads() {
         int numTasks = getConnectionNum();
 
@@ -152,6 +177,15 @@ public class StressTest extends TestCase {
      * @tests StressTest#testInsertOfManyRowsUsingOneThread(). Insert a lot of
      *        records to the DataBase using a maximum number of connections.
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "",
+          methodArgs = {}
+        )
+    })
     public void testInsertOfManyRowsUsingOneThread() {
         // TODO Crashes VM. Fix later.
         /*
@@ -172,6 +206,15 @@ public class StressTest extends TestCase {
     /**
      * @tests
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "",
+          methodArgs = {}
+        )
+    })
     public void testInsertOfManyRowsUsingManyThreads() {
         // TODO Crashes VM. Fix later.
         /*

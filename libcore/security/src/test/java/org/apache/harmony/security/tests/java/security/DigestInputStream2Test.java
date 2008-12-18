@@ -17,12 +17,18 @@
 
 package org.apache.harmony.security.tests.java.security;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+@TestTargetClass(DigestInputStream.class)
 public class DigestInputStream2Test extends junit.framework.TestCase {
 
     ByteArrayInputStream inStream;
@@ -35,6 +41,15 @@ public class DigestInputStream2Test extends junit.framework.TestCase {
      * @tests java.security.DigestInputStream#DigestInputStream(java.io.InputStream,
      *        java.security.MessageDigest)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies case with non null parameters only",
+      targets = {
+        @TestTarget(
+          methodName = "DigestInputStream",
+          methodArgs = {java.io.InputStream.class, MessageDigest.class}
+        )
+    })
     public void test_ConstructorLjava_io_InputStreamLjava_security_MessageDigest() {
         // Test for method java.security.DigestInputStream(java.io.InputStream,
         // java.security.MessageDigest)
@@ -45,6 +60,15 @@ public class DigestInputStream2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.DigestInputStream#getMessageDigest()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getMessageDigest",
+          methodArgs = {}
+        )
+    })
     public void test_getMessageDigest() {
         // Test for method java.security.MessageDigest
         // java.security.DigestInputStream.getMessageDigest()
@@ -56,6 +80,15 @@ public class DigestInputStream2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.DigestInputStream#on(boolean)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "on",
+          methodArgs = {boolean.class}
+        )
+    })
     public void test_onZ() throws Exception {
         // Test for method void java.security.DigestInputStream.on(boolean)
         MessageDigest originalDigest = (MessageDigest) (digest.clone());
@@ -88,6 +121,15 @@ public class DigestInputStream2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.DigestInputStream#read()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies just one positive case for method read()",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {}
+        )
+    })
     public void test_read() throws IOException {
         // Test for method int java.security.DigestInputStream.read()
         DigestInputStream dis = new DigestInputStream(inStream, digest);
@@ -103,6 +145,15 @@ public class DigestInputStream2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.DigestInputStream#read(byte[], int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies just one positive case for method read(byte[], int, int)",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {byte[].class, int.class, int.class}
+        )
+    })
     public void test_read$BII() throws IOException {
         // Test for method int java.security.DigestInputStream.read(byte [],
         // int, int)
@@ -132,6 +183,15 @@ public class DigestInputStream2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.DigestInputStream#setMessageDigest(java.security.MessageDigest)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setMessageDigest",
+          methodArgs = {MessageDigest.class}
+        )
+    })
     public void test_setMessageDigestLjava_security_MessageDigest() {
         // Test for method void
         // java.security.DigestInputStream.setMessageDigest(java.security.MessageDigest)

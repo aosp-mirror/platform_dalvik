@@ -16,15 +16,30 @@
 
 package org.apache.harmony.luni.tests.java.util;
 
-import java.util.Vector;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
 
+import java.util.Vector;
+
+@TestTargetClass(Vector.class) 
 public class VectorTest extends TestCase {
 
     /**
      * @tests java.util.Vector#toString()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public void test_toString() {
         // Ensure toString works with self-referencing elements.
         Vector<Object> vec = new Vector<Object>(3);

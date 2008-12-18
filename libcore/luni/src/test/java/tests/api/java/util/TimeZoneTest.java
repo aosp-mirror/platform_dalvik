@@ -17,6 +17,11 @@
 
 package tests.api.java.util;
 
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass; 
+
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.SimpleTimeZone;
@@ -24,6 +29,7 @@ import java.util.TimeZone;
 
 import tests.support.Support_TimeZone;
 
+@TestTargetClass(TimeZone.class) 
 public class TimeZoneTest extends junit.framework.TestCase {
 
     private static final int ONE_HOUR = 3600000;
@@ -31,6 +37,15 @@ public class TimeZoneTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TimeZone#getDefault()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getDefault",
+          methodArgs = {}
+        )
+    })
     public void test_getDefault() {
         assertNotSame("returns identical",
                               TimeZone.getDefault(), TimeZone.getDefault());
@@ -39,7 +54,16 @@ public class TimeZoneTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TimeZone#getDSTSavings()
      */
-    public void test_getDSTSavings() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getDSTSavings",
+          methodArgs = {}
+        )
+    })
+    public void _test_getDSTSavings() {
         // Test for method int java.util.TimeZone.getDSTSavings()
 
         // test on subclass SimpleTimeZone
@@ -66,7 +90,16 @@ public class TimeZoneTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TimeZone#getOffset(long)
      */
-    public void test_getOffset_long() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getOffset",
+          methodArgs = {long.class}
+        )
+    })
+    public void _test_getOffset_long() {
         // Test for method int java.util.TimeZone.getOffset(long time)
 
         // test on subclass SimpleTimeZone
@@ -100,6 +133,15 @@ public class TimeZoneTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TimeZone#getTimeZone(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getTimeZone",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_getTimeZoneLjava_lang_String() {
         assertEquals("Must return GMT when given an invalid TimeZone id SMT-8.",
                              "GMT", TimeZone.getTimeZone("SMT-8").getID());
@@ -152,6 +194,15 @@ public class TimeZoneTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TimeZone#setDefault(java.util.TimeZone)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setDefault",
+          methodArgs = {java.util.TimeZone.class}
+        )
+    })
     public void test_setDefaultLjava_util_TimeZone() {
         TimeZone oldDefault = TimeZone.getDefault();
         TimeZone zone = new SimpleTimeZone(45, "TEST");

@@ -17,12 +17,15 @@
 
 package org.apache.harmony.sql.tests.java.sql;
 
+import dalvik.annotation.TestTargetClass;
+
 import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
 import junit.framework.TestCase;
 
+@TestTargetClass(DriverManager.class)
 /**
  * Helper class for the Driver manager tes - it allows the test code to be
  * loaded under a different classloader, necessary for testing the

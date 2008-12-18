@@ -15,6 +15,11 @@
  */
 package org.apache.harmony.nio.tests.java.nio.channels;
 
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+
 import java.nio.channels.FileLockInterruptionException;
 
 import junit.framework.TestCase;
@@ -24,11 +29,21 @@ import org.apache.harmony.testframework.serialization.SerializationTest;
 /**
  * Tests for FileLockInterruptionException
  */
+@TestTargetClass(FileLockInterruptionException.class)
 public class FileLockInterruptionExceptionTest extends TestCase {
 
     /**
      * @tests serialization/deserialization compatibility.
      */
+    @TestInfo(
+            level = TestLevel.COMPLETE,
+            purpose = "Verifies serialization/deserialization compatibility.",
+            targets = {
+              @TestTarget(
+                methodName = "!SerializationSelf",
+                methodArgs = {}
+              )
+          })
     public void testSerializationSelf() throws Exception {
 
         SerializationTest.verifySelf(new FileLockInterruptionException());
@@ -37,6 +52,15 @@ public class FileLockInterruptionExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
+    @TestInfo(
+            level = TestLevel.COMPLETE,
+            purpose = "Verifies serialization/deserialization compatibility.",
+            targets = {
+              @TestTarget(
+                methodName = "!SerializationGolden",
+                methodArgs = {}
+              )
+          })
     public void testSerializationCompatibility() throws Exception {
 
         SerializationTest.verifyGolden(this,

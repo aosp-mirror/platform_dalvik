@@ -29,7 +29,9 @@ import org.apache.harmony.luni.util.Msg;
 import org.apache.harmony.luni.util.PriviAction;
 
 /**
- * Default implementation for ProxySelector
+ * Default implementation for {@code ProxySelector}.
+ * 
+ * @since Android 1.0
  */
 class ProxySelectorImpl extends ProxySelector {
 
@@ -273,9 +275,9 @@ class ProxySelectorImpl extends ProxySelector {
         } else {
             int iPort;
             try {
-// BEGIN android-changed
+                // BEGIN android-changed
                 iPort = Integer.parseInt(port);
-// END android-changed
+                // END android-changed
             } catch (NumberFormatException e) {
                 iPort = defaultPort;
             }

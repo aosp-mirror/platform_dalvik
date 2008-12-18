@@ -17,54 +17,78 @@
 
 package tests.api.java.net;
 
+import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.net.NoRouteToHostException;
 
+@TestTargetClass(NoRouteToHostException.class) 
 public class NoRouteToHostExceptionTest extends junit.framework.TestCase {
 
-	/**
-	 * @tests java.net.NoRouteToHostException#NoRouteToHostException()
-	 */
-	public void test_Constructor() {
-		// Test for method java.net.NoRouteToHostException()
+    /**
+     * @tests java.net.NoRouteToHostException#NoRouteToHostException()
+     */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "NoRouteToHostException",
+          methodArgs = {}
+        )
+    })
+    public void test_Constructor() {
+        // Test for method java.net.NoRouteToHostException()
 
-		try {
-			if (true)
-				throw new NoRouteToHostException();
-		} catch (NoRouteToHostException e) {
-			return;
-		}
-		fail("Failed to generate expected exception");
-	}
+        try {
+            if (true)
+                throw new NoRouteToHostException();
+        } catch (NoRouteToHostException e) {
+            return;
+        }
+        fail("Failed to generate expected exception");
+    }
 
-	/**
-	 * @tests java.net.NoRouteToHostException#NoRouteToHostException(java.lang.String)
-	 */
-	public void test_ConstructorLjava_lang_String() {
-		// Test for method java.net.NoRouteToHostException(java.lang.String)
-		// Cannot test correctly without changing some routing tables !!
+    /**
+     * @tests java.net.NoRouteToHostException#NoRouteToHostException(java.lang.String)
+     */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "NoRouteToHostException",
+          methodArgs = {String.class}
+        )
+    })
+    public void test_ConstructorLjava_lang_String() {
+        // Test for method java.net.NoRouteToHostException(java.lang.String)
+        // Cannot test correctly without changing some routing tables !!
 
-		try {
-			if (true)
-				throw new NoRouteToHostException("test");
-		} catch (NoRouteToHostException e) {
-			assertEquals("Threw exception with incorrect message", "test", e.getMessage()
-					);
-			return;
-		}
-		fail("Failed to generate expected exception");
-	}
+        try {
+            if (true)
+                throw new NoRouteToHostException("test");
+        } catch (NoRouteToHostException e) {
+            assertEquals("Threw exception with incorrect message", "test", e.getMessage()
+                    );
+            return;
+        }
+        fail("Failed to generate expected exception");
+    }
 
-	/**
-	 * Sets up the fixture, for example, open a network connection. This method
-	 * is called before a test is executed.
-	 */
-	protected void setUp() {
-	}
+    /**
+     * Sets up the fixture, for example, open a network connection. This method
+     * is called before a test is executed.
+     */
+    protected void setUp() {
+    }
 
-	/**
-	 * Tears down the fixture, for example, close a network connection. This
-	 * method is called after a test is executed.
-	 */
-	protected void tearDown() {
-	}
+    /**
+     * Tears down the fixture, for example, close a network connection. This
+     * method is called after a test is executed.
+     */
+    protected void tearDown() {
+    }
 }

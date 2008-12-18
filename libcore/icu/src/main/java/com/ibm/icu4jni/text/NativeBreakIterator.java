@@ -16,7 +16,7 @@
 
 package com.ibm.icu4jni.text;
  
-public final class NativeBreakIterator
+final class NativeBreakIterator
 {  
     public NativeBreakIterator() {
         

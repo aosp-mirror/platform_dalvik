@@ -22,8 +22,8 @@
 
 package org.apache.harmony.security.tests.support.cert;
 
+import java.io.ObjectStreamException;
 import java.security.cert.CertPath;
-import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.util.Collections;
 import java.util.Iterator;
@@ -36,10 +36,12 @@ import java.util.Vector;
  * 
  */
 public class MyCertPath extends CertPath {
+    private static final long serialVersionUID = 7444835599161870893L;
     /**
      * my certificates list
      */
-    private final Vector<Certificate> certificates;
+    private final Vector<MyCertificate> certificates;
+
     /**
      * List of encodings supported
      */
@@ -58,7 +60,7 @@ public class MyCertPath extends CertPath {
     public MyCertPath(byte[] encoding) {
         super("MyEncoding");
         this.encoding = encoding;
-        certificates = new Vector<Certificate>();
+        certificates = new Vector<MyCertificate>();
         certificates.add(new MyCertificate("MyEncoding", encoding));
         encodingNames = new Vector<String>();
         encodingNames.add("MyEncoding");
@@ -68,7 +70,7 @@ public class MyCertPath extends CertPath {
      * @return certificates list
      * @see java.security.cert.CertPath#getCertificates()
      */
-    public List<Certificate> getCertificates() {
+    public List<MyCertificate> getCertificates() {
         return Collections.unmodifiableList(certificates);
     }
 
@@ -83,8 +85,8 @@ public class MyCertPath extends CertPath {
     /**
      * @return encoded form of this cert path as specified by
      * <code>encoding</code> parameter
-     * @throws CertificateEncodingException if <code>encoding</code>
-     * not equals "MyEncoding" 
+     * @throws CertificateEncodingException
+     *             if <code>encoding</code> not equals "MyEncoding"
      * @see java.security.cert.CertPath#getEncoded(java.lang.String)
      */
     public byte[] getEncoded(String encoding)
@@ -104,4 +106,37 @@ public class MyCertPath extends CertPath {
         return Collections.unmodifiableCollection(encodingNames).iterator();
     }
 
+    /**
+     * @return the CertPathRep to be serialized
+     * @see java.security.cert.CertPath#writeReplace()
+     */
+    public Object writeReplace() throws ObjectStreamException {
+        return super.writeReplace();
+    }
+
+    public class MyCertPathRep extends CertPath.CertPathRep {
+
+        private static final long serialVersionUID = 1609000085450479173L;
+
+        private String type;
+        private byte[] data; 
+        
+        public MyCertPathRep(String type, byte[] data) {
+            super(type, data);
+            this.data = data;
+            this.type = type;
+        }
+
+        public Object readResolve() throws ObjectStreamException {
+            return super.readResolve();
+        }
+
+        public String getType() {
+            return type;
+        }
+        
+        public byte[] getData() {
+            return data;
+        }
+    }
 }

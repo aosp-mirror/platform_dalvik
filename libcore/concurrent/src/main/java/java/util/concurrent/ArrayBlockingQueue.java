@@ -254,6 +254,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 
+
     public E poll() {
         final ReentrantLock lock = this.lock;
         lock.lock();
@@ -291,6 +292,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             lock.unlock();
         }
     }
+
 
     public boolean remove(Object o) {
         if (o == null) return false;
@@ -411,6 +413,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 
+
     public boolean contains(Object o) {
         if (o == null) return false;
         final E[] items = this.items;
@@ -483,6 +486,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
         }
     }
 
+
     public void clear() {
         final E[] items = this.items;
         final ReentrantLock lock = this.lock;
@@ -532,6 +536,7 @@ public class ArrayBlockingQueue<E> extends AbstractQueue<E>
             lock.unlock();
         }
     }
+
 
     public int drainTo(Collection<? super E> c, int maxElements) {
         if (c == null)

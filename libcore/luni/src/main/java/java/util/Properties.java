@@ -42,19 +42,28 @@ import org.xml.sax.SAXParseException;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+// BEGIN android-added
+import org.w3c.dom.Node;
 import org.w3c.dom.Text;
+// END android-added
 
+// BEGIN android-added
+// copied from newer version of Haromny
+import org.apache.harmony.luni.internal.nls.Messages;
+// END android-added
 import org.apache.harmony.luni.util.PriviAction;
 
 /**
- * Properties is a Hashtable where the keys and values must be Strings. Each
- * Properties can have a default Properties which specifies the default values
- * which are used if the key is not in this Properties.
+ * A {@code Properties} object is a {@code Hashtable} where the keys and values 
+ * must be {@code String}s. Each property can have a default 
+ * {@code Properties} list which specifies the default
+ * values to be used when a given key is not found in this {@code Properties}
+ * instance.
  * 
  * @see Hashtable
  * @see java.lang.System#getProperties
+ * @since Android 1.0
  */
 public class Properties extends Hashtable<Object,Object> {
     
@@ -74,7 +83,10 @@ public class Properties extends Hashtable<Object,Object> {
             + "    <!ATTLIST entry key CDATA #REQUIRED >";
     
     /**
-     * The default values for this Properties.
+     * The default values for keys not found in this {@code Properties}
+     * instance.
+     * 
+     * @since Android 1.0
      */
     protected Properties defaults;
 
@@ -82,18 +94,21 @@ public class Properties extends Hashtable<Object,Object> {
             KEY_DONE = 4, IGNORE = 5;
 
     /**
-     * Constructs a new Properties object.
+     * Constructs a new {@code Properties} object.
+     * 
+     * @since Android 1.0
      */
     public Properties() {
         super();
     }
 
     /**
-     * Constructs a new Properties object using the specified default
-     * properties.
+     * Constructs a new {@code Properties} object using the specified default
+     * {@code Properties}.
      * 
      * @param properties
-     *            the default properties
+     *            the default {@code Properties}.
+     * @since Android 1.0
      */
     public Properties(Properties properties) {
         defaults = properties;
@@ -141,12 +156,13 @@ public class Properties extends Hashtable<Object,Object> {
 
     /**
      * Searches for the property with the specified name. If the property is not
-     * found, look in the default properties. If the property is not found in
-     * the default properties, answer null.
+     * found, the default {@code Properties} are checked. If the property is not
+     * found in the default {@code Properties}, {@code null} is returned.
      * 
      * @param name
-     *            the name of the property to find
-     * @return the named property value
+     *            the name of the property to find.
+     * @return the named property value, or {@code null} if it can't be found.
+     * @since Android 1.0
      */
     public String getProperty(String name) {
         Object result = super.get(name);
@@ -159,14 +175,16 @@ public class Properties extends Hashtable<Object,Object> {
 
     /**
      * Searches for the property with the specified name. If the property is not
-     * found, look in the default properties. If the property is not found in
-     * the default properties, answer the specified default.
+     * found, it looks in the default {@code Properties}. If the property is not
+     * found in the default {@code Properties}, it returns the specified
+     * default.
      * 
      * @param name
-     *            the name of the property to find
+     *            the name of the property to find.
      * @param defaultValue
-     *            the default value
-     * @return the named property value
+     *            the default value.
+     * @return the named property value.
+     * @since Android 1.0
      */
     public String getProperty(String name, String defaultValue) {
         Object result = super.get(name);
@@ -181,11 +199,14 @@ public class Properties extends Hashtable<Object,Object> {
     }
 
     /**
-     * Lists the mappings in this Properties to the specified PrintStream in a
+     * Lists the mappings in this {@code Properties} to the specified
+     * {@code PrintStream} in a
      * human readable form.
      * 
      * @param out
-     *            the PrintStream
+     *            the {@code PrintStream} to write the content to in human readable
+     *            form.
+     * @since Android 1.0
      */
     public void list(PrintStream out) {
         if (out == null) {
@@ -215,11 +236,14 @@ public class Properties extends Hashtable<Object,Object> {
     }
 
     /**
-     * Lists the mappings in this Properties to the specified PrintWriter in a
+     * Lists the mappings in this {@code Properties} to the specified
+     * {@code PrintWriter} in a
      * human readable form.
      * 
      * @param writer
-     *            the PrintWriter
+     *            the {@code PrintWriter} to write the content to in human
+     *            readable form.
+     * @since Android 1.0
      */
     public void list(PrintWriter writer) {
         if (writer == null) {
@@ -249,12 +273,32 @@ public class Properties extends Hashtable<Object,Object> {
     }
 
     /**
-     * Loads properties from the specified InputStream. The properties are of
-     * the form <code>key=value</code>, one property per line.
+     * Loads properties from the specified {@code InputStream}. The encoding is
+     * ISO8859-1. The {@code Properties} file is interpreted according to the
+     * following rules:
+     * <ul>
+     * <li>Empty lines are ignored.</li>
+     * <li>Lines starting with either a "#" or a "!" are comment lines and are
+     * ignored.</li>
+     * <li>A backslash at the end of the line escapes the following newline
+     * character ("\r", "\n", "\r\n"). If there's a whitespace after the
+     * backslash it will just escape that whitespace instead of concatenating
+     * the lines. This does not apply to comment lines.</li>
+     * <li>A property line consists of the key, the space between the key and
+     * the value, and the value. The key goes up to the first whitespace, "=" or
+     * ":" that is not escaped. The space between the key and the value contains
+     * either one whitespace, one "=" or one ":" and any number of additional
+     * whitespaces before and after that character. The value starts with the
+     * first character after the space between the key and the value.</li>
+     * <li>Following escape sequences are recognized: "\ ", "\\", "\r", "\n",
+     * "\!", "\#", "\t", "\b", "\f", and "&#92;uXXXX" (unicode character).</li>
+     * </ul>
      * 
      * @param in
-     *            the input stream
-     * @throws IOException 
+     *            the {@code InputStream}.
+     * @throws IOException
+     *             if error occurs during reading from the {@code InputStream}.
+     * @since Android 1.0
      */
     public synchronized void load(InputStream in) throws IOException {
         int mode = NONE, unicode = 0, count = 0;
@@ -280,12 +324,18 @@ public class Properties extends Hashtable<Object,Object> {
             }
             if (mode == UNICODE) {
                 int digit = Character.digit(nextChar, 16);
+                // BEGIN android-changed
+                // copied from newer version of Harmony
                 if (digit >= 0) {
                     unicode = (unicode << 4) + digit;
                     if (++count < 4) {
                         continue;
                     }
+                } else if (count <= 4) {
+                    // luni.09=Invalid Unicode sequence: illegal character
+                    throw new IllegalArgumentException(Messages.getString("luni.09"));
                 }
+                // END android-changed
                 mode = NONE;
                 buf[offset++] = (char) unicode;
                 if (nextChar != '\n') {
@@ -403,6 +453,13 @@ public class Properties extends Hashtable<Object,Object> {
             }
             buf[offset++] = nextChar;
         }
+        // BEGIN android-added
+        // copied from a newer version of Harmony
+        if (mode == UNICODE && count <= 4) {
+            // luni.08=Invalid Unicode sequence: expected format \\uxxxx
+            throw new IllegalArgumentException(Messages.getString("luni.08"));
+        }
+        // END android-added
         if (keyLength >= 0) {
             String temp = new String(buf, 0, offset);
             put(temp.substring(0, keyLength), temp.substring(keyLength));
@@ -410,9 +467,12 @@ public class Properties extends Hashtable<Object,Object> {
     }
 
     /**
-     * Returns all of the property names that this Properties contains.
+     * Returns all of the property names that this {@code Properties} object
+     * contains.
      * 
-     * @return an Enumeration containing the names of all properties
+     * @return an {@code Enumeration} containing the names of all properties
+     *         that this {@code Properties} object contains.
+     * @since Android 1.0
      */
     public Enumeration<?> propertyNames() {
         if (defaults == null) {
@@ -432,19 +492,19 @@ public class Properties extends Hashtable<Object,Object> {
     }
 
     /**
-     * Saves the mappings in this Properties to the specified OutputStream,
-     * putting the specified comment at the beginning. The output from this
-     * method is suitable for being read by the load() method.
+     * Saves the mappings in this {@code Properties} to the specified {@code
+     * OutputStream}, putting the specified comment at the beginning. The output
+     * from this method is suitable for being read by the
+     * {@link #load(InputStream)} method.
      * 
-     * @param out
-     *            the OutputStream
-     * @param comment
-     *            the comment
-     * 
-     * @exception ClassCastException
-     *                when the key or value of a mapping is not a String
-     * 
-     * @deprecated Does not throw an IOException, use {@link #store}
+     * @param out the {@code OutputStream} to write to.
+     * @param comment the comment to add at the beginning.
+     * @exception ClassCastException when the key or value of a mapping is not a
+     *                String.
+     * @deprecated This method ignores any {@code IOException} thrown while
+     *             writing -- use {@link #store} instead for better exception
+     *             handling.
+     * @since Android 1.0
      */
     @Deprecated
     public void save(OutputStream out, String comment) {
@@ -456,13 +516,14 @@ public class Properties extends Hashtable<Object,Object> {
 
     /**
      * Maps the specified key to the specified value. If the key already exists,
-     * the old value is replaced. The key and value cannot be null.
+     * the old value is replaced. The key and value cannot be {@code null}.
      * 
      * @param name
-     *            the key
+     *            the key.
      * @param value
-     *            the value
-     * @return the old value mapped to the key, or null
+     *            the value.
+     * @return the old value mapped to the key, or {@code null}.
+     * @since Android 1.0
      */
     public Object setProperty(String name, String value) {
         return put(name, value);
@@ -471,18 +532,18 @@ public class Properties extends Hashtable<Object,Object> {
     private static String lineSeparator;
 
     /**
-     * Stores the mappings in this Properties to the specified OutputStream,
-     * putting the specified comment at the beginning. The output from this
-     * method is suitable for being read by the load() method.
+     * Stores the mappings in this {@code Properties} to the specified {@code
+     * OutputStream}, putting the specified comment at the beginning. The output
+     * from this method is suitable for being read by the
+     * {@link #load(InputStream)} method.
      * 
-     * @param out
-     *            the OutputStream
-     * @param comment
-     *            the comment
-     * @throws IOException 
-     * 
-     * @exception ClassCastException
-     *                when the key or value of a mapping is not a String
+     * @param out the {@code OutputStream} to write to.
+     * @param comment the comment to put at the beginning.
+     * @throws IOException if an error occurs during the write to the {@code
+     *             OutputStream}.
+     * @exception ClassCastException when the key or value of a mapping is not a
+     *                {@code String}.
+     * @since Android 1.0
      */
     public synchronized void store(OutputStream out, String comment)
             throws IOException {
@@ -514,6 +575,25 @@ public class Properties extends Hashtable<Object,Object> {
         writer.flush();
     }
 
+    /**
+     * Loads the properties from an {@code InputStream} containing the
+     * properties in XML form. The XML document must begin with (and conform to)
+     * following DOCTYPE:
+     * 
+     * <pre>
+     * &lt;!DOCTYPE properties SYSTEM &quot;http://java.sun.com/dtd/properties.dtd&quot;&gt;
+     * </pre>
+     * 
+     * Also the content of the XML data must satisfy the DTD but the xml is not
+     * validated against it. The DTD is not loaded from the SYSTEM ID. After
+     * this method returns the InputStream is not closed.
+     * 
+     * @param in the InputStream containing the XML document.
+     * @throws IOException in case an error occurs during a read operation.
+     * @throws InvalidPropertiesFormatException if the XML data is not a valid
+     *             properties file.
+     * @since Android 1.0
+     */
     public synchronized void loadFromXML(InputStream in) 
             throws IOException, InvalidPropertiesFormatException {
         if (in == null) {
@@ -578,7 +658,7 @@ public class Properties extends Hashtable<Object,Object> {
                 // BEGIN android-added
                 String value = getTextContent(entry);
                 // END android-added
-
+                
                 /*
                  * key != null & value != null
                  * but key or(and) value can be empty String
@@ -591,12 +671,49 @@ public class Properties extends Hashtable<Object,Object> {
             throw new InvalidPropertiesFormatException(e);
         }
     }
-    
+
+    /**
+     * Writes all properties stored in this instance into the {@code
+     * OutputStream} in XML representation. The DOCTYPE is
+     * 
+     * <pre>
+     * &lt;!DOCTYPE properties SYSTEM &quot;http://java.sun.com/dtd/properties.dtd&quot;&gt;
+     * </pre>
+     * 
+     * If the comment is null, no comment is added to the output. UTF-8 is used
+     * as the encoding. The {@code OutputStream} is not closed at the end. A
+     * call to this method is the same as a call to {@code storeToXML(os,
+     * comment, "UTF-8")}.
+     * 
+     * @param os the {@code OutputStream} to write to.
+     * @param comment the comment to add. If null, no comment is added.
+     * @throws IOException if an error occurs during writing to the output.
+     * @since Android 1.0
+     */
     public void storeToXML(OutputStream os, String comment) 
             throws IOException {
         storeToXML(os, comment, "UTF-8");
     }
-    
+
+    /**
+     * Writes all properties stored in this instance into the {@code
+     * OutputStream} in XML representation. The DOCTYPE is
+     * 
+     * <pre>
+     * &lt;!DOCTYPE properties SYSTEM &quot;http://java.sun.com/dtd/properties.dtd&quot;&gt;
+     * </pre>
+     * 
+     * If the comment is null, no comment is added to the output. The parameter
+     * {@code encoding} defines which encoding should be used. The {@code
+     * OutputStream} is not closed at the end.
+     * 
+     * @param os the {@code OutputStream} to write to.
+     * @param comment the comment to add. If null, no comment is added.
+     * @param encoding the code identifying the encoding that should be used to
+     *            write into the {@code OutputStream}.
+     * @throws IOException if an error occurs during writing to the output.
+     * @since Android 1.0
+     */
     public synchronized void storeToXML(OutputStream os, String comment,
             String encoding) throws IOException {
 

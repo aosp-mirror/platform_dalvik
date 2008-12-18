@@ -34,9 +34,9 @@ public class Element extends Node {
 
     protected String namespace;
     protected String name;
-    protected ArrayList attributes;
+    protected Vector attributes;
     protected Node parent;
-    protected ArrayList prefixes;
+    protected Vector prefixes;
 
     public Element() {
     }
@@ -81,24 +81,22 @@ public class Element extends Node {
     }
 
     public String getAttributeNamespace (int index) {
-        return ((String []) attributes.get(index)) [0];
+        return ((String []) attributes.elementAt (index)) [0];
     }
 
+/*    public String getAttributePrefix (int index) {
+        return ((String []) attributes.elementAt (index)) [1];
+    }*/
+
     public String getAttributeName (int index) {
-        return ((String []) attributes.get(index)) [1];
+        return ((String []) attributes.elementAt (index)) [1];
     }
     
 
     public String getAttributeValue (int index) {
-        return ((String []) attributes.get(index)) [2];
+        return ((String []) attributes.elementAt (index)) [2];
     }
     
-
-    public String
-    getAttributeValue(String name)
-    {
-        return getAttributeValue(null, name);
-    }
     
     public String getAttributeValue (String namespace, String name) {
         for (int i = 0; i < getAttributeCount (); i++) {
@@ -165,11 +163,11 @@ public class Element extends Node {
 
 
     public String getNamespacePrefix (int i) {
-        return ((String []) prefixes.get(i)) [0];
+        return ((String []) prefixes.elementAt (i)) [0];
     }
 
     public String getNamespaceUri (int i) {
-        return ((String []) prefixes.get(i)) [1];
+        return ((String []) prefixes.elementAt (i)) [1];
     }
 
 
@@ -240,18 +238,18 @@ public class Element extends Node {
 
     public void setAttribute (String namespace, String name, String value) {
         if (attributes == null) 
-            attributes = new ArrayList();
+            attributes = new Vector ();
 
         if (namespace == null) 
             namespace = "";
         
         for (int i = attributes.size()-1; i >=0; i--){
-            String[] attribut = (String[]) attributes.get(i);
+            String[] attribut = (String[]) attributes.elementAt(i);
             if (attribut[0].equals(namespace) &&
                 attribut[1].equals(name)){
                     
                 if (value == null) {
-                    attributes.remove(i);
+                    attributes.removeElementAt(i);
                 }
                 else {
                     attribut[2] = value;
@@ -260,7 +258,8 @@ public class Element extends Node {
             }
         }
 
-        attributes.add(new String[] {namespace, name, value});
+        attributes.addElement 
+            (new String [] {namespace, name, value});
     }
 
 
@@ -269,8 +268,8 @@ public class Element extends Node {
      * prefix */
 
     public void setPrefix (String prefix, String namespace) {
-        if (prefixes == null) prefixes = new ArrayList();
-        prefixes.add(new String [] {prefix, namespace});        
+        if (prefixes == null) prefixes = new Vector ();
+        prefixes.addElement (new String [] {prefix, namespace});        
     }
 
 

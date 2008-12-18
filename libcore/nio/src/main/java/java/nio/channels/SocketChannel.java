@@ -27,36 +27,39 @@ import java.nio.channels.spi.SelectorProvider;
 import org.apache.harmony.luni.platform.Platform;
 
 /**
- * A SocketChannel is a selectable channel for part abstraction of stream
- * connecting socket. The <code>socket</code> method of this class can return
- * the related <code>Socket</code> instance, which can handle the socket.
+ * A {@code SocketChannel} is a selectable channel that provides a partial
+ * abstraction of stream connecting socket. {@code socket()} returns the related
+ * {@link Socket} instance which can handle the socket.
  * <p>
- * A socket channel is open but not connected when created by <code>open</code>
- * method. After connected by calling the <code>connect</code> method, it will
- * keep connected before closed. The connection is non-blocking that the
- * <code>connect</code> method is for the initial connection and following
- * <code>finishConnect</code> method is for the final steps of connection. The
- * <code>isConnectionPending</code> method can tell the connection is blocked
- * or not; the <code>isConnected</code> method can tell the socket is
- * connected finally or not.
+ * A socket channel is open but not connected when created by {@code open()}.
+ * After connecting it by calling {@code connect(SocketAddress)}, it will remain
+ * connected until it gets closed. If the connection is non-blocking then
+ * {@code connect(SocketAddress)} is used to initiate the connection, followed
+ * by a call of {@code finishConnect()} to perform the final steps of
+ * connecting. {@code isConnectionPending()} indicates if the connection is
+ * blocked or not; {@code isConnected()} indicates if the socket is finally
+ * connected or not.
  * </p>
  * <p>
- * The shut down operation can be independent and asynchronous for input and
- * output. The <code>shutdownInput</code> method is for input, and can make
- * the following read operation fail as end of stream. If the input is shut down
- * and another thread is pending in read operation, the read will end without
- * effect and return end of stream. The <code>shutdownOutput</code> method is
- * for output, and can make the following write operation throwing a
- * <code>ClosedChannelException</code>. If the output is shut down and
- * another is pending in a write operation, an
- * <code>AsynchronousCloseException</code> will thrown to the pending thread.
+ * The input and output sides of a channel can be shut down independently and
+ * asynchronously without closing the channel. The {@code shutdownInput} method
+ * is used for the input side of a channel and subsequent read operations return
+ * -1, which means end of stream. If another thread is blocked in a read
+ * operation when the shutdown occurs, the read will end without effect and
+ * return end of stream. The {@code shutdownOutput} method is used for the
+ * output side of the channel; subsequent write operations throw a
+ * {@link ClosedChannelException}. If the output is shut down and another thread
+ * is blocked in a write operation, an {@link AsynchronousCloseException} will
+ * be thrown to the pending thread.
  * </p>
  * <p>
  * Socket channels are thread-safe, no more than one thread can read or write at
- * given time. The <code>connect</code> and <code>finishConnect</code>
- * methods are concurrent each other, when they are processing, other read and
- * write will block.
+ * any given time. The {@code connect(SocketAddress)} and {@code
+ * finishConnect()} methods are synchronized against each other; when they are
+ * processing, calls to {@code read} and {@code write} will block.
  * </p>
+ * 
+ * @since Android 1.0
  */
 public abstract class SocketChannel extends AbstractSelectableChannel implements
         ByteChannel, ScatteringByteChannel, GatheringByteChannel {
@@ -66,57 +69,59 @@ public abstract class SocketChannel extends AbstractSelectableChannel implements
     }
     
     /**
-     * Constructor for this class.
+     * Constructs a new {@code SocketChannel}.
      * 
      * @param selectorProvider
-     *            A instance of SelectorProvider
+     *            an instance of SelectorProvider.
+     * @since Android 1.0
      */
     protected SocketChannel(SelectorProvider selectorProvider) {
         super(selectorProvider);
     }
 
     /**
-     * Create a open and not-connected socket channel.
+     * Creates an open and unconnected socket channel.
      * <p>
-     * This channel is got by <code>openSocketChannel</code> method of the
-     * default <code>SelectorProvider </code> instance.
+     * This channel is created by calling {@code openSocketChannel()} of the
+     * default {@link SelectorProvider} instance.
      * </p>
      * 
-     * @return The new created channel which is open but not-connected.
+     * @return the new channel which is open but unconnected.
      * @throws IOException
-     *             If some IO problem occurs.
+     *             if an I/O error occurs.
+     * @since Android 1.0
      */
     public static SocketChannel open() throws IOException {
         return SelectorProvider.provider().openSocketChannel();
     }
 
     /**
-     * Create a socket channel and connect it to a socket address.
+     * Creates a socket channel and connects it to a socket address.
      * <p>
-     * This method perform just as <code>open</code> method following by the
-     * <code>connect</code> method.
+     * This method performs a call to {@code open()} followed by a call to
+     * {@code connect(SocketAdress)}.
      * </p>
      * 
      * @param address
-     *            The socket address to be connected.
-     * @return The new opened channel.
+     *            the socket address to be connected to.
+     * @return the new connected channel.
      * @throws AsynchronousCloseException
-     *             If the channel is closed by another thread while this method
-     *             is in operation.
+     *             if this channel is closed by another thread while this method
+     *             is executing.
      * @throws ClosedByInterruptException
-     *             If another thread interrupts the calling thread while the
-     *             operation is in progress. The calling thread will have the
-     *             interrupt state set, and the channel will be closed.
-     * @throws UnresolvedAddressException
-     *             If the address is not resolved.
-     * @throws UnsupportedAddressTypeException
-     *             If the address type is not supported.
+     *             if another thread interrupts the calling thread while this
+     *             operation is executing. The calling thread will have the
+     *             interrupt state set and the channel will be closed.
      * @throws SecurityException
-     *             If there is a security manager, and the address is not
-     *             permitted to access.
+     *             if there is a security manager and it denies the access of
+     *             {@code address}.
+     * @throws UnresolvedAddressException
+     *             if the address is not resolved.
+     * @throws UnsupportedAddressTypeException
+     *             if the address type is not supported.
      * @throws IOException
-     *             Some other IO error occurred.
-     * 
+     *             if an I/O error occurs.
+     * @since Android 1.0
      */
     public static SocketChannel open(SocketAddress address) throws IOException {
         SocketChannel socketChannel = open();
@@ -127,240 +132,235 @@ public abstract class SocketChannel extends AbstractSelectableChannel implements
     }
 
     /**
-     * Get the valid operations of this channel. Socket channels support
-     * connect, read and write operation, so this method returns (
-     * <code>SelectionKey.OP_CONNECT</code> |
-     * <code>SelectionKey.OP_READ</code> | <code>SelectionKey.OP_WRITE</code> ).
+     * Gets the valid operations of this channel. Socket channels support
+     * connect, read and write operation, so this method returns
+     * {@code SelectionKey.OP_CONNECT | SelectionKey.OP_READ | SelectionKey.OP_WRITE}.
      * 
+     * @return the operations supported by this channel.
      * @see java.nio.channels.SelectableChannel#validOps()
-     * @return Valid operations in bit-set.
+     * @since Android 1.0
      */
     public final int validOps() {
         return (SelectionKey.OP_CONNECT | SelectionKey.OP_READ | SelectionKey.OP_WRITE);
     }
 
     /**
-     * Return the related socket of this channel, which won't declare public
-     * methods that not declared in <code>Socket</code>.
+     * Returns the socket assigned to this channel, which does not declare any public
+     * methods that are not declared in {@code Socket}.
      * 
-     * @return The related Socket instance.
+     * @return the socket assigned to this channel.
+     * @since Android 1.0
      */
     public abstract Socket socket();
 
     /**
-     * Answer whether this channel's socket is connected or not.
+     * Indicates whether this channel's socket is connected.
      * 
-     * @return <code>true</code> for this channel's socket is connected;
-     *         <code>false</code> otherwise.
+     * @return {@code true} if this channel's socket is connected, {@code false}
+     *         otherwise.
+     * @since Android 1.0
      */
     public abstract boolean isConnected();
 
     /**
-     * Answer whether this channel's socket is in connecting or not.
+     * Indicates whether this channel's socket is still trying to connect.
      * 
-     * @return <code>true</code> for the connection is initiated but not
-     *         finished; <code>false</code> otherwise.
+     * @return {@code true} if the connection is initiated but not finished;
+     *         {@code false} otherwise.
+     * @since Android 1.0
      */
     public abstract boolean isConnectionPending();
 
     /**
-     * Connect the socket to remote address.
+     * Connects this channel's socket with a remote address.
      * <p>
-     * If the channel is blocking, this method will suspend before connection
-     * finished or an I/O exception. If the channel is non-blocking, this method
-     * will return <code>true</code> if the connection is finished at once or
-     * return <code>false</code> and the connection must wait
-     * <code>finishConnect</code> to finished otherwise.
+     * If this channel is blocking, this method will suspend until connecting is
+     * finished or an I/O exception occurrs. If the channel is non-blocking,
+     * this method will return {@code true} if the connection is finished at
+     * once or return {@code false} when the connection must be finished later
+     * by calling {@code finishConnect()}.
      * </p>
      * <p>
-     * This method can be called at any moment, and can block other read and
-     * write operations while connecting.
-     * </p>
-     * <p>
-     * This method just execute the same security checks as the connect method
-     * of the <code>Socket</code> class.
+     * This method can be called at any moment and can block other read and
+     * write operations while connecting. It executes the same security checks
+     * as the connect method of the {@code Socket} class.
      * </p>
      * 
      * @param address
-     *            The address to be connected.
-     * @return <code>true</code> if connection is finished,<code>false</code>
+     *            the address to connect with.
+     * @return {@code true} if the connection is finished, {@code false}
      *         otherwise.
      * @throws AlreadyConnectedException
-     *             If the channel is connected already.
+     *             if the channel is already connected.
      * @throws ConnectionPendingException
-     *             A non-blocking connecting is doing on this channel.
+     *             a non-blocking connecting operation is already executing on
+     *             this channel.
      * @throws ClosedChannelException
-     *             If the channel is already closed.
+     *             if this channel is closed.
      * @throws AsynchronousCloseException
-     *             If the channel is closed by another thread while this method
-     *             is in operation.
+     *             if this channel is closed by another thread while this method
+     *             is executing.
      * @throws ClosedByInterruptException
-     *             If another thread interrupts the calling thread while the
+     *             if another thread interrupts the calling thread while this
      *             operation is in progress. The calling thread will have the
-     *             interrupt state set, and the channel will be closed.
+     *             interrupt state set and this channel will be closed.
      * @throws UnresolvedAddressException
-     *             If the address is not resolved.
+     *             if the address is not resolved.
      * @throws UnsupportedAddressTypeException
-     *             If the address type is not supported.
+     *             if the address type is not supported.
      * @throws SecurityException
-     *             If there is a security manager, and the address is not
-     *             permitted to access.
+     *             if there is a security manager and it denies the access of
+     *             {@code address}.
      * @throws IOException
-     *             Some other IO error occurred.
-     * 
+     *             if an I/O error occurs.
+     * @since Android 1.0
      */
     public abstract boolean connect(SocketAddress address) throws IOException;
 
     /**
-     * Complete the connection.
+     * Completes the connection process initiated by a call of {@code
+     * connect(SocketAddress)}.
      * <p>
-     * This method is used when the channel is connectable to finish the
-     * connection, and the connectable status of a channel means the channel is
-     * after initiating in non-blocking mode and calling its
-     * <code>connect</code> method. It will throw related
-     * <code>IOException</code> if the connection failed.
+     * This method returns {@code true} if the connection is finished already
+     * and returns {@code false} if the channel is non-blocking and the
+     * connection is not finished yet.
      * </p>
      * <p>
-     * This method will return <code>true</code> if the connection is finished
-     * already, and return <code>false</code> if the channel is non-blocking
-     * and the connection is not finished yet.
+     * If this channel is in blocking mode, this method will suspend and return
+     * {@code true} when the connection is finished. It closes this channel and
+     * throws an exception if the connection fails.
      * </p>
      * <p>
-     * If the channel is in blocking mode, this method will suspend, and return
-     * <code>true</code> for connection finished or throw some exception
-     * otherwise. The channel will be closed if the connection failed and this
-     * method thrown some exception.
-     * </p>
-     * <p>
-     * This method can be called at any moment, and can block other read and
-     * write operations while connecting.
+     * This method can be called at any moment and it can block other {@code
+     * read} and {@code write} operations while connecting.
      * </p>
      * 
-     * @return <code>true</code> if the connection is successfully finished,
-     *         <code>false</code> otherwise.
+     * @return {@code true} if the connection is successfully finished, {@code
+     *         false} otherwise.
      * @throws NoConnectionPendingException
-     *             If the channel is not connected and the connection is not
-     *             initiated.
+     *             if the channel is not connected and the connection process
+     *             has not been initiated.
      * @throws ClosedChannelException
-     *             If the channel is already closed.
+     *             if this channel is closed.
      * @throws AsynchronousCloseException
-     *             If the channel is closed by another thread while this method
-     *             is in operation.
+     *             if this channel is closed by another thread while this method
+     *             is executing.
      * @throws ClosedByInterruptException
-     *             If another thread interrupts the calling thread while the
-     *             operation is in progress. The calling thread will have the
-     *             interrupt state set, and the channel will be closed.
+     *             if another thread interrupts the calling thread while this
+     *             operation is in progress. The calling thread has the
+     *             interrupt state set, and this channel is closed.
      * @throws IOException
-     *             Some other IO error occurred.
-     * 
+     *             if an I/O error occurs.
+     * @since Android 1.0
      */
     public abstract boolean finishConnect() throws IOException;
 
     /**
-     * Reads bytes from the channel into the given buffer.
+     * Reads bytes from this socket channel into the given buffer.
      * <p>
-     * The maximum number of bytes that will be read is the
-     * <code>remaining()</code> number of bytes in the buffer when the method
-     * invoked. The bytes will be read into the buffer starting at the buffer's
-     * <code>position</code>.
+     * The maximum number of bytes that will be read is the remaining number of
+     * bytes in the buffer when the method is invoked. The bytes will be copied
+     * into the buffer starting at the buffer's current position.
      * </p>
      * <p>
-     * The call may block if other threads are also attempting to read on the
-     * same channel.
+     * The call may block if other threads are also attempting to read from this
+     * channel.
      * </p>
      * <p>
-     * Upon completion, the buffer's <code>position()</code> is updated to the
-     * end of the bytes that were read. The buffer's <code>limit()</code> is
-     * unmodified.
+     * Upon completion, the buffer's position is set to the end of the bytes
+     * that have been read. The buffer's limit is not changed.
      * </p>
      * 
-     * @see java.nio.channels.ReadableByteChannel#read(java.nio.ByteBuffer)
      * @param target
-     *            The byte buffer to receive the bytes.
-     * @return The number of bytes actually read.
-     * @throws NotYetConnectedException
-     *             If the channel is not connected yet.
-     * @throws ClosedChannelException
-     *             If the channel is already closed.
+     *            the byte buffer to receive the bytes.
+     * @return the number of bytes actually read.
      * @throws AsynchronousCloseException
-     *             If the channel is closed by another thread while this method
-     *             is in operation.
+     *             if another thread closes the channel during the read.
+     * @throws NotYetConnectedException
+     *             if this channel is not yet connected.
      * @throws ClosedByInterruptException
-     *             If another thread interrupts the calling thread while the
-     *             operation is in progress. The calling thread will have the
-     *             interrupt state set, and the channel will be closed.
+     *             if another thread interrupts the calling thread while this
+     *             operation is in progress. The interrupt state of the calling
+     *             thread is set and the channel is closed.
+     * @throws ClosedChannelException
+     *             if this channel is closed.
      * @throws IOException
-     *             Some other IO error occurred.
-     * 
+     *             if another I/O error occurs.
+     * @since Android 1.0
      */
     public abstract int read(ByteBuffer target) throws IOException;
 
     /**
-     * Reads bytes from the channel into a subset of the given buffers.
-     * <p>
-     * This method attempts to read all of the <code>remaining()</code> bytes
-     * from <code>length</code> byte buffers, in order, starting at
-     * <code>targets[offset]</code>. The number of bytes actually read is
-     * returned.
-     * </p>
+     * Reads bytes from this socket channel and stores them in a subset of the
+     * specified array of buffers. The subset is defined by {@code offset} and
+     * {@code length}, indicating the first buffer and the number of buffers to
+     * use. This method attempts to read as many bytes as can be stored in the
+     * buffer subset from this channel and returns the number of bytes actually
+     * read.
      * <p>
      * If a read operation is in progress, subsequent threads will block until
-     * the read is completed, and will then contend for the ability to read.
+     * the read is completed and will then contend for the ability to read.
      * </p>
      * 
-     * @see java.nio.channels.ScatteringByteChannel#read(java.nio.ByteBuffer[],
-     *      int, int)
      * @param targets
-     *            the array of byte buffers into which the bytes will be read.
+     *            the array of byte buffers into which the bytes will be copied.
      * @param offset
-     *            the index of the first buffer to read.
+     *            the index of the first buffer to store bytes in.
      * @param length
-     *            the maximum number of buffers to read.
-     * @throws NotYetConnectedException
-     *             If the channel is not connected yet.
-     * @throws ClosedChannelException
-     *             If the channel is already closed.
+     *            the maximum number of buffers to store bytes in.
+     * @return the number of bytes actually read.
      * @throws AsynchronousCloseException
-     *             If the channel is closed by another thread while this method
-     *             is in operation.
+     *             if this channel is closed by another thread during this read
+     *             operation.
      * @throws ClosedByInterruptException
-     *             If another thread interrupts the calling thread while the
-     *             operation is in progress. The calling thread will have the
-     *             interrupt state set, and the channel will be closed.
+     *             if another thread interrupts the calling thread while this
+     *             operation is in progress. The interrupt state of the calling
+     *             thread is set and the channel is closed.
+     * @throws ClosedChannelException
+     *             if this channel is closed.
+     * @throws IndexOutOfBoundsException
+     *             if {@code offset < 0} or {@code length < 0}, or if {@code
+     *             offset + length} is greater than the size of {@code targets}.
      * @throws IOException
-     *             Some other IO error occurred.
-     * 
+     *             if another I/O error occurs.
+     * @throws NotYetConnectedException
+     *             if this channel is not yet connected.
+     * @since Android 1.0
      */
     public abstract long read(ByteBuffer[] targets, int offset, int length)
             throws IOException;
 
     /**
-     * Reads bytes from the channel into all the given buffers.
+     * Reads bytes from this socket channel and stores them in the specified
+     * array of buffers. This method attempts to read as many bytes as can be
+     * stored in the buffer array from this channel and returns the number of
+     * bytes actually read.
      * <p>
-     * This method is equivalent to:
+     * If a read operation is in progress, subsequent threads will block until
+     * the read is completed and will then contend for the ability to read.
+     * </p>
+     * <p>
+     * Calling this method is equivalent to calling {@code read(targets, 0,
+     * targets.length);}
+     * </p>
      * 
-     * <pre>
-     * read(targets, 0, targets.length);
-     * </pre>
-     * 
-     * @see java.nio.channels.ScatteringByteChannel#read(java.nio.ByteBuffer[])
      * @param targets
-     *            the array of byte buffers to receive the bytes being read.
+     *            the array of byte buffers into which the bytes will be copied.
      * @return the number of bytes actually read.
-     * @throws NotYetConnectedException
-     *             If the channel is not connected yet.
-     * @throws ClosedChannelException
-     *             If the channel is already closed.
      * @throws AsynchronousCloseException
-     *             If the channel is closed by another thread while this method
-     *             is in operation.
+     *             if this channel is closed by another thread during this read
+     *             operation.
      * @throws ClosedByInterruptException
-     *             If another thread interrupts the calling thread while the
-     *             operation is in progress. The calling thread will have the
-     *             interrupt state set, and the channel will be closed.
+     *             if another thread interrupts the calling thread while this
+     *             operation is in progress. The interrupt state of the calling
+     *             thread is set and the channel is closed.
+     * @throws ClosedChannelException
+     *             if this channel is closed.
      * @throws IOException
-     *             Some other IO error occurred.
-     * 
+     *             if another I/O error occurs.
+     * @throws NotYetConnectedException
+     *             if this channel is not yet connected.
+     * @since Android 1.0
      */
     public synchronized final long read(ByteBuffer[] targets)
             throws IOException {
@@ -368,114 +368,101 @@ public abstract class SocketChannel extends AbstractSelectableChannel implements
     }
 
     /**
-     * Writes bytes from the given buffer to the channel.
+     * Writes bytes from the given byte buffer to this socket channel. The
+     * maximum number of bytes that are written is the remaining number of bytes
+     * in the buffer when this method is invoked. The bytes are taken from the
+     * buffer starting at the buffer's position.
      * <p>
-     * The maximum number of bytes that will be written is the
-     * <code>remaining()</code> number of bytes in the buffer when the method
-     * invoked. The bytes will be written from the buffer starting at the
-     * buffer's <code>position</code>.
-     * </p>
-     * <p>
-     * The call may block if other threads are also attempting to write on the
+     * The call may block if other threads are also attempting to write to the
      * same channel.
      * </p>
      * <p>
-     * Upon completion, the buffer's <code>position()</code> is updated to the
-     * end of the bytes that were written. The buffer's <code>limit()</code>
-     * is unmodified.
+     * Upon completion, the buffer's position is updated to the end of the bytes
+     * that have been written. The buffer's limit is not changed.
      * </p>
      * 
-     * @see java.nio.channels.WritableByteChannel#write(java.nio.ByteBuffer)
      * @param source
      *            the byte buffer containing the bytes to be written.
      * @return the number of bytes actually written.
-     * @throws NotYetConnectedException
-     *             If the channel is not connected yet.
-     * @throws ClosedChannelException
-     *             If the channel is already closed.
      * @throws AsynchronousCloseException
-     *             If the channel is closed by another thread while this method
-     *             is in operation.
+     *             if another thread closes the channel during the write.
      * @throws ClosedByInterruptException
-     *             If another thread interrupts the calling thread while the
-     *             operation is in progress. The calling thread will have the
-     *             interrupt state set, and the channel will be closed.
+     *             if another thread interrupts the calling thread while this
+     *             operation is in progress. The interrupt state of the calling
+     *             thread is set and the channel is closed.
+     * @throws ClosedChannelException
+     *             if the channel was already closed.
      * @throws IOException
-     *             Some other IO error occurred.
-     * 
+     *             if another I/O error occurs.
+     * @throws NotYetConnectedException
+     *             if this channel is not connected yet.
+     * @since Android 1.0
      */
     public abstract int write(ByteBuffer source) throws IOException;
 
     /**
-     * Writes a subset of the given bytes from the buffers to the channel.
-     * <p>
-     * This method attempts to write all of the <code>remaining()</code> bytes
-     * from <code>length</code> byte buffers, in order, starting at
-     * <code>sources[offset]</code>. The number of bytes actually written is
-     * returned.
-     * </p>
+     * Writes bytes from a subset of the specified array of buffers into this
+     * socket channel. The subset is defined by {@code offset} and {@code
+     * length}, indicating the first buffer and the number of buffers to use.
      * <p>
      * If a write operation is in progress, subsequent threads will block until
-     * the write is completed, and will then contend for the ability to write.
+     * the write is completed and then contend for the ability to write.
      * </p>
      * 
-     * @see java.nio.channels.GatheringByteChannel#write(java.nio.ByteBuffer[],
-     *      int, int)
      * @param sources
-     *            the array of byte buffers containing the source of remaining
-     *            bytes that will be attempted to be written.
+     *            the array of byte buffers that is the source for bytes written
+     *            to this channel.
      * @param offset
-     *            the index of the first buffer to write.
+     *            the index of the first buffer in {@code buffers }to get bytes
+     *            from.
      * @param length
-     *            the number of buffers to write.
-     * @return the number of bytes actually written.
-     * @throws NotYetConnectedException
-     *             If the channel is not connected yet.
-     * @throws ClosedChannelException
-     *             If the channel is already closed.
+     *            the number of buffers to get bytes from.
+     * @return the number of bytes actually written to this channel.
      * @throws AsynchronousCloseException
-     *             If the channel is closed by another thread while this method
-     *             is in operation.
+     *             if this channel is closed by another thread during this write
+     *             operation.
      * @throws ClosedByInterruptException
-     *             If another thread interrupts the calling thread while the
-     *             operation is in progress. The calling thread will have the
-     *             interrupt state set, and the channel will be closed.
+     *             if another thread interrupts the calling thread while this
+     *             operation is in progress. The interrupt state of the calling
+     *             thread is set and the channel is closed.
+     * @throws ClosedChannelException
+     *             if this channel is closed.
+     * @throws IndexOutOfBoundsException
+     *             if {@code offset < 0} or {@code length < 0}, or if {@code
+     *             offset + length} is greater than the size of {@code sources}.
      * @throws IOException
-     *             Some other IO error occurred.
-     * 
+     *             if another I/O error occurs.
+     * @throws NotYetConnectedException
+     *             if this channel is not yet connected.
+     * @since Android 1.0
      */
     public abstract long write(ByteBuffer[] sources, int offset, int length)
             throws IOException;
 
     /**
-     * Writes bytes from all the given buffers to the channel.
+     * Writes bytes from all the given byte buffers to this socket channel.
      * <p>
-     * This method is equivalent to:
-     * 
-     * <pre>
-     * write(buffers, 0, buffers.length);
-     * </pre>
-     * 
+     * Calling this method is equivalent to calling {@code write(sources, 0,
+     * sources.length);}
      * </p>
      * 
-     * @see java.nio.channels.GatheringByteChannel#write(java.nio.ByteBuffer[])
      * @param sources
-     *            the buffers containing bytes to be written.
+     *            the buffers containing bytes to write.
      * @return the number of bytes actually written.
-     * @throws NotYetConnectedException
-     *             If the channel is not connected yet.
-     * @throws ClosedChannelException
-     *             If the channel is already closed.
      * @throws AsynchronousCloseException
-     *             If the channel is closed by another thread while this method
-     *             is in operation.
+     *             if this channel is closed by another thread during this write
+     *             operation.
      * @throws ClosedByInterruptException
-     *             If another thread interrupts the calling thread while the
-     *             operation is in progress. The calling thread will have the
-     *             interrupt state set, and the channel will be closed.
+     *             if another thread interrupts the calling thread while this
+     *             operation is in progress. The interrupt state of the calling
+     *             thread is set and the channel is closed.
+     * @throws ClosedChannelException
+     *             if this channel is closed.
      * @throws IOException
-     *             Some other IO error occurred.
-     * 
+     *             if another I/O error occurs.
+     * @throws NotYetConnectedException
+     *             if this channel is not yet connected.
+     * @since Android 1.0
      */
     public synchronized final long write(ByteBuffer[] sources)
             throws IOException {

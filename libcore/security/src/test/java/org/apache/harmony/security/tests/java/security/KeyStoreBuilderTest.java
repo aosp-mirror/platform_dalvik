@@ -16,6 +16,11 @@
 
 package org.apache.harmony.security.tests.java.security;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -34,7 +39,7 @@ import org.apache.harmony.security.tests.support.KeyStoreTestSupport;
 import org.apache.harmony.security.tests.support.tmpCallbackHandler;
 
 import junit.framework.TestCase;
-
+@TestTargetClass(KeyStore.class)
 public class KeyStoreBuilderTest extends TestCase {
 
     protected void setUp() throws Exception {
@@ -70,8 +75,17 @@ public class KeyStoreBuilderTest extends TestCase {
     }
 
     /*
-     * test for method newInstance(KeyStore, KeyStore.ProtectionParameter) 
+     * test for constructor KeyStoreBuilder
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "KeyStoreBuilder",
+          methodArgs = {}
+        )
+    })
     public void testConstructor() {
         try {
             new KeyStoreBuilder();
@@ -83,6 +97,15 @@ public class KeyStoreBuilderTest extends TestCase {
     /*
      * test for method newInstance(KeyStore, KeyStore.ProtectionParameter) 
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "newInstance",
+          methodArgs = {java.security.KeyStore.class, java.security.KeyStore.ProtectionParameter.class}
+        )
+    })
     public void testNewInstanceKeyStoreProtectionParameter()
             throws KeyStoreException, NoSuchAlgorithmException, IOException,
             CertificateException, InvalidKeyException, InvalidKeySpecException {
@@ -199,7 +222,16 @@ public class KeyStoreBuilderTest extends TestCase {
      * ProtectionParameter which is used in newInstance(...)
      * 
      */
-    public void testNewInstanceStringProviderFileProtectionParameter()
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "newInstance",
+          methodArgs = {String.class, java.security.Provider.class, java.io.File.class, java.security.KeyStore.ProtectionParameter.class}
+        )
+    })
+    public void _testNewInstanceStringProviderFileProtectionParameter()
             throws Exception {
         
         File fl = File.createTempFile("KSBuilder_ImplTest", "keystore");
@@ -351,6 +383,15 @@ public class KeyStoreBuilderTest extends TestCase {
      * when alias is not available
      * 
      */
+    @TestInfo(
+            level = TestLevel.COMPLETE,
+            purpose = "",
+            targets = {
+              @TestTarget(
+                methodName = "newInstance",
+                methodArgs = {String.class, java.security.Provider.class, java.security.KeyStore.ProtectionParameter.class}
+              )
+          })
     public void testNewInstanceStringProviderProtectionParameter()
             throws KeyStoreException {
         

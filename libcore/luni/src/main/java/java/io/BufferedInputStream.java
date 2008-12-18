@@ -24,13 +24,22 @@ import java.util.logging.Logger;
 // END android-added
 
 /**
- * <code>BufferedInputStream</code> is a class which takes an input stream and
- * <em>buffers</em> the input. In this way, costly interaction with the
- * original input stream can be minimized by reading buffered amounts of data
- * infrequently. The drawback is that extra space is required to hold the buffer
- * and that copying takes place when reading that buffer.
+ * Wraps an existing {@link InputStream} and <em>buffers</em> the input.
+ * Expensive interaction with the underlying input stream is minimized, since
+ * most (smaller) requests can be satisfied by accessing the buffer alone. The
+ * drawback is that some extra space is required to hold the buffer and that
+ * copying takes place when filling that buffer, but this is usually outweighed
+ * by the performance benefits.
+ * 
+ * <p/>A typical application pattern for the class looks like this:<p/>
+ * 
+ * <pre>
+ * BufferedInputStream buf = new BufferedInputStream(new FileInputStream(&quot;file.java&quot;));
+ * </pre>
  * 
  * @see BufferedOutputStream
+ * 
+ * @since Android 1.0
  */
 public class BufferedInputStream extends FilterInputStream {
     // BEGIN android-changed
@@ -38,40 +47,51 @@ public class BufferedInputStream extends FilterInputStream {
     // This was changed to be more close to the RI.
     /**
      * The buffer containing the current bytes read from the target InputStream.
+     * 
+     * @since Android 1.0
      */
     protected volatile byte[] buf;
     // END android-changed
 
     /**
-     * The total number of bytes inside the byte array <code>buf</code>.
+     * The total number of bytes inside the byte array {@code buf}.
+     * 
+     * @since Android 1.0
      */
     protected int count;
 
     /**
      * The current limit, which when passed, invalidates the current mark.
+     * 
+     * @since Android 1.0
      */
     protected int marklimit;
 
     /**
      * The currently marked position. -1 indicates no mark has been set or the
      * mark has been invalidated.
+     * 
+     * @since Android 1.0
      */
     protected int markpos = -1;
 
     /**
-     * The current position within the byte array <code>buf</code>.
+     * The current position within the byte array {@code buf}.
+     * 
+     * @since Android 1.0
      */
     protected int pos;
 
     private boolean closed = false;
 
     /**
-     * Constructs a new <code>BufferedInputStream</code> on the InputStream
-     * <code>in</code>. The default buffer size (8Kb) is allocated and all
-     * reads can now be filtered through this stream.
+     * Constructs a new {@code BufferedInputStream} on the {@link InputStream}
+     * {@code in}. The default buffer size (8 KB) is allocated and all reads
+     * can now be filtered through this stream.
      * 
      * @param in
-     *            the InputStream to buffer reads on.
+     *            the InputStream the buffer reads from.
+     * @since Android 1.0
      */
     public BufferedInputStream(InputStream in) {
         super(in);
@@ -79,12 +99,11 @@ public class BufferedInputStream extends FilterInputStream {
 
         // BEGIN android-added
         /*
-         * For Android, we want to discourage the use of this
-         * constructor (with its arguably too-large default), so we
-         * note its use in the log. We don't disable it, nor do we
-         * alter the default, however, because we still aim to behave
-         * compatibly, and the default value, though not documented,
-         * is established by convention.
+         * For Android, we want to discourage the use of this constructor (with
+         * its arguably too-large default), so we note its use in the log. We
+         * don't disable it, nor do we alter the default, however, because we
+         * still aim to behave compatibly, and the default value, though not
+         * documented, is established by convention.
          */
         Logger.global.info(
                 "Default buffer size used in BufferedInputStream " +
@@ -94,14 +113,17 @@ public class BufferedInputStream extends FilterInputStream {
     }
 
     /**
-     * Constructs a new BufferedInputStream on the InputStream <code>in</code>.
-     * The buffer size is specified by the parameter <code>size</code> and all
-     * reads can now be filtered through this BufferedInputStream.
+     * Constructs a new {@code BufferedInputStream} on the {@link InputStream}
+     * {@code in}. The buffer size is specified by the parameter {@code size}
+     * and all reads are now filtered through this stream.
      * 
      * @param in
-     *            the InputStream to buffer reads on.
+     *            the input stream the buffer reads from.
      * @param size
      *            the size of buffer to allocate.
+     * @throws IllegalArgumentException
+     *             if {@code size < 0}.
+     * @since Android 1.0
      */
     public BufferedInputStream(InputStream in, int size) {
         super(in);
@@ -113,14 +135,14 @@ public class BufferedInputStream extends FilterInputStream {
     }
 
     /**
-     * Returns an int representing the number of bytes that are available before
-     * this BufferedInputStream will block. This method returns the number of
-     * bytes available in the buffer plus those available in the target stream.
+     * Returns the number of bytes that are available before this stream will
+     * block. This method returns the number of bytes available in the buffer
+     * plus those available in the source stream.
      * 
      * @return the number of bytes available before blocking.
-     * 
      * @throws IOException
-     *             If an error occurs in this stream.
+     *             if this stream is closed.
+     * @since Android 1.0
      */
     @Override
     public synchronized int available() throws IOException {
@@ -132,11 +154,12 @@ public class BufferedInputStream extends FilterInputStream {
     }
 
     /**
-     * Close this BufferedInputStream. This implementation closes the target
-     * stream and releases any resources associated with it.
+     * Closes this stream. The source stream is closed and any resources
+     * associated with it are released.
      * 
      * @throws IOException
-     *             If an error occurs attempting to close this stream.
+     *             if an error occurs while closing this stream.
+     * @since Android 1.0
      */
     @Override
     public synchronized void close() throws IOException {
@@ -180,16 +203,18 @@ public class BufferedInputStream extends FilterInputStream {
     }
 
     /**
-     * Set a Mark position in this BufferedInputStream. The parameter
-     * <code>readLimit</code> indicates how many bytes can be read before a
-     * mark is invalidated. Sending reset() will reposition the Stream back to
-     * the marked position provided <code>readLimit</code> has not been
-     * surpassed. The underlying buffer may be increased in size to allow
-     * <code>readlimit</code> number of bytes to be supported.
+     * Sets a mark position in this stream. The parameter {@code readlimit}
+     * indicates how many bytes can be read before a mark is invalidated.
+     * Calling {@code reset()} will reposition the stream back to the marked
+     * position if {@code readlimit} has not been surpassed. The underlying
+     * buffer may be increased in size to allow {@code readlimit} number of
+     * bytes to be supported.
      * 
      * @param readlimit
-     *            the number of bytes to be able to read before invalidating the
-     *            mark.
+     *            the number of bytes that can be read before the mark is
+     *            invalidated.
+     * @see #reset()
+     * @since Android 1.0
      */
     @Override
     public synchronized void mark(int readlimit) {
@@ -198,11 +223,13 @@ public class BufferedInputStream extends FilterInputStream {
     }
 
     /**
-     * Returns a boolean indicating whether or not this BufferedInputStream
-     * supports mark() and reset(). This implementation returns
-     * <code>true</code>.
+     * Indicates whether {@code BufferedInputStream} supports the {@code mark()}
+     * and {@code reset()} methods.
      * 
-     * @return <code>true</code> for BufferedInputStreams.
+     * @return {@code true} for BufferedInputStreams.
+     * @see #mark(int)
+     * @see #reset()
+     * @since Android 1.0
      */
     @Override
     public boolean markSupported() {
@@ -210,16 +237,16 @@ public class BufferedInputStream extends FilterInputStream {
     }
 
     /**
-     * Reads a single byte from this BufferedInputStream and returns the result
-     * as an int. The low-order byte is returned or -1 of the end of stream was
-     * encountered. If the underlying buffer does not contain any available
-     * bytes then it is filled and the first byte is returned.
+     * Reads a single byte from this stream and returns it as an integer in the
+     * range from 0 to 255. Returns -1 if the end of the source string has been
+     * reached. If the internal buffer does not contain any available bytes then
+     * it is filled from the source stream and the first byte is returned.
      * 
-     * @return the byte read or -1 if end of stream.
-     * 
+     * @return the byte read or -1 if the end of the source stream has been
+     *         reached.
      * @throws IOException
-     *             If the stream is already closed or another IOException
-     *             occurs.
+     *             if this stream is closed or another IOException occurs.
+     * @since Android 1.0
      */
     @Override
     public synchronized int read() throws IOException {
@@ -241,26 +268,30 @@ public class BufferedInputStream extends FilterInputStream {
     }
 
     /**
-     * Reads at most <code>length</code> bytes from this BufferedInputStream
-     * and stores them in byte array <code>buffer</code> starting at offset
-     * <code>offset</code>. Answer the number of bytes actually read or -1 if
-     * no bytes were read and end of stream was encountered. If all the buffered
-     * bytes have been used, a mark has not been set, and the requested number
-     * of bytes is larger than the receiver's buffer size, this implementation
-     * bypasses the buffer and simply places the results directly into
-     * <code>buffer</code>.
+     * Reads at most {@code length} bytes from this stream and stores them in
+     * byte array {@code buffer} starting at offset {@code offset}. Returns the
+     * number of bytes actually read or -1 if no bytes were read and the end of
+     * the stream was encountered. If all the buffered bytes have been used, a
+     * mark has not been set and the requested number of bytes is larger than
+     * the receiver's buffer size, this implementation bypasses the buffer and
+     * simply places the results directly into {@code buffer}.
      * 
      * @param buffer
-     *            the byte array in which to store the read bytes.
+     *            the byte array in which to store the bytes read.
      * @param offset
-     *            the offset in <code>buffer</code> to store the read bytes.
+     *            the initial position in {@code buffer} to store the bytes read
+     *            from this stream.
      * @param length
-     *            the maximum number of bytes to store in <code>buffer</code>.
+     *            the maximum number of bytes to store in {@code buffer}.
      * @return the number of bytes actually read or -1 if end of stream.
-     * 
+     * @throws IndexOutOfBoundsException
+     *             if {@code offset < 0} or {@code length < 0}, or if
+     *             {@code offset + length} is greater than the size of
+     *             {@code buffer}.
      * @throws IOException
-     *             If the stream is already closed or another IOException
+     *             if the stream is already closed or another IOException
      *             occurs.
+     * @since Android 1.0
      */
     @Override
     public synchronized int read(byte[] buffer, int offset, int length)
@@ -270,9 +301,18 @@ public class BufferedInputStream extends FilterInputStream {
             throw new IOException(Msg.getString("K0059")); //$NON-NLS-1$
         }
         // avoid int overflow
-        if (offset > buffer.length - length || offset < 0 || length < 0) {
-            throw new IndexOutOfBoundsException();
+        // BEGIN android-changed
+        // Exception priorities (in case of multiple errors) differ from
+        // RI, but are spec-compliant.
+        // made implicit null check explicit, used (offset | length) < 0
+        // instead of (offset < 0) || (length < 0) to safe one operation
+        if (buffer == null) {
+            throw new NullPointerException(Msg.getString("K0047")); //$NON-NLS-1$
         }
+        if ((offset | length) < 0 || offset > buffer.length - length) {
+            throw new IndexOutOfBoundsException(Msg.getString("K002f")); //$NON-NLS-1$
+        }
+        // END android-changed
         if (length == 0) {
             return 0;
         }
@@ -326,16 +366,15 @@ public class BufferedInputStream extends FilterInputStream {
     }
 
     /**
-     * Reset this BufferedInputStream to the last marked location. If the
-     * <code>readlimit</code> has been passed or no <code>mark</code> has
-     * been set, throw IOException. This implementation resets the target
-     * stream.
+     * Resets this stream to the last marked location.
      * 
      * @throws IOException
-     *             If the stream is already closed or another IOException
-     *             occurs.
+     *             if this stream is closed, no mark has been set or the mark is
+     *             no longer valid because more than {@code readlimit} bytes
+     *             have been read since setting the mark.
+     * @see #mark(int)
+     * @since Android 1.0
      */
-
     @Override
     public synchronized void reset() throws IOException {
         // BEGIN android-changed
@@ -355,17 +394,17 @@ public class BufferedInputStream extends FilterInputStream {
     }
 
     /**
-     * Skips <code>amount</code> number of bytes in this BufferedInputStream.
-     * Subsequent <code>read()</code>'s will not return these bytes unless
-     * <code>reset()</code> is used.
+     * Skips {@code amount} number of bytes in this stream. Subsequent
+     * {@code read()}'s will not return these bytes unless {@code reset()} is
+     * used.
      * 
      * @param amount
-     *            the number of bytes to skip.
+     *            the number of bytes to skip. {@code skip} does nothing and
+     *            returns 0 if {@code amount} is less than zero.
      * @return the number of bytes actually skipped.
-     * 
      * @throws IOException
-     *             If the stream is already closed or another IOException
-     *             occurs.
+     *             if this stream is closed or another IOException occurs.
+     * @since Android 1.0
      */
     @Override
     public synchronized long skip(long amount) throws IOException {

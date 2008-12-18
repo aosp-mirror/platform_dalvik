@@ -9,13 +9,13 @@ HANDLE_OPCODE(OP_SPARSE_SWITCH /*vAA, +BBBB*/)
         ILOGV("|sparse-switch v%d +0x%04x", vsrc1, vsrc2);
         switchData = pc + offset;       // offset in 16-bit units
 #ifndef NDEBUG
-        if (switchData < method->insns ||
-            switchData >= method->insns + dvmGetMethodInsnsSize(method))
+        if (switchData < curMethod->insns ||
+            switchData >= curMethod->insns + dvmGetMethodInsnsSize(curMethod))
         {
             /* should have been caught in verifier */
             EXPORT_PC();
             dvmThrowException("Ljava/lang/InternalError;", "bad sparse switch");
-            GOTO(exceptionThrown);
+            GOTO_exceptionThrown();
         }
 #endif
         testVal = GET_REGISTER(vsrc1);

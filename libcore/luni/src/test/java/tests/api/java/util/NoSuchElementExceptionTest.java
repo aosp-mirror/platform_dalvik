@@ -17,14 +17,29 @@
 
 package tests.api.java.util;
 
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass; 
+
 import java.util.NoSuchElementException;
 import java.util.Vector;
 
+@TestTargetClass(NoSuchElementException.class) 
 public class NoSuchElementExceptionTest extends junit.framework.TestCase {
 
     /**
      * @tests java.util.NoSuchElementException#NoSuchElementException()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Need to call constructor directly.",
+      targets = {
+        @TestTarget(
+          methodName = "NoSuchElementException",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         // Test for method java.util.NoSuchElementException()
 
@@ -41,6 +56,15 @@ public class NoSuchElementExceptionTest extends junit.framework.TestCase {
     /**
      * @tests java.util.NoSuchElementException#NoSuchElementException(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't call constructor with different parameters.",
+      targets = {
+        @TestTarget(
+          methodName = "NoSuchElementException",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() {
         // Test for method java.util.NoSuchElementException(java.lang.String)
 

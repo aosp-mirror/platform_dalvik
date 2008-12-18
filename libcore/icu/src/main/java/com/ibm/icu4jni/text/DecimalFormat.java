@@ -42,6 +42,11 @@ public class DecimalFormat extends NumberFormat {
     private boolean useExponentialNotation = false;
     @SuppressWarnings("unused")
     private byte minExponentDigits = 0;
+
+    private boolean negPrefNull;
+    private boolean negSuffNull;
+    private boolean posPrefNull;
+    private boolean posSuffNull;
     
     public DecimalFormat(String pattern, DecimalFormatSymbols icuSymbols) {
         this.addr = icuSymbols.getAddr();
@@ -123,10 +128,7 @@ public class DecimalFormat extends NumberFormat {
             throw new NullPointerException();
         }
         
-        String fieldType = null;
-        if(field != null) {
-            fieldType = getFieldType(field.getFieldAttribute());
-        }
+        String fieldType = getFieldType(field.getFieldAttribute());
         
         Number number = (Number) value;
         
@@ -158,15 +160,11 @@ public class DecimalFormat extends NumberFormat {
     @Override
     public StringBuffer format(long value, StringBuffer buffer, FieldPosition field) {
 
-        if(buffer == null) {
+        if(buffer == null || field == null) {
             throw new NullPointerException();
         }
         
-        String fieldType = null;
-        
-        if(field != null) {
-            fieldType = getFieldType(field.getFieldAttribute());
-        }
+        String fieldType = getFieldType(field.getFieldAttribute());
         
         String result = NativeDecimalFormat.format(this.addr, value, field, 
                 fieldType, null);
@@ -179,15 +177,11 @@ public class DecimalFormat extends NumberFormat {
     @Override
     public StringBuffer format(double value, StringBuffer buffer, FieldPosition field) {
 
-        if(buffer == null) {
+        if(buffer == null || field == null) {
             throw new NullPointerException();
         }
         
-        String fieldType = null;
-        
-        if(field != null) {
-            fieldType = getFieldType(field.getFieldAttribute());
-        }
+        String fieldType = getFieldType(field.getFieldAttribute());
         
         String result = NativeDecimalFormat.format(this.addr, value, field, 
                 fieldType, null);
@@ -232,22 +226,13 @@ public class DecimalFormat extends NumberFormat {
         
         if(number instanceof BigInteger) {
             BigInteger valBigInteger = (BigInteger) number;
-            if(valBigInteger.compareTo(
-                    new BigInteger(String.valueOf(Long.MAX_VALUE))) > 0) {
-                throw(new UnsupportedOperationException(
-                        "Number too big. BigInteger > Long.MAX_VALUE not yet supported."));
-            }
             text = NativeDecimalFormat.format(this.addr, 
-                    valBigInteger.longValue(), null, null, attributes);
+                    valBigInteger.toString(10), null, null, attributes, 0);
         } else if(number instanceof BigDecimal) {
             BigDecimal valBigDecimal = (BigDecimal) number;
-            if(valBigDecimal.compareTo(
-                    new BigDecimal(String.valueOf(Double.MAX_VALUE))) > 0) {
-                throw(new UnsupportedOperationException(
-                        "Number too big. BigDecimal > Double.MAX_VALUE not yet supported."));
-            }
             text = NativeDecimalFormat.format(this.addr, 
-                    valBigDecimal.doubleValue(), null, null, attributes);
+                    valBigDecimal.unscaledValue().toString(10), null,null,
+                    attributes, valBigDecimal.scale());
         } else {
             double dv = number.doubleValue();
             long lv = number.longValue();
@@ -333,21 +318,33 @@ public class DecimalFormat extends NumberFormat {
     }
 
     public String getNegativePrefix() {
+        if (negPrefNull) {
+            return null;
+        }
         return NativeDecimalFormat.getTextAttribute(this.addr, 
                 UNumberFormatTextAttribute.UNUM_NEGATIVE_PREFIX.ordinal());
     }
 
     public String getNegativeSuffix() {
+        if (negSuffNull) {
+            return null;
+        }
         return NativeDecimalFormat.getTextAttribute(this.addr, 
                 UNumberFormatTextAttribute.UNUM_NEGATIVE_SUFFIX.ordinal());
     }
 
     public String getPositivePrefix() {
+        if (posPrefNull) {
+            return null;
+        }
         return NativeDecimalFormat.getTextAttribute(this.addr, 
                 UNumberFormatTextAttribute.UNUM_POSITIVE_PREFIX.ordinal());
     }
 
     public String getPositiveSuffix() {
+        if (posSuffNull) {
+            return null;
+        }
         return NativeDecimalFormat.getTextAttribute(this.addr, 
                 UNumberFormatTextAttribute.UNUM_POSITIVE_SUFFIX.ordinal());
     }
@@ -430,23 +427,39 @@ public class DecimalFormat extends NumberFormat {
     }
 
     public void setNegativePrefix(String value) {
-        NativeDecimalFormat.setTextAttribute(this.addr,
-                UNumberFormatTextAttribute.UNUM_NEGATIVE_PREFIX.ordinal(), value);
+        negPrefNull = value == null;
+        if (!negPrefNull) {
+            NativeDecimalFormat.setTextAttribute(this.addr,
+                    UNumberFormatTextAttribute.UNUM_NEGATIVE_PREFIX.ordinal(),
+                    value);
+        }
     }
 
     public void setNegativeSuffix(String value) {
-        NativeDecimalFormat.setTextAttribute(this.addr,
-                UNumberFormatTextAttribute.UNUM_NEGATIVE_SUFFIX.ordinal(), value);
+        negSuffNull = value == null;
+        if (!negSuffNull) {
+            NativeDecimalFormat.setTextAttribute(this.addr,
+                    UNumberFormatTextAttribute.UNUM_NEGATIVE_SUFFIX.ordinal(),
+                    value);
+        }
     }
 
     public void setPositivePrefix(String value) {
-        NativeDecimalFormat.setTextAttribute(this.addr,
-                UNumberFormatTextAttribute.UNUM_POSITIVE_PREFIX.ordinal(), value);
+        posPrefNull = value == null;
+        if (!posPrefNull) {
+            NativeDecimalFormat.setTextAttribute(this.addr,
+                    UNumberFormatTextAttribute.UNUM_POSITIVE_PREFIX.ordinal(),
+                    value);
+        }
     }
 
     public void setPositiveSuffix(String value) {
-        NativeDecimalFormat.setTextAttribute(this.addr,
-                UNumberFormatTextAttribute.UNUM_POSITIVE_SUFFIX.ordinal(), value);
+        posSuffNull = value == null;
+        if (!posSuffNull) {
+            NativeDecimalFormat.setTextAttribute(this.addr,
+                    UNumberFormatTextAttribute.UNUM_POSITIVE_SUFFIX.ordinal(),
+                    value);
+        }
     }
 
     @Override

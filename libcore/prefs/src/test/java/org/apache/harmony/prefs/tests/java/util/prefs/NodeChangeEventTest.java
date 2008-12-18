@@ -16,6 +16,11 @@
 
 package org.apache.harmony.prefs.tests.java.util.prefs;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.NotSerializableException;
 import java.util.prefs.AbstractPreferences;
 import java.util.prefs.BackingStoreException;
@@ -29,87 +34,133 @@ import org.apache.harmony.testframework.serialization.SerializationTest;
 /**
  * 
  */
+@TestTargetClass(NodeChangeEvent.class)
 public class NodeChangeEventTest extends TestCase {
 
-	NodeChangeEvent event;
+    NodeChangeEvent event;
 
-	public void testConstructor() {
-		event = new NodeChangeEvent(Preferences.systemRoot(), Preferences
-				.userRoot());
-		assertSame(Preferences.systemRoot(), event.getParent());
-		assertSame(Preferences.userRoot(), event.getChild());
-		assertSame(Preferences.systemRoot(), event.getSource());
-	}
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "NodeChangeEvent",
+          methodArgs = {java.util.prefs.Preferences.class, java.util.prefs.Preferences.class}
+        )
+    })
+    public void testConstructor() {
+        event = new NodeChangeEvent(Preferences.systemRoot(), Preferences
+                .userRoot());
+        assertSame(Preferences.systemRoot(), event.getParent());
+        assertSame(Preferences.userRoot(), event.getChild());
+        assertSame(Preferences.systemRoot(), event.getSource());
+    }
 
-	public void testConstructorNullParam() {
-		try {
-			event = new NodeChangeEvent(null, Preferences.userRoot());
-			fail();
-		} catch (IllegalArgumentException e) {
-		}
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "NodeChangeEvent",
+          methodArgs = {java.util.prefs.Preferences.class, java.util.prefs.Preferences.class}
+        )
+    })
+    public void testConstructorNullParam() {
+        try {
+            event = new NodeChangeEvent(null, Preferences.userRoot());
+            fail();
+        } catch (IllegalArgumentException e) {
+        }
 
-		event = new NodeChangeEvent(Preferences.systemRoot(), null);
-		assertSame(Preferences.systemRoot(), event.getParent());
-		assertNull(event.getChild());
-		assertSame(Preferences.systemRoot(), event.getSource());
-	}
+        event = new NodeChangeEvent(Preferences.systemRoot(), null);
+        assertSame(Preferences.systemRoot(), event.getParent());
+        assertNull(event.getChild());
+        assertSame(Preferences.systemRoot(), event.getSource());
+    }
 
-	public void testSerialization() throws Exception {
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Verifies serialization",
+      targets = {
+        @TestTarget(
+          methodName = "!Serialization",
+          methodArgs = {}
+        )
+    })
+    public void testSerialization() throws Exception {
 
-		event = new NodeChangeEvent(Preferences.systemRoot(), null);
+        event = new NodeChangeEvent(Preferences.systemRoot(), null);
 
-		try {
-			SerializationTest.copySerializable(event);
-			fail("No expected NotSerializableException");
-		} catch (NotSerializableException e) {
-		}
-	}
+        try {
+            SerializationTest.copySerializable(event);
+            fail("No expected NotSerializableException");
+        } catch (NotSerializableException e) {
+        }
+    }
 
-	public void testGetChild() throws BackingStoreException {
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Test is correct, functionality checked in separate Mock class.",
+      targets = {
+        @TestTarget(
+          methodName = "getChild",
+          methodArgs = {}
+        )
+    })
+    public void testGetChild() throws BackingStoreException {
 
-		AbstractPreferences parent = (AbstractPreferences) Preferences
-				.userNodeForPackage(Preferences.class);
+        AbstractPreferences parent = (AbstractPreferences) Preferences
+                .userNodeForPackage(Preferences.class);
 
-		AbstractPreferences pref = (AbstractPreferences) parent.node("mock");
+        AbstractPreferences pref = (AbstractPreferences) parent.node("mock");
 
-		MockNodeChangeListener nl = new MockNodeChangeListener(
-				MockNodeChangeListener.TEST_GET_CHILD);
-		try {
-			pref.addNodeChangeListener(nl);
-			Preferences child1 = pref.node("mock1");
-			assertEquals(1, nl.getAdded());
-			assertTrue(nl.getAddResult());
-			nl.reset();
-			child1.removeNode();
-			assertEquals(1, nl.getRemoved());
-			assertTrue(nl.getRemoveResult());
-			nl.reset();
-		} finally {
-			pref.removeNodeChangeListener(nl);
-		}
-	}
-	
-	public void testGetParent() throws BackingStoreException {
+        MockNodeChangeListener nl = new MockNodeChangeListener(
+                MockNodeChangeListener.TEST_GET_CHILD);
+        try {
+            pref.addNodeChangeListener(nl);
+            Preferences child1 = pref.node("mock1");
+            assertEquals(1, nl.getAdded());
+            assertTrue(nl.getAddResult());
+            nl.reset();
+            child1.removeNode();
+            assertEquals(1, nl.getRemoved());
+            assertTrue(nl.getRemoveResult());
+            nl.reset();
+        } finally {
+            pref.removeNodeChangeListener(nl);
+        }
+    }
+    
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Test is correct, functionality checked in separate Mock class.",
+      targets = {
+        @TestTarget(
+          methodName = "getParent",
+          methodArgs = {}
+        )
+    })
+    public void testGetParent() throws BackingStoreException {
 
-		AbstractPreferences parent = (AbstractPreferences) Preferences
-				.userNodeForPackage(Preferences.class);
+        AbstractPreferences parent = (AbstractPreferences) Preferences
+                .userNodeForPackage(Preferences.class);
 
-		AbstractPreferences pref = (AbstractPreferences) parent.node("mock");
+        AbstractPreferences pref = (AbstractPreferences) parent.node("mock");
 
-		MockNodeChangeListener nl = new MockNodeChangeListener(
-				MockNodeChangeListener.TEST_GET_CHILD);
-		try {
-			pref.addNodeChangeListener(nl);
-			Preferences child1 = pref.node("mock1");
-			assertEquals(1, nl.getAdded());
-			assertTrue(nl.getAddResult());
-			nl.reset();
-			child1.removeNode();
-			assertEquals(1, nl.getRemoved());
-			assertTrue(nl.getRemoveResult());
-			nl.reset();
-		} finally {
-			pref.removeNodeChangeListener(nl);
-		}
-	}
+        MockNodeChangeListener nl = new MockNodeChangeListener(
+                MockNodeChangeListener.TEST_GET_CHILD);
+        try {
+            pref.addNodeChangeListener(nl);
+            Preferences child1 = pref.node("mock1");
+            assertEquals(1, nl.getAdded());
+            assertTrue(nl.getAddResult());
+            nl.reset();
+            child1.removeNode();
+            assertEquals(1, nl.getRemoved());
+            assertTrue(nl.getRemoveResult());
+            nl.reset();
+        } finally {
+            pref.removeNodeChangeListener(nl);
+        }
+    }
 }

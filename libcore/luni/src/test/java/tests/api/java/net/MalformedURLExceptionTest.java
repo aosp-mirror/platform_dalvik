@@ -17,57 +17,81 @@
 
 package tests.api.java.net;
 
+import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.net.MalformedURLException;
 import java.net.URL;
 
+@TestTargetClass(MalformedURLException.class) 
 public class MalformedURLExceptionTest extends junit.framework.TestCase {
 
-	/**
-	 * @tests java.net.MalformedURLException#MalformedURLException()
-	 */
-	public void test_Constructor() {
-		// Test for method java.net.MalformedURLException()
-		boolean passed;
-		passed = false;
-		try {
-			new URL("notAProtocol://www.ibm.com");
-		} catch (MalformedURLException e) {
-			// correct
-			passed = true;
-		} catch (Exception e) {
-			fail("Wrong exception thrown : " + e.getMessage());
-		}
-		assertTrue("Failed to throw correct exception", passed);
-	}
+    /**
+     * @tests java.net.MalformedURLException#MalformedURLException()
+     */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "MalformedURLException",
+          methodArgs = {}
+        )
+    })
+    public void test_Constructor() {
+        // Test for method java.net.MalformedURLException()
+        boolean passed;
+        passed = false;
+        try {
+            new URL("notAProtocol://www.ibm.com");
+        } catch (MalformedURLException e) {
+            // correct
+            passed = true;
+        } catch (Exception e) {
+            fail("Wrong exception thrown : " + e.getMessage());
+        }
+        assertTrue("Failed to throw correct exception", passed);
+    }
 
-	/**
-	 * @tests java.net.MalformedURLException#MalformedURLException(java.lang.String)
-	 */
-	public void test_ConstructorLjava_lang_String() {
-		// Test for method java.net.MalformedURLException(java.lang.String)
-		final String myString = "Gawsh!";
-		try {
-			if (true)
-				throw new MalformedURLException(myString);
-		} catch (MalformedURLException e) {
-			assertTrue("Incorrect exception text", e.toString().indexOf(
-					myString) >= 0);
-			return;
-		}
-		fail("Exception not thrown");
-	}
+    /**
+     * @tests java.net.MalformedURLException#MalformedURLException(java.lang.String)
+     */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "MalformedURLException",
+          methodArgs = {String.class}
+        )
+    })
+    public void test_ConstructorLjava_lang_String() {
+        // Test for method java.net.MalformedURLException(java.lang.String)
+        final String myString = "Gawsh!";
+        try {
+            if (true)
+                throw new MalformedURLException(myString);
+        } catch (MalformedURLException e) {
+            assertTrue("Incorrect exception text", e.toString().indexOf(
+                    myString) >= 0);
+            return;
+        }
+        fail("Exception not thrown");
+    }
 
-	/**
-	 * Sets up the fixture, for example, open a network connection. This method
-	 * is called before a test is executed.
-	 */
-	protected void setUp() {
-	}
+    /**
+     * Sets up the fixture, for example, open a network connection. This method
+     * is called before a test is executed.
+     */
+    protected void setUp() {
+    }
 
-	/**
-	 * Tears down the fixture, for example, close a network connection. This
-	 * method is called after a test is executed.
-	 */
-	protected void tearDown() {
-	}
+    /**
+     * Tears down the fixture, for example, close a network connection. This
+     * method is called after a test is executed.
+     */
+    protected void tearDown() {
+    }
 }

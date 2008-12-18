@@ -15,22 +15,33 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vladimir N. Molotkov
-* @version $Revision$
-*/
-
 package java.security.spec;
 
 import org.apache.harmony.security.internal.nls.Messages;
 
 /**
- * @com.intel.drl.spec_ref
+ * The parameter specification for the RSA-PSS Signature scheme.
+ * <p>
+ * Defined in the <a
+ * href="http://www.rsa.com/rsalabs/pubs/PKCS/html/pkcs-1.html">PKCS #1 v2.1</a>
+ * standard.
+ * </p>
  * 
+ * @since Android 1.0
  */
 public class PSSParameterSpec implements AlgorithmParameterSpec {   
+
     /**
-     * @com.intel.drl.spec_ref
+     * The default parameter specification. It specifies the following parameters:
+     * <ul>
+     * <li>message digest: {@code "SHA-1"}</li>
+     * <li>mask generation function (<i>mgf</i>): {@code "MGF1"}</li>
+     * <li>parameters for the <i>mgf</i>: {@link MGF1ParameterSpec#SHA1}</li>
+     * <li>salt length: {@code 20}</li>
+     * <li>trailer field: {@code -1}</li>
+     * </ul>
+     * 
+     * @since Android 1.0
      */
     public static final PSSParameterSpec DEFAULT = new PSSParameterSpec(20);
 
@@ -46,7 +57,14 @@ public class PSSParameterSpec implements AlgorithmParameterSpec {
     private final int saltLen;
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code PSSParameterSpec} with the specified salt length 
+     * and the default values.
+     * 
+     * @param saltLen
+     *            the salt length (in bits).
+     * @throws IllegalArgumentException
+     *             if {@code saltLen} is negative.
+     * @since Android 1.0
      */
     public PSSParameterSpec(int saltLen) {
         if (saltLen < 0) {
@@ -60,7 +78,23 @@ public class PSSParameterSpec implements AlgorithmParameterSpec {
     }
 
     /**
-     * @com.intel.drl.spec_ref     * 
+     * Creates a new {@code PSSParameterSpec} with the specified message digest
+     * name, mask generation function name, mask generation function parameters,
+     * salt length, and trailer field value.
+     * 
+     * @param mdName
+     *            the name of the message digest algorithm.
+     * @param mgfName
+     *            the name of the mask generation function algorithm.
+     * @param mgfSpec
+     *            the parameter for the mask generation function algorithm.
+     * @param saltLen
+     *            the salt length (in bits).
+     * @param trailerField
+     *            the trailer field value.
+     * @throws IllegalArgumentException
+     *             if {@code saltLen} or {@code trailerField} is negative.
+     * @since Android 1.0
      */
     public PSSParameterSpec(String mdName, String mgfName,
             AlgorithmParameterSpec mgfSpec, int saltLen, int trailerField) {
@@ -85,35 +119,51 @@ public class PSSParameterSpec implements AlgorithmParameterSpec {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the length of the salt (in bits).
+     * 
+     * @return the length of the salt (in bits).
+     * @since Android 1.0
      */
     public int getSaltLength() {
         return saltLen;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the name of the message digest algorithm.
+     * 
+     * @return the name of the message digest algorithm.
+     * @since Android 1.0
      */
     public String getDigestAlgorithm() {
         return mdName;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the name of the mask generation function algorithm.
+     * 
+     * @return the name of the mask generation function algorithm.
+     * @since Android 1.0
      */
     public String getMGFAlgorithm() {
         return mgfName;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the parameter for the mask generation function algorithm.
+     * 
+     * @return the parameter for the mask generation function algorithm, or
+     *         {@code null} if none specified.
+     * @since Android 1.0
      */
     public AlgorithmParameterSpec getMGFParameters() {
         return mgfSpec;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the trailer field value.
+     * 
+     * @return the trailer field value.
+     * @since Android 1.0
      */
     public int getTrailerField() {
         return trailerField;

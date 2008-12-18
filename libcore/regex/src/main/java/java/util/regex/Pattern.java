@@ -455,9 +455,14 @@ public final class Pattern implements Serializable {
     }
 
     @Override
-    protected void finalize() {
-        if (mNativePattern != 0) {
-            NativeRegEx.close(mNativePattern);
+    protected void finalize() throws Throwable {
+        try {
+            if (mNativePattern != 0) {
+                NativeRegEx.close(mNativePattern);
+            }
+        }
+        finally {
+            super.finalize();
         }
     }
 

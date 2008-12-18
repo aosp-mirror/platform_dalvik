@@ -28,11 +28,13 @@ import org.apache.harmony.luni.util.Inet6Util;
 import org.apache.harmony.luni.util.Msg;
 
 /**
- * SocketPermissions represent permission to access resources via sockets. The
- * name of the permission should be either the (possibly wildcarded (eg.
- * *.company.com)) DNS style name of the of the host for which access is being
- * requested, or its IP address in standard nn.nn.nn.nn ("dot") notation. The
- * action list can be made up of any of the following:
+ * Regulates the access to network operations available through sockets through
+ * permissions. A permission consists of a target (a host), and an associated
+ * action list. The target should identify the host by either indicating the
+ * (possibly wildcarded (eg. {@code .company.com})) DNS style name of the host
+ * or its IP address in standard {@code nn.nn.nn.nn} ("dot") notation. The
+ * action list can be made up of one or more of the following actions separated
+ * by a comma:
  * <dl>
  * <dt>connect</dt>
  * <dd>requests permission to connect to the host</dd>
@@ -41,23 +43,27 @@ import org.apache.harmony.luni.util.Msg;
  * <dt>accept</dt>
  * <dd>requests permission to accept connections from the host</dd>
  * <dt>resolve</dt>
- * <dd>requests permission to resolve the host name</dd>
+ * <dd>requests permission to resolve the hostname</dd>
  * </dl>
- * Note that "resolve" is implied when any (or none) of the others are present.
+ * Note that {@code resolve} is implied when any (or none) of the others are
+ * present.
  * <p>
  * Access to a particular port can be requested by appending a colon and a
- * single digit to the name (eg. "*.company.com:7000"). A range of port numbers
- * can also be specified, by appending a pattern of the form <low>-<high> where
- * <low> and <high> are valid port numbers. If either <low> or <high> is omitted
- * it is equivalent to entering the lowest or highest possible value
- * respectively. For example:
+ * single digit to the name (eg. {@code .company.com:7000}). A range of port
+ * numbers can also be specified, by appending a pattern of the form
+ * <i>LOW-HIGH</i> where <i>LOW</i> and <i>HIGH</i> are valid port numbers. If
+ * either <i>LOW</i> or <i>HIGH</i> is omitted it is equivalent to entering the
+ * lowest or highest possible value respectively. For example:
  * 
  * <pre>
- * SocketPermission(&quot;www.company.com:7000-&quot;, &quot;connect&quot;, &quot;accept&quot;)
+ * {@code SocketPermission(&quot;www.company.com:7000-&quot;, &quot;connect,accept&quot;)}
  * </pre>
  * 
- * represents permission to connect to and accept connections from
- * www.company.com on ports in the range 7000 to 65535.
+ * represents the permission to connect to and accept connections from {@code
+ * www.company.com} on ports in the range {@code 7000} to {@code 65535}.
+ * </p>
+ * 
+ * @since Android 1.0
  */
 public final class SocketPermission extends Permission implements Serializable {
 
@@ -105,18 +111,21 @@ public final class SocketPermission extends Permission implements Serializable {
     transient int actionsMask = SP_RESOLVE;
 
     /**
-     * Constructs an instance of this class. The host name can be a DNS name, an
-     * individual hostname, an ip address or the empty string which implies
-     * localhost. The port or port range is optional.
+     * Constructs a new {@code SocketPermission} instance. The hostname can be a
+     * DNS name, an individual hostname, an IP address or the empty string which
+     * implies {@code localhost}. The port or port range is optional.
      * <p>
-     * The action list is a comma-seperated list which can consist of "connect",
-     * "listen", "accept", and "resolve". They are case-insensitive and can be
-     * put together in any order. "resolve" is always implied.
+     * The action list is a comma-separated list which can consists of the
+     * possible operations {@code "connect"}, {@code "listen"}, {@code "accept"}
+     * , and {@code "resolve"}. They are case-insensitive and can be put
+     * together in any order. {@code "resolve"} is implied per default.
+     * </p>
      * 
      * @param host
-     *            java.lang.String the host name
+     *            the hostname this permission is valid for.
      * @param action
-     *            java.lang.String the action string
+     *            the action string of this permission.
+     * @since Android 1.0
      */
     public SocketPermission(String host, String action) {
         super(host.equals("") ? "localhost" : host); //$NON-NLS-1$ //$NON-NLS-2$
@@ -135,15 +144,16 @@ public final class SocketPermission extends Permission implements Serializable {
     }
 
     /**
-     * Compares the argument to the receiver, and returns true if they represent
-     * the equal objects using a class specific comparison.
-     * <p>
+     * Compares the argument {@code o} to this instance and returns {@code true}
+     * if they represent the same permission using a class specific comparison.
      * 
      * @param o
-     *            the object to compare with this object
-     * @return <code>true</code> if the object is the same as this object
-     *         <code>false</code> if it is different from this object
+     *            the object to compare with this {@code SocketPermission}
+     *            instance.
+     * @return {@code true} if they represent the same permission, {@code false}
+     *         otherwise.
      * @see #hashCode
+     * @since Android 1.0
      */
     @Override
     public boolean equals(Object o) {
@@ -171,13 +181,13 @@ public final class SocketPermission extends Permission implements Serializable {
     }
 
     /**
-     * Returns an integer hash code for the receiver. Any two objects which
-     * answer <code>true</code> when passed to <code>.equals</code> must
-     * answer the same value for this method.
+     * Returns the hash value for this {@code SocketPermission} instance. Any
+     * two objects which returns {@code true} when passed to {@code equals()}
+     * must return the same value as a result of this method.
      * 
-     * @return int the receiver's hash.
-     * 
+     * @return the hashcode value for this instance.
      * @see #equals
+     * @since Android 1.0
      */
     @Override
     public int hashCode() {
@@ -185,10 +195,12 @@ public final class SocketPermission extends Permission implements Serializable {
     }
 
     /**
-     * Returns the canonical action list of this SocketPermission in the order:
-     * connect, listen, accept, resolve.
+     * Gets a comma-separated list of all actions allowed by this permission. If
+     * more than one action is returned they follow this order: {@code connect},
+     * {@code listen}, {@code accept}, {@code resolve}.
      * 
-     * @return java.lang.String the canonical action list
+     * @return the comma-separated action list.
+     * @since Android 1.0
      */
     @Override
     public String getActions() {
@@ -196,7 +208,7 @@ public final class SocketPermission extends Permission implements Serializable {
     }
 
     /**
-     * Stores the actions for this permission as a bit field
+     * Stores the actions for this permission as a bit field.
      * 
      * @param actions
      *            java.lang.String the action list
@@ -234,16 +246,18 @@ public final class SocketPermission extends Permission implements Serializable {
     }
 
     /**
-     * Check the permission to see if the actions requested by the argument
-     * permission are permissable. All argument permission actions, host and
-     * port must be implied by this permission in order to return true. This
-     * permission may imply additional actions etc. not present in the argument
-     * permission.
+     * Checks whether this {@code SocketPermission} instance allows all actions
+     * which are allowed by the given permission object {@code p}. All argument
+     * permission actions, hosts and ports must be implied by this permission
+     * instance in order to return {@code true}. This permission may imply
+     * additional actions not present in the argument permission.
      * 
-     * @return boolean true if this permission implies <code>p</code>, and
-     *         false otherwise
      * @param p
-     *            java.security.Permission the other socket permission
+     *            the socket permission which has to be implied by this
+     *            instance.
+     * @return {@code true} if this permission instance implies all permissions
+     *         represented by {@code p}, {@code false} otherwise.
+     * @since Android 1.0
      */
     @Override
     public boolean implies(Permission p) {
@@ -273,9 +287,11 @@ public final class SocketPermission extends Permission implements Serializable {
     }
 
     /**
-     * Returns a PermissionCollection for storing SocketPermission objects.
+     * Creates a new {@code PermissionCollection} to store {@code
+     * SocketPermission} objects.
      * 
-     * @return java.security.PermissionCollection a permission collection
+     * @return the new permission collection.
+     * @since Android 1.0
      */
     @Override
     public PermissionCollection newPermissionCollection() {
@@ -425,9 +441,9 @@ public final class SocketPermission extends Permission implements Serializable {
         return host.toLowerCase();
     }
 
-    /*
+    /**
      * Determines whether or not this permission could refer to the same host as
-     * sp
+     * sp.
      */
     boolean checkHost(SocketPermission sp) {
         if (isPartialWild) {

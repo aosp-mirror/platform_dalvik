@@ -33,6 +33,7 @@ import org.apache.harmony.nio.internal.IOUtil;
 /**
  * This class provides several utilities to get I/O streams from channels.
  * 
+ * @since Android 1.0
  */
 public final class Channels {
 
@@ -51,44 +52,80 @@ public final class Channels {
     // -------------------------------------------------------------------
 
     /**
-     * Returns an input stream on the given channel
+     * Returns an input stream on the given channel. The resulting stream has
+     * the following properties:
+     * <ul>
+     * <li>If the stream is closed, then the underlying channel is closed as
+     * well.</li>
+     * <li>It is thread safe.</li>
+     * <li>It throws an {@link IllegalBlockingModeException} if the channel is
+     * in non-blocking mode and {@code read} is called.</li>
+     * <li>Neither {@code mark} nor {@code reset} is supported.</li>
+     * <li>It is not buffered.</li>
+     * </ul>
      * 
      * @param channel
-     *            The channel to be wrapped in an InputStream.
+     *            the channel to be wrapped by an InputStream.
      * @return an InputStream that takes bytes from the given byte channel.
+     * @since Android 1.0
      */
     public static InputStream newInputStream(ReadableByteChannel channel) {
         return new ReadableByteChannelInputStream(channel);
     }
 
     /**
-     * Returns an output stream on the given channel
+     * Returns an output stream on the given channel. The resulting stream has
+     * the following properties:
+     * <ul>
+     * <li>If the stream is closed, then the underlying channel is closed as
+     * well.</li>
+     * <li>It is thread safe.</li>
+     * <li>It throws an {@link IllegalBlockingModeException} if the channel is
+     * in non-blocking mode and {@code write} is called.</li>
+     * <li>It is not buffered.</li>
+     * </ul>
      * 
      * @param channel
-     *            the channel to be wrapped in an OutputStream.
+     *            the channel to be wrapped by an OutputStream.
      * @return an OutputStream that puts bytes onto the given byte channel.
+     * @since Android 1.0
      */
     public static OutputStream newOutputStream(WritableByteChannel channel) {
         return new WritableByteChannelOutputStream(channel);
     }
 
     /**
-     * Returns a channel on the given input stream
+     * Returns a readable channel on the given input stream. The resulting
+     * channel has the following properties:
+     * <ul>
+     * <li>If the channel is closed, then the underlying stream is closed as
+     * well.</li>
+     * <li>It is not buffered.</li>
+     * </ul>
      * 
      * @param inputStream
-     *            the stream to be wrapped in a byte channel.
+     *            the stream to be wrapped by a byte channel.
      * @return a byte channel that reads bytes from the input stream.
+     * @since Android 1.0
      */
     public static ReadableByteChannel newChannel(InputStream inputStream) {
         return new ReadableByteChannelImpl(inputStream);
     }
 
     /**
-     * Returns a channel on the given output stream
+     * Returns a writable channel on the given output stream.
+     * 
+     * The resulting channel has following properties:
+     * <ul>
+     * <li>If the channel is closed, then the underlying stream is closed as
+     * well.</li>
+     * <li>It is not buffered.</li>
+     * </ul>
      * 
      * @param outputStream
-     *            the stream to be wrapped in a byte channel.
+     *            the stream to be wrapped by a byte channel.
      * @return a byte channel that writes bytes to the output stream.
+     * @since Android 1.0
      */
     public static WritableByteChannel newChannel(OutputStream outputStream) {
         return new WritableByteChannelImpl(outputStream);
@@ -98,12 +135,14 @@ public final class Channels {
      * Returns a reader that decodes bytes from a channel.
      * 
      * @param channel
-     *            Channel to be read.
+     *            the Channel to be read.
      * @param decoder
-     *            Charset decoder to be used.
+     *            the Charset decoder to be used.
      * @param minBufferCapacity
-     *            The minimum size of byte buffer, -1 means to use default size.
-     * @return The reader.
+     *            The minimum size of the byte buffer, -1 means to use the
+     *            default size.
+     * @return the reader.
+     * @since Android 1.0
      */
     public static Reader newReader(ReadableByteChannel channel,
             CharsetDecoder decoder, int minBufferCapacity) {
@@ -113,13 +152,17 @@ public final class Channels {
     }
 
     /**
-     * Returns a reader that decodes bytes from a channel.
+     * Returns a reader that decodes bytes from a channel. This method creates a
+     * reader with a buffer of default size.
      * 
      * @param channel
-     *            Channel to be read.
+     *            the Channel to be read.
      * @param charsetName
-     *            Name of charset.
-     * @return The reader.
+     *            the name of the charset.
+     * @return the reader.
+     * @throws java.nio.charset.UnsupportedCharsetException
+     *             if the given charset name is not supported.
+     * @since Android 1.0
      */
     public static Reader newReader(ReadableByteChannel channel,
             String charsetName) {
@@ -127,16 +170,18 @@ public final class Channels {
     }
 
     /**
-     * Returns a writer that encodes characters by encoder and output bytes to a
-     * channel.
+     * Returns a writer that encodes characters with the specified
+     * {@code encoder} and sends the bytes to the specified channel.
      * 
      * @param channel
-     *            Channel to be written.
+     *            the Channel to write to.
      * @param encoder
-     *            Charset decoder to be used.
+     *            the CharsetEncoder to be used.
      * @param minBufferCapacity
-     *            The minimum size of byte buffer, -1 means to use default size.
-     * @return The writer.
+     *            the minimum size of the byte buffer, -1 means to use the
+     *            default size.
+     * @return the writer.
+     * @since Android 1.0
      */
     public static Writer newWriter(WritableByteChannel channel,
             CharsetEncoder encoder, int minBufferCapacity) {
@@ -145,14 +190,18 @@ public final class Channels {
     }
 
     /**
-     * Returns a writer that encodes characters by encoder and output bytes to a
-     * channel.
+     * Returns a writer that encodes characters with the specified
+     * {@code encoder} and sends the bytes to the specified channel. This method
+     * creates a writer with a buffer of default size.
      * 
      * @param channel
-     *            Channel to be written.
+     *            the Channel to be written to.
      * @param charsetName
-     *            Name of charset.
-     * @return The writer.
+     *            the name of the charset.
+     * @return the writer.
+     * @throws java.nio.charset.UnsupportedCharsetException
+     *             if the given charset name is not supported.
+     * @since Android 1.0
      */
     public static Writer newWriter(WritableByteChannel channel,
             String charsetName) {

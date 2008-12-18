@@ -27,9 +27,26 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+/**
+ * Annotation type used to indicate that the compiler should not issue the
+ * specified warnings for the marked program element. Warnings are not only
+ * suppressed for the annotated element but also for all program elements
+ * contained in that element.
+ * <p>
+ * It is recommended that programmers always use this annotation on the most
+ * deeply nested element where it is actually needed.
+ * </p>
+ * 
+ * @since Android 1.0
+ */
 @Target(value={TYPE,FIELD,METHOD,PARAMETER,CONSTRUCTOR,LOCAL_VARIABLE})
 @Retention(value=SOURCE)
 public @interface SuppressWarnings
 {
+    /**
+     * The list of warnings a compiler should not issue.
+     * 
+     * @since Android 1.0
+     */
     String[] value();
 }

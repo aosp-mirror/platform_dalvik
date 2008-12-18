@@ -15,31 +15,57 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package java.security.interfaces;
 
 import java.security.InvalidParameterException;
 import java.security.SecureRandom;
 
 /**
- * @com.intel.drl.spec_ref
+ * The interface for key generators that can generate DSA key pairs.
  * 
+ * @since Android 1.0
  */
 public interface DSAKeyPairGenerator {
+
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Initializes this generator with the prime ({@code p}), subprime ({@code
+     * q}), and base ({@code g}) values from the specified parameters.
+     * 
+     * @param params
+     *            the parameter values.
+     * @param random
+     *            the source of randomness.
+     * @throws InvalidParameterException
+     *             if the specified parameter values are {@code null} or
+     *             invalid.
+     * @since Android 1.0
      */
     public void initialize(DSAParams params, SecureRandom random)
             throws InvalidParameterException;
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Initializes this generator for the specified modulus length. Valid values
+     * for the modulus length are the multiples of 8 between 512 and 1024.
+     * <p>
+     * The parameter {@code genParams} specifies whether this method should
+     * generate new prime ({@code p}), subprime ({@code q}), and base ({@code g})
+     * values or whether
+     * it will use the pre-calculated values for the specified modulus
+     * length. Default parameters are available for modulus lengths of 512 and 1024
+     * bits.
+     * </p>
+     * 
+     * @param modlen
+     *            the length of the modulus in bits.
+     * @param genParams
+     *            whether new values should be generated.
+     * @param random
+     *            the source of randomness.
+     * @throws InvalidParameterException
+     *             if the specified modulus length is not valid, or if there are
+     *             no pre-calculated values and {@code genParams} is {@code
+     *             false}.
+     * @since Android 1.0
      */
     public void initialize(int modlen, boolean genParams, SecureRandom random)
             throws InvalidParameterException;

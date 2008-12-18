@@ -17,20 +17,38 @@
 
 package tests.api.java.net;
 
+import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.Socket;
 
 import tests.support.Support_PortManager;
 
+@TestTargetClass(ConnectException.class) 
 public class ConnectExceptionTest extends junit.framework.TestCase {
 
-	/**
-	 * @tests java.net.ConnectException#ConnectException()
+    /**
+     * @tests java.net.ConnectException#ConnectException()
      * @tests java.net.ConnectException#ConnectException(java.lang.String)
-	 */
-	public void test_Constructor() {
+     */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "ConnectException",
+          methodArgs = {}
+        ), @TestTarget(
+          methodName = "ConnectException",
+          methodArgs = {String.class}
+        )
+    })
+    public void test_Constructor() {
         assertNull("Wrong message", new ConnectException().getMessage());
-	    assertEquals("Wrong message", "message", new ConnectException("message").getMessage());
-	}
+        assertEquals("Wrong message", "message", new ConnectException("message").getMessage());
+    }
 }

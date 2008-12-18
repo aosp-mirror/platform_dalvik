@@ -20,35 +20,41 @@ package java.sql;
 import java.text.SimpleDateFormat;
 
 /**
- * A Date class which can consume and produce dates in SQL Date format.
+ * A class which can consume and produce dates in SQL {@code Date} format.
  * <p>
- * The SQL date format represents a date as yyyy-mm-dd. Note that this date
+ * Dates are represented in SQL as {@code yyyy-mm-dd}. Note that this date
  * format only deals with year, month and day values. There are no values for
  * hours, minutes, seconds.
+ * </p>
+ * This is unlike the familiar {@code java.util.Date} object, which also includes 
+ * values for hours, minutes, seconds, and milliseconds.
  * <p>
- * This contrasts with regular java.util.Date values, which include time values
- * for hours, minutes, seconds, milliseconds.
- * <p>
- * Time points are handled as millisecond values - milliseconds since the epoch,
- * January 1st 1970, 00:00:00.000 GMT. Time values passed to the java.sql.Date
- * class are "normalized" to the time 00:00:00.000 GMT on the date implied by
- * the time value.
+ * Time points are handled as millisecond values - milliseconds since the Epoch,
+ * January 1st 1970, 00:00:00.000 GMT. Time values passed to the {@code
+ * java.sql.Date} class are "normalized" to the time 00:00:00.000 GMT on the
+ * date implied by the time value.
+ * </p>
+ *  
+ * @since Android 1.0
  */
 public class Date extends java.util.Date {
 
     private static final long serialVersionUID = 1511598038487230103L;
 
     /**
-     * @deprecated Please use the constructor {@link #Date(long)} Constructs a Date
-     *             object corresponding to the supplied Year, Month and Day.
+     * Constructs a {@code Date} object corresponding to the supplied year,
+     * month and day.
+     * 
+     * @deprecated Please use the constructor {@link #Date(long)}.
      * @param theYear
      *            the year, specified as the year minus 1900. Must be in the
-     *            range 0 to 8099.
+     *            range {@code [0,8099]}.
      * @param theMonth
      *            the month, specified as a number with 0 = January. Must be in
-     *            the range 0 to 11.
+     *            the range {@code [0,11]}.
      * @param theDay
-     *            the day in the month. Must be in the range 1 to 31.
+     *            the day in the month. Must be in the range {@code [1,31]}.
+     * @since Android 1.0
      */
     @SuppressWarnings("deprecation")
     @Deprecated
@@ -57,26 +63,28 @@ public class Date extends java.util.Date {
     }
 
     /**
-     * Creates a Date which corresponds to the day implied by the supplied
-     * theDate milliseconds time value.
+     * Creates a date which corresponds to the day determined by the supplied
+     * milliseconds time value {@code theDate}.
      * 
-     * @param theDate -
+     * @param theDate
      *            a time value in milliseconds since the epoch - January 1 1970
      *            00:00:00 GMT. The time value (hours, minutes, seconds,
-     *            milliseconds) stored in the Date object is adjusted to
-     *            correspond to 00:00:00 GMT on the day implied by the supplied
+     *            milliseconds) stored in the {@code Date} object is adjusted to
+     *            correspond to 00:00:00 GMT on the day determined by the supplied
      *            time value.
+     * @since Android 1.0
      */
     public Date(long theDate) {
         super(normalizeTime(theDate));
     }
 
     /**
-     * @deprecated This method is deprecated and must not be used. SQL Date
-     *             values do not have an hours component.
-     * @return does not return
+     * @deprecated This method is deprecated and must not be used. SQL {@code
+     *             Date} values do not have an hours component.
+     * @return does not return anything.
      * @throws IllegalArgumentException
-     *             if this method is called
+     *             if this method is called.
+     * @since Android 1.0
      */
     @SuppressWarnings("deprecation")
     @Deprecated
@@ -86,11 +94,12 @@ public class Date extends java.util.Date {
     }
 
     /**
-     * @deprecated This method is deprecated and must not be used. SQL Date
-     *             values do not have a minutes component.
-     * @return does not return
+     * @deprecated This method is deprecated and must not be used. SQL {@code
+     *             Date} values do not have a minutes component.
+     * @return does not return anything.
      * @throws IllegalArgumentException
-     *             if this method is called
+     *             if this method is called.
+     * @since Android 1.0
      */
     @SuppressWarnings("deprecation")
     @Deprecated
@@ -100,11 +109,12 @@ public class Date extends java.util.Date {
     }
 
     /**
-     * @deprecated This method is deprecated and must not be used. SQL Date
-     *             values do not have a seconds component.
-     * @return does not return
+     * @deprecated This method is deprecated and must not be used. SQL {@code
+     *             Date} values do not have a seconds component.
+     * @return does not return anything.
      * @throws IllegalArgumentException
-     *             if this method is called
+     *             if this method is called.
+     * @since Android 1.0
      */
     @SuppressWarnings("deprecation")
     @Deprecated
@@ -114,12 +124,13 @@ public class Date extends java.util.Date {
     }
 
     /**
-     * @deprecated This method is deprecated and must not be used. SQL Date
-     *             values do not have an hours component.
+     * @deprecated This method is deprecated and must not be used. SQL {@code
+     *             Date} values do not have an hours component.
      * @param theHours
-     *            the number of hours to set
+     *            the number of hours to set.
      * @throws IllegalArgumentException
-     *             if this method is called
+     *             if this method is called.
+     * @since Android 1.0
      */
     @SuppressWarnings("deprecation")
     @Deprecated
@@ -129,12 +140,13 @@ public class Date extends java.util.Date {
     }
 
     /**
-     * @deprecated This method is deprecated and must not be used. SQL Date
-     *             values do not have a minutes component.
+     * @deprecated This method is deprecated and must not be used. SQL {@code
+     *             Date} values do not have a minutes component.
      * @param theMinutes
-     *            the number of minutes to set
+     *            the number of minutes to set.
      * @throws IllegalArgumentException
-     *             if this method is called
+     *             if this method is called.
+     * @since Android 1.0
      */
     @SuppressWarnings("deprecation")
     @Deprecated
@@ -144,12 +156,13 @@ public class Date extends java.util.Date {
     }
 
     /**
-     * @deprecated This method is deprecated and must not be used. SQL Date
-     *             values do not have a seconds component.
+     * @deprecated This method is deprecated and must not be used. SQL {@code
+     *             Date} values do not have a seconds component.
      * @param theSeconds
-     *            the number of seconds to set
+     *            the number of seconds to set.
      * @throws IllegalArgumentException
-     *             if this method is called
+     *             if this method is called.
+     * @since Android 1.0
      */
     @SuppressWarnings("deprecation")
     @Deprecated
@@ -160,11 +173,11 @@ public class Date extends java.util.Date {
 
     /**
      * Sets this date to a date supplied as a milliseconds value. The date is
-     * set based on the supplied time value after removing any time elements
-     * finer than a day, based on zero GMT for that day.
+     * set based on the supplied time value and rounded to zero GMT for that day.
      * 
      * @param theTime
-     *            the time in milliseconds since the Epoch
+     *            the time in milliseconds since the Epoch.
+     * @since Android 1.0
      */
     @Override
     public void setTime(long theTime) {
@@ -176,9 +189,11 @@ public class Date extends java.util.Date {
     }
 
     /**
-     * Produces a string representation of the Date in SQL format
+     * Produces a string representation of the date in SQL format
      * 
-     * @return a string representation of the Date in SQL format - "yyyy-mm-dd".
+     * @return a string representation of the date in SQL format - {@code
+     *         "yyyy-mm-dd"}.
+     * @since Android 1.0
      */
     @Override
     public String toString() {
@@ -187,15 +202,17 @@ public class Date extends java.util.Date {
     }
 
     /**
-     * Creates a Date from a string representation of a date in SQL format.
+     * Creates a {@code Date} from a string representation of a date in SQL
+     * format.
      * 
      * @param dateString
-     *            the string representation of a date in SQL format -
-     *            "yyyy-mm-dd".
-     * @return the Date object
+     *            the string representation of a date in SQL format - " {@code
+     *            yyyy-mm-dd}".
+     * @return the {@code Date} object.
      * @throws IllegalArgumentException
      *             if the format of the supplied string does not match the SQL
      *             format.
+     * @since Android 1.0
      */
     public static Date valueOf(String dateString) {
         if (dateString == null) {

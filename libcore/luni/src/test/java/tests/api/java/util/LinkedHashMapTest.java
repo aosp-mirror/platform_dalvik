@@ -17,6 +17,11 @@
 
 package tests.api.java.util;
 
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass; 
+
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,6 +38,7 @@ import tests.support.Support_UnmodifiableCollectionTest;
 /**
  * @tests java.util.LinkedHashMap
  */
+@TestTargetClass(LinkedHashMap.class) 
 public class LinkedHashMapTest extends junit.framework.TestCase {
 
     LinkedHashMap hm;
@@ -72,6 +78,15 @@ public class LinkedHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.LinkedHashMap#LinkedHashMap()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "LinkedHashMap",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         // Test for method java.util.LinkedHashMap()
         new Support_MapTest2(new LinkedHashMap()).runTest();
@@ -83,6 +98,15 @@ public class LinkedHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.LinkedHashMap#LinkedHashMap(int)
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Need to improve code.",
+      targets = {
+        @TestTarget(
+          methodName = "LinkedHashMap",
+          methodArgs = {int.class}
+        )
+    })
     public void test_ConstructorI() {
         // Test for method java.util.LinkedHashMap(int)
         LinkedHashMap hm2 = new LinkedHashMap(5);
@@ -104,6 +128,15 @@ public class LinkedHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.LinkedHashMap#LinkedHashMap(int, float)
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Need to improve code.",
+      targets = {
+        @TestTarget(
+          methodName = "LinkedHashMap",
+          methodArgs = {int.class, float.class}
+        )
+    })
     public void test_ConstructorIF() {
         // Test for method java.util.LinkedHashMap(int, float)
         LinkedHashMap hm2 = new LinkedHashMap(5, (float) 0.5);
@@ -124,6 +157,15 @@ public class LinkedHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.LinkedHashMap#LinkedHashMap(java.util.Map)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify IllegalArgumentException.",
+      targets = {
+        @TestTarget(
+          methodName = "LinkedHashMap",
+          methodArgs = {java.util.Map.class}
+        )
+    })
     public void test_ConstructorLjava_util_Map() {
         // Test for method java.util.LinkedHashMap(java.util.Map)
         Map myMap = new TreeMap();
@@ -138,6 +180,15 @@ public class LinkedHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.LinkedHashMap#get(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify ClassCastException, NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "get",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_getLjava_lang_Object() {
         // Test for method java.lang.Object
         // java.util.LinkedHashMap.get(java.lang.Object)
@@ -157,6 +208,16 @@ public class LinkedHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.LinkedHashMap#put(java.lang.Object, java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify that put returns null if there was no mapping " +
+            "for key, or associated null with the specified key.",
+      targets = {
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {java.lang.Object.class, java.lang.Object.class}
+        )
+    })
     public void test_putLjava_lang_ObjectLjava_lang_Object() {
         // Test for method java.lang.Object
         // java.util.LinkedHashMap.put(java.lang.Object, java.lang.Object)
@@ -177,6 +238,15 @@ public class LinkedHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.LinkedHashMap#putAll(java.util.Map)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "",
+              targets = {
+                @TestTarget(
+                  methodName = "putAll",
+                  methodArgs = {Map.class}
+                )
+            })    
     public void test_putAllLjava_util_Map() {
         // Test for method void java.util.LinkedHashMap.putAll(java.util.Map)
         LinkedHashMap hm2 = new LinkedHashMap();
@@ -189,6 +259,15 @@ public class LinkedHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.LinkedHashMap#putAll(java.util.Map)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "putAll",
+          methodArgs = {Map.class}
+        )
+    })
     public void test_putAll_Ljava_util_Map_Null() {
         LinkedHashMap linkedHashMap = new LinkedHashMap();
         try {
@@ -209,6 +288,15 @@ public class LinkedHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.LinkedHashMap#entrySet()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "entrySet",
+          methodArgs = {}
+        )
+    })
     public void test_entrySet() {
         // Test for method java.util.Set java.util.LinkedHashMap.entrySet()
         Set s = hm.entrySet();
@@ -225,6 +313,15 @@ public class LinkedHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.LinkedHashMap#keySet()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "keySet",
+          methodArgs = {}
+        )
+    })
     public void test_keySet() {
         // Test for method java.util.Set java.util.LinkedHashMap.keySet()
         Set s = hm.keySet();
@@ -278,6 +375,15 @@ public class LinkedHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.LinkedHashMap#values()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "values",
+          methodArgs = {}
+        )
+    })
     public void test_values() {
         // Test for method java.util.Collection java.util.LinkedHashMap.values()
         Collection c = hm.values();
@@ -304,6 +410,15 @@ public class LinkedHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.LinkedHashMap#remove(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "remove",
+          methodArgs = {Object.class}
+        )
+    })
     public void test_removeLjava_lang_Object() {
         // Test for method java.lang.Object
         // java.util.LinkedHashMap.remove(java.lang.Object)
@@ -326,6 +441,15 @@ public class LinkedHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.LinkedHashMap#clear()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "clear",
+          methodArgs = {}
+        )
+    })
     public void test_clear() {
         // Test for method void java.util.LinkedHashMap.clear()
         hm.clear();
@@ -339,6 +463,15 @@ public class LinkedHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.LinkedHashMap#clone()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "clone",
+          methodArgs = {}
+        )
+    })
     public void test_clone() {
         // Test for method java.lang.Object java.util.LinkedHashMap.clone()
         LinkedHashMap hm2 = (LinkedHashMap) hm.clone();
@@ -371,7 +504,15 @@ public class LinkedHashMapTest extends junit.framework.TestCase {
         assertEquals("keySet() was not cloned", 
                 "key2", key2.iterator().next());
     }
-    
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "Regression test.",
+              targets = {
+                @TestTarget(
+                  methodName = "clone",
+                  methodArgs = {}
+                )
+   })   
     // regresion test for HARMONY-4603
     public void test_clone_Mock() {
         LinkedHashMap hashMap = new MockMap();
@@ -402,6 +543,15 @@ public class LinkedHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.LinkedHashMap#containsKey(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify ClassCastException, NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "containsKey",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_containsKeyLjava_lang_Object() {
         // Test for method boolean
         // java.util.LinkedHashMap.containsKey(java.lang.Object)
@@ -419,6 +569,15 @@ public class LinkedHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.LinkedHashMap#containsValue(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify ClassCastException, NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "containsValue",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_containsValueLjava_lang_Object() {
         // Test for method boolean
         // java.util.LinkedHashMap.containsValue(java.lang.Object)
@@ -431,6 +590,15 @@ public class LinkedHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.LinkedHashMap#isEmpty()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isEmpty",
+          methodArgs = {}
+        )
+    })
     public void test_isEmpty() {
         // Test for method boolean java.util.LinkedHashMap.isEmpty()
         assertTrue("Returned false for new map", new LinkedHashMap().isEmpty());
@@ -440,6 +608,15 @@ public class LinkedHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.LinkedHashMap#size()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "size",
+          methodArgs = {}
+        )
+    })
     public void test_size() {
         // Test for method int java.util.LinkedHashMap.size()
         assertTrue("Returned incorrect size",
@@ -449,6 +626,15 @@ public class LinkedHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.LinkedHashMap#entrySet()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "entrySet",
+          methodArgs = {}
+        )
+    })
     public void test_ordered_entrySet() {
         int i;
         int sz = 100;
@@ -511,6 +697,15 @@ public class LinkedHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.LinkedHashMap#keySet()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "keySet",
+          methodArgs = {}
+        )
+    })
     public void test_ordered_keySet() {
         int i;
         int sz = 100;
@@ -567,6 +762,15 @@ public class LinkedHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.LinkedHashMap#values()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "values",
+          methodArgs = {}
+        )
+    })
     public void test_ordered_values() {
         int i;
         int sz = 100;
@@ -623,6 +827,15 @@ public class LinkedHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.LinkedHashMap#removeEldestEntry(java.util.Map$Entry)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "removeEldestEntry",
+          methodArgs = {java.util.Map.Entry.class}
+        )
+    })
     public void test_remove_eldest() {
         int i;
         int sz = 10;

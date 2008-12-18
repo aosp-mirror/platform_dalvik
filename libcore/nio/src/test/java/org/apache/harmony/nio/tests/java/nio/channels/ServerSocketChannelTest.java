@@ -17,6 +17,11 @@
 
 package org.apache.harmony.nio.tests.java.nio.channels;
 
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -39,6 +44,7 @@ import tests.support.Support_PortManager;
 /*
  * test for ServerSocketChannel
  */
+@TestTargetClass(ServerSocketChannel.class)
 public class ServerSocketChannelTest extends TestCase {
 
     private static final int CAPACITY_NORMAL = 200;
@@ -88,6 +94,15 @@ public class ServerSocketChannelTest extends TestCase {
     /*
      * Test method for 'java.nio.channels.ServerSocketChannel.validOps()'
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "validOps",
+          methodArgs = {}
+        )
+    })
     public void testValidOps() {
         MockServerSocketChannel testMSChnlnull = new MockServerSocketChannel(
                 null);
@@ -102,6 +117,15 @@ public class ServerSocketChannelTest extends TestCase {
     /*
      * Test method for 'java.nio.channels.ServerSocketChannel.open()'
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Doesn't call open() method.",
+      targets = {
+        @TestTarget(
+          methodName = "open",
+          methodArgs = {}
+        )
+    })
     public void testOpen() {
         MockServerSocketChannel testMSChnl = new MockServerSocketChannel(null);
         MockServerSocketChannel testMSChnlnotnull = new MockServerSocketChannel(
@@ -121,6 +145,15 @@ public class ServerSocketChannelTest extends TestCase {
     /*
      * Test method for 'com.ibm.io.nio.ServerSocketChannelImpl.socket()'
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "socket",
+          methodArgs = {}
+        )
+    })
     public void testSocket_Block_BeforeClose() throws Exception {
         assertTrue(this.serverChannel.isOpen());
         assertTrue(this.serverChannel.isBlocking());
@@ -136,7 +169,15 @@ public class ServerSocketChannelTest extends TestCase {
         assertFalse(this.serverChannel.isOpen());
 
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "socket",
+          methodArgs = {}
+        )
+    })
     public void testSocket_NonBlock_BeforeClose() throws Exception {
         assertTrue(this.serverChannel.isOpen());
         this.serverChannel.configureBlocking(false);
@@ -152,7 +193,15 @@ public class ServerSocketChannelTest extends TestCase {
         assertFalse(this.serverChannel.isOpen());
 
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "socket",
+          methodArgs = {}
+        )
+    })
     public void testSocket_Block_Closed() throws Exception {
         this.serverChannel.close();
         assertFalse(this.serverChannel.isOpen());
@@ -164,7 +213,15 @@ public class ServerSocketChannelTest extends TestCase {
         // same
         assertSame(s1, s2);
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "socket",
+          methodArgs = {}
+        )
+    })
     public void testSocket_NonBlock_Closed() throws Exception {
         this.serverChannel.configureBlocking(false);
         this.serverChannel.close();
@@ -185,7 +242,27 @@ public class ServerSocketChannelTest extends TestCase {
         assertNull(s.getLocalSocketAddress());
         assertEquals(0, s.getSoTimeout());
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies default status of ServerSocketChannel.",
+      targets = {
+        @TestTarget(
+          methodName = "validOps",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "provider",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "isRegistered",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "isBlocking",
+          methodArgs = {}
+        )
+    })
     public void testChannelBasicStatus() {
         ServerSocket gotSocket = this.serverChannel.socket();
         assertFalse(gotSocket.isClosed());
@@ -202,7 +279,15 @@ public class ServerSocketChannelTest extends TestCase {
     /*
      * Test method for 'com.ibm.io.nio.ServerSocketChannelImpl.accept()'
      */
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies NotYetBoundException.",
+      targets = {
+        @TestTarget(
+          methodName = "accept",
+          methodArgs = {}
+        )
+    })
     public void testAccept_Block_NotYetBound() throws IOException {
         assertTrue(this.serverChannel.isOpen());
         assertTrue(this.serverChannel.isBlocking());
@@ -213,7 +298,15 @@ public class ServerSocketChannelTest extends TestCase {
             // correct
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies NotYetBoundException.",
+      targets = {
+        @TestTarget(
+          methodName = "accept",
+          methodArgs = {}
+        )
+    })
     public void testAccept_NonBlock_NotYetBound() throws IOException {
         assertTrue(this.serverChannel.isOpen());
         this.serverChannel.configureBlocking(false);
@@ -224,7 +317,15 @@ public class ServerSocketChannelTest extends TestCase {
             // correct
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies ClosedChannelException.",
+      targets = {
+        @TestTarget(
+          methodName = "accept",
+          methodArgs = {}
+        )
+    })
     public void testAccept_ClosedChannel() throws Exception {
         this.serverChannel.close();
         assertFalse(this.serverChannel.isOpen());
@@ -235,7 +336,15 @@ public class ServerSocketChannelTest extends TestCase {
             // OK.
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies AsynchronousCloseException.",
+      targets = {
+        @TestTarget(
+          methodName = "accept",
+          methodArgs = {}
+        )
+    })
     public void testAccept_Block_NoConnect() throws IOException {
         assertTrue(this.serverChannel.isBlocking());
         ServerSocket gotSocket = this.serverChannel.socket();
@@ -260,7 +369,16 @@ public class ServerSocketChannelTest extends TestCase {
             // OK.
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies that accept() returns null if the channel is in " +
+            "non-blocking mode and no connection is available to be accepted.",
+      targets = {
+        @TestTarget(
+          methodName = "accept",
+          methodArgs = {}
+        )
+    })
     public void testAccept_NonBlock_NoConnect() throws IOException {
         ServerSocket gotSocket = this.serverChannel.socket();
         gotSocket.bind(localAddr1); 
@@ -272,6 +390,15 @@ public class ServerSocketChannelTest extends TestCase {
     /**
      * @tests ServerSocketChannel#accept().socket()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "accept",
+          methodArgs = {}
+        )
+    })
     public void test_read_Blocking_RealData() throws IOException {
         serverChannel.socket().bind(localAddr1);
         ByteBuffer buf = ByteBuffer.allocate(CAPACITY_NORMAL);
@@ -310,6 +437,15 @@ public class ServerSocketChannelTest extends TestCase {
     /**
      * @tests ServerSocketChannel#accept().socket()
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "",
+              targets = {
+                @TestTarget(
+                  methodName = "accept",
+                  methodArgs = {}
+                )
+            })    
     public void test_read_NonBlocking_RealData() throws Exception {
         serverChannel.configureBlocking(false);
         serverChannel.socket().bind(localAddr1);
@@ -329,6 +465,15 @@ public class ServerSocketChannelTest extends TestCase {
     /**
      * @tests ServerSocketChannel#accept().socket()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "accept",
+          methodArgs = {}
+        )
+    })
     public void test_write_Blocking_RealData() throws IOException {
         assertTrue(serverChannel.isBlocking());
         ServerSocket serverSocket = serverChannel.socket();
@@ -351,6 +496,15 @@ public class ServerSocketChannelTest extends TestCase {
     /**
      * @tests ServerSocketChannel#accept().socket()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "accept",
+          methodArgs = {}
+        )
+    })
     public void test_write_NonBlocking_RealData() throws Exception {
         serverChannel.configureBlocking(false);
         ServerSocket serverSocket = serverChannel.socket();
@@ -371,6 +525,15 @@ public class ServerSocketChannelTest extends TestCase {
     /**
      * @tests ServerSocketChannel#accept().socket()
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "",
+              targets = {
+                @TestTarget(
+                  methodName = "accept",
+                  methodArgs = {}
+                )
+            })    
     public void test_read_LByteBuffer_Blocking_ReadWriteRealLargeData()
             throws IOException {
         serverChannel.socket().bind(localAddr1);
@@ -390,6 +553,15 @@ public class ServerSocketChannelTest extends TestCase {
     /**
      * @tests ServerSocketChannel#accept().socket()
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "",
+              targets = {
+                @TestTarget(
+                  methodName = "accept",
+                  methodArgs = {}
+                )
+            })    
     public void test_read_LByteBuffer_NonBlocking_ReadWriteRealLargeData()
             throws Exception {
         serverChannel.configureBlocking(false);
@@ -410,6 +582,15 @@ public class ServerSocketChannelTest extends TestCase {
     /**
      * @tests ServerSocketChannel#accept().socket()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "accept",
+          methodArgs = {}
+        )
+    })
     public void test_write_LByteBuffer_NonBlocking_ReadWriteRealLargeData()
             throws Exception {
         serverChannel.configureBlocking(false);
@@ -429,6 +610,15 @@ public class ServerSocketChannelTest extends TestCase {
     /**
      * @tests ServerSocketChannel#accept().socket()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "accept",
+          methodArgs = {}
+        )
+    })
     public void test_write_LByteBuffer_Blocking_ReadWriteRealLargeData()
             throws Exception {
         serverChannel.socket().bind(localAddr1);
@@ -469,6 +659,16 @@ public class ServerSocketChannelTest extends TestCase {
     /**
      * @tests ServerSocketChannel#socket().getSoTimeout()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies that accept method  returns null since " +
+            "there are no pending connections. Doesn't verify exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "accept",
+          methodArgs = {}
+        )
+    })
     public void test_accept_SOTIMEOUT() throws IOException {
         // regression test for Harmony-707        
         final int SO_TIMEOUT = 10;
@@ -492,6 +692,15 @@ public class ServerSocketChannelTest extends TestCase {
     /**
      * @tests ServerSocket#socket().accept()
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "Regression test. Verifies IllegalBlockingModeException.",
+              targets = {
+                @TestTarget(
+                  methodName = "socket",
+                  methodArgs = {}
+                )
+            })    
     public void test_socket_accept_Blocking_NotBound() throws IOException {
         // regression test for Harmony-748       
         ServerSocket gotSocket = serverChannel.socket();
@@ -514,6 +723,15 @@ public class ServerSocketChannelTest extends TestCase {
     /**
      * @tests ServerSocket#socket().accept()
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "Regression test. Verifies IllegalBlockingModeException.",
+              targets = {
+                @TestTarget(
+                  methodName = "socket",
+                  methodArgs = {}
+                )
+            })    
     public void test_socket_accept_Nonblocking_NotBound() throws IOException {
         // regression test for Harmony-748       
         ServerSocket gotSocket = serverChannel.socket();
@@ -536,6 +754,16 @@ public class ServerSocketChannelTest extends TestCase {
     /**
      * @tests ServerSocket#socket().accept()
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "Regression test. Verifies IllegalBlockingModeException, " +
+                    "ClosedChannelException.",
+              targets = {
+                @TestTarget(
+                  methodName = "socket",
+                  methodArgs = {}
+                )
+            })
     public void test_socket_accept_Nonblocking_Bound() throws IOException {
         // regression test for Harmony-748
         serverChannel.configureBlocking(false);
@@ -559,6 +787,15 @@ public class ServerSocketChannelTest extends TestCase {
     /**
      * @tests ServerSocket#socket().accept()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Regression test. Verifies ClosedChannelException.",
+      targets = {
+        @TestTarget(
+          methodName = "socket",
+          methodArgs = {}
+        )
+    })
     public void test_socket_accept_Blocking_Bound() throws IOException {
         // regression test for Harmony-748
         serverChannel.configureBlocking(true);

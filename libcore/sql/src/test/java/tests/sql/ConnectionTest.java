@@ -16,6 +16,11 @@
 
 package tests.sql;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLWarning;
@@ -29,11 +34,21 @@ import java.sql.CallableStatement;
 
 import junit.framework.Test;
 
+@TestTargetClass(Connection.class)
 public class ConnectionTest extends SQLTest {
 
     /**
      * @test java.sql.Connection#createStatement()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "createStatement",
+          methodArgs = {}
+        )
+    })
     public void testCreateStatement() {
 
         Statement statement = null;
@@ -57,6 +72,15 @@ public class ConnectionTest extends SQLTest {
      * @test java.sql.Connection#createStatement(int resultSetType, int
      *       resultSetConcurrency)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "createStatement",
+          methodArgs = {int.class, int.class}
+        )
+    })
     public void testCreateStatement_int_int() {
         Statement st = null;
         ResultSet rs = null;
@@ -135,14 +159,14 @@ public class ConnectionTest extends SQLTest {
         }
 
         try {
-	    // exception is not specified for this case
+        // exception is not specified for this case
             conn.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, -1);
         } catch (SQLException sqle) {
             // expected
         }
 
         try {
-	    // exception is not specified for this case
+        // exception is not specified for this case
             conn.createStatement(Integer.MIN_VALUE, ResultSet.CONCUR_READ_ONLY);
         } catch (SQLException sqle) {
             // expected
@@ -153,6 +177,15 @@ public class ConnectionTest extends SQLTest {
      * @test java.sql.Connection#createStatement(int resultSetType, int
      *       resultSetConcurrency, int resultSetHoldability)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "createStatement",
+          methodArgs = {int.class, int.class, int.class}
+        )
+    })
     public void testCreateStatement_int_int_int() {
         Statement st = null;
         try {
@@ -213,6 +246,15 @@ public class ConnectionTest extends SQLTest {
     /**
      * @test java.sql.Connection#getMetaData()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getMetaData",
+          methodArgs = {}
+        )
+    })
     public void testGetMetaData() {
         try {
             DatabaseMetaData md = conn.getMetaData();
@@ -325,6 +367,15 @@ public class ConnectionTest extends SQLTest {
     /**
      * @test java.sql.Connection#getAutoCommit()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getAutoCommit",
+          methodArgs = {}
+        )
+    })
     public void testGetAutoCommit() {
         try {
             conn.setAutoCommit(true);
@@ -342,6 +393,15 @@ public class ConnectionTest extends SQLTest {
     /**
      * @test java.sql.Connection#setAutoCommit(boolean)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "setAutoCommit",
+          methodArgs = {boolean.class}
+        )
+    })
     public void testSetAutoCommit() {
         Statement st = null;
         ResultSet rs = null;
@@ -390,6 +450,15 @@ public class ConnectionTest extends SQLTest {
     /**
      * @test java.sql.Connection#isReadOnly()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "isReadOnly",
+          methodArgs = {}
+        )
+    })
     public void testIsReadOnly() {
         try {
             conn.setReadOnly(true);
@@ -408,7 +477,16 @@ public class ConnectionTest extends SQLTest {
     /**
      * @test java.sql.Connection#setReadOnly(boolean)
      */
-    public void testSetReadOnly() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setReadOnly",
+          methodArgs = {boolean.class}
+        )
+    })
+    public void _testSetReadOnly() {
         Statement st = null;
         try {
             conn.setReadOnly(true);
@@ -443,6 +521,15 @@ public class ConnectionTest extends SQLTest {
      * 
      * TODO ResultSet.CLOSE_CURSORS_AT_COMMIT is not supported
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getHoldability",
+          methodArgs = {}
+        )
+    })
     public void testGetHoldability() {
         try {
  //           conn.setHoldability(ResultSet.CLOSE_CURSORS_AT_COMMIT);
@@ -461,6 +548,15 @@ public class ConnectionTest extends SQLTest {
      * 
      * TODO ResultSet.CLOSE_CURSORS_AT_COMMIT is not supported
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setHoldability",
+          methodArgs = {int.class}
+        )
+    })
     public void testSetHoldability() {
         Statement st = null;
         try {
@@ -501,6 +597,15 @@ public class ConnectionTest extends SQLTest {
      * 
      * TODO only Connection.TRANSACTION_SERIALIZABLE is supported
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getTransactionIsolation",
+          methodArgs = {}
+        )
+    })
     public void testGetTransactionIsolation() {
         try {
 //            conn
@@ -527,6 +632,15 @@ public class ConnectionTest extends SQLTest {
      * 
      * TODO only Connection.TRANSACTION_SERIALIZABLE is supported
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setTransactionIsolation",
+          methodArgs = {int.class}
+        )
+    })
     public void testSetTransactionIsolation() {
         try {
 //            conn
@@ -1045,6 +1159,15 @@ public class ConnectionTest extends SQLTest {
     /**
      * @test java.sql.Connection#commit()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "commit",
+          methodArgs = {}
+        )
+    })
     public void testCommit() {
         Statement st = null;
         Statement st1 = null;
@@ -1123,6 +1246,15 @@ public class ConnectionTest extends SQLTest {
     /**
      * @test java.sql.Connection#rollback()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "rollback",
+          methodArgs = {}
+        )
+    })
     public void testRollback() {
         Statement st = null;
         Statement st1 = null;

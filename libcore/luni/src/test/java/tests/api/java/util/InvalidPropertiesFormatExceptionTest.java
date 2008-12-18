@@ -15,17 +15,32 @@
  */
 package tests.api.java.util;
 
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass; 
+
 import java.io.NotSerializableException;
 import java.util.InvalidPropertiesFormatException;
 
 import org.apache.harmony.testframework.serialization.SerializationTest;
 
+@TestTargetClass(InvalidPropertiesFormatException.class) 
 public class InvalidPropertiesFormatExceptionTest extends
         junit.framework.TestCase {
 
     /**
      * @tests java.util.InvalidPropertiesFormatException#SerializationTest()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Verifies serialization/deserialization compatibility.",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationSelf",
+          methodArgs = {}
+        )
+    })
     public void test_Serialization() throws Exception {
         InvalidPropertiesFormatException ipfe = new InvalidPropertiesFormatException(
                 "Hey, this is InvalidPropertiesFormatException");

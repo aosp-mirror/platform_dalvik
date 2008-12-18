@@ -16,6 +16,11 @@
 
 package org.apache.harmony.nio_char.tests.java.nio.charset;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestLevel;
+
 import java.io.Serializable;
 import java.nio.charset.IllegalCharsetNameException;
 
@@ -24,11 +29,25 @@ import junit.framework.TestCase;
 import org.apache.harmony.testframework.serialization.SerializationTest;
 import org.apache.harmony.testframework.serialization.SerializationTest.SerializableAssert;
 
+@TestTargetClass(IllegalCharsetNameException.class)
 /**
  * Test class IllegalCharsetNameException.
  */
 public class IllegalCharsetNameExceptionTest extends TestCase {
 
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "IllegalCharsetNameException",
+          methodArgs = {java.lang.String.class}
+        ),@TestTarget(
+          methodName = "getCharsetName",
+          methodArgs = {}
+        )
+
+    })
     public void testConstructor() {
         IllegalCharsetNameException ex = new IllegalCharsetNameException(
                 "impossible");
@@ -77,6 +96,15 @@ public class IllegalCharsetNameExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility.
      */
+    @TestInfo(
+              level = TestLevel.COMPLETE,
+              purpose = "Verifies serialization.",
+              targets = {
+                @TestTarget(
+                  methodName = "!SerializationSelf",
+                  methodArgs = {}
+                )
+            })
     public void testSerializationSelf() throws Exception {
 
         SerializationTest.verifySelf(new IllegalCharsetNameException(
@@ -86,6 +114,15 @@ public class IllegalCharsetNameExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
+    @TestInfo(
+              level = TestLevel.COMPLETE,
+              purpose = "Verifies serialization.",
+              targets = {
+                @TestTarget(
+                  methodName = "!SerializationGolden",
+                  methodArgs = {}
+                )
+            })
     public void testSerializationCompatibility() throws Exception {
 
         SerializationTest.verifyGolden(this, new IllegalCharsetNameException(

@@ -17,12 +17,18 @@
 
 package tests.api.java.util;
 
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass; 
+
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.SimpleTimeZone;
 import java.util.TimeZone;
 
+@TestTargetClass(SimpleTimeZone.class) 
 public class SimpleTimeZoneTest extends junit.framework.TestCase {
 
     SimpleTimeZone st1;
@@ -32,6 +38,15 @@ public class SimpleTimeZoneTest extends junit.framework.TestCase {
     /**
      * @tests java.util.SimpleTimeZone#SimpleTimeZone(int, java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "SimpleTimeZone",
+          methodArgs = {int.class, java.lang.String.class}
+        )
+    })
     public void test_ConstructorILjava_lang_String() {
         // Test for method java.util.SimpleTimeZone(int, java.lang.String)
 
@@ -47,6 +62,17 @@ public class SimpleTimeZoneTest extends junit.framework.TestCase {
      * @tests java.util.SimpleTimeZone#SimpleTimeZone(int, java.lang.String,
      *        int, int, int, int, int, int, int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IllegalArgumentException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "SimpleTimeZone",
+          methodArgs = {int.class, java.lang.String.class, int.class, 
+                        int.class, int.class, int.class, int.class, 
+                        int.class, int.class, int.class}
+        )
+    })
     public void test_ConstructorILjava_lang_StringIIIIIIII() {
         // Test for method java.util.SimpleTimeZone(int, java.lang.String, int,
         // int, int, int, int, int, int, int)
@@ -68,6 +94,17 @@ public class SimpleTimeZoneTest extends junit.framework.TestCase {
      * @tests java.util.SimpleTimeZone#SimpleTimeZone(int, java.lang.String,
      *        int, int, int, int, int, int, int, int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IllegalArgumentException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "SimpleTimeZone",
+          methodArgs = {int.class, java.lang.String.class, int.class, 
+                        int.class, int.class, int.class, int.class, 
+                        int.class, int.class, int.class, int.class}
+        )
+    })
     public void test_ConstructorILjava_lang_StringIIIIIIIII() {
         // Test for method java.util.SimpleTimeZone(int, java.lang.String, int,
         // int, int, int, int, int, int, int, int)
@@ -91,6 +128,18 @@ public class SimpleTimeZoneTest extends junit.framework.TestCase {
      * @tests java.util.SimpleTimeZone#SimpleTimeZone(int, java.lang.String,
      *        int, int, int, int, int, int, int, int, int, int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IllegalArgumentException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "SimpleTimeZone",
+          methodArgs = {int.class, java.lang.String.class, int.class, 
+                        int.class, int.class, int.class, int.class, 
+                        int.class, int.class, int.class, int.class, 
+                        int.class, int.class}
+        )
+    })
     public void test_ConstructorILjava_lang_StringIIIIIIIIIII() {
         // Test for method java.util.SimpleTimeZone(int, java.lang.String, int,
         // int, int, int, int, int, int, int, int, int, int)
@@ -131,6 +180,15 @@ public class SimpleTimeZoneTest extends junit.framework.TestCase {
     /**
      * @tests java.util.SimpleTimeZone#clone()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "clone",
+          methodArgs = {}
+        )
+    })
     public void test_clone() {
         // Test for method java.lang.Object java.util.SimpleTimeZone.clone()
         SimpleTimeZone st1 = new SimpleTimeZone(1000, "TEST",
@@ -148,7 +206,16 @@ public class SimpleTimeZoneTest extends junit.framework.TestCase {
     /**
      * @tests java.util.SimpleTimeZone#equals(java.lang.Object)
      */
-    public void test_equalsLjava_lang_Object() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "equals",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
+    public void _test_equalsLjava_lang_Object() {
         // Test for method boolean
         // java.util.SimpleTimeZone.equals(java.lang.Object)
 
@@ -164,6 +231,15 @@ public class SimpleTimeZoneTest extends junit.framework.TestCase {
     /**
      * @tests java.util.SimpleTimeZone#getDSTSavings()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getDSTSavings",
+          methodArgs = {}
+        )
+    })
     public void test_getDSTSavings() {
         // Test for method int java.util.SimpleTimeZone.getDSTSavings()
         st1 = new SimpleTimeZone(0, "TEST");
@@ -186,7 +262,17 @@ public class SimpleTimeZoneTest extends junit.framework.TestCase {
     /**
      * @tests java.util.SimpleTimeZone#getOffset(int, int, int, int, int, int)
      */
-    public void test_getOffsetIIIIII() {
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IllegalArgumentException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "getOffset",
+          methodArgs = {int.class, int.class, int.class, int.class, 
+                        int.class, int.class}
+        )
+    })
+    public void _test_getOffsetIIIIII() {
         // Test for method int java.util.SimpleTimeZone.getOffset(int, int, int,
         // int, int, int)
         st1 = (SimpleTimeZone) TimeZone.getTimeZone("EST");
@@ -203,7 +289,16 @@ public class SimpleTimeZoneTest extends junit.framework.TestCase {
     /**
      * @tests java.util.SimpleTimeZone#getRawOffset()
      */
-    public void test_getRawOffset() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getRawOffset",
+          methodArgs = {}
+        )
+    })
+    public void _test_getRawOffset() {
         // Test for method int java.util.SimpleTimeZone.getRawOffset()
         st1 = (SimpleTimeZone) TimeZone.getTimeZone("EST");
         assertTrue("Incorrect offset returned",
@@ -214,7 +309,16 @@ public class SimpleTimeZoneTest extends junit.framework.TestCase {
     /**
      * @tests java.util.SimpleTimeZone#hashCode()
      */
-    public void test_hashCode() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "hashCode",
+          methodArgs = {}
+        )
+    })
+    public void _test_hashCode() {
         // Test for method int java.util.SimpleTimeZone.hashCode()
         // For lack of a better test.
         st1 = new SimpleTimeZone(-5 * 3600000, "EST", Calendar.APRIL, 1,
@@ -227,6 +331,15 @@ public class SimpleTimeZoneTest extends junit.framework.TestCase {
     /**
      * @tests java.util.SimpleTimeZone#hasSameRules(java.util.TimeZone)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "hasSameRules",
+          methodArgs = {java.util.TimeZone.class}
+        )
+    })
     public void test_hasSameRulesLjava_util_TimeZone() {
         // Test for method boolean
         // java.util.SimpleTimeZone.hasSameRules(java.util.TimeZone)
@@ -248,7 +361,16 @@ public class SimpleTimeZoneTest extends junit.framework.TestCase {
     /**
      * @tests java.util.SimpleTimeZone#inDaylightTime(java.util.Date)
      */
-    public void test_inDaylightTimeLjava_util_Date() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "inDaylightTime",
+          methodArgs = {java.util.Date.class}
+        )
+    })
+    public void _test_inDaylightTimeLjava_util_Date() {
         // Test for method boolean
         // java.util.SimpleTimeZone.inDaylightTime(java.util.Date)
         SimpleTimeZone zone = (SimpleTimeZone) TimeZone.getTimeZone("EST");
@@ -285,6 +407,15 @@ public class SimpleTimeZoneTest extends junit.framework.TestCase {
     /**
      * @tests java.util.SimpleTimeZone#setDSTSavings(int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setDSTSavings",
+          methodArgs = {int.class}
+        )
+    })
     public void test_setDSTSavingsI() {
         // Test for method void java.util.SimpleTimeZone.setDSTSavings(int)
         SimpleTimeZone st = new SimpleTimeZone(1000, "Test_TZ");
@@ -297,6 +428,15 @@ public class SimpleTimeZoneTest extends junit.framework.TestCase {
     /**
      * @tests java.util.SimpleTimeZone#setEndRule(int, int, int)
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test.",
+      targets = {
+        @TestTarget(
+          methodName = "setEndRule",
+          methodArgs = {int.class, int.class, int.class}
+        )
+    })
     public void test_setEndRuleIII() {
         // Test for method void java.util.SimpleTimeZone.setEndRule(int, int,
         // int)
@@ -306,6 +446,15 @@ public class SimpleTimeZoneTest extends junit.framework.TestCase {
     /**
      * @tests java.util.SimpleTimeZone#setEndRule(int, int, int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IllegalArgumentException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "setEndRule",
+          methodArgs = {int.class, int.class, int.class, int.class}
+        )
+    })
     public void test_setEndRuleIIII() {
         // Test for method void java.util.SimpleTimeZone.setEndRule(int, int,
         // int, int)
@@ -326,6 +475,15 @@ public class SimpleTimeZoneTest extends junit.framework.TestCase {
     /**
      * @tests java.util.SimpleTimeZone#setEndRule(int, int, int, int, boolean)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IllegalArgumentException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "setEndRule",
+          methodArgs = {int.class, int.class, int.class, int.class, boolean.class}
+        )
+    })
     public void test_setEndRuleIIIIZ() {
         // Test for method void java.util.SimpleTimeZone.setEndRule(int, int,
         // int, int, boolean)
@@ -352,7 +510,16 @@ public class SimpleTimeZoneTest extends junit.framework.TestCase {
     /**
      * @tests java.util.SimpleTimeZone#setRawOffset(int)
      */
-    public void test_setRawOffsetI() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setRawOffset",
+          methodArgs = {int.class}
+        )
+    })
+    public void _test_setRawOffsetI() {
         // Test for method void java.util.SimpleTimeZone.setRawOffset(int)
 
         st1 = (SimpleTimeZone) TimeZone.getTimeZone("EST");
@@ -366,6 +533,15 @@ public class SimpleTimeZoneTest extends junit.framework.TestCase {
     /**
      * @tests java.util.SimpleTimeZone#setStartRule(int, int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IllegalArgumentException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "setStartRule",
+          methodArgs = {int.class, int.class, int.class}
+        )
+    })
     public void test_setStartRuleIII() {
         // Test for method void java.util.SimpleTimeZone.setStartRule(int, int,
         // int)
@@ -387,6 +563,15 @@ public class SimpleTimeZoneTest extends junit.framework.TestCase {
     /**
      * @tests java.util.SimpleTimeZone#setStartRule(int, int, int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IllegalArgumentException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "setStartRule",
+          methodArgs = {int.class, int.class, int.class, int.class}
+        )
+    })
     public void test_setStartRuleIIII() {
         // Test for method void java.util.SimpleTimeZone.setStartRule(int, int,
         // int, int)
@@ -407,6 +592,15 @@ public class SimpleTimeZoneTest extends junit.framework.TestCase {
     /**
      * @tests java.util.SimpleTimeZone#setStartRule(int, int, int, int, boolean)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IllegalArgumentException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "setStartRule",
+          methodArgs = {int.class, int.class, int.class, int.class, boolean.class}
+        )
+    })
     public void test_setStartRuleIIIIZ() {
         // Test for method void java.util.SimpleTimeZone.setStartRule(int, int,
         // int, int, boolean)
@@ -433,6 +627,15 @@ public class SimpleTimeZoneTest extends junit.framework.TestCase {
     /**
      * @tests java.util.SimpleTimeZone#setStartYear(int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setStartYear",
+          methodArgs = {int.class}
+        )
+    })
     public void test_setStartYearI() {
         // Test for method void java.util.SimpleTimeZone.setStartYear(int)
         SimpleTimeZone st = new SimpleTimeZone(1000, "Test_TZ");
@@ -453,6 +656,15 @@ public class SimpleTimeZoneTest extends junit.framework.TestCase {
     /**
      * @tests java.util.SimpleTimeZone#toString()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public void test_toString() {
         // Test for method java.lang.String java.util.SimpleTimeZone.toString()
         String string = TimeZone.getTimeZone("EST").toString();
@@ -463,6 +675,15 @@ public class SimpleTimeZoneTest extends junit.framework.TestCase {
     /**
      * @tests java.util.SimpleTimeZone#useDaylightTime()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "useDaylightTime",
+          methodArgs = {}
+        )
+    })
     public void test_useDaylightTime() {
         // Test for method boolean java.util.SimpleTimeZone.useDaylightTime()
         SimpleTimeZone st = new SimpleTimeZone(1000, "Test_TZ");
