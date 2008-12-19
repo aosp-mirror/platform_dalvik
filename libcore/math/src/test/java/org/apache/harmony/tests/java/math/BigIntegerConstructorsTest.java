@@ -21,10 +21,16 @@
 
 package org.apache.harmony.tests.java.math;
 
-import junit.framework.TestCase;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.math.BigInteger;
 import java.util.Random;
 
+import junit.framework.TestCase;
+@TestTargetClass(BigInteger.class)
 /**
  * Class:   java.math.BigInteger
  * Constructors: BigInteger(byte[] a), BigInteger(int sign, byte[] a), 
@@ -35,6 +41,15 @@ public class BigIntegerConstructorsTest extends TestCase {
      * Create a number from an array of bytes.
      * Verify an exception thrown if an array is zero bytes long
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "This is a complete subset of tests for BigInteger(byte[]) constructor.",
+      targets = {
+        @TestTarget(
+          methodName = "BigInteger",
+          methodArgs = {byte[].class}
+        )
+    })
     public void testConstructorBytesException() {
         byte aBytes[] = {};
         try {
@@ -49,6 +64,15 @@ public class BigIntegerConstructorsTest extends TestCase {
      * Create a positive number from an array of bytes.
      * The number fits in an array of integers.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for BigInteger(byte[]) constructor.",
+          targets = {
+            @TestTarget(
+              methodName = "BigInteger",
+              methodArgs = {byte[].class}
+            )
+        })
     public void testConstructorBytesPositive1() {
         byte aBytes[] = {12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, 3, 91};
         byte rBytes[] = {12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, 3, 91};
@@ -65,6 +89,15 @@ public class BigIntegerConstructorsTest extends TestCase {
      * Create a positive number from an array of bytes.
      * The number fits in an integer.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for BigInteger(byte[]) constructor.",
+          targets = {
+            @TestTarget(
+              methodName = "BigInteger",
+              methodArgs = {byte[].class}
+            )
+        })
     public void testConstructorBytesPositive2() {
         byte aBytes[] = {12, 56, 100};
         byte rBytes[] = {12, 56, 100};
@@ -81,6 +114,15 @@ public class BigIntegerConstructorsTest extends TestCase {
      * Create a positive number from an array of bytes.
      * The number of bytes is 4.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for BigInteger(byte[]) constructor.",
+          targets = {
+            @TestTarget(
+              methodName = "BigInteger",
+              methodArgs = {byte[].class}
+            )
+        })
     public void testConstructorBytesPositive3() {
         byte aBytes[] = {127, 56, 100, -1};
         byte rBytes[] = {127, 56, 100, -1};
@@ -97,6 +139,15 @@ public class BigIntegerConstructorsTest extends TestCase {
      * Create a positive number from an array of bytes.
      * The number of bytes is multiple of 4.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for BigInteger(byte[]) constructor.",
+          targets = {
+            @TestTarget(
+              methodName = "BigInteger",
+              methodArgs = {byte[].class}
+            )
+        })
     public void testConstructorBytesPositive() {
         byte aBytes[] = {127, 56, 100, -1, 14, 75, -24, -100};
         byte rBytes[] = {127, 56, 100, -1, 14, 75, -24, -100};
@@ -113,6 +164,15 @@ public class BigIntegerConstructorsTest extends TestCase {
      * Create a negative number from an array of bytes.
      * The number fits in an array of integers.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for BigInteger(byte[]) constructor.",
+          targets = {
+            @TestTarget(
+              methodName = "BigInteger",
+              methodArgs = {byte[].class}
+            )
+        })
     public void testConstructorBytesNegative1() {
         byte aBytes[] = {-12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, 3, 91};
         byte rBytes[] = {-12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, 3, 91};
@@ -129,6 +189,15 @@ public class BigIntegerConstructorsTest extends TestCase {
      * Create a negative number from an array of bytes.
      * The number fits in an integer.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for BigInteger(byte[]) constructor.",
+          targets = {
+            @TestTarget(
+              methodName = "BigInteger",
+              methodArgs = {byte[].class}
+            )
+        })
     public void testConstructorBytesNegative2() {
         byte aBytes[] = {-12, 56, 100};
         byte rBytes[] = {-12, 56, 100};
@@ -145,6 +214,15 @@ public class BigIntegerConstructorsTest extends TestCase {
      * Create a negative number from an array of bytes.
      * The number of bytes is 4.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for BigInteger(byte[]) constructor.",
+          targets = {
+            @TestTarget(
+              methodName = "BigInteger",
+              methodArgs = {byte[].class}
+            )
+        })
     public void testConstructorBytesNegative3() {
         byte aBytes[] = {-128, -12, 56, 100};
         byte rBytes[] = {-128, -12, 56, 100};
@@ -161,6 +239,15 @@ public class BigIntegerConstructorsTest extends TestCase {
      * Create a negative number from an array of bytes.
      * The number of bytes is multiple of 4.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for BigInteger(byte[]) constructor.",
+          targets = {
+            @TestTarget(
+              methodName = "BigInteger",
+              methodArgs = {byte[].class}
+            )
+        })
     public void testConstructorBytesNegative4() {
         byte aBytes[] = {-128, -12, 56, 100, -13, 56, 93, -78};
         byte rBytes[] = {-128, -12, 56, 100, -13, 56, 93, -78};
@@ -176,6 +263,15 @@ public class BigIntegerConstructorsTest extends TestCase {
     /**
      * Create a zero number from an array of zero bytes.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for BigInteger(byte[]) constructor.",
+          targets = {
+            @TestTarget(
+              methodName = "BigInteger",
+              methodArgs = {byte[].class}
+            )
+        })
     public void testConstructorBytesZero() {
         byte aBytes[] = {0, 0, 0, -0, +0, 0, -0};
         byte rBytes[] = {0};
@@ -192,6 +288,15 @@ public class BigIntegerConstructorsTest extends TestCase {
      * Create a number from a sign and an array of bytes.
      * Verify an exception thrown if a sign has improper value.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for BigInteger(int, byte[]) constructor.",
+          targets = {
+            @TestTarget(
+              methodName = "BigInteger",
+              methodArgs = {int.class, byte[].class}
+            )
+        })
     public void testConstructorSignBytesException1() {
         byte aBytes[] = {123, 45, -3, -76};
         int aSign = 3;
@@ -207,6 +312,15 @@ public class BigIntegerConstructorsTest extends TestCase {
      * Create a number from a sign and an array of bytes.
      * Verify an exception thrown if the array contains non-zero bytes while the sign is 0. 
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for BigInteger(int, byte[]) constructor.",
+          targets = {
+            @TestTarget(
+            methodName = "BigInteger",
+            methodArgs = {int.class, byte[].class}
+          )
+        })
     public void testConstructorSignBytesException2() {
         byte aBytes[] = {123, 45, -3, -76};
         int aSign = 0;
@@ -223,6 +337,15 @@ public class BigIntegerConstructorsTest extends TestCase {
      * The number fits in an array of integers.
      * The most significant byte is positive.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for BigInteger(int, byte[]) constructor.",
+          targets = {
+            @TestTarget(
+            methodName = "BigInteger",
+            methodArgs = {int.class, byte[].class}
+          )
+        })
     public void testConstructorSignBytesPositive1() {
         byte aBytes[] = {12, 56, 100, -2, -76, 89, 45, 91, 3, -15};
         int aSign = 1;
@@ -241,6 +364,15 @@ public class BigIntegerConstructorsTest extends TestCase {
      * The number fits in an array of integers.
      * The most significant byte is negative.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for BigInteger(int, byte[]) constructor.",
+          targets = {
+            @TestTarget(
+            methodName = "BigInteger",
+            methodArgs = {int.class, byte[].class}
+          )
+        })
     public void testConstructorSignBytesPositive2() {
         byte aBytes[] = {-12, 56, 100, -2, -76, 89, 45, 91, 3, -15};
         int aSign = 1;
@@ -258,6 +390,15 @@ public class BigIntegerConstructorsTest extends TestCase {
      * Create a positive number from a sign and an array of bytes.
      * The number fits in an integer.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for BigInteger(int, byte[]) constructor.",
+          targets = {
+            @TestTarget(
+            methodName = "BigInteger",
+            methodArgs = {int.class, byte[].class}
+          )
+        })
     public void testConstructorSignBytesPositive3() {
         byte aBytes[] = {-12, 56, 100};
         int aSign = 1;
@@ -276,6 +417,15 @@ public class BigIntegerConstructorsTest extends TestCase {
      * The number of bytes is 4.
      * The most significant byte is positive.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for BigInteger(int, byte[]) constructor.",
+          targets = {
+            @TestTarget(
+            methodName = "BigInteger",
+            methodArgs = {int.class, byte[].class}
+          )
+        })
     public void testConstructorSignBytesPositive4() {
         byte aBytes[] = {127, 56, 100, -2};
         int aSign = 1;
@@ -294,6 +444,15 @@ public class BigIntegerConstructorsTest extends TestCase {
      * The number of bytes is 4.
      * The most significant byte is negative.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for BigInteger(int, byte[]) constructor.",
+          targets = {
+            @TestTarget(
+            methodName = "BigInteger",
+            methodArgs = {int.class, byte[].class}
+          )
+        })
     public void testConstructorSignBytesPositive5() {
         byte aBytes[] = {-127, 56, 100, -2};
         int aSign = 1;
@@ -312,6 +471,15 @@ public class BigIntegerConstructorsTest extends TestCase {
      * The number of bytes is multiple of 4.
      * The most significant byte is positive.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for BigInteger(int, byte[]) constructor.",
+          targets = {
+            @TestTarget(
+            methodName = "BigInteger",
+            methodArgs = {int.class, byte[].class}
+          )
+        })
     public void testConstructorSignBytesPositive6() {
         byte aBytes[] = {12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 23, -101};
         int aSign = 1;
@@ -330,6 +498,15 @@ public class BigIntegerConstructorsTest extends TestCase {
      * The number of bytes is multiple of 4.
      * The most significant byte is negative.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for BigInteger(int, byte[]) constructor.",
+          targets = {
+            @TestTarget(
+            methodName = "BigInteger",
+            methodArgs = {int.class, byte[].class}
+          )
+        })
     public void testConstructorSignBytesPositive7() {
         byte aBytes[] = {-12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 23, -101};
         int aSign = 1;
@@ -348,6 +525,15 @@ public class BigIntegerConstructorsTest extends TestCase {
      * The number fits in an array of integers.
      * The most significant byte is positive.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for BigInteger(int, byte[]) constructor.",
+          targets = {
+            @TestTarget(
+            methodName = "BigInteger",
+            methodArgs = {int.class, byte[].class}
+          )
+        })
     public void testConstructorSignBytesNegative1() {
         byte aBytes[] = {12, 56, 100, -2, -76, 89, 45, 91, 3, -15};
         int aSign = -1;
@@ -366,6 +552,15 @@ public class BigIntegerConstructorsTest extends TestCase {
      * The number fits in an array of integers.
      * The most significant byte is negative.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for BigInteger(int, byte[]) constructor.",
+          targets = {
+            @TestTarget(
+            methodName = "BigInteger",
+            methodArgs = {int.class, byte[].class}
+          )
+        })
     public void testConstructorSignBytesNegative2() {
         byte aBytes[] = {-12, 56, 100, -2, -76, 89, 45, 91, 3, -15};
         int aSign = -1;
@@ -383,6 +578,15 @@ public class BigIntegerConstructorsTest extends TestCase {
      * Create a negative number from a sign and an array of bytes.
      * The number fits in an integer.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for BigInteger(int, byte[]) constructor.",
+          targets = {
+            @TestTarget(
+            methodName = "BigInteger",
+            methodArgs = {int.class, byte[].class}
+          )
+        })
     public void testConstructorSignBytesNegative3() {
         byte aBytes[] = {-12, 56, 100};
         int aSign = -1;
@@ -401,6 +605,15 @@ public class BigIntegerConstructorsTest extends TestCase {
      * The number of bytes is 4.
      * The most significant byte is positive.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for BigInteger(int, byte[]) constructor.",
+          targets = {
+            @TestTarget(
+            methodName = "BigInteger",
+            methodArgs = {int.class, byte[].class}
+          )
+        })
     public void testConstructorSignBytesNegative4() {
         byte aBytes[] = {127, 56, 100, -2};
         int aSign = -1;
@@ -419,6 +632,15 @@ public class BigIntegerConstructorsTest extends TestCase {
      * The number of bytes is 4.
      * The most significant byte is negative.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for BigInteger(int, byte[]) constructor.",
+          targets = {
+            @TestTarget(
+            methodName = "BigInteger",
+            methodArgs = {int.class, byte[].class}
+          )
+        })
     public void testConstructorSignBytesNegative5() {
         byte aBytes[] = {-127, 56, 100, -2};
         int aSign = -1;
@@ -437,6 +659,15 @@ public class BigIntegerConstructorsTest extends TestCase {
      * The number of bytes is multiple of 4.
      * The most significant byte is positive.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for BigInteger(int, byte[]) constructor.",
+          targets = {
+            @TestTarget(
+            methodName = "BigInteger",
+            methodArgs = {int.class, byte[].class}
+          )
+        })
     public void testConstructorSignBytesNegative6() {
         byte aBytes[] = {12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 23, -101};
         int aSign = -1;
@@ -455,6 +686,15 @@ public class BigIntegerConstructorsTest extends TestCase {
      * The number of bytes is multiple of 4.
      * The most significant byte is negative.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for BigInteger(int, byte[]) constructor.",
+          targets = {
+            @TestTarget(
+            methodName = "BigInteger",
+            methodArgs = {int.class, byte[].class}
+          )
+        })
     public void testConstructorSignBytesNegative7() {
         byte aBytes[] = {-12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 23, -101};
         int aSign = -1;
@@ -472,6 +712,15 @@ public class BigIntegerConstructorsTest extends TestCase {
      * Create a zero number from a sign and an array of zero bytes.
      * The sign is -1.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for BigInteger(int, byte[]) constructor.",
+          targets = {
+            @TestTarget(
+            methodName = "BigInteger",
+            methodArgs = {int.class, byte[].class}
+          )
+        })
     public void testConstructorSignBytesZero1() {
         byte aBytes[] = {-0, 0, +0, 0, 0, 00, 000};
         int aSign = -1;
@@ -489,6 +738,15 @@ public class BigIntegerConstructorsTest extends TestCase {
      * Create a zero number from a sign and an array of zero bytes.
      * The sign is 0.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for BigInteger(int, byte[]) constructor.",
+          targets = {
+            @TestTarget(
+            methodName = "BigInteger",
+            methodArgs = {int.class, byte[].class}
+          )
+        })
     public void testConstructorSignBytesZero2() {
         byte aBytes[] = {-0, 0, +0, 0, 0, 00, 000};
         int aSign = 0;
@@ -506,6 +764,15 @@ public class BigIntegerConstructorsTest extends TestCase {
      * Create a zero number from a sign and an array of zero bytes.
      * The sign is 1.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for BigInteger(int, byte[]) constructor.",
+          targets = {
+            @TestTarget(
+            methodName = "BigInteger",
+            methodArgs = {int.class, byte[].class}
+          )
+        })
     public void testConstructorSignBytesZero3() {
         byte aBytes[] = {-0, 0, +0, 0, 0, 00, 000};
         int aSign = 1;
@@ -523,6 +790,15 @@ public class BigIntegerConstructorsTest extends TestCase {
      * Create a zero number from a sign and an array of zero length.
      * The sign is -1.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for BigInteger(int, byte[]) constructor.",
+          targets = {
+            @TestTarget(
+            methodName = "BigInteger",
+            methodArgs = {int.class, byte[].class}
+          )
+        })
     public void testConstructorSignBytesZeroNull1() {
         byte aBytes[] = {};
         int aSign = -1;
@@ -540,6 +816,15 @@ public class BigIntegerConstructorsTest extends TestCase {
      * Create a zero number from a sign and an array of zero length.
      * The sign is 0.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for BigInteger(int, byte[]) constructor.",
+          targets = {
+            @TestTarget(
+            methodName = "BigInteger",
+            methodArgs = {int.class, byte[].class}
+          )
+        })
     public void testConstructorSignBytesZeroNull2() {
         byte aBytes[] = {};
         int aSign = 0;
@@ -557,6 +842,15 @@ public class BigIntegerConstructorsTest extends TestCase {
      * Create a zero number from a sign and an array of zero length.
      * The sign is 1.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for BigInteger(int, byte[]) constructor.",
+          targets = {
+            @TestTarget(
+            methodName = "BigInteger",
+            methodArgs = {int.class, byte[].class}
+          )
+        })
     public void testConstructorSignBytesZeroNull3() {
         byte aBytes[] = {};
         int aSign = 1;
@@ -574,6 +868,15 @@ public class BigIntegerConstructorsTest extends TestCase {
      * Create a number from a string value and radix.
      * Verify an exception thrown if a radix is out of range
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "This is a complete subset of tests for BigInteger(String, int) constructor.",
+      targets = {
+        @TestTarget(
+          methodName = "BigInteger",
+          methodArgs = {java.lang.String.class, int.class}
+        )
+    })
     public void testConstructorStringException1() {
         String value = "9234853876401";
         int radix = 45;
@@ -589,6 +892,15 @@ public class BigIntegerConstructorsTest extends TestCase {
      * Create a number from a string value and radix.
      * Verify an exception thrown if the string starts with a space.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for BigInteger(String, int) constructor.",
+          targets = {
+            @TestTarget(
+              methodName = "BigInteger",
+              methodArgs = {java.lang.String.class, int.class}
+            )
+        })
     public void testConstructorStringException2() {
         String value = "   9234853876401";
         int radix = 10;
@@ -603,6 +915,15 @@ public class BigIntegerConstructorsTest extends TestCase {
      * Create a number from a string value and radix.
      * Verify an exception thrown if the string contains improper characters.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for BigInteger(String, int) constructor.",
+          targets = {
+            @TestTarget(
+              methodName = "BigInteger",
+              methodArgs = {java.lang.String.class, int.class}
+            )
+        })
     public void testConstructorStringException3() {
         String value = "92348$*#78987";
         int radix = 34;
@@ -617,6 +938,15 @@ public class BigIntegerConstructorsTest extends TestCase {
      * Create a number from a string value and radix.
      * Verify an exception thrown if some digits are greater than radix.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for BigInteger(String, int) constructor.",
+          targets = {
+            @TestTarget(
+              methodName = "BigInteger",
+              methodArgs = {java.lang.String.class, int.class}
+            )
+        })
     public void testConstructorStringException4() {
         String value = "98zv765hdsaiy";
         int radix = 20;
@@ -630,6 +960,15 @@ public class BigIntegerConstructorsTest extends TestCase {
     /**
      * Create a positive number from a string value and radix 2.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for BigInteger(String, int) constructor.",
+          targets = {
+            @TestTarget(
+              methodName = "BigInteger",
+              methodArgs = {java.lang.String.class, int.class}
+            )
+        })
     public void testConstructorStringRadix2() {
         String value = "10101010101010101";
         int radix = 2;
@@ -646,6 +985,15 @@ public class BigIntegerConstructorsTest extends TestCase {
     /**
      * Create a positive number from a string value and radix 8.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for BigInteger(String, int) constructor.",
+          targets = {
+            @TestTarget(
+              methodName = "BigInteger",
+              methodArgs = {java.lang.String.class, int.class}
+            )
+        })
     public void testConstructorStringRadix8() {
         String value = "76356237071623450";
         int radix = 8;
@@ -662,6 +1010,15 @@ public class BigIntegerConstructorsTest extends TestCase {
     /**
      * Create a positive number from a string value and radix 10.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for BigInteger(String, int) constructor.",
+          targets = {
+            @TestTarget(
+              methodName = "BigInteger",
+              methodArgs = {java.lang.String.class, int.class}
+            )
+        })
     public void testConstructorStringRadix10() {
         String value = "987328901348934898";
         int radix = 10;
@@ -678,6 +1035,15 @@ public class BigIntegerConstructorsTest extends TestCase {
     /**
      * Create a positive number from a string value and radix 16.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for BigInteger(String, int) constructor.",
+          targets = {
+            @TestTarget(
+              methodName = "BigInteger",
+              methodArgs = {java.lang.String.class, int.class}
+            )
+        })
     public void testConstructorStringRadix16() {
         String value = "fe2340a8b5ce790";
         int radix = 16;
@@ -694,6 +1060,15 @@ public class BigIntegerConstructorsTest extends TestCase {
     /**
      * Create a positive number from a string value and radix 36.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for BigInteger(String, int) constructor.",
+          targets = {
+            @TestTarget(
+              methodName = "BigInteger",
+              methodArgs = {java.lang.String.class, int.class}
+            )
+        })
     public void testConstructorStringRadix36() {
         String value = "skdjgocvhdjfkl20jndjkf347ejg457";
         int radix = 36;
@@ -710,6 +1085,15 @@ public class BigIntegerConstructorsTest extends TestCase {
     /**
      * Create a negative number from a string value and radix 10.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for BigInteger(String, int) constructor.",
+          targets = {
+            @TestTarget(
+              methodName = "BigInteger",
+              methodArgs = {java.lang.String.class, int.class}
+            )
+        })
     public void testConstructorStringRadix10Negative() {
         String value = "-234871376037";
         int radix = 36;
@@ -726,6 +1110,15 @@ public class BigIntegerConstructorsTest extends TestCase {
     /**
      * Create a zero number from a string value and radix 36.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for BigInteger(String, int) constructor.",
+          targets = {
+            @TestTarget(
+              methodName = "BigInteger",
+              methodArgs = {java.lang.String.class, int.class}
+            )
+        })
     public void testConstructorStringRadix10Zero() {
         String value = "-00000000000000";
         int radix = 10;
@@ -742,6 +1135,15 @@ public class BigIntegerConstructorsTest extends TestCase {
     /**
      * Create a random number of 75 bits length.
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IllegalArgumentException checking missed for negative number of bits.",
+      targets = {
+        @TestTarget(
+          methodName = "BigInteger",
+          methodArgs = {int.class, java.util.Random.class}
+        )
+    })
     public void testConstructorRandom() {
         int bitLen = 75;
         Random rnd = new Random();
@@ -752,6 +1154,15 @@ public class BigIntegerConstructorsTest extends TestCase {
     /**
      * Create a prime number of 25 bits length.
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "ArithmeticException checking missed for incorrect bitLength parameter.",
+      targets = {
+        @TestTarget(
+          methodName = "BigInteger",
+          methodArgs = {int.class, int.class, java.util.Random.class}
+        )
+    })
     public void testConstructorPrime() {
         int bitLen = 25;
         Random rnd = new Random();
@@ -782,6 +1193,15 @@ public class BigIntegerConstructorsTest extends TestCase {
     /**
      * @tests java.math.BigInteger#BigInteger(java.lang.String)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "This is a complete subset of tests for BigInteger(String) constructor.",
+      targets = {
+        @TestTarget(
+          methodName = "BigInteger",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_ConstrString1() {
         String s = "0";
         BigInteger bi_s = new BigInteger(s);
@@ -792,6 +1212,15 @@ public class BigIntegerConstructorsTest extends TestCase {
     /**
      * @tests java.math.BigInteger#BigInteger(java.lang.String)
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for BigInteger(String) constructor.",
+          targets = {
+            @TestTarget(
+              methodName = "BigInteger",
+              methodArgs = {java.lang.String.class}
+            )
+        })
     public void test_ConstrString2() {
         String s = "-2147483648";
         BigInteger bi_s = new BigInteger(s);
@@ -803,6 +1232,15 @@ public class BigIntegerConstructorsTest extends TestCase {
     /**
      * @tests java.math.BigInteger#BigInteger(java.lang.String)
      */
+@TestInfo(
+          level = TestLevel.PARTIAL,
+          purpose = "This is a complete subset of tests for BigInteger(String) constructor.",
+          targets = {
+            @TestTarget(
+              methodName = "BigInteger_OK",
+              methodArgs = {java.lang.String.class}
+            )
+        })
     public void test_ConstrString3() {
         String s = "2147483647";
         BigInteger bi_s = new BigInteger(s);
@@ -814,6 +1252,15 @@ public class BigIntegerConstructorsTest extends TestCase {
     /**
      * @tests java.math.BigInteger#BigInteger(java.lang.String)
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for BigInteger(String) constructor.",
+          targets = {
+            @TestTarget(
+              methodName = "BigInteger",
+              methodArgs = {java.lang.String.class}
+            )
+        })
     public void test_ConstrStringExc1() {
         try {
             new BigInteger("01234 56");
@@ -825,6 +1272,15 @@ public class BigIntegerConstructorsTest extends TestCase {
     /**
      * @tests java.math.BigInteger#BigInteger(java.lang.String)
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for BigInteger(String) constructor.",
+          targets = {
+            @TestTarget(
+              methodName = "BigInteger",
+              methodArgs = {java.lang.String.class}
+            )
+        })
     public void test_ConstrStringExc2() {
         try {
             new BigInteger("1234#56");
@@ -836,6 +1292,15 @@ public class BigIntegerConstructorsTest extends TestCase {
     /**
      * @tests java.math.BigInteger#BigInteger(java.lang.String)
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for BigInteger(String) constructor.",
+          targets = {
+            @TestTarget(
+              methodName = "BigInteger",
+              methodArgs = {java.lang.String.class}
+            )
+        })
     public void test_ConstrStringExc3() {
         try {
             new BigInteger("1234.56");
@@ -847,6 +1312,15 @@ public class BigIntegerConstructorsTest extends TestCase {
     /**
      * @tests java.math.BigInteger#BigInteger(java.lang.String)
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for BigInteger(String) constructor.",
+          targets = {
+            @TestTarget(
+              methodName = "BigInteger",
+              methodArgs = {java.lang.String.class}
+            )
+        })
     public void test_ConstrStringExc4() {
         try {
             new BigInteger("1E+1");

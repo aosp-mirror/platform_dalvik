@@ -12,6 +12,6 @@ HANDLE_OPCODE(OP_THROW /*vAA*/)
             /* use the requested exception */
             dvmSetException(self, obj);
         }
-        GOTO(exceptionThrown);
+        GOTO_exceptionThrown();
     }
 OP_END

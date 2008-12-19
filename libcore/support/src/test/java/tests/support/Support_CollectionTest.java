@@ -17,14 +17,16 @@
 
 package tests.support;
 
+import dalvik.annotation.TestTargetClass;
+
 import java.util.Collection;
 import java.util.TreeSet;
 
 /**
  * @tests java.util.Collection
  */
-public class Support_CollectionTest extends junit.framework.TestCase {
-
+@TestTargetClass(java.util.Collection.class)
+public class Support_CollectionTest extends junit.framework.TestCase { 
     Collection<Integer> col; // must contain the Integers 0 to 99
 
     public Support_CollectionTest(String p1) {

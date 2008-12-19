@@ -23,18 +23,36 @@
 package java.security.cert;
 
 /**
- * @com.intel.drl.spec_ref
+ * The interface specification to determine whether a {@code
+ * Certificate} meets some criteria.
+ * <p>
+ * The implementations of this interface are typically used to define the
+ * criteria for selecting {@code Certificate}s from a {@code CertStore}.
+ * </p>
  * 
+ * @see CertStore
+ * @see Certificate
+ * @since Android 1.0
  */
 public interface CertSelector extends Cloneable {
 
     /**
-     * @com.intel.drl.spec_ref
+     * Clones this {@code CertSelector} instance.
+     * 
+     * @return the cloned instance.
+     * @since Android 1.0
      */
     public Object clone();
 
     /**
-     * @com.intel.drl.spec_ref
+     * Checks whether the defined criteria of this instance match the specified
+     * certificate.
+     * 
+     * @param cert
+     *            the certificate to be evaluated.
+     * @return {@code true} if the certificate matches the criteria, {@code
+     *         false} otherwise.
+     * @since Android 1.0
      */
     public boolean match(Certificate cert);
 }

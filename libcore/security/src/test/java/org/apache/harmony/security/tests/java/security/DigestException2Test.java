@@ -17,13 +17,28 @@
 
 package org.apache.harmony.security.tests.java.security;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.security.DigestException;
 
+@TestTargetClass(DigestException.class)
 public class DigestException2Test extends junit.framework.TestCase {
 
     /**
      * @tests java.security.DigestException#DigestException()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "DigestException",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         // Test for method java.security.DigestException()
         DigestException de = new DigestException();
@@ -34,6 +49,16 @@ public class DigestException2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.DigestException#DigestException(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Different variants of string parameter (empty, null, etc.) " +
+                  "weren't checked",
+      targets = {
+        @TestTarget(
+          methodName = "DigestException",
+          methodArgs = {String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() {
         // Test for method java.security.DigestException(java.lang.String)
         DigestException de = new DigestException("Test message");

@@ -18,25 +18,32 @@
 package java.io;
 
 /**
- * FilterWriter is a class which takes a Writer and <em>filters</em> the
- * output in some way. The filtered view may be a buffered output or one which
- * compresses data before actually writing the bytes.
+ * Wraps an existing {@link Writer} and performs some transformation on the
+ * output data while it is being written. Transformations can be anything from a
+ * simple byte-wise filtering output data to an on-the-fly compression or
+ * decompression of the underlying writer. Writers that wrap another writer and
+ * provide some additional functionality on top of it usually inherit from this
+ * class.
  * 
- * @see FilterWriter
+ * @see FilterReader
+ * 
+ * @since Android 1.0
  */
 public abstract class FilterWriter extends Writer {
 
     /**
      * The Writer being filtered.
+     * @since Android 1.0
      */
     protected Writer out;
 
     /**
-     * Constructs a new FilterWriter on the Writer <code>out</code>. All
-     * writes are now filtered through this Writer.
+     * Constructs a new FilterWriter on the Writer {@code out}. All writes are
+     * now filtered through this writer.
      * 
      * @param out
      *            the target Writer to filter writes on.
+     * @since Android 1.0
      */
     protected FilterWriter(Writer out) {
         super(out);
@@ -44,13 +51,11 @@ public abstract class FilterWriter extends Writer {
     }
 
     /**
-     * Close this FilterWriter. Closes the Writer <code>out</code> by default.
-     * This will close any downstream Writers as well. Any additional processing
-     * required by concrete subclasses should be provided in their own
-     * <code>close</code> implementation.
+     * Closes this writer. This implementation closes the target writer.
      * 
      * @throws java.io.IOException
-     *             If an error occurs attempting to close this FilterWriter.
+     *             if an error occurs attempting to close this writer.
+     * @since Android 1.0
      */
     @Override
     public void close() throws IOException {
@@ -60,11 +65,12 @@ public abstract class FilterWriter extends Writer {
     }
 
     /**
-     * Flush this FilteredWriter to ensure all pending data is sent out to the
-     * target Writer. This implementation flushes the target Writer.
+     * Flushes this writer to ensure all pending data is sent out to the target
+     * writer. This implementation flushes the target writer.
      * 
      * @throws java.io.IOException
-     *             If an error occurs attempting to flush this FilterWriter.
+     *             if an error occurs attempting to flush this writer.
+     * @since Android 1.0
      */
     @Override
     public void flush() throws IOException {
@@ -74,38 +80,38 @@ public abstract class FilterWriter extends Writer {
     }
 
     /**
-     * Writes <code>count</code> <code>chars</code> from the char array
-     * <code>buffer</code> starting at offset <code>index</code> to this
-     * FilterWriter. This implementation writes the <code>buffer</code> to the
-     * target Writer.
+     * Writes {@code count} characters from the char array {@code buffer}
+     * starting at position {@code offset} to the target writer.
      * 
      * @param buffer
-     *            the buffer to be written
+     *            the buffer to write.
      * @param offset
-     *            offset in buffer to get chars
+     *            the index of the first character in {@code buffer} to write.
      * @param count
-     *            number of chars in buffer to write
-     * 
+     *            the number of characters in {@code buffer} to write.
      * @throws java.io.IOException
-     *             If an error occurs attempting to write to this FilterWriter.
+     *             if an error occurs while writing to this writer.
+     * @since Android 1.0
      */
     @Override
-    public void write(char buffer[], int offset, int count) throws IOException {
+    public void write(char[] buffer, int offset, int count) throws IOException {
+        // BEGIN android-note
+        // changed array notation to be consistent with the rest of harmony
+        // END android-note
         synchronized (lock) {
             out.write(buffer, offset, count);
         }
     }
 
     /**
-     * Writes the specified char <code>oneChar</code> to this FilterWriter.
-     * Only the 2 low order bytes of <code>oneChar</code> is written. This
-     * implementation writes the char to the target Writer.
+     * Writes the specified character {@code oneChar} to the target writer. Only the
+     * two least significant bytes of the integer {@code oneChar} are written.
      * 
      * @param oneChar
-     *            the char to be written
-     * 
+     *            the char to write to the target writer.
      * @throws java.io.IOException
-     *             If an error occurs attempting to write to this FilterWriter.
+     *             if an error occurs while writing to this writer.
+     * @since Android 1.0
      */
     @Override
     public void write(int oneChar) throws IOException {
@@ -115,20 +121,19 @@ public abstract class FilterWriter extends Writer {
     }
 
     /**
-     * Writes <code>count</code> <code>chars</code> from the String
-     * <code>str</code> starting at offset <code>index</code> to this
-     * FilterWriter. This implementation writes the <code>str</code> to the
-     * target Writer.
+     * Writes {@code count} characters from the string {@code str} starting at
+     * position {@code index} to this writer. This implementation writes
+     * {@code str} to the target writer.
      * 
      * @param str
-     *            the String to be written.
+     *            the string to be written.
      * @param offset
-     *            offset in str to get chars.
+     *            the index of the first character in {@code str} to write.
      * @param count
-     *            number of chars in str to write.
-     * 
+     *            the number of chars in {@code str} to write.
      * @throws java.io.IOException
-     *             If an error occurs attempting to write to this FilterWriter.
+     *             if an error occurs while writing to this writer.
+     * @since Android 1.0
      */
     @Override
     public void write(String str, int offset, int count) throws IOException {

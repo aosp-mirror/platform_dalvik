@@ -23,44 +23,56 @@
 package java.security;
 
 /**
- * This class represents the general security exception. Subclasses will
- * represents specific security problems.
+ * {@code GeneralSecurityException} is a general security exception and the
+ * superclass for all security specific exceptions.
  * 
+ * @since Android 1.0
  */
 public class GeneralSecurityException extends Exception {
-    /**
-     * @com.intel.drl.spec_ref
-     */
+
     private static final long serialVersionUID = 894798122053539237L;
 
     /**
-     * Constructs a new instance of this class with its walkback and message
-     * filled in.
-     * 
+     * Constructs a new instance of {@code GeneralSecurityException} with the
+     * given message.
      * 
      * @param msg
-     *            String The detail message for the exception.
+     *            the detail message for this exception.
+     * @since Android 1.0
      */
     public GeneralSecurityException(String msg) {
         super(msg);
     }
 
     /**
-     * Constructs a new instance of this class with its walkback filled in.
+     * Constructs a new instance of {@code GeneralSecurityException}.
      * 
+     * @since Android 1.0
      */
     public GeneralSecurityException() {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Constructs a new instance of {@code GeneralSecurityException} with the
+     * given message and the cause.
+     * 
+     * @param message
+     *            the detail message for this exception.
+     * @param cause
+     *            the exception which is the cause for this exception.
+     * @since Android 1.0
      */
     public GeneralSecurityException(String message, Throwable cause) {
         super(message, cause);
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Constructs a new instance of {@code GeneralSecurityException} with the
+     * cause.
+     * 
+     * @param cause
+     *            the exception which is the cause for this exception.
+     * @since Android 1.0
      */
     public GeneralSecurityException(Throwable cause) {
         super(cause);

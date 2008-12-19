@@ -48,10 +48,10 @@ HANDLE_OPCODE(OP_EXECUTE_INLINE /*vB, {vD, vE, vF, vG}, inline@CCCC*/)
 
 #if INTERP_TYPE == INTERP_DBG
         if (!dvmPerformInlineOp4Dbg(arg0, arg1, arg2, arg3, &retval, ref))
-            GOTO(exceptionThrown);
+            GOTO_exceptionThrown();
 #else
         if (!dvmPerformInlineOp4Std(arg0, arg1, arg2, arg3, &retval, ref))
-            GOTO(exceptionThrown);
+            GOTO_exceptionThrown();
 #endif
     }
     FINISH(3);

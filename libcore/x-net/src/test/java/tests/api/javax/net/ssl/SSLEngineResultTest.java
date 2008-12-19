@@ -17,14 +17,20 @@
 
 package tests.api.javax.net.ssl;
 
-import javax.net.ssl.SSLEngineResult;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
 
+import javax.net.ssl.SSLEngineResult;
 import junit.framework.TestCase;
+
 
 /**
  * Tests for SSLEngineResult class
  * 
  */
+@TestTargetClass(SSLEngineResult.class) 
 public class SSLEngineResultTest extends TestCase {
 
     /**
@@ -44,6 +50,15 @@ public class SSLEngineResultTest extends TestCase {
      * is null  
      *
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exception cases were tested only",
+      targets = {
+        @TestTarget(
+          methodName = "SSLEngineResult",
+          methodArgs = {SSLEngineResult.Status.class, SSLEngineResult.HandshakeStatus.class, int.class, int.class}
+        )
+    })
     public void test_ConstructorLjavax_net_ssl_SSLEngineResult_StatusLjavax_net_ssl_SSLEngineResult_HandshakeStatusII() {
     
         int[] neg = { -1, -10, -1000, Integer.MIN_VALUE,
@@ -81,122 +96,175 @@ public class SSLEngineResultTest extends TestCase {
     /**
      * Test for <code>bytesConsumed()</code> method
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "bytesConsumed",
+          methodArgs = {}
+        )
+    })
     public void test_bytesConsumed() {
         int[] pos = { 0, 1, 1000, Integer.MAX_VALUE, (Integer.MAX_VALUE - 1) };
         SSLEngineResult.Status [] enS =
-        	SSLEngineResult.Status.values();
+            SSLEngineResult.Status.values();
         SSLEngineResult.HandshakeStatus [] enHS =
-        	SSLEngineResult.HandshakeStatus.values();
+            SSLEngineResult.HandshakeStatus.values();
         for (int i = 0; i < enS.length; i++) {
-        	for (int j = 0; j < enHS.length; j++) {
-        		for (int n = 0; n < pos.length; n++) {
-        			for (int l = 0; l < pos.length; l++) {
-        				SSLEngineResult res = new SSLEngineResult(enS[i],
-        						enHS[j], pos[n], pos[l]);
-        				assertEquals("Incorrect bytesConsumed", pos[n],
-        						res.bytesConsumed());
-        			}
-        		}
-        	}
+            for (int j = 0; j < enHS.length; j++) {
+                for (int n = 0; n < pos.length; n++) {
+                    for (int l = 0; l < pos.length; l++) {
+                        SSLEngineResult res = new SSLEngineResult(enS[i],
+                                enHS[j], pos[n], pos[l]);
+                        assertEquals("Incorrect bytesConsumed", pos[n],
+                                res.bytesConsumed());
+                    }
+                }
+            }
         }
     }
 
     /**
      * Test for <code>bytesProduced()</code> method
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "bytesProduced",
+          methodArgs = {}
+        )
+    })
     public void test_bytesProduced() {
         int[] pos = { 0, 1, 1000, Integer.MAX_VALUE, (Integer.MAX_VALUE - 1) };
         SSLEngineResult.Status [] enS =
-        	SSLEngineResult.Status.values();
+            SSLEngineResult.Status.values();
         SSLEngineResult.HandshakeStatus [] enHS =
-        	SSLEngineResult.HandshakeStatus.values();
+            SSLEngineResult.HandshakeStatus.values();
         for (int i = 0; i < enS.length; i++) {
-        	for (int j = 0; j < enHS.length; j++) {
-        		for (int n = 0; n < pos.length; n++) {
-        			for (int l = 0; l < pos.length; ++l) {
-        				SSLEngineResult res = new SSLEngineResult(enS[i],
-        						enHS[j], pos[n], pos[l]);
+            for (int j = 0; j < enHS.length; j++) {
+                for (int n = 0; n < pos.length; n++) {
+                    for (int l = 0; l < pos.length; ++l) {
+                        SSLEngineResult res = new SSLEngineResult(enS[i],
+                                enHS[j], pos[n], pos[l]);
                         assertEquals("Incorrect bytesProduced", pos[l],
-                        		res.bytesProduced());
-        			}
-        		}
-        	}
+                                res.bytesProduced());
+                    }
+                }
+            }
         }
     }
 
     /**
      * Test for <code>getHandshakeStatus()</code> method
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getHandshakeStatus",
+          methodArgs = {}
+        )
+    })
     public void test_getHandshakeStatus() {
         int[] pos = { 0, 1, 1000, Integer.MAX_VALUE, (Integer.MAX_VALUE - 1) };
         SSLEngineResult.Status [] enS =
-        	SSLEngineResult.Status.values();
+            SSLEngineResult.Status.values();
         SSLEngineResult.HandshakeStatus [] enHS =
-        	SSLEngineResult.HandshakeStatus.values();
+            SSLEngineResult.HandshakeStatus.values();
         for (int i = 0; i < enS.length; i++) {
-        	for (int j = 0; j < enHS.length; j++) {
-        		for (int n = 0; n < pos.length; n++) {
-        			for (int l = 0; l < pos.length; ++l) {
-        				SSLEngineResult res = new SSLEngineResult(enS[i],
-        						enHS[j], pos[n], pos[l]);
-        		        assertEquals("Incorrect HandshakeStatus", enHS[j],
-        		        		res.getHandshakeStatus());
-        			}
-        		}
-        	}
+            for (int j = 0; j < enHS.length; j++) {
+                for (int n = 0; n < pos.length; n++) {
+                    for (int l = 0; l < pos.length; ++l) {
+                        SSLEngineResult res = new SSLEngineResult(enS[i],
+                                enHS[j], pos[n], pos[l]);
+                        assertEquals("Incorrect HandshakeStatus", enHS[j],
+                                res.getHandshakeStatus());
+                    }
+                }
+            }
         }
     }
 
     /**
      * Test for <code>getStatus()</code> method
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getStatus",
+          methodArgs = {}
+        )
+    })
     public void test_getStatus() {
         int[] pos = { 0, 1, 1000, Integer.MAX_VALUE, (Integer.MAX_VALUE - 1) };
         SSLEngineResult.Status [] enS =
-        	SSLEngineResult.Status.values();
+            SSLEngineResult.Status.values();
         SSLEngineResult.HandshakeStatus [] enHS =
-        	SSLEngineResult.HandshakeStatus.values();
+            SSLEngineResult.HandshakeStatus.values();
         for (int i = 0; i < enS.length; i++) {
-        	for (int j = 0; j < enHS.length; j++) {
-        		for (int n = 0; n < pos.length; n++) {
-        			for (int l = 0; l < pos.length; ++l) {
-        				SSLEngineResult res = new SSLEngineResult(enS[i],
-        						enHS[j], pos[n], pos[l]);
+            for (int j = 0; j < enHS.length; j++) {
+                for (int n = 0; n < pos.length; n++) {
+                    for (int l = 0; l < pos.length; ++l) {
+                        SSLEngineResult res = new SSLEngineResult(enS[i],
+                                enHS[j], pos[n], pos[l]);
                         assertEquals("Incorrect Status", enS[i],
-                        		res.getStatus());
-        			}
-        		}
-        	}
+                                res.getStatus());
+                    }
+                }
+            }
         }
     }
 
     /**
      * Test for <code>toString()</code> method
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public void test_toString() {
         int[] pos = { 0, 1, 1000, Integer.MAX_VALUE, (Integer.MAX_VALUE - 1) };
         SSLEngineResult.Status [] enS =
-        	SSLEngineResult.Status.values();
+            SSLEngineResult.Status.values();
         SSLEngineResult.HandshakeStatus [] enHS =
-        	SSLEngineResult.HandshakeStatus.values();
+            SSLEngineResult.HandshakeStatus.values();
         for (int i = 0; i < enS.length; i++) {
-        	for (int j = 0; j < enHS.length; j++) {
-        		for (int n = 0; n < pos.length; n++) {
-        			for (int l = 0; l < pos.length; ++l) {
-        				SSLEngineResult res = new SSLEngineResult(enS[i],
-        						enHS[j], pos[n], pos[l]);
+            for (int j = 0; j < enHS.length; j++) {
+                for (int n = 0; n < pos.length; n++) {
+                    for (int l = 0; l < pos.length; ++l) {
+                        SSLEngineResult res = new SSLEngineResult(enS[i],
+                                enHS[j], pos[n], pos[l]);
                         assertNotNull("Result of toSring() method is null",
-                        		res.toString());
-        			}
-        		}
-        	}
+                                res.toString());
+                    }
+                }
+            }
         }
     }
 
     /**
      * Test for <code>SSLEngineResult.Status.values()</code> method
      */
-
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Status class includes values() method.",
+      targets = {
+        @TestTarget(
+          methodName = "values",
+          methodArgs = {}
+        )
+    })
     public void test_SSLEngineResult_Status01() {
         SSLEngineResult.Status [] enS = SSLEngineResult.Status.values();
         assertTrue("Incorrect array of Status objects", enS.length > 0);
@@ -216,7 +284,15 @@ public class SSLEngineResultTest extends TestCase {
      * throws IllegalArgumentException when there is no constan with specified
      * name 
      */
-
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Status class includes valueOf method. Null parameter checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "valueOf",
+          methodArgs = {String.class}
+        )
+    })
     public void test_SSLEngineResult_Status02() {
         String [] invalid = {"", "OK1", "BUFFER_overflow", "BUFFER_UND",
                 "CLOSED_CLOSED", "Bad string for verification valueOf method"
@@ -241,7 +317,15 @@ public class SSLEngineResultTest extends TestCase {
     /**
      * Test for <code>SSLEngineResult.HandshakeStatus.values()</code> method
      */
-
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "HandshakeStatus class includes values method.",
+      targets = {
+        @TestTarget(
+          methodName = "values",
+          methodArgs = {}
+        )
+    })
     public void test_SSLEngineResult_HandshakeStatus01() {
         SSLEngineResult.HandshakeStatus [] enHS = SSLEngineResult.HandshakeStatus
                 .values();
@@ -266,6 +350,15 @@ public class SSLEngineResultTest extends TestCase {
      * name 
      */
 
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "HandshakeStatus class includes valueOf method. Null parameter checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "valueOf",
+          methodArgs = {String.class}
+        )
+    })
     public void test_SSLEngineResult_HandshakeStatus02() {
         String [] invalid = {"", "FINISHED1", "NEED_task", "NEED_UN",
                 "NEED_WRAP_WRAP", "not_HANDSHAKING", "Bad string for verification valueOf method"

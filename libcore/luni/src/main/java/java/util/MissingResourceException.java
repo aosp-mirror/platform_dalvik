@@ -19,10 +19,13 @@ package java.util;
 
 
 /**
- * This runtime exception is thrown by ResourceBundle when a resouce bundle
- * cannot be found or a resource is missing from a resource bundle.
+ * A {@code MissingResourceException} is thrown by ResourceBundle when a
+ * resource bundle cannot be found or a resource is missing from a resource
+ * bundle.
  * 
  * @see ResourceBundle
+ * @see java.lang.RuntimeException
+ * @since Android 1.0
  */
 public class MissingResourceException extends RuntimeException {
 
@@ -31,15 +34,16 @@ public class MissingResourceException extends RuntimeException {
     String className, key;
 
     /**
-     * Constructs a new instance of this class with its walkback, message, the
-     * class name of the resource bundle and the name of the missing resource.
+     * Constructs a new {@code MissingResourceException} with the stack trace,
+     * message, the class name of the resource bundle and the name of the
+     * missing resource filled in.
      * 
      * @param detailMessage
-     *            String The detail message for the exception.
+     *           the detail message for the exception.
      * @param className
-     *            String The class name of the resource bundle.
+     *           the class name of the resource bundle.
      * @param resourceName
-     *            String The name of the missing resource.
+     *           the name of the missing resource.
      */
     public MissingResourceException(String detailMessage, String className,
             String resourceName) {
@@ -53,7 +57,7 @@ public class MissingResourceException extends RuntimeException {
      * not be found, or in the case of a missing resource, the name of the
      * missing resource bundle.
      * 
-     * @return String The class name of the resource bundle.
+     * @return the class name of the resource bundle.
      */
     public String getClassName() {
         return className;
@@ -63,7 +67,7 @@ public class MissingResourceException extends RuntimeException {
      * Returns the name of the missing resource, or an empty string if the
      * resource bundle is missing.
      * 
-     * @return String The name of the missing resource.
+     * @return the name of the missing resource.
      */
     public String getKey() {
         return key;

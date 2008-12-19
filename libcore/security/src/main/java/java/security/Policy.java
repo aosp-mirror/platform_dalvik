@@ -29,8 +29,19 @@ import org.apache.harmony.security.fortress.PolicyUtils;
 
 
 /**
- * Abstract superclass of classes which represent the system security policy.
+ * {@code Policy} is the common super type of classes which represent a system
+ * security policy. The {@code Policy} specifies which permissions apply to
+ * which code sources.
+ * <p>
+ * The system policy can be changed by setting the {@code 'policy.provider'}
+ * property in the file named {@code JAVA_HOME/lib/security/java.security} to
+ * the fully qualified class name of the desired {@code Policy}.
+ * </p>
+ * <p>
+ * Only one instance of a {@code Policy} is active at any time.
+ * </p>
  * 
+ * @since Android 1.0
  */
 public abstract class Policy {
     
@@ -49,38 +60,47 @@ public abstract class Policy {
     private static Policy activePolicy;
 
     /**
-     * Returns a PermissionCollection describing what permissions are available
-     * to the given CodeSource based on the current security policy.
+     * Returns a {@code PermissionCollection} describing what permissions are
+     * allowed for the specified {@code CodeSource} based on the current
+     * security policy.
      * <p>
-     * Note that this method is <em>not</em> called for classes which are in
-     * the system domain (i.e. system classes). System classes are
-     * <em>always</em> given full permissions (i.e. AllPermission). This can
-     * not be changed by installing a new Policy.
-     * 
+     * Note that this method is not called for classes which are in the system
+     * domain (i.e. system classes). System classes are always given
+     * full permissions (i.e. AllPermission). This can not be changed by
+     * installing a new policy.
+     * </p>
      * 
      * @param cs
-     *            CodeSource the code source to compute the permissions for.
-     * @return PermissionCollection the permissions the code source should have.
+     *            the {@code CodeSource} to compute the permissions for.
+     * @return the permissions that are granted to the specified {@code
+     *         CodeSource}.
+     * @since Android 1.0
      */
     public abstract PermissionCollection getPermissions(CodeSource cs);
 
     /**
-     * Reloads the policy configuration, depending on how the type of source
-     * location for the policy information.
+     * Reloads the policy configuration for this {@code Policy} instance.
      * 
-     * 
+     * @since Android 1.0
      */
     public abstract void refresh();
 
     /**
-     * Returns a PermissionCollection describing what permissions are available
-     * to the given ProtectionDomain (more specifically, its CodeSource) based
-     * on the current security policy.
+     * Returns a {@code PermissionCollection} describing what permissions are
+     * allowed for the specified {@code ProtectionDomain} (more specifically,
+     * its {@code CodeSource}) based on the current security policy.
+     * <p>
+     * Note that this method is not< called for classes which are in the
+     * system domain (i.e. system classes). System classes are always
+     * given full permissions (i.e. AllPermission). This can not be changed by
+     * installing a new policy.
+     * </p>
      * 
      * @param domain
-     *            ProtectionDomain the protection domain to compute the
-     *            permissions for.
-     * @return PermissionCollection the permissions the code source should have.
+     *            the {@code ProtectionDomain} to compute the permissions for.
+     * @return the permissions that are granted to the specified {@code
+     *         CodeSource}.
+     * @since Android 1.0
      */
     public PermissionCollection getPermissions(ProtectionDomain domain) {
         if (domain != null) {
@@ -90,14 +110,18 @@ public abstract class Policy {
     }
 
     /**
-     * Returns whether the Permission is implied by the PermissionCollection of
-     * the Protection Domain
+     * Indicates whether the specified {@code Permission} is implied by the
+     * {@code PermissionCollection} of the specified {@code ProtectionDomain}.
      * 
      * @param domain
-     *            ProtectionDomain for which Permission to be checked
+     *            the {@code ProtectionDomain} for which the permission should
+     *            be granted.
      * @param permission
-     *            Permission for which authorization is to be verified
-     * @return boolean Permission implied by ProtectionDomain
+     *            the {@code Permission} for which authorization is to be
+     *            verified.
+     * @return {@code true} if the {@code Permission} is implied by the {@code
+     *         ProtectionDomain}, {@code false} otherwise.
+     * @since Android 1.0
      */
     public boolean implies(ProtectionDomain domain, Permission permission) {
         if (domain != null) {
@@ -119,10 +143,19 @@ public abstract class Policy {
 
     /**
      * Returns the current system security policy. If no policy has been
-     * instantiated then this is done using the security property <EM>policy.provider</EM>
+     * instantiated then this is done using the security property {@code
+     * "policy.provider"}.
+     * <p>
+     * If a {@code SecurityManager} is installed, code calling this method needs
+     * the {@code SecurityPermission} {@code getPolicy} to be granted, otherwise
+     * a {@code SecurityException} will be thrown.
+     * </p>
      * 
-     * 
-     * @return Policy the current system security policy.
+     * @return the current system security policy.
+     * @throws SecurityException
+     *             if a {@code SecurityManager} is installed and the caller does
+     *             not have permission to invoke this method.
+     * @since Android 1.0
      */
     public static Policy getPolicy() {
         SecurityManager sm = System.getSecurityManager();
@@ -169,7 +202,7 @@ public abstract class Policy {
     }
     
     /**
-     * Returns true if system policy provider is instantiated.
+     * Returns {@code true} if system policy provider is instantiated.
      */
     static boolean isSet() {
         return activePolicy != null;
@@ -197,11 +230,19 @@ public abstract class Policy {
     }
 
     /**
-     * Sets the system-wide policy object if it is permitted by the security
-     * manager.
+     * Sets the system wide policy.
+     * <p>
+     * If a {@code SecurityManager} is installed, code calling this method needs
+     * the {@code SecurityPermission} {@code setPolicy} to be granted, otherwise
+     * a {@code SecurityException} will be thrown.
+     * </p>
      * 
      * @param policy
-     *            Policy the policy object that needs to be set.
+     *            the {@code Policy} to set.
+     * @throws SecurityException
+     *             if a {@code SecurityManager} is installed and the caller does
+     *             not have permission to invoke this method.
+     * @since Android 1.0
      */
     public static void setPolicy(Policy policy) {
         SecurityManager sm = System.getSecurityManager();

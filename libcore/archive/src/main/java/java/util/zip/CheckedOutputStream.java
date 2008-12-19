@@ -22,21 +22,27 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 /**
- * The CheckedOutputStream class is used to maintain a running Checksum of all
- * data written to a stream.
+ * The {@code CheckedOutputStream} class is used to maintain a running checksum
+ * of all data written to a stream. The purpose of this checksum is to establish
+ * data integrity, by publishing the checksum to other parties wanting to read
+ * the non corrupted data.
+ * 
+ * @since Android 1.0
  */
 public class CheckedOutputStream extends java.io.FilterOutputStream {
 
     private final Checksum check;
 
     /**
-     * Constructs a new CheckedOutputStream on OutputStream os. The Checksum
-     * will be calculated using the algorithm implemented by csum.
+     * Constructs a new {@code CheckedOutputStream} on {@code OutputStream}
+     * {@code os}. The checksum is calculated using the algorithm implemented
+     * by {@code csum}.
      * 
      * @param os
-     *            OutputStream to calculate checksum from
+     *            the output stream to calculate checksum for.
      * @param cs
-     *            Type of Checksum to calculate
+     *            an entity implementing the checksum algorithm.
+     * @since Android 1.0
      */
     public CheckedOutputStream(OutputStream os, Checksum cs) {
         super(os);
@@ -44,23 +50,24 @@ public class CheckedOutputStream extends java.io.FilterOutputStream {
     }
 
     /**
-     * Returns the Checksum calculated on the stream thus far.
+     * Returns the checksum calculated on the stream read so far.
      * 
-     * @return A java.util.zip.Checksum
+     * @return the updated checksum.
+     * @since Android 1.0
      */
     public Checksum getChecksum() {
         return check;
     }
 
     /**
-     * Writes byte value val to the underlying stream. The Checksum is updated
-     * with val.
+     * Writes the specified byte to the underlying stream. The checksum is
+     * updated with {@code val}.
      * 
      * @param val
-     *            Value of the byte to write out
-     * 
+     *            the data value to written to the output stream.
      * @throws IOException
-     *             if an IO error has occured
+     *             if an IO error has occurred.
+     * @since Android 1.0
      */
     @Override
     public void write(int val) throws IOException {
@@ -69,18 +76,19 @@ public class CheckedOutputStream extends java.io.FilterOutputStream {
     }
 
     /**
-     * Writes nbytes of data from buf starting at offset off to the underlying
-     * stream. The Checksum is updated with the bytes written.
+     * Writes n bytes of data from {@code buf} starting at offset {@code off} to
+     * the underlying stream. The checksum is updated with the bytes written.
      * 
      * @param buf
-     *            data to write out
+     *            data written to the output stream.
      * @param off
-     *            the start offset of the data
+     *            the offset to start reading the data from {@code buf} written
+     *            to the output stream.
      * @param nbytes
-     *            number of bytes to write out
-     * 
+     *            number of bytes to write to the output stream.
      * @throws IOException
-     *             if an IO error has occured
+     *             if an IO error has occurred.
+     * @since Android 1.0
      */
     @Override
     public void write(byte[] buf, int off, int nbytes) throws IOException {

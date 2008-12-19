@@ -15,27 +15,48 @@
  *  limitations under the License.
  */
 
-/**
-* @author Boris V. Kuznetsov
-* @version $Revision$
-*/
-
 package javax.net.ssl;
 
 import java.security.BasicPermission;
 
 /**
- * @com.intel.drl.spec_ref
+ * The class representing a network permission.
+ * <p>
+ * The following permissions are defined, allowing the specified action:
+ * </p>
+ * <dl>
+ * <dt> {@code "setHostnameVerifier"} </dt>
+ * <dd> setting a callback object for additional verification of a hostname mismatch.</dd> 
+ * <dt> {@code "getSSLSessionContext"} </dt>
+ * <dd> getting the {@code SSLSessionContext} of an {@code SSLSession}.</dd>
+ * </dl> 
  * 
+ * @since Android 1.0
  */
 public final class SSLPermission extends BasicPermission {
     
     private static final long serialVersionUID = -3456898025505876775L;
     
+    /**
+     * Creates a new {@code SSLPermission} with the specified name.
+     * 
+     * @param name
+     *            the permission name.
+     * @since Android 1.0
+     */
     public SSLPermission(String name) {
         super(name);
     }
 
+    /**
+     * Creates a new {@code SSLPermission} with the specified name.
+     * 
+     * @param name
+     *            the permission name.
+     * @param actions
+     *            is ignored and should be {@code null}.
+     * @since Android 1.0
+     */
     public SSLPermission(String name, String actions) {
         super(name, actions);
     }

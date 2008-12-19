@@ -195,11 +195,31 @@ INLINE int dvmCompareMethodProtos(const Method* method1,
 }    
 
 /*
+ * Compare the two method prototypes, considering only the parameters
+ * (i.e. ignoring the return types). The two prototypes are compared
+ * as if by strcmp() on the result of dexProtoGetMethodDescriptor().
+ */
+INLINE int dvmCompareMethodParameterProtos(const Method* method1,
+        const Method* method2)
+{
+    return dexProtoCompareParameters(&method1->prototype, &method2->prototype);
+}    
+
+/*
  * Compare the two method names and prototypes, a la strcmp(). The
  * name is considered the "major" order and the prototype the "minor"
  * order. The prototypes are compared as if by dexProtoGetMethodDescriptor().
  */
 int dvmCompareMethodNamesAndProtos(const Method* method1,
+        const Method* method2);
+
+/*
+ * Compare the two method names and prototypes, a la strcmp(), ignoring
+ * the return type. The name is considered the "major" order and the
+ * prototype the "minor" order. The prototypes are compared as if by
+ * dexProtoGetMethodDescriptor().
+ */
+int dvmCompareMethodNamesAndParameterProtos(const Method* method1,
         const Method* method2);
 
 /*

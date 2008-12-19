@@ -21,9 +21,15 @@
 
 package org.apache.harmony.tests.java.math;
 
-import junit.framework.TestCase;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.math.BigInteger;
 
+import junit.framework.TestCase;
+@TestTargetClass(BigInteger.class)
 /**
  * Class:   java.math.BigInteger
  * Methods: abs, compareTo, equals, max, min, negate, signum
@@ -32,6 +38,15 @@ public class BigIntegerCompareTest extends TestCase {
     /**
      * abs() for a positive number
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "This is a complete subset of tests for abs method.",
+      targets = {
+        @TestTarget(
+          methodName = "abs",
+          methodArgs = {}
+        )
+    })
     public void testAbsPositive() {
         byte aBytes[] = {1, 2, 3, 4, 5, 6, 7};
         int aSign = 1;
@@ -49,6 +64,15 @@ public class BigIntegerCompareTest extends TestCase {
     /**
      * abs() for a negative number
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for abs method.",
+          targets = {
+            @TestTarget(
+              methodName = "abs",
+              methodArgs = {}
+            )
+        })
     public void testAbsNegative() {
         byte aBytes[] = {1, 2, 3, 4, 5, 6, 7};
         int aSign = -1;
@@ -68,6 +92,15 @@ public class BigIntegerCompareTest extends TestCase {
      * Compare two positive numbers.
      * The first is greater.
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "This is a complete subset of tests for compareTo method.",
+      targets = {
+        @TestTarget(
+          methodName = "compareTo",
+          methodArgs = {java.math.BigInteger.class}
+        )
+    })
     public void testCompareToPosPos1() {
         byte aBytes[] = {12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, 3, 91};
         byte bBytes[] = {10, 20, 30, 40, 50, 60, 70, 10, 20, 30};
@@ -83,6 +116,15 @@ public class BigIntegerCompareTest extends TestCase {
      * Compare two positive numbers.
      * The first is less.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for compareTo method.",
+          targets = {
+            @TestTarget(
+              methodName = "compareTo",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testCompareToPosPos2() {
         byte aBytes[] = {10, 20, 30, 40, 50, 60, 70, 10, 20, 30};
         byte bBytes[] = {12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, 3, 91};
@@ -97,6 +139,15 @@ public class BigIntegerCompareTest extends TestCase {
      * compareTo(BigInteger a).
      * Compare two equal positive numbers.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for compareTo method.",
+          targets = {
+            @TestTarget(
+              methodName = "compareTo",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testCompareToEqualPos() {
         byte aBytes[] = {12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, 3, 91};
         byte bBytes[] = {12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, 3, 91};
@@ -112,6 +163,15 @@ public class BigIntegerCompareTest extends TestCase {
      * Compare two negative numbers.
      * The first is greater in absolute value.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for compareTo method.",
+          targets = {
+            @TestTarget(
+              methodName = "compareTo",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testCompareToNegNeg1() {
         byte aBytes[] = {12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, 3, 91};
         byte bBytes[] = {10, 20, 30, 40, 50, 60, 70, 10, 20, 30};
@@ -127,6 +187,15 @@ public class BigIntegerCompareTest extends TestCase {
      * Compare two negative numbers.
      * The first is less  in absolute value.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for compareTo method.",
+          targets = {
+            @TestTarget(
+              methodName = "compareTo",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testCompareNegNeg2() {
         byte aBytes[] = {10, 20, 30, 40, 50, 60, 70, 10, 20, 30};
         byte bBytes[] = {12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, 3, 91};
@@ -141,6 +210,15 @@ public class BigIntegerCompareTest extends TestCase {
      * compareTo(BigInteger a).
      * Compare two equal negative numbers.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for compareTo method.",
+          targets = {
+            @TestTarget(
+              methodName = "compareTo",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testCompareToEqualNeg() {
         byte aBytes[] = {12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, 3, 91};
         byte bBytes[] = {12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, 3, 91};
@@ -156,6 +234,15 @@ public class BigIntegerCompareTest extends TestCase {
      * Compare two numbers of different signs.
      * The first is positive.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for compareTo method.",
+          targets = {
+            @TestTarget(
+              methodName = "compareTo",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testCompareToDiffSigns1() {
         byte aBytes[] = {12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, 3, 91};
         byte bBytes[] = {10, 20, 30, 40, 50, 60, 70, 10, 20, 30};
@@ -171,6 +258,15 @@ public class BigIntegerCompareTest extends TestCase {
      * Compare two numbers of different signs.
      * The first is negative.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for compareTo method.",
+          targets = {
+            @TestTarget(
+              methodName = "compareTo",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testCompareToDiffSigns2() {
         byte aBytes[] = {12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, 3, 91};
         byte bBytes[] = {10, 20, 30, 40, 50, 60, 70, 10, 20, 30};
@@ -185,6 +281,15 @@ public class BigIntegerCompareTest extends TestCase {
      * compareTo(BigInteger a).
      * Compare a positive number to ZERO.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for compareTo method.",
+          targets = {
+            @TestTarget(
+              methodName = "compareTo",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testCompareToPosZero() {
         byte aBytes[] = {12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, 3, 91};
         int aSign = 1;
@@ -197,6 +302,15 @@ public class BigIntegerCompareTest extends TestCase {
      * compareTo(BigInteger a).
      * Compare ZERO to a positive number.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for compareTo method.",
+          targets = {
+            @TestTarget(
+              methodName = "compareTo",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testCompareToZeroPos() {
         byte bBytes[] = {12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, 3, 91};
         int bSign = 1;
@@ -209,6 +323,15 @@ public class BigIntegerCompareTest extends TestCase {
      * compareTo(BigInteger a).
      * Compare a negative number to ZERO.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for compareTo method.",
+          targets = {
+            @TestTarget(
+              methodName = "compareTo",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testCompareToNegZero() {
         byte aBytes[] = {12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, 3, 91};
         int aSign = -1;
@@ -221,6 +344,15 @@ public class BigIntegerCompareTest extends TestCase {
      * compareTo(BigInteger a).
      * Compare ZERO to a negative number.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for compareTo method.",
+          targets = {
+            @TestTarget(
+              methodName = "compareTo",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testCompareToZeroNeg() {
         byte bBytes[] = {12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, 3, 91};
         int bSign = -1;
@@ -233,6 +365,15 @@ public class BigIntegerCompareTest extends TestCase {
      * compareTo(BigInteger a).
      * Compare ZERO to ZERO.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for compareTo method.",
+          targets = {
+            @TestTarget(
+              methodName = "compareTo",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testCompareToZeroZero() {
         BigInteger aNumber = BigInteger.ZERO;
         BigInteger bNumber = BigInteger.ZERO;
@@ -243,6 +384,15 @@ public class BigIntegerCompareTest extends TestCase {
      * equals(Object obj).
      * obj is not a BigInteger
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "This is a complete subset of tests for equals method.",
+      targets = {
+        @TestTarget(
+          methodName = "equals",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void testEqualsObject() {
         byte aBytes[] = {12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, 3, 91};
         int aSign = 1;
@@ -254,6 +404,15 @@ public class BigIntegerCompareTest extends TestCase {
     /**
      * equals(null).
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for equals method.",
+          targets = {
+            @TestTarget(
+              methodName = "equals",
+              methodArgs = {java.lang.Object.class}
+            )
+        })
     public void testEqualsNull() {
         byte aBytes[] = {12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, 3, 91};
         int aSign = 1;
@@ -266,6 +425,15 @@ public class BigIntegerCompareTest extends TestCase {
      * obj is a BigInteger.
      * numbers are equal.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for equals method.",
+          targets = {
+            @TestTarget(
+              methodName = "equals",
+              methodArgs = {java.lang.Object.class}
+            )
+        })
     public void testEqualsBigIntegerTrue() {
         byte aBytes[] = {12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, 3, 91};
         byte bBytes[] = {12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, 3, 91};
@@ -281,6 +449,15 @@ public class BigIntegerCompareTest extends TestCase {
      * obj is a BigInteger.
      * numbers are not equal.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for equals method.",
+          targets = {
+            @TestTarget(
+              methodName = "equals",
+              methodArgs = {java.lang.Object.class}
+            )
+        })
     public void testEqualsBigIntegerFalse() {
         byte aBytes[] = {12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, 3, 91};
         byte bBytes[] = {45, 91, 3, -15, 35, 26, 3, 91};
@@ -295,6 +472,15 @@ public class BigIntegerCompareTest extends TestCase {
      * max(BigInteger val).
      * the first is greater.
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "This is a complete subset of tests for max method.",
+      targets = {
+        @TestTarget(
+          methodName = "max",
+          methodArgs = {java.math.BigInteger.class}
+        )
+    })
     public void testMaxGreater() {
         byte aBytes[] = {12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, 3, 91};
         byte bBytes[] = {45, 91, 3, -15, 35, 26, 3, 91};
@@ -316,6 +502,15 @@ public class BigIntegerCompareTest extends TestCase {
      * max(BigInteger val).
      * the first is less.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for max method.",
+          targets = {
+            @TestTarget(
+              methodName = "max",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testMaxLess() {
         byte aBytes[] = {45, 91, 3, -15, 35, 26, 3, 91};
         byte bBytes[] = {12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, 3, 91};
@@ -337,6 +532,15 @@ public class BigIntegerCompareTest extends TestCase {
      * max(BigInteger val).
      * numbers are equal.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for max method.",
+          targets = {
+            @TestTarget(
+              methodName = "max",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testMaxEqual() {
         byte aBytes[] = {45, 91, 3, -15, 35, 26, 3, 91};
         byte bBytes[] = {45, 91, 3, -15, 35, 26, 3, 91};
@@ -358,6 +562,15 @@ public class BigIntegerCompareTest extends TestCase {
      * max(BigInteger val).
      * max of negative and ZERO.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for max method.",
+          targets = {
+            @TestTarget(
+              methodName = "max",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testMaxNegZero() {
         byte aBytes[] = {45, 91, 3, -15, 35, 26, 3, 91};
         int aSign = -1;
@@ -377,6 +590,15 @@ public class BigIntegerCompareTest extends TestCase {
      * min(BigInteger val).
      * the first is greater.
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "This is a complete subset of tests for mix method.",
+      targets = {
+        @TestTarget(
+          methodName = "min",
+          methodArgs = {java.math.BigInteger.class}
+        )
+    })
     public void testMinGreater() {
         byte aBytes[] = {12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, 3, 91};
         byte bBytes[] = {45, 91, 3, -15, 35, 26, 3, 91};
@@ -398,6 +620,15 @@ public class BigIntegerCompareTest extends TestCase {
      * min(BigInteger val).
      * the first is less.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for mix method.",
+          targets = {
+            @TestTarget(
+              methodName = "min",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testMinLess() {
         byte aBytes[] = {45, 91, 3, -15, 35, 26, 3, 91};
         byte bBytes[] = {12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, 3, 91};
@@ -419,6 +650,15 @@ public class BigIntegerCompareTest extends TestCase {
      * min(BigInteger val).
      * numbers are equal.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for mix method.",
+          targets = {
+            @TestTarget(
+              methodName = "min",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testMinEqual() {
         byte aBytes[] = {45, 91, 3, -15, 35, 26, 3, 91};
         byte bBytes[] = {45, 91, 3, -15, 35, 26, 3, 91};
@@ -440,6 +680,15 @@ public class BigIntegerCompareTest extends TestCase {
      * max(BigInteger val).
      * min of positive and ZERO.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for mix method.",
+          targets = {
+            @TestTarget(
+              methodName = "min",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testMinPosZero() {
         byte aBytes[] = {45, 91, 3, -15, 35, 26, 3, 91};
         int aSign = 1;
@@ -458,6 +707,15 @@ public class BigIntegerCompareTest extends TestCase {
     /**
      * negate() a positive number.
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "This is a complete subset of tests for negate method.",
+      targets = {
+        @TestTarget(
+          methodName = "negate",
+          methodArgs = {}
+        )
+    })
     public void testNegatePositive() {
         byte aBytes[] = {12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, 3, 91};
         int aSign = 1;
@@ -475,6 +733,15 @@ public class BigIntegerCompareTest extends TestCase {
     /**
      * negate() a negative number.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for negate method.",
+          targets = {
+            @TestTarget(
+              methodName = "negate",
+              methodArgs = {}
+            )
+        })
     public void testNegateNegative() {
         byte aBytes[] = {12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, 3, 91};
         int aSign = -1;
@@ -492,6 +759,15 @@ public class BigIntegerCompareTest extends TestCase {
     /**
      * negate() ZERO.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for negate method.",
+          targets = {
+            @TestTarget(
+              methodName = "negate",
+              methodArgs = {}
+            )
+        })
     public void testNegateZero() {
         byte rBytes[] = {0};
         BigInteger aNumber = BigInteger.ZERO;
@@ -507,6 +783,15 @@ public class BigIntegerCompareTest extends TestCase {
     /**
      * signum() of a positive number.
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "This is a complete subset of tests for signum method.",
+      targets = {
+        @TestTarget(
+          methodName = "signum",
+          methodArgs = {}
+        )
+    })
     public void testSignumPositive() {
         byte aBytes[] = {12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, 3, 91};
         int aSign = 1;
@@ -517,6 +802,15 @@ public class BigIntegerCompareTest extends TestCase {
     /**
      * signum() of a negative number.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for signum method.",
+          targets = {
+            @TestTarget(
+              methodName = "signum",
+              methodArgs = {}
+            )
+        })
     public void testSignumNegative() {
         byte aBytes[] = {12, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, 3, 91};
         int aSign = -1;
@@ -527,6 +821,15 @@ public class BigIntegerCompareTest extends TestCase {
     /**
      * signum() of ZERO.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for signum method.",
+          targets = {
+            @TestTarget(
+              methodName = "signum",
+              methodArgs = {}
+            )
+        })
     public void testSignumZero() {
         BigInteger aNumber = BigInteger.ZERO;
         assertEquals("incorrect sign", 0, aNumber.signum());

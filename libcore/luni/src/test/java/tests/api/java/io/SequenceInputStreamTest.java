@@ -17,175 +17,245 @@
 
 package tests.api.java.io;
 
+
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
 import java.util.Enumeration;
 
+@TestTargetClass(SequenceInputStream.class) 
 public class SequenceInputStreamTest extends junit.framework.TestCase {
 
-	SequenceInputStream si;
+    SequenceInputStream si;
 
-	String s1 = "Hello";
+    String s1 = "Hello";
 
-	String s2 = "World";
+    String s2 = "World";
 
-	/**
-	 * @tests java.io.SequenceInputStream#SequenceInputStream(java.io.InputStream,
-	 *        java.io.InputStream)
-	 */
-	public void test_ConstructorLjava_io_InputStreamLjava_io_InputStream() {
-		// Test for method java.io.SequenceInputStream(java.io.InputStream,
-		// java.io.InputStream)
-		// Used in tests
-	}
-	
-	/**
-	 * @tests SequenceInputStream#SequenceInputStream(java.io.InputStream,
-	 *        java.io.InputStream)
-	 */
-	public void test_Constructor_LInputStreamLInputStream_Null() {		
-		try {
-			si = new SequenceInputStream(null , null);
-			fail("should throw NullPointerException");
-		} catch (NullPointerException e) {
-			//expected
-		}
-		
-		//will not throw NullPointerException if the first InputStream is not null
-		InputStream is = new ByteArrayInputStream(s1.getBytes()); 
-		si = new SequenceInputStream(is , null);
-	}
+    /**
+     * @tests java.io.SequenceInputStream#SequenceInputStream(java.io.InputStream,
+     *        java.io.InputStream)
+     */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "See setUp.",
+      targets = {
+        @TestTarget(
+          methodName = "SequenceInputStream",
+          methodArgs = {java.io.InputStream.class, java.io.InputStream.class}
+        )
+    })
+    public void test_ConstructorLjava_io_InputStreamLjava_io_InputStream() {
+        // Test for method java.io.SequenceInputStream(java.io.InputStream,
+        // java.io.InputStream)
+        // Used in tests
+    }
+    
+    /**
+     * @tests SequenceInputStream#SequenceInputStream(java.io.InputStream,
+     *        java.io.InputStream)
+     */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Checks NullPointerException",
+      targets = {
+        @TestTarget(
+          methodName = "SequenceInputStream",
+          methodArgs = {java.io.InputStream.class, java.io.InputStream.class}
+        )
+    })
+    public void test_Constructor_LInputStreamLInputStream_Null() {        
+        try {
+            si = new SequenceInputStream(null , null);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            //expected
+        }
+        
+        //will not throw NullPointerException if the first InputStream is not null
+        InputStream is = new ByteArrayInputStream(s1.getBytes()); 
+        si = new SequenceInputStream(is , null);
+    }
 
-	/**
-	 * @tests java.io.SequenceInputStream#SequenceInputStream(java.util.Enumeration)
-	 */
-	public void test_ConstructorLjava_util_Enumeration() {
-		// Test for method java.io.SequenceInputStream(java.util.Enumeration)
-		class StreamEnumerator implements Enumeration {
-			InputStream streams[] = new InputStream[2];
+    /**
+     * @tests java.io.SequenceInputStream#SequenceInputStream(java.util.Enumeration)
+     */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "SequenceInputStream",
+          methodArgs = {java.util.Enumeration.class}
+        )
+    })
+    public void test_ConstructorLjava_util_Enumeration() {
+        // Test for method java.io.SequenceInputStream(java.util.Enumeration)
+        class StreamEnumerator implements Enumeration {
+            InputStream streams[] = new InputStream[2];
 
-			int count = 0;
+            int count = 0;
 
-			public StreamEnumerator() {
-				streams[0] = new ByteArrayInputStream(s1.getBytes());
-				streams[1] = new ByteArrayInputStream(s2.getBytes());
-			}
+            public StreamEnumerator() {
+                streams[0] = new ByteArrayInputStream(s1.getBytes());
+                streams[1] = new ByteArrayInputStream(s2.getBytes());
+            }
 
-			public boolean hasMoreElements() {
-				return count < streams.length;
-			}
+            public boolean hasMoreElements() {
+                return count < streams.length;
+            }
 
-			public Object nextElement() {
-				return streams[count++];
-			}
-		}
+            public Object nextElement() {
+                return streams[count++];
+            }
+        }
 
-		try {
-			si = new SequenceInputStream(new StreamEnumerator());
-			byte buf[] = new byte[s1.length() + s2.length()];
-			si.read(buf, 0, s1.length());
-			si.read(buf, s1.length(), s2.length());
-			assertTrue("Read incorrect bytes: " + new String(buf), new String(
-					buf).equals(s1 + s2));
-		} catch (IOException e) {
-			fail("IOException during read test : " + e.getMessage());
-		}
+        try {
+            si = new SequenceInputStream(new StreamEnumerator());
+            byte buf[] = new byte[s1.length() + s2.length()];
+            si.read(buf, 0, s1.length());
+            si.read(buf, s1.length(), s2.length());
+            assertTrue("Read incorrect bytes: " + new String(buf), new String(
+                    buf).equals(s1 + s2));
+        } catch (IOException e) {
+            fail("IOException during read test : " + e.getMessage());
+        }
 
-	}
+    }
 
-	/**
-	 * @tests java.io.SequenceInputStream#available()
-	 */
-	public void test_available() {
-		// Test for method int java.io.SequenceInputStream.available()
-		try {
+    /**
+     * @tests java.io.SequenceInputStream#available()
+     */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "available",
+          methodArgs = {}
+        )
+    })
+    public void test_available() {
+        // Test for method int java.io.SequenceInputStream.available()
+        try {
 
-			assertTrue("Returned incorrect number of bytes: " + si.available(),
-					si.available() == s1.length());
-		} catch (IOException e) {
-			fail("IOException during available test : " + e.getMessage());
-		}
-	}
+            assertTrue("Returned incorrect number of bytes: " + si.available(),
+                    si.available() == s1.length());
+        } catch (IOException e) {
+            fail("IOException during available test : " + e.getMessage());
+        }
+    }
 
-	/**
-	 * @tests java.io.SequenceInputStream#close()
-	 */
-	public void test_close() throws IOException {
-		si.close();		
-		//will not throw IOException to close a stream which is closed already
-		si.close();
-	}
+    /**
+     * @tests java.io.SequenceInputStream#close()
+     */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "close",
+          methodArgs = {}
+        )
+    })
+    public void test_close() throws IOException {
+        si.close();        
+        //will not throw IOException to close a stream which is closed already
+        si.close();
+    }
 
-	/**
-	 * @tests java.io.SequenceInputStream#read()
-	 */
-	public void test_read() throws IOException {
-		// Test for method int java.io.SequenceInputStream.read()
-		try {
-			si.read();
-			assertTrue("Read incorrect char", (char) si.read() == s1.charAt(1));
-		} catch (IOException e) {
-			fail("IOException during read test: " + e.getMessage());
-		}
-		
-		//returns -1 if the stream is closed , do not throw IOException
-		si.close();
-		int result = si.read();
-		assertEquals(-1 , result);		
-	}
-
-	/**
-	 * @tests java.io.SequenceInputStream#read(byte[], int, int)
-	 */
-	public void test_read$BII() throws IOException {
-		// Test for method int java.io.SequenceInputStream.read(byte [], int,
-		// int)
-		try {
-			byte buf[] = new byte[s1.length() + s2.length()];
-			si.read(buf, 0, s1.length());
-			si.read(buf, s1.length(), s2.length());
-			assertTrue("Read incorrect bytes: " + new String(buf), new String(
-					buf).equals(s1 + s2));
-		} catch (IOException e) {
-			fail("IOException during read test : " + e.getMessage());
-		}
-		
-		ByteArrayInputStream bis1 = new ByteArrayInputStream(
-				new byte[] { 1, 2, 3, 4 });
-		ByteArrayInputStream bis2 = new ByteArrayInputStream(
-				new byte[] { 5, 6, 7, 8 });
-		SequenceInputStream sis = new SequenceInputStream(bis1, bis2);
-
-		try {
-			sis.read(null, 0, -1);
-			fail("Expected NullPointerException exception");
-		} catch (NullPointerException e) {
-			// expected
-		}
-		
+    /**
+     * @tests java.io.SequenceInputStream#read()
+     */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {}
+        )
+    })
+    public void test_read() throws IOException {
+        // Test for method int java.io.SequenceInputStream.read()
+        try {
+            si.read();
+            assertTrue("Read incorrect char", (char) si.read() == s1.charAt(1));
+        } catch (IOException e) {
+            fail("IOException during read test: " + e.getMessage());
+        }
+        
         //returns -1 if the stream is closed , do not throw IOException
-		byte[] array = new byte[] { 1 , 2 , 3 ,4 };
-		sis.close();
-		int result = sis.read(array , 0 , 5);
-		assertEquals(-1 , result);	
-		
-	}
+        si.close();
+        int result = si.read();
+        assertEquals(-1 , result);        
+    }
 
-	/**
-	 * Sets up the fixture, for example, open a network connection. This method
-	 * is called before a test is executed.
-	 */
-	protected void setUp() {
-		si = new SequenceInputStream(new ByteArrayInputStream(s1.getBytes()),
-				new ByteArrayInputStream(s2.getBytes()));
-	}
+    /**
+     * @tests java.io.SequenceInputStream#read(byte[], int, int)
+     */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {byte[].class, int.class, int.class}
+        )
+    })
+    public void test_read$BII() throws IOException {
+        // Test for method int java.io.SequenceInputStream.read(byte [], int,
+        // int)
+        try {
+            byte buf[] = new byte[s1.length() + s2.length()];
+            si.read(buf, 0, s1.length());
+            si.read(buf, s1.length(), s2.length());
+            assertTrue("Read incorrect bytes: " + new String(buf), new String(
+                    buf).equals(s1 + s2));
+        } catch (IOException e) {
+            fail("IOException during read test : " + e.getMessage());
+        }
+        
+        ByteArrayInputStream bis1 = new ByteArrayInputStream(
+                new byte[] { 1, 2, 3, 4 });
+        ByteArrayInputStream bis2 = new ByteArrayInputStream(
+                new byte[] { 5, 6, 7, 8 });
+        SequenceInputStream sis = new SequenceInputStream(bis1, bis2);
 
-	/**
-	 * Tears down the fixture, for example, close a network connection. This
-	 * method is called after a test is executed.
-	 */
-	protected void tearDown() {
-	}
+        try {
+            sis.read(null, 0, -1);
+            fail("Expected NullPointerException exception");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        
+        //returns -1 if the stream is closed , do not throw IOException
+        byte[] array = new byte[] { 1 , 2 , 3 ,4 };
+        sis.close();
+        int result = sis.read(array , 0 , 5);
+        assertEquals(-1 , result);    
+        
+    }
+
+    /**
+     * Sets up the fixture, for example, open a network connection. This method
+     * is called before a test is executed.
+     */
+    protected void setUp() {
+        si = new SequenceInputStream(new ByteArrayInputStream(s1.getBytes()),
+                new ByteArrayInputStream(s2.getBytes()));
+    }
+
+    /**
+     * Tears down the fixture, for example, close a network connection. This
+     * method is called after a test is executed.
+     */
+    protected void tearDown() {
+    }
 }

@@ -18,34 +18,39 @@
 package java.io;
 
 /**
- * This type of exception is thrown by readObject() when it detects an exception
- * marker in the input stream. This marker indicates that when the object was
- * being serialized, an exception happened and this marker was inserted instead
+ * Signals that the {@link ObjectInputStream#readObject()} method has detected
+ * an exception marker in the input stream. This marker indicates that exception
+ * occurred when the object was serialized, and this marker was inserted instead
  * of the original object. It is a way to "propagate" an exception from the code
  * that attempted to write the object to the code that is attempting to read the
  * object.
  * 
  * @see ObjectInputStream#readObject()
+ * 
+ * @since Android 1.0
  */
 public class WriteAbortedException extends ObjectStreamException {
 
     private static final long serialVersionUID = -3326426625597282442L;
 
     /**
-     * The exception that was caused when writeObject() was attempting to
-     * serialize the object
+     * The exception that occured when writeObject() was attempting to serialize
+     * the object.
+     * 
+     * @since Android 1.0
      */
     public Exception detail;
 
     /**
-     * Constructs a new instance of this class with its walkback, message and
-     * the exception which caused the underlying problem when serializing the
-     * object filled in.
+     * Constructs a new {@code WriteAbortedException} with its stack trace,
+     * detail message and the exception which caused the underlying problem when
+     * serializing the object filled in.
      * 
      * @param detailMessage
-     *            the detail message for the exception.
+     *            the detail message for this exception.
      * @param rootCause
-     *            exception that caused the problem when serializing the object.
+     *            the exception that was thrown when serializing the object.
+     * @since Android 1.0
      */
     public WriteAbortedException(String detailMessage, Exception rootCause) {
         super(detailMessage);
@@ -54,11 +59,12 @@ public class WriteAbortedException extends ObjectStreamException {
     }
 
     /**
-     * Returns the extra information message which was provided when the
-     * throwable was created. If no message was provided at creation time, then
-     * answer null.
+     * Gets the extra information message which was provided when this exception
+     * was created. Returns {@code null} if no message was provided at creation
+     * time.
      * 
-     * @return the receiver's message.
+     * @return the exception message.
+     * @since Android 1.0
      */
     @Override
     public String getMessage() {
@@ -70,9 +76,10 @@ public class WriteAbortedException extends ObjectStreamException {
     }
 
     /**
-     * Returns the cause of this Throwable, or null if there is no cause.
+     * Gets the cause of this exception or {@code null} if there is no cause.
      * 
-     * @return the receiver's cause.
+     * @return the exception cause.
+     * @since Android 1.0
      */
     @Override
     public Throwable getCause() {

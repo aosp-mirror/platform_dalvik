@@ -29,15 +29,17 @@ import org.apache.harmony.luni.util.Msg;
 import org.apache.harmony.luni.util.PriviAction;
 
 /**
- * OutputStreamWriter is a class for turning a character output stream into a
- * byte output stream. The conversion of Unicode characters to their byte
- * equivalents is determined by the converter used. By default, the encoding is
- * ISO8859_1 (ISO-Latin-1) but can be changed by calling the constructor which
- * takes an encoding.
+ * A class for turning a character stream into a byte stream. Data written to
+ * the target input stream is converted into bytes by either a default or a
+ * provided character converter. The default encoding is taken from the
+ * "file.encoding" system property. {@code OutputStreamWriter} contains a buffer
+ * of bytes to be written to target stream and converts these into characters as
+ * needed. The buffer size is 8K.
  * 
  * @see InputStreamReader
+ * 
+ * @since Android 1.0
  */
-
 public class OutputStreamWriter extends Writer {
 
     private OutputStream out;
@@ -47,12 +49,13 @@ public class OutputStreamWriter extends Writer {
     private ByteBuffer bytes = ByteBuffer.allocate(8192);
 
     /**
-     * Constructs a new OutputStreamWriter using <code>out</code> as the
-     * OutputStream to write converted characters to. The default character
-     * encoding is used (see class description).
+     * Constructs a new OutputStreamWriter using {@code out} as the target
+     * stream to write converted characters to. The default character encoding
+     * is used.
      * 
      * @param out
-     *            the non-null OutputStream to write converted bytes to.
+     *            the non-null target stream to write converted bytes to.
+     * @since Android 1.0
      */
     public OutputStreamWriter(OutputStream out) {
         super(out);
@@ -66,18 +69,20 @@ public class OutputStreamWriter extends Writer {
     }
 
     /**
-     * Constructs a new OutputStreamWriter using <code>out</code> as the
-     * OutputStream to write converted characters to and <code>enc</code> as
-     * the character encoding. If the encoding cannot be found, an
+     * Constructs a new OutputStreamWriter using {@code out} as the target
+     * stream to write converted characters to and {@code enc} as the character
+     * encoding. If the encoding cannot be found, an
      * UnsupportedEncodingException error is thrown.
      * 
      * @param out
-     *            the non-null OutputStream to write converted bytes to.
+     *            the target stream to write converted bytes to.
      * @param enc
-     *            the non-null String describing the desired character encoding.
-     * 
+     *            the string describing the desired character encoding.
+     * @throws NullPointerException
+     *             if {@code enc} is {@code null}.
      * @throws UnsupportedEncodingException
-     *             if the encoding cannot be found.
+     *             if the encoding specified by {@code enc} cannot be found.
+     * @since Android 1.0
      */
     public OutputStreamWriter(OutputStream out, final String enc)
             throws UnsupportedEncodingException {
@@ -96,15 +101,15 @@ public class OutputStreamWriter extends Writer {
     }
 
     /**
-     * Constructs a new OutputStreamWriter using <code>out</code> as the
-     * OutputStream to write converted characters to and <code>cs</code> as
-     * the character encoding.
-     * 
+     * Constructs a new OutputStreamWriter using {@code out} as the target
+     * stream to write converted characters to and {@code cs} as the character
+     * encoding.
      * 
      * @param out
-     *            the non-null OutputStream to write converted bytes to.
+     *            the target stream to write converted bytes to.
      * @param cs
-     *            the non-null Charset which specify the character encoding.
+     *            the {@code Charset} that specifies the character encoding.
+     * @since Android 1.0
      */
     public OutputStreamWriter(OutputStream out, Charset cs) {
         super(out);
@@ -115,14 +120,15 @@ public class OutputStreamWriter extends Writer {
     }
 
     /**
-     * Constructs a new OutputStreamWriter using <code>out</code> as the
-     * OutputStream to write converted characters to and <code>enc</code> as
-     * the character encoding.
+     * Constructs a new OutputStreamWriter using {@code out} as the target
+     * stream to write converted characters to and {@code enc} as the character
+     * encoder.
      * 
      * @param out
-     *            the non-null OutputStream to write converted bytes to.
+     *            the target stream to write converted bytes to.
      * @param enc
-     *            the non-null CharsetEncoder which used to character encoding.
+     *            the character encoder used for character conversion.
+     * @since Android 1.0
      */
     public OutputStreamWriter(OutputStream out, CharsetEncoder enc) {
         super(out);
@@ -132,16 +138,17 @@ public class OutputStreamWriter extends Writer {
     }
 
     /**
-     * Close this OutputStreamWriter. This implementation first flushes the
-     * buffer and the target OutputStream. The OutputStream is then closed and
-     * the resources for the buffer and converter are freed.
+     * Closes this writer. This implementation flushes the buffer as well as the
+     * target stream. The target stream is then closed and the resources for the
+     * buffer and converter are released.
      * <p>
      * Only the first invocation of this method has any effect. Subsequent calls
-     * do no work.
+     * do nothing.
+     * </p>
      * 
      * @throws IOException
-     *             If an error occurs attempting to close this
-     *             OutputStreamWriter.
+     *             if an error occurs while closing this writer.
+     * @since Android 1.0
      */
     @Override
     public void close() throws IOException {
@@ -158,13 +165,13 @@ public class OutputStreamWriter extends Writer {
     }
 
     /**
-     * Flush this OutputStreamWriter. This implementation ensures all buffered
-     * bytes are written to the target OutputStream. After writing the bytes,
-     * the target OutputStream is then flushed.
+     * Flushes this writer. This implementation ensures that all buffered bytes
+     * are written to the target stream. After writing the bytes, the target
+     * stream is flushed as well.
      * 
      * @throws IOException
-     *             If an error occurs attempting to flush this
-     *             OutputStreamWriter.
+     *             if an error occurs while flushing this writer.
+     * @since Android 1.0
      */
     @Override
     public void flush() throws IOException {
@@ -188,14 +195,13 @@ public class OutputStreamWriter extends Writer {
     }
 
     /**
-     * Answer the String which identifies the encoding used to convert
-     * characters to bytes. The value <code>null</code> is returned if this
-     * Writer has been closed.
+     * Gets the name of the encoding that is used to convert characters to
+     * bytes.
      * 
-     * @return the String describing the converter or null if this Writer is
-     *         closed.
+     * @return the string describing the converter or {@code null} if this
+     *         writer is closed.
+     * @since Android 1.0
      */
-
     public String getEncoding() {
         if (encoder == null) {
             return null;
@@ -205,32 +211,43 @@ public class OutputStreamWriter extends Writer {
     }
 
     /**
-     * Writes <code>count</code> characters starting at <code>offset</code>
-     * in <code>buf</code> to this Writer. The characters are immediately
-     * converted to bytes by the character converter and stored in a local
-     * buffer. If the buffer becomes full as a result of this write, this Writer
-     * is flushed.
+     * Writes {@code count} characters starting at {@code offset} in {@code buf}
+     * to this writer. The characters are immediately converted to bytes by the
+     * character converter and stored in a local buffer. If the buffer gets full
+     * as a result of the conversion, this writer is flushed.
      * 
      * @param buf
-     *            the non-null array containing characters to write.
+     *            the array containing characters to write.
      * @param offset
-     *            offset in buf to retrieve characters
+     *            the index of the first character in {@code buf} to write.
      * @param count
-     *            maximum number of characters to write
-     * 
-     * @throws IOException
-     *             If this OutputStreamWriter has already been closed or some
-     *             other IOException occurs.
+     *            the maximum number of characters to write.
      * @throws IndexOutOfBoundsException
-     *             If offset or count is outside of bounds.
+     *             if {@code offset < 0} or {@code count < 0}, or if
+     *             {@code offset + count} is greater than the size of
+     *             {@code buf}.
+     * @throws IOException
+     *             if this writer has already been closed or another I/O error
+     *             occurs.
+     * @since Android 1.0
      */
     @Override
     public void write(char[] buf, int offset, int count) throws IOException {
         synchronized (lock) {
             checkStatus();
-            if (offset < 0 || offset > buf.length - count || count < 0) {
-                throw new IndexOutOfBoundsException();
+            // BEGIN android-changed
+            // Exception priorities (in case of multiple errors) differ from
+            // RI, but are spec-compliant.
+            // made implicit null check explicit,
+            // used (offset | count) < 0 instead of (offset < 0) || (count < 0)
+            // to safe one operation
+            if (buf == null) {
+                throw new NullPointerException(Msg.getString("K0047")); //$NON-NLS-1$
             }
+            if ((offset | count) < 0 || offset > buf.length - count) {
+                throw new IndexOutOfBoundsException(Msg.getString("K002f")); //$NON-NLS-1$
+            }
+            // END android-changed
             CharBuffer chars = CharBuffer.wrap(buf, offset, count);
             convert(chars);
         }
@@ -252,17 +269,16 @@ public class OutputStreamWriter extends Writer {
     }
 
     /**
-     * Writes out the character <code>oneChar</code> to this Writer. The
-     * low-order 2 bytes are immediately converted to bytes by the character
-     * converter and stored in a local buffer. If the buffer becomes full as a
-     * result of this write, this Writer is flushed.
+     * Writes the character {@code oneChar} to this writer. The lowest two bytes
+     * of the integer {@code oneChar} are immediately converted to bytes by the
+     * character converter and stored in a local buffer. If the buffer gets full
+     * by converting this character, this writer is flushed.
      * 
      * @param oneChar
-     *            the character to write
-     * 
+     *            the character to write.
      * @throws IOException
-     *             If this OutputStreamWriter has already been closed or some
-     *             other IOException occurs.
+     *             if this writer is closed or another I/O error occurs.
+     * @since Android 1.0
      */
     @Override
     public void write(int oneChar) throws IOException {
@@ -274,37 +290,42 @@ public class OutputStreamWriter extends Writer {
     }
 
     /**
-     * Writes <code>count</code> characters starting at <code>offset</code>
-     * in <code>str</code> to this Writer. The characters are immediately
-     * converted to bytes by the character converter and stored in a local
-     * buffer. If the buffer becomes full as a result of this write, this Writer
-     * is flushed.
+     * Writes {@code count} characters starting at {@code offset} in {@code str}
+     * to this writer. The characters are immediately converted to bytes by the
+     * character converter and stored in a local buffer. If the buffer gets full
+     * as a result of the conversion, this writer is flushed.
      * 
      * @param str
-     *            the non-null String containing characters to write.
+     *            the string containing characters to write.
      * @param offset
-     *            offset in str to retrieve characters
+     *            the start position in {@code str} for retrieving characters.
      * @param count
-     *            maximum number of characters to write
-     * 
+     *            the maximum number of characters to write.
      * @throws IOException
-     *             If this OutputStreamWriter has already been closed or some
-     *             other IOException occurs.
-     * @throws IndexOutOfBoundsException
-     *             If count is negative
+     *             if this writer has already been closed or another I/O error
+     *             occurs.
      * @throws StringIndexOutOfBoundsException
-     *             If offset is negative or offset + count is outside of bounds
+     *             if {@code offset < 0} or {@code count < 0}, or if
+     *             {@code offset + count} is bigger than the length of
+     *             {@code str}.
+     * @since Android 1.0
      */
     @Override
     public void write(String str, int offset, int count) throws IOException {
         synchronized (lock) {
             // avoid int overflow
-            if (count < 0) {
-                throw new IndexOutOfBoundsException();
+            // BEGIN android-changed
+            // Exception priorities (in case of multiple errors) differ from RI,
+            // but are spec-compliant.
+            // made implicit null check explicit, used (offset | count) < 0
+            // instead of (offset < 0) || (count < 0) to safe one operation
+            if (str == null) {
+                throw new NullPointerException(Msg.getString("K0047")); //$NON-NLS-1$
             }
-            if (offset > str.length() - count || offset < 0) {
-                throw new StringIndexOutOfBoundsException();
+            if ((offset | count) < 0 || offset > str.length() - count) {
+                throw new StringIndexOutOfBoundsException(Msg.getString("K002f")); //$NON-NLS-1$
             }
+            // END android-changed
             checkStatus();
             CharBuffer chars = CharBuffer.wrap(str, offset, count + offset);
             convert(chars);

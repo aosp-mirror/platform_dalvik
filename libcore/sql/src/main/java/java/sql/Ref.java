@@ -20,35 +20,42 @@ package java.sql;
 import java.util.Map;
 
 /**
- * A manifestation of the SQL REF type - a reference to an SQL type contained in
- * the database.
+ * This interface represents an SQL Ref - a data object containing a cursor
+ * or pointer to a result table.
  * <p>
- * The SQL REF's are held in a table along with SQL structured types. Every REF
- * has an individual identifier for each single instance. The SQL REF is used
- * instead of the structured type it references.
- * <p>
- * A Ref object is stored into the database using the PreparedStatement.setRef
- * method.
+ * The data structure identified by an instance of Ref is held in the 
+ * database, so the data is not necessarily read and converted
+ * into a Java object until {@code getObject} is called. However, if 
+ * the database supports the {@code Ref} type, it is not typically 
+ * necessary to get the underlying object before using it in a method call -
+ * the {@code Ref} object can be used in place of the data structure.
+ * </p>
+ * A {@code Ref} object is stored into the database using the
+ * {@link PreparedStatement#setRef(int, Ref)} method.
+ *  
+ * @since Android 1.0
  */
 public interface Ref {
 
     /**
      * Gets the fully-qualified SQL name of the SQL structured type that this
-     * Ref references.
+     * {@code Ref} references.
      * 
-     * @return the fully qualified name of the SQL structured type
+     * @return the fully qualified name of the SQL structured type.
      * @throws SQLException
-     *             if there is a database error
+     *             if there is a database error.
+     * @since Android 1.0
      */
     public String getBaseTypeName() throws SQLException;
 
     /**
-     * Gets the SQL structured type instance referenced by this Ref.
+     * Gets the SQL structured type instance referenced by this {@code Ref}.
      * 
      * @return a Java object whose type is defined by the mapping for the SQL
      *         structured type.
      * @throws SQLException
-     *             if there is a database error
+     *             if there is a database error.
+     * @since Android 1.0
      */
     public Object getObject() throws SQLException;
 
@@ -57,23 +64,25 @@ public interface Ref {
      * to a Java type.
      * 
      * @param map
-     *            a java.util.Map which contains the mapping to use
+     *            the mapping for type conversion.
      * @return a Java object whose type is defined by the mapping for the SQL
      *         structured type.
      * @throws SQLException
-     *             if there is a database error
+     *             if there is a database error.
+     * @since Android 1.0
      */
     public Object getObject(Map<String, Class<?>> map) throws SQLException;
 
     /**
-     * Sets the value of the structured typethat this Ref references to a
-     * supplied Object.
+     * Sets the value of the structured type that this {@code Ref} references to
+     * a supplied object.
      * 
      * @param value
-     *            the Object representing the new SQL structured type that this
-     *            Ref will reference.
+     *            the {@code Object} representing the new SQL structured type
+     *            that this {@code Ref} references.
      * @throws SQLException
-     *             if there is a database error
+     *             if there is a database error.
+     * @since Android 1.0
      */
     public void setObject(Object value) throws SQLException;
 }

@@ -16,10 +16,25 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import junit.framework.TestCase;
 
+@TestTargetClass(Character.class) 
 public class CharacterImplTest extends TestCase {
 
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "valueOf",
+          methodArgs = {char.class}
+        )
+    })
     public void test_valueOfC() {
         // test the cache range
         for (char c = '\u0000'; c < 512; c++) {

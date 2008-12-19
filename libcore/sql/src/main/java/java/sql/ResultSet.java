@@ -25,1188 +25,1363 @@ import java.util.Map;
 import java.net.URL;
 
 /**
- * An interface to an Object which represents a Table of Data, typically
- * returned as the result of a Query to a Database.
+ * An interface for an object which represents a database table entry, returned
+ * as the result of the query to the database.
  * <p>
- * <code>ResultSets</code> have a Cursor which points to a current row of
- * data. When a ResultSet is created, the Cursor is positioned before the first
- * row. To move the Cursor to the next row in the table, use the
- * <code>next</code> method. The next method returns true until there are no
- * more rows in the ResultSet, when it returns false.
+ * {@code ResultSet}s have a cursor which points to the current data table row.
+ * When the {@code ResultSet} is created, the cursor's location is one position
+ * ahead of the first row. To move the cursor to the first and consecutive rows,
+ * use the {@code next} method. The {@code next} method returns {@code true} as
+ * long as there are more rows in the {@code ResultSet}, otherwise it returns
+ * {@code false}.
+ * </p>
  * <p>
- * The default type of ResultSet cannot be updated and its cursor can only move
- * forward through the rows of data. This means that it is only possible to read
- * through it once. However, it is possible to create types of ResultSet that
- * can be updated and also types where the cursor can be scrolled forward and
- * backward through the rows of data. This is shown in the following code
- * example: <code>
- *         Connection con;
- *         Statement aStatement = con.createStatement( ResultSet.TYPE_SCROLL_SENSITIVE,
- *                                                       ResultSet.CONCUR_UPDATABLE );
- *         ResultSet theResultSet = theStatement.executeQuery("SELECT price, quantity FROM STOCKTABLE");
- *         // theResultSet will be both scrollable and updateable
- * </code>
+ * The default type of {@code ResultSet} can not be updated and its cursor can
+ * only advance forward through the rows of data. This means that it is only
+ * possible to read through it once. However, other kinds of {@code ResultSet}
+ * are implemented: an <i>updatable</i> type and also types where the cursor can
+ * be <i>scrolled</i> forward and backward through the rows of data. How such a
+ * {@code ResultSet} is created is demonstrated in the following example:
+ * </p>
+ * <ul>
+ * <dd>
+ *         {@code Connection con;}</dd>
+ * <dd>{@code Statement aStatement = con.createStatement(
+ * ResultSet.TYPE_SCROLL_SENSITIVE,}{@code ResultSet.CONCUR_UPDATABLE );}</dd>
+ * <dd>{@code ResultSet theResultSet =
+ * theStatement.executeQuery("SELECT price, quantity FROM STOCKTABLE");}</dd>
+ * <dd>{@code // theResultSet is both scrollable and updatable}</dd> </ul>
  * <p>
- * The ResultSet interface provides a series of methods for retrieving data from
- * columns in the current row, such as getDate, getFloat. The columns are
- * identified either by their index number (starting at 1) or by their name -
- * there are separate methods for both techniques of column addressing. The
- * column names are case insensitive. If several columns have the same name,
- * then the getter methods use the first matching column. This means that if
- * column names are used, it is not possible to guarantee that the name will
- * retrieve data from the intended column - for certainty it is better to use
- * column indexes. Ideally the columns should be read left-to-right and read
- * once only, since not all * databases are optimized to handle other techniques
- * of reading the data.
+ * The {@code ResultSet} interface provides a series of methods for retrieving
+ * data from columns in the current row, such as {@code getDate} and {@code
+ * getFloat}. The columns are retrieved either by their index number (starting
+ * at 1) or by their name - there are separate methods for both techniques of
+ * column addressing. The column names are case insensitive. If several columns
+ * have the same name, then the getter methods use the first matching column.
+ * This means that if column names are used, it is not possible to guarantee
+ * that the name will retrieve data from the intended column - for certainty it
+ * is better to use column indexes. Ideally the columns should be read
+ * left-to-right and read once only, since not all databases are optimized to
+ * handle other techniques of reading the data.
+ * </p>
  * <p>
- * When reading data, the JDBC driver maps the SQL data retrieved from the
- * database to the Java type implied by the method invoked by the application.
- * The JDBC specification has a table of allowable mappings from SQL types to
- * Java types.
+ * When reading data via the appropriate getter methods, the JDBC driver maps
+ * the SQL data retrieved from the database to the Java type implied by the
+ * method invoked by the application. The JDBC specification has a table for the
+ * mappings from SQL types to Java types.
+ * </p>
  * <p>
- * There are also methods for writing data into the ResultSet, such as
- * updateInt, updateString. The update methods can be used either to modify the
- * data of an existing row or to insert new data rows into the ResultSet.
- * Modification of existing data involves moving the Cursor to the row which
- * needs modification and then using the update methods to modify the data,
- * followed by calling the ResultSet.updateRow method. For insertion of new
- * rows, the cursor is first moved to a special row called the Insert Row, data
- * is added using the update methods, followed by calling the
- * ResultSet.insertRow method.
+ * There are also methods for writing data into the {@code ResultSet}, such as
+ * {@code updateInt} and {@code updateString}. The update methods can be used
+ * either to modify the data of an existing row or to insert new data rows into
+ * the {@code ResultSet} . Modification of existing data involves moving the
+ * cursor to the row which needs modification and then using the update methods
+ * to modify the data, followed by calling the {@code ResultSet.updateRow}
+ * method. For insertion of new rows, the cursor is first moved to a special row
+ * called the <i>Insert Row</i>, data is added using the update methods,
+ * followed by calling the {@code ResultSet.insertRow} method.
+ * </p>
  * <p>
- * A ResultSet is closed if the Statement object which generated it closed,
- * executed again or is used to retrieve the next result from a sequence of
- * results.
+ * A {@code ResultSet} is closed if the statement which generated it closes, the
+ * statement is executed again, or the same statement's next {@code ResultSet} 
+ * is retrieved (if the statement returned of multiple results).
+ * </p>
  * 
+ * @since Android 1.0
  */
 public interface ResultSet {
 
     /**
-     * A constant used to indicate that a ResultSet object must be closed when
-     * the method Connection.commit is invoked.
+     * A constant used to indicate that a {@code ResultSet} object must be
+     * closed when the method {@code Connection.commit} is invoked.
+     * 
+     * @since Android 1.0
      */
     public static final int CLOSE_CURSORS_AT_COMMIT = 2;
 
     /**
-     * A constant used to indicate that a ResultSet object must not be closed
-     * when the method Connection.commit is invoked.
+     * A constant used to indicate that a {@code ResultSet} object must not be
+     * closed when the method {@code Connection.commit} is invoked.
+     * 
+     * @since Android 1.0
      */
     public static final int HOLD_CURSORS_OVER_COMMIT = 1;
 
     /**
-     * A constant used to indicate the Concurrency Mode for a ResultSet object
-     * that cannot be updated.
+     * A constant used to indicate the concurrency mode for a {@code ResultSet}
+     * object that cannot be updated.
+     * 
+     * @since Android 1.0
      */
     public static final int CONCUR_READ_ONLY = 1007;
 
     /**
-     * A constant used to indicate the Concurrency Mode for a ResultSet object
-     * that can be updated.
+     * A constant used to indicate the concurrency mode for a {@code ResultSet}
+     * object that can be updated.
+     * 
+     * @since Android 1.0
      */
     public static final int CONCUR_UPDATABLE = 1008;
 
     /**
-     * A constant used to indicate processing of the rows of a ResultSet in the
-     * forward direction, first to last
+     * A constant used to indicate processing of the rows of a {@code ResultSet}
+     * in the forward direction, first to last.
+     * 
+     * @since Android 1.0
      */
     public static final int FETCH_FORWARD = 1000;
 
     /**
-     * A constant used to indicate processing of the rows of a ResultSet in the
-     * reverse direction, last to first
+     * A constant used to indicate processing of the rows of a {@code ResultSet}
+     * in the reverse direction, last to first.
+     * 
+     * @since Android 1.0
      */
     public static final int FETCH_REVERSE = 1001;
 
     /**
      * A constant used to indicate that the order of processing of the rows of a
-     * ResultSet is unknown.
+     * {@code ResultSet} is unknown.
+     * 
+     * @since Android 1.0
      */
     public static final int FETCH_UNKNOWN = 1002;
 
     /**
-     * A constant used to indicate a ResultSet object whose Cursor can only move
-     * forward
+     * A constant used to indicate a {@code ResultSet} object whose cursor can
+     * only move forward.
+     * 
+     * @since Android 1.0
      */
     public static final int TYPE_FORWARD_ONLY = 1003;
 
     /**
-     * A constant used to indicate a ResultSet object which is Scrollable but
-     * which is not sensitive to changes made by others
+     * A constant used to indicate a {@code ResultSet} object which is
+     * scrollable but is insensitive to changes made by others.
+     * 
+     * @since Android 1.0
      */
     public static final int TYPE_SCROLL_INSENSITIVE = 1004;
 
     /**
-     * A constant used to indicate a ResultSet object which is Scrollable but
-     * which is sensitive to changes made by others
+     * A constant used to indicate a {@code ResultSet} object which is
+     * scrollable and sensitive to changes made by others.
+     * 
+     * @since Android 1.0
      */
     public static final int TYPE_SCROLL_SENSITIVE = 1005;
 
     /**
-     * Moves the Cursor to a specified row number in the ResultSet.
+     * Moves the cursor to a specified row number in the {@code ResultSet}.
      * 
      * @param row
-     *            The new row number for the Cursor
-     * @return true if the new Cursor position is on the ResultSet, false
-     *         otherwise
+     *            the index of the row starting at index 1. Index {@code -1}
+     *            returns the last row.
+     * @return {@code true} if the new cursor position is on the {@code
+     *         ResultSet}, {@code false} otherwise.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public boolean absolute(int row) throws SQLException;
 
     /**
-     * Moves the Cursor to the end of the ResultSet, after the last row.
+     * Moves the cursor to the end of the {@code ResultSet}, after the last row.
      * 
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void afterLast() throws SQLException;
 
     /**
-     * Moves the Cursor to the start of the ResultSet, before the first row.
+     * Moves the cursor to the start of the {@code ResultSet}, before the first
+     * row.
      * 
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void beforeFirst() throws SQLException;
 
     /**
-     * Cancels any updates made to the current row in the ResultSet.
+     * Cancels any updates made to the current row in the {@code ResultSet}.
      * 
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void cancelRowUpdates() throws SQLException;
 
     /**
-     * Clears all the warnings related to this ResultSet.
+     * Clears all warnings related to this {@code ResultSet}.
      * 
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void clearWarnings() throws SQLException;
 
     /**
-     * Releases this ResultSet's database and JDBC resources. You are strongly
-     * advised to use this method rather than relying on the release being done
-     * when the ResultSet's finalize method is called during garbage collection
-     * process. Note that the close() method might take some time to complete
-     * since it is dependent on the behaviour of the connection to the database
-     * and the database itself.
+     * Releases this {@code ResultSet}'s database and JDBC resources. You are
+     * strongly advised to use this method rather than relying on the release
+     * being done when the {@code ResultSet}'s finalize method is called during
+     * garbage collection process. Note that the {@code close()} method might
+     * take some time to complete since it is dependent on the behavior of the
+     * connection to the database and the database itself.
      * 
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void close() throws SQLException;
 
     /**
-     * Deletes the current row from the ResultSet and from the underlying
-     * database.
+     * Deletes the current row from the {@code ResultSet} and from the
+     * underlying database.
      * 
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void deleteRow() throws SQLException;
 
     /**
-     * Gets the index number for a column in the ResultSet from the provided
-     * Column Name.
+     * Gets the index number for a column in the {@code ResultSet} from the
+     * provided column name.
      * 
      * @param columnName
-     *            the column name
-     * @return the index of the column in the ResultSet for the column name
+     *            the column name.
+     * @return the column's index in the {@code ResultSet} identified by column
+     *         name.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public int findColumn(String columnName) throws SQLException;
 
     /**
-     * Shifts the cursor position to the first row in the ResultSet.
+     * Shifts the cursor position to the first row in the {@code ResultSet}.
      * 
-     * @return true if the position is in a legitimate row, false if the
-     *         ResultSet contains no rows.
+     * @return {@code true} if the position is in a legitimate row, {@code
+     *         false} if the {@code ResultSet} contains no rows.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public boolean first() throws SQLException;
 
     /**
-     * Gets the content of a column specified as a column index in the current
-     * row of this ResultSet as a java.sql.Array.
+     * Gets the content of a column specified by column index in the current row
+     * of this {@code ResultSet} as a {@code java.sql.Array}.
      * 
      * @param columnIndex
      *            the index of the column to read
-     * @return a java.sql.Array with the data from the column
+     * @return a {@code java.sql.Array} with the data from the column.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public Array getArray(int columnIndex) throws SQLException;
 
     /**
-     * Gets the value of a column specified as a column name as a
-     * java.sql.Array.
+     * Gets the value of a column specified by column name as a {@code
+     * java.sql.Array}.
      * 
      * @param colName
-     *            the name of the column to read
-     * @return a java.sql.Array with the data from the column
+     *            the name of the column to read.
+     * @return a {@code java.sql.Array} with the data from the specified column.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public Array getArray(String colName) throws SQLException;
 
     /**
-     * Gets the value of a column specified as a column index as an ASCII
+     * Gets the value of a column specified by column index as an ASCII
      * character stream.
      * 
      * @param columnIndex
-     *            the index of the column to read
-     * @return an InputStream with the data from the column
+     *            the index of the column to read.
+     * @return an {@code InputStream} with the data from the column.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public InputStream getAsciiStream(int columnIndex) throws SQLException;
 
     /**
-     * Gets the value of a column specified as a column name as an ASCII
-     * character stream.
+     * Gets the value of a column specified by column name as an ASCII character
+     * stream.
      * 
      * @param columnName
      *            the name of the column to read
-     * @return an InputStream with the data from the column
+     * @return an {@code InputStream} with the data from the column.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public InputStream getAsciiStream(String columnName) throws SQLException;
 
     /**
-     * Gets the value of a column specified as a column index as a
-     * java.math.BigDecimal.
+     * Gets the value of a column specified by column index as a {@code
+     * java.math.BigDecimal}.
      * 
      * @param columnIndex
-     *            the index of the column to read
-     * @return a BigDecimal with the value of the column
+     *            the index of the column to read.
+     * @return a {@code BigDecimal} with the value of the column.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public BigDecimal getBigDecimal(int columnIndex) throws SQLException;
 
     /**
-     * @deprecated Gets the value of a column specified as a column index as a
-     *             java.math.BigDecimal.
+     * Gets the value of a column specified by column index as a {@code
+     * java.math.BigDecimal}.
+     * 
+     * @deprecated use {@link #getBigDecimal(int)} or
+     *             {@link #getBigDecimal(String)}
      * @param columnIndex
-     *            the index of the column to read
+     *            the index of the column to read.
      * @param scale
      *            the number of digits after the decimal point
-     * @return a BigDecimal with the value of the column
+     * @return a {@code BigDecimal} with the value of the column.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     @Deprecated
     public BigDecimal getBigDecimal(int columnIndex, int scale)
             throws SQLException;
 
     /**
-     * Gets the value of a column specified as a column name, as a
-     * java.math.BigDecimal.
+     * Gets the value of a column specified by column name, as a {@code
+     * java.math.BigDecimal}.
      * 
      * @param columnName
-     *            the name of the column to read
-     * @return a BigDecimal with the value of the column
+     *            the name of the column to read.
+     * @return a BigDecimal with value of the column.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public BigDecimal getBigDecimal(String columnName) throws SQLException;
 
     /**
-     * @deprecated Gets the value of a column specified as a column name, as a
-     *             java.math.BigDecimal.
+     * Gets the value of a column specified by column name, as a {@code
+     * java.math.BigDecimal}.
+     * 
+     * @deprecated use {@link #getBigDecimal(int)} or
+     *             {@link #getBigDecimal(String)}
      * @param columnName
-     *            the name of the column to read
+     *            the name of the column to read.
      * @param scale
      *            the number of digits after the decimal point
-     * @return a BigDecimal with the value of the column
+     * @return a BigDecimal with value of the column.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     @Deprecated
     public BigDecimal getBigDecimal(String columnName, int scale)
             throws SQLException;
 
     /**
-     * Gets the value of a column specified as a column index as a binary
+     * Gets the value of a column specified by column index as a binary
      * stream.
      * <p>
-     * This method can be used to read LONGVARBINARY values. All of the data in
-     * the InputStream should be read before getting data from any other column.
-     * A further call to a getter method will implicitly close the InputStream.
+     * This method can be used to read {@code LONGVARBINARY} values. All of the
+     * data in the {@code InputStream} should be read before getting data from
+     * any other column. A further call to a getter method will implicitly close
+     * the {@code InputStream}.
+     * </p>
      * 
      * @param columnIndex
-     *            the index of the column to read
-     * @return an InputStream with the data from the column. If the column value
-     *         is SQL NULL, null is returned.
+     *            the index of the column to read.
+     * @return an {@code InputStream} with the data from the column. If the
+     *         column value is SQL {@code NULL}, {@code null} is returned.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public InputStream getBinaryStream(int columnIndex) throws SQLException;
 
     /**
-     * Gets the value of a column specified as a column name as a binary stream.
+     * Gets the value of a column specified by column name as a binary stream.
      * <p>
-     * This method can be used to read LONGVARBINARY values. All of the data in
-     * the InputStream should be read before getting data from any other column.
-     * A further call to a getter method will implicitly close the InputStream.
+     * This method can be used to read {@code LONGVARBINARY} values. All of the
+     * data in the {@code InputStream} should be read before getting data from
+     * any other column. A further call to a getter method will implicitly close
+     * the {@code InputStream}.
+     * </p>
      * 
      * @param columnName
-     *            the name of the column to read
-     * @return an InputStream with the data from the column If the column value
-     *         is SQL NULL, null is returned.
+     *            the name of the column to read.
+     * @return an {@code InputStream} with the data from the column if the
+     *         column value is SQL {@code NULL}, {@code null} is returned.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public InputStream getBinaryStream(String columnName) throws SQLException;
 
     /**
-     * Gets the value of a column specified as a column index as a java.sql.Blob
-     * object.
+     * Gets the value of a column specified by column index as a {@code
+     * java.sql.Blob} object.
      * 
      * @param columnIndex
-     *            the index of the column to read
-     * @return a java.sql.Blob with the value of the column
+     *            the index of the column to read.
+     * @return a {@code java.sql.Blob} with the value of the column.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public Blob getBlob(int columnIndex) throws SQLException;
 
     /**
-     * Gets the value of a column specified as a column name, as a java.sql.Blob
-     * object.
+     * Gets the value of a column specified by column name, as a {@code
+     * java.sql.Blob} object.
      * 
      * @param columnName
-     *            the name of the column to read
-     * @return a java.sql.Blob with the value of the column
+     *            the name of the column to read.
+     * @return a {@code java.sql.Blob} with the value of the column.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public Blob getBlob(String columnName) throws SQLException;
 
     /**
-     * Gets the value of a column specified as a column index as a boolean.
+     * Gets the value of a column specified by column index as a {@code boolean}
+     * .
      * 
      * @param columnIndex
-     *            the index of the column to read
-     * @return a boolean value from the column. If the column is SQL NULL, false
-     *         is returned.
+     *            the index of the column to read.
+     * @return a {@code boolean} value from the column. If the column is SQL
+     *         {@code NULL}, {@code false} is returned.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public boolean getBoolean(int columnIndex) throws SQLException;
 
     /**
-     * Gets the value of a column specified as a column name, as a boolean.
+     * Gets the value of a column specified by column name, as a {@code boolean}
+     * .
      * 
      * @param columnName
-     *            the name of the column to read
-     * @return a boolean value from the column. If the column is SQL NULL, false
-     *         is returned.
+     *            the name of the column to read.
+     * @return a {@code boolean} value from the column. If the column is SQL
+     *         {@code NULL}, {@code false} is returned.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public boolean getBoolean(String columnName) throws SQLException;
 
     /**
-     * Gets the value of a column specified as a column index as a byte.
+     * Gets the value of a column specified by column index as a {@code byte}.
      * 
      * @param columnIndex
-     *            the index of the column to read
-     * @return a byte containing the value of the column. 0 if the value is SQL
-     *         NULL.
+     *            the index of the column to read.
+     * @return a {@code byte} equal to the value of the column. 0 if the value
+     *         is SQL {@code NULL}.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public byte getByte(int columnIndex) throws SQLException;
 
     /**
-     * Gets the value of a column specified as a column name as a byte.
+     * Gets the value of a column specified by column name as a {@code byte}.
      * 
      * @param columnName
-     *            the name of the column to read
-     * @return a byte containing the value of the column. 0 if the value is SQL
-     *         NULL.
+     *            the name of the column to read.
+     * @return a {@code byte} equal to the value of the column. 0 if the value
+     *         is SQL {@code NULL}.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public byte getByte(String columnName) throws SQLException;
 
     /**
-     * Gets the value of a column specified as a column index as a byte array.
+     * Gets the value of a column specified by column index as a byte array.
      * 
      * @param columnIndex
-     *            the index of the column to read
-     * @return a byte array containing the value of the column. null if the
-     *         column contains SQL NULL.
+     *            the index of the column to read.
+     * @return a byte array containing the value of the column. {@code null} if
+     *         the column contains SQL {@code NULL}.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public byte[] getBytes(int columnIndex) throws SQLException;
 
     /**
-     * Gets the value of a column specified as a column name as a byte array.
+     * Gets the value of a column specified by column name as a byte array.
      * 
      * @param columnName
-     *            the name of the column to read
-     * @return a byte array containing the value of the column. null if the
-     *         column contains SQL NULL.
+     *            the name of the column to read.
+     * @return a byte array containing the value of the column. {@code null} if
+     *         the column contains SQL {@code NULL}.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public byte[] getBytes(String columnName) throws SQLException;
 
     /**
-     * Gets the value of a column specified as a column index as a
-     * java.io.Reader object.
+     * Gets the value of a column specified by column index as a {@code
+     * java.io.Reader} object.
      * 
      * @param columnIndex
-     *            the index of the column to read
-     * @return a Reader holding the value of the column. null if the column
-     *         value is SQL NULL.
+     *            the index of the column to read.
+     * @return a {@code Reader} holding the value of the column. {@code null} if
+     *         the column value is SQL {@code NULL}.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @see java.io.Reader
+     * @since Android 1.0
      */
     public Reader getCharacterStream(int columnIndex) throws SQLException;
 
     /**
-     * Gets the value of a column specified as a column name as a java.io.Reader
-     * object.
+     * Gets the value of a column specified by column name as a {@code
+     * java.io.Reader} object.
      * 
      * @param columnName
-     *            the name of the column to read
-     * @return a Reader holding the value of the column. null if the column
-     *         value is SQL NULL.
+     *            the name of the column to read.
+     * @return a {@code Reader} holding the value of the column. {@code null} if
+     *         the column value is SQL {@code NULL}.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public Reader getCharacterStream(String columnName) throws SQLException;
 
     /**
-     * Gets the value of a column specified as a column index as a
-     * java.sql.Clob.
+     * Gets the value of a column specified by column index as a {@code
+     * java.sql.Clob}.
      * 
      * @param columnIndex
-     *            the index of the column to read
-     * @return a Clob object representing the value in the column. null if the
-     *         value is SQL NULL.
+     *            the index of the column to read.
+     * @return a {@code Clob} object representing the value in the column.
+     *         {@code null} if the value is SQL {@code NULL}.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public Clob getClob(int columnIndex) throws SQLException;
 
     /**
-     * Gets the value of a column specified as a column name as a java.sql.Clob.
+     * Gets the value of a column specified by column name as a {@code
+     * java.sql.Clob}.
      * 
      * @param colName
-     *            the name of the column to read
-     * @return a Clob object representing the value in the column. null if the
-     *         value is SQL NULL.
+     *            the name of the column to read.
+     * @return a {@code Clob} object representing the value in the column.
+     *         {@code null} if the value is SQL {@code NULL}.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public Clob getClob(String colName) throws SQLException;
 
     /**
-     * Gets the concurrency mode of this ResultSet.
+     * Gets the concurrency mode of this {@code ResultSet}.
      * 
-     * @return the concurrency mode - one of: ResultSet.CONCUR_READ_ONLY,
-     *         ResultSet.CONCUR_UPDATABLE
+     * @return the concurrency mode - one of: {@code ResultSet.CONCUR_READ_ONLY}
+     *         , {@code ResultSet.CONCUR_UPDATABLE}.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public int getConcurrency() throws SQLException;
 
     /**
-     * Gets the name of the SQL cursor of this ResultSet.
+     * Gets the name of the SQL cursor of this {@code ResultSet}.
      * 
-     * @return a String containing the SQL cursor name
+     * @return the SQL cursor name.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public String getCursorName() throws SQLException;
 
     /**
-     * Gets the value of a column specified as a column index as a
-     * java.sql.Date.
+     * Gets the value of a column specified by column index as a {@code
+     * java.sql.Date}.
      * 
      * @param columnIndex
-     *            the index of the column to read
-     * @return a java.sql.Date matching the column value. null if the column is
-     *         SQL NULL.
+     *            the index of the column to read.
+     * @return a {@code java.sql.Date} matching the column value. {@code null}
+     *         if the column is SQL {@code NULL}.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public Date getDate(int columnIndex) throws SQLException;
 
     /**
-     * Gets the value of a column specified as a column index as a
-     * java.sql.Date. This method uses a supplied calendar to compute the Date.
+     * Gets the value of a column specified by column index as a {@code
+     * java.sql.Date}. This method uses a supplied calendar to compute the Date.
      * 
      * @param columnIndex
-     *            the index of the column to read
+     *            the index of the column to read.
      * @param cal
-     *            a java.util.Calendar to use in constructing the Date.
-     * @return a java.sql.Date matching the column value. null if the column is
-     *         SQL NULL.
+     *            a {@code java.util.Calendar} to use in constructing the Date.
+     * @return a {@code java.sql.Date} matching the column value. {@code null}
+     *         if the column is SQL {@code NULL}.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public Date getDate(int columnIndex, Calendar cal) throws SQLException;
 
     /**
-     * Gets the value of a column specified as a column name as a java.sql.Date.
+     * Gets the value of a column specified by column name as a {@code
+     * java.sql.Date}.
      * 
      * @param columnName
-     *            the name of the column to read
-     * @return a java.sql.Date matching the column value. null if the column is
-     *         SQL NULL.
+     *            the name of the column to read.
+     * @return a {@code java.sql.Date} matching the column value. {@code null}
+     *         if the column is SQL {@code NULL}.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public Date getDate(String columnName) throws SQLException;
 
     /**
-     * Gets the value of a column specified as a column name, as a java.sql.Date
-     * object.
+     * Gets the value of a column specified by column name, as a {@code
+     * java.sql.Date} object.
      * 
      * @param columnName
-     *            the name of the column to read
+     *            the name of the column to read.
      * @param cal
-     *            java.util.Calendar to use in constructing the Date.
-     * @return a java.sql.Date matching the column value. null if the column is
-     *         SQL NULL.
+     *            {@code java.util.Calendar} to use in constructing the Date.
+     * @return a {@code java.sql.Date} matching the column value. {@code null}
+     *         if the column is SQL {@code NULL}.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public Date getDate(String columnName, Calendar cal) throws SQLException;
 
     /**
-     * Gets the value of a column specified as a column index as a double value.
+     * Gets the value of a column specified by column index as a {@code double}
+     * value.
      * 
      * @param columnIndex
-     *            the index of the column to read
-     * @return a double containing the column value. 0.0 if the column is SQL
-     *         NULL.
+     *            the index of the column to read.
+     * @return a {@code double} equal to the column value. {@code 0.0} if the
+     *         column is SQL {@code NULL}.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public double getDouble(int columnIndex) throws SQLException;
 
     /**
-     * Gets the value of a column specified as a column name as a double value.
+     * Gets the value of a column specified by column name as a {@code double}
+     * value.
      * 
      * @param columnName
-     *            the name of the column to read
-     * @return a double containing the column value. 0.0 if the column is SQL
-     *         NULL.
+     *            the name of the column to read.
+     * @return a {@code double} equal to the column value. {@code 0.0} if the
+     *         column is SQL {@code NULL}.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public double getDouble(String columnName) throws SQLException;
 
     /**
-     * Gets the direction in which rows are fetched for this ResultSet object.
+     * Gets the direction in which rows are fetched for this {@code ResultSet}
+     * object.
      * 
-     * @return the fetch direction. Will be: ResultSet.FETCH_FORWARD,
-     *         ResultSet.FETCH_REVERSE or ResultSet.FETCH_UNKNOWN
+     * @return the fetch direction. Will be one of:
+     *         <ul>
+     *         <li>ResultSet.FETCH_FORWARD</li><li>ResultSet.FETCH_REVERSE</li>
+     *         <li>ResultSet.FETCH_UNKNOWN</li>
+     *         </ul>
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public int getFetchDirection() throws SQLException;
 
     /**
-     * Gets the fetch size (in number of rows) for this ResultSet
+     * Gets the fetch size (in number of rows) for this {@code ResultSet}.
      * 
      * @return the fetch size as an int
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public int getFetchSize() throws SQLException;
 
     /**
-     * Gets the value of a column specified as a column index as a float value.
+     * Gets the value of a column specified by column index as a {@code float}
+     * value.
      * 
      * @param columnIndex
-     *            the index of the column to read
-     * @return a float containing the column value. 0.0 if the column is SQL
-     *         NULL.
+     *            the index of the column to read.
+     * @return a {@code float} equal to the column value. {@code 0.0} if the
+     *         column is SQL {@code NULL}.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public float getFloat(int columnIndex) throws SQLException;
 
     /**
-     * Gets the value of a column specified as a column name as a float value.
+     * Gets the value of a column specified by column name as a {@code float}
+     * value.
      * 
      * @param columnName
-     *            the name of the column to read
-     * @return a float containing the column value. 0.0 if the column is SQL
-     *         NULL.
+     *            the name of the column to read.
+     * @return a {@code float} equal to the column value. {@code 0.0} if the
+     *         column is SQL {@code NULL}.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public float getFloat(String columnName) throws SQLException;
 
     /**
-     * Gets the value of a column specified as a column index as an int value.
+     * Gets the value of a column specified by column index as an {@code int}
+     * value.
      * 
      * @param columnIndex
-     *            the index of the column to read
-     * @return an int containing the column value. 0 if the column is SQL NULL.
+     *            the index of the column to read.
+     * @return an {@code int} equal to the column value. {@code 0} if the
+     *         column is SQL {@code NULL}.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public int getInt(int columnIndex) throws SQLException;
 
     /**
-     * Gets the value of a column specified as a column name, as an int value.
+     * Gets the value of a column specified by column name, as an {@code int}
+     * value.
      * 
      * @param columnName
-     *            the name of the column to read
-     * @return an int containing the column value. 0 if the column is SQL NULL.
+     *            the name of the column to read.
+     * @return an {@code int} equal to the column value. {@code 0} if the
+     *         column is SQL {@code NULL}.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public int getInt(String columnName) throws SQLException;
 
     /**
-     * Gets the value of a column specified as a column index as a long value.
+     * Gets the value of a column specified by column index as a {@code long}
+     * value.
      * 
      * @param columnIndex
-     *            the index of the column to read
-     * @return a long containing the column value. 0 if the column is SQL NULL.
+     *            the index of the column to read.
+     * @return a {@code long} equal to the column value. {@code 0} if the
+     *         column is SQL {@code NULL}.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public long getLong(int columnIndex) throws SQLException;
 
     /**
-     * Gets the value of a column specified as a column name, as a long value.
+     * Gets the value of a column specified by column name, as a {@code long}
+     * value.
      * 
      * @param columnName
-     *            the name of the column to read
-     * @return a long containing the column value. 0 if the column is SQL NULL.
+     *            the name of the column to read.
+     * @return a {@code long} equal to the column value. {@code 0} if the
+     *         column is SQL {@code NULL}.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public long getLong(String columnName) throws SQLException;
 
     /**
-     * Gets the Metadata for this ResultSet. This defines the number, types and
-     * properties of the columns in the ResultSet.
+     * Gets the metadata for this {@code ResultSet}. This defines the number,
+     * types and properties of the columns in the {@code ResultSet}.
      * 
-     * @return a ResultSetMetaData object with information about this ResultSet.
+     * @return a {@code ResultSetMetaData} object with information about this
+     *         {@code ResultSet}.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public ResultSetMetaData getMetaData() throws SQLException;
 
     /**
-     * Gets the value of a specified column as a Java Object. The type of the
-     * returned object will be the default according to the column's SQL type,
-     * following the JDBC specification for built-in types.
+     * Gets the value of a specified column as a Java {@code Object}. The type
+     * of the returned object will be the default according to the column's SQL
+     * type, following the JDBC specification for built-in types.
      * <p>
      * For SQL User Defined Types, if a column value is Structured or Distinct,
-     * this method behaves the same as a call to: getObject(columnIndex,
-     * this.getStatement().getConnection().getTypeMap())
+     * this method behaves the same as a call to: {@code
+     * getObject(columnIndex,this.getStatement().getConnection().getTypeMap())}
+     * </p>
      * 
      * @param columnIndex
-     *            the index of the column to read
-     * @return an Object containing the value of the column. null if the column
-     *         value is SQL NULL.
+     *            the index of the column to read.
+     * @return an {@code Object} containing the value of the column. {@code
+     *         null} if the column value is SQL {@code NULL}.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public Object getObject(int columnIndex) throws SQLException;
 
     /**
-     * Gets the value of a column specified as a column index as a Java Object.
+     * Gets the value of a column specified by column index as a Java {@code
+     * Object}.
      * <p>
      * The type of the Java object will be determined by the supplied Map to
-     * perform the mapping of SQL Struct or Distinct types into Java objects.
+     * perform the mapping of SQL {@code Struct} or Distinct types into Java
+     * objects.
+     * </p>
      * 
      * @param columnIndex
-     *            the index of the column to read
+     *            the index of the column to read.
      * @param map
-     *            a java.util.Map containing a mapping from SQL Type names to
-     *            Java classes.
-     * @return an Object containing the value of the column. null if the column
-     *         value is SQL NULL.
+     *            a {@code java.util.Map} containing a mapping from SQL Type
+     *            names to Java classes.
+     * @return an {@code Object} containing the value of the column. {@code
+     *         null} if the column value is SQL {@code NULL}.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public Object getObject(int columnIndex, Map<String, Class<?>> map)
             throws SQLException;
 
     /**
-     * Gets the value of a specified column as a Java Object. The type of the
-     * returned object will be the default according to the column's SQL type,
-     * following the JDBC specification for built-in types.
+     * Gets the value of a specified column as a Java {@code Object}. The type
+     * of the returned object will be the default according to the column's SQL
+     * type, following the JDBC specification for built-in types.
      * <p>
-     * For SQL User Defined Types, if a column value is Structured or Distinct,
-     * this method behaves the same as a call to: getObject(columnIndex,
-     * this.getStatement().getConnection().getTypeMap())
+     * For SQL User Defined Types, if a column value is structured or distinct,
+     * this method behaves the same as a call to: {@code
+     * getObject(columnIndex,this.getStatement().getConnection().getTypeMap())}
+     * </p>
      * 
      * @param columnName
-     *            the name of the column to read
-     * @return an Object containing the value of the column. null if the column
-     *         value is SQL NULL.
+     *            the name of the column to read.
+     * @return an {@code Object} containing the value of the column. {@code
+     *         null} if the column value is SQL {@code NULL}.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public Object getObject(String columnName) throws SQLException;
 
     /**
-     * Gets the value of a column specified as a column name as a Java Object.
+     * Gets the value of a column specified by column name as a Java {@code
+     * Object}.
      * <p>
      * The type of the Java object will be determined by the supplied Map to
      * perform the mapping of SQL Struct or Distinct types into Java objects.
+     * </p>
      * 
      * @param columnName
-     *            the name of the column to read
+     *            the name of the column to read.
      * @param map
-     *            a java.util.Map containing a mapping from SQL Type names to
+     *            a {@code java.util.Map} containing a mapping from SQL Type names to
      *            Java classes.
-     * @return an Object containing the value of the column. null if the column
-     *         value is SQL NULL.
+     * @return an {@code Object} containing the value of the column. {@code
+     *         null} if the column value is SQL {@code NULL}.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public Object getObject(String columnName, Map<String, Class<?>> map)
             throws SQLException;
 
     /**
-     * Gets the value of a column specified as a column index as a Java
-     * java.sql.Ref.
+     * Gets the value of a column specified by column index as a Java {@code
+     * java.sql.Ref}.
      * 
      * @param columnIndex
-     *            the index of the column to read
+     *            the index of the column to read.
      * @return a Ref representing the value of the SQL REF in the column
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public Ref getRef(int columnIndex) throws SQLException;
 
     /**
-     * Gets the value of a column specified as a column name as a Java
-     * java.sql.Ref.
+     * Gets the value of a column specified by column name as a Java {@code
+     * java.sql.Ref}.
      * 
      * @param colName
-     *            the name of the column to read
-     * @return a Ref representing the value of the SQL REF in the column
+     *            the name of the column to read.
+     * @return a Ref representing the value of the SQL {@code REF} in the column
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public Ref getRef(String colName) throws SQLException;
 
     /**
-     * Gets the number of the current row in the ResultSet. Row numbers start at
-     * 1 for the first row.
+     * Gets the number of the current row in the {@code ResultSet}. Row numbers
+     * start at 1 for the first row.
      * 
-     * @return the index number of the current row. 0 is returned if there is no
-     *         current row.
+     * @return the index number of the current row. {@code 0} is returned if
+     *         there is no current row.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public int getRow() throws SQLException;
 
     /**
-     * Gets the value of a column specified as a column index as a short value.
+     * Gets the value of a column specified by column index as a short value.
      * 
      * @param columnIndex
-     *            the index of the column to read
-     * @return a short value containing the value of the column. 0 if the value
-     *         is SQL NULL.
+     *            the index of the column to read.
+     * @return a short value equal to the value of the column. {@code 0} if
+     *         the value is SQL {@code NULL}.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public short getShort(int columnIndex) throws SQLException;
 
     /**
-     * Gets the value of a column specified as a column name, as a short value.
+     * Gets the value of a column specified by column name, as a short value.
      * 
      * @param columnName
-     *            the name of the column to read
-     * @return a short value containing the value of the column. 0 if the value
-     *         is SQL NULL.
+     *            the name of the column to read.
+     * @return a short value equal to the value of the column. {@code 0} if
+     *         the value is SQL {@code NULL}.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public short getShort(String columnName) throws SQLException;
 
     /**
-     * Gets the Statement that produced this ResultSet. If the ResultSet was not
-     * created by a Statement (eg it was returned from one of the
-     * DatabaseMetaData methods), null is returned.
+     * Gets the statement that produced this {@code ResultSet}. If the {@code
+     * ResultSet} was not created by a statement (i.e. because it was returned
+     * from one of the {@link DatabaseMetaData} methods), {@code null} is
+     * returned.
      * 
-     * @return the Statement which produced this ResultSet, or null if the
-     *         ResultSet was not created by a Statement.
+     * @return the Statement which produced this {@code ResultSet}, or {@code
+     *         null} if the {@code ResultSet} was not created by a Statement.
      * @throws SQLException
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public Statement getStatement() throws SQLException;
 
     /**
-     * Gets the value of a column specified as a column index as a String.
+     * Gets the value of a column specified by column index as a String.
      * 
      * @param columnIndex
-     *            the index of the column to read
-     * @return the String representing the value of the column, null if the
-     *         column is SQL NULL.
+     *            the index of the column to read.
+     * @return the String representing the value of the column, {@code null} if
+     *         the column is SQL {@code NULL}.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public String getString(int columnIndex) throws SQLException;
 
     /**
-     * Gets the value of a column specified as a column name, as a String.
+     * Gets the value of a column specified by column name, as a String.
      * 
      * @param columnName
-     *            the name of the column to read
-     * @return the String representing the value of the column, null if the
-     *         column is SQL NULL.
+     *            the name of the column to read.
+     * @return the String representing the value of the column, {@code null} if
+     *         the column is SQL {@code NULL}.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public String getString(String columnName) throws SQLException;
 
     /**
-     * Gets the value of a column specified as a column index as a java.sql.Time
-     * value.
+     * Gets the value of a column specified by column index as a {@code
+     * java.sql.Time} value.
      * 
      * @param columnIndex
-     *            the index of the column to read
-     * @return a Time representing the column value, null if the column value is
-     *         SQL NULL.
+     *            the index of the column to read.
+     * @return a Time representing the column value, {@code null} if the column
+     *         value is SQL {@code NULL}.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public Time getTime(int columnIndex) throws SQLException;
 
     /**
-     * Gets the value of a column specified as a column index as a java.sql.Time
-     * value. The supplied Calendar is used to map between the SQL Time value
-     * and the Java Time value.
+     * Gets the value of a column specified by column index as a {@code
+     * java.sql.Time} value. The supplied {@code Calendar} is used to 
+     * map the SQL {@code Time} value to a Java Time value.
      * 
      * @param columnIndex
-     *            the index of the column to read
+     *            the index of the column to read.
      * @param cal
-     *            a Calendar to use in creating the Java Time value.
-     * @return a Time representing the column value, null if the column value is
-     *         SQL NULL.
+     *            a {@code Calendar} to use in creating the Java Time value.
+     * @return a Time representing the column value, {@code null} if the column
+     *         value is SQL {@code NULL}.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public Time getTime(int columnIndex, Calendar cal) throws SQLException;
 
     /**
-     * Gets the value of a column specified as a column name, as a java.sql.Time
-     * value.
+     * Gets the value of a column specified by column name, as a {@code
+     * java.sql.Time} value.
      * 
      * @param columnName
-     *            the name of the column to read
-     * @return a Time representing the column value, null if the column value is
-     *         SQL NULL.
+     *            the name of the column to read.
+     * @return the column value, {@code null} if the column value is SQL {@code
+     *         NULL}.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public Time getTime(String columnName) throws SQLException;
 
     /**
-     * Gets the value of a column specified as a column index, as a
-     * java.sql.Time value. The supplied Calendar is used to map between the SQL
-     * Time value and the Java Time value.
+     * Gets the value of a column specified by column index, as a {@code
+     * java.sql.Time} value. The supplied {@code Calendar} is used to 
+     * map the SQL {@code Time} value to a Java Time value.
      * 
      * @param columnName
-     *            the name of the column to read
+     *            the name of the column to read.
      * @param cal
-     *            a Calendar to use in creating the Java Time value.
-     * @return a Time representing the column value, null if the column value is
-     *         SQL NULL.
+     *            a {@code Calendar} to use in creating the Java time value.
+     * @return a Time representing the column value, {@code null} if the column
+     *         value is SQL {@code NULL}.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public Time getTime(String columnName, Calendar cal) throws SQLException;
 
     /**
-     * Gets the value of a column specified as a column index as a
-     * java.sql.Timestamp value.
+     * Gets the value of a column specified by column index as a {@code
+     * java.sql.Timestamp} value.
      * 
      * @param columnIndex
-     *            the index of the column to read
-     * @return a Timestamp representing the column value, null if the column
-     *         value is SQL NULL.
+     *            the index of the column to read.
+     * @return a timestamp representing the column value, {@code null} if the
+     *         column value is SQL {@code NULL}.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public Timestamp getTimestamp(int columnIndex) throws SQLException;
 
     /**
-     * Gets the value of a column specified as a column index, as a
-     * java.sql.Timestamp value. The supplied Calendar is used to map between
-     * the SQL Timestamp value and the Java Timestamp value.
+     * Gets the value of a column specified by column index, as a {@code
+     * java.sql.Timestamp} value. The supplied Calendar is used when mapping
+     * the SQL {@code Timestamp} value to a Java {@code Timestamp} value.
      * 
      * @param columnIndex
-     *            the index of the column to read
+     *            the index of the column to read.
      * @param cal
-     *            Calendar to use in creating the Java Timestamp value.
-     * @return a Timestamp representing the column value, null if the column
-     *         value is SQL NULL.
+     *            Calendar to use in creating the Java timestamp value.
+     * @return a timestamp representing the column value, {@code null} if the
+     *         column value is SQL NULL.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public Timestamp getTimestamp(int columnIndex, Calendar cal)
             throws SQLException;
 
     /**
-     * Gets the value of a column specified as a column name, as a
-     * java.sql.Timestamp value.
+     * Gets the value of a column specified by column name, as a {@code
+     * java.sql.Timestamp} value.
      * 
      * @param columnName
-     *            the name of the column to read
-     * @return a Timestamp representing the column value, null if the column
-     *         value is SQL NULL.
+     *            the name of the column to read.
+     * @return a timestamp representing the column value, {@code null} if the
+     *         column value is SQL {@code NULL}.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public Timestamp getTimestamp(String columnName) throws SQLException;
 
     /**
-     * Gets the value of a column specified as a column name, as a
-     * java.sql.Timestamp value. The supplied Calendar is used to map between
-     * the SQL Timestamp value and the Java Timestamp value.
+     * Gets the value of a column specified by column name, as a {@code
+     * java.sql.Timestamp} value. The supplied Calendar is used when mapping
+     * the SQL {@code Timestamp} value to a Java {@code Timestamp} value.
      * 
      * @param columnName
-     *            the name of the column to read
+     *            the name of the column to read.
      * @param cal
-     *            Calendar to use in creating the Java Timestamp value.
-     * @return a Timestamp representing the column value, null if the column
-     *         value is SQL NULL.
+     *            Calendar to use in creating the Java {@code Timestamp} value.
+     * @return a timestamp representing the column value, {@code null} if the
+     *         column value is SQL {@code NULL}.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public Timestamp getTimestamp(String columnName, Calendar cal)
             throws SQLException;
 
     /**
-     * Gets the type of the ResultSet.
+     * Gets the type of the {@code ResultSet}.
      * 
-     * @return The ResultSet type, one of: ResultSet.TYPE_FORWARD_ONLY,
-     *         ResultSet.TYPE_SCROLL_INSENSITIVE, or
-     *         ResultSet.TYPE_SCROLL_SENSITIVE
+     * @return The {@code ResultSet} type, one of:
+     *         <ul>
+     *         <li>{@code ResultSet.TYPE_FORWARD_ONLY}</li> <li>{@code
+     *         ResultSet.TYPE_SCROLL_INSENSITIVE}</li> <li>{@code
+     *         ResultSet.TYPE_SCROLL_SENSITIVE}</li>
+     *         </ul>
      * @throws SQLException
-     *             if there is a database error
+     *             if there is a database error.
+     * @since Android 1.0
      */
     public int getType() throws SQLException;
 
     /**
+     * Gets the value of the column as an {@code InputStream} of unicode
+     * characters.
+     * 
      * @deprecated Use {@link #getCharacterStream}.
-     *             <p>
-     *             Gets the value of the column as an InputStream of Unicode
-     *             characters.
      * @param columnIndex
-     *            the index of the column to read
-     * @return an InputStream holding the value of the column. null if the
-     *         column value is SQL NULL.
+     *            the index of the column to read.
+     * @return an {@code InputStream} holding the value of the column. {@code
+     *         null} if the column value is SQL {@code NULL}.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     @Deprecated
     public InputStream getUnicodeStream(int columnIndex) throws SQLException;
 
     /**
+     * Gets the value of the column as an {@code InputStream} of Unicode
+     * characters.
+     * 
      * @deprecated Use {@link #getCharacterStream}
-     *             <p>
-     *             Gets the value of the column as an InputStream of Unicode
-     *             characters.
      * @param columnName
-     *            the name of the column to read
-     * @return an InputStream holding the value of the column. null if the
-     *         column value is SQL NULL.
+     *            the name of the column to read.
+     * @return an {@code InputStream} holding the value of the column. {@code
+     *         null} if the column value is SQL {@code NULL}.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     @Deprecated
     public InputStream getUnicodeStream(String columnName) throws SQLException;
 
     /**
-     * Gets the value of a column specified as a column index as a java.net.URL.
+     * Gets the value of a column specified by column index as a {@code
+     * java.net.URL}.
      * 
      * @param columnIndex
-     *            the index of the column to read
-     * @return a URL. null if the column value is SQL NULL.
+     *            the index of the column to read.
+     * @return a URL. {@code null} if the column value is SQL {@code NULL}.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public URL getURL(int columnIndex) throws SQLException;
 
     /**
-     * Gets the value of a column specified as a column name as a java.net.URL
-     * object.
+     * Gets the value of a column specified by column name as a {@code
+     * java.net.URL} object.
      * 
      * @param columnName
-     *            the name of the column to read
-     * @return a URL. null if the column value is SQL NULL.
+     *            the name of the column to read.
+     * @return the column vaule as a URL. {@code null} if the column value is SQL {@code NULL}.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public URL getURL(String columnName) throws SQLException;
 
     /**
-     * Gets the first warning generated by calls on this ResultSet. Subsequent
-     * warnings on this ResultSet are chained to the first one.
+     * Gets the first warning generated by calls on this {@code ResultSet}.
+     * Subsequent warnings on this {@code ResultSet} are chained to the first
+     * one.
      * <p>
-     * The warnings are cleared when a new Row is read from the ResultSet. The
-     * warnings returned by this method are only the warnings generated by
-     * ResultSet method calls - warnings generated by Statement methods are held
-     * by the Statement.
+     * The warnings are cleared when a new Row is read from the {@code
+     * ResultSet}. The warnings returned by this method are only the warnings
+     * generated by {@code ResultSet} method calls - warnings generated by
+     * Statement methods are held by the Statement.
      * <p>
-     * An SQLException is generated if this method is called on a closed
-     * ResultSet.
+     * </p>
+     * An {@code SQLException} is generated if this method is called on a closed
+     * {@code ResultSet}. </p>
      * 
-     * @return an SQLWarning which is the first warning for this ResultSet. null
-     *         if there are no warnings.
+     * @return an SQLWarning which is the first warning for this {@code
+     *         ResultSet}. {@code null} if there are no warnings.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public SQLWarning getWarnings() throws SQLException;
 
     /**
-     * Insert the insert row into the ResultSet and into the underlying
-     * database. The Cursor must be set to the Insert Row before this method is
+     * Insert the insert row into the {@code ResultSet} and into the underlying
+     * database. The cursor must be set to the Insert Row before this method is
      * invoked.
      * 
      * @throws SQLException
      *             if a database error happens. Particular cases include the
-     *             Cursor not being on the Insert Row or if any Columns in the
-     *             Row do not have a value where the column is declared as
+     *             cursor not being on the Insert Row or if any columns in the
+     *             row do not have a value where the column is declared as
      *             not-nullable.
+     * @since Android 1.0
      */
     public void insertRow() throws SQLException;
 
     /**
-     * Gets if the cursor is after the last row of the ResultSet.
+     * Gets if the cursor is after the last row of the {@code ResultSet}.
      * 
-     * @return true if the Cursor is after the last Row in the ResultSet, false
-     *         if the cursor is at any other position in the ResultSet.
+     * @return {@code true} if the cursor is after the last row in the {@code
+     *         ResultSet}, {@code false} if the cursor is at any other position
+     *         in the {@code ResultSet}.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public boolean isAfterLast() throws SQLException;
 
     /**
-     * Gets if the cursor is before the first row of the ResultSet.
+     * Gets if the cursor is before the first row of the {@code ResultSet}.
      * 
-     * @return true if the Cursor is before the last Row in the ResultSet, false
-     *         if the cursor is at any other position in the ResultSet.
+     * @return {@code true} if the cursor is before the first row in the {@code
+     *         ResultSet}, {@code false} if the cursor is at any other position
+     *         in the {@code ResultSet}.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public boolean isBeforeFirst() throws SQLException;
 
     /**
-     * Gets if the cursor is on the first row of the ResultSet.
+     * Gets if the cursor is on the first row of the {@code ResultSet}.
      * 
-     * @return true if the Cursor is on the first Row in the ResultSet, false if
-     *         the cursor is at any other position in the ResultSet.
+     * @return {@code true} if the cursor is on the first row in the {@code
+     *         ResultSet}, {@code false} if the cursor is at any other position
+     *         in the {@code ResultSet}.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public boolean isFirst() throws SQLException;
 
     /**
-     * Gets if the cursor is on the last row of the ResultSet
+     * Gets if the cursor is on the last row of the {@code ResultSet}
      * 
-     * @return true if the Cursor is on the last Row in the ResultSet, false if
-     *         the cursor is at any other position in the ResultSet.
+     * @return {@code true} if the cursor is on the last row in the {@code
+     *         ResultSet}, {@code false} if the cursor is at any other position
+     *         in the {@code ResultSet}.
      * @throws SQLException
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public boolean isLast() throws SQLException;
 
     /**
-     * Shifts the cursor position to the last row of the ResultSet.
+     * Shifts the cursor position to the last row of the {@code ResultSet}.
      * 
-     * @return true if the new position is in a legitimate row, false if the
-     *         ResultSet contains no rows.
+     * @return {@code true} if the new position is in a legitimate row, {@code
+     *         false} if the {@code ResultSet} contains no rows.
      * @throws SQLException
-     *             if there is a database error
+     *             if there is a database error.
+     * @since Android 1.0
      */
     public boolean last() throws SQLException;
 
     /**
-     * Moves the cursor to the remembered position, usually the current row.
-     * This only applies if the cursor is on the Insert row.
+     * Moves the cursor to the remembered position, namely the 
+     * row that was the current row before a call to {@code moveToInsertRow}.
+     * This only applies if the cursor is on the Insert Row.
      * 
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void moveToCurrentRow() throws SQLException;
 
     /**
-     * Moves the cursor position to the Insert row. The current position is
-     * remembered and the cursor is positioned at the Insert row. The columns in
-     * the Insert row should be filled in with the appropriate update methods,
-     * before calling <code>insertRow</code> to insert the new row into the
-     * database.
+     * Moves the cursor position to the Insert Row. The current position is
+     * remembered and the cursor is positioned at the Insert Row. The columns in
+     * the Insert Row should be filled in with the appropriate update methods,
+     * before calling {@code insertRow} to insert the new row into the database.
      * 
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void moveToInsertRow() throws SQLException;
 
     /**
-     * Shifts the cursor position down one row in this ResultSet object.
+     * Shifts the cursor position down one row in this {@code ResultSet} object.
      * <p>
-     * Any InputStreams associated with the current row are closed and any
+     * Any input streams associated with the current row are closed and any
      * warnings are cleared.
+     * </p>
      * 
-     * @return true if the updated cursor position is pointing to a valid row,
-     *         false otherwise (ie when the cursor is after the last row in the
-     *         ResultSet).
+     * @return {@code true} if the updated cursor position is pointing to a
+     *         valid row, {@code false} otherwise (i.e. when the cursor is after
+     *         the last row in the {@code ResultSet}).
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public boolean next() throws SQLException;
 
     /**
-     * Relocates the cursor position to the preceding row in this ResultSet.
+     * Relocates the cursor position to the preceding row in this {@code
+     * ResultSet}.
      * 
-     * @return true if the new position is in a legitimate row, false if the
-     *         cursor is now before the first row.
+     * @return {@code true} if the new position is in a legitimate row, {@code
+     *         false} if the cursor is now before the first row.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public boolean previous() throws SQLException;
 
     /**
      * Refreshes the current row with its most up to date value in the database.
-     * Must not be called when the cursor is on the Insert row.
+     * Must not be called when the cursor is on the Insert Row.
      * <p>
-     * If any columns in the current row have been updated but the
-     * <code>updateRow</code> has not been called, then the updates are lost
-     * when this method is called.
+     * If any columns in the current row have been updated but the {@code
+     * updateRow} has not been called, then the updates are lost when this
+     * method is called.
+     * </p>
      * 
      * @throws SQLException
-     *             if a database error happens, including if the current row is
+     *             if a database error happens., including if the current row is
      *             the Insert row.
+     * @since Android 1.0
      */
     public void refreshRow() throws SQLException;
 
     /**
      * Moves the cursor position up or down by a specified number of rows. If
-     * the new position is beyond the start or end rows, the cursor position is
-     * set before the first row/after the last row.
+     * the new position is beyond the start row (or end row), the cursor position is
+     * set before the first row (or, respectively, after the last row).
      * 
      * @param rows
      *            a number of rows to move the cursor - may be positive or
      *            negative
-     * @return true if the new cursor position is on a row, false otherwise
+     * @return {@code true} if the new cursor position is on a row, {@code
+     *         false} otherwise
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public boolean relative(int rows) throws SQLException;
 
@@ -1214,10 +1389,11 @@ public interface ResultSet {
      * Indicates whether a row has been deleted. This method depends on whether
      * the JDBC driver and database can detect deletions.
      * 
-     * @return true if a row has been deleted and if deletions are detected,
-     *         false otherwise.
+     * @return {@code true} if a row has been deleted and if deletions are
+     *         detected, {@code false} otherwise.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public boolean rowDeleted() throws SQLException;
 
@@ -1226,10 +1402,11 @@ public interface ResultSet {
      * method depends on whether the JDBC driver and database can detect
      * insertions.
      * 
-     * @return true if a row has been inserted and if insertions are detected,
-     *         false otherwise.
+     * @return {@code true} if a row has been inserted and if insertions are
+     *         detected, {@code false} otherwise.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public boolean rowInserted() throws SQLException;
 
@@ -1237,61 +1414,70 @@ public interface ResultSet {
      * Indicates whether the current row has been updated. This method depends
      * on whether the JDBC driver and database can detect updates.
      * 
-     * @return true if the current row has been updated and if updates can be
-     *         detected, false otherwise.
+     * @return {@code true} if the current row has been updated and if updates
+     *         can be detected, {@code false} otherwise.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public boolean rowUpdated() throws SQLException;
 
     /**
      * Indicates which direction (forward/reverse) will be used to process the
-     * rows of this ResultSet object. This is treated as a hint by the JDBC
-     * driver.
+     * rows of this {@code ResultSet} object. This is treated as a hint by the
+     * JDBC driver.
      * 
      * @param direction
-     *            can be ResultSet.FETCH_FORWARD, ResultSet.FETCH_REVERSE, or
-     *            ResultSet.FETCH_UNKNOWN
+     *            can be {@code ResultSet.FETCH_FORWARD}, {@code
+     *            ResultSet.FETCH_REVERSE}, or {@code ResultSet.FETCH_UNKNOWN}
      * @throws SQLException
-     *             if there is a database error
+     *             if there is a database error.
+     * @since Android 1.0
      */
     public void setFetchDirection(int direction) throws SQLException;
 
     /**
-     * Indicates the amount of rows to fetch from the database when extra rows
-     * are required for this ResultSet. This used as a hint to the JDBC driver.
+     * Indicates the number of rows to fetch from the database when extra rows
+     * are required for this {@code ResultSet}. This used as a hint to the JDBC
+     * driver.
      * 
      * @param rows
-     *            the number of rows to fetch. 0 implies that the JDBC driver
-     *            can make its own decision about the fetch size. The number
-     *            should not be greater than the maximum number of rows
-     *            established by the Statement that generated the ResultSet.
+     *            the number of rows to fetch. {@code 0} implies that the JDBC
+     *            driver can make its own decision about the fetch size. The
+     *            number should not be greater than the maximum number of rows
+     *            established by the statement that generated the {@code
+     *            ResultSet}.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void setFetchSize(int rows) throws SQLException;
 
     /**
-     * Updates a column specified by a column index with a java.sql.Array value.
+     * Updates a column specified by a column index with a {@code
+     * java.sql.Array} value.
      * 
      * @param columnIndex
-     *            the index of the column to update
+     *            the index of the column to update.
      * @param x
-     *            the new value for the specified column
+     *            the new value for the specified column.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void updateArray(int columnIndex, Array x) throws SQLException;
 
     /**
-     * Updates a column specified by a column name with a java.sql.Array value.
+     * Updates a column specified by a column name with a {@code java.sql.Array}
+     * value.
      * 
      * @param columnName
-     *            the name of the column to update
+     *            the name of the column to update.
      * @param x
-     *            the new value for the specified column
+     *            the new value for the specified column.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void updateArray(String columnName, Array x) throws SQLException;
 
@@ -1299,13 +1485,14 @@ public interface ResultSet {
      * Updates a column specified by a column index with an ASCII stream value.
      * 
      * @param columnIndex
-     *            the index of the column to update
+     *            the index of the column to update.
      * @param x
-     *            the new value for the specified column
+     *            the new value for the specified column.
      * @param length
      *            the length of the data to write from the stream
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void updateAsciiStream(int columnIndex, InputStream x, int length)
             throws SQLException;
@@ -1314,41 +1501,44 @@ public interface ResultSet {
      * Updates a column specified by a column name with an Ascii stream value.
      * 
      * @param columnName
-     *            the name of the column to update
+     *            the name of the column to update.
      * @param x
-     *            the new value for the specified column
+     *            the new value for the specified column.
      * @param length
      *            the length of the data to write from the stream
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void updateAsciiStream(String columnName, InputStream x, int length)
             throws SQLException;
 
     /**
-     * Updates a column specified by a column index with a java.sql.BigDecimal
-     * value.
+     * Updates a column specified by a column index with a {@code
+     * java.sql.BigDecimal} value.
      * 
      * @param columnIndex
-     *            the index of the column to update
+     *            the index of the column to update.
      * @param x
-     *            the new value for the specified column
+     *            the new value for the specified column.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void updateBigDecimal(int columnIndex, BigDecimal x)
             throws SQLException;
 
     /**
-     * Updates a column specified by a column name with a java.sql.BigDecimal
-     * value.
+     * Updates a column specified by a column name with a {@code
+     * java.sql.BigDecimal} value.
      * 
      * @param columnName
-     *            the name of the column to update
+     *            the name of the column to update.
      * @param x
-     *            the new value for the specified column
+     *            the new value for the specified column.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void updateBigDecimal(String columnName, BigDecimal x)
             throws SQLException;
@@ -1357,12 +1547,14 @@ public interface ResultSet {
      * Updates a column specified by a column index with a binary stream value.
      * 
      * @param columnIndex
-     *            the index of the column to update
+     *            the index of the column to update.
      * @param x
-     *            the new value for the specified column
+     *            the new value for the specified column.
      * @param length
+     *            the number of bytes to be read from the the stream.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void updateBinaryStream(int columnIndex, InputStream x, int length)
             throws SQLException;
@@ -1371,96 +1563,110 @@ public interface ResultSet {
      * Updates a column specified by a column name with a binary stream value.
      * 
      * @param columnName
-     *            the name of the column to update
+     *            the name of the column to update.
      * @param x
-     *            the new value for the specified column
+     *            the new value for the specified column.
      * @param length
+     *            he number of bytes to be read from the the stream.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void updateBinaryStream(String columnName, InputStream x, int length)
             throws SQLException;
 
     /**
-     * Updates a column specified by a column index with a java.sql.Blob value.
+     * Updates a column specified by a column index with a {@code java.sql.Blob}
+     * value.
      * 
      * @param columnIndex
-     *            the index of the column to update
+     *            the index of the column to update.
      * @param x
-     *            the new value for the specified column
+     *            the new value for the specified column.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void updateBlob(int columnIndex, Blob x) throws SQLException;
 
     /**
-     * Updates a column specified by a column name with a java.sql.Blob value.
+     * Updates a column specified by a column name with a {@code java.sql.Blob}
+     * value.
      * 
      * @param columnName
-     *            the name of the column to update
+     *            the name of the column to update.
      * @param x
-     *            the new value for the specified column
+     *            the new value for the specified column.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void updateBlob(String columnName, Blob x) throws SQLException;
 
     /**
-     * Updates a column specified by a column index with a boolean value.
+     * Updates a column specified by a column index with a {@code boolean}
+     * value.
      * 
      * @param columnIndex
+     *            the index of the column to update.
      * @param x
-     *            the new value for the specified column
+     *            the new value for the specified column.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void updateBoolean(int columnIndex, boolean x) throws SQLException;
 
     /**
-     * Updates a column specified by a column name with a boolean value.
+     * Updates a column specified by a column name with a {@code boolean} value.
      * 
      * @param columnName
-     *            the name of the column to update
+     *            the name of the column to update.
      * @param x
-     *            the new value for the specified column
+     *            the new value for the specified column.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void updateBoolean(String columnName, boolean x) throws SQLException;
 
     /**
-     * Updates a column specified by a column index with a byte value.
+     * Updates a column specified by a column index with a {@code byte} value.
      * 
      * @param columnIndex
-     *            the index of the column to update
+     *            the index of the column to update.
      * @param x
-     *            the new value for the specified column
+     *            the new value for the specified column.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void updateByte(int columnIndex, byte x) throws SQLException;
 
     /**
-     * Updates a column specified by a column name with a byte value.
+     * Updates a column specified by a column name with a {@code byte} value.
      * 
      * @param columnName
-     *            the name of the column to update
+     *            the name of the column to update.
      * @param x
-     *            the new value for the specified column
+     *            the new value for the specified column.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void updateByte(String columnName, byte x) throws SQLException;
 
     /**
-     * Updates a column specified by a column index with a byte array value.
+     * Updates a column specified by a column index with a {@code byte} array
+     * value.
      * 
      * @param columnIndex
-     *            the index of the column to update
+     *            the index of the column to update.
      * @param x
-     *            the new value for the specified column
+     *            the new value for the specified column.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void updateBytes(int columnIndex, byte[] x) throws SQLException;
 
@@ -1468,11 +1674,12 @@ public interface ResultSet {
      * Updates a column specified by a column name with a byte array value.
      * 
      * @param columnName
-     *            the name of the column to update
+     *            the name of the column to update.
      * @param x
-     *            the new value for the specified column
+     *            the new value for the specified column.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void updateBytes(String columnName, byte[] x) throws SQLException;
 
@@ -1481,13 +1688,14 @@ public interface ResultSet {
      * value.
      * 
      * @param columnIndex
-     *            the index of the column to update
+     *            the index of the column to update.
      * @param x
-     *            the new value for the specified column
+     *            the new value for the specified column.
      * @param length
      *            the length of data to write from the stream
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void updateCharacterStream(int columnIndex, Reader x, int length)
             throws SQLException;
@@ -1497,374 +1705,418 @@ public interface ResultSet {
      * value.
      * 
      * @param columnName
-     *            the name of the column to update
+     *            the name of the column to update.
      * @param reader
-     *            the new value for the specified column
+     *            the new value for the specified column.
      * @param length
      *            the length of data to write from the Reader
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void updateCharacterStream(String columnName, Reader reader,
             int length) throws SQLException;
 
     /**
-     * Updates a column specified by a column index with a java.sql.Clob value.
+     * Updates a column specified by a column index with a {@code java.sql.Clob}
+     * value.
      * 
      * @param columnIndex
-     *            the index of the column to update
+     *            the index of the column to update.
      * @param x
-     *            the new value for the specified column
+     *            the new value for the specified column.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void updateClob(int columnIndex, Clob x) throws SQLException;
 
     /**
-     * Updates a column specified by a column name with a java.sql.Clob value.
+     * Updates a column specified by a column name with a {@code java.sql.Clob}
+     * value.
      * 
      * @param columnName
-     *            the name of the column to update
+     *            the name of the column to update.
      * @param x
-     *            the new value for the specified column
+     *            the new value for the specified column.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void updateClob(String columnName, Clob x) throws SQLException;
 
     /**
-     * Updates a column specified by a column index with a java.sql.Date value.
+     * Updates a column specified by a column index with a {@code java.sql.Date}
+     * value.
      * 
      * @param columnIndex
-     *            the index of the column to update
+     *            the index of the column to update.
      * @param x
-     *            the new value for the specified column
+     *            the new value for the specified column.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void updateDate(int columnIndex, Date x) throws SQLException;
 
     /**
-     * Updates a column specified by a column name with a java.sql.Date value.
+     * Updates a column specified by a column name with a {@code java.sql.Date}
+     * value.
      * 
      * @param columnName
-     *            the name of the column to update
+     *            the name of the column to update.
      * @param x
-     *            the new value for the specified column
+     *            the new value for the specified column.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void updateDate(String columnName, Date x) throws SQLException;
 
     /**
-     * Updates a column specified by a column index with a double value.
+     * Updates a column specified by a column index with a {@code double} value.
      * 
      * @param columnIndex
-     *            the index of the column to update
+     *            the index of the column to update.
      * @param x
-     *            the new value for the specified column
+     *            the new value for the specified column.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     *             @since Android 1.0
      */
     public void updateDouble(int columnIndex, double x) throws SQLException;
 
     /**
-     * Updates a column specified by a column name with a double value.
+     * Updates a column specified by a column name with a {@code double} value.
      * 
      * @param columnName
-     *            the name of the column to update
+     *            the name of the column to update.
      * @param x
-     *            the new value for the specified column
+     *            the new value for the specified column.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void updateDouble(String columnName, double x) throws SQLException;
 
     /**
-     * Updates a column specified by a column index with a float value.
+     * Updates a column specified by a column index with a {@code float} value.
      * 
      * @param columnIndex
-     *            the index of the column to update
+     *            the index of the column to update.
      * @param x
-     *            the new value for the specified column
+     *            the new value for the specified column.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void updateFloat(int columnIndex, float x) throws SQLException;
 
     /**
-     * Updates a column specified by a column name with a float value.
+     * Updates a column specified by a column name with a {@code float} value.
      * 
      * @param columnName
-     *            the name of the column to update
+     *            the name of the column to update.
      * @param x
-     *            the new value for the specified column
+     *            the new value for the specified column.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void updateFloat(String columnName, float x) throws SQLException;
 
     /**
-     * Updates a column specified by a column index with an int value.
+     * Updates a column specified by a column index with an {@code int} value.
      * 
      * @param columnIndex
-     *            the index of the column to update
+     *            the index of the column to update.
      * @param x
-     *            the new value for the specified column
+     *            the new value for the specified column.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void updateInt(int columnIndex, int x) throws SQLException;
 
     /**
-     * Updates a column specified by a column name with an int value.
+     * Updates a column specified by a column name with an {@code int} value.
      * 
      * @param columnName
-     *            the name of the column to update
+     *            the name of the column to update.
      * @param x
-     *            the new value for the specified column
+     *            the new value for the specified column.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void updateInt(String columnName, int x) throws SQLException;
 
     /**
-     * Updates a column specified by a column index with a long value.
+     * Updates a column specified by a column index with a {@code long} value.
      * 
      * @param columnIndex
-     *            the index of the column to update
+     *            the index of the column to update.
      * @param x
-     *            the new value for the specified column
+     *            the new value for the specified column..
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void updateLong(int columnIndex, long x) throws SQLException;
 
     /**
-     * Updates a column specified by a column name with a long value.
+     * Updates a column specified by a column name with a {@code long} value.
      * 
      * @param columnName
-     *            the name of the column to update
+     *            the name of the column to update.
      * @param x
-     *            the new value for the specified column
+     *            the new value for the specified column.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void updateLong(String columnName, long x) throws SQLException;
 
     /**
-     * Updates a column specified by a column index with a null value.
+     * Updates a column specified by a column index with a {@code null} value.
      * 
      * @param columnIndex
-     *            the index of the column to update
+     *            the index of the column to update.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void updateNull(int columnIndex) throws SQLException;
 
     /**
-     * Updates a column specified by a column name with a null value.
+     * Updates a column specified by a column name with a {@code null} value.
      * 
      * @param columnName
-     *            the name of the column to update
+     *            the name of the column to update.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void updateNull(String columnName) throws SQLException;
 
     /**
-     * Updates a column specified by a column index with an Object value.
+     * Updates a column specified by a column index with an {@code Object}
+     * value.
      * 
      * @param columnIndex
-     *            the index of the column to update
+     *            the index of the column to update.
      * @param x
-     *            the new value for the specified column
+     *            the new value for the specified column.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void updateObject(int columnIndex, Object x) throws SQLException;
 
     /**
-     * Updates a column specified by a column index with an Object value.
+     * Updates a column specified by a column index with an {@code Object}
+     * value.
      * 
      * @param columnIndex
-     *            the index of the column to update
+     *            the index of the column to update.
      * @param x
-     *            the new value for the specified column
+     *            the new value for the specified column.
      * @param scale
-     *            for the types java.sql.Types.DECIMAL or
-     *            java.sql.Types.NUMERIC, this specifies the number of digits
+     *            for the types {@code java.sql.Types.DECIMAL} or {@code
+     *            java.sql.Types.NUMERIC}, this specifies the number of digits
      *            after the decimal point.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void updateObject(int columnIndex, Object x, int scale)
             throws SQLException;
 
     /**
-     * Updates a column specified by a column name with an Object value.
+     * Updates a column specified by a column name with an {@code Object} value.
      * 
      * @param columnName
-     *            the name of the column to update
+     *            the name of the column to update.
      * @param x
-     *            the new value for the specified column
+     *            the new value for the specified column.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void updateObject(String columnName, Object x) throws SQLException;
 
     /**
-     * Updates a column specified by a column name with an Object value.
+     * Updates a column specified by a column name with an {@code Object} value.
      * 
      * @param columnName
-     *            the name of the column to update
+     *            the name of the column to update.
      * @param x
-     *            the new value for the specified column
+     *            the new value for the specified column.
      * @param scale
-     *            for the types java.sql.Types.DECIMAL or
-     *            java.sql.Types.NUMERIC, this specifies the number of digits
+     *            for the types {@code java.sql.Types.DECIMAL} or {@code
+     *            java.sql.Types.NUMERIC}, this specifies the number of digits
      *            after the decimal point.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void updateObject(String columnName, Object x, int scale)
             throws SQLException;
 
     /**
-     * Updates a column specified by a column index with a java.sql.Ref value.
+     * Updates a column specified by a column index with a {@code java.sql.Ref}
+     * value.
      * 
      * @param columnIndex
-     *            the index of the column to update
+     *            the index of the column to update.
      * @param x
-     *            the new value for the specified column
+     *            the new value for the specified column.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void updateRef(int columnIndex, Ref x) throws SQLException;
 
     /**
-     * Updates a column specified by a column name with a java.sql.Ref value.
+     * Updates a column specified by a column name with a {@code java.sql.Ref}
+     * value.
      * 
      * @param columnName
-     *            the name of the column to update
+     *            the name of the column to update.
      * @param x
-     *            the new value for the specified column
+     *            the new value for the specified column.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void updateRef(String columnName, Ref x) throws SQLException;
 
     /**
      * Updates the database with the new contents of the current row of this
-     * ResultSet object.
+     * {@code ResultSet} object.
      * 
      * @throws SQLException
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void updateRow() throws SQLException;
 
     /**
-     * Updates a column specified by a column index with a short value.
+     * Updates a column specified by a column index with a {@code short} value.
      * 
      * @param columnIndex
-     *            the index of the column to update
+     *            the index of the column to update.
      * @param x
-     *            the new value for the specified column
+     *            the new value for the specified column.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void updateShort(int columnIndex, short x) throws SQLException;
 
     /**
-     * Updates a column specified by a column name with a short value.
+     * Updates a column specified by a column name with a {@code short} value.
      * 
      * @param columnName
-     *            the name of the column to update
+     *            the name of the column to update.
      * @param x
-     *            the new value for the specified column
+     *            the new value for the specified column.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void updateShort(String columnName, short x) throws SQLException;
 
     /**
-     * Updates a column specified by a column index with a String value.
+     * Updates a column specified by a column index with a {@code String} value.
      * 
      * @param columnIndex
-     *            the index of the column to update
+     *            the index of the column to update.
      * @param x
-     *            the new value for the specified column
+     *            the new value for the specified column.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void updateString(int columnIndex, String x) throws SQLException;
 
     /**
-     * Updates a column specified by a column name with a String value.
+     * Updates a column specified by a column name with a {@code String} value.
      * 
      * @param columnName
-     *            the name of the column to update
+     *            the name of the column to update.
      * @param x
-     *            the new value for the specified column
+     *            the new value for the specified column.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void updateString(String columnName, String x) throws SQLException;
 
     /**
-     * Updates a column specified by a column index with a Time value.
+     * Updates a column specified by a column index with a {@code Time} value.
      * 
      * @param columnIndex
-     *            the index of the column to update
+     *            the index of the column to update.
      * @param x
-     *            the new value for the specified column
+     *            the new value for the specified column.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void updateTime(int columnIndex, Time x) throws SQLException;
 
     /**
-     * Updates a column specified by a column name with a Time value.
+     * Updates a column specified by a column name with a {@code Time} value.
      * 
      * @param columnName
+     *            the name of the column to update.
      * @param x
-     *            the new value for the specified column
+     *            the new value for the specified column.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void updateTime(String columnName, Time x) throws SQLException;
 
     /**
-     * Updates a column specified by a column index with a Timestamp value.
+     * Updates a column specified by a column index with a {@code Timestamp}
+     * value.
      * 
      * @param columnIndex
-     *            the index of the column to update
+     *            the index of the column to update.
      * @param x
-     *            the new value for the specified column
+     *            the new timestamp value for the specified column.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void updateTimestamp(int columnIndex, Timestamp x)
             throws SQLException;
 
     /**
-     * Updates a column specified by column name with a Timestamp value.
+     * Updates a column specified by column name with a {@code Timestamp} value.
      * 
      * @param columnName
-     *            the name of the column to update
+     *            the name of the column to update.
      * @param x
+     *            the new timestamp value for the specified column.
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public void updateTimestamp(String columnName, Timestamp x)
             throws SQLException;
 
     /**
-     * Determines if the last column read from this ResultSet contained SQL
-     * NULL.
+     * Determines whether the last column read from this {@code ResultSet}
+     * contained SQL {@code NULL}.
      * 
-     * @return true if the last column contained SQL NULL, false otherwise
+     * @return {@code {@code true} if the last column contained SQL {@code
+     *         NULL}, {@code false} otherwise
      * @throws SQLException
-     *             if a database error happens
+     *             if a database error happens.
+     * @since Android 1.0
      */
     public boolean wasNull() throws SQLException;
 }

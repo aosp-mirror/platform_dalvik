@@ -15,16 +15,15 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package javax.net.ssl;
 
 /**
- * @com.intel.drl.spec_ref
+ * This is the interface to implement in order to mark a class as a JSSE key managers
+ * so that key managers can be easily grouped. 
+ * The key managers are responsible for handling the keys used to
+ * authenticate the local side to its peer,
  * 
+ * @since Android 1.0
  */
 public interface KeyManager {
 }

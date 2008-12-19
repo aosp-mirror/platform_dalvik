@@ -17,10 +17,11 @@
 
 package java.lang;
 
-
 /**
  * ThreadDeath is thrown when a thread stops executing. It is used to aid in the
  * orderly unrolling of the thread's stack (eg. cleanup of monitors).
+ * 
+ * @since Android 1.0
  */
 public class ThreadDeath extends Error {
 
@@ -28,8 +29,10 @@ public class ThreadDeath extends Error {
 
     /**
      * Constructs a new instance of this class. Note that in the case of
-     * ThreadDeath, the walkback may <em>not</em> be filled in a way which
+     * ThreadDeath, the stacktrace may <em>not</em> be filled in a way which
      * allows a stack trace to be printed.
+     * 
+     * @since Android 1.0
      */
     public ThreadDeath() {
     }

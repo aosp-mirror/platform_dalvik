@@ -21,6 +21,12 @@
 */
 
 package org.apache.harmony.security.tests.java.security;
+
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.security.AlgorithmParameterGenerator;
 import java.security.AlgorithmParameters;
 import java.security.InvalidAlgorithmParameterException;
@@ -34,8 +40,7 @@ import java.security.spec.AlgorithmParameterSpec;
 import org.apache.harmony.security.tests.support.SpiEngUtils;
 
 import junit.framework.TestCase;
-
-
+@TestTargetClass(AlgorithmParameterGenerator.class)
 /**
  * Tests for <code>AlgorithmParameterGenerator</code> class constructors and
  * methods.
@@ -124,6 +129,15 @@ public class AlgorithmParameterGenerator2Test extends TestCase {
      * throws NoSuchAlgorithmException must be thrown if algorithm is not available
      * returns AlgorithmParameterGenerator object
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getInstance",
+          methodArgs = {String.class}
+        )
+    })
     public void testGetInstance01() throws NoSuchAlgorithmException,
             InvalidAlgorithmParameterException {
         try {
@@ -160,6 +174,15 @@ public class AlgorithmParameterGenerator2Test extends TestCase {
      * throws NoSuchProviderException when provider is available;
      * returns AlgorithmParameterGenerator object
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getInstance",
+          methodArgs = {String.class, String.class}
+        )
+    })
     public void testGetInstance02() throws NoSuchAlgorithmException,
             NoSuchProviderException, IllegalArgumentException,
             InvalidAlgorithmParameterException {
@@ -220,6 +243,15 @@ public class AlgorithmParameterGenerator2Test extends TestCase {
      * throws IllegalArgumentException when provider is null;
      * returns AlgorithmParameterGenerator object
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getInstance",
+          methodArgs = {String.class, Provider.class}
+        )
+    })
     public void testGetInstance03() throws NoSuchAlgorithmException,
             IllegalArgumentException,
             InvalidAlgorithmParameterException {

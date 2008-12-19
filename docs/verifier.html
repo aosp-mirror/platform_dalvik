@@ -65,11 +65,14 @@ because they're not relevant.  For example:
 
 In some cases they are implemented differently, e.g.:
 <ul>
-    <li>In a conventional VM, backward branches are forbidden when the
-    stack has an uninitialized reference.  The restriction was changed to
-    disallow use of the <code>new-instance</code> instruction if a register
-    refers to an uninitialized instance created by that same instruction.
-    This solves the same problem without unduly limiting branches.
+    <li>In a conventional VM, backward branches and exceptions are
+    forbidden when a local variable holds an uninitialized reference.  The
+    restriction was changed to mark registers as invalid when they hold
+    references to the uninitialized result of a previous invocation of the
+    same <code>new-instance</code> instruction.
+    This solves the same problem -- trickery potentially allowing
+    uninitialized objects to slip past the verifier -- without unduly
+    limiting branches.
 </ul>
 
 There are also some new ones, such as:

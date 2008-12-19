@@ -16,20 +16,35 @@
 
 package org.apache.harmony.luni.tests.java.util;
 
-import java.io.Serializable;
-import java.util.IllegalFormatConversionException;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
+
+import java.io.Serializable;
+import java.util.IllegalFormatConversionException;
 
 import org.apache.harmony.testframework.serialization.SerializationTest;
 import org.apache.harmony.testframework.serialization.SerializationTest.SerializableAssert;
 
+@TestTargetClass(IllegalFormatConversionException.class) 
 public class IllegalFormatConversionExceptionTest extends TestCase {
 
     /**
      * @tests java.util.IllegalFormatConversionException#IllegalFormatConversionException(char,
      *        Class)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "IllegalFormatConversionException",
+          methodArgs = {char.class, java.lang.Class.class}
+        )
+    })
     public void test_illegalFormatConversionException() {
         try {
             new IllegalFormatConversionException(' ', null);
@@ -42,6 +57,15 @@ public class IllegalFormatConversionExceptionTest extends TestCase {
     /**
      * @tests java.util.IllegalFormatConversionException#getArgumentClass()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getArgumentClass",
+          methodArgs = {}
+        )
+    })
     public void test_getArgumentClass() {
         char c = '*';
         Class<String> argClass = String.class;
@@ -55,6 +79,15 @@ public class IllegalFormatConversionExceptionTest extends TestCase {
     /**
      * @tests java.util.IllegalFormatConversionException#getConversion()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getConversion",
+          methodArgs = {}
+        )
+    })
     public void test_getConversion() {
         char c = '*';
         Class<String> argClass = String.class;
@@ -67,6 +100,15 @@ public class IllegalFormatConversionExceptionTest extends TestCase {
     /**
      * @tests java.util.IllegalFormatConversionException#getMessage()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getMessage",
+          methodArgs = {}
+        )
+    })
     public void test_getMessage() {
         char c = '*';
         Class<String> argClass = String.class;
@@ -97,6 +139,15 @@ public class IllegalFormatConversionExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization.
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationSelf",
+          methodArgs = {}
+        )
+    })
     public void testSerializationSelf() throws Exception {
 
         SerializationTest.verifySelf(new IllegalFormatConversionException('*',
@@ -106,6 +157,15 @@ public class IllegalFormatConversionExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationGolden",
+          methodArgs = {}
+        )
+    })
     public void testSerializationCompatibility() throws Exception {
 
         SerializationTest.verifyGolden(this,

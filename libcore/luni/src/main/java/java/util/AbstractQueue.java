@@ -17,21 +17,23 @@
 package java.util;
 
 /**
- * 
- * An abstract class which gives out skeletal implementations for some methods
- * in Queue which include add, remove, and element that are based on offer,
- * poll, and peek except that they throw exception to indicate the occurrence of
- * some error instead of the return value of false or null.
+ * AbstractQueue is an abstract class which implements some of the methods in
+ * {@link Queue}. The provided implementations of {@code add, remove} and
+ * {@code element} are based on {@code offer, poll}, and {@code peek} except
+ * that they throw exceptions to indicate some error instead of returning true
+ * or false.
  * 
  * @param <E>
  *            the type of the element in the collection.
+ * @since Android 1.0
  */
 public abstract class AbstractQueue<E> extends AbstractCollection<E> implements
         Queue<E> {
 
     /**
-     * Constructor for the sub classes.
+     * Constructor to be used by subclasses.
      * 
+     * @since Android 1.0
      */
     protected AbstractQueue() {
         super();
@@ -40,11 +42,12 @@ public abstract class AbstractQueue<E> extends AbstractCollection<E> implements
     /**
      * Adds an element to the queue.
      * 
-     * @param o the element added to the queue.
-     * @return true if the operation succeeds.
-     * @throws NullPointerException if the element is null.
-     * @throws IllegalStateException if the element is not allowed to be added
-     *         to the queue.
+     * @param o
+     *            the element to be added to the queue.
+     * @return {@code true} if the operation succeeds, otherwise {@code false}.
+     * @throws IllegalStateException
+     *             if the element is not allowed to be added to the queue.
+     * @since Android 1.0
      */
     @Override
     public boolean add(E o) {
@@ -59,20 +62,21 @@ public abstract class AbstractQueue<E> extends AbstractCollection<E> implements
 
     /**
      * Adds all the elements of a collection to the queue. If the collection is
-     * the queue itself, then an IllegalArgumentException will be thrown out. If
-     * during the process, some runtime exception is thrown out, then part of
-     * the elements in the collection that have successfully added will remain
-     * in the queue.
+     * the queue itself, then an IllegalArgumentException will be thrown. If
+     * during the process, some runtime exception is thrown, then those elements
+     * in the collection which have already successfully been added will remain
+     * in the queue. The result of the method is undefined if the collection is
+     * modified during the process of the method.
      * 
-     * The result of the method is undefined if the collection is modified
-     * during the process of the method.
-     * 
-     * @param c the collection to be added to the queue.
-     * @return true if the operation succeeds.
-     * @throws NullPointerException if the collection or any element of it is
-     *         null.
-     * @throws IllegalArgumentException If the collection to be added to the
-     *         queue is the queue itself.
+     * @param c
+     *            the collection to be added to the queue.
+     * @return {@code true} if the operation succeeds, otherwise {@code false}.
+     * @throws NullPointerException
+     *             if the collection or any element of it is null.
+     * @throws IllegalArgumentException
+     *             If the collection to be added to the queue is the queue
+     *             itself.
+     * @since Android 1.0
      */
     @Override
     public boolean addAll(Collection<? extends E> c) {
@@ -86,10 +90,12 @@ public abstract class AbstractQueue<E> extends AbstractCollection<E> implements
     }
 
     /**
-     * Gets and removes the element in the head of the queue.
+     * Removes the element at the head of the queue and returns it.
      * 
-     * @return the element in the head of the queue.
-     * @throws NoSuchElementException if the queue is empty.
+     * @return the element at the head of the queue.
+     * @throws NoSuchElementException
+     *             if the queue is empty.
+     * @since Android 1.0
      */
     public E remove() {
         E o = poll();
@@ -100,10 +106,12 @@ public abstract class AbstractQueue<E> extends AbstractCollection<E> implements
     }
 
     /**
-     * Gets but not removes the element in the head of the queue.
+     * Returns but does not remove the element at the head of the queue.
      * 
-     * @return the element in the head of the queue.
-     * @throws NoSuchElementException if the queue is empty.
+     * @return the element at the head of the queue.
+     * @throws NoSuchElementException
+     *             if the queue is empty.
+     * @since Android 1.0
      */
     public E element() {
         E o = peek();
@@ -114,7 +122,9 @@ public abstract class AbstractQueue<E> extends AbstractCollection<E> implements
     }
 
     /**
-     * Removes all elements of the queue.
+     * Removes all elements of the queue, leaving it empty.
+     * 
+     * @since Android 1.0
      */
     @Override
     public void clear() {

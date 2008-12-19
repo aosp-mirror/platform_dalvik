@@ -15,17 +15,32 @@
  */
 package org.apache.harmony.nio.tests.java.nio;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.nio.ReadOnlyBufferException;
 
 import junit.framework.TestCase;
 
 import org.apache.harmony.testframework.serialization.SerializationTest;
 
+@TestTargetClass(ReadOnlyBufferException.class)
 public class ReadOnlyBufferExceptionTest extends TestCase {
 
     /**
      * @tests serialization/deserialization compatibility.
      */
+    @TestInfo(
+              level = TestLevel.COMPLETE,
+              purpose = "Verifies serialization/deserialization compatibility.",
+              targets = {
+                @TestTarget(
+                  methodName = "!SerializationSelf",
+                  methodArgs = {}
+                )
+            })
     public void testSerializationSelf() throws Exception {
 
         SerializationTest.verifySelf(new ReadOnlyBufferException());
@@ -34,6 +49,15 @@ public class ReadOnlyBufferExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
+    @TestInfo(
+              level = TestLevel.COMPLETE,
+              purpose = "Verifies serialization/deserialization compatibility.",
+              targets = {
+                @TestTarget(
+                  methodName = "!SerializationGolden",
+                  methodArgs = {}
+                )
+            })    
     public void testSerializationCompatibility() throws Exception {
 
         SerializationTest.verifyGolden(this, new ReadOnlyBufferException());

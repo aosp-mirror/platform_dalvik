@@ -22,31 +22,35 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 
 /**
- * An interface provided by a RowSet object to either a RowSetReader or a
- * RowSetWriter, providing facilities to read and update the internal state of
- * the RowSet.
+ * An interface provided by a {@code RowSet} object to let either a {@code RowSetReader} or a
+ * {@code RowSetWriter} access its internal state, thereby providing facilities to read and update the state of
+ * the {@code RowSet}.
  */
 public interface RowSetInternal {
 
     /**
-     * Gets the Connection associated with this RowSet object.
+     * Gets the connection associated with this {@code RowSet} object.
      * 
-     * @return the Connection
+     * @return the connection or {@code null}.
      * @throws SQLException
      *             if there is a problem accessing the database.
+     * @since Android 1.0
      */
     public Connection getConnection() throws SQLException;
 
     /**
-     * Gets the ResultSet that was the original (unmodified) content of the
-     * RowSet.
+     * Gets the {@code ResultSet} that was the original (unmodified) content of
+     * the {@code RowSet}.
      * <p>
-     * The ResultSet cursor is positioned before the first row of data
+     * The {@code ResultSet}'s cursor is positioned before the first row of
+     * data.
+     * </p>
      * 
-     * @return the ResultSet that contained the original data value of the
-     *         RowSet
+     * @return the {@code ResultSet} that contained the original data value of
+     *         the {@code RowSet}.
      * @throws SQLException
      *             if there is a problem accessing the database.
+     * @since Android 1.0
      */
     public ResultSet getOriginal() throws SQLException;
 
@@ -54,33 +58,36 @@ public interface RowSetInternal {
      * Gets the original value of the current row only. If the current row did
      * not have an original value, then an empty value is returned.
      * 
-     * @return a ResultSet containing the value of the current row only.
+     * @return a {@code ResultSet} containing the value of the current row only.
      * @throws SQLException
      *             if there is a problem accessing the database, or if the
-     *             cursor is not on a valid row (before first, after last or
-     *             pointing to the insert row).
+     *             cursor is not on a valid row (before the first row, after the
+     *             last one or pointing to the insert row).
+     * @since Android 1.0
      */
     public ResultSet getOriginalRow() throws SQLException;
 
     /**
-     * Gets the parameter values that have been set for this RowSet's command.
+     * Gets the parameter values that have been set for this {@code RowSet}'s
+     * command.
      * 
-     * @return an Object array containing the values of parameters that have
-     *         been set.
+     * @return the values of parameters that have been set.
      * @throws SQLException
      *             if there is a problem accessing the database.
+     * @since Android 1.0
      */
     public Object[] getParams() throws SQLException;
 
     /**
-     * Sets RowSetMetaData for this RowSet. The RowSetMetaData is used by a
-     * RowSetReader to set values giving information about the RowSet's columns.
+     * Sets {@code RowSetMetaData} for this {@code RowSet}. The {@code
+     * RowSetMetaData} is used by a {@code RowSetReader} to set values giving
+     * information about the {@code RowSet}'s columns.
      * 
      * @param theMetaData
-     *            a RowSetMetaData holding the metadata about the RowSet's
-     *            columns.
+     *            holds the metadata about the {@code RowSet}'s columns.
      * @throws SQLException
      *             if there is a problem accessing the database.
+     * @since Android 1.0
      */
     public void setMetaData(RowSetMetaData theMetaData) throws SQLException;
 }

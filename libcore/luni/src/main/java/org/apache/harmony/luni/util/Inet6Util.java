@@ -468,7 +468,7 @@ public class Inet6Util {
         // BEGIN android-changed
         // general test
         if (!value.matches("\\p{Digit}+(\\.\\p{Digit}+)*")) {
-        	return false;
+            return false;
         }
 
         String[] parts = value.split("\\.");

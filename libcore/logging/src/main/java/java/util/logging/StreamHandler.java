@@ -26,31 +26,32 @@ import java.io.Writer;
 import org.apache.harmony.logging.internal.nls.Messages;
 
 /**
- * A <code>StreamHandler</code> object writes log messages to an output
- * stream, that is, objects of the class <code>java.io.OutputStream</code>.
+ * A {@code StreamHandler} object writes log messages to an output stream, that
+ * is, objects of the class {@link java.io.OutputStream}.
  * <p>
- * A <code>StreamHandler</code> object reads the following properties from the
- * log manager to initialize itself:
+ * A {@code StreamHandler} object reads the following properties from the log
+ * manager to initialize itself:
  * <ul>
  * <li>java.util.logging.StreamHandler.level specifies the logging level,
- * defaults to <code>Level.INFO</code> if this property is not found or has an
- * invalid value;
+ * defaults to {@code Level.INFO} if this property is not found or has an
+ * invalid value.
  * <li>java.util.logging.StreamHandler.filter specifies the name of the filter
- * class to be associated with this handler, defaults to <code>null</code> if
- * this property is not found or has an invalid value;
+ * class to be associated with this handler, defaults to {@code null} if this
+ * property is not found or has an invalid value.
  * <li>java.util.logging.StreamHandler.formatter specifies the name of the
  * formatter class to be associated with this handler, defaults to
- * <code>java.util.logging.SimpleFormatter</code> if this property is not
- * found or has an invalid value;
+ * {@code java.util.logging.SimpleFormatter} if this property is not found or
+ * has an invalid value.
  * <li>java.util.logging.StreamHandler.encoding specifies the encoding this
- * handler will use to encode log messages, defaults to <code>null</code> if
- * this property is not found or has an invalid value.
+ * handler will use to encode log messages, defaults to {@code null} if this
+ * property is not found or has an invalid value.
  * </ul>
  * </p>
  * <p>
  * This class is not thread-safe.
  * </p>
  * 
+ * @since Android 1.0
  */
 public class StreamHandler extends Handler {
     // the output stream this handler writes to
@@ -63,8 +64,10 @@ public class StreamHandler extends Handler {
     private boolean writerNotInitialized;
 
     /**
-     * Constructs a <code>StreamHandler</code> object. The new stream handler
+     * Constructs a {@code StreamHandler} object. The new stream handler
      * does not have an associated output stream.
+     * 
+     * @since Android 1.0
      */
     public StreamHandler() {
         initProperties("INFO", null, "java.util.logging.SimpleFormatter",  //$NON-NLS-1$//$NON-NLS-2$
@@ -75,11 +78,11 @@ public class StreamHandler extends Handler {
     }
 
     /**
-     * Constructs a <code>StreamHandler</code> object with the supplied output
+     * Constructs a {@code StreamHandler} object with the supplied output
      * stream. Default properties are read.
      * 
      * @param os
-     *            the output stream this handler writes to
+     *            the output stream this handler writes to.
      */
     StreamHandler(OutputStream os) {
         this();
@@ -87,8 +90,8 @@ public class StreamHandler extends Handler {
     }
 
     /**
-     * Constructs a <code>StreamHandler</code> object. Specified default
-     * values will be used if the corresponding properties are found in log
+     * Constructs a {@code StreamHandler} object. The specified default values
+     * will be used if the corresponding properties are not found in the log
      * manager's properties.
      */
     StreamHandler(String defaultLevel, String defaultFilter,
@@ -101,13 +104,16 @@ public class StreamHandler extends Handler {
     }
 
     /**
-     * Constructs a <code>StreamHandler</code> object with the supplied output
-     * stream and formatter.
+     * Constructs a {@code StreamHandler} object with the supplied output stream
+     * and formatter.
      * 
      * @param os
-     *            the output stream this handler writes to
+     *            the output stream this handler writes to.
      * @param formatter
-     *            the formatter this handler uses to format the output
+     *            the formatter this handler uses to format the output.
+     * @throws NullPointerException
+     *             if {@code os} or {@code formatter} is {@code null}.
+     * @since Android 1.0
      */
     public StreamHandler(OutputStream os, Formatter formatter) {
         this();
@@ -166,13 +172,16 @@ public class StreamHandler extends Handler {
     /**
      * Sets the output stream this handler writes to. If there's an existing
      * output stream, the tail string of the associated formatter will be
-     * written to it. Then it will be flushed and closed.
+     * written to it. Then it will be flushed, closed and replaced with 
+     * {@code os}.
      * 
      * @param os
-     *            the new output stream
+     *            the new output stream.
      * @throws SecurityException
-     *             If a security manager determines that the caller does not
+     *             if a security manager determines that the caller does not
      *             have the required permission.
+     * @throws NullPointerException
+     *             if {@code os} is {@code null}.
      */
     protected void setOutputStream(OutputStream os) {
         if (null == os) {
@@ -186,16 +195,17 @@ public class StreamHandler extends Handler {
     }
 
     /**
-     * Sets the character encoding used by this handler. A <code>null</code>
-     * value indicates the using of the default encoding.
+     * Sets the character encoding used by this handler. A {@code null} value
+     * indicates that the default encoding should be used.
      * 
      * @param encoding
-     *            the character encoding to set
+     *            the character encoding to set.
      * @throws SecurityException
-     *             If a security manager determines that the caller does not
+     *             if a security manager determines that the caller does not
      *             have the required permission.
      * @throws UnsupportedEncodingException
-     *             If the specified encoding is not supported by the runtime.
+     *             if the specified encoding is not supported by the runtime.
+     * @since Android 1.0
      */
     @Override
     public void setEncoding(String encoding) throws SecurityException,
@@ -222,11 +232,11 @@ public class StreamHandler extends Handler {
     }
 
     /**
-     * Closes this handler, but the underlying output stream is only closed when
-     * <code>closeStream</code> is <code>true</code>. Security is not checked.
+     * Closes this handler, but the underlying output stream is only closed if
+     * {@code closeStream} is {@code true}. Security is not checked.
      * 
      * @param closeStream
-     *            whether to close the underlying output stream
+     *            whether to close the underlying output stream.
      */
     void close(boolean closeStream) {
         if (null != this.os) {
@@ -251,13 +261,14 @@ public class StreamHandler extends Handler {
 
     /**
      * Closes this handler. The tail string of the formatter associated with
-     * this handler will be written out. A flush operation a subsequent close
-     * operation will then be performed upon the outputstream. Client
-     * applications should not use a handler after closing it.
+     * this handler is written out. A flush operation and a subsequent close
+     * operation is then performed upon the output stream. Client applications
+     * should not use a handler after closing it.
      * 
      * @throws SecurityException
-     *             If a security manager determines that the caller does not
+     *             if a security manager determines that the caller does not
      *             have the required permission.
+     * @since Android 1.0
      */
     @Override
     public void close() {
@@ -267,6 +278,8 @@ public class StreamHandler extends Handler {
 
     /**
      * Flushes any buffered output.
+     * 
+     * @since Android 1.0
      */
     @Override
     public void flush() {
@@ -286,21 +299,20 @@ public class StreamHandler extends Handler {
     }
 
     /**
-     * Accepts an actual logging request. The log record will be formatted and
-     * written to the output stream if the following three conditions are met:
+     * Accepts a logging request. The log record is formatted and written to the
+     * output stream if the following three conditions are met:
      * <ul>
      * <li>the supplied log record has at least the required logging level;
      * <li>the supplied log record passes the filter associated with this
-     * handler if any;
-     * <li>the output stream associated with this handler is not
-     * <code>null</code>.
+     * handler, if any;
+     * <li>the output stream associated with this handler is not {@code null}.
      * </ul>
-     * If it is the first time a log record need to be written out, the head
-     * string of the formatter associated with this handler will be written out
-     * first.
+     * If it is the first time a log record is written out, the head string of
+     * the formatter associated with this handler is written out first.
      * 
      * @param record
-     *            the log record to be logged
+     *            the log record to be logged.
+     * @since Android 1.0
      */
     @Override
     public synchronized void publish(LogRecord record) {
@@ -327,14 +339,19 @@ public class StreamHandler extends Handler {
     }
 
     /**
-     * Determines whether the supplied log record need to be logged. The logging
-     * levels will be checked as well as the filter. The output stream of this
-     * handler is also checked. If it's null, this method returns false.
+     * Determines whether the supplied log record needs to be logged. The
+     * logging levels are checked as well as the filter. The output stream of
+     * this handler is also checked. If it is {@code null}, this method returns
+     * {@code false}.
+     * <p>
+     * Notice : Case of no output stream will return {@code false}.
+     * </p>
      * 
      * @param record
-     *            the log record to be checked
-     * @return <code>true</code> if the supplied log record need to be logged,
-     *         otherwise <code>false</code>
+     *            the log record to be checked.
+     * @return {@code true} if {@code record} needs to be logged, {@code false}
+     *         otherwise.
+     * @since Android 1.0
      */
     @Override
     public boolean isLoggable(LogRecord record) {

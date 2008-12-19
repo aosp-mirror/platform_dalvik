@@ -21,6 +21,7 @@
  * most common example is ".apk".
  */
 #include "Dalvik.h"
+#include "libdex/OptInvocation.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -114,11 +115,14 @@ DexCacheStatus dvmDexCacheStatus(const char *fileName)
          * in the cache, but don't create one if there isn't.
          */
         LOGV("dvmDexCacheStatus: Checking cache for %s\n", fileName);
-        fd = dvmOpenCachedDexFile(fileName, kDexInJarName,
+        cachedName = dexOptGenerateCacheFileName(fileName, kDexInJarName);
+        if (cachedName == NULL)
+            return -1;
+
+        fd = dvmOpenCachedDexFile(fileName, cachedName,
                 dexGetZipEntryModTime(&archive, entry),
                 dexGetZipEntryCrc32(&archive, entry),
-                /*isBootstrap=*/false, &cachedName, &newFile,
-                /*createIfMissing=*/false);
+                /*isBootstrap=*/false, &newFile, /*createIfMissing=*/false);
         LOGV("dvmOpenCachedDexFile returned fd %d\n", fd);
         if (fd < 0) {
             result = DEX_CACHE_STALE;
@@ -179,7 +183,8 @@ bail:
  * If "isBootstrap" is not set, the optimizer/verifier regards this DEX as
  * being part of a different class loader.
  */
-int dvmJarFileOpen(const char* fileName, JarFile** ppJarFile, bool isBootstrap)
+int dvmJarFileOpen(const char* fileName, const char* odexOutputName,
+    JarFile** ppJarFile, bool isBootstrap)
 {
     ZipArchive archive;
     DvmDex* pDvmDex = NULL;
@@ -216,12 +221,15 @@ int dvmJarFileOpen(const char* fileName, JarFile** ppJarFile, bool isBootstrap)
             LOGV("%s odex has good dependencies\n", fileName);
             //TODO: make sure that the .odex actually corresponds
             //      to the classes.dex inside the archive (if present).
+            //      For typical use there will be no classes.dex.
         }
     } else {
         ZipEntry entry;
 
 tryArchive:
-        /* Missing or out-of-date .odex.  Look inside the jar.
+        /*
+         * Pre-created .odex absent or stale.  Look inside the jar for a
+         * "classes.dex".
          */
         entry = dexZipFindEntry(&archive, kDexInJarName);
         if (entry != NULL) {
@@ -238,11 +246,20 @@ tryArchive:
              * .odex file; the fd will point into dalvik-cache like any
              * other jar.
              */
-            fd = dvmOpenCachedDexFile(fileName, kDexInJarName,
+            if (odexOutputName == NULL) {
+                cachedName = dexOptGenerateCacheFileName(fileName,
+                                kDexInJarName);
+                if (cachedName == NULL)
+                    goto bail;
+            } else {
+                cachedName = strdup(odexOutputName);
+            }
+            LOGV("dvmDexCacheStatus: Checking cache for %s (%s)\n",
+                fileName, cachedName);
+            fd = dvmOpenCachedDexFile(fileName, cachedName,
                     dexGetZipEntryModTime(&archive, entry),
                     dexGetZipEntryCrc32(&archive, entry),
-                    isBootstrap, &cachedName, &newFile,
-                    /*createIfMissing=*/true);
+                    isBootstrap, &newFile, /*createIfMissing=*/true);
             if (fd < 0) {
                 LOGI("Unable to open or create cache for %s\n", fileName);
                 goto bail;

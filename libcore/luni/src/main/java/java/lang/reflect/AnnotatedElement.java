@@ -20,52 +20,65 @@ package java.lang.reflect;
 import java.lang.annotation.Annotation;
 
 /**
- * An interface implemented an annotated element to enable reflective access to
- * annotation information.
+ * This interface provides reflective access to annotation information.
  * 
  * @since 1.5
+ * @since Android 1.0
  */
 public interface AnnotatedElement {
 
     /**
-     * Gets the {@link Annotation} for this element for the annotation type
-     * passed, if it exists.
+     * Returns, for this element, the annotation with the specified type, or
+     * {@code null} if no annotation with the specified type is present
+     * (including inherited annotations).
      * 
      * @param annotationType
-     *            The Class instance of the annotation to search for.
-     * @return The {@link Annotation} for this element or <code>null</code>.
+     *            the type of the annotation to search for
+     *            
+     * @return the annotation with the specified type or {@code null}
+     * 
      * @throws NullPointerException
-     *             if <code>annotationType</code> is <code>null</code>.
+     *             if {@code annotationType} is {@code null}
+     * 
+     * @since Android 1.0
      */
     <T extends Annotation> T getAnnotation(Class<T> annotationType);
 
     /**
-     * Gets all {@link Annotation}s for this element.
+     * Returns, for this element, an array containing all annotations (including
+     * inherited annotations). If there are no annotations present, this method
+     * returns a zero length array.
      * 
-     * @return An array of {@link Annotation}s, which may be empty, but never
-     *         <code>null</code>.
+     * @return an array of all annotations for this element
+     * 
+     * @since Android 1.0
      */
     Annotation[] getAnnotations();
 
     /**
-     * Gets all {@link Annotation}s that are explicitly declared by this
-     * element (not inherited).
+     * Returns, for this element, all annotations that are explicitly declared
+     * (not inherited). If there are no declared annotations present, this
+     * method returns a zero length array.
      * 
-     * @return An array of {@link Annotation}s, which may be empty, but never
-     *         <code>null</code>.
+     * @return an array of annotations declared for this element
+     * 
+     * @since Android 1.0
      */
     Annotation[] getDeclaredAnnotations();
 
     /**
-     * Determines if this element has an annotation for the annotation type
-     * passed.
+     * Indicates whether or not this element has an annotation with the
+     * specified annotation type (including inherited annotations).
      * 
      * @param annotationType
-     *            The class instance of the annotation to search for.
-     * @return <code>true</code> if the annotation exists, otherwise
-     *         <code>false</code>.
+     *            the type of the annotation to search for
+     *            
+     * @return {@code true} if the annotation exists, {@code false} otherwise
+     * 
      * @throws NullPointerException
-     *             if <code>annotationType</code> is <code>null</code>.
+     *             if {@code annotationType} is {@code null}
+     * 
+     * @since Android 1.0
      */
     boolean isAnnotationPresent(Class<? extends Annotation> annotationType);
 }

@@ -16,10 +16,16 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import java.util.Locale;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
 
+import java.util.Locale;
+
+@TestTargetClass(Double.class) 
 public class DoubleTest extends TestCase {
     private static final long rawBitsFor3_4en324ToN1[] = { 0x1L, 0x7L, 0x45L, 0x2b0L, 0x1ae2L,
             0x10cd1L, 0xa8028L, 0x69018dL, 0x41a0f7eL, 0x29049aedL, 0x19a2e0d44L,
@@ -205,6 +211,15 @@ public class DoubleTest extends TestCase {
     /**
      * @tests java.lang.Double#Double(double)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Double",
+          methodArgs = {double.class}
+        )
+    })
     public void test_ConstructorD() {
         Double d = new Double(39089.88888888888888888888888888888888);
         assertEquals("Created incorrect double", 39089.88888888888888888888888888888888, d
@@ -214,6 +229,15 @@ public class DoubleTest extends TestCase {
     /**
      * @tests java.lang.Double#Double(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Double",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() {
         Double d = new Double("39089.88888888888888888888888888888888");
         assertEquals("Created incorrect double", 39089.88888888888888888888888888888888, d
@@ -231,6 +255,15 @@ public class DoubleTest extends TestCase {
     /**
      * @tests java.lang.Double#byteValue()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "byteValue",
+          methodArgs = {}
+        )
+    })
     public void test_byteValue() {
         Double d = new Double(1923311.47712);
         assertEquals("Returned incorrect byte value", (byte) -17, d.byteValue());
@@ -240,6 +273,15 @@ public class DoubleTest extends TestCase {
      * @tests java.lang.Double#compareTo(java.lang.Double)
      * @tests java.lang.Double#compare(double, double)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "compare",
+          methodArgs = {double.class, double.class}
+        )
+    })
     public void test_compare() {
         double[] values = new double[] { Double.NEGATIVE_INFINITY, -Double.MAX_VALUE, -2d,
                 -Double.MIN_VALUE, -0d, 0d, Double.MIN_VALUE, 2d, Double.MAX_VALUE,
@@ -273,6 +315,15 @@ public class DoubleTest extends TestCase {
     /**
      * @tests java.lang.Double#doubleToLongBits(double)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check NaN, positive infinity, negative infinity.",
+      targets = {
+        @TestTarget(
+          methodName = "doubleToLongBits",
+          methodArgs = {double.class}
+        )
+    })
     public void test_doubleToLongBitsD() {
         // Test for method long java.lang.Double.doubleToLongBits(double)
         Double d = new Double(Double.MAX_VALUE);
@@ -285,6 +336,15 @@ public class DoubleTest extends TestCase {
     /**
      * @tests java.lang.Double#doubleToRawLongBits(double)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check NaN, infinities values.",
+      targets = {
+        @TestTarget(
+          methodName = "doubleToRawLongBits",
+          methodArgs = {double.class}
+        )
+    })
     public void test_doubleToRawLongBitsD() {
         long l = 0x7ff80000000004d2L;
         double d = Double.longBitsToDouble(l);
@@ -294,6 +354,15 @@ public class DoubleTest extends TestCase {
     /**
      * @tests java.lang.Double#doubleValue()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "doubleValue",
+          methodArgs = {}
+        )
+    })
     public void test_doubleValue() {
         assertEquals("Incorrect double value returned", 999999999999999.9999999999999,
                 new Double(999999999999999.9999999999999).doubleValue(), 0D);
@@ -302,6 +371,15 @@ public class DoubleTest extends TestCase {
     /**
      * @tests java.lang.Double#floatValue()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "floatValue",
+          methodArgs = {}
+        )
+    })
     public void test_floatValue() {
         // Test for method float java.lang.Double.floatValue()
         assertTrue(
@@ -313,6 +391,15 @@ public class DoubleTest extends TestCase {
     /**
      * @tests java.lang.Double#hashCode()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "hashCode",
+          methodArgs = {}
+        )
+    })
     public void test_hashCode() {
         // Test for method int java.lang.Double.hashCode()
         for (int i = -1000; i < 1000; i++) {
@@ -331,6 +418,15 @@ public class DoubleTest extends TestCase {
     /**
      * @tests java.lang.Double#intValue()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check NaN, infinities.",
+      targets = {
+        @TestTarget(
+          methodName = "intValue",
+          methodArgs = {}
+        )
+    })
     public void test_intValue() {
         // Test for method int java.lang.Double.intValue()
         Double d = new Double(1923311.47712);
@@ -340,6 +436,15 @@ public class DoubleTest extends TestCase {
     /**
      * @tests java.lang.Double#isInfinite()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check MAX/MIN values.",
+      targets = {
+        @TestTarget(
+          methodName = "isInfinite",
+          methodArgs = {}
+        )
+    })
     public void test_isInfinite() {
         // Test for method boolean java.lang.Double.isInfinite()
         assertTrue("NEGATIVE_INFINITY returned false", new Double(Double.NEGATIVE_INFINITY)
@@ -352,6 +457,15 @@ public class DoubleTest extends TestCase {
     /**
      * @tests java.lang.Double#isInfinite(double)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Checks infinities + MAX value.",
+      targets = {
+        @TestTarget(
+          methodName = "isInfinite",
+          methodArgs = {}
+        )
+    })
     public void test_isInfiniteD() {
         // Test for method boolean java.lang.Double.isInfinite(double)
         assertTrue("Infinity check failed", Double.isInfinite(Double.NEGATIVE_INFINITY)
@@ -362,6 +476,15 @@ public class DoubleTest extends TestCase {
     /**
      * @tests java.lang.Double#isNaN()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isNaN",
+          methodArgs = {}
+        )
+    })
     public void test_isNaN() {
         // Test for method boolean java.lang.Double.isNaN()
         Double d = new Double(0.0 / 0.0);
@@ -373,6 +496,15 @@ public class DoubleTest extends TestCase {
     /**
      * @tests java.lang.Double#isNaN(double)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "DOesn't check returned false value.",
+      targets = {
+        @TestTarget(
+          methodName = "isNaN",
+          methodArgs = {double.class}
+        )
+    })
     public void test_isNaND() {
         // Test for method boolean java.lang.Double.isNaN(double)
 
@@ -383,6 +515,15 @@ public class DoubleTest extends TestCase {
     /**
      * @tests java.lang.Double#longBitsToDouble(long)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "longBitsToDouble",
+          methodArgs = {long.class}
+        )
+    })
     public void test_longBitsToDoubleJ() {
         // Test for method double java.lang.Double.longBitsToDouble(long)
 
@@ -396,6 +537,15 @@ public class DoubleTest extends TestCase {
     /**
      * @tests java.lang.Double#longValue()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "longValue",
+          methodArgs = {}
+        )
+    })
     public void test_longValue() {
         // Test for method long java.lang.Double.longValue()
         Double d = new Double(1923311.47712);
@@ -405,6 +555,16 @@ public class DoubleTest extends TestCase {
     /**
      * @tests java.lang.Double#parseDouble(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies boundary values and the loop due to " +
+            "the difference in the expected output string.",
+      targets = {
+        @TestTarget(
+          methodName = "parseDouble",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_parseDoubleLjava_lang_String() {
         assertEquals("Incorrect double returned, expected zero.", 0.0, Double
                 .parseDouble("2.4703282292062327208828439643411e-324"), 0.0);
@@ -557,6 +717,15 @@ public class DoubleTest extends TestCase {
     /**
      * @tests java.lang.Double#parseDouble(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies NumberFormatException.",
+      targets = {
+        @TestTarget(
+          methodName = "parseDouble",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_parseDouble_LString_Illegal() {
         try {
             Double.parseDouble("0.0p0D");
@@ -625,6 +794,15 @@ public class DoubleTest extends TestCase {
     /**
      * @tests java.lang.Double#parseDouble(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't check exception.",
+      targets = {
+        @TestTarget(
+          methodName = "parseDouble",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_parseDouble_LString_FromHexString() {
         double actual;
         double expected;
@@ -709,6 +887,15 @@ public class DoubleTest extends TestCase {
     /**
      * @tests java.lang.Double#parseDouble(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies positive functionality.",
+      targets = {
+        @TestTarget(
+          methodName = "parseDouble",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_parseDouble_LString_NormalPositiveExponent() {
         long[] expecteds = {
                 0x3f323456789abcdfL,                0x40e111012345678aL,                0x41a1110091a2b3c5L,
@@ -770,6 +957,15 @@ public class DoubleTest extends TestCase {
     /**
      * @tests java.lang.Double#parseDouble(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies positive functionality.",
+      targets = {
+        @TestTarget(
+          methodName = "parseDouble",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_parseDouble_LString_NormalNegativeExponent() {
         long[] expecteds = {
                 0x3f323456789abcdfL,                0x3f8111012345678aL,                0x3ee1110091a2b3c5L,
@@ -831,6 +1027,15 @@ public class DoubleTest extends TestCase {
     /**
      * @tests java.lang.Double#parseDouble(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies max boundary.",
+      targets = {
+        @TestTarget(
+          methodName = "parseDouble",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_parseDouble_LString_MaxNormalBoundary() {
        long[] expecteds = {
                0x7fefffffffffffffL,               0x7fefffffffffffffL,               0x7fefffffffffffffL,
@@ -895,6 +1100,15 @@ public class DoubleTest extends TestCase {
     /**
      * @tests java.lang.Double#parseDouble(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies Min boundary.",
+      targets = {
+        @TestTarget(
+          methodName = "parseDouble",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_parseDouble_LString_MinNormalBoundary() {
         long[] expecteds = {
                 0x10000000000000L,                0x10000000000000L,                0x10000000000000L,
@@ -959,6 +1173,15 @@ public class DoubleTest extends TestCase {
     /**
      * @tests java.lang.Double#parseDouble(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies Max boundary.",
+      targets = {
+        @TestTarget(
+          methodName = "parseDouble",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_parseDouble_LString_MaxSubNormalBoundary() {
         long[] expecteds = {
                 0xfffffffffffffL,                0xfffffffffffffL,                0xfffffffffffffL,
@@ -1023,6 +1246,15 @@ public class DoubleTest extends TestCase {
     /**
      * @tests java.lang.Double#parseDouble(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies Min boundary.",
+      targets = {
+        @TestTarget(
+          methodName = "parseDouble",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_parseDouble_LString_MinSubNormalBoundary() {
         long[] expecteds = {
                 0x1L,                0x1L,                0x2L,
@@ -1087,6 +1319,15 @@ public class DoubleTest extends TestCase {
     /**
      * @tests java.lang.Double#parseDouble(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies zero boundary.",
+      targets = {
+        @TestTarget(
+          methodName = "parseDouble",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_parseDouble_LString_ZeroBoundary() {
         long[] expecteds = {
                 0x0L,                0x0L,                0x0L,
@@ -1134,6 +1375,15 @@ public class DoubleTest extends TestCase {
     /**
      * @tests java.lang.Double#shortValue()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "shortValue",
+          methodArgs = {}
+        )
+    })
     public void test_shortValue() {
         // Test for method short java.lang.Double.shortValue()
         Double d = new Double(1923311.47712);
@@ -1143,6 +1393,15 @@ public class DoubleTest extends TestCase {
     /**
      * @tests java.lang.Double#toString()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public void test_toString() {
         // Test for method java.lang.String java.lang.Double.toString()
         test_toString(1.7976931348623157E308, "1.7976931348623157E308");
@@ -1152,6 +1411,15 @@ public class DoubleTest extends TestCase {
     /**
      * @tests java.lang.Double#toString(double)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {double.class}
+        )
+    })
     public void test_toStringD() {
         // Test for method java.lang.String java.lang.Double.toString(double)
         test_toString(1.7976931348623157E308, "1.7976931348623157E308");
@@ -1239,6 +1507,15 @@ public class DoubleTest extends TestCase {
     /**
      * @tests java.lang.Double#valueOf(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "valueOf",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_valueOfLjava_lang_String() {
         // Test for method java.lang.Double
         // java.lang.Double.valueOf(java.lang.String)
@@ -1296,6 +1573,15 @@ public class DoubleTest extends TestCase {
      * @tests java.lang.Double#compareTo(java.lang.Double)
      * @tests java.lang.Double#compare(double, double)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "compareTo",
+          methodArgs = {java.lang.Double.class}
+        )
+    })
     public void test_compareToLjava_lang_Double() {
         // A selection of double values in ascending order.
         double[] values = new double[] { Double.NEGATIVE_INFINITY, -Double.MAX_VALUE, -2d,
@@ -1337,6 +1623,15 @@ public class DoubleTest extends TestCase {
     /**
      * @tests java.lang.Double#equals(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "equals",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_equalsLjava_lang_Object() {
         Double d1 = new Double(87654321.12345d);
         Double d2 = new Double(87654321.12345d);
@@ -1359,6 +1654,15 @@ public class DoubleTest extends TestCase {
     /**
      * @tests java.lang.Double#toHexString(double)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toHexString",
+          methodArgs = {double.class}
+        )
+    })
     public void test_toHexStringF() {
         // the follow values come from the Double Javadoc/Spec
         assertEquals("0x0.0p0", Double.toHexString(0.0D));
@@ -1391,6 +1695,15 @@ public class DoubleTest extends TestCase {
     /**
      * @tests java.lang.Double#valueOf(double)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "valueOf",
+          methodArgs = {double.class}
+        )
+    })
     public void test_valueOfD() {
         assertEquals(new Double(Double.MIN_VALUE), Double.valueOf(Double.MIN_VALUE));
         assertEquals(new Double(Double.MAX_VALUE), Double.valueOf(Double.MAX_VALUE));

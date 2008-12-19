@@ -17,15 +17,29 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import junit.framework.TestCase;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
 
+import junit.framework.TestCase;
 import org.apache.harmony.testframework.serialization.SerializationTest;
 
+@TestTargetClass(IllegalArgumentException.class) 
 public class IllegalArgumentExceptionTest extends TestCase {
 
     /**
      * @tests java.lang.IllegalArgumentException#IllegalArgumentException()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "IllegalArgumentException",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         IllegalArgumentException e = new IllegalArgumentException();
         assertNull(e.getMessage());
@@ -36,6 +50,15 @@ public class IllegalArgumentExceptionTest extends TestCase {
     /**
      * @tests java.lang.IllegalArgumentException#IllegalArgumentException(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "IllegalArgumentException",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() {
         IllegalArgumentException e = new IllegalArgumentException("fixture");
         assertEquals("fixture", e.getMessage());
@@ -45,6 +68,15 @@ public class IllegalArgumentExceptionTest extends TestCase {
     /**
      * @tests java.lang.IllegalArgumentException#IllegalArgumentException(String,Throwable)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "IllegalArgumentException",
+          methodArgs = {java.lang.String.class, java.lang.Throwable.class}
+        )
+    })
     @SuppressWarnings("nls")
     public void test_ConstructorLjava_lang_StringLjava_lang_Throwable() {
         NullPointerException npe = new NullPointerException();
@@ -57,6 +89,15 @@ public class IllegalArgumentExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization.
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Verifies serialization/deserialization compatibility.",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationSelf",
+          methodArgs = {}
+        )
+    })
     public void testSerializationSelf() throws Exception {
         SerializationTest.verifySelf(new IllegalArgumentException());
     }
@@ -64,6 +105,15 @@ public class IllegalArgumentExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Verifies serialization/deserialization compatibility.",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationGolden",
+          methodArgs = {}
+        )
+    })
     public void testSerializationCompatibility() throws Exception {
         SerializationTest.verifyGolden(this, new IllegalArgumentException());
     }

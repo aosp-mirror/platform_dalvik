@@ -16,6 +16,13 @@
 
 package org.apache.harmony.luni.tests.java.util;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
+import junit.framework.TestCase;
+
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -23,8 +30,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 
-import junit.framework.TestCase;
-
+@TestTargetClass(WeakHashMap.class) 
 public class WeakHashMapTest extends TestCase {
 
     Object[] KEY_ARRAY;
@@ -34,6 +40,15 @@ public class WeakHashMapTest extends TestCase {
     /**
      * @tests java.util.WeakHashMap#entrySet()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "entrySet",
+          methodArgs = {}
+        )
+    })
     public void test_entrySet() {
         WeakHashMap<Object, Object> weakMap = new WeakHashMap<Object, Object>();
         KEY_ARRAY = new Object[100];

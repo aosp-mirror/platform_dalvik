@@ -18,35 +18,105 @@
 package java.lang.reflect;
 
 /**
- * This class provides methods to decode class and member modifiers.
- * 
+ * This class provides static methods to decode class and member modifiers.
+ *
  * @see Class#getModifiers()
  * @see Member#getModifiers()
+ * 
+ * @since Android 1.0
  */
 public class Modifier {
 
+    /**
+     * The {@code int} value representing the {@code public}
+     * modifier.
+     *
+     * @since Android 1.0
+     */
     public static final int PUBLIC = 0x1;
 
+    /**
+     * The {@code int} value representing the {@code private}
+     * modifier.
+     *
+     * @since Android 1.0
+     */
     public static final int PRIVATE = 0x2;
 
+    /**
+     * The {@code int} value representing the {@code protected}
+     * modifier.
+     *
+     * @since Android 1.0
+     */
     public static final int PROTECTED = 0x4;
 
+    /**
+     * The {@code int} value representing the {@code static} modifier.
+     *
+     * @since Android 1.0
+     */
     public static final int STATIC = 0x8;
 
+    /**
+     * The {@code int} value representing the {@code final} modifier.
+     *
+     * @since Android 1.0
+     */
     public static final int FINAL = 0x10;
 
+    /**
+     * The {@code int} value representing the {@code synchronized}
+     * modifier.
+     *
+     * @since Android 1.0
+     */
     public static final int SYNCHRONIZED = 0x20;
 
+    /**
+     * The {@code int} value representing the {@code volatile}
+     * modifier.
+     *
+     * @since Android 1.0
+     */
     public static final int VOLATILE = 0x40;
 
+    /**
+     * The {@code int} value representing the {@code transient}
+     * modifier.
+     *
+     * @since Android 1.0
+     */
     public static final int TRANSIENT = 0x80;
 
+    /**
+     * The {@code int} value representing the {@code native} modifier.
+     *
+     * @since Android 1.0
+     */
     public static final int NATIVE = 0x100;
 
+    /**
+     * The {@code int} value representing the {@code interface}
+     * modifier.
+     *
+     * @since Android 1.0
+     */
     public static final int INTERFACE = 0x200;
 
+    /**
+     * The {@code int} value representing the {@code abstract}
+     * modifier.
+     *
+     * @since Android 1.0
+     */
     public static final int ABSTRACT = 0x400;
 
+    /**
+     * The {@code int} value representing the {@code strict} modifier.
+     *
+     * @since Android 1.0
+     */
     public static final int STRICT = 0x800;
 
     // Non-public types required by Java 5 update to class file format
@@ -60,148 +130,201 @@ public class Modifier {
 
     static final int ENUM = 0x4000;
 
+    /**
+     * Constructs a new {@code Modifier} instance.
+     *
+     * @since Android 1.0
+     */
     public Modifier() {
     }
 
     /**
-     * Return true if the specified modifiers contain the <code>abstract</code>
-     * modifier, false otherwise.
+     * Indicates whether or not the specified modifiers contain the {@code
+     * abstract} modifier.
      * 
      * @param modifiers
      *            the modifiers to test
-     * @return if the modifiers contain the abstract modifier
+     *            
+     * @return {@code true} if the specified modifiers contain the {@code
+     *         abstract} modifier, {@code false} otherwise
+     *         
+     * @since Android 1.0
      */
     public static boolean isAbstract(int modifiers) {
         return ((modifiers & ABSTRACT) != 0);
     }
 
     /**
-     * Return true if the specified modifiers contain the <code>final</code>
-     * modifier, false otherwise.
+     * Indicates whether or not the specified modifiers contain the {@code
+     * final} modifier.
      * 
      * @param modifiers
      *            the modifiers to test
-     * @return if the modifiers contain the final modifier
+     *            
+     * @return {@code true} if the specified modifiers contain the {@code
+     *         final} modifier, {@code false} otherwise
+     *         
+     * @since Android 1.0
      */
     public static boolean isFinal(int modifiers) {
         return ((modifiers & FINAL) != 0);
     }
 
     /**
-     * Return true if the specified modifiers contain the <code>interface</code>
-     * modifier, false otherwise.
+     * Indicates whether or not the specified modifiers contain the {@code
+     * interface} modifier.
      * 
      * @param modifiers
      *            the modifiers to test
-     * @return if the modifiers contain the interface modifier
+     *
+     * @return {@code true} if the specified modifiers contain the {@code
+     *         interface} modifier, {@code false} otherwise
+     * 
+     * @since Android 1.0
      */
     public static boolean isInterface(int modifiers) {
         return ((modifiers & INTERFACE) != 0);
     }
 
     /**
-     * Return true if the specified modifiers contain the <code>native</code>
-     * modifier, false otherwise.
+     * Indicates whether or not the specified modifiers contain the {@code
+     * native} modifier.
      * 
      * @param modifiers
      *            the modifiers to test
-     * @return if the modifiers contain the native modifier
+     * 
+     * @return {@code true} if the specified modifiers contain the {@code
+     *         native} modifier, {@code false} otherwise
+     * 
+     * @since Android 1.0
      */
     public static boolean isNative(int modifiers) {
         return ((modifiers & NATIVE) != 0);
     }
 
     /**
-     * Return true if the specified modifiers contain the <code>private</code>
-     * modifier, false otherwise.
+     * Indicates whether or not the specified modifiers contain the {@code
+     * private} modifier.
      * 
      * @param modifiers
      *            the modifiers to test
-     * @return if the modifiers contain the private modifier
+     * 
+     * @return {@code true} if the specified modifiers contain the {@code
+     *         private} modifier, {@code false} otherwise
+     * 
+     * @since Android 1.0
      */
     public static boolean isPrivate(int modifiers) {
         return ((modifiers & PRIVATE) != 0);
     }
 
     /**
-     * Return true if the specified modifiers contain the <code>protected</code>
-     * modifier, false otherwise.
+     * Indicates whether or not the specified modifiers contain the {@code
+     * protected} modifier.
      * 
      * @param modifiers
      *            the modifiers to test
-     * @return if the modifiers contain the protected modifier
+     * 
+     * @return {@code true} if the specified modifiers contain the {@code
+     *         protected} modifier, {@code false} otherwise
+     * 
+     * @since Android 1.0
      */
     public static boolean isProtected(int modifiers) {
         return ((modifiers & PROTECTED) != 0);
     }
 
     /**
-     * Return true if the specified modifiers contain the <code>public</code>
-     * modifier, false otherwise.
+     * Indicates whether or not the specified modifiers contain the {@code
+     * public} modifier.
      * 
      * @param modifiers
      *            the modifiers to test
-     * @return if the modifiers contain the abstract modifier
+     * 
+     * @return {@code true} if the specified modifiers contain the {@code
+     *         public} modifier, {@code false} otherwise
+     * 
+     * @since Android 1.0
      */
     public static boolean isPublic(int modifiers) {
         return ((modifiers & PUBLIC) != 0);
     }
 
     /**
-     * Return true if the specified modifiers contain the <code>static</code>
-     * modifier, false otherwise.
+     * Indicates whether or not the specified modifiers contain the {@code
+     * static} modifier.
      * 
      * @param modifiers
      *            the modifiers to test
-     * @return if the modifiers contain the static modifier
+     * 
+     * @return {@code true} if the specified modifiers contain the {@code
+     *         static} modifier, {@code false} otherwise
+     * 
+     * @since Android 1.0
      */
     public static boolean isStatic(int modifiers) {
         return ((modifiers & STATIC) != 0);
     }
 
     /**
-     * Return true if the specified modifiers contain the <code>strict</code>
-     * modifier, false otherwise.
+     * Indicates whether or not the specified modifiers contain the {@code
+     * strict} modifier.
      * 
      * @param modifiers
      *            the modifiers to test
-     * @return if the modifiers contain the strict modifier
+     * 
+     * @return {@code true} if the specified modifiers contain the {@code
+     *         strict} modifier, {@code false} otherwise
+     * 
+     * @since Android 1.0
      */
     public static boolean isStrict(int modifiers) {
         return ((modifiers & STRICT) != 0);
     }
 
     /**
-     * Return true if the specified modifiers contain the
-     * <code>synchronized</code> modifier, false otherwise.
+     * Indicates whether or not the specified modifiers contain the {@code
+     * synchronized} modifier.
      * 
      * @param modifiers
      *            the modifiers to test
-     * @return if the modifiers contain the synchronized modifier
+     * 
+     * @return {@code true} if the specified modifiers contain the {@code
+     *         synchronized} modifier, {@code false} otherwise
+     * 
+     * @since Android 1.0
      */
     public static boolean isSynchronized(int modifiers) {
         return ((modifiers & SYNCHRONIZED) != 0);
     }
 
     /**
-     * Return true if the specified modifiers contain the <code>transient</code>
-     * modifier, false otherwise.
+     * Indicates whether or not the specified modifiers contain the {@code
+     * transient} modifier.
      * 
      * @param modifiers
      *            the modifiers to test
-     * @return if the modifiers contain the transient modifier
+     * 
+     * @return {@code true} if the specified modifiers contain the {@code
+     *         transient} modifier, {@code false} otherwise
+     * 
+     * @since Android 1.0
      */
     public static boolean isTransient(int modifiers) {
         return ((modifiers & TRANSIENT) != 0);
     }
 
     /**
-     * Return true if the specified modifiers contain the <code>volatile</code>
-     * modifier, false otherwise.
+     * Indicates whether or not the specified modifiers contain the {@code
+     * volatile} modifier.
      * 
      * @param modifiers
      *            the modifiers to test
-     * @return if the modifiers contain the volatile modifier
+     * 
+     * @return {@code true} if the specified modifiers contain the {@code
+     *         volatile} modifier, {@code false} otherwise
+     * 
+     * @since Android 1.0
      */
     public static boolean isVolatile(int modifiers) {
         return ((modifiers & VOLATILE) != 0);
@@ -209,15 +332,17 @@ public class Modifier {
 
     /**
      * Returns a string containing the string representation of all modifiers
-     * present in the specified modifiers.
-     * 
-     * Modifiers appear in the order specified by the Java Language
-     * Specification:
-     * <code>public private protected abstract static final transient volatile native synchronized interface strict</code>
-     * 
+     * present in the specified modifiers. Modifiers appear in the order
+     * specified by the Java Language Specification:
+     *
+     * {@code public private protected abstract static final transient volatile native synchronized interface strict}
+     *
      * @param modifiers
      *            the modifiers to print
+     * 
      * @return a printable representation of the modifiers
+     * 
+     * @since Android 1.0
      */
     @SuppressWarnings("nls")
     public static java.lang.String toString(int modifiers) {

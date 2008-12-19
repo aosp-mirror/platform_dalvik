@@ -42,7 +42,12 @@ typedef struct JNIEnvExt {
 
     u4      envThreadId;
     Thread* self;
+
+    /* if nonzero, we are in a "critical" JNI call */
     int     critical;
+
+    /* keep a copy of this here for speed */
+    bool    forceDataCopy;
 
     struct JNIEnvExt* prev;
     struct JNIEnvExt* next;
@@ -55,7 +60,10 @@ typedef struct JavaVMExt {
 
     /* if multiple VMs are desired, add doubly-linked list stuff here */
 
+    /* per-VM feature flags */
     bool    useChecked;
+    bool    warnError;
+    bool    forceDataCopy;
 
     /* head of list of JNIEnvs associated with this VM */
     JNIEnvExt*      envList;
@@ -116,6 +124,7 @@ void dvmCallSynchronizedJNIMethod(const u4* args, JValue* pResult,
  */
 void dvmUseCheckedJniEnv(JNIEnvExt* pEnv);
 void dvmUseCheckedJniVm(JavaVMExt* pVm);
+void dvmLateEnableCheckedJni(void);
 
 /*
  * Verify that a reference passed in from native code is valid.  Returns

@@ -16,41 +16,68 @@
 
 package org.apache.harmony.luni.tests.java.io;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 
 import junit.framework.TestCase;
-
+@TestTargetClass(OutputStreamWriter.class)
 public class OutputStreamWriterTest extends TestCase {
-	public void testGetEncoding_StreamClosed() {
-		OutputStreamWriter out = null;
-		try {
-			out = new OutputStreamWriter(new ByteArrayOutputStream(),
-					"UTF-16BE");
-		} catch (UnsupportedEncodingException e) {
-			fail("Should not throw UnsupportedEncodingException");
-		}
-		try {
-			out.close();
-		} catch (IOException e) {
-			fail("Should not throw IOException");
-		}
-		String result = out.getEncoding();
-		assertNull(result);
-	}
+    
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Checks IOException",
+      targets = {
+        @TestTarget(
+          methodName = "getEncoding",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "close",
+          methodArgs = {}
+        )
+    })
+    public void testGetEncoding_StreamClosed() {
+        OutputStreamWriter out = null;
+        try {
+            out = new OutputStreamWriter(new ByteArrayOutputStream(),
+                    "UTF-16BE");
+        } catch (UnsupportedEncodingException e) {
+            fail("Should not throw UnsupportedEncodingException");
+        }
+        try {
+            out.close();
+        } catch (IOException e) {
+            fail("Should not throw IOException");
+        }
+        String result = out.getEncoding();
+        assertNull(result);
+    }
 
-	public void testGetEncoding_NotHistorical() {
-		OutputStreamWriter out = null;
-		try {
-			out = new OutputStreamWriter(new ByteArrayOutputStream(),
-					"UTF-16BE");
-		} catch (UnsupportedEncodingException e) {
-			// ok
-		}
-		String result = out.getEncoding();
-		assertEquals("UnicodeBigUnmarked", result);
-
-	}
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getEncoding",
+          methodArgs = {}
+        )
+    })
+    public void testGetEncoding_NotHistorical() {
+        OutputStreamWriter out = null;
+        try {
+            out = new OutputStreamWriter(new ByteArrayOutputStream(),
+                    "UTF-16BE");
+        } catch (UnsupportedEncodingException e) {
+            // ok
+        }
+        String result = out.getEncoding();
+        assertEquals("UnicodeBigUnmarked", result);
+    }
 }

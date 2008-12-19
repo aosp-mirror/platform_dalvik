@@ -26,10 +26,11 @@ import java.io.UnsupportedEncodingException;
 import org.apache.harmony.logging.internal.nls.Messages;
 
 /**
- * A <code>Handler</code> object accepts a logging request and exports the
- * desired messages to a target, for example, a file, the console, etc. It can
- * be disabled by setting its logging level to <code>Level.OFF</code>.
+ * A {@code Handler} object accepts a logging request and exports the desired
+ * messages to a target, for example, a file, the console, etc. It can be
+ * disabled by setting its logging level to {@code Level.OFF}.
  * 
+ * @since Android 1.0
  */
 public abstract class Handler {
 
@@ -71,9 +72,11 @@ public abstract class Handler {
      */
 
     /**
-     * Constructs a <code>Handler</code> object with a default error manager,
-     * the default encoding, and the default logging level
-     * <code>Level.ALL</code>. It has no filter and no formatter.
+     * Constructs a {@code Handler} object with a default error manager instance
+     * {@code ErrorManager}, the default encoding, and the default logging
+     * level {@code Level.ALL}. It has no filter and no formatter.
+     * 
+     * @since Android 1.0
      */
     protected Handler() {
         this.errorMan = new ErrorManager();
@@ -187,33 +190,40 @@ public abstract class Handler {
     }
 
     /**
-     * Closes this handler. A flush operation will usually be performed and all
-     * the associated resources will be freed. Client applications should not
-     * use a handler after closing it.
+     * Closes this handler. A flush operation will be performed and all the
+     * associated resources will be freed. Client applications should not use
+     * this handler after closing it.
      * 
      * @throws SecurityException
-     *             If a security manager determines that the caller does not
+     *             if a security manager determines that the caller does not
      *             have the required permission.
+     *
+     * @since Android 1.0             
      */
     public abstract void close();
 
     /**
      * Flushes any buffered output.
+     * 
+     * @since Android 1.0
      */
     public abstract void flush();
 
     /**
-     * Accepts an actual logging request.
+     * Accepts a logging request and sends it to the the target.
      * 
      * @param record
-     *            the log record to be logged
+     *            the log record to be logged; {@code null} records are ignored.
+     * @since Android 1.0
      */
     public abstract void publish(LogRecord record);
 
     /**
-     * Gets the character encoding used by this handler.
+     * Gets the character encoding used by this handler, {@code null} for
+     * default encoding.
      * 
-     * @return the character encoding used by this handler
+     * @return the character encoding used by this handler.
+     * @since Android 1.0
      */
     public String getEncoding() {
         return this.encoding;
@@ -223,10 +233,11 @@ public abstract class Handler {
      * Gets the error manager used by this handler to report errors during
      * logging.
      * 
-     * @return the error manager used by this handler
+     * @return the error manager used by this handler.
      * @throws SecurityException
-     *             If a security manager determines that the caller does not
+     *             if a security manager determines that the caller does not
      *             have the required permission.
+     * @since Android 1.0            
      */
     public ErrorManager getErrorManager() {
         LogManager.getLogManager().checkAccess();
@@ -236,7 +247,8 @@ public abstract class Handler {
     /**
      * Gets the filter used by this handler.
      * 
-     * @return the filter used by this handler
+     * @return the filter used by this handler (possibly {@code null}).
+     * @since Android 1.0
      */
     public Filter getFilter() {
         return this.filter;
@@ -245,29 +257,33 @@ public abstract class Handler {
     /**
      * Gets the formatter used by this handler to format the logging messages.
      * 
-     * @return the formatter used by this handler
+     * @return the formatter used by this handler (possibly {@code null}).
+     * @since Android 1.0
      */
     public Formatter getFormatter() {
         return this.formatter;
     }
 
     /**
-     * Gets the logging level of this handler.
+     * Gets the logging level of this handler, records with levels lower than
+     * this value will be dropped.
      * 
-     * @return the logging level of this handler
+     * @return the logging level of this handler.
+     * @since Android 1.0
      */
     public Level getLevel() {
         return this.level;
     }
 
     /**
-     * Determines whether the supplied log record need to be logged. The logging
-     * levels will be checked as well as the filter.
+     * Determines whether the supplied log record needs to be logged. The
+     * logging levels will be checked as well as the filter.
      * 
      * @param record
-     *            the log record to be checked
-     * @return <code>true</code> if the supplied log record need to be logged,
-     *         otherwise <code>false</code>
+     *            the log record to be checked.
+     * @return {@code true} if the supplied log record needs to be logged,
+     *         otherwise {@code false}.
+     * @since Android 1.0
      */
     public boolean isLoggable(LogRecord record) {
         if (null == record) {
@@ -282,28 +298,33 @@ public abstract class Handler {
     }
 
     /**
-     * Report an error to the error manager associated with this handler.
+     * Reports an error to the error manager associated with this handler,
+     * {@code ErrorManager} is used for that purpose. No security checks are
+     * done, therefore this is compatible with environments where the caller
+     * is non-privileged.
      * 
      * @param msg
-     *            the error message
+     *            the error message, may be {@code null}.
      * @param ex
-     *            the associated exception
+     *            the associated exception, may be {@code null}.
      * @param code
-     *            the error code
+     *            an {@code ErrorManager} error code.
+     * @since Android 1.0
      */
     protected void reportError(String msg, Exception ex, int code) {
         this.errorMan.error(msg, ex, code);
     }
 
     /**
-     * Sets the character encoding used by this handler. A <code>null</code>
-     * value indicates the using of the default encoding. This internal method
-     * does not check security.
+     * Sets the character encoding used by this handler. A {@code null} value
+     * indicates the use of the default encoding. This internal method does
+     * not check security.
      * 
      * @param newEncoding
-     *            the character encoding to set
+     *            the character encoding to set.
      * @throws UnsupportedEncodingException
-     *             If the specified encoding is not supported by the runtime.
+     *             if the specified encoding is not supported by the runtime.
+     * @since Android 1.0
      */
     void internalSetEncoding(String newEncoding)
             throws UnsupportedEncodingException {
@@ -324,16 +345,17 @@ public abstract class Handler {
     }
 
     /**
-     * Sets the character encoding used by this handler. A <code>null</code>
-     * value indicates the using of the default encoding.
+     * Sets the character encoding used by this handler, {@code null} indicates
+     * a default encoding.
      * 
      * @param encoding
-     *            the character encoding to set
+     *            the character encoding to set.
      * @throws SecurityException
-     *             If a security manager determines that the caller does not
+     *             if a security manager determines that the caller does not
      *             have the required permission.
      * @throws UnsupportedEncodingException
-     *             If the specified encoding is not supported by the runtime.
+     *             if the specified encoding is not supported by the runtime.
+     * @since Android 1.0             
      */
     public void setEncoding(String encoding) throws SecurityException,
             UnsupportedEncodingException {
@@ -345,10 +367,13 @@ public abstract class Handler {
      * Sets the error manager for this handler.
      * 
      * @param em
-     *            the error manager to set
+     *            the error manager to set.
+     * @throws NullPointerException
+     *             if {@code em} is {@code null}.
      * @throws SecurityException
-     *             If a security manager determines that the caller does not
+     *             if a security manager determines that the caller does not
      *             have the required permission.
+     * @since Android 1.0
      */
     public void setErrorManager(ErrorManager em) {
         LogManager.getLogManager().checkAccess();
@@ -362,10 +387,11 @@ public abstract class Handler {
      * Sets the filter to be used by this handler.
      * 
      * @param newFilter
-     *            the filter to set
+     *            the filter to set, may be {@code null}.
      * @throws SecurityException
-     *             If a security manager determines that the caller does not
+     *             if a security manager determines that the caller does not
      *             have the required permission.
+     * @since Android 1.0
      */
     public void setFilter(Filter newFilter) {
         LogManager.getLogManager().checkAccess();
@@ -377,7 +403,7 @@ public abstract class Handler {
      * not check security.
      * 
      * @param newFormatter
-     *            the formatter to set
+     *            the formatter to set.
      */
     void internalSetFormatter(Formatter newFormatter) {
         if (null == newFormatter) {
@@ -390,10 +416,13 @@ public abstract class Handler {
      * Sets the formatter to be used by this handler.
      * 
      * @param newFormatter
-     *            the formatter to set
+     *            the formatter to set.
+     * @throws NullPointerException
+     *             if {@code newFormatter} is {@code null}.
      * @throws SecurityException
-     *             If a security manager determines that the caller does not
+     *             if a security manager determines that the caller does not
      *             have the required permission.
+     * @since Android 1.0
      */
     public void setFormatter(Formatter newFormatter) {
         LogManager.getLogManager().checkAccess();
@@ -401,13 +430,17 @@ public abstract class Handler {
     }
 
     /**
-     * Sets the logging level of this handler.
+     * Sets the logging level of the messages logged by this handler, levels
+     * lower than this value will be dropped.
      * 
      * @param newLevel
-     *            the logging level to set
+     *            the logging level to set.
+     * @throws NullPointerException
+     *             if {@code newLevel} is {@code null}.
      * @throws SecurityException
-     *             If a security manager determines that the caller does not
+     *             if a security manager determines that the caller does not
      *             have the required permission.
+     * @since Android 1.0
      */
     public void setLevel(Level newLevel) {
         if (null == newLevel) {

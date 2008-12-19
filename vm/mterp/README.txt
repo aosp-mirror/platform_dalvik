@@ -5,11 +5,36 @@ NOTE: Find rebuilding instructions at the bottom of this file.
 
 ==== Overview ====
 
+This is the source code for the Dalvik interpreter.  The core of the
+original version was implemented as a single C function, but to improve
+performance we rewrote it in assembly.  To make this and future assembly
+ports easier and less error-prone, we used a modular approach that allows
+development of platform-specific code one opcode at a time.
+
+The original all-in-one-function C version still exists as the "portable"
+interpreter, and is generated using the same sources and tools that
+generate the platform-specific versions.  One form of the portable
+interpreter includes support for profiling and debugging features, and
+is included even if we have a platform-optimized implementation.
+
+Every configuration has a "config-*" file that controls how the sources
+are generated.  The sources are written into the "out" directory, where
+they are picked up by the Android build system.
+
+The best way to become familiar with the interpreter is to look at the
+generated files in the "out" directory, such as out/InterpC-portstd.c,
+rather than trying to look at the various component pieces in (say)
+armv5te.
+
+
+==== Platform-specific source generation ====
+
 The architecture-specific config files determine what goes into two
 generated output files (InterpC-<arch>.c, InterpAsm-<arch>.S).  The goal is
 to make it easy to swap C and assembly sources during initial development
-and testing, and to provide a way to use architecture-specific versions
-of some operations (e.g. making use of PLD instructions on ARMv6).
+and testing, and to provide a way to use architecture-specific versions of
+some operations (e.g. making use of PLD instructions on ARMv6 or avoiding
+CLZ on ARMv4T).
 
 Two basic assumptions are made about the operation of the interpreter:
 
@@ -19,11 +44,10 @@ Two basic assumptions are made about the operation of the interpreter:
    local state into a "glue" struct, and passes that into the C function.
    Updates to the state are pulled out of the "glue" on return.
 
-
 The "arch" value should indicate an architecture family with common
-programming characteristics, so "armv5" would work for all ARMv5 CPUs,
+programming characteristics, so "armv5te" would work for all ARMv5TE CPUs,
 but might not be backward- or forward-compatible.  (We *might* want to
-specify the ABI model as well, e.g. "armv5-eabi", but currently that adds
+specify the ABI model as well, e.g. "armv5te-eabi", but currently that adds
 verbosity without value.)
 
 
@@ -60,8 +84,8 @@ The commands are:
 
     Can only appear after "op-start" and before "op-end".  Overrides the
     default source file location of the specified opcode.  The opcode
-    definition will come from the specified file, e.g. "op OP_NOP armv5"
-    will load from "armv5/OP_NOP.S".  A substitution dictionary will be
+    definition will come from the specified file, e.g. "op OP_NOP armv5te"
+    will load from "armv5te/OP_NOP.S".  A substitution dictionary will be
     applied (see below).
 
   op-end
@@ -96,9 +120,9 @@ declarations for the segment type and alignment.  The expected target
 assembler is GNU "as", but others will work (may require fiddling with
 some of the pseudo-ops emitted by the generation tool).
 
-The C files do a bunch of fancy things with macros in an attempt to keep
-the code "cut & pastable" from the portable interpreter.  (This will be
-reduced when the code bases are merged.)
+The C files do a bunch of fancy things with macros in an attempt to share
+code with the portable interpreter.  (This is expected to be reduced in
+the future.)
 
 A substitution dictionary is applied to all opcode fragments as they are
 appended to the output.  Substitutions can look like "$value" or "${value}".
@@ -118,11 +142,11 @@ Some generator operations are available.
 
   %include "filename" [subst-dict]
 
-    Includes the file, which should look like "armv5/OP_NOP.S".  You can
+    Includes the file, which should look like "armv5te/OP_NOP.S".  You can
     specify values for the substitution dictionary, using standard Python
     syntax.  For example, this:
-      %include "armv5/unop.S" {"result":"r1"}
-    would insert "armv5/unop.S" at the current file position, replacing
+      %include "armv5te/unop.S" {"result":"r1"}
+    would insert "armv5te/unop.S" at the current file position, replacing
     occurrences of "$result" with "r1".
 
   %default <subst-dict>
@@ -148,7 +172,7 @@ oversized handler.  On architectures with fixed-width instructions this
 is easy to work with, on others this you will need to count bytes.
 
 
-==== Sharing constants ====
+==== Using C constants from assembly sources ====
 
 The file "common/asm-constants.h" has some definitions for constant
 values, structure sizes, and struct member offsets.  The format is fairly
@@ -185,4 +209,8 @@ combined source files in the "out" directory.  Make sure the files in
 As of this writing, this requires Python 2.5. You may see inscrutible
 error messages or just general failure if you have a different version
 of Python installed.
+
+The ultimate goal is to have the build system generate the necessary
+output files without requiring this separate step, but we're not yet
+ready to require Python in the build.
 

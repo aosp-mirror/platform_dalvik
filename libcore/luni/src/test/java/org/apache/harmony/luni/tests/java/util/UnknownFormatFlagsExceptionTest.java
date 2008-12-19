@@ -16,19 +16,34 @@
 
 package org.apache.harmony.luni.tests.java.util;
 
-import java.io.Serializable;
-import java.util.UnknownFormatFlagsException;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
+
+import java.io.Serializable;
+import java.util.UnknownFormatFlagsException;
 
 import org.apache.harmony.testframework.serialization.SerializationTest;
 import org.apache.harmony.testframework.serialization.SerializationTest.SerializableAssert;
 
+@TestTargetClass(UnknownFormatFlagsException.class) 
 public class UnknownFormatFlagsExceptionTest extends TestCase {
 
     /**
      * @tests java.util.UnknownFormatFlagsException#UnknownFormatFlagsException(String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "UnknownFormatFlagsException",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_unknownFormatFlagsException() {
 
         try {
@@ -42,6 +57,15 @@ public class UnknownFormatFlagsExceptionTest extends TestCase {
     /**
      * @tests java.util.UnknownFormatFlagsException#getFlags()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getFlags",
+          methodArgs = {}
+        )
+    })
     public void test_getFlags() {
         String s = "MYTESTSTRING";
         UnknownFormatFlagsException UnknownFormatFlagsException = new UnknownFormatFlagsException(
@@ -52,6 +76,15 @@ public class UnknownFormatFlagsExceptionTest extends TestCase {
     /**
      * @tests java.util.UnknownFormatFlagsException#getMessage()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getMessage",
+          methodArgs = {}
+        )
+    })
     public void test_getMessage() {
         String s = "MYTESTSTRING";
         UnknownFormatFlagsException UnknownFormatFlagsException = new UnknownFormatFlagsException(
@@ -77,6 +110,15 @@ public class UnknownFormatFlagsExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization.
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationSelf",
+          methodArgs = {}
+        )
+    })
     public void testSerializationSelf() throws Exception {
 
         SerializationTest.verifySelf(new UnknownFormatFlagsException(
@@ -86,6 +128,15 @@ public class UnknownFormatFlagsExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationGolden",
+          methodArgs = {}
+        )
+    })
     public void testSerializationCompatibility() throws Exception {
 
         SerializationTest.verifyGolden(this, new UnknownFormatFlagsException(

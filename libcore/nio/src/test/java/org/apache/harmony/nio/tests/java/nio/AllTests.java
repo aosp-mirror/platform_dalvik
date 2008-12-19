@@ -96,6 +96,7 @@ public class AllTests {
         suite.addTestSuite(DuplicateDirectByteBufferTest.class);
         suite.addTestSuite(WrappedIntBufferTest.class);
         suite.addTestSuite(HeapCharBufferTest.class);
+        suite.addTestSuite(MappedByteBufferTest.class);
         //$JUnit-END$
         return suite;
     }

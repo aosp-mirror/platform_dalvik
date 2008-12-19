@@ -16,13 +16,18 @@
 
 package org.apache.harmony.nio.tests.java.nio.channels;
 
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+
 import java.io.IOException;
 import java.nio.channels.Pipe;
 import java.nio.channels.Pipe.SinkChannel;
 import java.nio.channels.Pipe.SourceChannel;
 
 import junit.framework.TestCase;
-
+@TestTargetClass(Pipe.class)
 /*
  * Tests for Pipe and its default implementation
  */
@@ -31,6 +36,15 @@ public class PipeTest extends TestCase {
     /**
      * @tests java.nio.channels.Pipe#open()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "open",
+          methodArgs = {}
+        )
+    })
     public void test_open() throws IOException{
         Pipe pipe = Pipe.open();
         assertNotNull(pipe);
@@ -39,6 +53,15 @@ public class PipeTest extends TestCase {
     /**
      * @tests java.nio.channels.Pipe#sink()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "sink",
+          methodArgs = {}
+        )
+    })
     public void test_sink() throws IOException {
         Pipe pipe = Pipe.open();
         SinkChannel sink = pipe.sink();
@@ -48,6 +71,15 @@ public class PipeTest extends TestCase {
     /**
      * @tests java.nio.channels.Pipe#source()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "source",
+          methodArgs = {}
+        )
+    })
     public void test_source() throws IOException {
         Pipe pipe = Pipe.open();
         SourceChannel source = pipe.source();

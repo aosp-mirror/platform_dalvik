@@ -40,6 +40,12 @@ import org.apache.harmony.luni.util.TwoKeyHashMap;
 import org.apache.harmony.security.fortress.Services;
 import org.apache.harmony.security.internal.nls.Messages;
 
+/**
+ * {@code Provider} is the abstract superclass for all security providers in the
+ * Java security infrastructure.
+ * 
+ * @since Android 1.0
+ */
 public abstract class Provider extends Properties {
     private static final long serialVersionUID = -4298000515446427739L;
 
@@ -90,6 +96,18 @@ public abstract class Provider extends Properties {
     // last Service found by type
     private transient Provider.Service lastServicesByType;
 
+    /**
+     * Constructs a new instance of {@code Provider} with its name, version and
+     * description.
+     * 
+     * @param name
+     *            the name of the provider.
+     * @param version
+     *            the version of the provider.
+     * @param info
+     *            a description of the provider.
+     * @since Android 1.0
+     */
     protected Provider(String name, double version, String info) {
         this.name = name;
         this.version = version;
@@ -101,47 +119,61 @@ public abstract class Provider extends Properties {
     /**
      * Returns the name of this provider.
      * 
-     * 
-     * 
-     * @return String name of the provider
+     * @return the name of this provider.
+     * @since Android 1.0
      */
     public String getName() {
         return name;
     }
 
     /**
-     * Returns the version number for the services being provided
+     * Returns the version number for the services being provided.
      * 
-     * 
-     * 
-     * @return double version number for the services being provided
+     * @return the version number for the services being provided.
+     * @since Android 1.0
      */
     public double getVersion() {
         return version;
     }
 
     /**
-     * Returns the generic information about the services being provided.
+     * Returns a description of the services being provided.
      * 
-     * 
-     * 
-     * @return String generic description of the services being provided
+     * @return a description of the services being provided.
+     * @since Android 1.0
      */
     public String getInfo() {
         return info;
     }
 
     /**
-     * Returns a string containing a concise, human-readable description of the
-     * receiver.
-     * 
-     * 
-     * @return a printable representation for the receiver.
+     * Returns a string containing a concise, human-readable description of
+     * this {@code Provider} including its name and its version.
+     *
+     * @return a printable representation for this {@code Provider}.
+     * @since Android 1.0
      */
     public String toString() {
+        // BEGIN android-changed
         return name + " version " + version; //$NON-NLS-1$
+        // END android-changed
     }
 
+    /**
+     * Clears all properties used to look up services implemented by this
+     * {@code Provider}.
+     * <p>
+     * If a {@code SecurityManager} is installed, code calling this method needs
+     * the {@code SecurityPermission} {@code clearProviderProperties.NAME}
+     * (where NAME is the provider name) to be granted, otherwise a {@code
+     * SecurityException} will be thrown.
+     * </p>
+     * 
+     * @throws SecurityException
+     *             if a {@code SecurityManager} is installed and the caller does
+     *             not have permission to invoke this method.
+     * @since Android 1.0
+     */
     public synchronized void clear() {
         SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
@@ -177,6 +209,22 @@ public abstract class Provider extends Properties {
         myPutAll(tmp);
     }
 
+    /**
+     * Copies all from the provided map to this {@code Provider}.
+     * <p>
+     * If a {@code SecurityManager} is installed, code calling this method needs
+     * the {@code SecurityPermission} {@code putProviderProperty.NAME} (where
+     * NAME is the provider name) to be granted, otherwise a {@code
+     * SecurityException} will be thrown.
+     * </p>
+     * 
+     * @param t
+     *            the mappings to copy to this provider.
+     * @throws SecurityException
+     *             if a {@code SecurityManager} is installed and the caller does
+     *             not have permission to invoke this method.
+     * @since Android 1.0
+     */
     public synchronized void putAll(Map<?,?> t) {
 
         // Implementation note:
@@ -229,6 +277,27 @@ public abstract class Provider extends Properties {
         return Collections.unmodifiableCollection(super.values());
     }
 
+    /**
+     * Maps the specified {@code key} property name to the specified {@code
+     * value}.
+     * <p>
+     * If a {@code SecurityManager} is installed, code calling this method needs
+     * the {@code SecurityPermission} {@code putProviderProperty.NAME} (where
+     * NAME is the provider name) to be granted, otherwise a {@code
+     * SecurityException} will be thrown.
+     * </p>
+     * 
+     * @param key
+     *            the name of the property.
+     * @param value
+     *            the value of the property.
+     * @return the value that was previously mapped to the specified {@code key}
+     *         ,or {@code null} if it did not have one.
+     * @throws SecurityException
+     *             if a {@code SecurityManager} is installed and the caller does
+     *             not have permission to invoke this method.
+     * @since Android 1.0
+     */
     public synchronized Object put(Object key, Object value) {
         SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
@@ -252,6 +321,25 @@ public abstract class Provider extends Properties {
         return super.put(key, value);
     }
 
+    /**
+     * Removes the specified {@code key} and its associated value from this
+     * {@code Provider}.
+     * <p>
+     * If a {@code SecurityManager} is installed, code calling this method needs
+     * the {@code SecurityPermission} {@code removeProviderProperty.NAME} (where
+     * NAME is the provider name) to be granted, otherwise a {@code
+     * SecurityException} will be thrown.
+     * </p>
+     * 
+     * @param key
+     *            the name of the property
+     * @return the value that was mapped to the specified {@code key} ,or
+     *         {@code null} if no mapping was present
+     * @throws SecurityException
+     *             if a {@code SecurityManager} is installed and the caller does
+     *             not have the permission to invoke this method.
+     * @since Android 1.0
+     */
     public synchronized Object remove(Object key) {
         SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
@@ -277,19 +365,18 @@ public abstract class Provider extends Properties {
     }
 
     /**
-     * 
-     * returns true if the provider implements the specified algorithm.  Caller must
-     * specify the cryptographic service and specify constraints via the
+     * returns true if the provider implements the specified algorithm. Caller
+     * must specify the cryptographic service and specify constraints via the
      * attribute name the attribute value
      * 
      * @param serv
-     *            Crypto service
+     *            Crypto service.
      * @param alg
-     *            Algorithm or type
+     *            Algorithm or type.
      * @param attribute
-     *            The attribute name or null
+     *            The attribute name or {@code null}.
      * @param val
-     *            The attribute value
+     *            The attribute value.
      * @return
      */
     boolean implementsAlg(String serv, String alg, String attribute, String val) {
@@ -319,11 +406,11 @@ public abstract class Provider extends Properties {
         String attributeValue = getPropertyIgnoreCase(servAlg + ' ' + attribute);
         if (attributeValue != null) {
             if (attribute.equalsIgnoreCase("KeySize")) { //$NON-NLS-1$
-// BEGIN android-changed
+                // BEGIN android-changed
                 if (Integer.parseInt(attributeValue) >= Integer.parseInt(val)) {
-// END android-changed
                     return true;
                 }
+                // END android-changed
             } else { // other attributes
                 if (attributeValue.equalsIgnoreCase(val)) {
                     return true;
@@ -374,6 +461,23 @@ public abstract class Provider extends Properties {
         return null;
     }
 
+    /**
+     * Returns the service with the specified {@code type} implementing the
+     * specified {@code algorithm}, or {@code null} if no such implementation
+     * exists.
+     * <p>
+     * If two services match the requested type and algorithm, the one added
+     * with the {@link #putService(Service)} is returned (as opposed to the one
+     * added via {@link #put(Object, Object)}.
+     * 
+     * @param type
+     *            the type of the service (for example {@code KeyPairGenerator})
+     * @param algorithm
+     *            the algorithm name (case insensitive)
+     * @return the requested service, or {@code null} if no such implementation
+     *         exists
+     * @since Android 1.0
+     */
     public synchronized Provider.Service getService(String type,
             String algorithm) {
         if (type == null || algorithm == null) {
@@ -412,6 +516,14 @@ public abstract class Provider extends Properties {
         return null;
     }
 
+    /**
+     * Returns an unmodifiable {@code Set} of all services registered by this
+     * provider.
+     * 
+     * @return an unmodifiable {@code Set} of all services registered by this
+     *         provider
+     * @since Android 1.0
+     */
     public synchronized Set<Provider.Service> getServices() {
         updatePropertyServiceTable();
         if (lastServicesSet != null) {
@@ -429,6 +541,22 @@ public abstract class Provider extends Properties {
         return lastServicesSet;
     }
 
+    /**
+     * Adds a {@code Service} to this {@code Provider}. If a service with the
+     * same name was registered via this method, it is replace.
+     * <p>
+     * If a {@code SecurityManager} is installed, code calling this method needs
+     * the {@code SecurityPermission} {@code putProviderProperty.NAME} (where
+     * NAME is the provider name) to be granted, otherwise a {@code
+     * SecurityException} will be thrown.
+     * 
+     * @param s
+     *            the {@code Service} to register
+     * @throws SecurityException
+     *             if a {@code SecurityManager} is installed and the caller does
+     *             not have permission to invoke this method
+     * @since Android 1.0
+     */
     protected synchronized void putService(Provider.Service s) {
         if (s == null) {
             throw new NullPointerException();
@@ -457,6 +585,24 @@ public abstract class Provider extends Properties {
         serviceInfoToProperties(s);
     }
 
+    /**
+     * Removes a previously registered {@code Service} from this {@code
+     * Provider}.
+     * <p>
+     * If a {@code SecurityManager} is installed, code calling this method needs
+     * the {@code SecurityPermission} {@code removeProviderProperty.NAME} (where
+     * NAME is the provider name) to be granted, otherwise a {@code
+     * SecurityException} will be thrown.
+     * 
+     * @param s
+     *            the {@code Service} to remove
+     * @throws SecurityException
+     *             if a {@code SecurityManager} is installed and the caller does
+     *             not have permission to invoke this method
+     * @throws NullPointerException
+     *             if {@code s} is {@code null}
+     * @since Android 1.0
+     */
     protected synchronized void removeService(Provider.Service s) {
         if (s == null) {
             throw new NullPointerException();
@@ -755,6 +901,13 @@ public abstract class Provider extends Properties {
         return null;
     }
 
+    /**
+     * {@code Service} represents a service in the Java Security infrastructure.
+     * Each service describes its type, the algorithm it implements, to which
+     * provider it belongs and other properties.
+     * 
+     * @since Android 1.0
+     */
     public static class Service {
         // The provider
         private Provider provider;
@@ -780,6 +933,30 @@ public abstract class Provider extends Properties {
         // For newInstance() optimization
         private String lastClassName;
 
+        /**
+         * Constructs a new instance of {@code Service} with the given
+         * attributes.
+         * 
+         * @param provider
+         *            the provider to which this service belongs.
+         * @param type
+         *            the type of this service (for example {@code
+         *            KeyPairGenerator}).
+         * @param algorithm
+         *            the algorithm this service implements.
+         * @param className
+         *            the name of the class implementing this service.
+         * @param aliases
+         *            {@code List} of aliases for the algorithm name, or {@code
+         *            null} if the implemented algorithm has no aliases.
+         * @param attributes
+         *            {@code Map} of additional attributes, or {@code null} if
+         *            this {@code Service} has no attributed.
+         * @throws NullPointerException
+         *             if {@code provider, type, algorithm} or {@code className}
+         *             is {@code null}.
+         * @since Android 1.0
+         */
         public Service(Provider provider, String type, String algorithm,
                 String className, List<String> aliases, Map<String, String> attributes) {
             if (provider == null || type == null || algorithm == null
@@ -792,10 +969,10 @@ public abstract class Provider extends Properties {
             this.className = className;
             // BEGIN android-changed
             this.aliases = ((aliases != null) && (aliases.size() == 0))
-                ? Collections.<String>emptyList() : aliases;
+                    ? Collections.<String>emptyList() : aliases;
             this.attributes =
-                ((attributes != null) && (attributes.size() == 0))
-                ? Collections.<String,String>emptyMap() : attributes;
+                    ((attributes != null) && (attributes.size() == 0))
+                    ? Collections.<String,String>emptyMap() : attributes;
             // END android-changed
         }
 
@@ -815,8 +992,8 @@ public abstract class Provider extends Properties {
         /**
          * Puts a new attribute mapping.
          * 
-         * @param name the attribute name
-         * @param value the attribute value
+         * @param name the attribute name.
+         * @param value the attribute value.
          */
         /*package*/ void putAttribute(String name, String value) {
             if ((attributes == null) || (attributes.size() == 0)) {
@@ -826,22 +1003,60 @@ public abstract class Provider extends Properties {
         }
         // END android-added
 
+        /**
+         * Returns the type of this {@code Service}. For example {@code
+         * KeyPairGenerator}.
+         * 
+         * @return the type of this {@code Service}.
+         * @since Android 1.0
+         */
         public final String getType() {
             return type;
         }
 
+        /**
+         * Returns the name of the algorithm implemented by this {@code Service}
+         * .
+         * 
+         * @return the name of the algorithm implemented by this {@code Service}
+         *         .
+         * @since Android 1.0
+         */
         public final String getAlgorithm() {
             return algorithm;
         }
 
+        /**
+         * Returns the {@code Provider} this {@code Service} belongs to.
+         * 
+         * @return the {@code Provider} this {@code Service} belongs to.
+         * @since Android 1.0
+         */
         public final Provider getProvider() {
             return provider;
         }
 
+        /**
+         * Returns the name of the class implementing this {@code Service}.
+         * 
+         * @return the name of the class implementing this {@code Service}.
+         * @since Android 1.0
+         */
         public final String getClassName() {
             return className;
         }
 
+        /**
+         * Returns the value of the attribute with the specified {@code name}.
+         * 
+         * @param name
+         *            the name of the attribute.
+         * @return the value of the attribute, or {@code null} if no attribute
+         *         with the given name is set.
+         * @throws NullPointerException
+         *             if {@code name} is {@code null}.
+         * @since Android 1.0
+         */
         public final String getAttribute(String name) {
             if (name == null) {
                 throw new NullPointerException();
@@ -856,6 +1071,23 @@ public abstract class Provider extends Properties {
             return aliases.iterator();
         }
 
+        /**
+         * Creates and returns a new instance of the implementation described by
+         * this {@code Service}.
+         * 
+         * @param constructorParameter
+         *            the parameter that is used by the constructor, or {@code
+         *            null} if the implementation does not declare a constructor
+         *            parameter.
+         * @return a new instance of the implementation described by this
+         *         {@code Service}.
+         * @throws NoSuchAlgorithmException
+         *             if the instance could not be constructed.
+         * @throws InvalidParameterException
+         *             if the implementation does not support the specified
+         *             {@code constructorParameter}.
+         * @since Android 1.0
+         */
         public Object newInstance(Object constructorParameter)
                 throws NoSuchAlgorithmException {
             if (implementation == null || !className.equals(lastClassName)) {
@@ -914,17 +1146,27 @@ public abstract class Provider extends Properties {
             }
         }
 
+        /**
+         * Indicates whether this {@code Service} supports the specified
+         * constructor parameter.
+         * 
+         * @param parameter
+         *            the parameter to test.
+         * @return {@code true} if this {@code Service} supports the specified
+         *         constructor parameter, {@code false} otherwise.
+         * @since Android 1.0
+         */
         public boolean supportsParameter(Object parameter) {
             return true;
         }
 
-    /**
-     * Returns a string containing a concise, human-readable
-     * description of the receiver.
-     * 
-     * 
-     * @return a printable representation for the receiver.
-     */
+        /**
+         * Returns a string containing a concise, human-readable description of
+         * this {@code Service}.
+         * 
+         * @return a printable representation for this {@code Service}.
+         * @since Android 1.0
+         */
         public String toString() {
             String result = "Provider " + provider.getName() + " Service " //$NON-NLS-1$ //$NON-NLS-2$
                     + type + "." + algorithm + " " + className; //$NON-NLS-1$ //$NON-NLS-2$

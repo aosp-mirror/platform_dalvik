@@ -16,6 +16,11 @@
 
 package tests.api.java.nio.charset;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestLevel;
+
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
@@ -33,6 +38,7 @@ import java.util.Vector;
 
 import junit.framework.TestCase;
 
+@TestTargetClass(Charset.class)
 /**
  * Test class java.nio.Charset.
  */
@@ -61,6 +67,21 @@ public class CharsetTest extends TestCase {
     /*
      * Test the required 6 charsets are supported.
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Test is OK for availableCharsets. For forName & isSupported only functionality tested.",
+      targets = {
+        @TestTarget(
+          methodName = "isSupported",
+          methodArgs = {java.lang.String.class}
+        ), @TestTarget(
+          methodName = "forName",
+          methodArgs = {java.lang.String.class}
+        ), @TestTarget(
+          methodName = "availableCharsets",
+          methodArgs = {}
+        )
+    })
     public void testRequiredCharsetSupported() {
         assertTrue(Charset.isSupported("US-ASCII"));
         assertTrue(Charset.isSupported("ASCII"));
@@ -98,6 +119,15 @@ public class CharsetTest extends TestCase {
     /*
      * Test the method isSupported(String) with null.
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "IllegalArgumentException checked.",
+      targets = {
+        @TestTarget(
+          methodName = "isSupported",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void testIsSupported_Null() {
         try {
             Charset.isSupported(null);
@@ -111,6 +141,15 @@ public class CharsetTest extends TestCase {
      * Test the method isSupported(String) with empty string.
      * 
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "check test on target vm and fix, now it is dummy",
+      targets = {
+        @TestTarget(
+          methodName = "isSupported",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void testIsSupported_EmptyString() {
         try {
             Charset.isSupported("");
@@ -124,6 +163,15 @@ public class CharsetTest extends TestCase {
      * Test the method isSupported(String) with a string starting with ".".
      * 
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isSupported",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void testIsSupported_InvalidInitialCharacter() {
         try {
             Charset.isSupported(".char");
@@ -135,6 +183,15 @@ public class CharsetTest extends TestCase {
     /*
      * Test the method isSupported(String) with illegal charset name.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "IllegalArgumentException checked.",
+          targets = {
+            @TestTarget(
+              methodName = "isSupported",
+              methodArgs = {java.lang.String.class}
+            )
+        })
     public void testIsSupported_IllegalName() {
         try {
             Charset.isSupported(" ///#$$");
@@ -147,6 +204,15 @@ public class CharsetTest extends TestCase {
     /*
      * Test the method isSupported(String) with not supported charset name.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "",
+          targets = {
+            @TestTarget(
+              methodName = "isSupported",
+              methodArgs = {java.lang.String.class}
+            )
+        })
     public void testIsSupported_NotSupported() {
         assertFalse(Charset.isSupported("impossible"));
     }
@@ -154,6 +220,15 @@ public class CharsetTest extends TestCase {
     /*
      * Test the method forName(String) with null.
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "forName",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void testForName_Null() {
         try {
             Charset.forName(null);
@@ -166,6 +241,15 @@ public class CharsetTest extends TestCase {
     /*
      * Test the method forName(String) with empty string.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "",
+          targets = {
+            @TestTarget(
+              methodName = "forName",
+              methodArgs = {java.lang.String.class}
+            )
+        })
     public void testForName_EmptyString() {
         try {
             Charset.forName("");
@@ -178,6 +262,15 @@ public class CharsetTest extends TestCase {
     /*
      * Test the method forName(String) with a string starting with ".".
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "",
+          targets = {
+            @TestTarget(
+              methodName = "forName",
+              methodArgs = {java.lang.String.class}
+            )
+        })
     public void testForName_InvalidInitialCharacter() {
         try {
             Charset.forName(".char");
@@ -190,6 +283,15 @@ public class CharsetTest extends TestCase {
     /*
      * Test the method forName(String) with illegal charset name.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "",
+          targets = {
+            @TestTarget(
+              methodName = "forName",
+              methodArgs = {java.lang.String.class}
+            )
+        })
     public void testForName_IllegalName() {
         try {
             Charset.forName(" ///#$$");
@@ -202,6 +304,15 @@ public class CharsetTest extends TestCase {
     /*
      * Test the method forName(String) with not supported charset name.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "",
+          targets = {
+            @TestTarget(
+              methodName = "forName",
+              methodArgs = {java.lang.String.class}
+            )
+        })
     public void testForName_NotSupported() {
         try {
             Charset.forName("impossible");
@@ -214,6 +325,24 @@ public class CharsetTest extends TestCase {
     /*
      * Test the constructor with normal parameter values.
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "name",
+          methodArgs = {}
+        ), @TestTarget(
+          methodName = "displayName",
+          methodArgs = {}
+        ), @TestTarget(
+          methodName = "aliases",
+          methodArgs = {}
+        ), @TestTarget(
+          methodName = "Charset",
+          methodArgs = {java.lang.String.class, java.lang.String[].class}
+        )
+    })
     public void testConstructor_Normal() {
         final String mockName = "mockChar1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.:-_";
         MockCharset c = new MockCharset(mockName, new String[] { "mock" });
@@ -228,6 +357,15 @@ public class CharsetTest extends TestCase {
      * Test the constructor with empty canonical name.
      * 
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "check test on target vm and fix, now it is dummy",
+          targets = {
+            @TestTarget(
+              methodName = "Charset",
+              methodArgs = {java.lang.String.class, java.lang.String[].class}
+            )
+        })
     public void testConstructor_EmptyCanonicalName() {
         try {
             new MockCharset("", new String[0]);
@@ -242,6 +380,15 @@ public class CharsetTest extends TestCase {
      * digit nor a letter.
      * 
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Charset",
+          methodArgs = {java.lang.String.class, java.lang.String[].class}
+        )
+    })
     public void testConstructor_IllegalCanonicalName_Initial() {
         try {
             new MockCharset("-123", new String[] { "mock" });
@@ -254,6 +401,15 @@ public class CharsetTest extends TestCase {
      * Test the constructor with illegal canonical name, illegal character in
      * the middle.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "",
+          targets = {
+            @TestTarget(
+              methodName = "Charset",
+              methodArgs = {java.lang.String.class, java.lang.String[].class}
+            )
+        })
     public void testConstructor_IllegalCanonicalName_Middle() {
         try {
             new MockCharset("1%%23", new String[] { "mock" });
@@ -272,6 +428,15 @@ public class CharsetTest extends TestCase {
     /*
      * Test the constructor with null canonical name.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "",
+          targets = {
+            @TestTarget(
+              methodName = "Charset",
+              methodArgs = {java.lang.String.class, java.lang.String[].class}
+            )
+        })
     public void testConstructor_NullCanonicalName() {
         try {
             MockCharset c = new MockCharset(null, new String[] { "mock" });
@@ -284,6 +449,27 @@ public class CharsetTest extends TestCase {
     /*
      * Test the constructor with null aliases.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "",
+          targets = {
+            @TestTarget(
+              methodName = "Charset",
+              methodArgs = {java.lang.String.class, java.lang.String[].class}
+            ), @TestTarget(
+          methodName = "name",
+          methodArgs = {}
+        ), @TestTarget(
+          methodName = "displayName",
+          methodArgs = {}
+        ), @TestTarget(
+          methodName = "displayName",
+          methodArgs = {java.util.Locale.class}
+        ), @TestTarget(
+          methodName = "aliases",
+          methodArgs = {}
+        )
+        })
     public void testConstructor_NullAliases() {
         MockCharset c = new MockCharset("mockChar", null);
         assertEquals("mockChar", c.name());
@@ -295,6 +481,15 @@ public class CharsetTest extends TestCase {
     /*
      * Test the constructor with a null aliases.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "",
+          targets = {
+            @TestTarget(
+              methodName = "Charset",
+              methodArgs = {java.lang.String.class, java.lang.String[].class}
+            )
+        })
     public void testConstructor_NullAliase() {
         try {
             new MockCharset("mockChar", new String[] { "mock", null });
@@ -307,6 +502,27 @@ public class CharsetTest extends TestCase {
     /*
      * Test the constructor with no aliases.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "",
+          targets = {
+            @TestTarget(
+              methodName = "Charset",
+              methodArgs = {java.lang.String.class, java.lang.String[].class}
+            ), @TestTarget(
+        methodName = "name",
+        methodArgs = {}
+      ), @TestTarget(
+        methodName = "displayName",
+        methodArgs = {}
+      ), @TestTarget(
+        methodName = "displayName",
+        methodArgs = {java.util.Locale.class}
+      ), @TestTarget(
+        methodName = "aliases",
+        methodArgs = {}
+      )
+        })
     public void testConstructor_NoAliases() {
         MockCharset c = new MockCharset("mockChar", new String[0]);
         assertEquals("mockChar", c.name());
@@ -319,6 +535,15 @@ public class CharsetTest extends TestCase {
      * Test the constructor with empty aliases.
      * 
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "",
+          targets = {
+            @TestTarget(
+              methodName = "Charset",
+              methodArgs = {java.lang.String.class, java.lang.String[].class}
+            )
+        })
     public void testConstructor_EmptyAliases() {
         try {
             new MockCharset("mockChar", new String[] { "" });
@@ -333,6 +558,15 @@ public class CharsetTest extends TestCase {
      * nor a letter.
      * 
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "",
+          targets = {
+            @TestTarget(
+              methodName = "Charset",
+              methodArgs = {java.lang.String.class, java.lang.String[].class}
+            )
+        })
     public void testConstructor_IllegalAliases_Initial() {
         try {
             new MockCharset("mockChar", new String[] { "mock", "-123" });
@@ -345,6 +579,15 @@ public class CharsetTest extends TestCase {
      * Test the constructor with illegal aliase, illegal character in the
      * middle.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "",
+          targets = {
+            @TestTarget(
+              methodName = "Charset",
+              methodArgs = {java.lang.String.class, java.lang.String[].class}
+            )
+        })
     public void testConstructor_IllegalAliases_Middle() {
         try {
             new MockCharset("mockChar", new String[] { "mock", "22##ab" });
@@ -364,6 +607,15 @@ public class CharsetTest extends TestCase {
      * Test the method aliases() with multiple aliases. Most conditions have
      * been tested in the testcases for the constructors.
      */
+@TestInfo(
+        level = TestLevel.PARTIAL_OK,
+        purpose = "",
+        targets = {
+          @TestTarget(
+            methodName = "aliases",
+            methodArgs = {}
+          )
+      })
     public void testAliases_Multiple() {
         final String mockName = "mockChar1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.:-_";
         MockCharset c = new MockCharset("mockChar", new String[] { "mock",
@@ -386,6 +638,15 @@ public class CharsetTest extends TestCase {
      * Test the method aliases() with duplicate aliases, one same with its
      * canonical name.
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "aliases",
+          methodArgs = {}
+        )
+    })
     public void testAliases_Duplicate() {
         final String mockName = "mockChar1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.:-_";
         MockCharset c = new MockCharset("mockChar", new String[] { "mockChar",
@@ -401,6 +662,15 @@ public class CharsetTest extends TestCase {
     /*
      * Test the method canEncode(). Test the default return value.
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "canEncode",
+          methodArgs = {}
+        )
+    })
     public void testCanEncode() {
         MockCharset c = new MockCharset("mock", null);
         assertTrue(c.canEncode());
@@ -409,6 +679,15 @@ public class CharsetTest extends TestCase {
     /*
      * Test the method isRegistered(). Test the default return value.
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isRegistered",
+          methodArgs = {}
+        )
+    })
     public void testIsRegistered() {
         MockCharset c = new MockCharset("mock", null);
         assertTrue(c.isRegistered());
@@ -417,6 +696,15 @@ public class CharsetTest extends TestCase {
     /*
      * The name() method has been tested by the testcases for the constructor.
      */
+@TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Test is empty",
+      targets = {
+        @TestTarget(
+          methodName = "name",
+          methodArgs = {}
+        )
+    })
     public void testName() {
         // already covered by testConstructor_XXX series
     }
@@ -425,6 +713,15 @@ public class CharsetTest extends TestCase {
      * The displayName() method have been tested by the testcases for the
      * constructor.
      */
+@TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Test is empty",
+      targets = {
+        @TestTarget(
+          methodName = "displayName",
+          methodArgs = {}
+        )
+    })
     public void testDisplayName() {
         // already covered by testConstructor_XXX series
     }
@@ -432,6 +729,15 @@ public class CharsetTest extends TestCase {
     /*
      * Test displayName(Locale) with null.
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "displayName",
+          methodArgs = {java.util.Locale.class}
+        )
+    })
     public void testDisplayName_Locale_Null() {
         MockCharset c = new MockCharset("mock", null);
         assertEquals("mock", c.displayName(null));
@@ -440,6 +746,15 @@ public class CharsetTest extends TestCase {
     /*
      * Test the method compareTo(Object) with normal conditions.
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "compareTo",
+          methodArgs = {java.nio.charset.Charset.class}
+        )
+    })
     public void testCompareTo_Normal() {
         MockCharset c1 = new MockCharset("mock", null);
         assertEquals(0, c1.compareTo(c1));
@@ -475,6 +790,15 @@ public class CharsetTest extends TestCase {
     /*
      * Test the method compareTo(Object) with null param.
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "compareTo",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void testCompareTo_Null() {
         MockCharset c1 = new MockCharset("mock", null);
         try {
@@ -488,6 +812,15 @@ public class CharsetTest extends TestCase {
     /*
      * Test the method compareTo(Object) with another kind of charset object.
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "compareTo",
+          methodArgs = {java.nio.charset.Charset.class}
+        )
+    })
     public void testCompareTo_DiffCharsetClass() {
         MockCharset c1 = new MockCharset("mock", null);
         MockCharset2 c2 = new MockCharset2("Mock", new String[] { "myname" });
@@ -498,6 +831,15 @@ public class CharsetTest extends TestCase {
     /*
      * Test the method equals(Object) with null param.
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "equals",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void testEquals_Normal() {
         MockCharset c1 = new MockCharset("mock", null);
         MockCharset2 c2 = new MockCharset2("mock", null);
@@ -512,6 +854,15 @@ public class CharsetTest extends TestCase {
     /*
      * Test the method equals(Object) with normal conditions.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "",
+          targets = {
+            @TestTarget(
+              methodName = "equals",
+              methodArgs = {java.lang.Object.class}
+            )
+        })
     public void testEquals_Null() {
         MockCharset c1 = new MockCharset("mock", null);
         assertFalse(c1.equals(null));
@@ -520,6 +871,15 @@ public class CharsetTest extends TestCase {
     /*
      * Test the method equals(Object) with another kind of charset object.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "",
+          targets = {
+            @TestTarget(
+              methodName = "equals",
+              methodArgs = {java.lang.Object.class}
+            )
+        })
     public void testEquals_NonCharsetObject() {
         MockCharset c1 = new MockCharset("mock", null);
         assertFalse(c1.equals("test"));
@@ -528,6 +888,15 @@ public class CharsetTest extends TestCase {
     /*
      * Test the method equals(Object) with another kind of charset object.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "",
+          targets = {
+            @TestTarget(
+              methodName = "equals",
+              methodArgs = {java.lang.Object.class}
+            )
+        })
     public void testEquals_DiffCharsetClass() {
         MockCharset c1 = new MockCharset("mock", null);
         MockCharset2 c2 = new MockCharset2("mock", null);
@@ -538,6 +907,15 @@ public class CharsetTest extends TestCase {
     /*
      * Test the method hashCode().
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "hashCode",
+          methodArgs = {}
+        )
+    })
     public void testHashCode_DiffCharsetClass() {
         MockCharset c1 = new MockCharset("mock", null);
         assertEquals(c1.hashCode(), "mock".hashCode());
@@ -551,6 +929,15 @@ public class CharsetTest extends TestCase {
     /*
      * Test the method encode(CharBuffer) under normal condition.
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "encode",
+          methodArgs = {java.nio.CharBuffer.class}
+        )
+    })
     public void testEncode_CharBuffer_Normal() throws Exception {
         MockCharset c1 = new MockCharset("testEncode_CharBuffer_Normal_mock", null);
         ByteBuffer bb = c1.encode(CharBuffer.wrap("abcdefg"));
@@ -562,6 +949,18 @@ public class CharsetTest extends TestCase {
     /*
      * Test the method encode(CharBuffer) with an unmappable char.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "",
+          targets = {
+            @TestTarget(
+              methodName = "encode",
+              methodArgs = {java.nio.CharBuffer.class}
+            ), @TestTarget(
+          methodName = "newEncoder",
+          methodArgs = {}
+        )
+        })
     public void testEncode_CharBuffer_Unmappable() throws Exception {
         Charset c1 = Charset.forName("iso8859-1");
         ByteBuffer bb = c1.encode(CharBuffer.wrap("abcd\u5D14efg"));
@@ -573,6 +972,15 @@ public class CharsetTest extends TestCase {
     /*
      * Test the method encode(CharBuffer) with null CharBuffer.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "",
+          targets = {
+            @TestTarget(
+              methodName = "encode",
+              methodArgs = {java.nio.CharBuffer.class}
+            )
+        })
     public void testEncode_CharBuffer_NullCharBuffer() {
         MockCharset c = new MockCharset("mock", null);
         try {
@@ -586,6 +994,15 @@ public class CharsetTest extends TestCase {
     /*
      * Test the method encode(CharBuffer) with null encoder.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "",
+          targets = {
+            @TestTarget(
+              methodName = "encode",
+              methodArgs = {java.nio.CharBuffer.class}
+            )
+        })
     public void testEncode_CharBuffer_NullEncoder() {
         MockCharset2 c = new MockCharset2("mock2", null);
         try {
@@ -599,6 +1016,15 @@ public class CharsetTest extends TestCase {
     /*
      * Test the method encode(String) under normal condition.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "",
+          targets = {
+            @TestTarget(
+              methodName = "encode",
+              methodArgs = {java.nio.CharBuffer.class}
+            )
+        })
     public void testEncode_String_Normal() throws Exception {
         MockCharset c1 = new MockCharset("testEncode_String_Normal_mock", null);
         ByteBuffer bb = c1.encode("abcdefg");
@@ -610,6 +1036,18 @@ public class CharsetTest extends TestCase {
     /*
      * Test the method encode(String) with an unmappable char.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "",
+          targets = {
+            @TestTarget(
+              methodName = "encode",
+              methodArgs = {java.nio.CharBuffer.class}
+            ), @TestTarget(
+        methodName = "newEncoder",
+        methodArgs = {}
+      )
+        })
     public void testEncode_String_Unmappable() throws Exception {
         Charset c1 = Charset.forName("iso8859-1");
         ByteBuffer bb = c1.encode("abcd\u5D14efg");
@@ -621,6 +1059,15 @@ public class CharsetTest extends TestCase {
     /*
      * Test the method encode(String) with null CharBuffer.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "",
+          targets = {
+            @TestTarget(
+              methodName = "encode",
+              methodArgs = {java.nio.CharBuffer.class}
+            )
+        })
     public void testEncode_String_NullString() {
         MockCharset c = new MockCharset("mock", null);
         try {
@@ -634,6 +1081,15 @@ public class CharsetTest extends TestCase {
     /*
      * Test the method encode(String) with null encoder.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "",
+          targets = {
+            @TestTarget(
+              methodName = "encode",
+              methodArgs = {java.nio.CharBuffer.class}
+            )
+        })
     public void testEncode_String_NullEncoder() {
 
         MockCharset2 c = new MockCharset2("mock2", null);
@@ -648,6 +1104,15 @@ public class CharsetTest extends TestCase {
     /*
      * Test the method decode(ByteBuffer) under normal condition.
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "decode",
+          methodArgs = {java.nio.ByteBuffer.class}
+        )
+    })
     public void testDecode_Normal() throws Exception {
         MockCharset c1 = new MockCharset("mock", null);
         CharBuffer cb = c1.decode(ByteBuffer.wrap("abcdefg"
@@ -660,6 +1125,15 @@ public class CharsetTest extends TestCase {
     /*
      * Test the method decode(ByteBuffer) with a malformed input.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "",
+          targets = {
+            @TestTarget(
+              methodName = "decode",
+              methodArgs = {java.nio.ByteBuffer.class}
+        )
+        })
     public void testDecode_Malformed() throws Exception {
         Charset c1 = Charset.forName("iso8859-1");
         CharBuffer cb = c1.decode(ByteBuffer.wrap("abcd\u5D14efg"
@@ -672,6 +1146,15 @@ public class CharsetTest extends TestCase {
     /*
      * Test the method decode(ByteBuffer) with null CharBuffer.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "",
+          targets = {
+            @TestTarget(
+              methodName = "decode",
+              methodArgs = {java.nio.ByteBuffer.class}
+            )
+        })
     public void testDecode_NullByteBuffer() {
         MockCharset c = new MockCharset("mock", null);
         try {
@@ -685,6 +1168,15 @@ public class CharsetTest extends TestCase {
     /*
      * Test the method decode(ByteBuffer) with null encoder.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "",
+          targets = {
+            @TestTarget(
+              methodName = "decode",
+              methodArgs = {java.nio.ByteBuffer.class}
+            )
+        })
     public void testDecode_NullDecoder() {
         MockCharset2 c = new MockCharset2("mock2", null);
         try {
@@ -698,6 +1190,15 @@ public class CharsetTest extends TestCase {
     /*
      * Test the method toString().
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public void testToString() {
         MockCharset c1 = new MockCharset("mock", null);
         assertTrue(-1 != c1.toString().indexOf("mock"));
@@ -706,7 +1207,16 @@ public class CharsetTest extends TestCase {
     /**
      * @tests java.nio.charset.Charset#availableCharsets()
      */
-    public void test_availableCharsets() throws Exception {
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "availableCharsets",
+          methodArgs = {}
+        )
+    })
+    public void _test_availableCharsets() throws Exception {
         // regression test for Harmony-1051
         ClassLoader originalClassLoader = Thread.currentThread()
                 .getContextClassLoader();
@@ -723,7 +1233,16 @@ public class CharsetTest extends TestCase {
     /**
      * @tests java.nio.charset.Charset#availableCharsets()
      */
-    public void test_forNameLString() throws Exception {
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "forName",
+          methodArgs = {java.lang.String.class}
+        )
+    })
+    public void _test_forNameLString() throws Exception {
         // regression test for Harmony-1051
         ClassLoader originalClassLoader = Thread.currentThread()
                 .getContextClassLoader();

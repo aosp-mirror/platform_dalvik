@@ -20,83 +20,110 @@ package java.sql;
 import java.util.Map;
 
 /**
- * A Connection represents a link from a Java application to a database. All SQL
+ * A connection represents a link from a Java application to a database. All SQL
  * statements and results are returned within the context of a connection.
- * 
+ * Database statements that are executed within this context form a
+ * database session which forms one or more closed transactions. Especially In distributed applications, multiple concurrent connections may exist accessing the same values of the database.
+ * which may lead to the following phenomena (referred to as <i>transaction isolation levels</i>):
+ * <ul>
+ * <li><i>dirty reads</i>:<br>
+ * reading values from table rows that are not committed.</br></li>
+ * <li><i>non-repeatable reads</i>:<br>
+ * reading table rows more than once in a transaction but getting back different
+ * data because other transactions have altered the rows between the reads.</br></li>
+ * <li><i>phantom reads</i>:<br>
+ * retrieving additional "phantom" rows in the course of repeated table reads
+ * because other transactions have inserted additional rows that satisfy an
+ * SQL {@code WHERE} clause</br></li>
+ * </ul>
+ *  
+ * @since Android 1.0
  */
 public interface Connection {
 
     /**
      * A constant indicating that transactions are not supported.
+     * 
+     * @since Android 1.0
      */
     public static final int TRANSACTION_NONE = 0;
 
     /**
-     * No dirty reads are permitted. Transactions may not read a row containing
-     * changes that have not yet been committed.
+     * No <i>dirty reads</i> are permitted, therefore transactions may not read
+     * a row containing uncommitted values - but does not prevent an application
+     * from <i>non-repeatable reads</i> and <i>phantom reads</i>.
+     * 
+     * @since Android 1.0
      */
     public static final int TRANSACTION_READ_COMMITTED = 2;
 
     /**
-     * Dirty reads (reading from table rows containing changes that have not yet
-     * been committed), non-repeatable reads (reading table rows more than once
-     * in a transaction but getting back different data because other
-     * transactions may have altered rows between reads), and phantom reads
-     * (retrieving additional "phantom" rows in the course of repeated table
-     * reads because other transactions may have inserted additional rows that
-     * satisfy an SQL <code>WHERE</code> clause) are <b>all permitted</b>.
+     * In the case that reading uncommitted values is allowed, the following
+     * incidents may happen which may lead to an invalid results:
+     * <ul>
+     * <li><i>dirty reads</i></li>
+     * <li><i>non-repeatable reads</i></li>
+     * <li><i>phantom reads</i></li>
+     * </ul>
+     * 
+     * @since Android 1.0
      */
     public static final int TRANSACTION_READ_UNCOMMITTED = 1;
 
     /**
-     * A constant indicating that dirty reads and non-repeatable reads are
-     * prevented; phantom reads can occur.
+     * A constant indicating that <i>dirty reads</i> and <i>non-repeatable
+     * reads</i> are <b>prevented</b> but <i>phantom reads</i> can occur.
+     * 
+     * @since Android 1.0
      */
     public static final int TRANSACTION_REPEATABLE_READ = 4;
 
     /**
-     * Dirty reads (reading from table rows containing changes that have not yet
-     * been committed), non-repeatable reads (reading table rows more than once
-     * in a transaction but getting back different data because other
-     * transactions may have altered rows between reads), and phantom reads
-     * (retrieving additional "phantom" rows in the course of repeated table
-     * reads because other transactions may have inserted additional rows that
-     * satisfy an SQL <code>WHERE</code> clause) are <b>all prevented</b>.
+     * The constant that indicates that the following incidents are <b>all
+     * prevented</b> (the opposite of {@link #TRANSACTION_READ_UNCOMMITTED}):
+     * <ul>
+     * <li><i>dirty reads</i></li>
+     * <li><i>non-repeatable reads</i></li>
+     * <li><i>phantom reads</i></li>
+     * </ul>
+     * 
+     * @since Android 1.0
      */
     public static final int TRANSACTION_SERIALIZABLE = 8;
 
     /**
-     * Throws away any warnings that may have arisen for this connection.
-     * Subsequent calls to {@link #getWarnings()} will return <code>null</code>
-     * up until a brand new warning condition occurs.
+     * Discards all warnings that may have arisen for this connection.
+     * Subsequent calls to {@link #getWarnings()} will return {@code null}
+     * up until a new warning condition occurs.
      * 
      * @throws SQLException
-     *             if there is a problem accessing the database
+     *             if there is a problem accessing the database.
      */
     public void clearWarnings() throws SQLException;
 
     /**
      * Causes the instant release of all database and driver connection
      * resources associated with this object. Any subsequent invocations of this
-     * method will have no effect.
+     * method have no effect.
      * <p>
-     * It is strongly recommended that all Connections are closed before they
-     * are dereferenced by the application ready for garbage collection. While
-     * the finalize method of the Connection will close the Connection before
-     * garbage collection takes place, it is not advisable to leave the close
-     * operation to take place in this way. Unpredictable performance may result
-     * from closing Connections in the finalizer.
+     * It is strongly recommended that all connections are closed before they
+     * are dereferenced by the application ready for garbage collection.
+     * Although the {@code finalize} method of the connection closes the
+     * connection before garbage collection takes place, it is not advisable to
+     * leave the {@code close} operation to take place in this way. Mainly
+     * because undesired side-effects may appear.
+     * </p>
      * 
      * @throws SQLException
-     *             if there is a problem accessing the database
+     *             if there is a problem accessing the database.
      */
     public void close() throws SQLException;
 
     /**
-     * Commits all of the changes made subsequent to the last commit or rollback
-     * of the associated transaction. All locks in the database held by this
-     * connection are also relinquished. Calling this operation on connection
-     * objects in auto-commit mode is an error.
+     * Commits all of the changes made since the last {@code commit} or
+     * {@code rollback} of the associated transaction. All locks in the database
+     * held by this connection are also relinquished. Calling this operation on
+     * connection objects in {@code auto-commit} mode leads to an error.
      * 
      * @throws SQLException
      *             if there is a problem accessing the database or if the target
@@ -105,41 +132,41 @@ public interface Connection {
     public void commit() throws SQLException;
 
     /**
-     * Returns a new instance of <code>Statement</code> for issuing SQL
-     * commands to the remote database.
+     * Returns a new instance of {@code Statement} for issuing SQL commands to
+     * the remote database.
      * <p>
-     * ResultSets generated by the returned Statement will default to type
-     * <code>TYPE_FORWARD_ONLY</code> and concurrency level
-     * <code>CONCUR_READ_ONLY</code>.
+     * {@code ResultSets} generated by the returned statement will default to
+     * type {@code ResultSet.TYPE_FORWARD_ONLY} and concurrency level {@code
+     * ResultSet.CONCUR_READ_ONLY}.
      * 
-     * @return a <code>Statement</code> object with default settings.
+     * @return a {@code Statement} object with default settings.
      * @throws SQLException
-     *             if there is a problem accessing the database
+     *             if there is a problem accessing the database.
+     * @see ResultSet
      */
     public Statement createStatement() throws SQLException;
 
     /**
-     * Returns a new instance of <code>Statement</code> whose associated
-     * <code>ResultSet</code>s will have the characteristics specified in the
-     * type, concurrency and holdability arguments.
+     * Returns a new instance of {@code Statement} whose associated {@code
+     * ResultSet}s have the characteristics specified in the type and
+     * concurrency arguments.
      * 
      * @param resultSetType
-     *            one of :
+     *            one of the following type specifiers:
      *            <ul>
-     *            <li>{@link ResultSet#TYPE_SCROLL_SENSITIVE}
-     *            <li>{@link ResultSet#TYPE_SCROLL_INSENSITIVE}
-     *            <li>{@link ResultSet#TYPE_FORWARD_ONLY}
+     *            <li>{@link ResultSet#TYPE_SCROLL_SENSITIVE} </li> <li>
+     *            {@link ResultSet#TYPE_SCROLL_INSENSITIVE} </li> <li>
+     *            {@link ResultSet#TYPE_FORWARD_ONLY}</li>
      *            </ul>
      * @param resultSetConcurrency
-     *            one of :
+     *            one of the following concurrency mode specifiers:
      *            <ul>
-     *            <li>{@link ResultSet#CONCUR_UPDATABLE}
-     *            <li>{@link ResultSet#CONCUR_READ_ONLY}
+     *            <li>{@link ResultSet#CONCUR_UPDATABLE}</li> <li>
+     *            {@link ResultSet#CONCUR_READ_ONLY}</li>
      *            </ul>
-     * @return a new instance of <code>Statement</code> capable of
-     *         manufacturing <code>ResultSet</code>s that satisfy the
-     *         specified <code>resultSetType</code> and
-     *         <code>resultSetConcurrency</code> values.
+     * @return a new instance of {@code Statement} capable of manufacturing
+     *         {@code ResultSet}s that satisfy the specified {@code
+     *         resultSetType} and {@code resultSetConcurrency} values.
      * @throws SQLException
      *             if there is a problem accessing the database
      */
@@ -147,158 +174,165 @@ public interface Connection {
             throws SQLException;
 
     /**
-     * Returns a new instance of <code>Statement</code> whose associated
-     * <code>ResultSet</code>s will have the characteristics specified in the
+     * Returns a new instance of {@code Statement} whose associated
+     * {@code ResultSet}s will have the characteristics specified in the
      * type, concurrency and holdability arguments.
      * 
      * @param resultSetType
-     *            one of :
+     *            one of the following type specifiers:
      *            <ul>
-     *            <li>{@link ResultSet#TYPE_SCROLL_SENSITIVE}
-     *            <li>{@link ResultSet#TYPE_SCROLL_INSENSITIVE}
-     *            <li>{@link ResultSet#TYPE_FORWARD_ONLY}
+     *            <li>{@link ResultSet#TYPE_SCROLL_SENSITIVE}</li>
+     *            <li>{@link ResultSet#TYPE_SCROLL_INSENSITIVE}</li>
+     *            <li>{@link ResultSet#TYPE_FORWARD_ONLY}</li>
      *            </ul>
      * @param resultSetConcurrency
-     *            one of :
+     *            one of the following concurrency mode specifiers:
      *            <ul>
-     *            <li>{@link ResultSet#CONCUR_UPDATABLE}
-     *            <li>{@link ResultSet#CONCUR_READ_ONLY}
+     *            <li>{@link ResultSet#CONCUR_UPDATABLE}</li>
+     *            <li>{@link ResultSet#CONCUR_READ_ONLY}</li>
      *            </ul>
      * @param resultSetHoldability
-     *            one of :
+     *            one of the following holdability mode specifiers:
      *            <ul>
-     *            <li>{@link ResultSet#HOLD_CURSORS_OVER_COMMIT}
-     *            <li>{@link ResultSet#CLOSE_CURSORS_AT_COMMIT}
+     *            <li>{@link ResultSet#HOLD_CURSORS_OVER_COMMIT}</li>
+     *            <li>{@link ResultSet#CLOSE_CURSORS_AT_COMMIT}</li>
      *            </ul>
-     * @return a new instance of <code>Statement</code> capable of
-     *         manufacturing <code>ResultSet</code>s that satisfy the
-     *         specified <code>resultSetType</code>,
-     *         <code>resultSetConcurrency</code> and
-     *         <code>resultSetHoldability</code> values.
+     * @return a new instance of {@code Statement} capable of
+     *         manufacturing {@code ResultSet}s that satisfy the
+     *         specified {@code resultSetType},
+     *         {@code resultSetConcurrency} and
+     *         {@code resultSetHoldability} values.
      * @throws SQLException
-     *             if there is a problem accessing the database
+     *             if there is a problem accessing the database.
      */
     public Statement createStatement(int resultSetType,
             int resultSetConcurrency, int resultSetHoldability)
             throws SQLException;
 
     /**
-     * Returns a boolean indication of whether or not this connection is in the
-     * auto-commit operating mode.
+     * Returns a {@code boolean} indicating whether or not this connection is in
+     * the {@code auto-commit} operating mode.
      * 
-     * @return <code>true</code> if auto-commit is on, otherwise
-     *         <code>false</code>
+     * @return {@code true} if {@code auto-commit} is on, otherwise {@code
+     *         false}.
      * @throws SQLException
-     *             if there is a problem accessing the database
+     *             if there is a problem accessing the database.
+     * @since Android 1.0
      */
     public boolean getAutoCommit() throws SQLException;
 
     /**
-     * Gets this Connection object's current catalog name.
+     * Gets this {@code Connection} object's current catalog name.
      * 
-     * @return the catalog name. <code>null</code> if there is no catalog
+     * @return the catalog name. {@code null} if there is no catalog
      *         name.
      * @throws SQLException
-     *             if there is a problem accessing the database
+     *             if there is a problem accessing the database.
      */
     public String getCatalog() throws SQLException;
 
     /**
-     * Returns the kind of holdability that any <code>ResultSet</code>s made
-     * from this instance will have.
+     * Returns the holdability property that any {@code ResultSet} produced by
+     * this instance will have.
      * 
-     * @return one of :
+     * @return one of the following holdability mode specifiers:
      *         <ul>
-     *         <li>{@link ResultSet#HOLD_CURSORS_OVER_COMMIT}
-     *         <li>{@link ResultSet#CLOSE_CURSORS_AT_COMMIT}
+     *         <li>{@link ResultSet#HOLD_CURSORS_OVER_COMMIT}</li> <li>
+     *         {@link ResultSet#CLOSE_CURSORS_AT_COMMIT}</li>
      *         </ul>
      * @throws SQLException
-     *             if there is a problem accessing the a database
+     *             if there is a problem accessing the a database.
+     * @since Android 1.0
      */
     public int getHoldability() throws SQLException;
 
     /**
      * Gets the metadata about the database referenced by this connection. The
-     * returned <code>DatabaseMetaData</code> describes the database
-     * topography, available stored procedures, SQL syntax and so on.
+     * returned {@code DatabaseMetaData} describes the database topography,
+     * available stored procedures, SQL syntax and so on.
      * 
-     * @return a <code>DatabaseMetaData</code> object containing the database
-     *         description
+     * @return a {@code DatabaseMetaData} object containing the database
+     *         description.
      * @throws SQLException
-     *             if there is a problem accessing the a database
+     *             if there is a problem accessing the a database.
+     * @since Android 1.0
      */
     public DatabaseMetaData getMetaData() throws SQLException;
 
     /**
-     * Returns the present value of transaction isolation for this Connection
-     * instance.
+     * Returns the transaction isolation level for this connection.
      * 
-     * @return the transaction isolation value
+     * @return the transaction isolation value.
      * @throws SQLException
-     *             if there is a problem accessing the database
+     *             if there is a problem accessing the database.
      * @see #TRANSACTION_NONE
      * @see #TRANSACTION_READ_COMMITTED
      * @see #TRANSACTION_READ_UNCOMMITTED
      * @see #TRANSACTION_REPEATABLE_READ
      * @see #TRANSACTION_SERIALIZABLE
+     * @since Android 1.0
      */
     public int getTransactionIsolation() throws SQLException;
 
     /**
-     * Returns the Type Map associated with this Connection object. The type map
-     * will be empty unless the application has added at least one entry.
+     * Returns the type mapping associated with this {@code Connection} object.
+     * The type mapping must be set on the application level.
      * 
-     * @return the Type Map as a <code>java.util.Map</code>
+     * @return the Type Map as a {@code java.util.Map}.
      * @throws SQLException
-     *             if there is a problem accessing the database
+     *             if there is a problem accessing the database.
+     * @since Android 1.0
      */
     public Map<String, Class<?>> getTypeMap() throws SQLException;
 
     /**
-     * Gets the first instance of any <code>SQLWarning</code> objects that may
-     * have been created in the use of this connection. If at least one warning
-     * has occurred then this operation returns the first one reported. A
-     * <code>null</code> indicates that no warnings have occurred.
+     * Gets the first instance of any {@code SQLWarning} objects that may have
+     * been created in the use of this connection. If at least one warning has
+     * occurred then this operation returns the first one reported. A {@code
+     * null} indicates that no warnings have occurred.
      * <p>
      * By invoking the {@link SQLWarning#getNextWarning()} method of the
-     * returned <code>SQLWarning</code> object it is possible to obtain all
-     * warning objects.
+     * returned {@code SQLWarning} object it is possible to obtain all of
+     * this connection's warning objects.
+     * </p>
      * 
-     * @return the first warning as an SQLWarning object (may be
-     *         <code>null</code>)
+     * @return the first warning as an SQLWarning object (may be {@code null}).
      * @throws SQLException
      *             if there is a problem accessing the database or if the call
      *             has been made on a connection which has been previously
      *             closed.
+     * @since Android 1.0
      */
     public SQLWarning getWarnings() throws SQLException;
 
     /**
-     * Returns a boolean indication of whether or not this connection is in the
-     * closed state. The closed state may be entered into as a consequence of a
-     * successful invocation of the {@link #close()} method or else if an error
-     * has occurred that prevents the connection from functioning normally.
+     * Returns a {@code boolean} indicating whether or not this connection is in
+     * the {@code closed} state. The {@code closed} state may be entered into as
+     * a consequence of a successful invocation of the {@link #close()} method
+     * or else if an error has occurred that prevents the connection from
+     * functioning normally.
      * 
-     * @return <code>true</code> if closed, otherwise <code>false</code>
+     * @return {@code true} if closed, otherwise {@code false}.
      * @throws SQLException
-     *             if there is a problem accessing the database
+     *             if there is a problem accessing the database.
+     * @since Android 1.0
      */
     public boolean isClosed() throws SQLException;
 
     /**
-     * Returns a boolean indication of whether or not this connection is
-     * currently in read-only state.
+     * Returns a {@code boolean} indicating whether or not this connection is
+     * currently in the {@code read-only} state.
      * 
-     * @return <code>true</code> if in read-only state, otherwise
-     *         <code>false</code>.
+     * @return {@code true} if in read-only state, otherwise {@code false}.
      * @throws SQLException
-     *             if there is a problem accessing the database
+     *             if there is a problem accessing the database.
+     * @since Android 1.0
      */
     public boolean isReadOnly() throws SQLException;
 
     /**
      * Returns a string representation of the input SQL statement
-     * <code>sql</code> expressed in the underlying system's native SQL
+     * {@code sql} expressed in the underlying system's native SQL
      * syntax.
      * 
      * @param sql
@@ -310,354 +344,364 @@ public interface Connection {
     public String nativeSQL(String sql) throws SQLException;
 
     /**
-     * Returns a new instance of <code>CallableStatement</code> that may be
-     * used for making stored procedure calls to the database.
+     * Returns a new instance of {@code CallableStatement} that may be used for
+     * making stored procedure calls to the database.
      * 
      * @param sql
      *            the SQL statement that calls the stored function
-     * @return a new instance of <code>CallableStatement</code> representing
-     *         the SQL statement. <code>ResultSet</code>s emitted from this
-     *         <code>CallableStatement</code> will default to type
+     * @return a new instance of {@code CallableStatement} representing the SQL
+     *         statement. {@code ResultSet}s emitted from this {@code
+     *         CallableStatement} will default to type
      *         {@link ResultSet#TYPE_FORWARD_ONLY} and concurrency
      *         {@link ResultSet#CONCUR_READ_ONLY}.
      * @throws SQLException
-     *             if a problem occurs accessing the database
+     *             if a problem occurs accessing the database.
+     * @since Android 1.0
      */
     public CallableStatement prepareCall(String sql) throws SQLException;
 
     /**
-     * Returns a new instance of <code>CallableStatement</code> that may be
-     * used for making stored procedure calls to the database.
-     * <code>ResultSet</code>s emitted from this
-     * <code>CallableStatement</code> will satisfy the specified
-     * <code>resultSetType</code> and <code>resultSetConcurrency</code>
-     * values.
+     * Returns a new instance of {@code CallableStatement} that may be used for
+     * making stored procedure calls to the database. {@code ResultSet}s emitted
+     * from this {@code CallableStatement} will satisfy the specified {@code
+     * resultSetType} and {@code resultSetConcurrency} values.
      * 
      * @param sql
      *            the SQL statement
      * @param resultSetType
-     *            one of :
+     *            one of the following type specifiers:
      *            <ul>
-     *            <li>{@link ResultSet#TYPE_SCROLL_SENSITIVE}
-     *            <li>{@link ResultSet#TYPE_SCROLL_INSENSITIVE}
-     *            <li>{@link ResultSet#TYPE_FORWARD_ONLY}
+     *            <li>{@link ResultSet#TYPE_SCROLL_SENSITIVE}</li>
+     *            <li>{@link ResultSet#TYPE_SCROLL_INSENSITIVE}</li>
+     *            <li>{@link ResultSet#TYPE_FORWARD_ONLY}</li>
      *            </ul>
      * @param resultSetConcurrency
-     *            one of :
+     *            one of the following concurrency mode specifiers:
      *            <ul>
-     *            <li>{@link ResultSet#CONCUR_READ_ONLY}
-     *            <li>{@link ResultSet#CONCUR_UPDATABLE}
+     *            <li>{@link ResultSet#CONCUR_READ_ONLY}</li>
+     *            <li>{@link ResultSet#CONCUR_UPDATABLE}</li>
      *            </ul>
-     * @return a new instance of <code>CallableStatement</code> representing
-     *         the precompiled SQL statement. <code>ResultSet</code>s emitted
-     *         from this <code>CallableStatement</code> will satisfy the
-     *         specified <code>resultSetType</code> and
-     *         <code>resultSetConcurrency</code> values.
+     * @return a new instance of {@code CallableStatement} representing the
+     *         precompiled SQL statement. {@code ResultSet}s emitted from this
+     *         {@code CallableStatement} will satisfy the specified {@code
+     *         resultSetType} and {@code resultSetConcurrency} values.
      * @throws SQLException
      *             if a problem occurs accessing the database
+     * @since Android 1.0
      */
     public CallableStatement prepareCall(String sql, int resultSetType,
             int resultSetConcurrency) throws SQLException;
 
     /**
-     * Returns a new instance of <code>CallableStatement</code> that may be
-     * used for making stored procedure calls to the database. ResultSets
-     * created from this <code>CallableStatement</code> will have
-     * characteristics determined by the specified type, concurrency and
-     * holdability arguments.
+     * Returns a new instance of {@code CallableStatement} that may be used for
+     * making stored procedure calls to the database. {@code ResultSet}s created
+     * from this {@code CallableStatement} will have characteristics determined
+     * by the specified type, concurrency and holdability arguments.
      * 
      * @param sql
      *            the SQL statement
      * @param resultSetType
-     *            one of :
+     *            one of the following type specifiers:
      *            <ul>
-     *            <li>{@link ResultSet#TYPE_SCROLL_SENSITIVE}
-     *            <li>{@link ResultSet#TYPE_SCROLL_INSENSITIVE}
-     *            <li>{@link ResultSet#TYPE_FORWARD_ONLY}
+     *            <li>{@link ResultSet#TYPE_SCROLL_SENSITIVE}</li>
+     *            <li>{@link ResultSet#TYPE_SCROLL_INSENSITIVE}</li>
+     *            <li>{@link ResultSet#TYPE_FORWARD_ONLY}</li>
      *            </ul>
      * @param resultSetConcurrency
-     *            one of :
+     *            one of the following concurrency mode specifiers:
      *            <ul>
-     *            <li>{@link ResultSet#CONCUR_READ_ONLY}
-     *            <li>{@link ResultSet#CONCUR_UPDATABLE}
+     *            <li>{@link ResultSet#CONCUR_READ_ONLY}</li>
+     *            <li>{@link ResultSet#CONCUR_UPDATABLE}</li>
      *            </ul>
      * @param resultSetHoldability
-     *            one of :
+     *            one of the following holdability mode specifiers:
      *            <ul>
-     *            <li>{@link ResultSet#HOLD_CURSORS_OVER_COMMIT}
-     *            <li>{@link ResultSet#CLOSE_CURSORS_AT_COMMIT}
+     *            <li>{@link ResultSet#HOLD_CURSORS_OVER_COMMIT}</li>
+     *            <li>{@link ResultSet#CLOSE_CURSORS_AT_COMMIT}</li>
      *            </ul>
-     * @return a new instance of <code>CallableStatement</code> representing
-     *         the precompiled SQL statement. <code>ResultSet</code>s emitted
-     *         from this <code>CallableStatement</code> will satisfy the
-     *         specified <code>resultSetType</code>,
-     *         <code>resultSetConcurrency</code> and
-     *         <code>resultSetHoldability</code> values.
+     * @return a new instance of {@code CallableStatement} representing the
+     *         precompiled SQL statement. {@code ResultSet}s emitted from this
+     *         {@code CallableStatement} will satisfy the specified {@code
+     *         resultSetType}, {@code resultSetConcurrency} and {@code
+     *         resultSetHoldability} values.
      * @throws SQLException
-     *             if a problem occurs accessing the database
+     *             if a problem occurs accessing the database.
+     * @since Android 1.0
      */
     public CallableStatement prepareCall(String sql, int resultSetType,
             int resultSetConcurrency, int resultSetHoldability)
             throws SQLException;
 
     /**
-     * Returns a new instance of <code>PreparedStatement</code> that may be
-     * used any number of times to execute parameterized requests on the
-     * database server.
+     * Returns a new instance of {@code PreparedStatement} that may be used any
+     * number of times to execute parameterized requests on the database server.
      * <p>
      * Subject to JDBC driver support, this operation will attempt to send the
-     * precompiled version of the statement to the database. Alternatively, if
-     * the driver is not capable of flowing precompiled statements, the
-     * statement will not reach the database server until it is executed. This
-     * will have a bearing on precisely when <code>SQLException</code>
-     * instances get raised.
-     * <p>
-     * By default, ResultSets from the returned object will be
+     * precompiled version of the statement to the database. If
+     * the driver does not support precompiled statements, the statement will
+     * not reach the database server until it is executed. This distinction
+     * determines the moment when {@code SQLException}s get raised.
+     * </p>
+     * By default, {@code ResultSet}s from the returned object will be
      * {@link ResultSet#TYPE_FORWARD_ONLY} type with a
      * {@link ResultSet#CONCUR_READ_ONLY} mode of concurrency.
      * 
      * @param sql
      *            the SQL statement.
-     * @return the PreparedStatement containing the supplied SQL statement
+     * @return the {@code PreparedStatement} containing the supplied SQL
+     *         statement.
      * @throws SQLException
-     *             if there is a problem accessing the database
+     *             if there is a problem accessing the database.
+     * @since Android 1.0
      */
     public PreparedStatement prepareStatement(String sql) throws SQLException;
 
     /**
-     * Creates a default PreparedStatement that can retrieve automatically
-     * generated keys. Parameter <code>autoGeneratedKeys</code> may be used to
-     * specify to the driver if such keys should be made accessible. This is
-     * only the case when <code>sql</code> is an insert statement.
+     * Creates a default {@code PreparedStatement} that can retrieve
+     * automatically generated keys. Parameter {@code autoGeneratedKeys} may be
+     * used to tell the driver whether such keys should be made accessible.
+     * This is only relevant when the {@code sql} statement is an {@code insert}
+     * statement.
      * <p>
-     * An SQL statement which may have IN parameters can be stored and
-     * precompiled in a PreparedStatement. The PreparedStatement can then be
-     * used to execute the statement multiple times in an efficient way.
-     * <p>
+     * An SQL statement which may have {@code IN} parameters can be stored and
+     * precompiled in a {@code PreparedStatement}. The {@code PreparedStatement}
+     * can then be then be used to execute the statement multiple times in an
+     * efficient way.
+     * </p>
      * Subject to JDBC driver support, this operation will attempt to send the
-     * precompiled version of the statement to the database. Alternatively, if
-     * the driver is not capable of flowing precompiled statements, the
-     * statement will not reach the database server until it is executed. This
-     * will have a bearing on precisely when <code>SQLException</code>
-     * instances get raised.
+     * precompiled version of the statement to the database. If
+     * the driver does not support precompiled statements, the statement will
+     * not reach the database server until it is executed. This distinction
+     * determines the moment when {@code SQLException}s get raised.
      * <p>
-     * By default, ResultSets from the returned object will be
+     * By default, {@code ResultSet}s from the returned object will be
      * {@link ResultSet#TYPE_FORWARD_ONLY} type with a
      * {@link ResultSet#CONCUR_READ_ONLY} mode of concurrency.
+     * </p>
      * 
      * @param sql
      *            the SQL statement.
      * @param autoGeneratedKeys
-     *            one of :
+     *            one of the following generated key options:
      *            <ul>
-     *            <li>{@link Statement#RETURN_GENERATED_KEYS}
-     *            <li>{@link Statement#NO_GENERATED_KEYS}
+     *            <li>{@link Statement#RETURN_GENERATED_KEYS}</li>
+     *            <li>{@link Statement#NO_GENERATED_KEYS}</li>
      *            </ul>
-     * @return a new <code>PreparedStatement</code> instance representing the
-     *         input SQL statement.
+     * @return a new {@code PreparedStatement} instance representing the input
+     *         SQL statement.
      * @throws SQLException
-     *             if there is a problem accessing the database
+     *             if there is a problem accessing the database.
+     * @since Android 1.0
      */
     public PreparedStatement prepareStatement(String sql, int autoGeneratedKeys)
             throws SQLException;
 
     /**
-     * Creates a default PreparedStatement that can retrieve the auto-generated
-     * keys designated by a supplied array. If <code>sql</code> is an SQL
-     * <code>INSERT</code> statement, parameter <code>columnIndexes</code>
-     * is expected to hold the index values for each column in the statement's
-     * intended database table containing the autogenerated-keys of interest.
-     * Otherwise <code>columnIndexes</code> is ignored.
+     * Creates a default {@code PreparedStatement} that can retrieve the
+     * auto-generated keys designated by a supplied array. If {@code sql} is an
+     * SQL {@code INSERT} statement, the parameter {@code columnIndexes} is expected
+     * to hold the index values for each column in the statement's intended
+     * database table containing the autogenerated-keys of interest. Otherwise
+     * {@code columnIndexes} is ignored.
      * <p>
      * Subject to JDBC driver support, this operation will attempt to send the
-     * precompiled version of the statement to the database. Alternatively, if
-     * the driver is not capable of flowing precompiled statements, the
-     * statement will not reach the database server until it is executed. This
-     * will have a bearing on precisely when <code>SQLException</code>
-     * instances get raised.
+     * precompiled version of the statement to the database. If
+     * the driver does not support precompiled statements, the statement will
+     * not reach the database server until it is executed. This distinction
+     * determines the moment when {@code SQLException}s get raised.
+     * </p>
      * <p>
-     * By default, ResultSets from the returned object will be
+     * By default, {@code ResultSet}s from the returned object will be
      * {@link ResultSet#TYPE_FORWARD_ONLY} type with a
-     * {@link ResultSet#CONCUR_READ_ONLY} mode of concurrency.
+     * {@link ResultSet#CONCUR_READ_ONLY} concurrency mode.
+     * </p>
      * 
      * @param sql
      *            the SQL statement.
      * @param columnIndexes
      *            the indexes of the columns for which auto-generated keys
      *            should be made available.
-     * @return the PreparedStatement containing the supplied SQL statement
+     * @return the PreparedStatement containing the supplied SQL statement.
      * @throws SQLException
-     *             if a problem occurs accessing the database
+     *             if a problem occurs accessing the database.
+     * @since Android 1.0
      */
     public PreparedStatement prepareStatement(String sql, int[] columnIndexes)
             throws SQLException;
 
     /**
-     * Creates a PreparedStatement that generates ResultSets with the specified
-     * values of <code>resultSetType</code> and
-     * <code>resultSetConcurrency</code>.
+     * Creates a {@code PreparedStatement} that generates {@code ResultSet}s
+     * with the specified values of {@code resultSetType} and {@code
+     * resultSetConcurrency}.
      * 
      * @param sql
-     *            the SQL statement. It can contain one or more '?' IN parameter
-     *            placeholders
+     *            the SQL statement. It can contain one or more {@code '?'}
+     *            {@code IN} parameter placeholders.
      * @param resultSetType
-     *            one of :
+     *            one of the following type specifiers:
      *            <ul>
-     *            <li>{@link ResultSet#TYPE_SCROLL_SENSITIVE}
-     *            <li>{@link ResultSet#TYPE_SCROLL_INSENSITIVE}
-     *            <li>{@link ResultSet#TYPE_FORWARD_ONLY}
+     *            <li>{@link ResultSet#TYPE_SCROLL_SENSITIVE}</li>
+     *            <li>{@link ResultSet#TYPE_SCROLL_INSENSITIVE}</li>
+     *            <li>{@link ResultSet#TYPE_FORWARD_ONLY}</li>
      *            </ul>
      * @param resultSetConcurrency
-     *            one of :
+     *            one of the following concurrency mode specifiers:
      *            <ul>
-     *            <li>{@link ResultSet#CONCUR_READ_ONLY}
-     *            <li>{@link ResultSet#CONCUR_UPDATABLE}
+     *            <li>{@link ResultSet#CONCUR_READ_ONLY}</li>
+     *            <li>{@link ResultSet#CONCUR_UPDATABLE}</li>
      *            </ul>
-     * @return a new instance of <code>PreparedStatement</code> containing the
-     *         SQL statement <code>sql</code>. <code>ResultSet</code>s
-     *         emitted from this <code>PreparedStatement</code> will satisfy
-     *         the specified <code>resultSetType</code> and
-     *         <code>resultSetConcurrency</code> values.
+     * @return a new instance of {@code PreparedStatement} containing the SQL
+     *         statement {@code sql}. {@code ResultSet}s emitted from this
+     *         {@code PreparedStatement} will satisfy the specified {@code
+     *         resultSetType} and {@code resultSetConcurrency} values.
      * @throws SQLException
-     *             if a problem occurs accessing the database
+     *             if a problem occurs accessing the database.
+     * @since Android 1.0
      */
     public PreparedStatement prepareStatement(String sql, int resultSetType,
             int resultSetConcurrency) throws SQLException;
 
     /**
-     * Creates a PreparedStatement that generates ResultSets with the specified
-     * type, concurrency and holdability
+     * Creates a {@code PreparedStatement} that generates {@code ResultSet}s
+     * with the specified type, concurrency and holdability
      * 
      * @param sql
-     *            the SQL statement. It can contain one or more '?' IN parameter
-     *            placeholders
+     *            the SQL statement. It can contain one or more {@code '?' IN}
+     *            parameter placeholders.
      * @param resultSetType
-     *            one of :
+     *            one of the following type specifiers:
      *            <ul>
-     *            <li>{@link ResultSet#TYPE_SCROLL_SENSITIVE}
-     *            <li>{@link ResultSet#TYPE_SCROLL_INSENSITIVE}
-     *            <li>{@link ResultSet#TYPE_FORWARD_ONLY}
+     *            <li>{@link ResultSet#TYPE_SCROLL_SENSITIVE}</li>
+     *            <li>{@link ResultSet#TYPE_SCROLL_INSENSITIVE}</li>
+     *            <li>{@link ResultSet#TYPE_FORWARD_ONLY}</li>
      *            </ul>
      * @param resultSetConcurrency
-     *            one of :
+     *            one of the following concurrency mode specifiers:
      *            <ul>
-     *            <li>{@link ResultSet#CONCUR_READ_ONLY}
-     *            <li>{@link ResultSet#CONCUR_UPDATABLE}
+     *            <li>{@link ResultSet#CONCUR_READ_ONLY}</li>
+     *            <li>{@link ResultSet#CONCUR_UPDATABLE}</li>
      *            </ul>
      * @param resultSetHoldability
-     *            one of :
+     *            one of the following holdability mode specifiers:
      *            <ul>
-     *            <li>{@link ResultSet#HOLD_CURSORS_OVER_COMMIT}
-     *            <li>{@link ResultSet#CLOSE_CURSORS_AT_COMMIT}
+     *            <li>{@link ResultSet#HOLD_CURSORS_OVER_COMMIT}</li>
+     *            <li>{@link ResultSet#CLOSE_CURSORS_AT_COMMIT}</li>
      *            </ul>
-     * 
-     * @return a new instance of <code>PreparedStatement</code> containing the
-     *         SQL statement <code>sql</code>. <code>ResultSet</code>s
-     *         emitted from this <code>PreparedStatement</code> will satisfy
-     *         the specified <code>resultSetType</code>,
-     *         <code>resultSetConcurrency</code> and
-     *         <code>resultSetHoldability</code> values.
+     * @return a new instance of {@code PreparedStatement} containing the SQL
+     *         statement {@code sql}. {@code ResultSet}s emitted from this
+     *         {@code PreparedStatement} will satisfy the specified {@code
+     *         resultSetType}, {@code resultSetConcurrency} and {@code
+     *         resultSetHoldability} values.
      * @throws SQLException
-     *             if a problem occurs accessing the database
+     *             if a problem occurs accessing the database.
+     * @since Android 1.0
      */
     public PreparedStatement prepareStatement(String sql, int resultSetType,
             int resultSetConcurrency, int resultSetHoldability)
             throws SQLException;
 
     /**
-     * Creates a default PreparedStatement that can retrieve the auto-generated
-     * keys designated by a supplied array. If <code>sql</code> is an SQL
-     * <code>INSERT</code> statement, <code>columnNames</code> is expected
-     * to hold the names of each column in the statement's associated database
-     * table containing the autogenerated-keys of interest. Otherwise
-     * <code>columnNames</code> is ignored.
+     * Creates a default {@code PreparedStatement} that can retrieve the
+     * auto-generated keys designated by a supplied array. If {@code sql} is an
+     * SQL {@code INSERT} statement, {@code columnNames} is expected to hold the
+     * names of each column in the statement's associated database table
+     * containing the autogenerated-keys of interest. Otherwise {@code
+     * columnNames} is ignored.
      * <p>
      * Subject to JDBC driver support, this operation will attempt to send the
      * precompiled version of the statement to the database. Alternatively, if
-     * the driver is not capable of flowing precompiled statements, the
+     * the driver is not capable of handling precompiled statements, the
      * statement will not reach the database server until it is executed. This
-     * will have a bearing on precisely when <code>SQLException</code>
+     * will have a bearing on precisely <i>when</i> {@code SQLException}
      * instances get raised.
+     * </p>
      * <p>
      * By default, ResultSets from the returned object will be
      * {@link ResultSet#TYPE_FORWARD_ONLY} type with a
-     * {@link ResultSet#CONCUR_READ_ONLY} mode of concurrency.
+     * {@link ResultSet#CONCUR_READ_ONLY} concurrency mode.
+     * </p>
      * 
      * @param sql
      *            the SQL statement.
      * @param columnNames
      *            the names of the columns for which auto-generated keys should
      *            be made available.
-     * @return the PreparedStatement containing the supplied SQL statement
+     * @return the PreparedStatement containing the supplied SQL statement.
      * @throws SQLException
-     *             if a problem occurs accessing the database
+     *             if a problem occurs accessing the database.
+     * @since Android 1.0
      */
     public PreparedStatement prepareStatement(String sql, String[] columnNames)
             throws SQLException;
 
     /**
-     * Releases <code>savepoint</code> from the present transaction. Once
-     * removed, the <code>Savepoint</code> is considered invalid and should
-     * not be referenced further.
+     * Releases the specified {@code savepoint} from the present transaction. Once removed,
+     * the {@code Savepoint} is considered invalid and should not be referenced
+     * further.
      * 
      * @param savepoint
-     *            the object targeted for removal
+     *            the object targeted for removal.
      * @throws SQLException
      *             if there is a problem with accessing the database or if
-     *             <code>savepoint</code> is considered not valid in this
+     *             {@code savepoint} is considered not valid in this
      *             transaction.
+     * @since Android 1.0
      */
     public void releaseSavepoint(Savepoint savepoint) throws SQLException;
 
     /**
-     * Rolls back all updates made so far in this transaction as well as
-     * relinquishing all acquired database locks. It is an error to invoke this
+     * Rolls back all updates made so far in this transaction and
+     * relinquishes all acquired database locks. It is an error to invoke this
      * operation when in auto-commit mode.
      * 
      * @throws SQLException
      *             if there is a problem with the database or if the method is
      *             called while in auto-commit mode of operation.
+     * @since Android 1.0
      */
     public void rollback() throws SQLException;
 
     /**
-     * Undoes all changes made after the supplied Savepoint object was set. This
-     * method should only be used when auto-commit mode is disabled.
+     * Undoes all changes made after the supplied {@code Savepoint} object was
+     * set. This method should only be used when auto-commit mode is disabled.
      * 
      * @param savepoint
      *            the Savepoint to roll back to
      * @throws SQLException
-     *             if there is a problem accessing the database
+     *             if there is a problem accessing the database.
+     * @since Android 1.0
      */
     public void rollback(Savepoint savepoint) throws SQLException;
 
     /**
-     * Sets this connection's auto-commit mode on or off.
+     * Sets this connection's auto-commit mode {@code on} or {@code off}.
      * <p>
      * Putting a Connection into auto-commit mode means that all associated SQL
-     * statements will be run and committed in their own separate transactions.
-     * Alternatively, auto-commit set to off means that associated SQL
+     * statements are run and committed as separate transactions.
+     * By contrast, setting auto-commit to {@code off} means that associated SQL
      * statements get grouped into transactions that need to be completed by
      * explicit calls to either the {@link #commit()} or {@link #rollback()}
      * methods.
-     * <p>
+     * </p>
      * Auto-commit is the default mode for new connection instances.
      * <p>
      * When in this mode, commits will automatically occur upon successful SQL
      * statement completion or upon successful completion of an execute.
-     * Statements are not considered successfully complete until all associated
-     * <code>ResultSet</code>s and output parameters have been obtained or
-     * closed.
+     * Statements are not considered successfully completed until all associated
+     * {@code ResultSet}s and output parameters have been obtained or closed.
+     * </p>
      * <p>
      * Calling this operation during an uncommitted transaction will result in
      * it being committed.
+     * </p>
      * 
      * @param autoCommit
-     *            boolean indication of whether to put the target connection
-     *            into auto-commit mode (<code>true</code>) or not (<code>false</code>)
-     * 
+     *            {@code boolean} indication of whether to put the target
+     *            connection into auto-commit mode ({@code true}) or not (
+     *            {@code false}).
      * @throws SQLException
-     *             if there is a problem accessing the database
+     *             if there is a problem accessing the database.
+     * @since Android 1.0
      */
     public void setAutoCommit(boolean autoCommit) throws SQLException;
 
@@ -669,18 +713,19 @@ public interface Connection {
      * @param catalog
      *            the catalog name to use.
      * @throws SQLException
-     *             if there is a problem accessing the database
+     *             if there is a problem accessing the database.
+     * @since Android 1.0
      */
     public void setCatalog(String catalog) throws SQLException;
 
     /**
-     * Sets the holdability of ResultSets created by this Connection.
+     * Sets the holdability of the {@code ResultSet}s created by this Connection.
      * 
      * @param holdability
-     *            one of :
+     *            one of the following holdability mode specifiers:
      *            <ul>
-     *            <li>{@link ResultSet#CLOSE_CURSORS_AT_COMMIT}
-     *            <li>{@link ResultSet#HOLD_CURSORS_OVER_COMMIT}
+     *            <li>{@link ResultSet#CLOSE_CURSORS_AT_COMMIT}</li>
+     *            <li>{@link ResultSet#HOLD_CURSORS_OVER_COMMIT}</li>
      *            <li>
      *            </ul>
      * @throws SQLException
@@ -693,32 +738,36 @@ public interface Connection {
      * <p>
      * This serves as a hint to the driver, which can enable database
      * optimizations.
+     * </p>
      * 
      * @param readOnly
-     *            true to set the Connection to read only mode. false disables
-     *            read-only mode
+     *            {@code true} to set the Connection to read only mode. {@code
+     *            false} disables read-only mode.
      * @throws SQLException
-     *             if there is a problem accessing the database
+     *             if there is a problem accessing the database.
+     * @since Android 1.0
      */
     public void setReadOnly(boolean readOnly) throws SQLException;
 
     /**
-     * Creates an unnamed Savepoint in the current transaction.
+     * Creates an unnamed {@code Savepoint} in the current transaction.
      * 
-     * @return a Savepoint object for this savepoint.
+     * @return a {@code Savepoint} object for this savepoint.
      * @throws SQLException
-     *             if there is a problem accessing the database
+     *             if there is a problem accessing the database.
+     * @since Android 1.0
      */
     public Savepoint setSavepoint() throws SQLException;
 
     /**
-     * Creates a named Savepoint in the current transaction.
+     * Creates a named {@code Savepoint} in the current transaction.
      * 
      * @param name
-     *            the name to use for the new Savepoint.
-     * @return a Savepoint object for this savepoint.
+     *            the name to use for the new {@code Savepoint}.
+     * @return a {@code Savepoint} object for this savepoint.
      * @throws SQLException
-     *             if there is a problem accessing the database
+     *             if there is a problem accessing the database.
+     * @since Android 1.0
      */
     public Savepoint setSavepoint(String name) throws SQLException;
 
@@ -727,10 +776,11 @@ public interface Connection {
      * <p>
      * If this method is called during a transaction, the results are
      * implementation defined.
+     * </p>
      * 
      * @param level
      *            the new transaction isolation level to use from the following
-     *            list of possible values :
+     *            list of possible values:
      *            <ul>
      *            <li>{@link #TRANSACTION_READ_COMMITTED}
      *            <li>{@link #TRANSACTION_READ_UNCOMMITTED}
@@ -739,21 +789,21 @@ public interface Connection {
      *            </ul>
      * @throws SQLException
      *             if there is a problem with the database or if the value of
-     *             <code>level</code> is not one of the expected constant
-     *             values.
+     *             {@code level} is not one of the expected constant values.
+     * @since Android 1.0
      */
     public void setTransactionIsolation(int level) throws SQLException;
 
     /**
-     * Sets the <code>TypeMap</code> for this connection. The input
-     * <code>map</code> should contain mappings between complex Java and SQL
-     * types.
+     * Sets the {@code TypeMap} for this connection. The input {@code map}
+     * should contain mappings between complex Java and SQL types.
      * 
      * @param map
-     *            the new type map
+     *            the new type map.
      * @throws SQLException
-     *             if there is a problem accessing the database or if
-     *             <code>map</code> is not an instance of {@link Map}.
+     *             if there is a problem accessing the database or if {@code
+     *             map} is not an instance of {@link Map}.
+     * @since Android 1.0
      */
     public void setTypeMap(Map<String, Class<?>> map) throws SQLException;
 }

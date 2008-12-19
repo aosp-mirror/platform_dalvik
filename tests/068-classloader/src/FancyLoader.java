@@ -1,4 +1,4 @@
-// Copyright 2008 Google Inc. All Rights Reserved.
+// Copyright 2008 The Android Open Source Project
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -175,7 +175,7 @@ public class FancyLoader extends ClassLoader {
          */
         res = findLoadedClass(name);
         if (res != null) {
-            System.out.println("MyClassLoader.loadClass: "
+            System.out.println("FancyLoader.loadClass: "
                 + name + " already loaded");
             if (resolve)
                 resolveClass(res);

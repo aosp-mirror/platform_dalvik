@@ -20,18 +20,22 @@ package java.nio.channels;
 import java.io.IOException;
 
 /**
- * Thrown when thread was interrupted while waiting to acquire a file lock.
+ * A {@code FileLockInterruptionException} is thrown when a thread is
+ * interrupted while waiting to acquire a file lock.
  * <p>
  * Note that the thread will also be in the 'interrupted' state.
  * </p>
  * 
+ * @since Android 1.0
  */
 public class FileLockInterruptionException extends IOException {
 
     private static final long serialVersionUID = 7104080643653532383L;
 
     /**
-     * Default constructor.
+     * Constructs a {@code FileLockInterruptionException}.
+     * 
+     * @since Android 1.0
      */
     public FileLockInterruptionException() {
         super();

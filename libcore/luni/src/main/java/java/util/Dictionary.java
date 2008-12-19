@@ -17,107 +17,110 @@
 
 package java.util;
 
-
 /**
- * Dictionary is a abstract class which is the superclass of all classes that
- * associate keys with values, such as Hashtable.
+ * <strong>Note: Do not use this class since it is obsolete. Please use the
+ * {@link Map} interface for new implementations.</strong>
+ * <p>
+ * Dictionary is an abstract class which is the superclass of all classes that
+ * associate keys with values, such as {@code Hashtable}.
  * 
  * @see Hashtable
- * @since 1.0
+ * @since Android 1.0
  */
 public abstract class Dictionary<K,V> {
+
     /**
      * Constructs a new instance of this class.
      * 
+     * @since Android 1.0
      */
     public Dictionary() {
         super();
     }
 
     /**
-     * Returns an Enumeration on the elements of this Dictionary.
+     * Returns an enumeration on the elements of this dictionary.
      * 
-     * @return an Enumeration of the values of this Dictionary
-     * 
+     * @return an enumeration of the values of this dictionary.
      * @see #keys
      * @see #size
      * @see Enumeration
+     * @since Android 1.0
      */
     public abstract Enumeration<V> elements();
 
     /**
-     * Returns the value associated with <code>key</code>.
+     * Returns the value which is associated with {@code key}.
      * 
      * @param key
-     *            the key of the value returned
-     * @return the value associated with <code>key</code> or <code>null</code>
-     *         if the specified key does not exist
-     * 
+     *            the key of the value returned.
+     * @return the value associated with {@code key}, or {@code null} if the
+     *         specified key does not exist.
      * @see #put
+     * @since Android 1.0
      */
     public abstract V get(Object key);
 
     /**
-     * Returns if this Dictionary has no key/value pairs, a size of zero.
+     * Returns true if this dictionary has no key/value pairs.
      * 
-     * @return true if this Dictionary has no key/value pairs, false otherwise
-     * 
+     * @return {@code true} if this dictionary has no key/value pairs,
+     *         {@code false} otherwise.
      * @see #size
+     * @since Android 1.0
      */
     public abstract boolean isEmpty();
 
     /**
-     * Returns an Enumeration on the keys of this Dictionary.
+     * Returns an enumeration on the keys of this dictionary.
      * 
-     * @return an Enumeration of the keys of this Dictionary
-     * 
+     * @return an enumeration of the keys of this dictionary.
      * @see #elements
      * @see #size
      * @see Enumeration
+     * @since Android 1.0
      */
     public abstract Enumeration<K> keys();
 
     /**
-     * Associate <code>key</code> with <code>value</code> in this
-     * <code>Dictionary</code>. If <code>key</code> exists in the
-     * <code>Dictionary</code> prior to this call being made, the old value is
-     * replaced.
+     * Associate {@code key} with {@code value} in this dictionary. If {@code
+     * key} exists in the dictionary before this call, the old value in the
+     * dictionary is replaced by {@code value}.
      * 
      * @param key
-     *            the key to add
+     *            the key to add.
      * @param value
-     *            the value to add
-     * @return the old value previously associated with <code>key</code> or
-     *         <code>null</code> if <code>key</code> is new to the
-     *         <code>Dictionary</code>.
-     * 
+     *            the value to add.
+     * @return the old value previously associated with {@code key} or {@code
+     *         null} if {@code key} is new to the dictionary.
      * @see #elements
      * @see #get
      * @see #keys
+     * @since Android 1.0
      */
     public abstract V put(K key, V value);
 
     /**
-     * Remove the key/value pair with the specified <code>key</code> from this
-     * <code>Dictionary</code>.
+     * Removes the key/value pair with the specified {@code key} from this
+     * dictionary.
      * 
      * @param key
-     *            the key to remove
-     * @return the associated value or else <code>null</code> if
-     *         <code>key</code> is not known to this <code>Dictionary</code>
-     * 
+     *            the key to remove.
+     * @return the associated value before the deletion or {@code null} if
+     *         {@code key} was not known to this dictionary.
      * @see #get
      * @see #put
+     * @since Android 1.0
      */
     public abstract V remove(Object key);
 
     /**
-     * Returns the number of key/value pairs in this Dictionary.
+     * Returns the number of key/value pairs in this dictionary.
      * 
-     * @return the number of key/value pairs in this Dictionary
-     * 
+     * @return the number of key/value pairs in this dictionary.
      * @see #elements
      * @see #keys
+     * @since Android 1.0
      */
     public abstract int size();
 }

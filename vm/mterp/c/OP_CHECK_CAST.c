@@ -13,18 +13,18 @@ HANDLE_OPCODE(OP_CHECK_CAST /*vAA, class@BBBB*/)
         if (obj != NULL) {
 #if defined(WITH_EXTRA_OBJECT_VALIDATION)
             if (!checkForNull(obj))
-                GOTO(exceptionThrown);
+                GOTO_exceptionThrown();
 #endif
             clazz = dvmDexGetResolvedClass(methodClassDex, ref);
             if (clazz == NULL) {
-                clazz = dvmResolveClass(method->clazz, ref, false);
+                clazz = dvmResolveClass(curMethod->clazz, ref, false);
                 if (clazz == NULL)
-                    GOTO(exceptionThrown);
+                    GOTO_exceptionThrown();
             }
             if (!dvmInstanceof(obj->clazz, clazz)) {
                 dvmThrowExceptionWithClassMessage(
                     "Ljava/lang/ClassCastException;", obj->clazz->descriptor);
-                GOTO(exceptionThrown);
+                GOTO_exceptionThrown();
             }
         }
     }

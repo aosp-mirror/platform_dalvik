@@ -29,8 +29,13 @@ import org.apache.harmony.luni.util.PriviAction;
 import org.apache.harmony.luni.util.Util;
 
 /**
- * An instance of class URL specifies the location of a resource on the world
- * wide web as specified by RFC 1738.
+ * A URL instance specifies the location of a resource on the internet as
+ * specified by RFC 1738. Such a resource can be a simple file or a service
+ * which generates the output dynamically. A URL is divided in its parts
+ * protocol, host name, port, path, file, user-info, query, reference and
+ * authority. However, not each of this parts has to be defined.
+ * 
+ * @since Android 1.0
  */
 public final class URL implements java.io.Serializable {
     private static final long serialVersionUID = -7627629688361524110L;
@@ -119,15 +124,18 @@ public final class URL implements java.io.Serializable {
     private static URLStreamHandlerFactory streamHandlerFactory;
 
     /**
-     * Sets the URL Stream (protocol) handler factory. This method can be
-     * invoked only once during an application's lifetime.
+     * Sets the {@code URLStreamHandlerFactory} which creates protocol specific
+     * stream handlers. This method can be invoked only once during an
+     * application's lifetime. If the {@code URLStreamHandlerFactory} is already
+     * set an {@link Error} will be thrown.
      * <p>
-     * A security check is performed to verify that the current Policy allows
-     * the stream handler factory to be set.
+     * A security check is performed to verify whether the current policy allows
+     * to set the stream handler factory.
+     * </p>
      * 
      * @param streamFactory
-     *            URLStreamHandlerFactory The factory to use for finding stream
-     *            handlers.
+     *            the factory to be used for creating stream protocol handlers.
+     * @since Android 1.0
      */
     public static synchronized void setURLStreamHandlerFactory(
             URLStreamHandlerFactory streamFactory) {
@@ -143,90 +151,58 @@ public final class URL implements java.io.Serializable {
     }
 
     /**
-     * Constructs a new URL instance by parsing the specification.
+     * Creates a new URL instance by parsing the string {@code spec}.
      * 
      * @param spec
-     *            java.lang.String a URL specification.
-     * 
+     *            the URL string representation which has to be parsed.
      * @throws MalformedURLException
-     *             if the spec could not be parsed as an URL.
+     *             if the given string {@code spec} could not be parsed as a
+     *             URL.
+     * @since Android 1.0
      */
     public URL(String spec) throws MalformedURLException {
         this((URL) null, spec, (URLStreamHandler) null);
     }
 
     /**
-     * Constructs a new URL by parsing the specification given by
-     * <code>spec</code> and using the context provided by
-     * <code>context</code>.
-     * <p>
-     * The protocol of the specification is obtained by parsing the
-     * <code> spec </code> string.
-     * <p>
-     * If the <code>spec</code> does not specify a protocol:
-     * <ul>
-     * <li>If the context is <code>null</code>, then a
-     * <code>MalformedURLException</code>.</li>
-     * <li>If the context is not <code>null</code>, then the protocol is
-     * obtained from the context.</li>
-     * </ul>
-     * If the <code>spec</code> does specify a protocol:
-     * <ul>
-     * <li>If the context is <code>null</code>, or specifies a different
-     * protocol than the spec, the context is ignored.</li>
-     * <li>If the context is not <code>null</code> and specifies the same
-     * protocol as the specification, the properties of the new <code>URL</code>
-     * are obtained from the context.</li>
-     * </ul>
+     * Creates a new URL to the specified resource {@code spec}. This URL is
+     * relative to the given {@code context}. If the protocol of the parsed URL
+     * does not match with the protocol of the context URL, then the newly
+     * created URL is absolute and bases only on the given URL represented by
+     * {@code spec}. Otherwise the protocol is defined by the context URL.
      * 
      * @param context
-     *            java.net.URL URL to use as context.
+     *            the URL which is used as the context.
      * @param spec
-     *            java.lang.String a URL specification.
-     * 
+     *            the URL string representation which has to be parsed.
      * @throws MalformedURLException
-     *             if the spec could not be parsed as an URL.
+     *             if the given string {@code spec} could not be parsed as a URL
+     *             or an invalid protocol has been found.
+     * @since Android 1.0
      */
     public URL(URL context, String spec) throws MalformedURLException {
         this(context, spec, (URLStreamHandler) null);
     }
 
     /**
-     * Constructs a new URL by parsing the specification given by
-     * <code>spec</code> and using the context provided by
-     * <code>context</code>.
-     * <p>
-     * If the handler argument is non-null, a security check is made to verify
-     * that user-defined protocol handlers can be specified.
-     * <p>
-     * The protocol of the specification is obtained by parsing the
-     * <code> spec </code> string.
-     * <p>
-     * If the <code>spec</code> does not specify a protocol:
-     * <ul>
-     * <li>If the context is <code>null</code>, then a
-     * <code>MalformedURLException</code>.</li>
-     * <li>If the context is not <code>null</code>, then the protocol is
-     * obtained from the context.</li>
-     * </ul>
-     * If the <code>spec</code> does specify a protocol:
-     * <ul>
-     * <li>If the context is <code>null</code>, or specifies a different
-     * protocol than the spec, the context is ignored.</li>
-     * <li>If the context is not <code>null</code> and specifies the same
-     * protocol as the specification, the properties of the new <code>URL</code>
-     * are obtained from the context.</li>
-     * </ul>
+     * Creates a new URL to the specified resource {@code spec}. This URL is
+     * relative to the given {@code context}. The {@code handler} will be used
+     * to parse the URL string representation. If this argument is {@code null}
+     * the default {@code URLStreamHandler} will be used. If the protocol of the
+     * parsed URL does not match with the protocol of the context URL, then the
+     * newly created URL is absolute and bases only on the given URL represented
+     * by {@code spec}. Otherwise the protocol is defined by the context URL.
      * 
      * @param context
-     *            java.net.URL URL to use as context.
+     *            the URL which is used as the context.
      * @param spec
-     *            java.lang.String a URL specification.
+     *            the URL string representation which has to be parsed.
      * @param handler
-     *            java.net.URLStreamHandler a URLStreamHandler.
-     * 
+     *            the specific stream handler to be used by this URL.
      * @throws MalformedURLException
-     *             if the spec could not be parsed as an URL
+     *             if the given string {@code spec} could not be parsed as a URL
+     *             or an invalid protocol has been found.
+     * @since Android 1.0
      */
     public URL(URL context, String spec, URLStreamHandler handler)
             throws MalformedURLException {
@@ -259,8 +235,20 @@ public final class URL implements java.io.Serializable {
                 // According to RFC 2396 scheme part should match
                 // the following expression:
                 // alpha *( alpha | digit | "+" | "-" | "." )
-                if (!protocol.matches("\\A\\p{Alpha}[\\p{Alnum}+-.]*\\z") || //$NON-NLS-1$
-                        protocol.indexOf('/') >= 0) {
+                // BEGIN android-changed
+                // copied from newer version of harmony
+                char c = protocol.charAt(0);
+                boolean valid = ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z');
+                for (int i = 1; valid && (i < protocol.length()); i++) {
+                    c = protocol.charAt(i);
+                    valid = ('a' <= c && c <= 'z') ||
+                            ('A' <= c && c <= 'Z') ||
+                            ('0' <= c && c <= '9') ||
+                            (c == '+') ||
+                            (c == '-') ||
+                            (c == '.');
+                }
+                if (!valid) {
                     protocol = null;
                     index = -1;
                 } else {
@@ -268,6 +256,7 @@ public final class URL implements java.io.Serializable {
                     // Scheme is defined by ASCII characters.
                     protocol = Util.toASCIILowerCase(protocol);
                 }
+                // END android-changed
             }
         }
 
@@ -337,17 +326,19 @@ public final class URL implements java.io.Serializable {
     }
 
     /**
-     * Constructs a new URL instance using the arguments provided.
+     * Creates a new URL instance using the given arguments. The URL uses the
+     * default port for the specified protocol.
      * 
      * @param protocol
-     *            String the protocol for the URL.
+     *            the protocol of the new URL.
      * @param host
-     *            String the name of the host.
+     *            the host name or IP address of the new URL.
      * @param file
      *            the name of the resource.
-     * 
      * @throws MalformedURLException
-     *             if the parameters do not represent a valid URL.
+     *             if the combination of all arguments do not represent a valid
+     *             URL or the protocol is invalid.
+     * @since Android 1.0
      */
     public URL(String protocol, String host, String file)
             throws MalformedURLException {
@@ -355,19 +346,22 @@ public final class URL implements java.io.Serializable {
     }
 
     /**
-     * Constructs a new URL instance using the arguments provided.
+     * Creates a new URL instance using the given arguments. The URL uses the
+     * specified port instead of the default port for the given protocol.
      * 
      * @param protocol
-     *            String the protocol for the URL.
+     *            the protocol of the new URL.
      * @param host
-     *            String the name of the host.
+     *            the host name or IP address of the new URL.
      * @param port
-     *            int the port number.
+     *            the specific port number of the URL. {@code -1} represents the
+     *            default port of the protocol.
      * @param file
-     *            String the name of the resource.
-     * 
+     *            the name of the resource.
      * @throws MalformedURLException
-     *             if the parameters do not represent a valid URL.
+     *             if the combination of all arguments do not represent a valid
+     *             URL or the protocol is invalid.
+     * @since Android 1.0
      */
     public URL(String protocol, String host, int port, String file)
             throws MalformedURLException {
@@ -375,24 +369,24 @@ public final class URL implements java.io.Serializable {
     }
 
     /**
-     * Constructs a new URL instance using the arguments provided.
-     * <p>
-     * If the handler argument is non-null, a security check is made to verify
-     * that user-defined protocol handlers can be specified.
+     * Creates a new URL instance using the given arguments. The URL uses the
+     * specified port instead of the default port for the given protocol.
      * 
      * @param protocol
-     *            the protocol for the URL.
+     *            the protocol of the new URL.
      * @param host
-     *            the name of the host.
+     *            the host name or IP address of the new URL.
      * @param port
-     *            the port number.
+     *            the specific port number of the URL. {@code -1} represents the
+     *            default port of the protocol.
      * @param file
      *            the name of the resource.
      * @param handler
-     *            the stream handler that this URL uses.
-     * 
+     *            the stream handler to be used by this URL.
      * @throws MalformedURLException
-     *             if the parameters do not represent an URL.
+     *             if the combination of all arguments do not represent a valid
+     *             URL or the protocol is invalid.
+     * @since Android 1.0
      */
     public URL(String protocol, String host, int port, String file,
             URLStreamHandler handler) throws MalformedURLException {
@@ -471,23 +465,21 @@ public final class URL implements java.io.Serializable {
     }
 
     /**
-     * Sets the properties of this URL using the provided arguments. This method
-     * is used both within this class and by the <code>URLStreamHandler</code>
-     * code.
+     * Sets the properties of this URL using the provided arguments. Only a
+     * {@code URLStreamHandler} can use this method to set fields of the
+     * existing URL instance. A URL is generally constant.
      * 
      * @param protocol
-     *            the new protocol.
+     *            the protocol to be set.
      * @param host
-     *            the new host name.
+     *            the host name to be set.
      * @param port
-     *            the new port number.
+     *            the port number to be set.
      * @param file
-     *            the new file component.
+     *            the file to be set.
      * @param ref
-     *            the new reference.
-     * 
-     * @see URL
-     * @see URLStreamHandler
+     *            the reference to be set.
+     * @since Android 1.0
      */
     protected void set(String protocol, String host, int port, String file,
             String ref) {
@@ -503,16 +495,19 @@ public final class URL implements java.io.Serializable {
     }
 
     /**
-     * Compares the argument to the receiver, and returns true if they represent
-     * the same URL. Two URLs are equal if they have the same file, host, port,
-     * protocol, and reference components.
+     * Compares this URL instance with the given argument {@code o} and
+     * determines if both are equal. Two URL instances are equal if all single
+     * parts are identical in their meaning. Compares the argument to the
+     * receiver, and returns true if they represent the same URL. Two URLs are
+     * equal if they have the same file, host, port, protocol, and reference
+     * components.
      * 
      * @param o
-     *            the object to compare with this URL.
-     * @return <code>true</code> if the object is the same as this URL,
-     *         <code>false</code> otherwise.
-     * 
+     *            the URL this instance has to be compared with.
+     * @return {@code true} if both instances represents the same URL, {@code
+     *         false} otherwise.
      * @see #hashCode
+     * @since Android 1.0
      */
     @Override
     public boolean equals(Object o) {
@@ -529,21 +524,25 @@ public final class URL implements java.io.Serializable {
     }
 
     /**
-     * Returns true if the receiver and the argument refer to the same file. All
-     * components except the reference are compared.
+     * Returns whether this URL refers to the same resource as the given
+     * argument {@code otherURL}. All URL components except the reference field
+     * are compared.
      * 
      * @param otherURL
-     *            URL to compare against.
-     * @return true if the same resource, false otherwise
+     *            the URL to compare against.
+     * @return {@code true} if both instances refer to the same resource,
+     *         {@code false} otherwise.
+     * @since Android 1.0
      */
     public boolean sameFile(URL otherURL) {
         return strmHandler.sameFile(this, otherURL);
     }
 
     /**
-     * Returns a hash code for this URL object.
+     * Gets the hashcode value of this URL instance.
      * 
-     * @return the hashcode for hashtable indexing
+     * @return the appropriate hashcode value.
+     * @since Android 1.0
      */
     @Override
     public int hashCode() {
@@ -561,8 +560,8 @@ public final class URL implements java.io.Serializable {
      * Note that this will overwrite any existing stream handler with the new
      * one. Senders must check if the strmHandler is null before calling the
      * method if they do not want this behavior (a speed optimization).
+     * </p>
      */
-
     void setupStreamHandler() {
         // Check for a cached (previously looked up) handler for
         // the requested protocol.
@@ -607,7 +606,7 @@ public final class URL implements java.io.Serializable {
         }
 
         // No one else has provided a handler, so try our internal one.
-        
+
         String className = "org.apache.harmony.luni.internal.net.www.protocol." + protocol //$NON-NLS-1$
                 + ".Handler"; //$NON-NLS-1$
         try {
@@ -624,27 +623,38 @@ public final class URL implements java.io.Serializable {
     }
 
     /**
-     * Returns an Object representing the resource referenced by this URL.
+     * Gets the content of the resource which is referred by this URL. By
+     * default one of the following object types will be returned:
+     * <p>
+     * <li>Image for pictures</li>
+     * <li>AudioClip for audio sequences</li>
+     * <li>{@link InputStream} for all other data</li>
+     * </p>
      * 
-     * @return The object of the resource pointed by this URL.
-     * 
+     * @return the content of the referred resource.
      * @throws IOException
-     *             If an error occurred obtaining the content.
+     *             if an error occurs obtaining the content.
+     * @since Android 1.0
      */
     public final Object getContent() throws IOException {
         return openConnection().getContent();
     }
 
     /**
-     * Returns an Object representing the resource referenced by this URL.
+     * Gets the content of the resource which is referred by this URL. The
+     * argument {@code types} is an array of allowed or expected object types.
+     * {@code null} will be returned if the obtained object type does not match
+     * with one from this list. Otherwise the first type that matches will be
+     * used.
      * 
      * @param types
-     *            The list of acceptable content types
-     * @return The object of the resource pointed by this URL, or null if the
-     *         content does not match a specified content type.
-     * 
+     *            the list of allowed or expected object types.
+     * @return the object representing the resource referred by this URL,
+     *         {@code null} if the content does not match to a specified content
+     *         type.
      * @throws IOException
-     *             If an error occurred obtaining the content.
+     *             if an error occurs obtaining the content.
+     * @since Android 1.0
      */
     // Param not generic in spec
     @SuppressWarnings("unchecked")
@@ -653,60 +663,62 @@ public final class URL implements java.io.Serializable {
     }
 
     /**
-     * Returns a stream for reading from this URL.
+     * Opens an InputStream to read the resource referred by this URL.
      * 
-     * @return a stream on the contents of the resource.
-     * 
+     * @return the stream which allows to read the resource.
      * @throws IOException
-     *             if a stream could not be created.
+     *             if an error occurs while opening the InputStream.
+     * @since Android 1.0
      */
     public final InputStream openStream() throws java.io.IOException {
         return openConnection().getInputStream();
     }
 
     /**
-     * Creates a connection to this URL using the appropriate ProtocolHandler.
+     * Opens a connection to the remote resource specified by this URL. This
+     * connection allows bidirectional data transfer.
      * 
-     * @return The connection to this URL.
-     * 
+     * @return the connection to this URL.
      * @throws IOException
-     *             if the connection to the URL is not possible.
+     *             if an error occurs while opening the connection.
+     * @since Android 1.0
      */
     public URLConnection openConnection() throws IOException {
         return strmHandler.openConnection(this);
     }
 
     /**
-     * Creates a URI related with this URL
+     * Converts this URL instance into an equivalent URI object.
      * 
-     * @return a URI related to this URL
+     * @return the URI instance that represents this URL.
      * @throws URISyntaxException
-     *             if this URL cannot format into URI
+     *             if this URL cannot be converted into a URI.
+     * @since Android 1.0
      */
     public URI toURI() throws URISyntaxException {
         return new URI(toExternalForm());
     }
 
     /**
-     * The method is the same as <code>openConnection()</code> except that it
-     * uses the <code>proxy</code> to establish a connection to this URL using
-     * appropriate ProtocolHandler.
+     * Opens a connection to the remote resource specified by this URL. The
+     * connection will be established through the given proxy and allows
+     * bidirectional data transfer.
      * 
-     * @return The connection to this URL.
      * @param proxy
-     *            the proxy which is used to make the connection
-     * 
-     * @exception IOException
-     *                thrown if an IO error occurs during connection
-     *                establishment
-     * @exception SecurityException
-     *                thrown if a security manager is installed and it denies
-     *                the permission to connect to the proxy.
-     * @exception IllegalArgumentException
-     *                thrown if the proxy is null or of an invalid type.
-     * @exception UnsupportedOperationException
-     *                thrown if the protocol handler doesn't support this
-     *                method.
+     *            the proxy through which the connection will be established.
+     * @return the appropriate URLconnection instance representing the
+     *         connection to this URL.
+     * @throws IOException
+     *             if an I/O error occurs while opening the connection.
+     * @throws SecurityException
+     *             if a security manager is installed and it denies to connect
+     *             to the proxy.
+     * @throws IllegalArgumentException
+     *             if the argument proxy is {@code null} or is an invalid type.
+     * @throws UnsupportedOperationException
+     *             if the protocol handler does not support opening connections
+     *             through proxies.
+     * @since Android 1.0
      */
     public URLConnection openConnection(Proxy proxy) throws IOException {
         if (null == proxy) {
@@ -716,10 +728,12 @@ public final class URL implements java.io.Serializable {
     }
 
     /**
-     * Returns a string containing a concise, human-readable description of the
-     * receiver.
+     * Returns a string containing a concise, human-readable representation of
+     * this URL. The returned string is the same as the result of the method
+     * {@code toExternalForm()}.
      * 
-     * @return a printable representation for the receiver.
+     * @return the string representation of this URL.
+     * @since Android 1.0
      */
     @Override
     public String toString() {
@@ -727,13 +741,11 @@ public final class URL implements java.io.Serializable {
     }
 
     /**
-     * Create and return the String representation of this URL.
+     * Returns a string containing a concise, human-readable representation of
+     * this URL.
      * 
-     * @return the external representation of this URL.
-     * 
-     * @see #toString()
-     * @see URL
-     * @see URLStreamHandler#toExternalForm(URL)
+     * @return the string representation of this URL.
+     * @since Android 1.0
      */
     public String toExternalForm() {
         if (strmHandler == null) {
@@ -786,10 +798,10 @@ public final class URL implements java.io.Serializable {
      * <p>
      * Note that, we really only need the readObject method but the spec that
      * says readObject will be ignored if no writeObject is present.
+     * </p>
      * 
      * @param s
-     *            the stream to write to.
-     * 
+     *            the stream to write on.
      * @throws IOException
      *             if an IO Exception occurs during the write.
      */
@@ -798,110 +810,118 @@ public final class URL implements java.io.Serializable {
     }
 
     /**
-     * Returns the file component of this URL.
+     * Gets the value of the file part of this URL.
      * 
-     * @return the receiver's file.
+     * @return the file name this URL refers to or an empty string if the file
+     *         part is not set.
+     * @since Android 1.0
      */
     public String getFile() {
         return file;
     }
 
     /**
-     * Returns the host component of this URL.
+     * Gets the value of the host part of this URL.
      * 
-     * @return the receiver's host.
+     * @return the host name or IP address of this URL.
+     * @since Android 1.0
      */
     public String getHost() {
         return host;
     }
 
     /**
-     * Returns the port component of this URL.
+     * Gets the port number of this URL or {@code -1} if the port is not set.
      * 
-     * @return the receiver's port.
+     * @return the port number of this URL.
+     * @since Android 1.0
      */
     public int getPort() {
         return port;
     }
 
     /**
-     * Returns the protocol component of this URL.
+     * Gets the protocol of this URL.
      * 
-     * @return the receiver's protocol.
+     * @return the protocol type of this URL.
+     * @since Android 1.0
      */
     public String getProtocol() {
         return protocol;
     }
 
     /**
-     * Returns the reference component of this URL.
+     * Gets the value of the reference part of this URL.
      * 
-     * @return the receiver's reference component.
+     * @return the reference part of this URL.
+     * @since Android 1.0
      */
     public String getRef() {
         return ref;
     }
 
     /**
-     * Returns the query component of this URL.
+     * Gets the value of the query part of this URL.
      * 
-     * @return the receiver's query.
+     * @return the query part of this URL.
+     * @since Android 1.0
      */
     public String getQuery() {
         return query;
     }
 
     /**
-     * Returns the path component of this URL.
+     * Gets the value of the path part of this URL.
      * 
-     * @return the receiver's path.
+     * @return the path part of this URL.
+     * @since Android 1.0
      */
     public String getPath() {
         return path;
     }
 
     /**
-     * Returns the user info component of this URL.
+     * Gets the value of the user-info part of this URL.
      * 
-     * @return the receiver's user info.
+     * @return the user-info part of this URL.
+     * @since Android 1.0
      */
     public String getUserInfo() {
         return userInfo;
     }
 
     /**
-     * Returns the authority component of this URL.
+     * Gets the value of the authority part of this URL.
      * 
-     * @return the receiver's authority.
+     * @return the authority part of this URL.
+     * @since Android 1.0
      */
     public String getAuthority() {
         return authority;
     }
 
     /**
-     * Sets the properties of this URL using the provided arguments. This method
-     * is used both within this class and by the <code>URLStreamHandler</code>
-     * code.
+     * Sets the properties of this URL using the provided arguments. Only a
+     * {@code URLStreamHandler} can use this method to set fields of the
+     * existing URL instance. A URL is generally constant.
      * 
      * @param protocol
-     *            the new protocol.
+     *            the protocol to be set.
      * @param host
-     *            the new host name.
+     *            the host name to be set.
      * @param port
-     *            the new port number.
+     *            the port number to be set.
      * @param authority
-     *            the new authority.
+     *            the authority to be set.
      * @param userInfo
-     *            the new user info.
+     *            the user-info to be set.
      * @param path
-     *            the new path component.
+     *            the path to be set.
      * @param query
-     *            the new query.
+     *            the query to be set.
      * @param ref
-     *            the new reference.
-     * 
-     * @see URL
-     * @see URLStreamHandler
+     *            the reference to be set.
+     * @since Android 1.0
      */
     protected void set(String protocol, String host, int port,
             String authority, String userInfo, String path, String query,
@@ -921,16 +941,21 @@ public final class URL implements java.io.Serializable {
         this.query = query;
     }
 
-    URLStreamHandler getStreamHandler() {
-        return strmHandler;
-    }
+    // BEGIN android-removed
+    // copied from newer version of harmony
+    // URLStreamHandler getStreamHandler() {
+    //     return strmHandler;
+    // }
+    // END android-removed
 
     /**
-     * Returns the default port for this URL as defined by the URLStreamHandler.
+     * Gets the default port number of the protocol used by this URL. If no
+     * default port is defined by the protocol or the {@code URLStreamHandler},
+     * {@code -1} will be returned.
      * 
-     * @return the default port for this URL
-     * 
+     * @return the default port number according to the protocol of this URL.
      * @see URLStreamHandler#getDefaultPort
+     * @since Android 1.0
      */
     public int getDefaultPort() {
         return strmHandler.getDefaultPort();

@@ -765,9 +765,14 @@ public final class Matcher implements MatchResult {
     }
 
     @Override
-    protected void finalize() {
-        if (nativePattern != 0) {
-            NativeRegEx.close(nativePattern);
+    protected void finalize() throws Throwable {
+        try {
+            if (nativePattern != 0) {
+                NativeRegEx.close(nativePattern);
+            }
+        }
+        finally {
+            super.finalize();
         }
     }
     

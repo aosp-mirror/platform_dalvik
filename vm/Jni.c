@@ -408,6 +408,7 @@ JNIEnv* dvmCreateJNIEnv(Thread* self)
     newEnv = (JNIEnvExt*) calloc(1, sizeof(JNIEnvExt));
     newEnv->funcTable = &gNativeInterface;
     newEnv->vm = vm;
+    newEnv->forceDataCopy = vm->forceDataCopy;
     if (self != NULL) {
         dvmSetJniEnvThreadId((JNIEnv*) newEnv, self);
         assert(newEnv->envThreadId != 0);
@@ -507,6 +508,7 @@ static jobject addLocalReference(jobject obj)
         dvmDumpReferenceTable(pRef, "JNI local");
         LOGE("Failed adding to JNI local ref table (has %d entries)\n",
             (int) dvmReferenceTableEntries(pRef));
+        dvmDumpThread(dvmThreadSelf(), false);
         dvmAbort();     // spec says call FatalError; this is equivalent
     } else {
         LOGVV("LREF add %p  (%s.%s)\n", obj,
@@ -632,7 +634,8 @@ static jobject addGlobalReference(jobject obj)
 
             /* watch for "excessive" use; not generally appropriate */
             if (count >= gDvm.jniGrefLimit) {
-                if (gDvm.jniWarnError) {
+                JavaVMExt* vm = (JavaVMExt*) gDvm.vmList;
+                if (vm->warnError) {
                     dvmDumpReferenceTable(&gDvm.jniGlobalRefTable,"JNI global");
                     LOGE("Excessive JNI global references (%d)\n", count);
                     dvmAbort();
@@ -2861,6 +2864,8 @@ static jint attachThread(JavaVM* vm, JNIEnv** p_env, void* thr_args,
     dvmLockThreadList(NULL);
     if (gDvm.nonDaemonThreadCount == 0) {
         // dead or dying
+        LOGV("Refusing to attach thread '%s' -- VM is shutting down\n",
+            (thr_args == NULL) ? "(unknown)" : args->name);
         dvmUnlockThreadList();
         return JNI_ERR;
     }
@@ -3005,11 +3010,12 @@ static jint DestroyJavaVM(JavaVM* vm)
     if (self == NULL) {
         JNIEnv* tmpEnv;
         if (AttachCurrentThread(vm, &tmpEnv, NULL) != JNI_OK) {
-            LOGV("+++ Unable to attach for Destroy;"
-                 " assuming VM is shutting down\n");
+            LOGV("Unable to reattach main for Destroy; assuming VM is "
+                 "shutting down (count=%d)\n",
+                gDvm.nonDaemonThreadCount);
             goto shutdown;
         } else {
-            LOGV("+++ Attached to wait for shutdown in Destroy\n");
+            LOGV("Attached to wait for shutdown in Destroy\n");
         }
     }
     dvmChangeStatus(self, THREAD_VMWAIT);
@@ -3027,7 +3033,7 @@ shutdown:
     // TODO: call System.exit() to run any registered shutdown hooks
     // (this may not return -- figure out how this should work)
 
-    LOGI("DestroyJavaVM shutting VM down\n");
+    LOGD("DestroyJavaVM shutting VM down\n");
     dvmShutdown();
 
     // TODO - free resources associated with JNI-attached daemon threads
@@ -3339,6 +3345,35 @@ static const struct JNIInvokeInterface gInvokeInterface = {
  */
 
 /*
+ * Enable "checked JNI" after the VM has partially started.  This must
+ * only be called in "zygote" mode, when we have one thread running.
+ */
+void dvmLateEnableCheckedJni(void)
+{
+    JNIEnvExt* extEnv;
+    JavaVMExt* extVm;
+    
+    extEnv = dvmGetJNIEnvForThread();
+    if (extEnv == NULL) {
+        LOGE("dvmLateEnableCheckedJni: thread has no JNIEnv\n");
+        return;
+    }
+    extVm = extEnv->vm;
+    assert(extVm != NULL);
+
+    if (!extVm->useChecked) {
+        LOGD("Late-enabling CheckJNI\n");
+        dvmUseCheckedJniVm(extVm);
+        extVm->useChecked = true;
+        dvmUseCheckedJniEnv(extEnv);
+
+        /* currently no way to pick up jniopts features */
+    } else {
+        LOGD("Not late-enabling CheckJNI (already on)\n");
+    }
+}
+
+/*
  * Not supported.
  */
 jint JNI_GetDefaultJavaVMInitArgs(void* vm_args)
@@ -3382,7 +3417,8 @@ jint JNI_CreateJavaVM(JavaVM** p_vm, JNIEnv** p_env, void* vm_args)
     int i, curOpt;
     int result = JNI_ERR;
     bool checkJni = false;
-    bool checkJniFatal = true;
+    bool warnError = true;
+    bool forceDataCopy = false;
 
     if (args->version < JNI_VERSION_1_2)
         return JNI_EVERSION;
@@ -3416,7 +3452,7 @@ jint JNI_CreateJavaVM(JavaVM** p_vm, JNIEnv** p_env, void* vm_args)
      *
      * We have to pull out vfprintf/exit/abort, because they use the
      * "extraInfo" field to pass function pointer "hooks" in.  We also
-     * look for the -Xcheck:jni arg here.
+     * look for the -Xcheck:jni stuff here.
      */
     for (i = 0; i < args->nOptions; i++) {
         const char* optStr = args->options[i].optionString;
@@ -3432,9 +3468,19 @@ jint JNI_CreateJavaVM(JavaVM** p_vm, JNIEnv** p_env, void* vm_args)
             gDvm.abortHook = args->options[i].extraInfo;
         } else if (strcmp(optStr, "-Xcheck:jni") == 0) {
             checkJni = true;
-        } else if (strcmp(optStr, "-Xcheck:jni-warnonly") == 0) {
-            checkJni = true;
-            checkJniFatal = false;
+        } else if (strncmp(optStr, "-Xjniopts:", 10) == 0) {
+            const char* jniOpts = optStr + 9;
+            while (jniOpts != NULL) {
+                jniOpts++;      /* skip past ':' or ',' */
+                if (strncmp(jniOpts, "warnonly", 8) == 0) {
+                    warnError = false;
+                } else if (strncmp(jniOpts, "forcecopy", 9) == 0) {
+                    forceDataCopy = true;
+                } else {
+                    LOGW("unknown jni opt starting at '%s'\n", jniOpts);
+                }
+                jniOpts = strchr(jniOpts, ',');
+            }
         } else {
             /* regular option */
             argv[curOpt++] = optStr;
@@ -3446,6 +3492,8 @@ jint JNI_CreateJavaVM(JavaVM** p_vm, JNIEnv** p_env, void* vm_args)
         dvmUseCheckedJniVm(pVM);
         pVM->useChecked = true;
     }
+    pVM->warnError = warnError;
+    pVM->forceDataCopy = forceDataCopy;
 
     /* set this up before initializing VM, so it can create some JNIEnvs */
     gDvm.vmList = (JavaVM*) pVM;
@@ -3464,8 +3512,6 @@ jint JNI_CreateJavaVM(JavaVM** p_vm, JNIEnv** p_env, void* vm_args)
         free(pVM);
         goto bail;
     }
-
-    gDvm.jniWarnError = checkJniFatal;
 
     /*
      * Success!  Return stuff to caller.

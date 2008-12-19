@@ -23,11 +23,12 @@ import java.io.UnsupportedEncodingException;
 import org.apache.harmony.luni.util.Msg;
 
 /**
- * This class is used to encode a string using the format required by
- * <code>application/x-www-form-urlencoded</code> MIME content type.
+ * This class is used to encode a string using the format required by {@code
+ * application/x-www-form-urlencoded} MIME content type. It contains helper
+ * methods used by the URI class, and performs encoding and decoding in a
+ * slightly different way than {@code URLEncoder} and {@code URLDecoder}.
  * 
- * It contains helper methods used by the URI class, and performs encoding and
- * decoding in a slightly different way than URLEncoder and URLDecoder.
+ * @since Android 1.0
  */
 class URIEncoderDecoder {
 
@@ -37,19 +38,18 @@ class URIEncoderDecoder {
 
     /**
      * Validate a string by checking if it contains any characters other than:
-     * 
      * 1. letters ('a'..'z', 'A'..'Z') 2. numbers ('0'..'9') 3. characters in
-     * the legalset parameter 4. others (Unicode characters that are not in
+     * the legalset parameter 4. others (unicode characters that are not in
      * US-ASCII set, and are not ISO Control or are not ISO Space characters)
      * <p>
-     * called from URI.Helper.parseURI() to validate each component
-     * <p>
+     * called from {@code URI.Helper.parseURI()} to validate each component
+     * </p>
      * 
      * @param s
-     *            java.lang.String the string to be validated
+     *            {@code java.lang.String} the string to be validated
      * @param legal
-     *            java.lang.String the characters allowed in the String s
-     * 
+     *            {@code java.lang.String} the characters allowed in the String
+     *            s
      */
     static void validate(String s, String legal) throws URISyntaxException {
         for (int i = 0; i < s.length();) {
@@ -100,12 +100,13 @@ class URIEncoderDecoder {
      * by '%'.
      * <p>
      * For example: '#' -> %23
-     * <p>
-     * Other characters, which are Unicode chars that are not US-ASCII, and are
+     * </p>
+     * Other characters, which are unicode chars that are not US-ASCII, and are
      * not ISO Control or are not ISO Space chars, are preserved.
      * <p>
-     * Called from URI.quoteComponent() (for multiple argument constructors)
-     * <p>
+     * Called from {@code URI.quoteComponent()} (for multiple argument
+     * constructors)
+     * </p>
      * 
      * @param s
      *            java.lang.String the string to be converted
@@ -144,9 +145,9 @@ class URIEncoderDecoder {
      * converted into their hexidecimal value prepended by '%'.
      * <p>
      * For example: Euro currency symbol -> "%E2%82%AC".
-     * <p>
+     * </p>
      * Called from URI.toASCIIString()
-     * <p>
+     * </p>
      * 
      * @param s
      *            java.lang.String the string to be converted
@@ -171,19 +172,17 @@ class URIEncoderDecoder {
     }
 
     /**
-     * Decodes the string argument which is assumed to be encoded in the
-     * <code>x-www-form-urlencoded</code> MIME content type using the UTF-8
-     * encoding scheme.
+     * Decodes the string argument which is assumed to be encoded in the {@code
+     * x-www-form-urlencoded} MIME content type using the UTF-8 encoding scheme.
      * <p>
-     * '%' and two following hex digit characters are converted to the
+     *'%' and two following hex digit characters are converted to the
      * equivalent byte value. All other characters are passed through
      * unmodified.
-     * 
-     * <p>
+     * </p>
      * e.g. "A%20B%20C %24%25" -> "A B C $%"
      * <p>
      * Called from URI.getXYZ() methods
-     * <p>
+     * </p>
      * 
      * @param s
      *            java.lang.String The encoded string.

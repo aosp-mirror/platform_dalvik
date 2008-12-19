@@ -16,10 +16,16 @@
 
 package org.apache.harmony.nio.tests.java.nio;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.nio.BufferOverflowException;
 import java.nio.CharBuffer;
 import java.nio.ReadOnlyBufferException;
 
+@TestTargetClass(java.nio.CharBuffer.class)
 public class WrappedCharBufferTest2 extends ReadOnlyCharBufferTest {
     protected static final String TEST_STRING = "123456789abcdef12345";
 
@@ -34,7 +40,15 @@ public class WrappedCharBufferTest2 extends ReadOnlyCharBufferTest {
         baseBuf = null;
         buf = null;
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies NullPointerException, IndexOutOfBoundsException.",
+      targets = {
+        @TestTarget(
+          methodName = "wrap",
+          methodArgs = {java.lang.CharSequence.class, int.class, int.class}
+        )
+    })
     public void testWrappedCharSequence_IllegalArg() {
         String str = TEST_STRING;
         try {
@@ -68,7 +82,15 @@ public class WrappedCharBufferTest2 extends ReadOnlyCharBufferTest {
             // expected
         }
     }
-    
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies UnsupportedOperationException.",
+      targets = {
+        @TestTarget(
+          methodName = "array",
+          methodArgs = {}
+        )
+    })
     public void testArray() {
         try {
             buf.array();
@@ -76,7 +98,16 @@ public class WrappedCharBufferTest2 extends ReadOnlyCharBufferTest {
         } catch (UnsupportedOperationException e) {
         }
     }
-    
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies ReadOnlyBufferException, NullPointerException, " +
+            "BufferOverflowException, IndexOutOfBoundsException.",
+      targets = {
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {char[].class, int.class, int.class}
+        )
+    })
     public void testPutcharArrayintint() {
         char array[] = new char[1];
         try {
@@ -104,7 +135,16 @@ public class WrappedCharBufferTest2 extends ReadOnlyCharBufferTest {
             // expected
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies ReadOnlyBufferException, NullPointerException, " +
+            "IllegalArgumentException.",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {java.nio.CharBuffer.class}
+        )
+    })
     public void testPutCharBuffer() {
         CharBuffer other = CharBuffer.allocate(1);
         try {

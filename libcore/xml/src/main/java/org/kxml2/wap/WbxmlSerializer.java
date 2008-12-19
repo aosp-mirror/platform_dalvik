@@ -18,7 +18,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE. */
 
-//Contributors: Bogdan Onoiu (Genderal character encoding abstraction and UTF-8 Support)
+//Contributors: Jonathan Cox, Bogdan Onoiu, Jerry Tian
 
 package org.kxml2.wap;
 
@@ -37,6 +37,7 @@ import org.xmlpull.v1.*;
 
 
 public class WbxmlSerializer implements XmlSerializer {
+    
     
     Hashtable stringTable = new Hashtable();
     
@@ -58,7 +59,7 @@ public class WbxmlSerializer implements XmlSerializer {
     private int attrPage;
     private int tagPage;
     
-    private String encoding = null;
+    private String encoding;
     
     
     public XmlSerializer attribute(String namespace, String name, String value) {
@@ -137,7 +138,7 @@ public class WbxmlSerializer implements XmlSerializer {
     
     
     /** ATTENTION: flush cannot work since Wbxml documents require
-      need buffering. Thus, this call does nothing. */
+      buffering. Thus, this call does nothing. */
     
     public void flush() {
     }
@@ -158,12 +159,12 @@ public class WbxmlSerializer implements XmlSerializer {
             ? (degenerated ? Wbxml.LITERAL : Wbxml.LITERAL_C)
             : (degenerated ? Wbxml.LITERAL_A : Wbxml.LITERAL_AC));
             
-            writeStrT(pending);
+            writeStrT(pending, false);
         }
         else {
             if(idx[0] != tagPage){
                 tagPage=idx[0];
-                buf.write(0);
+                buf.write(Wbxml.SWITCH_PAGE);
                 buf.write(tagPage);
             }
             
@@ -181,11 +182,11 @@ public class WbxmlSerializer implements XmlSerializer {
             
             if (idx == null) {
                 buf.write(Wbxml.LITERAL);
-                writeStrT((String) attributes.elementAt(i));
+                writeStrT((String) attributes.elementAt(i), false);
             }
             else {
                 if(idx[0] != attrPage){
-                    attrPage = idx[1];
+                        attrPage = idx[0];
                     buf.write(0);
                     buf.write(attrPage);
                 }
@@ -193,12 +194,11 @@ public class WbxmlSerializer implements XmlSerializer {
             }
             idx = (int[]) attrValueTable.get(attributes.elementAt(++i));
             if (idx == null) {
-                buf.write(Wbxml.STR_I);
-                writeStrI(buf, (String) attributes.elementAt(i));
+                writeStr((String) attributes.elementAt(i));
             }
             else {
                 if(idx[0] != attrPage){
-                    attrPage = idx[1];
+                        attrPage = idx[0];
                     buf.write(0);
                     buf.write(attrPage);                    
                 }
@@ -232,8 +232,7 @@ public class WbxmlSerializer implements XmlSerializer {
     
     public void setOutput (OutputStream out, String encoding) throws IOException {
         
-        if (encoding != null) throw new IllegalArgumentException ("encoding not yet supported for WBXML");
-        
+        this.encoding = encoding == null ? "UTF-8" : encoding;
         this.out = out;
         
         buf = new ByteArrayOutputStream();
@@ -258,12 +257,14 @@ public class WbxmlSerializer implements XmlSerializer {
         out.write(0x01); // unknown or missing public identifier
 
         // default encoding is UTF-8
-        String[] encodings = { "UTF-8", "ISO-8859-1" };
-        if (s == null || s.toUpperCase().equals(encodings[0])){
-            encoding = encodings[0];
+        
+        if(s != null){
+            encoding = s;
+        }
+        
+        if (encoding.toUpperCase().equals("UTF-8")){
             out.write(106);
-        }else if (true == s.toUpperCase().equals(encodings[1])){
-            encoding = encodings[1];
+        }else if (encoding.toUpperCase().equals("ISO-8859-1")){
             out.write(0x04);
         }else{
             throw new UnsupportedEncodingException(s);
@@ -286,11 +287,10 @@ public class WbxmlSerializer implements XmlSerializer {
     }
     
     public XmlSerializer text(char[] chars, int start, int len) throws IOException {
-        
+
         checkPending(false);
         
-        buf.write(Wbxml.STR_I);
-        writeStrI(buf, new String(chars, start, len));
+        writeStr(new String(chars, start, len));
         
         return this;
     }
@@ -299,13 +299,61 @@ public class WbxmlSerializer implements XmlSerializer {
         
         checkPending(false);
         
-    buf.write(Wbxml.STR_I);
-    writeStrI(buf, text);
+        writeStr(text);
     
         return this;
     }
     
 
+    /** Used in text() and attribute() to write text */
+    
+    private void writeStr(String text) throws IOException{
+        int p0 = 0;
+        int lastCut = 0;
+        int len = text.length();
+        
+        while(p0 < len){
+            while(p0 < len && text.charAt(p0) < 'A' ){ // skip interpunctation
+                p0++;
+            }
+            int p1 = p0;
+            while(p1 < len && text.charAt(p1) >= 'A'){
+                p1++;
+            }
+            
+            if(p1 - p0 > 10) {
+
+                if(p0 > lastCut && text.charAt(p0-1) == ' ' 
+                    && stringTable.get(text.substring(p0, p1)) == null){
+                    
+                       buf.write(Wbxml.STR_T);
+                       writeStrT(text.substring(lastCut, p1), false);
+                }
+                else {
+
+                    if(p0 > lastCut && text.charAt(p0-1) == ' '){
+                        p0--;
+                    }
+
+                    if(p0 > lastCut){
+                        buf.write(Wbxml.STR_T);
+                        writeStrT(text.substring(lastCut, p0), false);
+                    }
+                    buf.write(Wbxml.STR_T);
+                    writeStrT(text.substring(p0, p1), true);
+                }
+                lastCut = p1;
+            }
+            p0 = p1;
+        }
+
+        if(lastCut < len){
+            buf.write(Wbxml.STR_T);
+            writeStrT(text.substring(lastCut, len), false);
+        }
+    }
+    
+    
 
     public XmlSerializer endTag(String namespace, String name) throws IOException {
         
@@ -321,9 +369,39 @@ public class WbxmlSerializer implements XmlSerializer {
         return this;
     }
     
-    /** currently ignored! */
+    /** 
+     * @throws IOException */
     
-    public void writeLegacy(int type, String data) {
+    public void writeWapExtension(int type, Object data) throws IOException {
+        checkPending(false);
+        buf.write(type);
+        switch(type){
+        case Wbxml.EXT_0:
+        case Wbxml.EXT_1:
+        case Wbxml.EXT_2:
+            break;
+        
+        case Wbxml.OPAQUE:
+            byte[] bytes = (byte[]) data;
+            writeInt(buf, bytes.length);
+            buf.write(bytes);
+            break;
+            
+        case Wbxml.EXT_I_0:
+        case Wbxml.EXT_I_1:
+        case Wbxml.EXT_I_2:
+            writeStrI(buf, (String) data);
+            break;
+
+        case Wbxml.EXT_T_0:
+        case Wbxml.EXT_T_1:
+        case Wbxml.EXT_T_2:
+            writeStrT((String) data, false);
+            break;
+            
+        default: 
+            throw new IllegalArgumentException();
+        }
     }
     
     // ------------- internal methods --------------------------
@@ -344,25 +422,43 @@ public class WbxmlSerializer implements XmlSerializer {
         out.write(buf[0]);
     }
     
-    static void writeStrI(OutputStream out, String s) throws IOException {
-        for (int i = 0; i < s.length(); i++) {
-            out.write((byte) s.charAt(i));
-        }
+    void writeStrI(OutputStream out, String s) throws IOException {
+        byte[] data = s.getBytes(encoding);
+        out.write(data);
         out.write(0);
     }
     
-    void writeStrT(String s) throws IOException {
+    private final void writeStrT(String s, boolean mayPrependSpace) throws IOException {
         
         Integer idx = (Integer) stringTable.get(s);
         
-        if (idx == null) {
-            idx = new Integer(stringTableBuf.size());
-            stringTable.put(s, idx);
+        if (idx != null) {
+            writeInt(buf, idx.intValue());
+        }
+        else{
+            int i = stringTableBuf.size();
+            if(s.charAt(0) >= '0' && mayPrependSpace){
+                s = ' ' + s;
+                writeInt(buf, i+1);
+            }
+            else{
+                writeInt(buf, i);
+            }
+            
+               stringTable.put(s, new Integer(i));
+               if(s.charAt(0) == ' '){
+                   stringTable.put(s.substring(1), new Integer(i+1));
+               }
+               int j = s.lastIndexOf(' ');
+               if(j > 1){
+                   stringTable.put(s.substring(j), new Integer(i+j));
+                   stringTable.put(s.substring(j+1), new Integer(i+j+1));
+               }
+                
             writeStrI(stringTableBuf, s);
             stringTableBuf.flush();
         }
         
-        writeInt(buf, idx.intValue());
     }
     
     /**
@@ -371,9 +467,7 @@ public class WbxmlSerializer implements XmlSerializer {
      */
     
     public void setTagTable(int page, String[] tagTable) {
-        // clear entries in tagTable!
-        if (page != 0)
-            return;
+        // TODO: clear entries in tagTable?
         
         for (int i = 0; i < tagTable.length; i++) {
             if (tagTable[i] != null) {

@@ -17,15 +17,30 @@
 
 package org.apache.harmony.text.tests.java.text;
 
-import java.text.Annotation;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
 
+import java.text.Annotation;
+
+@TestTargetClass(Annotation.class)
 public class AnnotationTest extends TestCase {
 
     /**
      * @tests java.text.Annotation(Object)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Annotation",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void testAnnotation() {
         assertNotNull(new Annotation(null));
         assertNotNull(new Annotation("value"));
@@ -34,6 +49,15 @@ public class AnnotationTest extends TestCase {
     /**
      * @tests java.text.Annotation.getValue()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getValue",
+          methodArgs = {}
+        )
+    })
     public void testGetValue() {
         Annotation a = new Annotation(null);
         assertNull(a.getValue());
@@ -44,6 +68,15 @@ public class AnnotationTest extends TestCase {
     /**
      * @tests java.text.Annotation.toString()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public void testToString() {
         Annotation ant = new Annotation("HelloWorld");
         assertEquals("toString error.",

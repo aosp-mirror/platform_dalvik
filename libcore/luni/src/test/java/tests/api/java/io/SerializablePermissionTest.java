@@ -17,43 +17,67 @@
 
 package tests.api.java.io;
 
+import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.SerializablePermission;
 
+@TestTargetClass(SerializablePermission.class) 
 public class SerializablePermissionTest extends junit.framework.TestCase {
 
-	/**
-	 * @tests java.io.SerializablePermission#SerializablePermission(java.lang.String)
-	 */
-	public void test_ConstructorLjava_lang_String() {
-		// Test for method java.io.SerializablePermission(java.lang.String)
-		assertEquals("permission ill-formed", 
-				"enableSubclassImplementation", new SerializablePermission(
-				"enableSubclassImplementation").getName());
-	}
+    /**
+     * @tests java.io.SerializablePermission#SerializablePermission(java.lang.String)
+     */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "SerializablePermission",
+          methodArgs = {java.lang.String.class}
+        )
+    })
+    public void test_ConstructorLjava_lang_String() {
+        // Test for method java.io.SerializablePermission(java.lang.String)
+        assertEquals("permission ill-formed", 
+                "enableSubclassImplementation", new SerializablePermission(
+                "enableSubclassImplementation").getName());
+    }
 
-	/**
-	 * @tests java.io.SerializablePermission#SerializablePermission(java.lang.String,
-	 *        java.lang.String)
-	 */
-	public void test_ConstructorLjava_lang_StringLjava_lang_String() {
-		// Test for method java.io.SerializablePermission(java.lang.String,
-		// java.lang.String)
-		assertEquals("permission ill-formed", 
-				"enableSubclassImplementation", new SerializablePermission(
-				"enableSubclassImplementation", "").getName());
-	}
+    /**
+     * @tests java.io.SerializablePermission#SerializablePermission(java.lang.String,
+     *        java.lang.String)
+     */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "SerializablePermission",
+          methodArgs = {java.lang.String.class, java.lang.String.class}
+        )
+    })
+    public void test_ConstructorLjava_lang_StringLjava_lang_String() {
+        // Test for method java.io.SerializablePermission(java.lang.String,
+        // java.lang.String)
+        assertEquals("permission ill-formed", 
+                "enableSubclassImplementation", new SerializablePermission(
+                "enableSubclassImplementation", "").getName());
+    }
 
-	/**
-	 * Sets up the fixture, for example, open a network connection. This method
-	 * is called before a test is executed.
-	 */
-	protected void setUp() {
-	}
+    /**
+     * Sets up the fixture, for example, open a network connection. This method
+     * is called before a test is executed.
+     */
+    protected void setUp() {
+    }
 
-	/**
-	 * Tears down the fixture, for example, close a network connection. This
-	 * method is called after a test is executed.
-	 */
-	protected void tearDown() {
-	}
+    /**
+     * Tears down the fixture, for example, close a network connection. This
+     * method is called after a test is executed.
+     */
+    protected void tearDown() {
+    }
 }

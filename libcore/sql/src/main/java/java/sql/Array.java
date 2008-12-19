@@ -20,112 +20,157 @@ package java.sql;
 import java.util.Map;
 
 /**
- * A Java representation of the SQL ARRAY type.
+ * A Java representation of the SQL {@code ARRAY} type.
+ *  
+ * @since Android 1.0
  */
 public interface Array {
 
     /**
-     * Retrieves the contents of the SQL ARRAY value as a Java array object.
+     * Retrieves the contents of the SQL {@code ARRAY} value as a Java array
+     * object.
      * 
      * @return A Java array containing the elements of this Array
      * @throws SQLException
+     *             if there is a database error.
+     * @since Android 1.0
      */
     public Object getArray() throws SQLException;
 
     /**
-     * Returns part of the SQL ARRAY associated with this Array, starting at a
-     * particular index and comprising up to count successive elements of the
-     * SQL array.
+     * Returns part of the SQL {@code ARRAY} associated with this array,
+     * starting at a particular {@code index} and comprising up to {@code count}
+     * successive elements of the SQL array.
      * 
      * @param index
+     *            the start position in the array where the values are
+     *            retrieved.
      * @param count
-     * @return A Java array containing the subportion of elements of this Array
+     *            the number of elements to retrieve.
+     * @return A Java array containing the desired set of elements from this Array
      * @throws SQLException
+     *             if there is a database error.
+     * @since Android 1.0
      */
     public Object getArray(long index, int count) throws SQLException;
 
     /**
-     * Returns part of the SQL ARRAY associated with this Array, starting at a
-     * particular index and comprising up to count successive elements of the
-     * SQL array.
+     * Returns part of the SQL {@code ARRAY} associated with this array,
+     * starting at a particular {@code index} and comprising up to {@code count}
+     * successive elements of the SQL array.
      * 
      * @param index
+     *            the start position in the array where the values are
+     *            retrieved.
      * @param count
+     *            the number of elements to retrieve.
      * @param map
-     * @return A Java array containing the subportion of elements of this Array
+     *            the map defining the correspondence between SQL type names 
+     *            and Java types.
+     * @return A Java array containing the desired set of elements from this Array
      * @throws SQLException
+     *             if there is a database error.
+     * @since Android 1.0
      */
     public Object getArray(long index, int count, Map<String, Class<?>> map)
             throws SQLException;
 
     /**
-     * Returns the SQL ARRAY associated with this Array.
+     * Returns the data from the underlying SQL {@code ARRAY} as a Java array.
      * 
      * @param map
-     * @return A Java array containing the elements of this Array
+     *            the map defining the correspondence between SQL type names 
+     *            and Java types.
+     * @return A Java array containing the elements of this array
      * @throws SQLException
+     *             if there is a database error.
+     * @since Android 1.0
      */
     public Object getArray(Map<String, Class<?>> map) throws SQLException;
 
     /**
-     * Returns the JDBC type of the entries in this Array's associated array.
+     * Returns the JDBC type of the entries in this array's underlying 
+     * SQL array.
      * 
-     * @return An integer constant from the java.sql.Types class
+     * @return An integer constant from the {@code java.sql.Types} class
      * @throws SQLException
+     *             if there is a database error.
+     * @since Android 1.0
      */
     public int getBaseType() throws SQLException;
 
     /**
-     * Returns the SQL type name of the entries in the array associated with
-     * this Array.
+     * Returns the SQL type name of the entries in this array's underlying 
+     * SQL array.
      * 
      * @return The database specific name or a fully-qualified SQL type name.
      * @throws SQLException
+     *              if there is a database error.
+     * @since Android 1.0
      */
     public String getBaseTypeName() throws SQLException;
 
     /**
-     * Returns a ResultSet object which holds the entries of the SQL ARRAY
-     * associated with this Array.
+     * Returns a ResultSet object which holds the entries of the SQL {@code
+     * ARRAY} associated with this array.
      * 
-     * @return the ResultSet
+     * @return the elements of the array as a {@code ResultSet}.
      * @throws SQLException
+     *             if there is a database error.
+     * @since Android 1.0
      */
     public ResultSet getResultSet() throws SQLException;
 
     /**
-     * Returns a ResultSet object that holds the entries of a subarray,
-     * beginning at a particular index and comprising up to count successive
-     * entries.
+     * Returns a {@code ResultSet} object that holds the entries of a subarray,
+     * beginning at a particular index and comprising up to {@code count} 
+     * successive entries.
      * 
      * @param index
+     *            the start position in the array where the values are
+     *            retrieved.
      * @param count
-     * @return the ResultSet
+     *            the number of elements to retrieve.
+     * @return the elements of the array as a {@code ResultSet}.
      * @throws SQLException
+     *             if there is a database error.
+     * @since Android 1.0
      */
     public ResultSet getResultSet(long index, int count) throws SQLException;
 
     /**
-     * Returns a ResultSet object that holds the entries of a subarray,
-     * beginning at a particular index and comprising up to count successive
-     * entries.
+     * Returns a {@code ResultSet} object that holds the entries of a subarray,
+     * beginning at a particular index and comprising up to {@code count} 
+     * successive entries.
      * 
      * @param index
+     *            the start position in the array where the values are
+     *            retrieved.
      * @param count
+     *            the number of elements to retrieve.
      * @param map
-     * @return the ResultSet
+     *            the map defining the correspondence between SQL type names 
+     *            and Java types.
+     * @return the {@code ResultSet} the array's custom type values. if a
+     *         database error has occurred.
      * @throws SQLException
+     *             if there is a database error.
+     * @since Android 1.0
      */
     public ResultSet getResultSet(long index, int count,
             Map<String, Class<?>> map) throws SQLException;
 
     /**
-     * Returns a ResultSet object which holds the entries of the SQL ARRAY
-     * associated with this Array.
+     * Returns a {@code ResultSet} object which holds the entries of the SQL
+     * {@code ARRAY} associated with this array.
      * 
      * @param map
-     * @return the ResultSet
+     *            the map defining the correspondence between SQL type names 
+     *            and Java types.
+     * @return the array as a {@code ResultSet}.
      * @throws SQLException
+     *             if there is a database error.
+     * @since Android 1.0
      */
     public ResultSet getResultSet(Map<String, Class<?>> map)
             throws SQLException;

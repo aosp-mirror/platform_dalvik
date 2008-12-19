@@ -17,6 +17,11 @@
 
 package org.apache.harmony.sql.tests.java.sql;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.Serializable;
 import java.sql.BatchUpdateException;
 import java.util.Arrays;
@@ -26,11 +31,21 @@ import junit.framework.TestCase;
 import org.apache.harmony.testframework.serialization.SerializationTest;
 import org.apache.harmony.testframework.serialization.SerializationTest.SerializableAssert;
 
+@TestTargetClass(BatchUpdateException.class)
 public class BatchUpdateExceptionTest extends TestCase {
 
     /*
      * ConstructorTest
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "BatchUpdateException",
+          methodArgs = {}
+        )
+    })
     public void testBatchUpdateException() {
 
         int[] theFinalStates1 = { 0 }; // Error Code state
@@ -75,6 +90,15 @@ public class BatchUpdateExceptionTest extends TestCase {
     /*
      * ConstructorTest
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "BatchUpdateException",
+          methodArgs = {int[].class}
+        )
+    })
     public void testBatchUpdateExceptionintArray() {
 
         int[][] init1 = { { 1, 2, 3 }, null };
@@ -121,6 +145,15 @@ public class BatchUpdateExceptionTest extends TestCase {
     /*
      * ConstructorTest
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "BatchUpdateException",
+          methodArgs = {String.class, int[].class}
+        )
+    })
     public void testBatchUpdateExceptionStringintArray() {
 
         String[] init1 = { "a", "1", "valid1", "----", "&valid*", null, "",
@@ -176,6 +209,15 @@ public class BatchUpdateExceptionTest extends TestCase {
     /*
      * ConstructorTest
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "BatchUpdateException",
+          methodArgs = {String.class, String.class, int[].class}
+        )
+    })
     public void testBatchUpdateExceptionStringStringintArray() {
 
         String[] init1 = { "a", "1", "valid1", "----", "&valid*", null, "",
@@ -233,6 +275,15 @@ public class BatchUpdateExceptionTest extends TestCase {
     /*
      * ConstructorTest
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "BatchUpdateException",
+          methodArgs = {String.class, String.class, int.class, int[].class}
+        )
+    })
     public void testBatchUpdateExceptionStringStringintintArray() {
 
         String[] init1 = { "a", "1", "valid1", "----", "&valid*", null, "",
@@ -291,6 +342,15 @@ public class BatchUpdateExceptionTest extends TestCase {
     /*
      * Method test for getUpdateCounts
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getUpdateCounts",
+          methodArgs = {}
+        )
+    })
     public void testGetUpdateCounts() {
 
         BatchUpdateException aBatchUpdateException;
@@ -344,6 +404,15 @@ public class BatchUpdateExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility.
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Serialization test",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationSelf",
+          methodArgs = {}
+        )
+    })
     public void testSerializationSelf() throws Exception {
         BatchUpdateException object = new BatchUpdateException();
         SerializationTest.verifySelf(object, BATCHUPDATEEXCEPTION_COMPARATOR);
@@ -352,6 +421,15 @@ public class BatchUpdateExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Serialization test",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationGolden",
+          methodArgs = {}
+        )
+    })
     public void testSerializationCompatibility() throws Exception {
         int vendorCode = 10;
         int[] updateCounts = { 1, 2, 3, 4 };

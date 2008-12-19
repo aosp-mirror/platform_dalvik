@@ -22,11 +22,19 @@ import java.util.List;
 import javax.net.ssl.SSLPeerUnverifiedException;
 
 /**
- * A secure cache response, which is orignally retrieved through secure ways.
+ * A secure cache response represents data which is originally retrieved over a
+ * secure connection. Such a connection can be secured by using a cryptographic
+ * protocol like TLS or SSL.
+ * 
+ * @see ResponseCache
+ * @since Android 1.0
  */
 public abstract class SecureCacheResponse extends CacheResponse {
+
     /**
-     * Constructor method
+     * Creates a new instance of this class.
+     * 
+     * @since Android 1.0
      */
     public SecureCacheResponse() {
         super();
@@ -36,60 +44,60 @@ public abstract class SecureCacheResponse extends CacheResponse {
      * Gets the cipher suite string on the connection which is originally used
      * to retrieve the network resource.
      * 
-     * @return the cipher suite string
+     * @return the cipher suite string.
+     * @since Android 1.0
      */
     public abstract String getCipherSuite();
 
     /**
-     * Gets local certificate chain. When the original connection retrieved the
-     * resource data, certificate chain was sent to the server during
+     * Gets the local certificate chain. When the original connection retrieved
+     * the resource data, this certificate chain was sent to the server during
      * handshaking process. This method only takes effect when certificate-based
      * cipher suite is enabled.
      * 
-     * @return the certificate chain that was sent to the server. The
-     *         certificate chain is represented as a <code>List</code> of
-     *         <code>Certificate</code>. If no certificate chain was sent,
-     *         the method returns null.
+     * @return the certificate chain that was sent to the server. If no
+     *         certificate chain was sent, the method returns {@code null}.
+     * @since Android 1.0
      */
     public abstract List<Certificate> getLocalCertificateChain();
 
     /**
-     * Gets server's certificate chain from cache. As part of defining the
+     * Gets the cached server's certificate chain. As part of defining the
      * session, the certificate chain was established when the original
      * connection retrieved network resource. This method can only be invoked
-     * when certificated-based cypher suites is enable. Otherwise, it throws an
-     * <code>SSLPeerUnverifiedException</code>.
+     * when certificated-based cipher suite is enabled. Otherwise, it throws an
+     * {@code SSLPeerUnverifiedException}.
      * 
-     * @return The server's certificate chain, which is represented as a
-     *         <code>List</code> of <code>Certificate</code>.
+     * @return the server's certificate chain.
      * @throws SSLPeerUnverifiedException
-     *             If the peer is unverified.
+     *             if the peer is unverified.
+     * @since Android 1.0
      */
     public abstract List<Certificate> getServerCertificateChain()
             throws SSLPeerUnverifiedException;
 
     /**
-     * Gets the server's <code>Principle</code>. When the original connection
-     * retrieved network resource, the principle was established when defining
-     * the session.
+     * Gets the server's principle. When the original connection retrieved
+     * network resource, the principle was established when defining the
+     * session.
      * 
-     * @return an <code>Principal</code> represents the server's principal.
+     * @return a principal object representing the server's principal.
      * @throws SSLPeerUnverifiedException
-     *             If the peer is unverified.
+     *             if the peer is unverified.
+     * @since Android 1.0
      */
     public abstract Principal getPeerPrincipal()
             throws SSLPeerUnverifiedException;
 
     /**
-     * Gets the <code>Principle</code> that the original connection sent to
-     * the server. When the original connection fetched the network resource,
-     * the <code>Principle</code> was sent to the server during handshaking
-     * process.
+     * Gets the local principle that the original connection sent to the server.
+     * When the original connection fetched the network resource, the principle
+     * was sent to the server during handshaking process.
      * 
-     * 
-     * @return the <code>principal</code> sent to the server. Returns an
-     *         <code>X500Principal</code> for X509-based cipher suites. If no
-     *         principal was sent, it returns null.
+     * @return the local principal object being sent to the server. Returns an
+     *         {@code X500Principal} object for X509-based cipher suites. If no
+     *         principal was sent, it returns {@code null}.
+     * @since Android 1.0
      */
     public abstract Principal getLocalPrincipal();
 }

@@ -17,6 +17,13 @@
 
 package org.apache.harmony.logging.tests.java.util.logging;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
+import junit.framework.TestCase;
+
 import java.io.UnsupportedEncodingException;
 import java.util.ResourceBundle;
 import java.util.logging.Handler;
@@ -24,8 +31,7 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.XMLFormatter;
 
-import junit.framework.TestCase;
-
+@TestTargetClass(XMLFormatter.class)
 public class XMLFormatterTest extends TestCase {
 
     XMLFormatter formatter = null;
@@ -43,7 +49,16 @@ public class XMLFormatterTest extends TestCase {
 
     /*
      * test for constructor public XMLFormatter()
+     * 
      */
+    @TestInfo
+    (level = TestLevel.COMPLETE, 
+            purpose = "", 
+            targets = 
+            {
+            @TestTarget(methodName = "XMLFormatter", methodArgs = {})
+            }
+     )
     public void testXMLFormatter() {
         String result = formatter.getHead(handler);
         int headPos = result
@@ -61,6 +76,14 @@ public class XMLFormatterTest extends TestCase {
                 .getTail(handler).indexOf("/log>") > 0);
     }
 
+    @TestInfo
+    (level = TestLevel.COMPLETE, 
+            purpose = "", 
+            targets = 
+            {
+            @TestTarget(methodName = "format", methodArgs = {LogRecord.class})
+            }
+     )
     public void testLocalFormat() {
         // if set resource bundle, output will use localized message,
         // but put the original message into the key element
@@ -92,6 +115,14 @@ public class XMLFormatterTest extends TestCase {
         assertTrue(result.indexOf("<key>") < 0);
     }
 
+    @TestInfo
+    (level = TestLevel.COMPLETE, 
+            purpose = "", 
+            targets = 
+            {
+            @TestTarget(methodName = "format", methodArgs = {LogRecord.class})
+            }
+     )
     public void testFullFormat() {
         lr.setSourceClassName("source class");
         lr.setSourceMethodName("source method");
@@ -124,6 +155,14 @@ public class XMLFormatterTest extends TestCase {
         assertTrue(output.indexOf("<key>pattern</key>") > 0);
     }
 
+    @TestInfo
+    (level = TestLevel.COMPLETE, 
+            purpose = "", 
+            targets = 
+            {
+            @TestTarget(methodName = "format", methodArgs = {LogRecord.class})
+            }
+     )
     public void testFormat() {
         String output = formatter.format(lr);
         // System.out.println(output);
@@ -143,6 +182,14 @@ public class XMLFormatterTest extends TestCase {
         assertTrue(output.indexOf("<key>") < 0);
     }
 
+    @TestInfo
+    (level = TestLevel.COMPLETE, 
+            purpose = "", 
+            targets = 
+            {
+            @TestTarget(methodName = "getHead", methodArgs = {Handler.class})
+            }
+     )
     public void testGetHead() throws SecurityException,
             UnsupportedEncodingException {
         String result = formatter.getHead(handler);
@@ -165,9 +212,7 @@ public class XMLFormatterTest extends TestCase {
         handler.setEncoding(null);
         result = formatter.getHead(handler);
         assertNull(handler.getEncoding());
-        // assertTrue(result.indexOf(defaultEncoding)>0);
         
-        // regression test for Harmony-1280
         // make sure no NPE is thrown
         formatter.getHead(null);
 
@@ -176,6 +221,14 @@ public class XMLFormatterTest extends TestCase {
     /*
      * test for method public String getTail(Handler h)
      */
+    @TestInfo
+    (level = TestLevel.COMPLETE, 
+            purpose = "", 
+            targets = 
+            {
+            @TestTarget(methodName = "getTail", methodArgs = {Handler.class})
+            }
+     )
     public void testGetTail() {
         assertEquals(
                 "Tail string with null handler should be equal expected value",
@@ -188,6 +241,16 @@ public class XMLFormatterTest extends TestCase {
                 "</log>", formatter.getTail(handler).trim());
     }
 
+    @TestInfo
+    (level = TestLevel.COMPLETE, 
+            purpose = "", 
+            targets = 
+            {
+            @TestTarget(methodName = "format", methodArgs = {LogRecord.class}),
+            @TestTarget(methodName = "getTail", methodArgs = {Handler.class}),
+            @TestTarget(methodName = "XMLFormatter", methodArgs = {})
+            }
+     )
     public void testInvalidParameter() {
         formatter.getTail(null);
         try {
@@ -199,7 +262,7 @@ public class XMLFormatterTest extends TestCase {
         formatter = new XMLFormatter();
         lr = new LogRecord(Level.SEVERE, null);
         String output = formatter.format(lr);
-        assertTrue(output.indexOf("<message") < 0);
+        assertTrue(output.indexOf("<message/>") != -1);
     }
 
     public static class MockHandler extends Handler {

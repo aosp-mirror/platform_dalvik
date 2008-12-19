@@ -17,40 +17,44 @@
 package java.util;
 
 /**
- * Any class that need to perform customer formatting by transferring converter
- * specifier 's' to Formatter should implement the Formattable interface. Basic
- * format is allowed by the interface to format arbitrary objects.
+ * Classes that handle custom formatting for the 's' specifier of {@code Formatter}
+ * should implement the {@code Formattable} interface. It gives basic control over
+ * formatting objects.
+ *  
+ * @see Formatter
+ * @since Android 1.0
  */
 
 public interface Formattable {
 
     /**
-     * Formats the object using the specified formatter.
+     * Formats the object using the specified {@code Formatter}.
      * 
      * @param formatter
-     *            The formatter to use in the formatTo.
+     *            the {@code Formatter} to use.
      * @param flags
-     *            The flags applied to the output format, which is a bitmask
-     *            that is any combination of FormattableFlags.LEFT_JUSTIFY,
-     *            FormattableFlags.UPPERCASE, and FormattableFlags.ALTERNATE. If
+     *            the flags applied to the output format, which is a bitmask
+     *            that is any combination of {@code FormattableFlags.LEFT_JUSTIFY},
+     *            {@code FormattableFlags.UPPERCASE}, and {@code FormattableFlags.ALTERNATE}. If
      *            no such flag is set, the output is formatted by the default
-     *            formatting of the implementation of the interface.
+     *            formatting of the implementation.
      * @param width
-     *            The minimum number of characters that should be written to the
-     *            output. Additional space ' ' is added to the output if the
-     *            length of the converted value is less than the width until the
-     *            length equals the width. These spaces are added at the
+     *            the minimum number of characters that should be written to the
+     *            output. If the length of the converted value is less than {@code width}
+     *            Additional space characters (' ') are added to the output if the
+     *            as needed to make up the difference. These spaces are added at the
      *            beginning by default unless the flag
      *            FormattableFlags.LEFT_JUSTIFY is set, which denotes that
-     *            padding should be added at the end. If width is -1, then no
-     *            minimum requirement.
+     *            padding should be added at the end. If width is -1, then
+     *            minimum length is not enforced.
      * @param precision
-     *            The maximum number of characters that can be written to the
-     *            output. The procedure to trunk the output according to the
-     *            precision is invoked before that of padding to width. If the
-     *            precision is -1, then no maximum requirement.
+     *            the maximum number of characters that can be written to the
+     *            output. The length of the output is trimmed down to this size
+     *            before the width padding is applied. If the precision
+     *            is -1, then maximum length is not enforced.
      * @throws IllegalFormatException
-     *             If any of the parameters is not supported.
+     *             if any of the parameters is not supported.
+     * @since Android 1.0
      */
     void formatTo(Formatter formatter, int flags, int width, int precision)
             throws IllegalFormatException;

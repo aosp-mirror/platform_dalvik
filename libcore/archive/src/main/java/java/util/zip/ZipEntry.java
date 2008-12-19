@@ -30,24 +30,30 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 
 /**
- * ZipEntry represents an entry in a zip file.
+ * An instance of {@code ZipEntry} represents an entry within a <i>ZIP-archive</i>.
+ * An entry has attributes such as name (= path) or the size of its data. While
+ * an entry identifies data stored in an archive, it does not hold the data
+ * itself. For example when reading a <i>ZIP-file</i> you will first retrieve
+ * all its entries in a collection and then read the data for a specific entry
+ * through an input stream.
  * 
  * @see ZipFile
- * @see ZipInputStream
+ * @see ZipOutputStream
+ * @since Android 1.0
  */
 public class ZipEntry implements ZipConstants, Cloneable {
-	String name, comment;
+    String name, comment;
 
-	long compressedSize = -1, crc = -1, size = -1;
-// BEGIN android-removed
-//     long dataOffset = -1;
-// END android-removed
+    long compressedSize = -1, crc = -1, size = -1;
+    // BEGIN android-removed
+    // long dataOffset = -1;
+    // END android-removed
 
-	int compressionMethod = -1, time = -1, modDate = -1;
+    int compressionMethod = -1, time = -1, modDate = -1;
 
-	byte[] extra;
+    byte[] extra;
 
-// BEGIN android-added
+    // BEGIN android-added
     /*
      * Fields, present in the Central Directory Entry and Local File Entry.
      *
@@ -61,12 +67,12 @@ public class ZipEntry implements ZipConstants, Cloneable {
     private int mVersionMadeBy;             // CDE
     private int mVersionToExtract;          // CDE, LFE
     private int mGPBitFlag;                 // CDE, LFE
-//    private int mCompressionMethod;         // CDE, LFE   = compressionMethod
-//    private int mLastModFileTime;           // CDE, LFE   = time
-//    private int mLastModFileDate;           // CDE, LFE   = modDate
-//    private long mCRC32;                    // CDE, LFE   = crc
-//    private long mCompressedSize;           // CDE, LFE   = compressedSize
-//    private long mUncompressedSize;         // CDE, LFE   = size
+    // private int mCompressionMethod;         // CDE, LFE   = compressionMethod
+    // private int mLastModFileTime;           // CDE, LFE   = time
+    // private int mLastModFileDate;           // CDE, LFE   = modDate
+    // private long mCRC32;                    // CDE, LFE   = crc
+    // private long mCompressedSize;           // CDE, LFE   = compressedSize
+    // private long mUncompressedSize;         // CDE, LFE   = size
     int nameLen, extraLen, commentLen;
     //private int mFileNameLength;            // CDE, LFE
     //private int mExtraFieldLength;          // CDE, LFE
@@ -75,43 +81,50 @@ public class ZipEntry implements ZipConstants, Cloneable {
     private int mInternalAttrs;             // CDE
     private long mExternalAttrs;            // CDE
     long mLocalHeaderRelOffset;     // CDE  ? dataOffset
-//    private String mFileName;               // CDE, LFE   = name
-//    private byte[] mExtraField;             // CDE, LFE   = extra
-//    private String mFileComment;            // CDE   = comment
+    // private String mFileName;               // CDE, LFE   = name
+    // private byte[] mExtraField;             // CDE, LFE   = extra
+    // private String mFileComment;            // CDE   = comment
 
 
     // GPBitFlag 3: uses a Data Descriptor block (need for deflated data)
     /*package*/ static final int USES_DATA_DESCR = 0x0008;
 
-//    private static Calendar mCalendar = Calendar.getInstance();
-// END android-added
+    // private static Calendar mCalendar = Calendar.getInstance();
+    // END android-added
 
-	/**
-	 * Zip entry state: Deflated
-	 */
-	public static final int DEFLATED = 8;
+    /**
+     * Zip entry state: Deflated.
+     * 
+     * @since Android 1.0
+     */
+    public static final int DEFLATED = 8;
 
-	/**
-	 * Zip entry state: Stored
-	 */
-	public static final int STORED = 0;
+    /**
+     * Zip entry state: Stored.
+     * 
+     * @since Android 1.0
+     */
+    public static final int STORED = 0;
 
-	/**
-	 * Constructs a new ZipEntry with the specified name.
-	 * 
-	 * @param name
-	 *            the name of the zip entry
-	 */
-	public ZipEntry(String name) {
-		if (name == null) {
+    /**
+     * Constructs a new {@code ZipEntry} with the specified name.
+     * 
+     * @param name
+     *            the name of the ZIP entry.
+     * @throws IllegalArgumentException
+     *             if the name length is outside the range (> 0xFFFF).
+     * @since Android 1.0
+     */
+    public ZipEntry(String name) {
+        if (name == null) {
             throw new NullPointerException();
         }
-		if (name.length() > 0xFFFF) {
+        if (name.length() > 0xFFFF) {
             throw new IllegalArgumentException();
         }
-		this.name = name;
+        this.name = name;
 
-// BEGIN android-added
+        // BEGIN android-added
         mVersionMadeBy = 0x0317;        // 03=UNIX, 17=spec v2.3
         mVersionToExtract = 20;         // need deflate, not much else
         mGPBitFlag = 0;
@@ -129,269 +142,284 @@ public class ZipEntry implements ZipConstants, Cloneable {
         mLocalHeaderRelOffset = -1;
         extra = null;
         comment = null;
-// END android-added
-	}
+        // END android-added
+    }
 
-	/**
-	 * Gets the comment for this ZipEntry.
-	 * 
-	 * @return the comment for this ZipEntry, or null if there is no comment
-     *
-     * Note the comment does not live in the
-     * LFH, only the CDE.  This means that, if we're reading an archive
-     * with ZipInputStream, we won't be able to see the comments.
-	 */
-	public String getComment() {
-		return comment;
-	}
+    /**
+     * Gets the comment for this {@code ZipEntry}.
+     * 
+     * @return the comment for this {@code ZipEntry}, or {@code null} if there
+     *         is no comment. If we're reading an archive with
+     *         {@code ZipInputStream} the comment is not available.
+     * @since Android 1.0
+     */
+    public String getComment() {
+        return comment;
+    }
 
-	/**
-	 * Gets the compressed size of this ZipEntry.
-	 * 
-	 * @return the compressed size, or -1 if the compressed size has not been
-	 *         set
-	 */
-	public long getCompressedSize() {
-		return compressedSize;
-	}
+    /**
+     * Gets the compressed size of this {@code ZipEntry}.
+     * 
+     * @return the compressed size, or -1 if the compressed size has not been
+     *         set.
+     * @since Android 1.0
+     */
+    public long getCompressedSize() {
+        return compressedSize;
+    }
 
-	/**
-	 * Gets the crc for this ZipEntry.
-	 * 
-	 * @return the crc, or -1 if the crc has not been set
-	 */
-	public long getCrc() {
-		return crc;
-	}
+    /**
+     * Gets the checksum for this {@code ZipEntry}.
+     * 
+     * @return the checksum, or -1 if the checksum has not been set.
+     * @since Android 1.0
+     */
+    public long getCrc() {
+        return crc;
+    }
 
-	/**
-	 * Gets the extra information for this ZipEntry.
-	 * 
-	 * @return a byte array containing the extra information, or null if there
-	 *         is none
-	 */
-	public byte[] getExtra() {
-		return extra;
-	}
+    /**
+     * Gets the extra information for this {@code ZipEntry}.
+     * 
+     * @return a byte array containing the extra information, or {@code null} if
+     *         there is none.
+     * @since Android 1.0
+     */
+    public byte[] getExtra() {
+        return extra;
+    }
 
-	/**
-	 * Gets the compression method for this ZipEntry.
-	 * 
-	 * @return the compression method, either DEFLATED, STORED or -1 if the
-	 *         compression method has not been set
-	 */
-	public int getMethod() {
-		return compressionMethod;
-	}
+    /**
+     * Gets the compression method for this {@code ZipEntry}.
+     * 
+     * @return the compression method, either {@code DEFLATED}, {@code STORED}
+     *         or -1 if the compression method has not been set.
+     * @since Android 1.0
+     */
+    public int getMethod() {
+        return compressionMethod;
+    }
 
-	/**
-	 * Gets the name of this ZipEntry.
-	 * 
-	 * @return the entry name
-	 */
-	public String getName() {
-		return name;
-	}
+    /**
+     * Gets the name of this {@code ZipEntry}.
+     * 
+     * @return the entry name.
+     * @since Android 1.0
+     */
+    public String getName() {
+        return name;
+    }
 
-	/**
-	 * Gets the uncompressed size of this ZipEntry.
-	 * 
-	 * @return the uncompressed size, or -1 if the size has not been set
-	 */
-	public long getSize() {
-		return size;
-	}
+    /**
+     * Gets the uncompressed size of this {@code ZipEntry}.
+     * 
+     * @return the uncompressed size, or {@code -1} if the size has not been
+     *         set.
+     * @since Android 1.0
+     */
+    public long getSize() {
+        return size;
+    }
 
-	/**
-	 * Gets the last modification time of this ZipEntry.
-	 * 
-	 * @return the last modification time as the number of milliseconds since
-	 *         Jan. 1, 1970
-	 */
-	public long getTime() {
-		if (time != -1) {
-			GregorianCalendar cal = new GregorianCalendar();
-			cal.set(Calendar.MILLISECOND, 0);
-			cal.set(1980 + ((modDate >> 9) & 0x7f), ((modDate >> 5) & 0xf) - 1,
-					modDate & 0x1f, (time >> 11) & 0x1f, (time >> 5) & 0x3f,
-					(time & 0x1f) << 1);
-			return cal.getTime().getTime();
-		}
-		return -1;
-	}
+    /**
+     * Gets the last modification time of this {@code ZipEntry}.
+     * 
+     * @return the last modification time as the number of milliseconds since
+     *         Jan. 1, 1970.
+     * @since Android 1.0
+     */
+    public long getTime() {
+        if (time != -1) {
+            GregorianCalendar cal = new GregorianCalendar();
+            cal.set(Calendar.MILLISECOND, 0);
+            cal.set(1980 + ((modDate >> 9) & 0x7f), ((modDate >> 5) & 0xf) - 1,
+                    modDate & 0x1f, (time >> 11) & 0x1f, (time >> 5) & 0x3f,
+                    (time & 0x1f) << 1);
+            return cal.getTime().getTime();
+        }
+        return -1;
+    }
 
-	/**
-     * Determine whether or not this ZipEntry is a directory.
-	 * 
-	 * @return <code>true</code> when this ZipEntry is a directory,
-	 *         <code>false<code> otherwise
-	 */
-	public boolean isDirectory() {
-		return name.charAt(name.length() - 1) == '/';
-	}
+    /**
+     * Determine whether or not this {@code ZipEntry} is a directory.
+     * 
+     * @return {@code true} when this {@code ZipEntry} is a directory, {@code
+     *         false} otherwise.
+     * @since Android 1.0
+     */
+    public boolean isDirectory() {
+        return name.charAt(name.length() - 1) == '/';
+    }
 
-	/**
-	 * Sets the comment for this ZipEntry.
-	 * 
-	 * @param string
-	 *            the comment
-	 */
-	public void setComment(String string) {
-		if (string == null || string.length() <= 0xFFFF) {
+    /**
+     * Sets the comment for this {@code ZipEntry}.
+     * 
+     * @param string
+     *            the comment for this entry.
+     * @since Android 1.0
+     */
+    public void setComment(String string) {
+        if (string == null || string.length() <= 0xFFFF) {
             comment = string;
         } else {
             throw new IllegalArgumentException();
         }
-	}
+    }
 
-	/**
-	 * Sets the compressed size for this ZipEntry.
-	 * 
-	 * @param value
-	 *            the compressed size
-	 */
-	public void setCompressedSize(long value) {
-		compressedSize = value;
-	}
+    /**
+     * Sets the compressed size for this {@code ZipEntry}.
+     * 
+     * @param value
+     *            the compressed size (in bytes).
+     * @since Android 1.0
+     */
+    public void setCompressedSize(long value) {
+        compressedSize = value;
+    }
 
-	/**
-	 * Sets the crc for this ZipEntry.
-	 * 
-	 * @param value
-	 *            the crc
-	 * 
-	 * @throws IllegalArgumentException
-	 *             if value is < 0 or > 0xFFFFFFFFL
-	 */
-	public void setCrc(long value) {
-		if (value >= 0 && value <= 0xFFFFFFFFL) {
+    /**
+     * Sets the checksum for this {@code ZipEntry}.
+     * 
+     * @param value
+     *            the checksum for this entry.
+     * @throws IllegalArgumentException
+     *             if {@code value} is < 0 or > 0xFFFFFFFFL.
+     * @since Android 1.0
+     */
+    public void setCrc(long value) {
+        if (value >= 0 && value <= 0xFFFFFFFFL) {
             crc = value;
         } else {
             throw new IllegalArgumentException();
         }
-	}
+    }
 
-	/**
-	 * Sets the extra information for this ZipEntry.
-	 * 
-	 * @param data
-	 *            a byte array containing the extra information
-	 * 
-	 * @throws IllegalArgumentException
-	 *             when the length of data is > 0xFFFF bytes
-	 */
-	public void setExtra(byte[] data) {
-		if (data == null || data.length <= 0xFFFF) {
+    /**
+     * Sets the extra information for this {@code ZipEntry}.
+     * 
+     * @param data
+     *            a byte array containing the extra information.
+     * @throws IllegalArgumentException
+     *             when the length of data is greater than 0xFFFF bytes.
+     * @since Android 1.0
+     */
+    public void setExtra(byte[] data) {
+        if (data == null || data.length <= 0xFFFF) {
             extra = data;
         } else {
             throw new IllegalArgumentException();
         }
-	}
+    }
 
-	/**
-	 * Sets the compression method for this ZipEntry.
-	 * 
-	 * @param value
-	 *            the compression method, either DEFLATED or STORED
-	 * 
-	 * @throws IllegalArgumentException
-	 *             when value is not DEFLATED or STORED
-	 */
-	public void setMethod(int value) {
-		if (value != STORED && value != DEFLATED) {
+    /**
+     * Sets the compression method for this {@code ZipEntry}.
+     * 
+     * @param value
+     *            the compression method, either {@code DEFLATED} or {@code
+     *            STORED}.
+     * @throws IllegalArgumentException
+     *             when value is not {@code DEFLATED} or {@code STORED}.
+     * @since Android 1.0
+     */
+    public void setMethod(int value) {
+        if (value != STORED && value != DEFLATED) {
             throw new IllegalArgumentException();
         }
-		compressionMethod = value;
-	}
+        compressionMethod = value;
+    }
 
-	/**
-	 * Sets the uncompressed size of this ZipEntry.
-	 * 
-	 * @param value
-	 *            the uncompressed size
-	 * 
-	 * @throws IllegalArgumentException
-	 *             if value is < 0 or > 0xFFFFFFFFL
-	 */
-	public void setSize(long value) {
-		if (value >= 0 && value <= 0xFFFFFFFFL) {
+    /**
+     * Sets the uncompressed size of this {@code ZipEntry}.
+     * 
+     * @param value
+     *            the uncompressed size for this entry.
+     * @throws IllegalArgumentException
+     *             if {@code value} < 0 or {@code value} > 0xFFFFFFFFL.
+     * @since Android 1.0
+     */
+    public void setSize(long value) {
+        if (value >= 0 && value <= 0xFFFFFFFFL) {
             size = value;
         } else {
             throw new IllegalArgumentException();
         }
-	}
+    }
 
-	/**
-	 * Sets the last modification time of this ZipEntry.
-	 * 
-	 * @param value
-	 *            the last modification time as the number of milliseconds since
-	 *            Jan. 1, 1970
-	 */
-	public void setTime(long value) {
-		GregorianCalendar cal = new GregorianCalendar();
-		cal.setTime(new Date(value));
-		int year = cal.get(Calendar.YEAR);
-		if (year < 1980) {
-			modDate = 0x21;
-			time = 0;
-		} else {
-			modDate = cal.get(Calendar.DATE);
-			modDate = (cal.get(Calendar.MONTH) + 1 << 5) | modDate;
-			modDate = ((cal.get(Calendar.YEAR) - 1980) << 9) | modDate;
-			time = cal.get(Calendar.SECOND) >> 1;
-			time = (cal.get(Calendar.MINUTE) << 5) | time;
-			time = (cal.get(Calendar.HOUR_OF_DAY) << 11) | time;
-		}
-	}
+    /**
+     * Sets the modification time of this {@code ZipEntry}.
+     * 
+     * @param value
+     *            the modification time as the number of milliseconds since Jan.
+     *            1, 1970.
+     * @since Android 1.0
+     */
+    public void setTime(long value) {
+        GregorianCalendar cal = new GregorianCalendar();
+        cal.setTime(new Date(value));
+        int year = cal.get(Calendar.YEAR);
+        if (year < 1980) {
+            modDate = 0x21;
+            time = 0;
+        } else {
+            modDate = cal.get(Calendar.DATE);
+            modDate = (cal.get(Calendar.MONTH) + 1 << 5) | modDate;
+            modDate = ((cal.get(Calendar.YEAR) - 1980) << 9) | modDate;
+            time = cal.get(Calendar.SECOND) >> 1;
+            time = (cal.get(Calendar.MINUTE) << 5) | time;
+            time = (cal.get(Calendar.HOUR_OF_DAY) << 11) | time;
+        }
+    }
 
-	/**
-	 * Returns the string representation of this ZipEntry.
-	 * 
-	 * @return the string representation of this ZipEntry
-	 */
-	@Override
+    /**
+     * Returns the string representation of this {@code ZipEntry}.
+     * 
+     * @return the string representation of this {@code ZipEntry}.
+     * @since Android 1.0
+     */
+    @Override
     public String toString() {
-		return name;
-	}
+        return name;
+    }
 
-// BEGIN android-removed
-//	ZipEntry(String name, String comment, byte[] extra, long modTime,
-//			long size, long compressedSize, long crc, int compressionMethod,
-//			long modDate, long offset) {
-//		this.name = name;
-//		this.comment = comment;
-//		this.extra = extra;
-//		time = (int) modTime;
-//		this.size = size;
-//		this.compressedSize = compressedSize;
-//		this.crc = crc;
-//		this.compressionMethod = compressionMethod;
-//		this.modDate = (int) modDate;
-//		dataOffset = offset;
-//	}
-// END android-removed
+    // BEGIN android-removed
+    // ZipEntry(String name, String comment, byte[] extra, long modTime,
+    //         long size, long compressedSize, long crc, int compressionMethod,
+    //         long modDate, long offset) {
+    //     this.name = name;
+    //     this.comment = comment;
+    //     this.extra = extra;
+    //     time = (int) modTime;
+    //     this.size = size;
+    //     this.compressedSize = compressedSize;
+    //     this.crc = crc;
+    //     this.compressionMethod = compressionMethod;
+    //     this.modDate = (int) modDate;
+    //     dataOffset = offset;
+    // }
+    // END android-removed
 
-	/**
-	 * Constructs a new ZipEntry using the values obtained from ze.
-	 * 
-	 * @param ze
-	 *            ZipEntry from which to obtain values.
-	 */
-	public ZipEntry(ZipEntry ze) {
-		name = ze.name;
-		comment = ze.comment;
-		time = ze.time;
-		size = ze.size;
-		compressedSize = ze.compressedSize;
-		crc = ze.crc;
-		compressionMethod = ze.compressionMethod;
-		modDate = ze.modDate;
-		extra = ze.extra;
-// BEGIN android-removed
-//		dataOffset = ze.dataOffset;
-// END android-removed
-// BEGIN android-added
+    /**
+     * Constructs a new {@code ZipEntry} using the values obtained from {@code
+     * ze}.
+     * 
+     * @param ze
+     *            the {@code ZipEntry} from which to obtain values.
+     * @since Android 1.0
+     */
+    public ZipEntry(ZipEntry ze) {
+        name = ze.name;
+        comment = ze.comment;
+        time = ze.time;
+        size = ze.size;
+        compressedSize = ze.compressedSize;
+        crc = ze.crc;
+        compressionMethod = ze.compressionMethod;
+        modDate = ze.modDate;
+        extra = ze.extra;
+        // BEGIN android-removed
+        // dataOffset = ze.dataOffset;
+        // END android-removed
+        // BEGIN android-added
         mVersionMadeBy = ze.mVersionMadeBy;
         mVersionToExtract = ze.mVersionToExtract;
         mGPBitFlag = ze.mGPBitFlag;
@@ -401,53 +429,34 @@ public class ZipEntry implements ZipConstants, Cloneable {
         mInternalAttrs = ze.mInternalAttrs;
         mExternalAttrs = ze.mExternalAttrs;
         mLocalHeaderRelOffset = ze.mLocalHeaderRelOffset;
-//        if (e.mExtraField != null)
-//            mExtraField = e.mExtraField.clone();
-//        else
-//            mExtraField = null;
-//        mFileComment = e.mFileComment;
-// END android-added
-	}
+        // END android-added
+    }
 
-	/**
-	 * Returns a shallow copy of this entry
-	 * 
-	 * @return a copy of this entry
-	 */
-	@Override
+    /**
+     * Returns a shallow copy of this entry.
+     * 
+     * @return a copy of this entry.
+     * @since Android 1.0
+     */
+    @Override
     public Object clone() {
-		return new ZipEntry(this);
-	}
-// BEGIN android-added
-//    /**
-//     * Return a copy of this entry.  The "extra" field requires special
-//     * handling; unlike the Strings it's mutable.
-//     */
-//    public Object clone() {
-//        try {
-//            ZipEntry clonedEntry = (ZipEntry) super.clone();
-//            if (mExtraField != null)
-//                clonedEntry.mExtraField = (byte[]) mExtraField.clone();
-//            return clonedEntry;
-//        }
-//        catch (CloneNotSupportedException ex) {
-//            /* should never happen */
-//            throw new InternalError();
-//        }
-//    }
-// END android-added
+        return new ZipEntry(this);
+    }
 
-	/**
-	 * Returns the hashCode for this ZipEntry.
-	 * 
-	 * @return the hashCode of the entry
-	 */
-	@Override
+    /**
+     * Returns the hash code for this {@code ZipEntry}.
+     * 
+     * @return the hash code of the entry.
+     * @since Android 1.0
+     */
+    @Override
     public int hashCode() {
-		return name.hashCode();
-	}
+        return name.hashCode();
+    }
 
-// BEGIN android-added
+    // BEGIN android-added
+    // readShortLE is not used.
+    // readIntLE is used only once in ZipFile.
     /*
      * Internal constructor.  Creates a new ZipEntry by reading the
      * Central Directory Entry from "in", which must be positioned at
@@ -550,9 +559,6 @@ public class ZipEntry implements ZipConstants, Cloneable {
         }
     }
 
-
-
-
     /*package*/ void setVersionToExtract(int version) {
         mVersionToExtract = version;
     }
@@ -575,13 +581,6 @@ public class ZipEntry implements ZipConstants, Cloneable {
         time = lastModFileTime;
         modDate = lastModFileDate;
     }
-
-
-
-// BEGIN android-added
-// Note: readShortLE is not used!
-// readIntLE is used only once in ZipFile.
-// END android-added
 
     /*
      * Read a two-byte short in little-endian order.
@@ -616,8 +615,6 @@ public class ZipEntry implements ZipConstants, Cloneable {
         return b0 | (b1 << 8) | (b2 << 16) | (b3 << 24); // ATTENTION: DOES SIGN EXTENSION: IS THIS WANTED?
     }
 
-
-// BEGIN android-changed
     static class LittleEndianReader {
         private byte[] b = new byte[4];
         byte[] hdrBuf = new byte[CENHDR];
@@ -648,8 +645,6 @@ public class ZipEntry implements ZipConstants, Cloneable {
             }
         }
     }
-// END android-changed
-
 
     /*
      * Write a two-byte short in little-endian order.
@@ -782,6 +777,5 @@ public class ZipEntry implements ZipConstants, Cloneable {
 
         return CENHDR + nameBytes.length + extraLen + commentLen;
     }
-// END android-added
-
+    // END android-added
 }

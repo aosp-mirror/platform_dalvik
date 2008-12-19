@@ -20,16 +20,23 @@ package java.io;
 import java.security.BasicPermission;
 
 /**
- * SerializablePermission objects represent permission to access unsafe
- * serialization operations. The name of the permission should be one of:
- * <dl>
- * <dt>enableSubclassImplementation</dt>
- * <dd>Subclasses can override serialization behavior</dd>
- * <dt>enableSubstitution</dt>
- * <dd>Object substitution can be enabled</dd>
- * </dl>
+ * Is used to enable access to potentially unsafe serialization operations. It
+ * does have a name but no action list. The following table lists valid
+ * permission names:
+ * <table>
+ * <tr>
+ * <td>enableSubclassImplementation</td>
+ * <td>Subclasses can override serialization behavior.</td>
+ * </tr>
+ * <tr>
+ * <td>enableSubstitution</td>
+ * <td>Object substitution is allowed.</td>
+ * </tr>
+ * </table>
  * 
  * @see ObjectStreamConstants
+ * 
+ * @since Android 1.0
  */
 public final class SerializablePermission extends BasicPermission {
     private static final long serialVersionUID = 8537212141160296410L;
@@ -39,23 +46,25 @@ public final class SerializablePermission extends BasicPermission {
     private String actions;
 
     /**
-     * Creates an instance of this class with the given name.
+     * Constructs a new {@code SerializablePermission} with the specified name.
      * 
      * @param permissionName
      *            the name of the new permission.
+     * @since Android 1.0
      */
     public SerializablePermission(String permissionName) {
         super(permissionName);
     }
 
     /**
-     * Creates an instance of this class with the given name and action list.
+     * Constructs a new {@code SerializablePermission} with the specified name.
      * The action list is ignored.
      * 
      * @param name
      *            the name of the new permission.
      * @param actions
      *            ignored.
+     * @since Android 1.0
      */
     public SerializablePermission(String name, String actions) {
         super(name, actions);

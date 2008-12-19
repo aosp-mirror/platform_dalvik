@@ -31,18 +31,18 @@ import org.apache.harmony.logging.internal.nls.Messages;
  * initialize itself:
  * <ul>
  * <li>java.util.logging.ConsoleHandler.level specifies the logging level,
- * defaults to <code>Level.ALL</code> if this property is not found or has an
- * invalid value;
+ * defaults to {@code Level.ALL} if this property is not found or has an invalid
+ * value.
  * <li>java.util.logging.SocketHandler.filter specifies the name of the filter
- * class to be associated with this handler, defaults to <code>null</code> if
- * this property is not found or has an invalid value;
+ * class to be associated with this handler, defaults to {@code null} if this
+ * property is not found or has an invalid value.
  * <li>java.util.logging.SocketHandler.formatter specifies the name of the
  * formatter class to be associated with this handler, defaults to
- * <code>java.util.logging.XMLFormatter</code> if this property is not found
- * or has an invalid value;
+ * {@code java.util.logging.XMLFormatter} if this property is not found or has
+ * an invalid value.
  * <li>java.util.logging.SocketHandler.encoding specifies the encoding this
- * handler will use to encode log messages, defaults to <code>null</code> if
- * this property is not found or has an invalid value.
+ * handler will use to encode log messages, defaults to {@code null} if this
+ * property is not found or has an invalid value.
  * <li>java.util.logging.SocketHandler.host specifies the name of the host that
  * this handler should connect to. There's no default value for this property.
  * <li>java.util.logging.SocketHandler.encoding specifies the port number that
@@ -56,7 +56,6 @@ import org.apache.harmony.logging.internal.nls.Messages;
  * <p>
  * This class is not thread-safe.
  * </p>
- * 
  */
 public class SocketHandler extends StreamHandler {
     // default level
@@ -69,15 +68,16 @@ public class SocketHandler extends StreamHandler {
     private Socket socket;
 
     /**
-     * Constructs a <code>SocketHandler</code> object using the properties
-     * read by the log manager, including the host name and port number.
+     * Constructs a {@code SocketHandler} object using the properties read by
+     * the log manager, including the host name and port number. Default
+     * formatting uses the XMLFormatter class and level is set to ALL.
      * 
      * @throws IOException
-     *             If failed to connect to the specified host and port.
+     *             if failed to connect to the specified host and port.
      * @throws IllegalArgumentException
-     *             If the host name or port number is illegal.
+     *             if the host name or port number is illegal.
      * @throws SecurityException
-     *             If a security manager determines that the caller does not
+     *             if a security manager determines that the caller does not
      *             have the required permission to control this handler.
      */
     public SocketHandler() throws IOException {
@@ -89,20 +89,20 @@ public class SocketHandler extends StreamHandler {
     }
 
     /**
-     * Constructs a <code>SocketHandler</code> object using the specified host
-     * name and port number together with other properties read by the log
-     * manager.
+     * Constructs a {@code SocketHandler} object using the specified host name
+     * and port number together with other properties read by the log manager.
+     * Default formatting uses the XMLFormatter class and level is set to ALL.
      * 
      * @param host
      *            the host name
      * @param port
      *            the port number
      * @throws IOException
-     *             If failed to connect to the specified host and port.
+     *             if failed to connect to the specified host and port.
      * @throws IllegalArgumentException
-     *             If the host name or port number is illegal.
+     *             if the host name or port number is illegal.
      * @throws SecurityException
-     *             If a security manager determines that the caller does not
+     *             if a security manager determines that the caller does not
      *             have the required permission to control this handler.
      */
     public SocketHandler(String host, int port) throws IOException {
@@ -170,7 +170,7 @@ public class SocketHandler extends StreamHandler {
      * Logs a record if necessary. A flush operation will be done afterwards.
      * 
      * @param record
-     *            the log record to be logged
+     *            the log record to be logged.
      */
     @Override
     public void publish(LogRecord record) {

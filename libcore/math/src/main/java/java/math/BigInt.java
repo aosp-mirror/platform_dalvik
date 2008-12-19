@@ -21,11 +21,11 @@ import org.openssl.NativeBN;
 
 import java.util.Random;
 
-/**
+/*
  * In contrast to BigIntegers this class doesn't fake two's complement representation.
  * Any Bit-Operations, including Shifting, solely regard the unsigned magnitude.
  * Moreover BigInt objects are mutable and offer efficient in-place-operations.
- **/
+ */
 
 class BigInt
 // extends Number
@@ -388,6 +388,12 @@ class BigInt
     public static BigInt generatePrimeDefault(int bitLength, Random rnd, Context t) {
         BigInt r = newBigInt();
         Check(NativeBN.BN_generate_prime_ex(r.bignum, bitLength, false, 0, 0, 0));
+        return r;
+    }
+
+    public static BigInt generatePrimeSafe(int bitLength, Random rnd, Context t) {
+        BigInt r = newBigInt();
+        Check(NativeBN.BN_generate_prime_ex(r.bignum, bitLength, true, 0, 0, 0));
         return r;
     }
 

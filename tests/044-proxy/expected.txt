@@ -38,8 +38,43 @@ Invoke public abstract java.lang.String Shapes.blob()
  (no args)
 --- blob
 Success: method blob res=mix
+Invoke public abstract void Shapes.upChuck()
+ (no args)
+Got expected ioobe
+Invoke public abstract void Shapes.upCheck() throws java.lang.InterruptedException
+ (no args)
+Got expected ie
 
-Proxy methods: [public native boolean .$Proxy0.equals(java.lang.Object), public native int .$Proxy0.hashCode(), public native java.lang.String .$Proxy0.toString(), public native int .$Proxy0.rectangle(int,int), public native int .$Proxy0.square(int,int), public native int .$Proxy0.trapezoid(int,double,int), public native java.lang.String .$Proxy0.blob(), public native void .$Proxy0.circle(int), public native double .$Proxy0.blue(int), public native int .$Proxy0.green(double), public native int .$Proxy0.mauve(java.lang.String), public native int .$Proxy0.red(float)]
+Proxy methods: [public native boolean .$Proxy0.equals(java.lang.Object), public native int .$Proxy0.hashCode(), public native java.lang.String .$Proxy0.toString(), public native int .$Proxy0.rectangle(int,int), public native int .$Proxy0.square(int,int), public native int .$Proxy0.trapezoid(int,double,int), public native java.lang.String .$Proxy0.blob(), public native void .$Proxy0.circle(int), public native void .$Proxy0.upCheck(), public native void .$Proxy0.upChuck(), public native double .$Proxy0.blue(int), public native R0aa .$Proxy0.checkMe(), public native int .$Proxy0.green(double), public native int .$Proxy0.mauve(java.lang.String), public native int .$Proxy0.red(float)]
 Decl annos: []
-Param annos: []
-Proxy fields: [protected java.lang.reflect.InvocationHandler .$Proxy0.h]
+Param annos (1) : [[]]
+Proxy fields: [private static [[Ljava.lang.Throwable; .$Proxy0.throws]
+Dupe threw expected exception
+Clash threw expected exception
+Clash2 threw expected exception
+Clash3 threw expected exception
+Clash4 threw expected exception
+Invoke public abstract void InterfaceW1.throwFunky()
+ (no args)
+Got expected UTE
+Invoke public abstract void InterfaceW1.throwFunky2() throws BaseException,java.lang.NoSuchMethodException,java.io.IOException
+ (no args)
+Got expected IOE
+Invoke public abstract void InterfaceW1.throwFunky2() throws BaseException,java.lang.NoSuchMethodException,java.io.IOException
+ (no args)
+Got expected IOE
+Invoke public abstract void InterfaceW1.throwException() throws BaseException
+ (no args)
+Got expected UTE
+Invoke public abstract void InterfaceW1.throwBase() throws BaseException
+ (no args)
+Got expected UTE
+Invoke public abstract void InterfaceW1.throwSub() throws BaseException
+ (no args)
+Got expected exception
+Invoke public abstract void InterfaceW1.throwSubSub() throws BaseException
+ (no args)
+Got expected exception
+Invoke public abstract void InterfaceW1.bothThrowBase() throws BaseException,SubException,SubSubException
+ (no args)
+Got expected exception

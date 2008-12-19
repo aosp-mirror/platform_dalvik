@@ -15,8 +15,14 @@
  */
 package org.apache.harmony.nio.tests.java.nio;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.nio.LongBuffer;
 
+@TestTargetClass(java.nio.LongBuffer.class)
 public class WrappedLongBufferTest extends LongBufferTest {
     protected void setUp() throws Exception {
         super.setUp();
@@ -35,6 +41,15 @@ public class WrappedLongBufferTest extends LongBufferTest {
      * @tests java.nio.CharBuffer#allocate(char[],int,int)
      * 
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "wrap",
+          methodArgs = {long[].class, int.class, int.class}
+        )
+    })
     public void testWrappedLongBuffer_IllegalArg() {
         long array[] = new long[20];
         try {

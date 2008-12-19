@@ -17,27 +17,49 @@
 
 package tests.api.java.lang;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
 import tests.support.Support_Exec;
 
+@TestTargetClass(Process.class) 
 public class Process2Test extends junit.framework.TestCase {
-	/**
-	 * @tests java.lang.Process#getInputStream(), 
-	 *        java.lang.Process#getErrorStream()
-	 *        java.lang.Process#getOutputStream()
-	 * Tests if these methods return buffered streams.
-	 */
-	public void test_isBufferedStreams() {
-		// Regression test for HARMONY-2735.
-		try {
-			Object[] execArgs = Support_Exec.execJava2(new String[0], null, true);
-			Process p = (Process) execArgs[0];
-			InputStream in = p.getInputStream();
+    /**
+     * @tests java.lang.Process#getInputStream(), 
+     *        java.lang.Process#getErrorStream()
+     *        java.lang.Process#getOutputStream()
+     * Tests if these methods return buffered streams.
+     */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getErrorStream",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "getInputStream",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "getOutputStream",
+          methodArgs = {}
+        )
+    })
+    public void test_isBufferedStreams() {
+        // Regression test for HARMONY-2735.
+        try {
+            Object[] execArgs = Support_Exec.execJava2(new String[0], null, true);
+            Process p = (Process) execArgs[0];
+            InputStream in = p.getInputStream();
                   assertTrue("getInputStream() returned non-buffered stream: " + in, (in instanceof BufferedInputStream));
                   in = p.getErrorStream();
                   assertTrue("getErrorStream() returned non-buffered stream: " + in, (in instanceof BufferedInputStream));
@@ -46,8 +68,8 @@ public class Process2Test extends junit.framework.TestCase {
                   in.close();
                   out.close();
                   p.destroy();
-		} catch (Exception ex) {
-			fail("Unexpected exception got: " + ex);
-		}
-	}
+        } catch (Exception ex) {
+            fail("Unexpected exception got: " + ex);
+        }
+    }
 }

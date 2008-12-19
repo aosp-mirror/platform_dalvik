@@ -35,7 +35,7 @@ public class AllTests {
 
         suite.addTestSuite(AccessControlException2Test.class);
         suite.addTestSuite(AccessControlExceptionTest.class);
-        suite.addTestSuite(AccessController2Test.class);
+//        suite.addTestSuite(AccessController2Test.class);
         suite.addTestSuite(AlgorithmParameterGenerator1Test.class);
         suite.addTestSuite(AlgorithmParameterGenerator2Test.class);
         suite.addTestSuite(AlgorithmParameterGenerator3Test.class);
@@ -112,7 +112,7 @@ public class AllTests {
         suite.addTestSuite(ProviderServiceTest.class);
         suite.addTestSuite(ProviderTest.class);
         suite.addTestSuite(PublicKeyTest.class);
-        suite.addTestSuite(SecureClassLoader2Test.class);
+//        suite.addTestSuite(SecureClassLoader2Test.class);
         suite.addTestSuite(SecureRandom2Test.class);
         suite.addTestSuite(Security2Test.class);
         suite.addTestSuite(SecurityPermission2Test.class);

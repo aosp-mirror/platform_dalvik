@@ -24,62 +24,84 @@ import org.apache.harmony.luni.net.NetUtil;
 import org.apache.harmony.luni.platform.Platform;
 
 /**
- * The abstract superclass of datagram & multicast socket implementations.
+ * The abstract superclass for datagram and multicast socket implementations.
+ * 
+ * @since Android 1.0
  */
 public abstract class DatagramSocketImpl implements SocketOptions {
 
+    /**
+     * File descriptor that is used to address this socket.
+     * 
+     * @since Android 1.0
+     */
     protected FileDescriptor fd;
 
+    /**
+     * The number of the local port to which this socket is bound.
+     * 
+     * @since Android 1.0
+     */
     protected int localPort;
 
     /**
      * Constructs an unbound datagram socket implementation.
+     * 
+     * @since Android 1.0
      */
     public DatagramSocketImpl() {
         localPort = -1;
     }
 
     /**
-     * Bind the datagram socket to the nominated localhost/port. Sockets must be
+     * Binds the datagram socket to the given localhost/port. Sockets must be
      * bound prior to attempting to send or receive data.
      * 
      * @param port
-     *            the port on the localhost to bind
+     *            the port on the localhost to bind.
      * @param addr
-     *            the address on the multihomed localhost to bind
-     * 
+     *            the address on the multihomed localhost to bind.
      * @exception SocketException
-     *                if an error occurred during bind, such as if the port was
-     *                already bound
+     *                if an error occurs while binding, for example, if the port
+     *                has been already bound.
+     * @since Android 1.0
      */
     protected abstract void bind(int port, InetAddress addr)
             throws SocketException;
 
     /**
-     * Close the socket.
+     * Closes this socket.
+     * 
+     * @since Android 1.0
      */
     protected abstract void close();
 
     /**
      * This method allocates the socket descriptor in the underlying operating
      * system.
+     * 
+     * @throws SocketException
+     *             if an error occurs while creating the socket.
+     * @since Android 1.0
      */
     protected abstract void create() throws SocketException;
 
     /**
-     * Answer the FileDescriptor, which will be invalid if the socket is closed
-     * or not bound.
+     * Gets the {@code FileDescriptor} of this datagram socket, which is invalid
+     * if the socket is closed or not bound.
      * 
-     * @return FileDescriptor the socket file descriptor
+     * @return the current file descriptor of this socket.
+     * @since Android 1.0
      */
     protected FileDescriptor getFileDescriptor() {
         return fd;
     }
 
     /**
-     * Answer the local address to which the socket is bound.
+     * Gets the local address to which the socket is bound.
      * 
-     * @return InetAddress the local address to which the socket is bound.
+     * @return the local address to which the socket is bound.
+     * @since Android 1.0
      */
     InetAddress getLocalAddress() {
         return Platform.getNetworkSystem().getSocketLocalAddress(fd,
@@ -87,170 +109,207 @@ public abstract class DatagramSocketImpl implements SocketOptions {
     }
 
     /**
-     * Answer the local port. If the socket was bound to any available port, as
-     * flagged by a <code>localPort</code> value of -1, query the IP stack.
+     * Gets the local port of this socket.
      * 
-     * @return int the local port to which the socket is bound.
+     * @return the local port to which this socket is bound.
+     * @since Android 1.0
      */
     protected int getLocalPort() {
         return localPort;
     }
 
     /**
-     * Answer the nominated socket option.
+     * Gets the value for the specified socket option.
      * 
      * @param optID
-     *            the socket option to retrieve
-     * @return Object the option value
+     *            the ID of the socket option to be retrieved.
+     * @return the requested option value.
      * @exception SocketException
-     *                thrown if an error occurs while accessing the option
+     *                if an error occurs while accessing the option.
+     * @since Android 1.0
      */
     public abstract Object getOption(int optID) throws SocketException;
 
     /**
-     * Answer the time-to-live (TTL) for multicast packets sent on this socket.
+     * Gets the time-to-live (TTL) for multicast packets sent on this socket.
      * 
-     * @return java.net.InetAddress
+     * @return the time-to-live option as a byte value.
      * @throws IOException
-     *             The exception description.
+     *             if an error occurs while getting the time-to-live option
+     *             value.
      * @deprecated Replaced by {@link #getTimeToLive}
      * @see #getTimeToLive()
+     * @since Android 1.0
      */
     @Deprecated
     protected abstract byte getTTL() throws IOException;
 
     /**
-     * Answer the time-to-live (TTL) for multicast packets sent on this socket.
+     * Gets the time-to-live (TTL) for multicast packets sent on this socket.
+     * The TTL option defines how many routers a packet may be pass before it is
+     * discarded.
      * 
-     * @return int
+     * @return the time-to-live option as an integer value.
      * @throws IOException
-     *             The exception description.
+     *             if an error occurs while getting the time-to-live option
+     *             value.
+     * @since Android 1.0
      */
     protected abstract int getTimeToLive() throws IOException;
 
     /**
-     * Add this socket to the multicast group. A socket must join a group before
-     * data may be received. A socket may be a member of multiple groups but may
-     * join any group once.
+     * Adds this socket to the multicast group {@code addr}. A socket must join
+     * a group before being able to receive data. Further, a socket may be a
+     * member of multiple groups but may join any group only once.
      * 
      * @param addr
-     *            the multicast group to be joined
-     * @throws IOException may be thrown while joining a group
+     *            the multicast group to which this socket has to be joined.
+     * @throws IOException
+     *             if an error occurs while joining the specified multicast
+     *             group.
+     * @since Android 1.0
      */
     protected abstract void join(InetAddress addr) throws IOException;
 
     /**
-     * Add this socket to the multicast group. A socket must join a group before
-     * data may be received. A socket may be a member of multiple groups but may
-     * join any group once.
+     * Adds this socket to the multicast group {@code addr}. A socket must join
+     * a group before being able to receive data. Further, a socket may be a
+     * member of multiple groups but may join any group only once.
      * 
      * @param addr
-     *            the multicast group to be joined
+     *            the multicast group to which this socket has to be joined.
      * @param netInterface
-     *            the network interface on which the addresses should be dropped
-     * @throws IOException may be thrown while joining a group
+     *            the local network interface which will receive the multicast
+     *            datagram packets.
+     * @throws IOException
+     *             if an error occurs while joining the specified multicast
+     *             group.
+     * @since Android 1.0
      */
     protected abstract void joinGroup(SocketAddress addr,
             NetworkInterface netInterface) throws IOException;
 
     /**
-     * Remove the socket from the multicast group.
+     * Removes this socket from the multicast group {@code addr}.
      * 
      * @param addr
-     *            the multicast group to be left
-     * @throws IOException May be thrown while leaving the group
+     *            the multicast group to be left.
+     * @throws IOException
+     *             if an error occurs while leaving the group or no multicast
+     *             address was assigned.
+     * @since Android 1.0
      */
     protected abstract void leave(InetAddress addr) throws IOException;
 
     /**
-     * Remove the socket from the multicast group.
+     * Removes this socket from the multicast group {@code addr}.
      * 
      * @param addr
-     *            the multicast group to be left
+     *            the multicast group to be left.
      * @param netInterface
-     *            the network interface on which the addresses should be dropped
-     * @throws IOException May be thrown while leaving the group
+     *            the local network interface on which this socket has to be
+     *            removed.
+     * @throws IOException
+     *             if an error occurs while leaving the group.
+     * @since Android 1.0
      */
     protected abstract void leaveGroup(SocketAddress addr,
             NetworkInterface netInterface) throws IOException;
 
     /**
-     * Peek at the incoming packet to this socket and answer the sender's
-     * address into <code>sender</code>. The method will block until a packet
-     * is received or timeout expires and returns the sender's port.
+     * Peeks at the incoming packet to this socket and returns the address of
+     * the {@code sender}. The method will block until a packet is received or
+     * timeout expires.
      * 
+     * @param sender
+     *            the origin address of a packet.
+     * @return the address of {@code sender} as an integer value.
      * @exception IOException
-     *                if a read error or timeout occurs
+     *                if an error or a timeout occurs while reading the address.
+     * @since Android 1.0
      */
     protected abstract int peek(InetAddress sender) throws IOException;
 
     /**
-     * Receive data into the supplied datagram packet. This call will block
-     * until either data is received or, if a timeout is set, the timeout
-     * expires. If the timeout expires, the InterruptedIOException is thrown.
+     * Receives data and stores it in the supplied datagram packet {@code pack}.
+     * This call will block until either data has been received or, if a timeout
+     * is set, the timeout has expired. If the timeout expires an {@code
+     * InterruptedIOException} is thrown.
      * 
+     * @param pack
+     *            the datagram packet container to fill in the received data.
      * @exception IOException
-     *                if a read error or timeout occurs
+     *                if an error or timeout occurs while receiving data.
+     * @since Android 1.0
      */
     protected abstract void receive(DatagramPacket pack) throws IOException;
 
     /**
-     * Sends the supplied datagram packet. The packet contains the destination
-     * host & port.
+     * Sends the given datagram packet {@code pack}. The packet contains the
+     * data and the address and port information of the target host as well.
      * 
      * @param pack
-     *            DatagramPacket to send
-     * 
+     *            the datagram packet to be sent.
      * @exception IOException
-     *                if a write error occurs
+     *                if an error occurs while sending the packet.
+     * @since Android 1.0
      */
     protected abstract void send(DatagramPacket pack) throws IOException;
 
     /**
-     * Set the nominated socket option.
+     * Sets the value for the specified socket option.
      * 
      * @param optID
-     *            the socket option to set
+     *            the ID of the socket option to be set.
      * @param val
-     *            the option value
+     *            the value of the option.
      * @exception SocketException
-     *                thrown if an error occurs while setting the option
+     *                if an error occurs while setting the option.
+     * @since Android 1.0
      */
     public abstract void setOption(int optID, Object val)
             throws SocketException;
 
     /**
-     * Set the time-to-live (TTL) for multicast packets sent on this socket.
+     * Sets the time-to-live (TTL) option for multicast packets sent on this
+     * socket.
      * 
      * @param ttl
-     *            the time-to-live, 0 &lt; ttl &lt;= 255
-     * @throws IOException The exception thrown while setting the TTL
+     *            the time-to-live option value. Valid values are 0 &lt; ttl
+     *            &lt;= 255.
+     * @throws IOException
+     *             if an error occurs while setting the option.
+     * @since Android 1.0
      */
     protected abstract void setTimeToLive(int ttl) throws IOException;
 
     /**
-     * Set the time-to-live (TTL) for multicast packets sent on this socket.
+     * Sets the time-to-live (TTL) option for multicast packets sent on this
+     * socket.
      * 
      * @param ttl
-     *            the time-to-live, 0 &lt; ttl &lt;= 255
-     * @throws IOException The exception thrown while setting the TTL
+     *            the time-to-live option value. Valid values are 0 &lt; ttl
+     *            &lt;= 255.
+     * @throws IOException
+     *             if an error occurs while setting the option.
      * @deprecated Replaced by {@link #setTimeToLive}
      * @see #setTimeToLive(int)
+     * @since Android 1.0
      */
     @Deprecated
     protected abstract void setTTL(byte ttl) throws IOException;
 
     /**
-     * Connect the socket to the specified remote address and port.
+     * Connects this socket to the specified remote address and port.
      * 
      * @param inetAddr
-     *            the remote address
+     *            the address of the target host which has to be connected.
      * @param port
-     *            the remote port
-     * 
+     *            the port on the target host which has to be connected.
      * @exception SocketException
-     *                possibly thrown, if the datagram socket cannot be
-     *                connected to the specified remote address and port
+     *                if the datagram socket cannot be connected to the
+     *                specified remote address and port.
+     * @since Android 1.0
      */
     protected void connect(InetAddress inetAddr, int port)
             throws SocketException {
@@ -258,26 +317,27 @@ public abstract class DatagramSocketImpl implements SocketOptions {
     }
 
     /**
-     * Disconnect the socket from the remote address and port.
+     * Disconnects this socket from the remote host.
+     * 
+     * @since Android 1.0
      */
     protected void disconnect() {
         // do nothing
     }
 
     /**
-     * Receive data into the supplied datagram packet by peeking. The data is
-     * not removed and will be received by another peekData() or receive() call.
-     * 
-     * This call will block until either data is received or, if a timeout is
-     * set, the timeout expires.
+     * Receives data into the supplied datagram packet by peeking. The data is
+     * not removed from socket buffer and can be received again by another
+     * {@code peekData()} or {@code receive()} call. This call blocks until
+     * either data has been received or, if a timeout is set, the timeout has
+     * been expired.
      * 
      * @param pack
-     *            the DatagramPacket used to store the data
-     * 
-     * @return the port the packet was received from
-     * 
+     *            the datagram packet used to store the data.
+     * @return the port the packet was received from.
      * @exception IOException
-     *                if an error occurs
+     *                if an error occurs while peeking at the data.
+     * @since Android 1.0
      */
     protected abstract int peekData(DatagramPacket pack) throws IOException;
 }

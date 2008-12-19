@@ -78,8 +78,8 @@ void dvmInstanceofShutdown(void)
  * "subDim" is usually just sub->dim, but for some kinds of checks we want
  * to pass in a non-array class and pretend that it's an array.
  */
-static int isArrayInstanceOfArray(ClassObject* subElemClass, int subDim,
-    ClassObject* clazz)
+static int isArrayInstanceOfArray(const ClassObject* subElemClass, int subDim,
+    const ClassObject* clazz)
 {
     //assert(dvmIsArrayClass(sub));
     assert(dvmIsArrayClass(clazz));
@@ -134,7 +134,7 @@ static int isArrayInstanceOfArray(ClassObject* subElemClass, int subDim,
  *
  * "clazz" could be an array class, interface, or simple class.
  */
-static int isArrayInstanceOf(ClassObject* sub, ClassObject* clazz)
+static int isArrayInstanceOf(const ClassObject* sub, const ClassObject* clazz)
 {
     assert(dvmIsArrayClass(sub));
 
@@ -167,7 +167,7 @@ static int isArrayInstanceOf(ClassObject* sub, ClassObject* clazz)
  *
  * "clazz" could be a class or an interface.
  */
-int dvmImplements(ClassObject* clazz, ClassObject* interface)
+int dvmImplements(const ClassObject* clazz, const ClassObject* interface)
 {
     int i;
 
@@ -194,7 +194,8 @@ int dvmImplements(ClassObject* clazz, ClassObject* interface)
  * Note that "objectClass" could be an array, but objectClass->elementClass
  * is always a non-array type.
  */
-bool dvmCanPutArrayElement(ClassObject* objectClass, ClassObject* arrayClass)
+bool dvmCanPutArrayElement(const ClassObject* objectClass,
+    const ClassObject* arrayClass)
 {
     if (dvmIsArrayClass(objectClass)) {
         /*
@@ -220,7 +221,8 @@ bool dvmCanPutArrayElement(ClassObject* objectClass, ClassObject* arrayClass)
 /*
  * Perform the instanceof calculation.
  */
-static inline int isInstanceof(ClassObject* instance, ClassObject* clazz)
+static inline int isInstanceof(const ClassObject* instance,
+    const ClassObject* clazz)
 {
     if (dvmIsInterfaceClass(clazz)) {
         return dvmImplements(instance, clazz);
@@ -236,7 +238,8 @@ static inline int isInstanceof(ClassObject* instance, ClassObject* clazz)
  * Do the instanceof calculation, pulling the result from the cache if
  * possible.
  */
-int dvmInstanceofNonTrivial(ClassObject* instance, ClassObject* clazz)
+int dvmInstanceofNonTrivial(const ClassObject* instance,
+    const ClassObject* clazz)
 {
 #define ATOMIC_CACHE_CALC isInstanceof(instance, clazz)
     return ATOMIC_CACHE_LOOKUP(gDvm.instanceofCache,

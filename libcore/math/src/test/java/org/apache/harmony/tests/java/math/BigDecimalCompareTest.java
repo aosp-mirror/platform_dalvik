@@ -21,13 +21,18 @@
 
 package org.apache.harmony.tests.java.math;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.MathContext;
 import java.math.RoundingMode;
 
 import junit.framework.TestCase;
-
+@TestTargetClass(BigDecimal.class)
 /**
  * Class:  java.math.BigDecimal
  * Methods: abs, compareTo, equals, hashCode, 
@@ -37,6 +42,15 @@ public class BigDecimalCompareTest extends TestCase {
     /**
      * Abs() of a negative BigDecimal
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "This is a complete subset of tests for abs method.",
+      targets = {
+        @TestTarget(
+          methodName = "abs",
+          methodArgs = {}
+        )
+    })
     public void testAbsNeg() {
         String a = "-123809648392384754573567356745735.63567890295784902768787678287E+21";
         BigDecimal aNumber = new BigDecimal(a);
@@ -47,6 +61,15 @@ public class BigDecimalCompareTest extends TestCase {
     /**
      * Abs() of a positive BigDecimal
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for abs method.",
+          targets = {
+            @TestTarget(
+              methodName = "abs",
+              methodArgs = {}
+            )
+        })
     public void testAbsPos() {
         String a = "123809648392384754573567356745735.63567890295784902768787678287E+21";
         BigDecimal aNumber = new BigDecimal(a);
@@ -57,6 +80,15 @@ public class BigDecimalCompareTest extends TestCase {
     /**
      * Abs(MathContext) of a negative BigDecimal
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "ArithmeticException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "abs",
+          methodArgs = {java.math.MathContext.class}
+        )
+    })
     public void testAbsMathContextNeg() {
         String a = "-123809648392384754573567356745735.63567890295784902768787678287E+21";
         BigDecimal aNumber = new BigDecimal(a);
@@ -73,6 +105,15 @@ public class BigDecimalCompareTest extends TestCase {
     /**
      * Abs(MathContext) of a positive BigDecimal
      */
+@TestInfo(
+          level = TestLevel.PARTIAL,
+          purpose = "ArithmeticException checking missed.",
+          targets = {
+            @TestTarget(
+              methodName = "abs",
+              methodArgs = {java.math.MathContext.class}
+            )
+        })
     public void testAbsMathContextPos() {
         String a = "123809648392384754573567356745735.63567890295784902768787678287E+21";
         BigDecimal aNumber = new BigDecimal(a);
@@ -89,6 +130,15 @@ public class BigDecimalCompareTest extends TestCase {
     /**
      * Compare to a number of an equal scale
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "This is a complete subset of tests for compareTo method.",
+      targets = {
+        @TestTarget(
+          methodName = "compareTo",
+          methodArgs = {java.math.BigDecimal.class}
+        )
+    })
     public void testCompareEqualScale1() {
         String a = "12380964839238475457356735674573563567890295784902768787678287";
         int aScale = 18;
@@ -103,6 +153,15 @@ public class BigDecimalCompareTest extends TestCase {
     /**
      * Compare to a number of an equal scale
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for compareTo method.",
+          targets = {
+            @TestTarget(
+              methodName = "compareTo",
+              methodArgs = {java.math.BigDecimal.class}
+            )
+        })
     public void testCompareEqualScale2() {
         String a = "12380964839238475457356735674573563567890295784902768787678287";
         int aScale = 18;
@@ -117,6 +176,15 @@ public class BigDecimalCompareTest extends TestCase {
     /**
      * Compare to a number of an greater scale
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for compareTo method.",
+          targets = {
+            @TestTarget(
+              methodName = "compareTo",
+              methodArgs = {java.math.BigDecimal.class}
+            )
+        })
     public void testCompareGreaterScale1() {
         String a = "12380964839238475457356735674573563567890295784902768787678287";
         int aScale = 28;
@@ -131,6 +199,15 @@ public class BigDecimalCompareTest extends TestCase {
     /**
      * Compare to a number of an greater scale
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for compareTo method.",
+          targets = {
+            @TestTarget(
+              methodName = "compareTo",
+              methodArgs = {java.math.BigDecimal.class}
+            )
+        })
     public void testCompareGreaterScale2() {
         String a = "12380964839238475457356735674573563567890295784902768787678287";
         int aScale = 48;
@@ -145,6 +222,15 @@ public class BigDecimalCompareTest extends TestCase {
     /**
      * Compare to a number of an less scale
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for compareTo method.",
+          targets = {
+            @TestTarget(
+              methodName = "compareTo",
+              methodArgs = {java.math.BigDecimal.class}
+            )
+        })
     public void testCompareLessScale1() {
         String a = "12380964839238475457356735674573563567890295784902768787678287";
         int aScale = 18;
@@ -159,6 +245,15 @@ public class BigDecimalCompareTest extends TestCase {
     /**
      * Compare to a number of an less scale
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for compareTo method.",
+          targets = {
+            @TestTarget(
+              methodName = "compareTo",
+              methodArgs = {java.math.BigDecimal.class}
+            )
+        })
     public void testCompareLessScale2() {
         String a = "12380964839238475457356735674573";
         int aScale = 36;
@@ -173,6 +268,15 @@ public class BigDecimalCompareTest extends TestCase {
     /**
      * Equals() for unequal BigDecimals
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "This is a complete subset of tests for equals method.",
+      targets = {
+        @TestTarget(
+          methodName = "equals",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void testEqualsUnequal1() {
        String a = "92948782094488478231212478987482988429808779810457634781384756794987";
        int aScale = -24;
@@ -186,6 +290,15 @@ public class BigDecimalCompareTest extends TestCase {
     /**
      * Equals() for unequal BigDecimals
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for equals method.",
+          targets = {
+            @TestTarget(
+              methodName = "equals",
+              methodArgs = {java.lang.Object.class}
+            )
+        })
     public void testEqualsUnequal2() {
        String a = "92948782094488478231212478987482988429808779810457634781384756794987";
        int aScale = -24;
@@ -199,6 +312,15 @@ public class BigDecimalCompareTest extends TestCase {
     /**
      * Equals() for unequal BigDecimals
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for equals method.",
+          targets = {
+            @TestTarget(
+              methodName = "equals",
+              methodArgs = {java.lang.Object.class}
+            )
+        })
     public void testEqualsUnequal3() {
        String a = "92948782094488478231212478987482988429808779810457634781384756794987";
        int aScale = -24;
@@ -210,6 +332,15 @@ public class BigDecimalCompareTest extends TestCase {
     /**
      * equals() for equal BigDecimals
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for equals method.",
+          targets = {
+            @TestTarget(
+              methodName = "equals",
+              methodArgs = {java.lang.Object.class}
+            )
+        })
     public void testEqualsEqual() {
        String a = "92948782094488478231212478987482988429808779810457634781384756794987";
        int aScale = -24;
@@ -223,6 +354,15 @@ public class BigDecimalCompareTest extends TestCase {
     /**
      * equals() for equal BigDecimals
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for equals method.",
+          targets = {
+            @TestTarget(
+              methodName = "equals",
+              methodArgs = {java.lang.Object.class}
+            )
+        })
     public void testEqualsNull() {
        String a = "92948782094488478231212478987482988429808779810457634781384756794987";
        int aScale = -24;
@@ -233,6 +373,15 @@ public class BigDecimalCompareTest extends TestCase {
     /**
      * hashCode() for equal BigDecimals
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "This is a complete subset of tests for hashCode method.",
+      targets = {
+        @TestTarget(
+          methodName = "hashCode",
+          methodArgs = {}
+        )
+    })
     public void testHashCodeEqual() {
        String a = "92948782094488478231212478987482988429808779810457634781384756794987";
        int aScale = -24;
@@ -246,6 +395,15 @@ public class BigDecimalCompareTest extends TestCase {
     /**
      * hashCode() for unequal BigDecimals
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for hashCode method.",
+          targets = {
+            @TestTarget(
+              methodName = "hashCode",
+              methodArgs = {}
+            )
+        })
     public void testHashCodeUnequal() {
        String a = "8478231212478987482988429808779810457634781384756794987";
        int aScale = 41;
@@ -259,6 +417,15 @@ public class BigDecimalCompareTest extends TestCase {
     /**
      * max() for equal BigDecimals
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "This is a complete subset of tests for max method.",
+      targets = {
+        @TestTarget(
+          methodName = "max",
+          methodArgs = {java.math.BigDecimal.class}
+        )
+    })
     public void testMaxEqual() {
        String a = "8478231212478987482988429808779810457634781384756794987";
        int aScale = 41;
@@ -275,6 +442,15 @@ public class BigDecimalCompareTest extends TestCase {
     /**
      * max() for unequal BigDecimals
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for max method.",
+          targets = {
+            @TestTarget(
+              methodName = "max",
+              methodArgs = {java.math.BigDecimal.class}
+            )
+        })
     public void testMaxUnequal1() {
        String a = "92948782094488478231212478987482988429808779810457634781384756794987";
        int aScale = 24;
@@ -291,6 +467,15 @@ public class BigDecimalCompareTest extends TestCase {
     /**
      * max() for unequal BigDecimals
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for max method.",
+          targets = {
+            @TestTarget(
+              methodName = "max",
+              methodArgs = {java.math.BigDecimal.class}
+            )
+        })
     public void testMaxUnequal2() {
        String a = "92948782094488478231212478987482988429808779810457634781384756794987";
        int aScale = 41;
@@ -307,6 +492,15 @@ public class BigDecimalCompareTest extends TestCase {
     /**
      * min() for equal BigDecimals
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for min method.",
+          targets = {
+            @TestTarget(
+              methodName = "min",
+              methodArgs = {java.math.BigDecimal.class}
+            )
+        })
     public void testMinEqual() {
        String a = "8478231212478987482988429808779810457634781384756794987";
        int aScale = 41;
@@ -323,6 +517,15 @@ public class BigDecimalCompareTest extends TestCase {
     /**
      * min() for unequal BigDecimals
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for min method.",
+          targets = {
+            @TestTarget(
+              methodName = "min",
+              methodArgs = {java.math.BigDecimal.class}
+            )
+        })
     public void testMinUnequal1() {
        String a = "92948782094488478231212478987482988429808779810457634781384756794987";
        int aScale = 24;
@@ -339,6 +542,15 @@ public class BigDecimalCompareTest extends TestCase {
     /**
      * min() for unequal BigDecimals
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for min method.",
+          targets = {
+            @TestTarget(
+              methodName = "min",
+              methodArgs = {java.math.BigDecimal.class}
+            )
+        })
     public void testMinUnequal2() {
        String a = "92948782094488478231212478987482988429808779810457634781384756794987";
        int aScale = 41;
@@ -355,6 +567,15 @@ public class BigDecimalCompareTest extends TestCase {
     /**
      * plus() for a positive BigDecimal
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "This is a complete subset of tests for plus method.",
+      targets = {
+        @TestTarget(
+          methodName = "plus",
+          methodArgs = {}
+        )
+    })
     public void testPlusPositive() {
        String a = "92948782094488478231212478987482988429808779810457634781384756794987";
        int aScale = 41;
@@ -368,6 +589,15 @@ public class BigDecimalCompareTest extends TestCase {
     /**
      * plus(MathContext) for a positive BigDecimal
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "ArithmeticException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "plus",
+          methodArgs = {java.math.MathContext.class}
+        )
+    })
     public void testPlusMathContextPositive() {
        String a = "92948782094488478231212478987482988429808779810457634781384756794987";
        int aScale = 41;
@@ -385,6 +615,15 @@ public class BigDecimalCompareTest extends TestCase {
     /**
      * plus() for a negative BigDecimal
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL_OK,
+              purpose = "This is a complete subset of tests for plus method.",
+              targets = {
+                @TestTarget(
+                  methodName = "plus",
+                  methodArgs = {}
+                )
+            })
     public void testPlusNegative() {
        String a = "-92948782094488478231212478987482988429808779810457634781384756794987";
        int aScale = 41;
@@ -398,6 +637,15 @@ public class BigDecimalCompareTest extends TestCase {
     /**
      * plus(MathContext) for a negative BigDecimal
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "ArithmeticException checking missed.",
+              targets = {
+                @TestTarget(
+                  methodName = "plus",
+                  methodArgs = {java.math.MathContext.class}
+                )
+            })
     public void testPlusMathContextNegative() {
        String a = "-92948782094488478231212478987482988429808779810457634781384756794987";
        int aScale = 49;
@@ -415,6 +663,15 @@ public class BigDecimalCompareTest extends TestCase {
     /**
      * negate() for a positive BigDecimal
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "This is a complete subset of tests for negate method.",
+      targets = {
+        @TestTarget(
+          methodName = "negate",
+          methodArgs = {}
+        )
+    })
     public void testNegatePositive() {
        String a = "92948782094488478231212478987482988429808779810457634781384756794987";
        int aScale = 41;
@@ -428,6 +685,15 @@ public class BigDecimalCompareTest extends TestCase {
     /**
      * negate(MathContext) for a positive BigDecimal
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "ArithmeticException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "negate",
+          methodArgs = {java.math.MathContext.class}
+        )
+    })
     public void testNegateMathContextPositive() {
        String a = "92948782094488478231212478987482988429808779810457634781384756794987";
        int aScale = 41;
@@ -445,6 +711,15 @@ public class BigDecimalCompareTest extends TestCase {
     /**
      * negate() for a negative BigDecimal
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL_OK,
+              purpose = "This is a complete subset of tests for negate method.",
+              targets = {
+                @TestTarget(
+                  methodName = "negate",
+                  methodArgs = {}
+                )
+            })
     public void testNegateNegative() {
        String a = "-92948782094488478231212478987482988429808779810457634781384756794987";
        int aScale = 41;
@@ -458,6 +733,15 @@ public class BigDecimalCompareTest extends TestCase {
     /**
      * negate(MathContext) for a negative BigDecimal
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "ArithmeticException checking missed.",
+              targets = {
+                @TestTarget(
+                  methodName = "negate",
+                  methodArgs = {java.math.MathContext.class}
+                )
+            })
     public void testNegateMathContextNegative() {
        String a = "-92948782094488478231212478987482988429808779810457634781384756794987";
        int aScale = 49;
@@ -475,6 +759,15 @@ public class BigDecimalCompareTest extends TestCase {
     /**
      * signum() for a positive BigDecimal
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "This is a complete subset of tests for signum method.",
+      targets = {
+        @TestTarget(
+          methodName = "signum",
+          methodArgs = {}
+        )
+    })
     public void testSignumPositive() {
        String a = "92948782094488478231212478987482988429808779810457634781384756794987";
        int aScale = 41;
@@ -485,6 +778,15 @@ public class BigDecimalCompareTest extends TestCase {
     /**
      * signum() for a negative BigDecimal
      */
+@TestInfo(
+          level = TestLevel.PARTIAL,
+          purpose = "This is a complete subset of tests for signum method.",
+          targets = {
+            @TestTarget(
+              methodName = "signum",
+              methodArgs = {}
+            )
+        })
     public void testSignumNegative() {
        String a = "-92948782094488478231212478987482988429808779810457634781384756794987";
        int aScale = 41;
@@ -495,6 +797,15 @@ public class BigDecimalCompareTest extends TestCase {
     /**
      * signum() for zero
      */
+@TestInfo(
+          level = TestLevel.PARTIAL,
+          purpose = "This is a complete subset of tests for signum method.",
+          targets = {
+            @TestTarget(
+              methodName = "signum",
+              methodArgs = {}
+            )
+        })
     public void testSignumZero() {
        String a = "0";
        int aScale = 41;

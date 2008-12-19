@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vladimir N. Molotkov
-* @version $Revision$
-*/
-
 package java.security.spec;
 
 import java.math.BigInteger;
@@ -27,12 +22,16 @@ import java.math.BigInteger;
 import org.apache.harmony.security.internal.nls.Messages;
 
 /**
- * @com.intel.drl.spec_ref
+ * A Point on an Elliptic Curve in barycentric (or affine) coordinates.  
  * 
+ * @since Android 1.0
  */
 public class ECPoint {
+
     /**
-     * @com.intel.drl.spec_ref
+     * The point on an Elliptic Curve at infinity.
+     * 
+     * @since Android 1.0
      */
     public static final ECPoint POINT_INFINITY = new ECPoint();
     // affine X coordinate of this point
@@ -47,7 +46,13 @@ public class ECPoint {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new point at the specified coordinates.
+     * 
+     * @param affineX
+     *            the x-coordinate.
+     * @param affineY
+     *            the y-coordinate.
+     * @since Android 1.0
      */
     public ECPoint(BigInteger affineX, BigInteger affineY) {
         this.affineX = affineX;
@@ -61,21 +66,34 @@ public class ECPoint {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the x-coordinate.
+     * 
+     * @return the x-coordinate, or {@code null} for the infinite point.
+     * @since Android 1.0
      */
     public BigInteger getAffineX() {
         return affineX;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the y-coordinate.
+     * 
+     * @return the y-coordinate, or {@code null} fot the infinite point.
+     * @since Android 1.0
      */
     public BigInteger getAffineY() {
         return affineY;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns whether the specified object and this elliptic curve point are
+     * equal.
+     * 
+     * @param other
+     *            the object to compare.
+     * @return {@code true} if the specified object and this elliptic curve
+     *         point are equal, otherwise {@code false}.
+     * @since Android 1.0
      */
     public boolean equals(Object other) {
         if (this == other) {
@@ -95,7 +113,10 @@ public class ECPoint {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the hashcode of this elliptic curve point.
+     * 
+     * @return the hashcode of this elliptic curve point.
+     * @since Android 1.0
      */
     public int hashCode() {
         if (this.affineX != null) {

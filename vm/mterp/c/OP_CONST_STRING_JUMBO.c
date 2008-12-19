@@ -10,9 +10,9 @@ HANDLE_OPCODE(OP_CONST_STRING_JUMBO /*vAA, string@BBBBBBBB*/)
         strObj = dvmDexGetResolvedString(methodClassDex, tmp);
         if (strObj == NULL) {
             EXPORT_PC();
-            strObj = dvmResolveString(method->clazz, tmp);
+            strObj = dvmResolveString(curMethod->clazz, tmp);
             if (strObj == NULL)
-                GOTO(exceptionThrown);
+                GOTO_exceptionThrown();
         }
         SET_REGISTER(vdst, (u4) strObj);
     }

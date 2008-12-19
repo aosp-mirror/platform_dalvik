@@ -895,15 +895,17 @@ static jstring getCanonicalName(JNIEnv *env, jclass jClass,jstring enc) {
     UErrorCode error = U_ZERO_ERROR;
     const char* encName = (*env)->GetStringUTFChars(env,enc,NULL);
     const char* canonicalName = "";
-    jstring ret;
+    // BEGIN android-changed
+    jstring ret = NULL;
     if(encName) {
         canonicalName = ucnv_getAlias(encName,0,&error);
         if(canonicalName !=NULL && strstr(canonicalName,",")!=0) {
             canonicalName = ucnv_getAlias(canonicalName,1,&error);
         }
         ret = ((*env)->NewStringUTF(env, canonicalName));
+        (*env)->ReleaseStringUTFChars(env,enc,encName);
     }
-    (*env)->ReleaseStringUTFChars(env,enc,encName);
+    // END android-changed
     return ret;
 }
 
@@ -1077,14 +1079,15 @@ static jint setCallbackEncode(JNIEnv *env, jclass jClass, jlong handle, jint onM
         }
         fromUNewContext->onMalformedInput = getFromUCallback(onMalformedInput);
         fromUNewContext->onUnmappableInput = getFromUCallback(onUnmappableInput);
+        // BEGIN android-changed
         if(sub!=NULL) {
             fromUNewContext->length = length;
             strncpy(fromUNewContext->subChars, sub, length);
+            (*env)->ReleasePrimitiveArrayCritical(env,subChars, sub, 0);
         }else{
             errorCode = U_ILLEGAL_ARGUMENT_ERROR;
         }
-
-        (*env)->ReleasePrimitiveArrayCritical(env,subChars, NULL, 0);
+        // END android-changed
 
         ucnv_setFromUCallBack(conv,
            fromUNewAction,
@@ -1203,13 +1206,15 @@ static jint setCallbackDecode(JNIEnv *env, jclass jClass, jlong handle, jint onM
         }
         toUNewContext->onMalformedInput = getToUCallback(onMalformedInput);
         toUNewContext->onUnmappableInput = getToUCallback(onUnmappableInput);
+        // BEGIN android-changed
         if(sub!=NULL) {
             toUNewContext->length = length;
             u_strncpy(toUNewContext->subUChars, sub, length);
+            (*env)->ReleasePrimitiveArrayCritical(env,subChars, sub, 0);
         }else{
             errorCode =  U_ILLEGAL_ARGUMENT_ERROR;
         }
-        (*env)->ReleasePrimitiveArrayCritical(env,subChars, NULL, 0);
+        // END android-changed
         ucnv_setToUCallBack(conv,
            toUNewAction,
            toUNewContext,
@@ -1358,7 +1363,7 @@ static JNINativeMethod gMethods[] = {
 };
 
 int register_com_ibm_icu4jni_converters_NativeConverter(JNIEnv *_env) {
-    return jniRegisterNativeMethods(_env, "com/ibm/icu4jni/converters/NativeConverter",
+    return jniRegisterNativeMethods(_env, "com/ibm/icu4jni/charset/NativeConverter",
                 gMethods, NELEM(gMethods));
 }
 

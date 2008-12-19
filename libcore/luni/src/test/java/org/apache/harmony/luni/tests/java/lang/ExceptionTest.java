@@ -17,13 +17,28 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import junit.framework.TestCase;
 
+@TestTargetClass(Exception.class) 
 public class ExceptionTest extends TestCase {
 
     /**
      * @tests java.lang.Exception#Exception()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Exception",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         Exception e = new Exception();
         assertNull(e.getMessage());
@@ -34,6 +49,15 @@ public class ExceptionTest extends TestCase {
     /**
      * @tests java.lang.Exception#Exception(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Exception",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() {
         Exception e = new Exception("fixture");
         assertEquals("fixture", e.getMessage());

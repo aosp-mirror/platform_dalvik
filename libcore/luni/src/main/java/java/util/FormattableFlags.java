@@ -16,41 +16,50 @@
 package java.util;
 
 /**
- * FormattableFlags are used as a parameter to method Formattable.formatTo() and
- * instruct the output format in Formattables. The validation and interpretation
- * are fulfilled by the implementation of Formattable.
+ * FormattableFlags are used as a parameter to
+ * {@link Formattable#formatTo(Formatter, int, int, int)} and change the output
+ * format in {@code Formattable}s. The validation and interpretation of the
+ * flags must be done by the implementations.
+ *  
+ * @see Formattable
+ * @since Android 1.0
  */
-
 public class FormattableFlags {
     
     private FormattableFlags(){
-        //prevent this class to be instantialized
+        //prevent this class from being instantiated
     }
     
     /**
-     * Denotes the output to be left-justified. In order to fill the minimum
+     * Denotes the output is to be left-justified. In order to fill the minimum
      * width requirement, spaces('\u0020') will be appended at the end of the
      * specified output element. If no such flag is set, the output is
      * right-justified.
      * 
      * The flag corresponds to '-' ('\u002d') in the format specifier.
+     * 
+     * @since Android 1.0
      */
     public static final int LEFT_JUSTIFY = 1;
 
     /**
-     * Denotes the output to be converted to upper case in the way the locale
+     * Denotes the output is to be converted to upper case in the way the locale
      * parameter of Formatter.formatTo() requires. The output has the same
-     * effect as String.toUpperCase(java.util.Locale).
+     * effect as {@code String.toUpperCase(java.util.Locale)}.
      * 
-     * This flag corresponds to '^' ('\u005e') in the format specifier.
+     * This flag corresponds to {@code '^' ('\u005e')} in the format specifier.
+     * 
+     * @since Android 1.0
      */
     public static final int UPPERCASE = 2;
 
     /**
-     * Denotes the output to be formatted in an alternate form. The definition
-     * of the alternate form is given out by Formattable.
+     * Denotes the output is to be formatted in an alternate form. The definition
+     * of the alternate form is determined by the {@code Formattable}.
      * 
-     * This flag corresponds to '#' ('\u0023') in the format specifier.
+     * This flag corresponds to {@code '#' ('\u0023')} in the format specifier.
+     * 
+     * @since Android 1.0
      */
     public static final int ALTERNATE = 4;
 }

@@ -36,20 +36,9 @@ public class AllTests
         suite.addTestSuite(tests.api.java.lang.BooleanTest.class);
         suite.addTestSuite(tests.api.java.lang.StringTest.class);
 
-        suite.addTestSuite(tests.api.java.lang.ref.ReferenceTest.class);
-        suite.addTestSuite(tests.api.java.lang.ref.SoftReferenceTest.class);
-        suite.addTestSuite(tests.api.java.lang.ref.WeakReferenceTest.class);
-        suite.addTestSuite(tests.api.java.lang.ref.PhantomReferenceTest.class);
-        // suite.addTestSuite(tests.api.java.lang.ref.ReferenceQueueTest.class);
-
-        suite.addTestSuite(tests.api.java.util.AbstractMapTest.class);
-        suite.addTestSuite(tests.api.java.util.HashMapTest.class);
-        suite.addTestSuite(tests.api.java.util.LinkedHashMapTest.class);
-
-        suite.addTestSuite(org.apache.harmony.luni.tests.java.lang.MathTest.class);
-        suite.addTestSuite(org.apache.harmony.luni.tests.java.lang.StrictMathTest.class);
-
         suite.addTestSuite(tests.java.lang.StrictMath.Fdlibm53Test.class);
+        
+        suite.addTestSuite(tests.api.org.apache.harmony.kernel.dalvik.ThreadsTest.class);
         return suite;
     }
 }

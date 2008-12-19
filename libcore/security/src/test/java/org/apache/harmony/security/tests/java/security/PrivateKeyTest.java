@@ -21,11 +21,15 @@
 */
 
 package org.apache.harmony.security.tests.java.security;
+
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
 import java.security.PrivateKey;
 
 import junit.framework.TestCase;
-
-
+@TestTargetClass(PrivateKey.class)
 /**
  * Tests for <code>PrivateKey</code> class field
  * 
@@ -45,6 +49,15 @@ public class PrivateKeyTest extends TestCase {
     /**
      * Test for <code>serialVersionUID</code> field
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Field testing",
+      targets = {
+        @TestTarget(
+          methodName = "serialVersionUID",
+          methodArgs = {}
+        )
+    })
     public void testField() {
         checkPrivateKey cPrKey = new checkPrivateKey(); 
         assertEquals("Incorrect serialVersionUID", cPrKey.getSerVerUID(), //PrivateKey.serialVersionUID,

@@ -15,26 +15,28 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vladimir N. Molotkov
-* @version $Revision$
-*/
-
 package java.security.spec;
 
 import java.math.BigInteger;
 
 /**
- * @com.intel.drl.spec_ref
+ * The parameter specification for generating an RSA key pair. 
  * 
+ * @since Android 1.0
  */
 public class RSAKeyGenParameterSpec implements AlgorithmParameterSpec {    
+
     /**
-     * @com.intel.drl.spec_ref
+     * The value of the public exponent {@code F0} = 3.
+     * 
+     * @since Android 1.0
      */
     public static final BigInteger F0 = BigInteger.valueOf(3L);
+
     /**
-     * @com.intel.drl.spec_ref
+     * The value of the public exponent {@code F4} = 65537.
+     * 
+     * @since Android 1.0
      */
     public static final BigInteger F4 = BigInteger.valueOf(65537L);
 
@@ -44,7 +46,14 @@ public class RSAKeyGenParameterSpec implements AlgorithmParameterSpec {
     private final BigInteger publicExponent;
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code RSAKeyGenParameterSpec} with the specified key size
+     * and public exponent.
+     * 
+     * @param keysize
+     *            the size of the modulus (number of bits).
+     * @param publicExponent
+     *            the value of the public exponent.
+     * @since Android 1.0
      */
     public RSAKeyGenParameterSpec(int keysize, BigInteger publicExponent) {
         this.keysize = keysize;
@@ -52,14 +61,20 @@ public class RSAKeyGenParameterSpec implements AlgorithmParameterSpec {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the size of the modulus (number of bits).
+     * 
+     * @return the size of the modulus (number of bits).
+     * @since Android 1.0
      */
     public int getKeysize() {
         return keysize;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the value of the public exponent.
+     * 
+     * @return the value of the public exponent.
+     * @since Android 1.0
      */
     public BigInteger getPublicExponent() {
         return publicExponent;

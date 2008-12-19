@@ -19,60 +19,75 @@ package java.lang;
 
 
 /**
- * Number is the abstract superclass of the classes which represent numeric base
- * types (i.e. all but Character, Boolean, and Void).
+ * The abstract superclass of the classes which represent numeric base types
+ * (that is {@link Byte}, {@link Short}, {@link Integer}, {@link Long},
+ * {@link Float}, and {@link Double}. 
+ * 
+ * @since Android 1.0
  */
 public abstract class Number implements java.io.Serializable {
 
     private static final long serialVersionUID = -8742448824652078965L;
 
     /**
-     * Number constructor. Included for spec compatability.
+     * Empty default constructor.
+     * 
+     * @since Android 1.0
      */
     public Number() {
     }
 
     /**
-     * Returns the byte value which the receiver represents
+     * Returns this object's value as a byte. Might involve rounding and/or
+     * truncating the value, so it fits into a byte.  
      * 
-     * @return byte the value of the receiver.
+     * @return the primitive byte value of this object.
+     * @since Android 1.0
      */
     public byte byteValue() {
         return (byte) intValue();
     }
 
     /**
-     * Returns the double value which the receiver represents
+     * Returns this object's value as a double. Might involve rounding.
      * 
-     * @return double the value of the receiver.
+     * @return the primitive double value of this object.
+     * @since Android 1.0
      */
     public abstract double doubleValue();
 
     /**
-     * Returns the float value which the receiver represents
+     * Returns this object's value as a float. Might involve rounding.
      * 
-     * @return float the value of the receiver.
+     * @return the primitive float value of this object.
+     * @since Android 1.0
      */
     public abstract float floatValue();
 
     /**
-     * Returns the int value which the receiver represents
+     * Returns this object's value as an int. Might involve rounding and/or
+     * truncating the value, so it fits into an int.
      * 
-     * @return int the value of the receiver.
+     * @return the primitive int value of this object.
+     * @since Android 1.0
      */
     public abstract int intValue();
 
     /**
-     * Returns the long value which the receiver represents
+     * Returns this object's value as a long. Might involve rounding and/or
+     * truncating the value, so it fits into a long.
      * 
-     * @return long the value of the receiver.
+     * @return the primitive long value of this object.
+     * @since Android 1.0
      */
     public abstract long longValue();
 
     /**
-     * Returns the short value which the receiver represents
+     * Returns this object's value as a short. Might involve rounding and/or
+     * truncating the value, so it fits into a short.
      * 
-     * @return short the value of the receiver.
+     * @return the primitive short value of this object.
+     * @since Android 1.0
      */
     public short shortValue() {
         return (short) intValue();

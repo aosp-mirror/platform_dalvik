@@ -20,43 +20,53 @@ package javax.sql;
 import java.util.EventListener;
 
 /**
- * An interface used to send notification of events occurring in a RowSet. To
- * receive the notification events, an object must implement the RowSetListener
- * interface and then register itself with the RowSet of interest using the
- * <code>RowSet.addRowSetListener</code> method.
+ * An interface used to send notification of events occurring in the context of
+ * a {@link RowSet}. To receive the notification events, an object must
+ * implement the {@code RowSetListener} interface and then register itself with
+ * the {@code RowSet} of interest using the
+ * {@link RowSet#addRowSetListener(RowSetListener)} method.
+ * 
+ * @since Android 1.0
  */
 public interface RowSetListener extends EventListener {
 
     /**
-     * Notifies the listener that one of the RowSet's rows has changed.
+     * Notifies the listener that the {@code RowSet}'s cursor in {@code
+     * theEvent.getSource} has moved.
      * 
      * @param theEvent
-     *            a RowSetEvent that contains information about the RowSet
-     *            involved. This information can be used to retrieve information
-     *            about the change, such as the new cursor position.
+     *            a {@code RowSetEvent} that contains information about the
+     *            {@code RowSet} involved. This information can be used to
+     *            retrieve information about the change, such as the updated
+     *            data values.
+     * @since Android 1.0
      */
     public void cursorMoved(RowSetEvent theEvent);
 
     /**
-     * Notifies the listener that the RowSet's cursor has moved.
+     * Notifies the listener that one of the {@code RowSet}'s rows in {@code
+     * theEvent.getSource} has changed.
      * 
      * @param theEvent
-     *            theEvent a RowSetEvent that contains information about the
-     *            RowSet involved. This information can be used to retrieve
-     *            information about the change, such as the updated data values.
+     *            a {@code RowSetEvent} that contains information about the
+     *            {@code RowSet} involved. This information can be used to
+     *            retrieve information about the change, such as the new cursor
+     *            position.
+     * @since Android 1.0
      */
     public void rowChanged(RowSetEvent theEvent);
 
     /**
-     * Notifies the listener that the RowSet's entire contents have been updated
-     * (an example is the execution of a command which retrieves new data from
-     * the database).
+     * Notifies the listener that the {@code RowSet}'s entire contents in
+     * {@code theEvent.getSource} have been updated (an example is the execution
+     * of a command which retrieves new data from the database).
      * 
      * @param theEvent
-     *            theEvent a RowSetEvent that contains information about the
-     *            RowSet involved. This information can be used to retrieve
-     *            information about the change, such as the updated rows of
-     *            data.
+     *            a {@code RowSetEvent} that contains information about the
+     *            {@code RowSet} involved. This information can be used to
+     *            retrieve information about the change, such as the updated
+     *            rows of data.
+     * @since Android 1.0
      */
     public void rowSetChanged(RowSetEvent theEvent);
 }

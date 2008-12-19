@@ -1,20 +1,4 @@
 /*
- * Copyright (C) 2008 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/*
  *  Licensed to the Apache Software Foundation (ASF) under one or more
  *  contributor license agreements.  See the NOTICE file distributed with
  *  this work for additional information regarding copyright ownership.
@@ -31,14 +15,11 @@
  *  limitations under the License.
  */
 
-/*
- * Since the original Harmony Code of the BigInteger class was strongly modified,
- * in order to use the more efficient OpenSSL BIGNUM implementation,
- * no android-modification-tags were placed, at all.
- */
-
 package java.math;
 
+// BEGIN android-removed
+// import org.apache.harmony.math.internal.nls.Messages;
+// END android-removed
 
 /**
  * Static library that provides all operations related with division and modular
@@ -65,6 +46,11 @@ package java.math;
  * @author Instituto Tecnologico de Cordoba
  */
 class Division {
+
+    // BEGIN android-note
+    // The divide method has been dropped since this functionality
+    // is now available from OpenSSL BIGNUM.
+    // END android-note
 
     /**
      * Divides an array by an integer value. Implements the Knuth's division
@@ -150,7 +136,9 @@ class Division {
      * @return divide % divisor
      */
     static int remainder(BigInteger dividend, int divisor) {
+        // BEGIN android-added
         dividend.establishOldRepresentation("Division.remainder");
+        // END android-added
         return remainderArrayByInt(dividend.digits, dividend.numberLength,
                 divisor);
     }
@@ -208,7 +196,9 @@ class Division {
      */
     static BigInteger[] divideAndRemainderByInteger(BigInteger val,
             int divisor, int divisorSign) {
+        // BEGIN android-added
         val.establishOldRepresentation("Division.divideAndRemainderByInteger");
+        // END android-added
         // res[0] is a quotient and res[1] is a remainder:
         int[] valDigits = val.digits;
         int valLen = val.numberLength;
@@ -241,4 +231,8 @@ class Division {
         return new BigInteger[] { result0, result1 };
     }
 
+    // BEGIN android-note
+    // A big part of this class that only has been used by the divide method
+    // has been dropped in favor of using the BIGNUM impl.
+    // END android-note
 }

@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package java.security.cert;
 
 import java.security.AccessController;
@@ -34,10 +29,12 @@ import org.apache.harmony.security.internal.nls.Messages;
 
 
 /**
- * <!-- @com.intel.drl.spec_ref -->
+ * This class provides the functionality for validating certification paths
+ * (certificate chains) establishing a trust chain from a certificate to a trust
+ * anchor.
  * 
+ * @since Android 1.0
  */
-
 public class CertPathValidator {
     // Store CertPathValidator implementation service name
     private static final String SERVICE = "CertPathValidator"; //$NON-NLS-1$
@@ -62,8 +59,15 @@ public class CertPathValidator {
     private final String algorithm;
 
     /**
-     * <!-- @com.intel.drl.spec_ref -->
-     *  
+     * Creates a new {@code CertPathValidator} instance.
+     * 
+     * @param validatorSpi
+     *            the implementation delegate.
+     * @param provider
+     *            the security provider.
+     * @param algorithm
+     *            the name of the algorithm.
+     * @since Android 1.0
      */
     protected CertPathValidator(CertPathValidatorSpi validatorSpi,
             Provider provider, String algorithm) {
@@ -73,25 +77,36 @@ public class CertPathValidator {
     }
 
     /**
-     * <!-- @com.intel.drl.spec_ref -->
-     *  
+     * Returns the certification path algorithm name.
+     * 
+     * @return the certification path algorithm name.
+     * @since Android 1.0
      */
     public final String getAlgorithm() {
         return algorithm;
     }
 
     /**
-     * <!-- @com.intel.drl.spec_ref -->
-     *  
+     * Returns the security provider.
+     * 
+     * @return the provider.
+     * @since Android 1.0
      */
     public final Provider getProvider() {
         return provider;
     }
 
     /**
-     * <!-- @com.intel.drl.spec_ref -->
+     * Returns a new certification path validator for the specified algorithm.
      * 
-     * throws NullPointerException if algorithm is null
+     * @param algorithm
+     *            the algorithm name.
+     * @return a certification path validator for the requested algorithm.
+     * @throws NoSuchAlgorithmException
+     *             if no installed provider provides the specified algorithm.
+     * @throws NullPointerException
+     *             if algorithm is {@code null}.
+     * @since Android 1.0
      */
     public static CertPathValidator getInstance(String algorithm)
             throws NoSuchAlgorithmException {
@@ -106,9 +121,24 @@ public class CertPathValidator {
     }
 
     /**
-     * <!-- @com.intel.drl.spec_ref -->
+     * Returns a new certification path validator for the specified algorithm
+     * from the specified provider.
      * 
-     * throws NullPointerException if algorithm is null
+     * @param algorithm
+     *            the algorithm name.
+     * @param provider
+     *            the security provider name.
+     * @return a certification path validator for the requested algorithm.
+     * @throws NoSuchAlgorithmException
+     *             if the specified security provider cannot provide the
+     *             requested algorithm.
+     * @throws NoSuchProviderException
+     *             if no provider with the specified name can be found.
+     * @throws NullPointerException
+     *             if algorithm is {@code null}.
+     * @throws IllegalArgumentException
+     *             if provider is {@code null} or empty.
+     * @since Android 1.0
      */
     public static CertPathValidator getInstance(String algorithm,
             String provider) throws NoSuchAlgorithmException,
@@ -124,9 +154,22 @@ public class CertPathValidator {
     }
 
     /**
-     * <!-- @com.intel.drl.spec_ref -->
+     * Returns a new certification path validator for the specified algorithm
+     * from the specified provider.
      * 
-     * throws NullPointerException if algorithm is null
+     * @param algorithm
+     *            the algorithm name.
+     * @param provider
+     *            the security provider name.
+     * @return a certification path validator for the requested algorithm.
+     * @throws NoSuchAlgorithmException
+     *             if the specified provider cannot provide the requested
+     *             algorithm.
+     * @throws IllegalArgumentException
+     *             if provider is {@code null}.
+     * @throws NullPointerException
+     *             if algorithm is {@code null}.
+     * @since Android 1.0
      */
     public static CertPathValidator getInstance(String algorithm,
             Provider provider) throws NoSuchAlgorithmException {
@@ -144,8 +187,23 @@ public class CertPathValidator {
     }
 
     /**
-     * <!-- @com.intel.drl.spec_ref -->
+     * Validates the {@code CertPath} with the algorithm of this {@code
+     * CertPathValidator} using the specified algorithm parameters.
      * 
+     * @param certPath
+     *            the certification path to be validated.
+     * @param params
+     *            the certification path validator algorithm parameters.
+     * @return the validation result.
+     * @throws CertPathValidatorException
+     *             if the validation fails, or the algorithm of the specified
+     *             certification path cannot be validated using the algorithm of
+     *             this instance.
+     * @throws InvalidAlgorithmParameterException
+     *             if the specified algorithm parameters cannot be used with
+     *             this algorithm.
+     * @see CertPathValidatorResult
+     * @since Android 1.0
      */
     public final CertPathValidatorResult validate(CertPath certPath,
             CertPathParameters params) throws CertPathValidatorException,
@@ -154,8 +212,13 @@ public class CertPathValidator {
     }
 
     /**
-     * <!-- @com.intel.drl.spec_ref -->
-     *  
+     * Returns the default {@code CertPathValidator} type from the <i>Security
+     * Properties</i>.
+     * 
+     * @return the default {@code CertPathValidator} type from the <i>Security
+     *         Properties</i>, or the string {@code "PKIX"} if it cannot be
+     *         determined.
+     * @since Android 1.0
      */
     public static final String getDefaultType() {
         String defaultType = AccessController

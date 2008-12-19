@@ -381,11 +381,6 @@ Thread* dvmGetThreadFromThreadObject(Object* vmThreadObj);
 void dvmThreadSleep(u8 msec, u4 nsec);
 
 /*
- * Interrupt a thread.  If it's waiting on a monitor, wake it up.
- */
-void dvmThreadInterrupt(Thread* thread);
-
-/*
  * Get the name of a thread.  (For safety, hold the thread list lock.)
  */
 char* dvmGetThreadName(Thread* thread);

@@ -20,13 +20,14 @@
 SHELL := /bin/sh
 
 # Build system has TARGET_ARCH=arm, but we need the exact architecture.
-# Sooner is armv5, Dream is armv6; someday we may have x86.  The simulator
-# is "desktop".
+# The base assumption for an ARM platform is ARMv5TE, but we may want to
+# support older ARMv4 devices, or use special features from ARMv6 or VFP.
+# The simulator build is "desktop".
 #
 # To generate sources for all targets:
-# for arch in desktop armv5; do TARGET_ARCH_EXT=$arch make -f Makefile-mterp; done
+# for arch in desktop armv5te; do TARGET_ARCH_EXT=$arch make -f Makefile-mterp; done
 #
-#TARGET_ARCH_EXT := armv5
+#TARGET_ARCH_EXT := armv5te
 
 OUTPUT_DIR := out
 

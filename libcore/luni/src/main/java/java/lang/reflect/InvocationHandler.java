@@ -18,32 +18,48 @@
 package java.lang.reflect;
 
 /**
- * Implementors of this interface decode and dispatch methods sent to proxy
- * instances.
+ * Implementors of this interface dispatch methods invoked on proxy instances.
  * 
  * @see Proxy
+ * 
+ * @since Android 1.0
  */
 public interface InvocationHandler {
 
     /**
-     * Return the result of decoding and dispatching the method which was
-     * originally sent to the proxy instance.
+     * Handles the method which was originally invoked on the proxy instance. A
+     * typical usage pattern follows below:
+     * 
+     * <pre>
+     * public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+     *     //do some processing before the method invocation
+     * 
+     *     //invoke the method
+     *     Object result = method.invoke(proxy, args);
+     * 
+     *     //do some processing after the method invocation
+     *     return result;
+     * }</pre>
      * 
      * @param proxy
-     *            the proxy instance which was the receiver of the method.
+     *            the proxy instance on which the method was invoked
      * @param method
-     *            the Method invoked on the proxy instance.
+     *            the method invoked on the proxy instance
      * @param args
      *            an array of objects containing the parameters passed to the
-     *            method, or null if no arguments are expected. primitive types
-     *            are wrapped in the appropriate class.
-     * @return the result of executing the method
-     * 
+     *            method, or {@code null} if no arguments are expected.
+     *            Primitive types are wrapped in the appropriate wrapper type
+     *            
+     * @return the result of executing the method. Primitive types need to be
+     *         wrapped in the appropriate wrapper type
+     *         
      * @throws Throwable
-     *             if an exception was thrown by the invoked method. The
-     *             exception must match one of the declared exception types for
-     *             the invoked method or any unchecked exception type. If not
-     *             then an UndeclaredThrowableException is thrown.
+     *             the exception to throw from the invoked method on the proxy.
+     *             The exception must match one of the declared exception types
+     *             of the invoked method or any unchecked exception type. If not
+     *             then an {@code UndeclaredThrowableException} is thrown
+     * 
+     * @since Android 1.0
      */
     public Object invoke(Object proxy, Method method, Object[] args)
             throws Throwable;

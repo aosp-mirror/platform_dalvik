@@ -16,6 +16,11 @@
  */
 package org.apache.harmony.archive.tests.java.util.zip;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -27,6 +32,7 @@ import java.util.zip.ZipException;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+@TestTargetClass(ZipOutputStream.class) 
 public class ZipOutputStreamTest extends junit.framework.TestCase {
 
     ZipOutputStream zos;
@@ -40,6 +46,15 @@ public class ZipOutputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipOutputStream#close()
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "close",
+          methodArgs = {}
+        )
+    })
     public void test_close() throws Exception {
         try {
             zos.close();
@@ -63,6 +78,15 @@ public class ZipOutputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipOutputStream#closeEntry()
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "closeEntry",
+          methodArgs = {}
+        )
+    })
     public void test_closeEntry() throws IOException {
         ZipEntry ze = new ZipEntry("testEntry");
         ze.setTime(System.currentTimeMillis());
@@ -77,6 +101,15 @@ public class ZipOutputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipOutputStream#finish()
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "ZipException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "finish",
+          methodArgs = {}
+        )
+    })
     public void test_finish() throws Exception {
         ZipEntry ze = new ZipEntry("test");
         zos.putNextEntry(ze);
@@ -99,6 +132,15 @@ public class ZipOutputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipOutputStream#putNextEntry(java.util.zip.ZipEntry)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "ZipException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "putNextEntry",
+          methodArgs = {java.util.zip.ZipEntry.class}
+        )
+    })
     public void test_putNextEntryLjava_util_zip_ZipEntry() throws IOException {
         ZipEntry ze = new ZipEntry("testEntry");
         ze.setTime(System.currentTimeMillis());
@@ -123,6 +165,15 @@ public class ZipOutputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipOutputStream#setComment(java.lang.String)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setComment",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_setCommentLjava_lang_String() {
         // There is no way to get the comment back, so no way to determine if
         // the comment is set correct
@@ -142,6 +193,15 @@ public class ZipOutputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipOutputStream#setLevel(int)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IllegalArgumentException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "setLevel",
+          methodArgs = {int.class}
+        )
+    })
     public void test_setLevelI() throws IOException {
         ZipEntry ze = new ZipEntry("test");
         zos.putNextEntry(ze);
@@ -158,6 +218,15 @@ public class ZipOutputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipOutputStream#setMethod(int)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IllegalArgumentException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "setMethod",
+          methodArgs = {int.class}
+        )
+    })
     public void test_setMethodI() throws IOException {
         ZipEntry ze = new ZipEntry("test");
         zos.setMethod(ZipOutputStream.STORED);
@@ -179,6 +248,15 @@ public class ZipOutputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipOutputStream#write(byte[], int, int)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "write",
+          methodArgs = {byte[].class, int.class, int.class}
+        )
+    })
     public void test_write$BII() throws IOException {
         ZipEntry ze = new ZipEntry("test");
         zos.putNextEntry(ze);
@@ -232,6 +310,15 @@ public class ZipOutputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipOutputStream#write(byte[], int, int)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Regression",
+      targets = {
+        @TestTarget(
+          methodName = "write",
+          methodArgs = {byte[].class, int.class, int.class}
+        )
+    })
     public void test_write$BII_2() throws IOException {
         // Regression for HARMONY-577
         File f1 = File.createTempFile("testZip1", "tst");

@@ -16,17 +16,32 @@
  */
 package org.apache.harmony.luni.tests.java.lang;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
+import junit.framework.TestCase;
+
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 
-import junit.framework.TestCase;
-
+@TestTargetClass(Throwable.class) 
 public class ThrowableTest extends TestCase {
 
     /**
      * @tests java.lang.Throwable#Throwable()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Throwable",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         Throwable e = new Throwable();
         assertNull(e.getMessage());
@@ -37,6 +52,15 @@ public class ThrowableTest extends TestCase {
     /**
      * @tests java.lang.Throwable#Throwable(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Throwable",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() {
         Throwable e = new Throwable("fixture");
         assertEquals("fixture", e.getMessage());
@@ -46,6 +70,15 @@ public class ThrowableTest extends TestCase {
     /**
      * @tests java.lang.Throwable#fillInStackTrace()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "fillInStackTrace",
+          methodArgs = {}
+        )
+    })
     public void test_fillInStackTrace() {
         // Test for method java.lang.Throwable
         // java.lang.Throwable.fillInStackTrace()
@@ -124,6 +157,15 @@ public class ThrowableTest extends TestCase {
     /**
      * @tests java.lang.Throwable#printStackTrace()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "printStackTrace",
+          methodArgs = {}
+        )
+    })
     public void test_printStackTrace() {
         // Test for method void java.lang.Throwable.printStackTrace()
         Throwable x = new ClassNotFoundException("A Test Message");
@@ -142,6 +184,15 @@ public class ThrowableTest extends TestCase {
     /**
      * @tests java.lang.Throwable#printStackTrace(java.io.PrintStream)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "printStackTrace",
+          methodArgs = {java.io.PrintStream.class}
+        )
+    })
     public void test_printStackTraceLjava_io_PrintStream() {
         // Test for method void
         // java.lang.Throwable.printStackTrace(java.io.PrintStream)
@@ -158,6 +209,15 @@ public class ThrowableTest extends TestCase {
     /**
      * @tests java.lang.Throwable#printStackTrace(java.io.PrintWriter)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "printStackTrace",
+          methodArgs = {java.io.PrintWriter.class}
+        )
+    })
     public void test_printStackTraceLjava_io_PrintWriter() {
         // Test for method void
         // java.lang.Throwable.printStackTrace(java.io.PrintWriter)
@@ -175,6 +235,15 @@ public class ThrowableTest extends TestCase {
     /**
      * @tests java.lang.Throwable#toString()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public void test_toString() {
         Throwable e = new Throwable("Throw");
         assertEquals("java.lang.Throwable: Throw", e.toString());

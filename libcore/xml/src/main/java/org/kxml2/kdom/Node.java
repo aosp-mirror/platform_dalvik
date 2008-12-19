@@ -38,7 +38,7 @@ public class Node { //implements XmlIO{
     public static final int COMMENT = 9;
     public static final int DOCDECL = 10;
 
-    protected ArrayList children;
+    protected Vector children;
     protected StringBuffer types;
 
     /** inserts the given child object of the given type at the
@@ -50,7 +50,7 @@ public class Node { //implements XmlIO{
             throw new NullPointerException();
 
         if (children == null) {
-            children = new ArrayList();
+            children = new Vector();
             types = new StringBuffer();
         }
 
@@ -63,7 +63,7 @@ public class Node { //implements XmlIO{
         else if (!(child instanceof String))
             throw new RuntimeException("String expected");
 
-        children.add(index, child);
+        children.insertElementAt(child, index);
         types.insert(index, (char) type);
     }
 
@@ -94,7 +94,7 @@ public class Node { //implements XmlIO{
         types, a String is returned. */
 
     public Object getChild(int index) {
-        return children.get(index);
+        return children.elementAt(index);
     }
 
     /** Returns the number of child objects */
@@ -272,7 +272,7 @@ public class Node { //implements XmlIO{
     /** Removes the child object at the given index */
 
     public void removeChild(int idx) {
-        children.remove(idx);
+        children.removeElementAt(idx);
 
         /***  Modification by HHS - start ***/
         //      types.deleteCharAt (index);
@@ -324,7 +324,7 @@ public class Node { //implements XmlIO{
 
         for (int i = 0; i < len; i++) {
             int type = getType(i);
-            Object child = children.get(i);
+            Object child = children.elementAt(i);
             switch (type) {
                 case ELEMENT :
                      ((Element) child).write(writer);

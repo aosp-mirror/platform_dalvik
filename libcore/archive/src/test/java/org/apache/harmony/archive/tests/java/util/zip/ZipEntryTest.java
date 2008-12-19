@@ -16,6 +16,11 @@
  */
 package org.apache.harmony.archive.tests.java.util.zip;
 
+import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import tests.support.resource.Support_Resources;
 
 import java.io.ByteArrayOutputStream;
@@ -24,6 +29,7 @@ import java.io.InputStream;
 import java.util.TimeZone;
 import java.util.zip.ZipEntry;
 
+@TestTargetClass(ZipEntry.class) 
 public class ZipEntryTest extends junit.framework.TestCase {
 
 // BEGIN android-added
@@ -64,6 +70,15 @@ public class ZipEntryTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipEntry#ZipEntry(java.lang.String)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "ZipEntry",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() {
         // Test for method java.util.zip.ZipEntry(java.lang.String)
         zentry = zfile.getEntry("File3.txt");
@@ -99,6 +114,15 @@ public class ZipEntryTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipEntry#getComment()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getComment",
+          methodArgs = {}
+        )
+    })
     public void test_getComment() {
         // Test for method java.lang.String java.util.zip.ZipEntry.getComment()
         ZipEntry zipEntry = new ZipEntry("zippy.zip");
@@ -111,6 +135,15 @@ public class ZipEntryTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipEntry#getCompressedSize()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getCompressedSize",
+          methodArgs = {}
+        )
+    })
     public void test_getCompressedSize() {
         // Test for method long java.util.zip.ZipEntry.getCompressedSize()
         assertTrue("Incorrect compressed size returned", zentry
@@ -120,6 +153,15 @@ public class ZipEntryTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipEntry#getCrc()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getCrc",
+          methodArgs = {}
+        )
+    })
     public void test_getCrc() {
         // Test for method long java.util.zip.ZipEntry.getCrc()
         assertTrue("Failed to get Crc", zentry.getCrc() == orgCrc);
@@ -128,6 +170,15 @@ public class ZipEntryTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipEntry#getExtra()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getExtra",
+          methodArgs = {}
+        )
+    })
     public void test_getExtra() {
         // Test for method byte [] java.util.zip.ZipEntry.getExtra()
         assertNull("Incorrect extra information returned",
@@ -142,6 +193,15 @@ public class ZipEntryTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipEntry#getMethod()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getMethod",
+          methodArgs = {}
+        )
+    })
     public void test_getMethod() {
         // Test for method int java.util.zip.ZipEntry.getMethod()
         zentry = zfile.getEntry("File1.txt");
@@ -157,6 +217,15 @@ public class ZipEntryTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipEntry#getName()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getName",
+          methodArgs = {}
+        )
+    })
     public void test_getName() {
         // Test for method java.lang.String java.util.zip.ZipEntry.getName()
         assertEquals("Incorrect name returned - Note return result somewhat ambiguous in spec",
@@ -166,6 +235,15 @@ public class ZipEntryTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipEntry#getSize()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getSize",
+          methodArgs = {}
+        )
+    })
     public void test_getSize() {
         // Test for method long java.util.zip.ZipEntry.getSize()
         assertTrue("Incorrect size returned", zentry.getSize() == orgSize);
@@ -174,6 +252,15 @@ public class ZipEntryTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipEntry#getTime()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getTime",
+          methodArgs = {}
+        )
+    })
     public void test_getTime() {
         // Test for method long java.util.zip.ZipEntry.getTime()
         assertTrue("Failed to get time", zentry.getTime() == orgTime);
@@ -182,6 +269,15 @@ public class ZipEntryTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipEntry#isDirectory()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isDirectory",
+          methodArgs = {}
+        )
+    })
     public void test_isDirectory() {
         // Test for method boolean java.util.zip.ZipEntry.isDirectory()
         assertTrue("Entry should not answer true to isDirectory", !zentry
@@ -194,6 +290,15 @@ public class ZipEntryTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipEntry#setComment(java.lang.String)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setComment",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_setCommentLjava_lang_String() {
         // Test for method void
         // java.util.zip.ZipEntry.setComment(java.lang.String)
@@ -224,6 +329,15 @@ public class ZipEntryTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipEntry#setCompressedSize(long)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setCompressedSize",
+          methodArgs = {long.class}
+        )
+    })
     public void test_setCompressedSizeJ() {
         // Test for method void java.util.zip.ZipEntry.setCompressedSize(long)
         zentry.setCompressedSize(orgCompressedSize + 10);
@@ -243,6 +357,15 @@ public class ZipEntryTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipEntry#setCrc(long)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setCrc",
+          methodArgs = {long.class}
+        )
+    })
     public void test_setCrcJ() {
         // Test for method void java.util.zip.ZipEntry.setCrc(long)
         zentry.setCrc(orgCrc + 100);
@@ -269,6 +392,15 @@ public class ZipEntryTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipEntry#setExtra(byte[])
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setExtra",
+          methodArgs = {byte[].class}
+        )
+    })
     public void test_setExtra$B() {
         // Test for method void java.util.zip.ZipEntry.setExtra(byte [])
         zentry = zfile.getEntry("File1.txt");
@@ -309,6 +441,15 @@ public class ZipEntryTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipEntry#setMethod(int)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setMethod",
+          methodArgs = {int.class}
+        )
+    })
     public void test_setMethodI() {
         // Test for method void java.util.zip.ZipEntry.setMethod(int)
         zentry = zfile.getEntry("File3.txt");
@@ -330,6 +471,15 @@ public class ZipEntryTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipEntry#setSize(long)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setSize",
+          methodArgs = {long.class}
+        )
+    })
     public void test_setSizeJ() {
         // Test for method void java.util.zip.ZipEntry.setSize(long)
         zentry.setSize(orgSize + 10);
@@ -356,6 +506,15 @@ public class ZipEntryTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipEntry#setTime(long)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setTime",
+          methodArgs = {long.class}
+        )
+    })
     public void test_setTimeJ() {
         // Test for method void java.util.zip.ZipEntry.setTime(long)
         zentry.setTime(orgTime + 10000);
@@ -392,6 +551,15 @@ public class ZipEntryTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipEntry#toString()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public void test_toString() {
         // Test for method java.lang.String java.util.zip.ZipEntry.toString()
         assertTrue("Returned incorrect entry name", zentry.toString().indexOf(
@@ -401,6 +569,15 @@ public class ZipEntryTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipEntry#ZipEntry(java.util.zip.ZipEntry)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "ZipEntry",
+          methodArgs = {java.util.zip.ZipEntry.class}
+        )
+    })
     public void test_ConstructorLjava_util_zip_ZipEntry() {
         // Test for method java.util.zip.ZipEntry(util.zip.ZipEntry)
         zentry.setSize(2);
@@ -422,6 +599,15 @@ public class ZipEntryTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipEntry#clone()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "clone",
+          methodArgs = {}
+        )
+    })
     public void test_clone() {
         // Test for method java.util.zip.ZipEntry.clone()
         Object obj = zentry.clone();

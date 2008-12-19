@@ -22,9 +22,11 @@ import java.sql.SQLException;
 import java.io.Serializable;
 
 /**
- * An Event object which is sent when specific events happen on a
- * PooledConnection object. The events involved are when the application closing
- * the PooledConnection and when an error occurs in the PooledConnection.
+ * Sent when specific events happen on a {@link PooledConnection} object. These
+ * events are a facility to report when an application closes the pooled
+ * connection or when an error occurs in the pooled connection.
+ * 
+ * @since Android 1.0
  */
 public class ConnectionEvent extends EventObject implements Serializable {
 
@@ -33,25 +35,29 @@ public class ConnectionEvent extends EventObject implements Serializable {
     private SQLException theSQLException;
 
     /**
-     * Creates a connection event initialized with a supplied PooledConnection.
+     * Creates a connection event initialized with the supplied {@code
+     * PooledConnection} reporting that the application has closed the
+     * connection.
      * 
      * @param theConnection
-     *            the PooledConnection
+     *            the connection for which this event is created.
+     * @since Android 1.0
      */
     public ConnectionEvent(PooledConnection theConnection) {
         super(theConnection);
     }
 
     /**
-     * Creates a ConnectionEvent initialized with a supplied PooledConnection
-     * and with a supplied SQLException indicating that an error has occurred
-     * within the PooledConnection.
+     * Creates a {@code ConnectionEvent} initialized with the supplied {@code
+     * PooledConnection} and with the supplied {@code SQLException} indicating
+     * that an error has occurred within the {@code PooledConnection}.
      * 
      * @param theConnection
-     *            the PooledConnection
+     *            the connection for which this event is created.
      * @param theException
-     *            the SQLException holding information about the error that has
-     *            occurred, which is about to be returned to the application.
+     *            information about the state of error that has occurred on the
+     *            application side.
+     * @since Android 1.0
      */
     public ConnectionEvent(PooledConnection theConnection,
             SQLException theException) {
@@ -60,11 +66,12 @@ public class ConnectionEvent extends EventObject implements Serializable {
     }
 
     /**
-     * Gets the SQLException which holds information about the error which
-     * occurred in the PooledConnection.
+     * Gets the {@code SQLException} which holds information about the error
+     * which occurred in the {@code PooledConnection}.
      * 
-     * @return an SQLException containing information about the error. May be
-     *         null if no error has occurred.
+     * @return a {@code SQLException} containing information about the error.
+     *         May be {@code null} if no error has occurred.
+     * @since Android 1.0
      */
     public SQLException getSQLException() {
         return theSQLException;

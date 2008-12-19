@@ -264,6 +264,10 @@ public class ServerSocketChannelImpl extends ServerSocketChannel implements
                 synchronized (this) {
                     super.implAccept(aSocket);
                     sockChannel.setConnected();
+                    // BEGIN android-added
+                    // copied from a newer version of harmony
+                    sockChannel.setBound(true);
+                    // END android-added
                 }
                 SecurityManager sm = System.getSecurityManager();
                 if (sm != null) {

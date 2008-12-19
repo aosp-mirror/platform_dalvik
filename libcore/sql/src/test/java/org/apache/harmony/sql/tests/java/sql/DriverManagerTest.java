@@ -17,6 +17,11 @@
 
 package org.apache.harmony.sql.tests.java.sql;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
@@ -31,7 +36,7 @@ import java.util.Enumeration;
 import java.util.Properties;
 
 import junit.framework.TestCase;
-
+@TestTargetClass(DriverManager.class)
 /**
  * JUnit Testcase for the java.sql.DriverManager class
  * 
@@ -75,6 +80,15 @@ public class DriverManagerTest extends TestCase {
      * Test for the method DriverManager.deregisterDriver
      * @throws SQLException 
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "deregisterDriver",
+          methodArgs = {Driver.class}
+        )
+    })
     public void testDeregisterDriver() throws SQLException {
         // First get one of the drivers loaded by the test
         Driver aDriver;
@@ -159,6 +173,15 @@ public class DriverManagerTest extends TestCase {
     static String[] invalidConnectionURLs = { invalidConnectionURL2,
             invalidConnectionURL3 };
 
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getConnection",
+          methodArgs = {String.class}
+        )
+    })
     public void testGetConnectionString() throws SQLException {
         Connection theConnection = null;
         // validConnection - no user & password required
@@ -180,6 +203,15 @@ public class DriverManagerTest extends TestCase {
     /**
      * @tests java.sql.DriverManager#getConnection(String, Properties)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getConnection",
+          methodArgs = {String.class, Properties.class}
+        )
+    })
     public void test_getConnection_LStringLProperties() {
         try {
             DriverManager.getConnection("fff", //$NON-NLS-1$
@@ -201,6 +233,15 @@ public class DriverManagerTest extends TestCase {
     /*
      * Class under test for Connection getConnection(String, Properties)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getConnection",
+          methodArgs = {String.class, Properties.class}
+        )
+    })
     public void testGetConnectionStringProperties() throws SQLException {
         String validURL1 = "jdbc:mikes1:data2";
         String validuser1 = "theuser";
@@ -247,6 +288,15 @@ public class DriverManagerTest extends TestCase {
     /*
      * Class under test for Connection getConnection(String, String, String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getConnection",
+          methodArgs = {String.class, String.class, String.class}
+        )
+    })
     public void testGetConnectionStringStringString() throws SQLException {
         String validURL1 = "jdbc:mikes1:data2";
         String validuser1 = "theuser";
@@ -298,6 +348,15 @@ public class DriverManagerTest extends TestCase {
 
     static String exceptionMsg1 = "No suitable driver";
 
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getDriver",
+          methodArgs = {String.class}
+        )
+    })
     public void testGetDriver() throws SQLException {
         for (String element : validURLs) {
             Driver validDriver = DriverManager.getDriver(element);
@@ -316,6 +375,15 @@ public class DriverManagerTest extends TestCase {
 
     } // end method testGetDriver()
 
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getDrivers",
+          methodArgs = {}
+        )
+    })
     public void testGetDrivers() {
         // Load a driver manager
         Enumeration<Driver> driverList = DriverManager.getDrivers();
@@ -333,11 +401,29 @@ public class DriverManagerTest extends TestCase {
 
     static int timeout1 = 25;
 
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getLoginTimeout",
+          methodArgs = {}
+        )
+    })
     public void testGetLoginTimeout() {
         DriverManager.setLoginTimeout(timeout1);
         assertEquals(timeout1, DriverManager.getLoginTimeout());
     } // end method testGetLoginTimeout()
 
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getLogStream",
+          methodArgs = {}
+        )
+    })
     @SuppressWarnings("deprecation")
     public void testGetLogStream() {
         assertNull(DriverManager.getLogStream());
@@ -348,6 +434,15 @@ public class DriverManagerTest extends TestCase {
         DriverManager.setLogStream(null);
     } // end method testGetLogStream()
 
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getLogWriter",
+          methodArgs = {}
+        )
+    })
     public void testGetLogWriter() {
         assertNull(DriverManager.getLogWriter());
 
@@ -360,6 +455,15 @@ public class DriverManagerTest extends TestCase {
 
     static String testMessage = "DriverManagerTest: test message for print stream";
 
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "println",
+          methodArgs = {String.class}
+        )
+    })
     @SuppressWarnings("deprecation")
     public void testPrintln() {
         // System.out.println("testPrintln");
@@ -384,6 +488,15 @@ public class DriverManagerTest extends TestCase {
         DriverManager.setLogStream(null);
     } // end method testPrintln()
 
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException/ClassNotFoundException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "registerDriver",
+          methodArgs = {Driver.class}
+        )
+    })
     public void testRegisterDriver() throws ClassNotFoundException,
             SQLException, IllegalAccessException, InstantiationException {
         String EXTRA_DRIVER_NAME = "org.apache.harmony.sql.tests.java.sql.TestHelper_Driver3";
@@ -414,6 +527,15 @@ public class DriverManagerTest extends TestCase {
 
     static int invalidTimeout1 = -10;
 
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setLoginTimeout",
+          methodArgs = {int.class}
+        )
+    })
     public void testSetLoginTimeout() {
         for (int element : validTimeouts) {
             DriverManager.setLoginTimeout(element);
@@ -429,6 +551,15 @@ public class DriverManagerTest extends TestCase {
 
     static PrintStream testPrintStream = new PrintStream(outputStream2);
 
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setLogStream",
+          methodArgs = {PrintStream.class}
+        )
+    })
     @SuppressWarnings("deprecation")
     public void testSetLogStream() {
         // System.out.println("testSetLogStream");
@@ -468,6 +599,15 @@ public class DriverManagerTest extends TestCase {
     /**
      * Test for the setLogWriter method
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setLogWriter",
+          methodArgs = {PrintWriter.class}
+        )
+    })
     public void testSetLogWriter() {
         // System.out.println("testSetLogWriter");
         DriverManager.setLogWriter(testPrintWriter);

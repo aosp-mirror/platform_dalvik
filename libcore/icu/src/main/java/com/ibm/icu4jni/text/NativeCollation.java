@@ -16,7 +16,7 @@ package com.ibm.icu4jni.text;
 * @internal ICU 2.4
 */
     
-public final class NativeCollation
+final class NativeCollation
 {
   // collator methods ---------------------------------------------
   

@@ -28,6 +28,11 @@ void dvmShutdown(void);
 bool dvmInitAfterZygote(void);
 
 /*
+ * Enable Java programming language assert statements after the Zygote fork.
+ */
+void dvmLateEnableAssertions(void);
+
+/*
  * Partial VM initialization; only used as part of "dexopt", which may be
  * asked to optimize a DEX file holding fundamental classes.
  */

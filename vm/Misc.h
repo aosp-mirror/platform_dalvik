@@ -149,6 +149,8 @@ void dvmPrintDebugMessage(const DebugOutputTarget* target, const char* format,
 /*
  * Expanding bitmap, used for tracking resources.  Bits are numbered starting
  * from zero.
+ *
+ * All operations on a BitVector are unsynchronized.
  */
 typedef struct BitVector {
     bool    expandable;     /* expand bitmap if we run out? */
@@ -161,13 +163,22 @@ BitVector* dvmAllocBitVector(int startBits, bool expandable);
 void dvmFreeBitVector(BitVector* pBits);
 
 /*
- * Set/clear a single bit; assumes external synchronization.
+ * dvmAllocBit always allocates the first possible bit.  If we run out of
+ * space in the bitmap, and it's not marked expandable, dvmAllocBit
+ * returns -1.
  *
- * We always allocate the first possible bit.  If we run out of space in
- * the bitmap, and it's not marked expandable, dvmAllocBit returns -1.
+ * dvmSetBit sets the specified bit, expanding the vector if necessary
+ * (and possible).
+ *
+ * dvmIsBitSet returns "true" if the bit is set.
  */
 int dvmAllocBit(BitVector* pBits);
-void dvmFreeBit(BitVector* pBits, int num);
+bool dvmSetBit(BitVector* pBits, int num);
+void dvmClearBit(BitVector* pBits, int num);
+bool dvmIsBitSet(const BitVector* pBits, int num);
+
+/* count the number of bits that have been set */
+int dvmCountSetBits(const BitVector* pBits);
 
 #define kBitVectorGrowth    4   /* increase by 4 u4s when limit hit */
 

@@ -30,8 +30,10 @@ import java.util.Map;
 import org.apache.harmony.luni.util.PriviAction;
 
 /**
- * The Manifest class is used to obtain attribute information for a JarFile and its entries.
+ * The {@code Manifest} class is used to obtain attribute information for a
+ * {@code JarFile} and its entries.
  * 
+ * @since Android 1.0
  */
 public class Manifest implements Cloneable {
     private static final int LINE_LENGTH_LIMIT = 70;
@@ -47,24 +49,29 @@ public class Manifest implements Cloneable {
     private HashMap<String, byte[]> chunks;
 
     /**
-     * The data chunk of Main Attributes in the manifest is needed in verification.
+     * The data chunk of main attributes in the manifest is needed in
+     * verification.
      */
     private byte[] mainAttributesChunk;
 
     /**
-     * Constructs a new Manifest instance.
+     * Creates a new {@code Manifest} instance.
+     * 
+     * @since Android 1.0
      */
     public Manifest() {
         super();
     }
 
     /**
-     * Constructs a new Manifest instance using the attributes obtained from is.
+     * Creates a new {@code Manifest} instance using the attributes obtained
+     * from the input stream.
      * 
-     * @param is InputStream to parse for attributes
-     * 
-     * @throws IOException if an IO error occurs while creating this Manifest
-     * 
+     * @param is
+     *            {@code InputStream} to parse for attributes.
+     * @throws IOException
+     *             if an IO error occurs while creating this {@code Manifest}
+     * @since Android 1.0
      */
     public Manifest(InputStream is) throws IOException {
         super();
@@ -72,10 +79,12 @@ public class Manifest implements Cloneable {
     }
 
     /**
-     * Constructs a new Manifest instance. The new instance will have the same attributes as
-     * those found in the parameter Manifest.
+     * Creates a new {@code Manifest} instance. The new instance will have the
+     * same attributes as those found in the parameter {@code Manifest}.
      * 
-     * @param man Manifest instance to obtain attributes from
+     * @param man
+     *            {@code Manifest} instance to obtain attributes from.
+     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     public Manifest(Manifest man) {
@@ -91,8 +100,10 @@ public class Manifest implements Cloneable {
     }
 
     /**
-     * Resets the both the mainAttributes as well as the entry Attributes associated with this
-     * Manifest.
+     * Resets the both the main attributes as well as the entry attributes
+     * associated with this {@code Manifest}.
+     * 
+     * @since Android 1.0
      */
     public void clear() {
         entryAttributes.clear();
@@ -100,38 +111,47 @@ public class Manifest implements Cloneable {
     }
 
     /**
-     * Returns the Attributes associated with the parameter entry name
+     * Returns the {@code Attributes} associated with the parameter entry
+     * {@code name}.
      * 
-     * @param name The name of the entry to obtain Attributes for.
-     * @return The Attributes for the entry or null if the entry does not exist.
+     * @param name
+     *            the name of the entry to obtain {@code Attributes} from.
+     * @return the Attributes for the entry or {@code null} if the entry does
+     *         not exist.
+     * @since Android 1.0
      */
     public Attributes getAttributes(String name) {
         return getEntries().get(name);
     }
 
     /**
-     * Returns a Map containing the Attributes for each entry in the Manifest.
+     * Returns a map containing the {@code Attributes} for each entry in the
+     * {@code Manifest}.
      * 
-     * @return A Map of entry attributes
+     * @return the map of entry attributes.
+     * @since Android 1.0
      */
     public Map<String, Attributes> getEntries() {
         return entryAttributes;
     }
 
     /**
-     * Returns the main Attributes of the JarFile.
+     * Returns the main {@code Attributes} of the {@code JarFile}.
      * 
-     * @return Main Attributes associated with the source JarFile
+     * @return main {@code Attributes} associated with the source {@code
+     *         JarFile}.
+     * @since Android 1.0
      */
     public Attributes getMainAttributes() {
         return mainAttributes;
     }
 
     /**
-     * Creates a copy of this Manifest. The returned Manifest will equal the Manifest from which
-     * it was cloned.
+     * Creates a copy of this {@code Manifest}. The returned {@code Manifest}
+     * will equal the {@code Manifest} from which it was cloned.
      * 
-     * @return A copy of the receiver.
+     * @return a copy of this instance.
+     * @since Android 1.0
      */
     @Override
     public Object clone() {
@@ -139,22 +159,28 @@ public class Manifest implements Cloneable {
     }
 
     /**
-     * Writes out the attribute information of the receiver to the specified OutputStream
+     * Writes out the attribute information of the receiver to the specified
+     * {@code OutputStream}.
      * 
-     * @param os The OutputStream to write to.
-     * 
-     * @throws IOException If an error occurs writing the Manifest
+     * @param os
+     *            The {@code OutputStream} to write to.
+     * @throws IOException
+     *             If an error occurs writing the {@code Manifest}.
+     * @since Android 1.0
      */
     public void write(OutputStream os) throws IOException {
         write(this, os);
     }
 
     /**
-     * Constructs a new Manifest instance obtaining Attribute information from the parameter
-     * InputStream.
+     * Constructs a new {@code Manifest} instance obtaining attribute
+     * information from the specified input stream.
      * 
-     * @param is The InputStream to read from
-     * @throws IOException If an error occurs reading the Manifest.
+     * @param is
+     *            The {@code InputStream} to read from.
+     * @throws IOException
+     *             If an error occurs reading the {@code Manifest}.
+     * @since Android 1.0
      */
     public void read(InputStream is) throws IOException {
         InitManifest initManifest = new InitManifest(is, mainAttributes, entryAttributes,
@@ -163,9 +189,10 @@ public class Manifest implements Cloneable {
     }
 
     /**
-     * Returns the hashCode for this instance.
+     * Returns the hash code for this instance.
      * 
-     * @return This Manifest's hashCode
+     * @return this {@code Manifest}'s hashCode.
+     * @since Android 1.0
      */
     @Override
     public int hashCode() {
@@ -173,11 +200,14 @@ public class Manifest implements Cloneable {
     }
 
     /**
-     * Determines if the receiver is equal to the parameter Object. Two Manifests are equal if
-     * they have identical main Attributes as well as identical entry Attributes.
+     * Determines if the receiver is equal to the parameter object. Two {@code
+     * Manifest}s are equal if they have identical main attributes as well as
+     * identical entry attributes.
      * 
-     * @param o The Object to compare against.
-     * @return <code>true</code> if the manifests are equal, <code>false</code> otherwise
+     * @param o
+     *            the object to compare against.
+     * @return {@code true} if the manifests are equal, {@code false} otherwise
+     * @since Android 1.0
      */
     @Override
     public boolean equals(Object o) {
@@ -206,12 +236,16 @@ public class Manifest implements Cloneable {
     }
 
     /**
-     * Writes out the attribute information of the receiver to the specified OutputStream
+     * Writes out the attribute information of the specified manifest to the
+     * specified {@code OutputStream}
      * 
-     * @param manifest the attribute information of the receiver
-     * @param out The OutputStream to write to.
-     * 
-     * @throws IOException If an error occurs writing the Manifest
+     * @param manifest
+     *            the manifest to write out.
+     * @param out
+     *            The {@code OutputStream} to write to.
+     * @throws IOException
+     *             If an error occurs writing the {@code Manifest}.
+     * @since Android 1.0
      */
     static void write(Manifest manifest, OutputStream out) throws IOException {
         Charset charset = null;

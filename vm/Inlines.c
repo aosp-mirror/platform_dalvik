@@ -13,14 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Generate non-inline copies of inline functions declared in header files.
  */
 
 #define _DALVIK_GEN_INLINES
 #include "Dalvik.h"
-#include "interp/InterpDefs.h"
 #include "analysis/CodeVerify.h"
+#include "mterp/c/header.c"
 
 #undef LOG_TAG
 #include "jdwp/JdwpPriv.h"

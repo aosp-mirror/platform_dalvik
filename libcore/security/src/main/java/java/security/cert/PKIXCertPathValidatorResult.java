@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vladimir N. Molotkov
-* @version $Revision$
-*/
-
 package java.security.cert;
 
 import java.security.PublicKey;
@@ -27,8 +22,11 @@ import java.security.PublicKey;
 import org.apache.harmony.security.internal.nls.Messages;
 
 /**
- * @com.intel.drl.spec_ref
+ * The implementation of the result of the PKIX certification path validation.
  * 
+ * @see CertPathValidator
+ * @see CertPathValidator#validate(CertPath, CertPathParameters)
+ * @since Android 1.0
  */
 public class PKIXCertPathValidatorResult implements CertPathValidatorResult {
     // A trust anchor used during validation of certification path
@@ -40,7 +38,17 @@ public class PKIXCertPathValidatorResult implements CertPathValidatorResult {
     private final PublicKey subjectPublicKey;
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code PKIXCertPathValidatorResult} with the specified
+     * trust anchor, the valid policy tree and the subject public key.
+     * 
+     * @param trustAnchor
+     *            the trust anchor describing the certification authority (CA)
+     *            that served as trust anchor for the certification path.
+     * @param policyTree
+     *            the valid policy tree from the validation.
+     * @param subjectPublicKey
+     *            the subject public key from the validation.
+     * @since Android 1.0
      */
     public PKIXCertPathValidatorResult(TrustAnchor trustAnchor,
             PolicyNode policyTree, PublicKey subjectPublicKey) {
@@ -57,28 +65,41 @@ public class PKIXCertPathValidatorResult implements CertPathValidatorResult {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the valid policy tree from the validation.
+     * 
+     * @return the valid policy tree from the validation.
+     * @since Android 1.0
      */
     public PolicyNode getPolicyTree() {
         return policyTree;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the subject public key from the validation.
+     * 
+     * @return the subject public key from the validation.
+     * @since Android 1.0
      */
     public PublicKey getPublicKey() {
         return subjectPublicKey;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the trust anchor describing the certification authority (CA) that
+     * served as trust anchor for this certification path.
+     * 
+     * @return the trust anchor.
+     * @since Android 1.0
      */
     public TrustAnchor getTrustAnchor() {
         return trustAnchor;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Clones this {@code PKIXCertPathValidatorResult} instance.
+     * 
+     * @return the cloned instance.
+     * @since Android 1.0
      */
     public Object clone() {
         try {
@@ -90,7 +111,12 @@ public class PKIXCertPathValidatorResult implements CertPathValidatorResult {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns a string representation for this {@code
+     * PKIXCertPathValidatorResult} instance.
+     * 
+     * @return a string representation for this {@code
+     *         PKIXCertPathValidatorResult} instance.
+     * @since Android 1.0
      */
     public String toString() {
         StringBuffer sb = new StringBuffer(super.toString());

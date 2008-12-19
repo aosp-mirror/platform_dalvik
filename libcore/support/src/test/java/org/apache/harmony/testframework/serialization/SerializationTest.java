@@ -22,6 +22,8 @@
 
 package org.apache.harmony.testframework.serialization;
 
+import dalvik.annotation.TestTargetClass; 
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -61,6 +63,7 @@ import junit.framework.TestCase;
  * <b>&quot;RESOURCE_DIR&quot; </b> system property.
  * 
  */
+@TestTargetClass(Serializable.class) 
 public abstract class SerializationTest extends TestCase {
 
     /**

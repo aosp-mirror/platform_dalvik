@@ -17,17 +17,32 @@
 
 package org.apache.harmony.luni.tests.java.util;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
+import junit.framework.TestCase;
+
 import java.util.UUID;
 
 import org.apache.harmony.testframework.serialization.SerializationTest;
 
-import junit.framework.TestCase;
-
+@TestTargetClass(UUID.class) 
 public class UUIDTest extends TestCase {
 
     /**
      * @see UUID#UUID(long, long)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "UUID",
+          methodArgs = {long.class, long.class}
+        )
+    })
     public void test_ConstructurJJ() {
         UUID uuid = new UUID(0xf81d4fae7dec11d0L, 0xa76500a0c91e6bf6L);
         assertEquals(2, uuid.variant());
@@ -41,6 +56,15 @@ public class UUIDTest extends TestCase {
     /**
      * @see UUID#getLeastSignificantBits()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getLeastSignificantBits",
+          methodArgs = {}
+        )
+    })
     public void test_getLeastSignificantBits() {
         UUID uuid = new UUID(0, 0);
         assertEquals(0, uuid.getLeastSignificantBits());
@@ -53,6 +77,15 @@ public class UUIDTest extends TestCase {
     /**
      * @see UUID#getMostSignificantBits()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getMostSignificantBits",
+          methodArgs = {}
+        )
+    })
     public void test_getMostSignificantBits() {
         UUID uuid = new UUID(0, 0);
         assertEquals(0, uuid.getMostSignificantBits());
@@ -65,6 +98,15 @@ public class UUIDTest extends TestCase {
     /**
      * @see UUID#version()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "version",
+          methodArgs = {}
+        )
+    })
     public void test_version() {
         UUID uuid = new UUID(0, 0);
         assertEquals(0, uuid.version());
@@ -83,6 +125,15 @@ public class UUIDTest extends TestCase {
     /**
      * @see UUID#variant()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "variant",
+          methodArgs = {}
+        )
+    })
     public void test_variant() {
         UUID uuid = new UUID(0, 0x0000000000000000L);
         assertEquals(0, uuid.variant());
@@ -116,6 +167,15 @@ public class UUIDTest extends TestCase {
     /**
      * @see UUID#timestamp()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "timestamp",
+          methodArgs = {}
+        )
+    })
     public void test_timestamp() {
         UUID uuid = new UUID(0x0000000000001000L, 0x8000000000000000L);
         assertEquals(0x0, uuid.timestamp());
@@ -139,6 +199,15 @@ public class UUIDTest extends TestCase {
     /**
      * @see UUID#clockSequence()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "clockSequence",
+          methodArgs = {}
+        )
+    })
     public void test_clockSequence() {
         UUID uuid = new UUID(0x0000000000001000L, 0x8000000000000000L);
         assertEquals(0x0, uuid.clockSequence());
@@ -165,6 +234,15 @@ public class UUIDTest extends TestCase {
     /**
      * @see UUID#node()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "node",
+          methodArgs = {}
+        )
+    })
     public void test_node() {
         UUID uuid = new UUID(0x0000000000001000L, 0x8000000000000000L);
         assertEquals(0x0, uuid.node());
@@ -188,6 +266,15 @@ public class UUIDTest extends TestCase {
     /**
      * @see UUID#compareTo(UUID)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "compareTo",
+          methodArgs = {java.util.UUID.class}
+        )
+    })
     public void test_compareTo() {
         UUID uuid1 = new UUID(0, 0);
         assertEquals(0, uuid1.compareTo(uuid1));
@@ -203,6 +290,15 @@ public class UUIDTest extends TestCase {
     /**
      * @see UUID#hashCode()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "hashCode",
+          methodArgs = {}
+        )
+    })
     public void test_hashCode() {
         UUID uuid = new UUID(0, 0);
         assertEquals(0, uuid.hashCode());
@@ -214,6 +310,15 @@ public class UUIDTest extends TestCase {
     /**
      * @see UUID#equals(Object)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "equals",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_equalsObject() {
         UUID uuid1 = new UUID(0, 0);
         assertEquals(uuid1, uuid1);
@@ -236,6 +341,15 @@ public class UUIDTest extends TestCase {
     /**
      * @see UUID#toString()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public void test_toString() {
         UUID uuid = new UUID(0xf81d4fae7dec11d0L, 0xa76500a0c91e6bf6L);
         String actual = uuid.toString();
@@ -249,6 +363,15 @@ public class UUIDTest extends TestCase {
     /**
      * @tests serialization/deserialization.
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationSelf",
+          methodArgs = {}
+        )
+    })
     public void testSerializationSelf() throws Exception {
         SerializationTest.verifySelf(new UUID(0xf81d4fae7dec11d0L,
                 0xa76500a0c91e6bf6L));
@@ -257,6 +380,15 @@ public class UUIDTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationGolden",
+          methodArgs = {}
+        )
+    })
     public void testSerializationCompatibility() throws Exception {
         SerializationTest.verifyGolden(this, new UUID(0xf81d4fae7dec11d0L,
                 0xa76500a0c91e6bf6L));
@@ -265,6 +397,15 @@ public class UUIDTest extends TestCase {
     /**
      * @see UUID#randomUUID()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "randomUUID",
+          methodArgs = {}
+        )
+    })
     public void test_randomUUID() {
         UUID uuid = UUID.randomUUID();
         assertEquals(2, uuid.variant());
@@ -274,6 +415,15 @@ public class UUIDTest extends TestCase {
     /**
      * @see UUID#nameUUIDFromBytes(byte[])
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "nameUUIDFromBytes",
+          methodArgs = {byte[].class}
+        )
+    })
     public void test_nameUUIDFromBytes() throws Exception {
         byte[] name = { (byte) 0x6b, (byte) 0xa7, (byte) 0xb8, (byte) 0x11,
                 (byte) 0x9d, (byte) 0xad, (byte) 0x11, (byte) 0xd1,
@@ -304,6 +454,15 @@ public class UUIDTest extends TestCase {
     /**
      * @see UUID#fromString(String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "fromString",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_fromString() {
         UUID actual = UUID.fromString("f81d4fae-7dec-11d0-a765-00a0c91e6bf6");
         UUID expected = new UUID(0xf81d4fae7dec11d0L, 0xa76500a0c91e6bf6L);
@@ -359,6 +518,15 @@ public class UUIDTest extends TestCase {
     /**
      * @tests java.util.UUID#fromString(String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "fromString",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_fromString_LString_Exception() {
 
         UUID uuid = UUID.fromString("0-0-0-0-0");

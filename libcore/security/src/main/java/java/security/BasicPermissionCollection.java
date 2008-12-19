@@ -32,10 +32,13 @@ import java.util.Map;
 import org.apache.harmony.security.internal.nls.Messages;
 
 /**
- * Specific PermissionCollection for storing BasicPermissions of arbitrary type.
+ * Specific {@code PermissionCollection} for storing {@code BasicPermissions} of
+ * arbitrary type.
  * 
+ * @see BasicPermission
+ * @see PermissionCollection
+ * @since Android 1.0
  */
-
 final class BasicPermissionCollection extends PermissionCollection {
 
     private static final long serialVersionUID = 739301742472979399L;
@@ -103,10 +106,11 @@ final class BasicPermissionCollection extends PermissionCollection {
     /**
      * Indicates whether the argument permission is implied by the receiver.
      * 
-     * @return boolean <code>true</code> if the argument permission is implied
-     *         by the receiver, and <code>false</code> if it is not.
+     * @return boolean {@code true} if the argument permission is implied by the
+     *         receiver, and {@code false} if it is not.
      * @param permission
-     *            java.security.Permission the permission to check
+     *            the permission to check.
+     * @see Permission
      */
     public boolean implies(Permission permission) {
         if (permission == null || permission.getClass() != permClass) {
@@ -150,15 +154,21 @@ final class BasicPermissionCollection extends PermissionCollection {
      * <dl>
      * <dt>boolean all_allowed
      * <dd>This is set to true if this BasicPermissionCollection contains a
-     * BasicPermission with '*' as its permission name.
+     * {@code BasicPermission} with '*' as its permission name.
      * <dt>Class&lt;T&gt; permClass
-     * <dd>The class to which all BasicPermissions in this
+     * <dd>The class to which all {@code BasicPermission}s in this
      * BasicPermissionCollection belongs.
      * <dt>Hashtable&lt;K,V&gt; permissions
-     * <dd>The BasicPermissions in this BasicPermissionCollection. All
-     * BasicPermissions in the collection must belong to the same class. The
-     * Hashtable is indexed by the BasicPermission name; the value of the
-     * Hashtable entry is the permission.
+     * <dd>The
+     * 
+     * <pre>
+     * BasicPermission
+     * </pre>
+     * 
+     * s in this {@code BasicPermissionCollection}. All {@code BasicPermission}s
+     * in the collection must belong to the same class. The Hashtable is indexed
+     * by the {@code BasicPermission} name; the value of the Hashtable entry is
+     * the permission.
      * </dl>
      */
     private void writeObject(java.io.ObjectOutputStream out) throws IOException {

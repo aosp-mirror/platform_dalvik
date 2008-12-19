@@ -15,9 +15,15 @@
  */
 package org.apache.harmony.nio.tests.java.nio;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
+@TestTargetClass(java.nio.IntBuffer.class)
 public class DirectIntBufferTest extends IntBufferTest {
     public void setUp(){
         buf = ByteBuffer.allocateDirect(BUFFER_LENGTH*4).asIntBuffer();
@@ -29,11 +35,27 @@ public class DirectIntBufferTest extends IntBufferTest {
         buf = null;
         baseBuf = null;
     }
-    
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies hasArray method for direct IntBuffer.",
+      targets = {
+        @TestTarget(
+          methodName = "hasArray",
+          methodArgs = {}
+        )
+    })
     public void testHasArray() {
         assertFalse(buf.hasArray());
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies array method for direct IntBuffer.",
+      targets = {
+        @TestTarget(
+          methodName = "array",
+          methodArgs = {}
+        )
+    })
     public void testArray() {
         try {
             buf.array();
@@ -41,7 +63,15 @@ public class DirectIntBufferTest extends IntBufferTest {
         } catch (UnsupportedOperationException e) {
         }
     }
-    
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies arrayOffset method for direct IntBuffer.",
+      targets = {
+        @TestTarget(
+          methodName = "arrayOffset",
+          methodArgs = {}
+        )
+    })
     public void testArrayOffset() {
         try {
             buf.arrayOffset();
@@ -50,11 +80,27 @@ public class DirectIntBufferTest extends IntBufferTest {
             //expected
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies isDirect method for direct IntBuffer.",
+      targets = {
+        @TestTarget(
+          methodName = "isDirect",
+          methodArgs = {}
+        )
+    })
     public void testIsDirect() {
         assertTrue(buf.isDirect());
     }
-    
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies order method for direct IntBuffer.",
+      targets = {
+        @TestTarget(
+          methodName = "order",
+          methodArgs = {}
+        )
+    })
     public void testOrder() {
         assertEquals(ByteOrder.BIG_ENDIAN, buf.order());
     }

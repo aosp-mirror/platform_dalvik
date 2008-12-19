@@ -15,16 +15,13 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package javax.net.ssl;
 
 /**
- * @com.intel.drl.spec_ref
+ * The marker interface for key manager factory parameters. Its purpose is to
+ * group key manager factory parameters objects.
  * 
+ * @since Android 1.0
  */
 public interface ManagerFactoryParameters {
 }

@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vladimir N. Molotkov
-* @version $Revision$
-*/
-
 package java.security.spec;
 
 import java.math.BigInteger;
@@ -27,8 +22,15 @@ import java.math.BigInteger;
 import org.apache.harmony.security.internal.nls.Messages;
 
 /**
- * @com.intel.drl.spec_ref
+ * The additional prime information specified as triplet of primes, a prime
+ * exponent, and a Chinese Remainder Theorem (CRT) coefficient.
+ * <p>
+ * Defined in the <a
+ * href="http://www.rsa.com/rsalabs/pubs/PKCS/html/pkcs-1.html">PKCS #1 v2.1</a>
+ * standard.
+ * </p>
  * 
+ * @since Android 1.0
  */
 public class RSAOtherPrimeInfo {
     // Prime
@@ -39,7 +41,16 @@ public class RSAOtherPrimeInfo {
     private final BigInteger crtCoefficient;
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code RSAOtherPrimeInfo} with the specified prime,
+     * exponent, and CRT coefficient.
+     * 
+     * @param prime
+     *            the prime factor.
+     * @param primeExponent
+     *            the prime exponent.
+     * @param crtCoefficient
+     *            the CRT coefficient.
+     * @since Android 1.0
      */
     public RSAOtherPrimeInfo(BigInteger prime,
             BigInteger primeExponent, BigInteger crtCoefficient) {
@@ -58,21 +69,30 @@ public class RSAOtherPrimeInfo {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the CRT coefficient.
+     * 
+     * @return the CRT coefficient.
+     * @since Android 1.0
      */
     public final BigInteger getCrtCoefficient() {
         return crtCoefficient;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the prime factor.
+     * 
+     * @return the prime factor.
+     * @since Android 1.0
      */
     public final BigInteger getPrime() {
         return prime;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the exponent.
+     * 
+     * @return the exponent.
+     * @since Android 1.0
      */
     public final BigInteger getExponent() {
         return primeExponent;

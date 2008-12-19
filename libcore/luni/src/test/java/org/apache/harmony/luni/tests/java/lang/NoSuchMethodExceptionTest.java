@@ -17,13 +17,28 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import junit.framework.TestCase;
 
+@TestTargetClass(NoSuchMethodException.class) 
 public class NoSuchMethodExceptionTest extends TestCase {
 
     /**
      * @tests java.lang.NoSuchMethodException#NoSuchMethodException()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "NoSuchMethodException",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         NoSuchMethodException e = new NoSuchMethodException();
         assertNull(e.getMessage());
@@ -34,6 +49,15 @@ public class NoSuchMethodExceptionTest extends TestCase {
     /**
      * @tests java.lang.NoSuchMethodException#NoSuchMethodException(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "NoSuchMethodException",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() {
         NoSuchMethodException e = new NoSuchMethodException("fixture");
         assertEquals("fixture", e.getMessage());

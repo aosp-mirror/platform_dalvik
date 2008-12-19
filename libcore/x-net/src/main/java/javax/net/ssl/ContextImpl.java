@@ -15,18 +15,14 @@
  *  limitations under the License.
  */
 
-/**
- * @author Boris V. Kuznetsov
- * @version $Revision$
- */
-
 package javax.net.ssl;
 
 import java.security.Provider;
 
 /**
  * Support class for this package.
- *  
+ * 
+ * @since Android 1.0
  */
 
 class ContextImpl extends SSLContext {

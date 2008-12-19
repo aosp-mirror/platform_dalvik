@@ -16,6 +16,11 @@
 
 package tests.api.javax.net.ssl;
 
+import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -26,6 +31,7 @@ import javax.net.ssl.TrustManagerFactorySpi;
 
 import junit.framework.TestCase;
 
+@TestTargetClass(TrustManagerFactorySpi.class) 
 public class TrustManagerFactorySpiTest extends TestCase {
 
     private class MockTrustManagerFactorySpi extends TrustManagerFactorySpi {
@@ -62,6 +68,15 @@ public class TrustManagerFactorySpiTest extends TestCase {
     /**
      * @tests javax.net.ssl.TrustManagerFactorySpi#TrustManagerFactorySpi()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "TrustManagerFactorySpi",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         try {
             new MockTrustManagerFactorySpi();

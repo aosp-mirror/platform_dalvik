@@ -21,140 +21,162 @@ import java.io.OutputStream;
 import java.io.InputStream;
 
 /**
- * A Java interface mapping for the SQL BLOB type.
+ * A Java interface representing the SQL {@code BLOB} type.
  * <p>
- * An SQL CLOB type stores a large array of bytes (binary data) as the value in
- * a column of a database.
- * <p>
- * The java.sql.Blob interface provides methods for setting and retrieving data
- * in the Blob, for querying Clob data length, for searching for data within the
- * Blob.
+ * An SQL {@code BLOB} type stores a large array of binary data (bytes) as the
+ * value in a column of a database.
+ * </p>
+ * The {@code java.sql.Blob} interface provides methods for setting and
+ * retrieving data in the {@code Blob}, for querying {@code Blob} data length,
+ * and for searching for data within the {@code Blob}.
+ *  
+ * @since Android 1.0
  */
 public interface Blob {
 
     /**
-     * Retrieves this Blob object as a binary stream.
+     * Retrieves this {@code Blob} object as a binary stream.
      * 
-     * @return a binary InputStream giving access to the Blob data
+     * @return a binary {@code InputStream} giving access to the {@code Blob}
+     *         data.
      * @throws SQLException
-     *             if an error occurs accessing the Blob
+     *             if an error occurs accessing the {@code Blob}.
+     * @since Android 1.0
      */
     public InputStream getBinaryStream() throws SQLException;
 
     /**
-     * Gets a portion of the value of this Blob as an array of bytes.
+     * Gets a portion of the value of this {@code Blob} as an array of bytes.
      * 
      * @param pos
-     *            the position of the first byte in the Blob to get, where the
-     *            first byte in the Blob has position = 1
+     *            the position of the first byte in the {@code Blob} to get,
+     *            where the first byte in the {@code Blob} has position 1.
      * @param length
-     *            the number of bytes to get
-     * @return a byte array containing the data from the Blob, starting at pos
-     *         and of length up to <code>length</code> bytes long
+     *            the number of bytes to get.
+     * @return a byte array containing the data from the {@code Blob}, starting
+     *         at {@code pos} and is up to {@code length} bytes long.
      * @throws SQLException
-     *             if an error occurs accessing the Blob
+     *             if an error occurs accessing the {@code Blob}.
+     * @since Android 1.0
      */
     public byte[] getBytes(long pos, int length) throws SQLException;
 
     /**
-     * Gets the number of bytes in this Blob object.
+     * Gets the number of bytes in this {@code Blob} object.
      * 
-     * @return an long value with the length of the Blob in bytes
+     * @return a {@code long} value with the length of the {@code Blob} in
+     *         bytes.
      * @throws SQLException
-     *             if an error occurs accessing the Blob
+     *             if an error occurs accessing the {@code Blob}.
+     * @since Android 1.0
      */
     public long length() throws SQLException;
 
     /**
-     * Search for the position in this Blob at which a specified pattern begins,
-     * starting at a specified position within the Blob.
+     * Search for the position in this {@code Blob} at which a specified pattern
+     * begins, starting at a specified position within the {@code Blob}.
      * 
      * @param pattern
-     *            a Blob containing the pattern of data to search for in this
-     *            Blob
+     *            a {@code Blob} containing the pattern of data to search for in
+     *            this {@code Blob}.
      * @param start
-     *            the position within this Blob to start the search, where the
-     *            first position in the Blob is 1
-     * @return a long value with the position at which the pattern begins. -1 if
-     *         the pattern is not found in this Blob.
+     *            the position within this {@code Blob} to start the search,
+     *            where the first position in the {@code Blob} is {@code 1}.
+     * @return a {@code long} value with the position at which the pattern
+     *         begins. Returns {@code -1} if the pattern is not found in this
+     *         {@code Blob}.
      * @throws SQLException
-     *             if an error occurs accessing the Blob
+     *             if an error occurs accessing the {@code Blob}.
+     * @since Android 1.0
      */
     public long position(Blob pattern, long start) throws SQLException;
 
     /**
-     * Search for the position in this Blob at which the specified pattern
-     * begins, starting at a specified position within the Blob.
+     * Search for the position in this {@code Blob} at which the specified
+     * pattern begins, starting at a specified position within the {@code Blob}.
      * 
      * @param pattern
      *            a byte array containing the pattern of data to search for in
-     *            this Blob
+     *            this {@code Blob}.
      * @param start
-     *            the position within this Blob to start the search, where the
-     *            first position in the Blob is 1
-     * @return a long value with the position at which the pattern begins. -1 if
-     *         the pattern is not found in this Blob.
+     *            the position within this {@code Blob} to start the search,
+     *            where the first position in the {@code Blob} is {@code 1}.
+     * @return a {@code long} value with the position at which the pattern
+     *         begins. Returns {@code -1} if the pattern is not found in this
+     *         {@code Blob}.
      * @throws SQLException
-     *             if an error occurs accessing the Blob
+     *             if an error occurs accessing the {@code Blob}.
+     * @since Android 1.0
      */
     public long position(byte[] pattern, long start) throws SQLException;
 
     /**
-     * Gets a stream that can be used to write binary data to this Blob.
+     * Gets a stream that can be used to write binary data to this {@code Blob}.
      * 
      * @param pos
-     *            the position within this Blob at which to start writing, where
-     *            the first position in the Blob is 1
-     * @return a binary InputStream which can be used to write data into the
-     *         Blob starting at the specified position.
+     *            the position within this {@code Blob} at which to start
+     *            writing, where the first position in the {@code Blob} is
+     *            {@code 1}.
+     * @return a binary {@code InputStream} which can be used to write data into
+     *         the {@code Blob} starting at the specified position.
      * @throws SQLException
-     *             if an error occurs accessing the Blob
+     *             if an error occurs accessing the {@code Blob}.
+     * @since Android 1.0
      */
     public OutputStream setBinaryStream(long pos) throws SQLException;
 
     /**
-     * Writes a specified array of bytes to this Blob. object, starting at a
-     * specified position. Returns the number of bytes written.
+     * Writes a specified array of bytes to this {@code Blob} object, starting
+     * at a specified position. Returns the number of bytes written.
      * 
      * @param pos
-     *            the position within this Blob at which to start writing, where
-     *            the first position in the Blob is 1
+     *            the position within this {@code Blob} at which to start
+     *            writing, where the first position in the {@code Blob} is
+     *            {@code 1}.
      * @param theBytes
-     *            an array of bytes to write into the Blob
-     * @return an integer containing the number of bytes written to the Blob
+     *            an array of bytes to write into the {@code Blob}.
+     * @return an integer containing the number of bytes written to the {@code
+     *         Blob}.
      * @throws SQLException
-     *             if an error occurs accessing the Blob
+     *             if an error occurs accessing the {@code Blob}.
+     * @since Android 1.0
      */
     public int setBytes(long pos, byte[] theBytes) throws SQLException;
 
     /**
-     * Writes a portion of a specified byte array to this Blob. Returns the
-     * number of bytes written.
+     * Writes a portion of a specified byte array to this {@code Blob}. Returns
+     * the number of bytes written.
      * 
      * @param pos
-     *            the position within this Blob at which to start writing, where
-     *            the first position in the Blob is 1
+     *            the position within this {@code Blob} at which to start
+     *            writing, where the first position in the {@code Blob} is
+     *            {@code 1}.
      * @param theBytes
-     *            an array of bytes to write into the Blob
+     *            an array of bytes to write into the {@code Blob}.
      * @param offset
      *            the offset into the byte array from which to start writing
-     *            data - the first byte in the array has offset 0.
+     *            data - the first byte in the array has offset {@code 0}.
      * @param len
-     *            the length of data to write, as the number of bytes
-     * @return an integer containing the number of bytes written to the Blob
+     *            the length of data to write in number of bytes.
+     * @return an integer containing the number of bytes written to the {@code
+     *         Blob}.
      * @throws SQLException
-     *             if an error occurs accessing the Blob
+     *             if an error occurs accessing the {@code Blob}.
+     * @since Android 1.0
      */
     public int setBytes(long pos, byte[] theBytes, int offset, int len)
             throws SQLException;
 
     /**
-     * Truncate the value of this Blob object to a specified length in bytes.
+     * Truncate the value of this {@code Blob} object to a specified length in
+     * bytes.
      * 
      * @param len
-     *            the length of data in bytes to truncate the value of this Blob
+     *            the length of data in bytes after which this {@code Blob}
+     *            is to be truncated.
      * @throws SQLException
-     *             if an error occurs accessing the Blob
+     *             if an error occurs accessing the {@code Blob}.
+     * @since Android 1.0
      */
     public void truncate(long len) throws SQLException;
 }

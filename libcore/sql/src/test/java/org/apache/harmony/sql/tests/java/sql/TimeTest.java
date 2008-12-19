@@ -17,11 +17,17 @@
 
 package org.apache.harmony.sql.tests.java.sql;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.sql.Time;
 import java.util.TimeZone;
 
 import junit.framework.TestCase;
 
+@TestTargetClass(Time.class)
 /**
  * JUnit Testcase for the java.sql.Time class
  * 
@@ -73,6 +79,15 @@ public class TimeTest extends TestCase {
             STRING_JP_ARRAY };
 
     @SuppressWarnings("deprecation")
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Deprecated method",
+      targets = {
+        @TestTarget(
+          methodName = "Time",
+          methodArgs = {int.class, int.class, int.class}
+        )
+    })
     public void testTimeintintint() {
         Time theTime = new Time(10, 45, 20);
 
@@ -80,6 +95,15 @@ public class TimeTest extends TestCase {
         assertNotNull(theTime);
     } // end method testTimeintintint()
 
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Incorrect parameter checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "Time",
+          methodArgs = {long.class}
+        )
+    })
     public void testTime() {
         Time theTime = new Time(TIME_TEST1);
 
@@ -87,6 +111,15 @@ public class TimeTest extends TestCase {
         assertNotNull(theTime);
     } // end method testTime()
 
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public void testToString() {
         // Loop through the timezones testing the String conversion for each
         for (int i = 0; i < TIME_ARRAY.length; i++) {
@@ -95,6 +128,15 @@ public class TimeTest extends TestCase {
 
     } // end method test
 
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     private void testToString(String timeZone, long[] theTimes,
             String[] theTimeStrings) {
         // Set the timezone
@@ -113,6 +155,15 @@ public class TimeTest extends TestCase {
     /*
      * Method test for valueOf
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "valueOf",
+          methodArgs = {String.class}
+        )
+    })
     public void testValueOfString() {
         TimeZone.setDefault(TimeZone.getTimeZone("GMT"));
 
@@ -138,6 +189,15 @@ public class TimeTest extends TestCase {
 
     } // end method testValueOfString
 
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setTime",
+          methodArgs = {long.class}
+        )
+    })
     public void testSetTime() {
         // Ensure that the timezone is set to GMT
         TimeZone.setDefault(TimeZone.getTimeZone("GMT"));
@@ -149,6 +209,15 @@ public class TimeTest extends TestCase {
         assertEquals(STRING_TEST2, theTime.toString());
     } // end method testSetTime()
 
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setDate",
+          methodArgs = {int.class}
+        )
+    })
     @SuppressWarnings("deprecation")
     public void testSetDate() {
         Time theTime = new Time(TIME_TEST1);
@@ -162,6 +231,15 @@ public class TimeTest extends TestCase {
     } // end method testSetDate()
 
     @SuppressWarnings("deprecation")
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setMonth",
+          methodArgs = {int.class}
+        )
+    })
     public void testSetMonth() {
         Time theTime = new Time(TIME_TEST1);
 
@@ -174,6 +252,15 @@ public class TimeTest extends TestCase {
     } // end method testSetMonth()
 
     @SuppressWarnings("deprecation")
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setYear",
+          methodArgs = {int.class}
+        )
+    })
     public void testSetYear() {
         Time theTime = new Time(TIME_TEST1);
 
@@ -186,6 +273,15 @@ public class TimeTest extends TestCase {
     } // end method testSetYear()
 
     @SuppressWarnings("deprecation")
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getDate",
+          methodArgs = {}
+        )
+    })
     public void testGetDate() {
         Time theTime = new Time(TIME_TEST1);
 
@@ -198,6 +294,15 @@ public class TimeTest extends TestCase {
     } // end method test
 
     @SuppressWarnings("deprecation")
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getDay",
+          methodArgs = {}
+        )
+    })
     public void testGetDay() {
         Time theTime = new Time(TIME_TEST1);
 
@@ -210,6 +315,15 @@ public class TimeTest extends TestCase {
     } // end method test
 
     @SuppressWarnings("deprecation")
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getMonth",
+          methodArgs = {}
+        )
+    })
     public void testGetMonth() {
         Time theTime = new Time(TIME_TEST1);
 
@@ -222,6 +336,15 @@ public class TimeTest extends TestCase {
     } // end method test
 
     @SuppressWarnings("deprecation")
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getYear",
+          methodArgs = {}
+        )
+    })
     public void testGetYear() {
         Time theTime = new Time(TIME_TEST1);
 
@@ -236,6 +359,15 @@ public class TimeTest extends TestCase {
     /**
      * @tests java.sql.Time#valueOf(String )
      */
+     @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "valueOf",
+          methodArgs = {String.class}
+        )
+    })
      public void test_valueOf_IllegalArgumentException() {
             try{
                 Time.valueOf("15:43:12:34");

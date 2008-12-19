@@ -15,20 +15,22 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vladimir N. Molotkov
-* @version $Revision$
-*/
-
 package java.security.spec;
 
 /**
- * @com.intel.drl.spec_ref
+ * The key specification of an X.509 encoded key in ASN.1 format.
  * 
+ * @since Android 1.0
  */
 public class X509EncodedKeySpec extends EncodedKeySpec {
+
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code X509EncodedKeySpec} with the specified encoded key
+     * bytes.
+     * 
+     * @param encodedKey
+     *            the encoded key bytes.
+     * @since Android 1.0
      */
     public X509EncodedKeySpec(byte[] encodedKey) {
         // Super class' ctor makes defensive parameter copy
@@ -36,7 +38,10 @@ public class X509EncodedKeySpec extends EncodedKeySpec {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the encoded key bytes.
+     * 
+     * @return the encoded key bytes.
+     * @since Android 1.0
      */
     public byte[] getEncoded() {
         // Super class' getEncoded() always returns a new array
@@ -44,7 +49,11 @@ public class X509EncodedKeySpec extends EncodedKeySpec {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the name of the encoding format of this encoded key
+     * specification.
+     * 
+     * @return the string "X.509".
+     * @since Android 1.0
      */
     public final String getFormat() {
         return "X.509"; //$NON-NLS-1$

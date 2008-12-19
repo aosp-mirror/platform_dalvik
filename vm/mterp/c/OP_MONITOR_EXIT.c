@@ -17,13 +17,13 @@ HANDLE_OPCODE(OP_MONITOR_EXIT /*vAA*/)
              * by doing so.
              */
             ADJUST_PC(1);           /* monitor-exit width is 1 */
-            GOTO(exceptionThrown);
+            GOTO_exceptionThrown();
         }
         ILOGV("+ unlocking %p %s\n", obj, obj->clazz->descriptor);
         if (!dvmUnlockObject(self, obj)) {
             assert(dvmCheckException(self));
             ADJUST_PC(1);
-            GOTO(exceptionThrown);
+            GOTO_exceptionThrown();
         }
     }
     FINISH(1);

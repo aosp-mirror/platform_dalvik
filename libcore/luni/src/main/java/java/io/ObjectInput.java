@@ -18,104 +18,106 @@
 package java.io;
 
 /**
- * Streams to be used with serialization to read objects must implement this
- * interface. ObjectInputStream is one example.
+ * Defines an interface for classes that allow reading serialized objects.
  * 
  * @see ObjectInputStream
  * @see ObjectOutput
+ * 
+ * @since Android 1.0
  */
 public interface ObjectInput extends DataInput {
     /**
-     * Returns a int representing then number of bytes of primitive data that
-     * are available.
+     * Indicates the number of bytes of primitive data that can be read without
+     * blocking.
      * 
-     * @return int the number of primitive bytes available.
-     * 
+     * @return the number of bytes available.
      * @throws IOException
-     *             If an error occurs in this ObjectInput.
+     *             if an I/O error occurs.
+     * @since Android 1.0
      */
     public int available() throws IOException;
 
     /**
-     * Close this ObjectInput. Concrete implementations of this class should
-     * free any resources during close.
+     * Closes this stream. Implementations of this method should free any
+     * resources used by the stream.
      * 
      * @throws IOException
-     *             If an error occurs attempting to close this ObjectInput.
+     *             if an I/O error occurs while closing the input stream.
+     * @since Android 1.0
      */
     public void close() throws IOException;
 
     /**
-     * Reads a single byte from this ObjectInput and returns the result as an
-     * int. The low-order byte is returned or -1 of the end of stream was
-     * encountered.
+     * Reads a single byte from this stream and returns it as an integer in the
+     * range from 0 to 255. Returns -1 if the end of this stream has been
+     * reached. Blocks if no input is available.
      * 
-     * @return int The byte read or -1 if end of ObjectInput.
-     * 
+     * @return the byte read or -1 if the end of this stream has been reached.
      * @throws IOException
-     *             If the ObjectInput is already closed or another IOException
-     *             occurs.
+     *             if this stream is closed or another I/O error occurs.
+     * @since Android 1.0
      */
     public int read() throws IOException;
 
     /**
-     * Reads bytes from the <code>ObjectInput</code> and stores them in byte
-     * array <code>buffer</code>. Blocks while waiting for input.
+     * Reads bytes from this stream into the byte array {@code buffer}. Blocks
+     * while waiting for input.
      * 
      * @param buffer
-     *            the array in which to store the read bytes.
-     * @return how many bytes were read or <code>-1</code> if encountered end
-     *         of <code>ObjectInput</code>.
-     * 
+     *            the array in which to store the bytes read.
+     * @return the number of bytes read or -1 if the end of this stream has been
+     *         reached.
      * @throws IOException
-     *             If the <code>ObjectInput</code> is already closed or
-     *             another IOException occurs.
+     *             if this stream is closed or another I/O error occurs.
+     * @since Android 1.0
      */
     public int read(byte[] buffer) throws IOException;
 
     /**
-     * Reads at most <code>count</code> bytes from the ObjectInput and stores
-     * them in byte array <code>buffer</code> starting at offset
-     * <code>count</code>. Answer the number of bytes actually read or -1 if
-     * no bytes were read and end of ObjectInput was encountered.
+     * Reads at most {@code count} bytes from this stream and stores them in
+     * byte array {@code buffer} starting at offset {@code count}. Blocks while
+     * waiting for input.
      * 
      * @param buffer
-     *            the byte array in which to store the read bytes.
+     *            the array in which to store the bytes read.
      * @param offset
-     *            the offset in <code>buffer</code> to store the read bytes.
+     *            the initial position in {@code buffer} to store the bytes read
+     *            from this stream.
      * @param count
-     *            the maximum number of bytes to store in <code>buffer</code>.
-     * @return the number of bytes actually read or -1 if end of ObjectInput.
-     * 
+     *            the maximum number of bytes to store in {@code buffer}.
+     * @return the number of bytes read or -1 if the end of this stream has been
+     *         reached.
      * @throws IOException
-     *             If the ObjectInput is already closed or another IOException
-     *             occurs.
+     *             if this stream is closed or another I/O error occurs.
+     * @since Android 1.0
      */
     public int read(byte[] buffer, int offset, int count) throws IOException;
 
     /**
-     * Reads the next object from this ObjectInput.
+     * Reads the next object from this stream.
      * 
-     * @return the next object read from this ObjectInput
+     * @return the object read.
      * 
-     * @throws IOException
-     *             If an error occurs attempting to read from this ObjectInput.
      * @throws ClassNotFoundException
-     *             If the object's class cannot be found
+     *             if the object's class cannot be found.
+     * @throws IOException
+     *             if this stream is closed or another I/O error occurs.
+     * @since Android 1.0
      */
     public Object readObject() throws ClassNotFoundException, IOException;
 
     /**
-     * Skips <code>toSkip</code> number of bytes in this ObjectInput.
-     * Subsequent <code>read()</code>'s will not return these bytes.
+     * Skips {@code toSkip} bytes on this stream. Less than {@code toSkip} byte are
+     * skipped if the end of this stream is reached before the operation
+     * completes.
      * 
      * @param toSkip
      *            the number of bytes to skip.
      * @return the number of bytes actually skipped.
      * 
      * @throws IOException
-     *             If the ObjectInput is already closed or another IOException
-     *             occurs.
+     *             if this stream is closed or another I/O error occurs.
+     * @since Android 1.0             
      */
     public long skip(long toSkip) throws IOException;
 }

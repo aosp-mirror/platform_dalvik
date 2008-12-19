@@ -18,15 +18,20 @@
 package java.net;
 
 /**
- * Defines a factory which is reponsible for creating a ContentHandler
+ * Defines a factory which is responsible for creating a {@code ContentHandler}.
+ * 
+ * @see ContentHandler
+ * @since Android 1.0
  */
 public interface ContentHandlerFactory {
     /**
-     * Creates a content handler to handle <code>contentType</code>
+     * Creates a content handler to handle {@code contentType}.
      * 
-     * @return java.net.ContentHandler
      * @param contentType
-     *            java.lang.String
+     *            specifies the content type which is handled by the returned
+     *            {@code ContentHandler}.
+     * @return content handler object for a specific content type.
+     * @since Android 1.0
      */
     ContentHandler createContentHandler(String contentType);
 }

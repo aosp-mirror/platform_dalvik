@@ -14,19 +14,116 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
+/**
+*******************************************************************************
+* Copyright (C) 1996-2006, International Business Machines Corporation and    *
+* others. All Rights Reserved.                                                *
+*******************************************************************************
+*/
 
 package java.util;
 
 
+// BEGIN android-note
+// The class javadoc and some of the method descriptions are copied from ICU4J
+// source files. Changes have been made to the copied descriptions.
+// The icu license header was added to this file. 
+// END android-note
 /**
- * String tokenizer is used to break a string apart into tokens.
+ * <p>
+ * The {@code StringTokenizer} class allows an application to break a string
+ * into tokens by performing code point comparison. The {@code StringTokenizer}
+ * methods do not distinguish among identifiers, numbers, and quoted strings,
+ * nor do they recognize and skip comments.
+ * </p>
+ * <p>
+ * The set of delimiters (the codepoints that separate tokens) may be specified
+ * either at creation time or on a per-token basis.
+ * </p>
+ * <p>
+ * An instance of {@code StringTokenizer} behaves in one of three ways,
+ * depending on whether it was created with the {@code returnDelimiters} flag
+ * having the value {@code true} or {@code false}:
+ * <ul>
+ * <li>If returnDelims is {@code false}, delimiter code points serve to separate
+ * tokens. A token is a maximal sequence of consecutive code points that are not
+ * delimiters.
+ * <li>If returnDelims is {@code true}, delimiter code points are themselves
+ * considered to be tokens. In this case a token will be received for each
+ * delimiter code point.
+ * </ul>
+ * <p>
+ * A token is thus either one delimiter code point, or a maximal sequence of
+ * consecutive code points that are not delimiters.
+ * </p>
+ * <p>
+ * A {@code StringTokenizer} object internally maintains a current position
+ * within the string to be tokenized. Some operations advance this current
+ * position past the code point processed.
+ * </p>
+ * <p>
+ * A token is returned by taking a substring of the string that was used to
+ * create the {@code StringTokenizer} object.
+ * </p>
+ * <p>
+ * Here's an example of the use of the default delimiter {@code StringTokenizer}
+ * : <blockquote>
  * 
- * If returnDelimiters is false, successive calls to nextToken() return maximal
- * blocks of characters that do not contain a delimiter.
+ * <pre>
+ * StringTokenizer st = new StringTokenizer(&quot;this is a test&quot;);
+ * while (st.hasMoreTokens()) {
+ *     println(st.nextToken());
+ * }
+ * </pre>
  * 
- * If returnDelimiters is true, delimiters are considered to be tokens, and
- * successive calls to nextToken() return either a one character delimiter, or a
- * maximal block of text between delimiters.
+ * </blockquote>
+ * </p>
+ * <p>
+ * This prints the following output: <blockquote>
+ * 
+ * <pre>
+ *     this
+ *     is
+ *     a
+ *     test
+ * </pre>
+ * 
+ * </blockquote>
+ * </p>
+ * <p>
+ * Here's an example of how to use a {@code StringTokenizer} with a user
+ * specified delimiter: <blockquote>
+ * 
+ * <pre>
+ * StringTokenizer st = new StringTokenizer(
+ *         &quot;this is a test with supplementary characters \ud800\ud800\udc00\udc00&quot;,
+ *         &quot; \ud800\udc00&quot;);
+ * while (st.hasMoreTokens()) {
+ *     println(st.nextToken());
+ * }
+ * </pre>
+ * 
+ * </blockquote>
+ * </p>
+ * <p>
+ * This prints the following output: <blockquote>
+ * 
+ * <pre>
+ *     this
+ *     is
+ *     a
+ *     test
+ *     with
+ *     supplementary
+ *     characters
+ *     \ud800
+ *     \udc00
+ * </pre>
+ * 
+ * </blockquote>
+ * </p>
+ * 
+ * @since Android 1.0
  */
 public class StringTokenizer implements Enumeration<Object> {
     
@@ -39,39 +136,49 @@ public class StringTokenizer implements Enumeration<Object> {
     private int position;
 
     /**
-     * Constructs a new StringTokenizer for string using whitespace as the
-     * delimiter, returnDelimiters is false.
+     * Constructs a new {@code StringTokenizer} for the parameter string using
+     * whitespace as the delimiter. The {@code returnDelimiters} flag is set to
+     * {@code false}.
      * 
      * @param string
-     *            the string to be tokenized
+     *            the string to be tokenized.
+     * @since Android 1.0
      */
     public StringTokenizer(String string) {
         this(string, " \t\n\r\f", false); //$NON-NLS-1$
     }
 
     /**
-     * Constructs a new StringTokenizer for string using the specified
-     * delimiters, returnDelimiters is false.
+     * Constructs a new {@code StringTokenizer} for the parameter string using
+     * the specified delimiters. The {@code returnDelimiters} flag is set to
+     * {@code false}. If {@code delimiters} is {@code null}, this constructor
+     * doesn't throw an {@code Exception}, but later calls to some methods might
+     * throw a {@code NullPointerException}.
      * 
      * @param string
-     *            the string to be tokenized
+     *            the string to be tokenized.
      * @param delimiters
-     *            the delimiters to use
+     *            the delimiters to use.
+     * @since Android 1.0
      */
     public StringTokenizer(String string, String delimiters) {
         this(string, delimiters, false);
     }
 
     /**
-     * Constructs a new StringTokenizer for string using the specified
-     * delimiters and returning delimiters as tokens when specified.
+     * Constructs a new {@code StringTokenizer} for the parameter string using
+     * the specified delimiters, returning the delimiters as tokens if the
+     * parameter {@code returnDelimiters} is {@code true}. If {@code delimiters}
+     * is null this constructor doesn't throw an {@code Exception}, but later
+     * calls to some methods might throw a {@code NullPointerException}.
      * 
      * @param string
-     *            the string to be tokenized
+     *            the string to be tokenized.
      * @param delimiters
-     *            the delimiters to use
+     *            the delimiters to use.
      * @param returnDelimiters
-     *            true to return each delimiter as a token
+     *            {@code true} to return each delimiter as a token.
+     * @since Android 1.0
      */
     public StringTokenizer(String string, String delimiters,
             boolean returnDelimiters) {
@@ -87,8 +194,9 @@ public class StringTokenizer implements Enumeration<Object> {
     /**
      * Returns the number of unprocessed tokens remaining in the string.
      * 
-     * @return number of tokens that can be retreived before an exception will
-     *         result
+     * @return number of tokens that can be retreived before an {@code
+     *         Exception} will result from a call to {@code nextToken()}.
+     * @since Android 1.0
      */
     public int countTokens() {
         int count = 0;
@@ -111,18 +219,21 @@ public class StringTokenizer implements Enumeration<Object> {
     }
 
     /**
-     * Returns true if unprocessed tokens remain.
+     * Returns {@code true} if unprocessed tokens remain. This method is
+     * implemented in order to satisfy the {@code Enumeration} interface.
      * 
-     * @return true if unprocessed tokens remain
+     * @return {@code true} if unprocessed tokens remain.
+     * @since Android 1.0
      */
     public boolean hasMoreElements() {
         return hasMoreTokens();
     }
 
     /**
-     * Returns true if unprocessed tokens remain.
+     * Returns {@code true} if unprocessed tokens remain.
      * 
-     * @return true if unprocessed tokens remain
+     * @return {@code true} if unprocessed tokens remain.
+     * @since Android 1.0
      */
     public boolean hasMoreTokens() {
         int length = string.length();
@@ -140,22 +251,25 @@ public class StringTokenizer implements Enumeration<Object> {
     }
 
     /**
-     * Returns the next token in the string as an Object.
+     * Returns the next token in the string as an {@code Object}. This method is
+     * implemented in order to satisfy the {@code Enumeration} interface.
      * 
-     * @return next token in the string as an Object
+     * @return next token in the string as an {@code Object}
      * @exception NoSuchElementException
-     *                if no tokens remain
+     *                if no tokens remain.
+     * @since Android 1.0
      */
     public Object nextElement() {
         return nextToken();
     }
 
     /**
-     * Returns the next token in the string as a String.
+     * Returns the next token in the string as a {@code String}.
      * 
-     * @return next token in the string as a String
+     * @return next token in the string as a {@code String}.
      * @exception NoSuchElementException
-     *                if no tokens remain
+     *                if no tokens remain.
+     * @since Android 1.0
      */
     public String nextToken() {
         int i = position;
@@ -185,16 +299,22 @@ public class StringTokenizer implements Enumeration<Object> {
     }
 
     /**
-     * Returns the next token in the string as a String. The delimiters used are
-     * changed to the specified delimiters.
+     * Returns the next token in the string as a {@code String}. The delimiters
+     * used are changed to the specified delimiters.
      * 
      * @param delims
-     *            the new delimiters to use
-     * @return next token in the string as a String
+     *            the new delimiters to use.
+     * @return next token in the string as a {@code String}.
      * @exception NoSuchElementException
-     *                if no tokens remain
+     *                if no tokens remain.
+     * @since Android 1.0
      */
     public String nextToken(String delims) {
+        // BEGIN android-added
+        if (delims == null) {
+            throw new NullPointerException();
+        }
+        // END android-added
         this.delimiters = delims;
         return nextToken();
     }

@@ -451,6 +451,7 @@ public class CopyOnWriteArrayList<E> implements List<E>, RandomAccess, Cloneable
         return (T[]) toArray(a, data, 0, data.length);
     }
 
+    @Override
     public String toString() {
         StringBuffer sb = new StringBuffer("[");
 

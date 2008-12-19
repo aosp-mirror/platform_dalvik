@@ -16,9 +16,14 @@
 
 package org.apache.harmony.nio.tests.java.nio;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.nio.CharBuffer;
 
-
+@TestTargetClass(java.nio.CharBuffer.class)
 public class ReadOnlyHeapCharBufferTest extends ReadOnlyCharBufferTest {
 
     protected void setUp() throws Exception {

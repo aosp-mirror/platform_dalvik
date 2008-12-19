@@ -17,6 +17,11 @@
 
 package tests.api.java.io;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass; 
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.Externalizable;
@@ -39,424 +44,425 @@ import java.io.WriteAbortedException;
 import java.security.Permission;
 import java.util.Arrays;
 
+@TestTargetClass(ObjectOutputStream.class) 
 public class ObjectOutputStreamTest extends junit.framework.TestCase implements
-		Serializable {
-
-	java.io.File f;
-
-	public class SerializableTestHelper implements Serializable {
-		public String aField1;
-
-		public String aField2;
-
-		SerializableTestHelper() {
-			aField1 = null;
-			aField2 = null;
-		}
-
-		SerializableTestHelper(String s, String t) {
-			aField1 = s;
-			aField2 = t;
-		}
-
-		private void readObject(ObjectInputStream ois) throws IOException {
-			// note aField2 is not read
-			try {
-				ObjectInputStream.GetField fields = ois.readFields();
-				aField1 = (String) fields.get("aField1", "Zap");
-			} catch (Exception e) {
-			}
-		}
-
-		private void writeObject(ObjectOutputStream oos) throws IOException {
-			// note aField2 is not written
-			ObjectOutputStream.PutField fields = oos.putFields();
-			fields.put("aField1", aField1);
-			oos.writeFields();
-		}
-
-		public String getText1() {
-			return aField1;
-		}
-
-		public void setText1(String s) {
-			aField1 = s;
-		}
-
-		public String getText2() {
-			return aField2;
-		}
-
-		public void setText2(String s) {
-			aField2 = s;
-		}
-	}
-
-	private static class SerializationTest implements java.io.Serializable {
-		int anInt = INIT_INT_VALUE;
-
-		public SerializationTest() {
-			super();
-		}
-	}
-
-	private static class SerializationTestSubclass1 extends SerializationTest
-			implements Serializable {
-		String aString = INIT_STR_VALUE;
-
-		public SerializationTestSubclass1() {
-			super();
-			// Just to change default superclass init value
-			anInt = INIT_INT_VALUE / 2;
-		}
-	}
-
-	private static class SpecTestSuperClass implements Runnable, Serializable {
-		protected java.lang.String instVar;
-
-		public void run() {
-		}
-	}
-
-	private static class SpecTest extends SpecTestSuperClass implements
-			Cloneable, Serializable {
-		public java.lang.String instVar1;
-
-		public static java.lang.String staticVar1;
-
-		public static java.lang.String staticVar2;
-		{
-			instVar1 = "NonStaticInitialValue";
-		}
-		static {
-			staticVar1 = "StaticInitialValue";
-			staticVar1 = new String(staticVar1);
-		}
-
-		public Object method(Object objParam, Object objParam2) {
-			return new Object();
-		}
-
-		public boolean method(boolean bParam, Object objParam) {
-			return true;
-		}
-
-		public boolean method(boolean bParam, Object objParam, Object objParam2) {
-			return true;
-		}
+        Serializable {
+
+    java.io.File f;
+
+    public class SerializableTestHelper implements Serializable {
+        public String aField1;
+
+        public String aField2;
+
+        SerializableTestHelper() {
+            aField1 = null;
+            aField2 = null;
+        }
+
+        SerializableTestHelper(String s, String t) {
+            aField1 = s;
+            aField2 = t;
+        }
+
+        private void readObject(ObjectInputStream ois) throws IOException {
+            // note aField2 is not read
+            try {
+                ObjectInputStream.GetField fields = ois.readFields();
+                aField1 = (String) fields.get("aField1", "Zap");
+            } catch (Exception e) {
+            }
+        }
+
+        private void writeObject(ObjectOutputStream oos) throws IOException {
+            // note aField2 is not written
+            ObjectOutputStream.PutField fields = oos.putFields();
+            fields.put("aField1", aField1);
+            oos.writeFields();
+        }
+
+        public String getText1() {
+            return aField1;
+        }
+
+        public void setText1(String s) {
+            aField1 = s;
+        }
+
+        public String getText2() {
+            return aField2;
+        }
+
+        public void setText2(String s) {
+            aField2 = s;
+        }
+    }
+
+    private static class SerializationTest implements java.io.Serializable {
+        int anInt = INIT_INT_VALUE;
+
+        public SerializationTest() {
+            super();
+        }
+    }
+
+    private static class SerializationTestSubclass1 extends SerializationTest
+            implements Serializable {
+        String aString = INIT_STR_VALUE;
+
+        public SerializationTestSubclass1() {
+            super();
+            // Just to change default superclass init value
+            anInt = INIT_INT_VALUE / 2;
+        }
+    }
+
+    private static class SpecTestSuperClass implements Runnable, Serializable {
+        protected java.lang.String instVar;
+
+        public void run() {
+        }
+    }
+
+    private static class SpecTest extends SpecTestSuperClass implements
+            Cloneable, Serializable {
+        public java.lang.String instVar1;
+
+        public static java.lang.String staticVar1;
+
+        public static java.lang.String staticVar2;
+        {
+            instVar1 = "NonStaticInitialValue";
+        }
+        static {
+            staticVar1 = "StaticInitialValue";
+            staticVar1 = new String(staticVar1);
+        }
+
+        public Object method(Object objParam, Object objParam2) {
+            return new Object();
+        }
+
+        public boolean method(boolean bParam, Object objParam) {
+            return true;
+        }
+
+        public boolean method(boolean bParam, Object objParam, Object objParam2) {
+            return true;
+        }
 
-	}
-
-	private static class SpecTestSubclass extends SpecTest implements
-			Serializable {
-		public transient java.lang.String transientInstVar = "transientValue";
-	}
-
-	private static class ReadWriteObject implements java.io.Serializable {
-		public boolean calledWriteObject = false;
-
-		public boolean calledReadObject = false;
-
-		public ReadWriteObject() {
-			super();
-		}
-
-		private void readObject(java.io.ObjectInputStream in)
-				throws java.io.IOException, ClassNotFoundException {
-			calledReadObject = true;
-			in.readObject();
-		}
-
-		private void writeObject(java.io.ObjectOutputStream out)
-				throws java.io.IOException {
-			calledWriteObject = true;
-			out.writeObject(FOO);
-		}
-	}
-
-	private static class PublicReadWriteObject implements java.io.Serializable {
-		public boolean calledWriteObject = false;
-
-		public boolean calledReadObject = false;
-
-		public PublicReadWriteObject() {
-			super();
-		}
-
-		public void readObject(java.io.ObjectInputStream in)
-				throws java.io.IOException, ClassNotFoundException {
-			calledReadObject = true;
-			in.readObject();
-		}
-
-		public void writeObject(java.io.ObjectOutputStream out)
-				throws java.io.IOException {
-			calledWriteObject = true;
-			out.writeObject(FOO);
-		}
-	}
-
-	private static class FieldOrder implements Serializable {
-		String aaa1NonPrimitive = "aaa1";
-
-		int bbb1PrimitiveInt = 5;
-
-		boolean aaa2PrimitiveBoolean = true;
-
-		String bbb2NonPrimitive = "bbb2";
-	}
-
-	private static class JustReadObject implements java.io.Serializable {
-		public boolean calledReadObject = false;
-
-		public JustReadObject() {
-			super();
-		}
-
-		private void readObject(java.io.ObjectInputStream in)
-				throws java.io.IOException, ClassNotFoundException {
-			calledReadObject = true;
-			in.defaultReadObject();
-		}
-	}
-
-	private static class JustWriteObject implements java.io.Serializable {
-		public boolean calledWriteObject = false;
-
-		public JustWriteObject() {
-			super();
-		}
-
-		private void writeObject(java.io.ObjectOutputStream out)
-				throws java.io.IOException, ClassNotFoundException {
-			calledWriteObject = true;
-			out.defaultWriteObject();
-		}
-	}
-
-	private static class ClassBasedReplacementWhenDumping implements
-			java.io.Serializable {
-		public boolean calledReplacement = false;
-
-		public ClassBasedReplacementWhenDumping() {
-			super();
-		}
-
-		private Object writeReplace() {
-			calledReplacement = true;
-			return FOO; // Replacement is a String
-		}
-	}
-
-	private static class MultipleClassBasedReplacementWhenDumping implements
-			java.io.Serializable {
-		private static class C1 implements java.io.Serializable {
-			private Object writeReplace() {
-				return new C2();
-			}
-		}
-
-		private static class C2 implements java.io.Serializable {
-			private Object writeReplace() {
-				return new C3();
-			}
-		}
-
-		private static class C3 implements java.io.Serializable {
-			private Object writeReplace() {
-				return FOO;
-			}
-		}
-
-		public MultipleClassBasedReplacementWhenDumping() {
-			super();
-		}
-
-		private Object writeReplace() {
-			return new C1();
-		}
-	}
-
-	private static class ClassBasedReplacementWhenLoading implements
-			java.io.Serializable {
-		public ClassBasedReplacementWhenLoading() {
-			super();
-		}
-
-		private Object readResolve() {
-			return FOO; // Replacement is a String
-		}
-	}
-
-	private static class ClassBasedReplacementWhenLoadingViolatesFieldType
-			implements java.io.Serializable {
-		public ClassBasedReplacementWhenLoading classBasedReplacementWhenLoading = new ClassBasedReplacementWhenLoading();
-
-		public ClassBasedReplacementWhenLoadingViolatesFieldType() {
-			super();
-		}
-	}
-
-	private static class MyExceptionWhenDumping implements java.io.Serializable {
-		private static class MyException extends java.io.IOException {
-		};
-
-		public boolean anInstanceVar = false;
-
-		public MyExceptionWhenDumping() {
-			super();
-		}
-
-		private void readObject(java.io.ObjectInputStream in)
-				throws java.io.IOException, ClassNotFoundException {
-			in.defaultReadObject();
-		}
-
-		private void writeObject(java.io.ObjectOutputStream out)
-				throws java.io.IOException, ClassNotFoundException {
-			throw new MyException();
-		}
-	}
-
-	private static class NonSerializableExceptionWhenDumping implements
-			java.io.Serializable {
-		public Object anInstanceVar = new Object();
-
-		public NonSerializableExceptionWhenDumping() {
-			super();
-		}
-	}
-
-	private static class MyUnserializableExceptionWhenDumping implements
-			java.io.Serializable {
-		private static class MyException extends java.io.IOException {
-			private Object notSerializable = new Object();
-		};
-
-		public boolean anInstanceVar = false;
-
-		public MyUnserializableExceptionWhenDumping() {
-			super();
-		}
-
-		private void readObject(java.io.ObjectInputStream in)
-				throws java.io.IOException, ClassNotFoundException {
-			in.defaultReadObject();
-		}
-
-		private void writeObject(java.io.ObjectOutputStream out)
-				throws java.io.IOException, ClassNotFoundException {
-			throw new MyException();
-		}
-	}
-
-	private static class WithUnmatchingSerialPersistentFields implements
-			java.io.Serializable {
-		private static final ObjectStreamField[] serialPersistentFields = { new ObjectStreamField(
-				"value", String.class) };
-
-		public int anInstanceVar = 5;
-
-		public WithUnmatchingSerialPersistentFields() {
-			super();
-		}
-	}
-
-	private static class WithMatchingSerialPersistentFields implements
-			java.io.Serializable {
-		private static final ObjectStreamField[] serialPersistentFields = { new ObjectStreamField(
-				"anInstanceVar", String.class) };
-
-		public String anInstanceVar = FOO + FOO;
-
-		public WithMatchingSerialPersistentFields() {
-			super();
-		}
-	}
-
-	private static class SerialPersistentFields implements java.io.Serializable {
-		private static final String SIMULATED_FIELD_NAME = "text";
-
-		private static final ObjectStreamField[] serialPersistentFields = { new ObjectStreamField(
-				SIMULATED_FIELD_NAME, String.class) };
-
-		public int anInstanceVar = 5;
-
-		public SerialPersistentFields() {
-			super();
-		}
-
-		private void readObject(java.io.ObjectInputStream in)
-				throws java.io.IOException, ClassNotFoundException {
-			ObjectInputStream.GetField fields = in.readFields();
-			anInstanceVar = Integer.parseInt((String) fields.get(
-					SIMULATED_FIELD_NAME, "-5"));
-		}
-
-		private void writeObject(java.io.ObjectOutputStream out)
-				throws java.io.IOException, ClassNotFoundException {
-			ObjectOutputStream.PutField fields = out.putFields();
-			fields.put(SIMULATED_FIELD_NAME, Integer.toString(anInstanceVar));
-			out.writeFields();
-		}
-	}
-
-	private static class WriteFieldsWithoutFetchingPutFields implements
-			java.io.Serializable {
-		private static final String SIMULATED_FIELD_NAME = "text";
-
-		private static final ObjectStreamField[] serialPersistentFields = { new ObjectStreamField(
-				SIMULATED_FIELD_NAME, String.class) };
-
-		public int anInstanceVar = 5;
-
-		public WriteFieldsWithoutFetchingPutFields() {
-			super();
-		}
-
-		private void readObject(java.io.ObjectInputStream in)
-				throws java.io.IOException, ClassNotFoundException {
-			in.readFields();
-		}
-
-		private void writeObject(java.io.ObjectOutputStream out)
-				throws java.io.IOException, ClassNotFoundException {
-			out.writeFields();
-		}
-	}
-
-	private static class SerialPersistentFieldsWithoutField implements
-			java.io.Serializable {
-		public int anInstanceVar = 5;
-
-		public SerialPersistentFieldsWithoutField() {
-			super();
-		}
-
-		private void readObject(java.io.ObjectInputStream in)
-				throws java.io.IOException, ClassNotFoundException {
-			in.readFields();
-		}
-
-		private void writeObject(java.io.ObjectOutputStream out)
-				throws java.io.IOException, ClassNotFoundException {
-			out.putFields();
-			out.writeFields();
-		}
-	}
-
-	private static class NotSerializable {
-		private int foo;
-
-		public NotSerializable() {
-		}
-
-		protected Object writeReplace() throws ObjectStreamException {
-			return new Integer(42);
-		}
-	}
-	
-	private static class WriteReplaceObject implements Serializable {
+    }
+
+    private static class SpecTestSubclass extends SpecTest implements
+            Serializable {
+        public transient java.lang.String transientInstVar = "transientValue";
+    }
+
+    private static class ReadWriteObject implements java.io.Serializable {
+        public boolean calledWriteObject = false;
+
+        public boolean calledReadObject = false;
+
+        public ReadWriteObject() {
+            super();
+        }
+
+        private void readObject(java.io.ObjectInputStream in)
+                throws java.io.IOException, ClassNotFoundException {
+            calledReadObject = true;
+            in.readObject();
+        }
+
+        private void writeObject(java.io.ObjectOutputStream out)
+                throws java.io.IOException {
+            calledWriteObject = true;
+            out.writeObject(FOO);
+        }
+    }
+
+    private static class PublicReadWriteObject implements java.io.Serializable {
+        public boolean calledWriteObject = false;
+
+        public boolean calledReadObject = false;
+
+        public PublicReadWriteObject() {
+            super();
+        }
+
+        public void readObject(java.io.ObjectInputStream in)
+                throws java.io.IOException, ClassNotFoundException {
+            calledReadObject = true;
+            in.readObject();
+        }
+
+        public void writeObject(java.io.ObjectOutputStream out)
+                throws java.io.IOException {
+            calledWriteObject = true;
+            out.writeObject(FOO);
+        }
+    }
+
+    private static class FieldOrder implements Serializable {
+        String aaa1NonPrimitive = "aaa1";
+
+        int bbb1PrimitiveInt = 5;
+
+        boolean aaa2PrimitiveBoolean = true;
+
+        String bbb2NonPrimitive = "bbb2";
+    }
+
+    private static class JustReadObject implements java.io.Serializable {
+        public boolean calledReadObject = false;
+
+        public JustReadObject() {
+            super();
+        }
+
+        private void readObject(java.io.ObjectInputStream in)
+                throws java.io.IOException, ClassNotFoundException {
+            calledReadObject = true;
+            in.defaultReadObject();
+        }
+    }
+
+    private static class JustWriteObject implements java.io.Serializable {
+        public boolean calledWriteObject = false;
+
+        public JustWriteObject() {
+            super();
+        }
+
+        private void writeObject(java.io.ObjectOutputStream out)
+                throws java.io.IOException, ClassNotFoundException {
+            calledWriteObject = true;
+            out.defaultWriteObject();
+        }
+    }
+
+    private static class ClassBasedReplacementWhenDumping implements
+            java.io.Serializable {
+        public boolean calledReplacement = false;
+
+        public ClassBasedReplacementWhenDumping() {
+            super();
+        }
+
+        private Object writeReplace() {
+            calledReplacement = true;
+            return FOO; // Replacement is a String
+        }
+    }
+
+    private static class MultipleClassBasedReplacementWhenDumping implements
+            java.io.Serializable {
+        private static class C1 implements java.io.Serializable {
+            private Object writeReplace() {
+                return new C2();
+            }
+        }
+
+        private static class C2 implements java.io.Serializable {
+            private Object writeReplace() {
+                return new C3();
+            }
+        }
+
+        private static class C3 implements java.io.Serializable {
+            private Object writeReplace() {
+                return FOO;
+            }
+        }
+
+        public MultipleClassBasedReplacementWhenDumping() {
+            super();
+        }
+
+        private Object writeReplace() {
+            return new C1();
+        }
+    }
+
+    private static class ClassBasedReplacementWhenLoading implements
+            java.io.Serializable {
+        public ClassBasedReplacementWhenLoading() {
+            super();
+        }
+
+        private Object readResolve() {
+            return FOO; // Replacement is a String
+        }
+    }
+
+    private static class ClassBasedReplacementWhenLoadingViolatesFieldType
+            implements java.io.Serializable {
+        public ClassBasedReplacementWhenLoading classBasedReplacementWhenLoading = new ClassBasedReplacementWhenLoading();
+
+        public ClassBasedReplacementWhenLoadingViolatesFieldType() {
+            super();
+        }
+    }
+
+    private static class MyExceptionWhenDumping implements java.io.Serializable {
+        private static class MyException extends java.io.IOException {
+        };
+
+        public boolean anInstanceVar = false;
+
+        public MyExceptionWhenDumping() {
+            super();
+        }
+
+        private void readObject(java.io.ObjectInputStream in)
+                throws java.io.IOException, ClassNotFoundException {
+            in.defaultReadObject();
+        }
+
+        private void writeObject(java.io.ObjectOutputStream out)
+                throws java.io.IOException, ClassNotFoundException {
+            throw new MyException();
+        }
+    }
+
+    private static class NonSerializableExceptionWhenDumping implements
+            java.io.Serializable {
+        public Object anInstanceVar = new Object();
+
+        public NonSerializableExceptionWhenDumping() {
+            super();
+        }
+    }
+
+    private static class MyUnserializableExceptionWhenDumping implements
+            java.io.Serializable {
+        private static class MyException extends java.io.IOException {
+            private Object notSerializable = new Object();
+        };
+
+        public boolean anInstanceVar = false;
+
+        public MyUnserializableExceptionWhenDumping() {
+            super();
+        }
+
+        private void readObject(java.io.ObjectInputStream in)
+                throws java.io.IOException, ClassNotFoundException {
+            in.defaultReadObject();
+        }
+
+        private void writeObject(java.io.ObjectOutputStream out)
+                throws java.io.IOException, ClassNotFoundException {
+            throw new MyException();
+        }
+    }
+
+    private static class WithUnmatchingSerialPersistentFields implements
+            java.io.Serializable {
+        private static final ObjectStreamField[] serialPersistentFields = { new ObjectStreamField(
+                "value", String.class) };
+
+        public int anInstanceVar = 5;
+
+        public WithUnmatchingSerialPersistentFields() {
+            super();
+        }
+    }
+
+    private static class WithMatchingSerialPersistentFields implements
+            java.io.Serializable {
+        private static final ObjectStreamField[] serialPersistentFields = { new ObjectStreamField(
+                "anInstanceVar", String.class) };
+
+        public String anInstanceVar = FOO + FOO;
+
+        public WithMatchingSerialPersistentFields() {
+            super();
+        }
+    }
+
+    private static class SerialPersistentFields implements java.io.Serializable {
+        private static final String SIMULATED_FIELD_NAME = "text";
+
+        private static final ObjectStreamField[] serialPersistentFields = { new ObjectStreamField(
+                SIMULATED_FIELD_NAME, String.class) };
+
+        public int anInstanceVar = 5;
+
+        public SerialPersistentFields() {
+            super();
+        }
+
+        private void readObject(java.io.ObjectInputStream in)
+                throws java.io.IOException, ClassNotFoundException {
+            ObjectInputStream.GetField fields = in.readFields();
+            anInstanceVar = Integer.parseInt((String) fields.get(
+                    SIMULATED_FIELD_NAME, "-5"));
+        }
+
+        private void writeObject(java.io.ObjectOutputStream out)
+                throws java.io.IOException, ClassNotFoundException {
+            ObjectOutputStream.PutField fields = out.putFields();
+            fields.put(SIMULATED_FIELD_NAME, Integer.toString(anInstanceVar));
+            out.writeFields();
+        }
+    }
+
+    private static class WriteFieldsWithoutFetchingPutFields implements
+            java.io.Serializable {
+        private static final String SIMULATED_FIELD_NAME = "text";
+
+        private static final ObjectStreamField[] serialPersistentFields = { new ObjectStreamField(
+                SIMULATED_FIELD_NAME, String.class) };
+
+        public int anInstanceVar = 5;
+
+        public WriteFieldsWithoutFetchingPutFields() {
+            super();
+        }
+
+        private void readObject(java.io.ObjectInputStream in)
+                throws java.io.IOException, ClassNotFoundException {
+            in.readFields();
+        }
+
+        private void writeObject(java.io.ObjectOutputStream out)
+                throws java.io.IOException, ClassNotFoundException {
+            out.writeFields();
+        }
+    }
+
+    private static class SerialPersistentFieldsWithoutField implements
+            java.io.Serializable {
+        public int anInstanceVar = 5;
+
+        public SerialPersistentFieldsWithoutField() {
+            super();
+        }
+
+        private void readObject(java.io.ObjectInputStream in)
+                throws java.io.IOException, ClassNotFoundException {
+            in.readFields();
+        }
+
+        private void writeObject(java.io.ObjectOutputStream out)
+                throws java.io.IOException, ClassNotFoundException {
+            out.putFields();
+            out.writeFields();
+        }
+    }
+
+    private static class NotSerializable {
+        private int foo;
+
+        public NotSerializable() {
+        }
+
+        protected Object writeReplace() throws ObjectStreamException {
+            return new Integer(42);
+        }
+    }
+    
+    private static class WriteReplaceObject implements Serializable {
         private Object replaceObject;
 
         private static enum Color {
@@ -472,22 +478,22 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
         }
     }
 
-	private static class ExternalizableWithReplace implements Externalizable {
-		private int foo;
+    private static class ExternalizableWithReplace implements Externalizable {
+        private int foo;
 
-		public ExternalizableWithReplace() {
-		}
+        public ExternalizableWithReplace() {
+        }
 
-		protected Object writeReplace() throws ObjectStreamException {
-			return new Integer(42);
-		}
+        protected Object writeReplace() throws ObjectStreamException {
+            return new Integer(42);
+        }
 
-		public void writeExternal(ObjectOutput out) {
-		}
+        public void writeExternal(ObjectOutput out) {
+        }
 
-		public void readExternal(ObjectInput in) {
-		}
-	}
+        public void readExternal(ObjectInput in) {
+        }
+    }
 
     private static class ObjectOutputStreamWithReplace extends ObjectOutputStream {
         public ObjectOutputStreamWithReplace(OutputStream out) throws IOException {
@@ -519,35 +525,42 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
         }
     }
 
-	protected static final String MODE_XLOAD = "xload";
+    protected static final String MODE_XLOAD = "xload";
 
-	protected static final String MODE_XDUMP = "xdump";
+    protected static final String MODE_XDUMP = "xdump";
 
-	static final String FOO = "foo";
+    static final String FOO = "foo";
 
-	static final String MSG_WITE_FAILED = "Failed to write: ";
+    static final String MSG_WITE_FAILED = "Failed to write: ";
 
-	private static final boolean DEBUG = false;
+    private static final boolean DEBUG = false;
 
-	protected static boolean xload = false;
+    protected static boolean xload = false;
 
-	protected static boolean xdump = false;
+    protected static boolean xdump = false;
 
-	protected static String xFileName = null;
+    protected static String xFileName = null;
 
-	protected ObjectInputStream ois;
+    protected ObjectInputStream ois;
 
-	protected ObjectOutputStream oos;
+    protected ObjectOutputStream oos;
 
-	protected ByteArrayOutputStream bao;
+    protected ByteArrayOutputStream bao;
 
-	static final int INIT_INT_VALUE = 7;
+    static final int INIT_INT_VALUE = 7;
 
-	static final String INIT_STR_VALUE = "a string that is blortz";
+    static final String INIT_STR_VALUE = "a string that is blortz";
 
-	/**
-	 * @tests java.io.ObjectOutputStream#ObjectOutputStream(java.io.OutputStream)
+    /**
+     * @tests java.io.ObjectOutputStream#ObjectOutputStream(java.io.OutputStream)
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Exceptions checking missed.",
+            targets = { @TestTarget(methodName = "ObjectOutputStream", 
+                                    methodArgs = {java.io.OutputStream.class})                                    
+            }
+        )        
     public void test_ConstructorLjava_io_OutputStream() throws IOException {
         // Test for method java.io.ObjectOutputStream(java.io.OutputStream)
         oos.close();
@@ -555,97 +568,125 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
         oos.close();
     }
 
-	/**
-	 * @tests java.io.ObjectOutputStream#ObjectOutputStream(java.io.OutputStream)
-	 */
-	public void test_ConstructorLjava_io_OutputStream_subtest0() throws IOException {
+    /**
+     * @tests java.io.ObjectOutputStream#ObjectOutputStream(java.io.OutputStream)
+     */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Checks SecurityException. IOException & NullPointerException checking missed.",
+            targets = { @TestTarget(methodName = "ObjectOutputStream", 
+                                    methodArgs = {java.io.OutputStream.class})                                    
+            }
+        )    
+    public void test_ConstructorLjava_io_OutputStream_subtest0() throws IOException {
 
-		// custom security manager
-		SecurityManager sm = new SecurityManager() {
+        // custom security manager
+        SecurityManager sm = new SecurityManager() {
 
-			final SerializablePermission forbidenPermission =
-				new SerializablePermission("enableSubclassImplementation");
+            final SerializablePermission forbidenPermission =
+                new SerializablePermission("enableSubclassImplementation");
 
-			public void checkPermission(Permission perm) {
-				if (forbidenPermission.equals(perm)) {
-					throw new SecurityException();
-				}
-			}
-		};
+            public void checkPermission(Permission perm) {
+                if (forbidenPermission.equals(perm)) {
+                    throw new SecurityException();
+                }
+            }
+        };
 
-		SecurityManager oldSm = System.getSecurityManager();
-		System.setSecurityManager(sm);
-		try {
-			ByteArrayOutputStream out = new ByteArrayOutputStream();
-			// should not cause SecurityException
-			new ObjectOutputStream(out);
-			// should not cause SecurityException
-			class SubTest1 extends ObjectOutputStream {
-				SubTest1(OutputStream out) throws IOException {
-					super(out);
-				}
-			}
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            // should not cause SecurityException
+            new ObjectOutputStream(out);
+            // should not cause SecurityException
+            class SubTest1 extends ObjectOutputStream {
+                SubTest1(OutputStream out) throws IOException {
+                    super(out);
+                }
+            }
 
-			// should not cause SecurityException
-			new SubTest1(out);
-			class SubTest2 extends ObjectOutputStream {
-				SubTest2(OutputStream out) throws IOException {
-					super(out);
-				}
+            // should not cause SecurityException
+            new SubTest1(out);
+            class SubTest2 extends ObjectOutputStream {
+                SubTest2(OutputStream out) throws IOException {
+                    super(out);
+                }
 
-				public void writeUnshared(Object obj) throws IOException {
-				}
-			}
+                public void writeUnshared(Object obj) throws IOException {
+                }
+            }
 
             try {
-				new SubTest2(out);
-				fail("should throw SecurityException 1");
-			} catch (SecurityException e) {
-			}
-			class SubTest3 extends ObjectOutputStream {
-				SubTest3(OutputStream out) throws IOException {
-					super(out);
-				}
+                new SubTest2(out);
+                fail("should throw SecurityException 1");
+            } catch (SecurityException e) {
+            }
+            class SubTest3 extends ObjectOutputStream {
+                SubTest3(OutputStream out) throws IOException {
+                    super(out);
+                }
 
-				public PutField putFields() throws IOException {
-					return null;
-				}
-			}
+                public PutField putFields() throws IOException {
+                    return null;
+                }
+            }
 
-			try {
-				new SubTest3(out);
-				fail("should throw SecurityException 2");
-			} catch (SecurityException e) {
-			}
-		} finally {
-			System.setSecurityManager(oldSm);
-		}
-	}
+            try {
+                new SubTest3(out);
+                fail("should throw SecurityException 2");
+            } catch (SecurityException e) {
+            }
+        } finally {
+            System.setSecurityManager(oldSm);
+        }
+    }
 
-	/**
-	 * @tests java.io.ObjectOutputStream#close()
-	 */
-	public void test_close() {
-		// Test for method void java.io.ObjectOutputStream.close()
-	}
+    /**
+     * @tests java.io.ObjectOutputStream#close()
+     */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "IOException checking missed. See tearDown",
+            targets = { @TestTarget(methodName = "close", 
+                                    methodArgs = {})                                    
+            }
+        )    
+    public void test_close() {
+        // Test for method void java.io.ObjectOutputStream.close()
+    }
 
-	/**
-	 * @tests java.io.ObjectOutputStream#defaultWriteObject()
-	 */
-	public void test_defaultWriteObject() throws IOException {
-		// Test for method void java.io.ObjectOutputStream.defaultWriteObject()
-		try {
-			oos.defaultWriteObject();
+    /**
+     * @tests java.io.ObjectOutputStream#defaultWriteObject()
+     */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "",
+            targets = { @TestTarget(methodName = "defaultWriteObject", 
+                                    methodArgs = {})                                    
+            }
+        )    
+    public void test_defaultWriteObject() throws IOException {
+        // Test for method void java.io.ObjectOutputStream.defaultWriteObject()
+        try {
+            oos.defaultWriteObject();
             fail("Failed to throw NotActiveException");
-		} catch (NotActiveException e) {
-			// Correct
-		}
-	}
+        } catch (NotActiveException e) {
+            // Correct
+        }
+    }
 
-	/**
-	 * @tests java.io.ObjectOutputStream#flush()
-	 */
-	public void test_flush() throws Exception {
+    /**
+     * @tests java.io.ObjectOutputStream#flush()
+     */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "IOException checking missed.",
+            targets = { @TestTarget(methodName = "flush", 
+                                    methodArgs = {})                                    
+            }
+        )    
+    public void test_flush() throws Exception {
         // Test for method void java.io.ObjectOutputStream.flush()
         int size = bao.size();
         oos.writeByte(127);
@@ -658,21 +699,28 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
         oos = null;
     }
 
-	/**
-	 * @tests java.io.ObjectOutputStream#putFields()
-	 */
-	public void test_putFields() throws Exception {
-		// Test for method java.io.ObjectOutputStream$PutField
-		// java.io.ObjectOutputStream.putFields()
+    /**
+     * @tests java.io.ObjectOutputStream#putFields()
+     */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "IOException checking missed.",
+            targets = { @TestTarget(methodName = "putFields", 
+                                    methodArgs = {})                                    
+            }
+        )      
+    public void test_putFields() throws Exception {
+        // Test for method java.io.ObjectOutputStream$PutField
+        // java.io.ObjectOutputStream.putFields()
 
-		SerializableTestHelper sth;
+        SerializableTestHelper sth;
 
-		/*
-		 * "SerializableTestHelper" is an object created for these tests with
-		 * two fields (Strings) and simple implementations of readObject and
-		 * writeObject which simply read and write the first field but not the
-		 * second
-		 */
+        /*
+         * "SerializableTestHelper" is an object created for these tests with
+         * two fields (Strings) and simple implementations of readObject and
+         * writeObject which simply read and write the first field but not the
+         * second
+         */
 
         oos.writeObject(new SerializableTestHelper("Gabba", "Jabba"));
         oos.flush();
@@ -685,10 +733,17 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
                 sth.getText2());
     }
 
-	/**
-	 * @tests java.io.ObjectOutputStream#reset()
-	 */
-	public void test_reset() throws Exception {
+    /**
+     * @tests java.io.ObjectOutputStream#reset()
+     */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "IOException checking missed.",
+            targets = { @TestTarget(methodName = "reset", 
+                                    methodArgs = {})                                    
+            }
+        )       
+    public void test_reset() throws Exception {
         // Test for method void java.io.ObjectOutputStream.reset()
         String o = "HelloWorld";
         oos.writeObject(o);
@@ -699,41 +754,48 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
         ois.close();
     }
 
-	private static class ExternalTest implements Externalizable {
-		public String value;
+    private static class ExternalTest implements Externalizable {
+        public String value;
 
-		public ExternalTest() {
-		}
+        public ExternalTest() {
+        }
 
-		public void setValue(String val) {
-			value = val;
-		}
+        public void setValue(String val) {
+            value = val;
+        }
 
-		public String getValue() {
-			return value;
-		}
+        public String getValue() {
+            return value;
+        }
 
-		public void writeExternal(ObjectOutput output) {
-			try {
-				output.writeUTF(value);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
+        public void writeExternal(ObjectOutput output) {
+            try {
+                output.writeUTF(value);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
 
-		public void readExternal(ObjectInput input) {
-			try {
-				value = input.readUTF();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-	}
+        public void readExternal(ObjectInput input) {
+            try {
+                value = input.readUTF();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
-	/**
-	 * @tests java.io.ObjectOutputStream#useProtocolVersion(int)
-	 */
-	public void test_useProtocolVersionI() throws Exception {
+    /**
+     * @tests java.io.ObjectOutputStream#useProtocolVersion(int)
+     */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Exceptions checking missed.",
+            targets = { @TestTarget(methodName = "useProtocolVersion", 
+                                    methodArgs = {int.class})                                    
+            }
+        )     
+    public void test_useProtocolVersionI() throws Exception {
         // Test for method void
         // java.io.ObjectOutputStream.useProtocolVersion(int)
         oos.useProtocolVersion(ObjectOutputStream.PROTOCOL_VERSION_1);
@@ -749,10 +811,17 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
                         + t2.getValue(), t1.getValue().equals(t2.getValue()));
     }
 
-	/**
-	 * @tests java.io.ObjectOutputStream#write(byte[])
-	 */
-	public void test_write$B() throws Exception {
+    /**
+     * @tests java.io.ObjectOutputStream#write(byte[])
+     */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "IOException checking missed.",
+            targets = { @TestTarget(methodName = "write", 
+                                    methodArgs = {byte[].class})                                    
+            }
+        )      
+    public void test_write$B() throws Exception {
         // Test for method void java.io.ObjectOutputStream.write(byte [])
         byte[] buf = new byte[10];
         oos.write("HelloWorld".getBytes());
@@ -764,9 +833,16 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
                 10));
     }
 
-	/**
+    /**
      * @tests java.io.ObjectOutputStream#write(byte[], int, int)
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "IOException checking missed.",
+            targets = { @TestTarget(methodName = "write", 
+                                    methodArgs = {byte[].class, int.class, int.class})                                    
+            }
+        )       
     public void test_write$BII() throws Exception {
         // Test for method void java.io.ObjectOutputStream.write(byte [], int,
         // int)
@@ -783,6 +859,13 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectOutputStream#write(int)
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "IOException checking missed.",
+            targets = { @TestTarget(methodName = "write", 
+                                    methodArgs = {int.class})                                    
+            }
+        )       
     public void test_writeI() throws Exception {
         // Test for method void java.io.ObjectOutputStream.write(int)
         oos.write('T');
@@ -795,6 +878,13 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectOutputStream#writeBoolean(boolean)
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "IOException checking missed.",
+            targets = { @TestTarget(methodName = "writeBoolean", 
+                                    methodArgs = {boolean.class})                                    
+            }
+        )       
     public void test_writeBooleanZ() throws Exception {
         // Test for method void java.io.ObjectOutputStream.writeBoolean(boolean)
         oos.writeBoolean(true);
@@ -806,6 +896,13 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectOutputStream#writeByte(int)
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "IOException checking missed.",
+            targets = { @TestTarget(methodName = "writeByte", 
+                                    methodArgs = {int.class})                                    
+            }
+        )     
     public void test_writeByteI() throws Exception {
         // Test for method void java.io.ObjectOutputStream.writeByte(int)
         oos.writeByte(127);
@@ -817,6 +914,13 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectOutputStream#writeBytes(java.lang.String)
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "IOException checking missed.",
+            targets = { @TestTarget(methodName = "writeBytes", 
+                                    methodArgs = {java.lang.String.class})                                    
+            }
+        )    
     public void test_writeBytesLjava_lang_String() throws Exception {
         // Test for method void
         // java.io.ObjectOutputStream.writeBytes(java.lang.String)
@@ -833,6 +937,13 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectOutputStream#writeChar(int)
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "IOException checking missed.",
+            targets = { @TestTarget(methodName = "writeChar", 
+                                    methodArgs = {int.class})                                    
+            }
+        )    
     public void test_writeCharI() throws Exception {
         // Test for method void java.io.ObjectOutputStream.writeChar(int)
         oos.writeChar('T');
@@ -844,6 +955,13 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectOutputStream#writeChars(java.lang.String)
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "IOException checking missed.",
+            targets = { @TestTarget(methodName = "writeChars", 
+                                    methodArgs = {java.lang.String.class})                                    
+            }
+        )    
     public void test_writeCharsLjava_lang_String() throws Exception {
         // Test for method void
         // java.io.ObjectOutputStream.writeChars(java.lang.String)
@@ -864,6 +982,13 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectOutputStream#writeDouble(double)
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "IOException checking missed.",
+            targets = { @TestTarget(methodName = "writeDouble", 
+                                    methodArgs = {double.class})                                    
+            }
+        )    
     public void test_writeDoubleD() throws Exception {
         // Test for method void java.io.ObjectOutputStream.writeDouble(double)
         oos.writeDouble(Double.MAX_VALUE);
@@ -876,6 +1001,13 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectOutputStream#writeFields()
      */
+    @TestInfo(
+            level = TestLevel.TODO,
+            purpose = "Dummy test.",
+            targets = { @TestTarget(methodName = "writeFields", 
+                                    methodArgs = {})                                    
+            }
+        )    
     public void test_writeFields() {
         // Test for method void java.io.ObjectOutputStream.writeFields()
         assertTrue("Used to test", true);
@@ -884,6 +1016,13 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectOutputStream#writeFloat(float)
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "IOException checking missed.",
+            targets = { @TestTarget(methodName = "writeFloat", 
+                                    methodArgs = {float.class})                                    
+            }
+        )    
     public void test_writeFloatF() throws Exception {
         // Test for method void java.io.ObjectOutputStream.writeFloat(float)
         oos.writeFloat(Float.MAX_VALUE);
@@ -898,6 +1037,13 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectOutputStream#writeInt(int)
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "IOException checking missed.",
+            targets = { @TestTarget(methodName = "writeInt", 
+                                    methodArgs = {int.class})                                    
+            }
+        )    
     public void test_writeIntI() throws Exception {
         // Test for method void java.io.ObjectOutputStream.writeInt(int)
         oos.writeInt(Integer.MAX_VALUE);
@@ -911,6 +1057,13 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectOutputStream#writeLong(long)
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "IOException checking missed.",
+            targets = { @TestTarget(methodName = "writeLong", 
+                                    methodArgs = {long.class})                                    
+            }
+        )     
     public void test_writeLongJ() throws Exception {
         // Test for method void java.io.ObjectOutputStream.writeLong(long)
         oos.writeLong(Long.MAX_VALUE);
@@ -923,6 +1076,13 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectOutputStream#writeObject(java.lang.Object)
      */
+    @TestInfo(
+            level = TestLevel.COMPLETE,
+            purpose = "",
+            targets = { @TestTarget(methodName = "writeObject", 
+                                    methodArgs = {java.lang.Object.class})                                    
+            }
+        )      
     public void test_writeObjectLjava_lang_Object() throws Exception {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
@@ -946,6 +1106,13 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectOutputStream#writeObject(java.lang.Object)
      */
+    @TestInfo(
+            level = TestLevel.COMPLETE,
+            purpose = "",
+            targets = { @TestTarget(methodName = "writeObject", 
+                                    methodArgs = {java.lang.Object.class})                                    
+            }
+        )      
     public void test_writeObject_NotSerializable() throws Exception {
         ObjectOutput out = null;
         try {
@@ -959,6 +1126,13 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectOutputStream#writeShort(int)
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "IOException checking missed.",
+            targets = { @TestTarget(methodName = "writeShort", 
+                                    methodArgs = {int.class})                                    
+            }
+        )      
     public void test_writeShortI() throws Exception {
         // Test for method void java.io.ObjectOutputStream.writeShort(int)
         oos.writeShort(127);
@@ -970,6 +1144,13 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectOutputStream#writeUTF(java.lang.String)
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "IOException checking missed.",
+            targets = { @TestTarget(methodName = "writeUTF", 
+                                    methodArgs = {java.lang.String.class})                                    
+            }
+        )    
     public void test_writeUTFLjava_lang_String() throws Exception {
         // Test for method void
         // java.io.ObjectOutputStream.writeUTF(java.lang.String)
@@ -982,6 +1163,13 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectOutputStream#writeObject(java.lang.Object)
      */
+    @TestInfo(
+            level = TestLevel.COMPLETE,
+            purpose = "",
+            targets = { @TestTarget(methodName = "writeObject", 
+                                    methodArgs = {java.lang.Object.class})                                    
+            }
+        )    
     public void test_writeObject_Exception() throws ClassNotFoundException, IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream(1024);
         ObjectOutputStream oos = new ObjectOutputStream(baos);
@@ -1079,7 +1267,17 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
      * @tests java.io.ObjectOutputStream#writeObject(java.lang.Object)
      * @tests java.io.ObjectOutputStream#writeUTF(java.lang.String)
      */
-
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "",
+            targets = { @TestTarget(methodName = "writeInt", 
+                                    methodArgs = {int.class}),
+                        @TestTarget(methodName = "writeObject", 
+                                            methodArgs = {java.lang.Object.class}),            
+                        @TestTarget(methodName = "writeUTF", 
+                                    methodArgs = {java.lang.String.class})                                    
+            }
+        )  
     public void testMixPrimitivesAndObjects() throws Exception {
         int i = 7;
         String s1 = "string 1";
@@ -1120,6 +1318,13 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectOutputStream#writeUnshared(java.lang.Object)
      */
+    @TestInfo(
+            level = TestLevel.COMPLETE,
+            purpose = "",
+            targets = { @TestTarget(methodName = "writeUnshared", 
+                                    methodArgs = {java.lang.Object.class})                                    
+            }
+        )    
     public void test_writeUnshared() throws Exception {
         //Regression for HARMONY-187
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -1150,6 +1355,13 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectOutputStream#writeUnshared(java.lang.Object)
      */
+    @TestInfo(
+            level = TestLevel.COMPLETE,
+            purpose = "",
+            targets = { @TestTarget(methodName = "writeUnshared", 
+                                    methodArgs = {java.lang.Object.class})                                    
+            }
+        )    
     public void test_writeUnshared2() throws Exception {
         //Regression for HARMONY-187
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -1186,6 +1398,13 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectOutputStream#useProtocolVersion(int)
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "IOException & IllegalStateException checking missed.",
+            targets = { @TestTarget(methodName = "useProtocolVersion", 
+                                    methodArgs = {int.class})                                    
+            }
+        )    
     public void test_useProtocolVersionI_2() throws Exception {
         ObjectOutputStream oos = new ObjectOutputStream(
                 new ByteArrayOutputStream());
@@ -1205,6 +1424,13 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
     /**
      * @tests java.io.ObjectOutputStream#replaceObject(java.lang.Object)
      */
+    @TestInfo(
+            level = TestLevel.COMPLETE,
+            purpose = "",
+            targets = { @TestTarget(methodName = "replaceObject", 
+                                    methodArgs = {java.lang.Object.class})                                    
+            }
+        )    
     public void test_replaceObject() throws Exception {
         //Regression for HARMONY-1429
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -1218,43 +1444,43 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
         ois.close();
         assertTrue("replaceObject has not been called", (obj instanceof Long));
 
-		//Regression for HARMONY-2239
-		Object replaceObject = int.class;
-		baos = new ByteArrayOutputStream();
-		ObjectOutputStreamWithReplace2 oos2 = new ObjectOutputStreamWithReplace2(
-				baos);
-		oos2.writeObject(new WriteReplaceObject(replaceObject));
-		oos2.flush();
-		ois = new ObjectInputStream(
-				new ByteArrayInputStream(baos.toByteArray()));
-		obj = ois.readObject();
-		oos.close();
-		ois.close();
-		assertTrue("replaceObject has not been called", (obj instanceof Long));
+        //Regression for HARMONY-2239
+        Object replaceObject = int.class;
+        baos = new ByteArrayOutputStream();
+        ObjectOutputStreamWithReplace2 oos2 = new ObjectOutputStreamWithReplace2(
+                baos);
+        oos2.writeObject(new WriteReplaceObject(replaceObject));
+        oos2.flush();
+        ois = new ObjectInputStream(
+                new ByteArrayInputStream(baos.toByteArray()));
+        obj = ois.readObject();
+        oos.close();
+        ois.close();
+        assertTrue("replaceObject has not been called", (obj instanceof Long));
 
-		replaceObject = ObjectStreamClass.lookup(Integer.class);
-		baos = new ByteArrayOutputStream();
-		oos2 = new ObjectOutputStreamWithReplace2(baos);
-		oos2.writeObject(new WriteReplaceObject(replaceObject));
-		oos2.flush();
-		ois = new ObjectInputStream(
-				new ByteArrayInputStream(baos.toByteArray()));
-		obj = ois.readObject();
-		oos.close();
-		ois.close();
-		assertTrue("replaceObject has not been called", (obj instanceof Long));
+        replaceObject = ObjectStreamClass.lookup(Integer.class);
+        baos = new ByteArrayOutputStream();
+        oos2 = new ObjectOutputStreamWithReplace2(baos);
+        oos2.writeObject(new WriteReplaceObject(replaceObject));
+        oos2.flush();
+        ois = new ObjectInputStream(
+                new ByteArrayInputStream(baos.toByteArray()));
+        obj = ois.readObject();
+        oos.close();
+        ois.close();
+        assertTrue("replaceObject has not been called", (obj instanceof Long));
 
-		replaceObject = WriteReplaceObject.Color.red;
-		baos = new ByteArrayOutputStream();
-		oos2 = new ObjectOutputStreamWithReplace2(baos);
-		oos2.writeObject(new WriteReplaceObject(replaceObject));
-		oos2.flush();
-		ois = new ObjectInputStream(
-				new ByteArrayInputStream(baos.toByteArray()));
-		obj = ois.readObject();
-		oos.close();
-		ois.close();
-		assertTrue("replaceObject has not been called", (obj instanceof Long));
+        replaceObject = WriteReplaceObject.Color.red;
+        baos = new ByteArrayOutputStream();
+        oos2 = new ObjectOutputStreamWithReplace2(baos);
+        oos2.writeObject(new WriteReplaceObject(replaceObject));
+        oos2.flush();
+        ois = new ObjectInputStream(
+                new ByteArrayInputStream(baos.toByteArray()));
+        obj = ois.readObject();
+        oos.close();
+        ois.close();
+        assertTrue("replaceObject has not been called", (obj instanceof Long));
 
         // Regression for HARMONY-3158
         Object obj1;
@@ -1282,5 +1508,5 @@ public class ObjectOutputStreamTest extends junit.framework.TestCase implements
         assertEquals("2nd replaceObject worked incorrectly", Integer.class, obj2);
         assertEquals("3rd replaceObject worked incorrectly",
                 ObjectStreamClass.class, obj3.getClass());
-	}
+    }
 }

@@ -15,19 +15,34 @@
  */
 package org.apache.harmony.luni.tests.java.util;
 
-import java.io.Serializable;
-import java.util.UnknownFormatConversionException;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
+
+import java.io.Serializable;
+import java.util.UnknownFormatConversionException;
 
 import org.apache.harmony.testframework.serialization.SerializationTest;
 import org.apache.harmony.testframework.serialization.SerializationTest.SerializableAssert;
 
+@TestTargetClass(UnknownFormatConversionException.class) 
 public class UnknownFormatConversionExceptionTest extends TestCase {
 
     /**
      * @tests java.util.UnknownFormatConversionException#UnknownFormatConversionException(String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "UnknownFormatConversionException",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_unknownFormatConversionException() {
 
         // RI 5.0 will not throw NullPointerException, it is the bug according
@@ -42,6 +57,15 @@ public class UnknownFormatConversionExceptionTest extends TestCase {
     /**
      * @tests java.util.UnknownFormatConversionException#getConversion()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getConversion",
+          methodArgs = {}
+        )
+    })
     public void test_getConversion() {
         String s = "MYTESTSTRING";
         UnknownFormatConversionException UnknownFormatConversionException = new UnknownFormatConversionException(
@@ -52,6 +76,15 @@ public class UnknownFormatConversionExceptionTest extends TestCase {
     /**
      * @tests java.util.UnknownFormatConversionException#getMessage()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getMessage",
+          methodArgs = {}
+        )
+    })
     public void test_getMessage() {
         String s = "MYTESTSTRING";
         UnknownFormatConversionException UnknownFormatConversionException = new UnknownFormatConversionException(
@@ -78,6 +111,15 @@ public class UnknownFormatConversionExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization.
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationSelf",
+          methodArgs = {}
+        )
+    })
     public void testSerializationSelf() throws Exception {
 
         SerializationTest.verifySelf(new UnknownFormatConversionException(
@@ -87,6 +129,15 @@ public class UnknownFormatConversionExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationGolden",
+          methodArgs = {}
+        )
+    })
     public void testSerializationCompatibility() throws Exception {
 
         SerializationTest.verifyGolden(this,

@@ -17,6 +17,11 @@
 
 package org.apache.harmony.luni.tests.java.net;
 
+import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.IOException;
 import java.net.ContentHandler;
 import java.net.URL;
@@ -24,12 +29,22 @@ import java.net.URLConnection;
 
 import junit.framework.TestCase;
 
+@TestTargetClass(ContentHandler.class) 
 public class ContentHandlerTest extends TestCase {
 
     /**
      * @tests java.net.ContentHandler#getContent(java.net.URLConnection,
      *        java.lang.Class[])
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "getContent",
+          methodArgs = {URLConnection.class, Class[].class}
+        )
+    })
     public void test_getContent() throws IOException {
         URLConnection conn = new URL("http://www.apache.org").openConnection();
         Class[] classes = { Foo.class, String.class, };

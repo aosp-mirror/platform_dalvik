@@ -62,7 +62,8 @@ import org.apache.harmony.security.internal.nls.Messages;
  * a pluggable scanner and converts received tokens to a set of 
  * {@link org.apache.harmony.security.PolicyEntry PolicyEntries}. 
  * For details of policy format, see the 
- * {@link org.apache.harmony.security.fortress.DefaultPolicy default policy description}.
+ * {@link org.apache.harmony.security.fortress.DefaultPolicy default policy
+ * description}.
  * <br>
  * For ordinary uses, this class has just one public method <code>parse()</code>, 
  * which performs the main task.

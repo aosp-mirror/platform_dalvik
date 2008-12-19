@@ -15,37 +15,33 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package java.security.cert;
 
 /**
- * This class indicates that a given certificate has expired.
+ * The exception that is thrown when a {@code Certificate} has expired.
+ * 
+ * @since Android 1.0
  */
 public class CertificateExpiredException extends CertificateException {
 
-    /**
-     * @com.intel.drl.spec_ref
-     *  
-     */
     private static final long serialVersionUID = 9071001339691533771L;
 
     /**
-     * Constructs a new instance of this class with its walkback and message
-     * filled in.
+     * Creates a new {@code CertificateExpiredException} with the specified
+     * message.
      * 
      * @param msg
-     *            String The detail message for the exception.
+     *            the detail message for this exception
+     * @since Android 1.0
      */
     public CertificateExpiredException(String msg) {
         super(msg);
     }
 
     /**
-     * Constructs a new instance of this class with its walkback filled in.
+     * Creates a new {@code CertificateExpiredException}.
+     * 
+     * @since Android 1.0
      */
     public CertificateExpiredException() {
     }

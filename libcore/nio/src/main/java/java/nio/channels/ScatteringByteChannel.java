@@ -21,82 +21,79 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 /**
- * The interface to channels that can read a set of buffers in a single
- * operation.
- * <p>
- * The corresponding interface for writes is called
- * <code>GatheringByteChannel</code>.
+ * The interface for channels that can read data into a set of buffers in a
+ * single operation. The corresponding interface for writes is
+ * {@link GatheringByteChannel}.
  * 
+ * @since Android 1.0
  */
 public interface ScatteringByteChannel extends ReadableByteChannel {
 
     /**
-     * Reads bytes from the channel into all the given buffers.
+     * Reads bytes from this channel into the specified array of buffers.
      * <p>
-     * This method is equivalent to:
-     * 
-     * <pre>
-     * read(buffers, 0, buffers.length);
-     * </pre>
-     * 
+     * This method is equivalent to {@code read(buffers, 0, buffers.length);}
      * </p>
      * 
      * @param buffers
-     *            the array of byte buffers to receive the bytes being read.
+     *            the array of byte buffers to store the bytes being read.
      * @return the number of bytes actually read.
+     * @throws AsynchronousCloseException
+     *             if the channel is closed by another thread during this read
+     *             operation.
+     * @throws ClosedByInterruptException
+     *             if another thread interrupts the calling thread while the
+     *             operation is in progress. The interrupt state of the calling 
+     *             thread is set and the channel is closed.
      * @throws ClosedChannelException
      *             if the channel is closed.
-     * @throws NonReadableChannelException
-     *             if the channel is open, but not in a mode that permits
-     *             reading.
-     * @throws ClosedByInterruptException
-     *             if the thread is interrupted in its IO operation by another
-     *             thread closing the channel.
-     * @throws AsynchronousCloseException
-     *             if the read is interrupted by another thread sending an
-     *             explicit interrupt.
      * @throws IOException
-     *             if some other type of exception occurs. Details are in the
-     *             message.
+     *             if another I/O error occurs; details are in the message.
+     * @throws NonWritableChannelException
+     *             if the channel has not been opened in a mode that permits
+     *             reading.
+     * @since Android 1.0
      */
     public long read(ByteBuffer[] buffers) throws IOException;
 
     /**
-     * Reads bytes from the channel into a subset of the given buffers.
-     * <p>
-     * This method attempts to read all of the <code>remaining()</code> bytes
-     * from <code>length</code> byte buffers, in order, starting at
-     * <code>buffers[offset]</code>. The number of bytes actually read is
-     * returned.
-     * </p>
+     * Reads bytes from this channel and stores them in a subset of the
+     * specified array of buffers. The subset is defined by {@code offset} and
+     * {@code length}, indicating the first buffer and the number of buffers to
+     * use. This method attempts to read as many bytes as can be stored in the
+     * buffer subset from the channel and returns the number of bytes actually
+     * read.
      * <p>
      * If a read operation is in progress, subsequent threads will block until
-     * the read is completed, and will then contend for the ability to read.
+     * the read is completed and will then contend for the ability to read.
      * </p>
      * 
      * @param buffers
-     *            the array of byte buffers into which the bytes will be read.
+     *            the array of byte buffers into which the bytes will be copied.
      * @param offset
-     *            the index of the first buffer to read.
+     *            the index of the first buffer to store bytes in.
      * @param length
-     *            the maximum number of buffers to read.
+     *            the maximum number of buffers to store bytes in.
      * @return the number of bytes actually read.
-     * @throws IndexOutOfBoundsException
-     *             if offset < 0 or > buffers.length; or length < 0 or >
-     *             buffers.length - offset.
-     * @throws NonReadableChannelException
-     *             if the channel was not opened for reading.
-     * @throws ClosedChannelException
-     *             the channel is currently closed.
      * @throws AsynchronousCloseException
-     *             the channel was closed by another thread while the write was
-     *             underway.
+     *             if the channel is closed by another thread during this read
+     *             operation.
      * @throws ClosedByInterruptException
-     *             the thread was interrupted by another thread while the write
-     *             was underway.
+     *             if another thread interrupts the calling thread while the
+     *             operation is in progress. The interrupt state of the calling 
+     *             thread is set and the channel is closed.
+     * @throws ClosedChannelException
+     *             if the channel is closed.
+     * @throws IndexOutOfBoundsException
+     *             if {@code offset < 0} or {@code length < 0}, or if
+     *             {@code offset + length} is greater than the size of
+     *             {@code buffers}.
      * @throws IOException
-     *             if some other type of exception occurs. Details are in the
-     *             message.
+     *             if another I/O error occurs; details are in the message.
+     * @throws NonWritableChannelException
+     *             if the channel has not been opened in a mode that permits
+     *             reading.
+     * @since Android 1.0
      */
     public long read(ByteBuffer[] buffers, int offset, int length)
             throws IOException;

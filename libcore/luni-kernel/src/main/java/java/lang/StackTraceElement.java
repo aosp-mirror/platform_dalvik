@@ -20,19 +20,20 @@ package java.lang;
 import java.io.Serializable;
 
 /**
- * An implementation of this class is provided, but the documented constructor
- * can be used by the VM specific implementation to create instances.
- * 
- * StackTraceElement represents a stack frame.
+ * A representation of a single stack frame. Arrays of {@code StackTraceElement}
+ * are stored in {@link Throwable} objects to represent the whole state of the
+ * call stack at the time a {@code Throwable} gets thrown.
  * 
  * @see Throwable#getStackTrace()
- * @since 1.4
+ * @since Android 1.0
  */
 public final class StackTraceElement implements Serializable {
 
     private static final long serialVersionUID = 6992337162326171013L;
 
+    // BEGIN android-added
     private static final int NATIVE_LINE_NUMBER = -2;
+    // END android-added
     
     String declaringClass;
 
@@ -43,22 +44,22 @@ public final class StackTraceElement implements Serializable {
     int lineNumber;
 
     /**
-     * <p>
-     * Constructs a <code>StackTraceElement</code> for an execution point.
-     * </p>
+     * Constructs a new {@code StackTraceElement} for a specified execution
+     * point.
      * 
-     * @param cls The fully qualified name of the class where execution is at.
-     * @param method The name of the method where execution is at.
-     * @param file The name of the file where execution is at or
-     *        <code>null</code>.
-     * @param line The line of the file where execution is at, a negative number
-     *        if unknown or <code>-2</code> if the execution is in a native
-     *        method.
-     * 
-     * @throws NullPointerException if <code>cls</code> or <code>method</code>
-     *         is <code>null</code>.
-     * 
-     * @since 1.5
+     * @param cls
+     *            the fully qualified name of the class where execution is at.
+     * @param method
+     *            the name of the method where execution is at.
+     * @param file
+     *            The name of the file where execution is at or {@code null}.
+     * @param line
+     *            the line of the file where execution is at, a negative number
+     *            if unknown or {@code -2} if the execution is in a native
+     *            method.
+     * @throws NullPointerException
+     *             if {@code cls} or {@code method} is {@code null}.
+     * @since Android 1.0
      */
     public StackTraceElement(String cls, String method, String file, int line) {
         super();
@@ -76,15 +77,28 @@ public final class StackTraceElement implements Serializable {
      * Private, nullary constructor for VM use only.
      * </p>
      */
-    @SuppressWarnings("unused")
     private StackTraceElement() {
         super();
     }
 
     /**
-     * Compare this object with the object passed in
+     * Compares this instance with the specified object and indicates if they
+     * are equal. In order to be equal, the following conditions must be
+     * fulfilled:
+     * <ul>
+     * <li>{@code obj} must be a stack trace element,</li>
+     * <li>the method names of this stack trace element and of {@code obj} must
+     * not be {@code null},</li>
+     * <li>the class, method and file names as well as the line number of this
+     * stack trace element and of {@code obj} must be equal.</li>
+     * </ul>
      * 
-     * @param obj Object to compare with
+     * @param obj
+     *            the object to compare this instance with.
+     * @return {@code true} if the specified object is equal to this
+     *         {@code StackTraceElement}; {@code false} otherwise.
+     * @see #hashCode
+     * @since Android 1.0
      */
     @Override
     public boolean equals(Object obj) {
@@ -125,57 +139,52 @@ public final class StackTraceElement implements Serializable {
     }
 
     /**
-     * Returns the full name (i.e. including the package) of the class where
-     * this stack trace element is executing.
+     * Returns the fully qualified name of the class belonging to this
+     * {@code StackTraceElement}.
      * 
-     * @return the fully qualified type name of the class where this stack trace
-     *         element is executing.
+     * @return the fully qualified type name of the class
+     * @since Android 1.0
      */
     public String getClassName() {
         return (declaringClass == null) ? "<unknown class>" : declaringClass;
     }
 
     /**
-     * If available, returns the name of the file containing the Java code
-     * source which was compiled into the class where this stack trace element
-     * is executing.
+     * Returns the name of the Java source file containing class belonging to
+     * this {@code StackTraceElement}.
      * 
-     * @return if available, the name of the file containing the Java code
-     *         source for the stack trace element's executing class. If no such
-     *         detail is available, a <code>null</code> value is returned.
+     * @return the name of the file, or {@code null} if this information is not
+     *         available.
+     * @since Android 1.0
      */
     public String getFileName() {
         return fileName;
     }
 
     /**
-     * If available, returns the line number in the source for the class where
-     * this stack trace element is executing.
+     * Returns the line number in the source for the class belonging to this
+     * {@code StackTraceElement}.
      * 
-     * @return if available, the line number in the source file for the class
-     *         where this stack trace element is executing. If no such detail is
-     *         available, a number less than <code>0</code>.
+     * @return the line number, or a negative number if this information is not
+     *         available.
+     * @since Android 1.0
      */
     public int getLineNumber() {
         return lineNumber;
     }
 
     /**
-     * Returns the name of the method where this stack trace element is
-     * executing.
+     * Returns the name of the method belonging to this {@code
+     * StackTraceElement}.
      * 
-     * @return the name of the method where this stack trace element is
-     *         executing.
+     * @return the name of the method, or "<unknown method>" if this information
+     *         is not available.
+     * @since Android 1.0
      */
     public String getMethodName() {
         return (methodName == null) ? "<unknown method>" : methodName;
     }
 
-    /**
-     * Return this StackTraceElement objects hash code
-     * 
-     * @return This objects hash code
-     */
     @Override
     public int hashCode() {
         /*
@@ -191,21 +200,19 @@ public final class StackTraceElement implements Serializable {
     }
 
     /**
-     * Returns <code>true</code> if the method name returned by
-     * {@link #getMethodName()} is implemented as a native method.
+     * Indicates if the method name returned by {@link #getMethodName()} is
+     * implemented as a native method.
      * 
-     * @return if the method in which this stack trace element is executing is a
-     *         native method
+     * @return {@code true} if the method in which this stack trace element is
+     *         executing is a native method; {@code false} otherwise.
+     * @since Android 1.0
      */
     public boolean isNativeMethod() {
+        // BEGIN android-changed
         return lineNumber == NATIVE_LINE_NUMBER;
+        // END android-changed
     }
 
-    /**
-     * Return a String representing this StackTraceElement object
-     * 
-     * @return String representing this object
-     */
     @Override
     public String toString() {
         StringBuilder buf = new StringBuilder(80);

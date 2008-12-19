@@ -17,6 +17,11 @@
 
 package tests.api.java.io;
 
+import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
@@ -27,6 +32,7 @@ import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 import java.nio.channels.NonWritableChannelException;
 
+@TestTargetClass(RandomAccessFile.class) 
 public class RandomAccessFileTest extends junit.framework.TestCase {
 
     public String fileName;
@@ -47,6 +53,15 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
      * @tests java.io.RandomAccessFile#RandomAccessFile(java.io.File,
      *        java.lang.String)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "RandomAccessFile",
+          methodArgs = {java.io.File.class, java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_io_FileLjava_lang_String()
             throws Exception {
         // Test for method java.io.RandomAccessFile(java.io.File,
@@ -62,6 +77,15 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
      * @tests java.io.RandomAccessFile#RandomAccessFile(java.lang.String,
      *        java.lang.String)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "RandomAccessFile",
+          methodArgs = {java.lang.String.class, java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_StringLjava_lang_String()
             throws IOException {
         // Test for method java.io.RandomAccessFile(java.lang.String,
@@ -74,6 +98,15 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.RandomAccessFile#close()
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "close",
+          methodArgs = {}
+        )
+    })
     public void test_close() {
         // Test for method void java.io.RandomAccessFile.close()
         try {
@@ -87,6 +120,15 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.RandomAccessFile#getFD()
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "getFD",
+          methodArgs = {}
+        )
+    })
     public void test_getFD() throws IOException {
         // Test for method java.io.FileDescriptor
         // java.io.RandomAccessFile.getFD()
@@ -101,6 +143,15 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.RandomAccessFile#getFilePointer()
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "getFilePointer",
+          methodArgs = {}
+        )
+    })
     public void test_getFilePointer() throws IOException {
         // Test for method long java.io.RandomAccessFile.getFilePointer()
         RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
@@ -112,6 +163,15 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.RandomAccessFile#length()
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "length",
+          methodArgs = {}
+        )
+    })
     public void test_length() throws IOException {
         // Test for method long java.io.RandomAccessFile.length()
         RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
@@ -123,6 +183,15 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.RandomAccessFile#read()
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {}
+        )
+    })
     public void test_read() throws IOException {
         // Test for method int java.io.RandomAccessFile.read()
         FileOutputStream fos = new java.io.FileOutputStream(fileName);
@@ -137,6 +206,15 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.RandomAccessFile#read(byte[])
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {byte[].class}
+        )
+    })
     public void test_read$B() throws IOException {
         // Test for method int java.io.RandomAccessFile.read(byte [])
         FileOutputStream fos = new java.io.FileOutputStream(fileName);
@@ -154,6 +232,15 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.RandomAccessFile#read(byte[], int, int)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {byte[].class, int.class, int.class}
+        )
+    })
     public void test_read$BII() throws IOException {
         // Test for method int java.io.RandomAccessFile.read(byte [], int, int)
         RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
@@ -169,6 +256,15 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.RandomAccessFile#readBoolean()
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "EOFException & IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "readBoolean",
+          methodArgs = {}
+        )
+    })
     public void test_readBoolean() throws IOException {
         // Test for method boolean java.io.RandomAccessFile.readBoolean()
         RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
@@ -181,6 +277,15 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.RandomAccessFile#readByte()
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "EOFException & IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "readByte",
+          methodArgs = {}
+        )
+    })
     public void test_readByte() throws IOException {
         // Test for method byte java.io.RandomAccessFile.readByte()
         RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
@@ -193,6 +298,15 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.RandomAccessFile#readChar()
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "EOFException & IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "readChar",
+          methodArgs = {}
+        )
+    })
     public void test_readChar() throws IOException {
         // Test for method char java.io.RandomAccessFile.readChar()
         RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
@@ -205,6 +319,15 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.RandomAccessFile#readDouble()
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "EOFException & IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "readDouble",
+          methodArgs = {}
+        )
+    })
     public void test_readDouble() throws IOException {
         // Test for method double java.io.RandomAccessFile.readDouble()
         RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
@@ -218,6 +341,15 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.RandomAccessFile#readFloat()
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "EOFException & IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "readFloat",
+          methodArgs = {}
+        )
+    })
     public void test_readFloat() throws IOException {
         // Test for method float java.io.RandomAccessFile.readFloat()
         RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
@@ -231,6 +363,15 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.RandomAccessFile#readFully(byte[])
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "EOFException & IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "readFully",
+          methodArgs = {byte[].class}
+        )
+    })
     public void test_readFully$B() throws IOException {
         // Test for method void java.io.RandomAccessFile.readFully(byte [])
         byte[] buf = new byte[10];
@@ -246,6 +387,15 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.RandomAccessFile#readFully(byte[], int, int)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "EOFException & IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "readFully",
+          methodArgs = {byte[].class, int.class, int.class}
+        )
+    })
     public void test_readFully$BII() throws IOException {
         // Test for method void java.io.RandomAccessFile.readFully(byte [], int,
         // int)
@@ -265,6 +415,15 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.RandomAccessFile#readInt()
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "EOFException & IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "readInt",
+          methodArgs = {}
+        )
+    })
     public void test_readInt() throws IOException {
         // Test for method int java.io.RandomAccessFile.readInt()
         RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
@@ -278,6 +437,15 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.RandomAccessFile#readLine()
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "readLine",
+          methodArgs = {}
+        )
+    })
     public void test_readLine() throws IOException {
         // Test for method java.lang.String java.io.RandomAccessFile.readLine()
         RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
@@ -293,6 +461,15 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.RandomAccessFile#readLong()
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "EOFException & IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "readLong",
+          methodArgs = {}
+        )
+    })
     public void test_readLong() throws IOException {
         // Test for method long java.io.RandomAccessFile.readLong()
         RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
@@ -306,6 +483,15 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.RandomAccessFile#readShort()
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "EOFException & IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "readShort",
+          methodArgs = {}
+        )
+    })
     public void test_readShort() throws IOException {
         // Test for method short java.io.RandomAccessFile.readShort()
         RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
@@ -319,6 +505,15 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.RandomAccessFile#readUnsignedByte()
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "EOFException & IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "readUnsignedByte",
+          methodArgs = {}
+        )
+    })
     public void test_readUnsignedByte() throws IOException {
         // Test for method int java.io.RandomAccessFile.readUnsignedByte()
         RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
@@ -331,6 +526,15 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.RandomAccessFile#readUnsignedShort()
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "EOFException & IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "readUnsignedShort",
+          methodArgs = {}
+        )
+    })
     public void test_readUnsignedShort() throws IOException {
         // Test for method int java.io.RandomAccessFile.readUnsignedShort()
         RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
@@ -344,6 +548,15 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.RandomAccessFile#readUTF()
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "readUTF",
+          methodArgs = {}
+        )
+    })
     public void test_readUTF() throws IOException {
         // Test for method java.lang.String java.io.RandomAccessFile.readUTF()
 
@@ -357,6 +570,15 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.RandomAccessFile#seek(long)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "seek",
+          methodArgs = {long.class}
+        )
+    })
     public void test_seekJ() throws IOException {
         // Test for method void java.io.RandomAccessFile.seek(long)
         RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
@@ -368,6 +590,15 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.RandomAccessFile#skipBytes(int)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "skipBytes",
+          methodArgs = {int.class}
+        )
+    })
     public void test_skipBytesI() throws IOException {
         // Test for method int java.io.RandomAccessFile.skipBytes(int)
         byte[] buf = new byte[5];
@@ -383,16 +614,25 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.RandomAccessFile#write(byte[])
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "write",
+          methodArgs = {byte[].class}
+        )
+    })
     public void test_write$B() throws IOException {
         // Test for method void java.io.RandomAccessFile.write(byte [])
         RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
         
         byte[] nullByteArray = null;
         try {
-        	raf.write(nullByteArray);
-        	fail("should throw NullPointerException");
+            raf.write(nullByteArray);
+            fail("should throw NullPointerException");
         } catch (NullPointerException e) {
-        	//expected
+            //expected
         }   
         
         byte[] rbuf = new byte[4000];
@@ -400,20 +640,20 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
         raf.close();
         
         try {
-        	raf.write(nullByteArray);
-        	fail("should throw NullPointerException");
+            raf.write(nullByteArray);
+            fail("should throw NullPointerException");
         } catch (NullPointerException e) {
-        	//expected
+            //expected
         }  
         
         //will not throw IOException if array's length is 0
         raf.write(new byte[0]);
         
         try {
-        	raf.write(fileString.getBytes());
-        	fail("should throw IOException");
+            raf.write(fileString.getBytes());
+            fail("should throw IOException");
         } catch (IOException e) {
-        	//expected
+            //expected
         }  
         
         FileInputStream fis = new java.io.FileInputStream(fileName);
@@ -425,6 +665,15 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.RandomAccessFile#write(byte[], int, int)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "write",
+          methodArgs = {byte[].class, int.class, int.class}
+        )
+    })
     public void test_write$BII() throws IOException {
         // Test for method void java.io.RandomAccessFile.write(byte [], int,
         // int)
@@ -441,146 +690,164 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.RandomAccessFile#write(byte[], int, int)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Checks exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "write",
+          methodArgs = {byte[].class, int.class, int.class}
+        )
+    })
     public void test_write_$BII_Exception() throws IOException {
-    	raf = new java.io.RandomAccessFile(f, "rw");
-		byte[] nullByteArray = null;
-		byte[] byteArray = new byte[10];
-		
-		try {
-			raf.write(nullByteArray, -1, -1);
-			fail("should throw NullPointerException");
-		} catch (NullPointerException e) {
-			// expected
-		}
+        raf = new java.io.RandomAccessFile(f, "rw");
+        byte[] nullByteArray = null;
+        byte[] byteArray = new byte[10];
+        
+        try {
+            raf.write(nullByteArray, -1, -1);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
 
-		try {
-			raf.write(nullByteArray, 0, 0);
-			fail("should throw NullPointerException");
-		} catch (NullPointerException e) {
-			// expected
-		}
-		
-		try {
-			raf.write(nullByteArray, 1, -1);
-			fail("should throw NullPointerException");
-		} catch (NullPointerException e) {
-			// expected
-		}
+        try {
+            raf.write(nullByteArray, 0, 0);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        
+        try {
+            raf.write(nullByteArray, 1, -1);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
 
-		try {
-			raf.write(nullByteArray, 1, 0);
-			fail("should throw NullPointerException");
-		} catch (NullPointerException e) {
-			// expected
-		}
-		
-		try {
-			raf.write(nullByteArray, 1, 1);
-			fail("should throw NullPointerException");
-		} catch (NullPointerException e) {
-			// expected
-		}
-		
-		try {
-			raf.write(byteArray, -1, -1);
-			fail("should throw IndexOutOfBoundsException");
-		} catch (IndexOutOfBoundsException e) {
-			// expected
-		}
+        try {
+            raf.write(nullByteArray, 1, 0);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        
+        try {
+            raf.write(nullByteArray, 1, 1);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        
+        try {
+            raf.write(byteArray, -1, -1);
+            fail("should throw IndexOutOfBoundsException");
+        } catch (IndexOutOfBoundsException e) {
+            // expected
+        }
 
-		try {
-			raf.write(byteArray, -1, 0);
-			fail("should throw IndexOutOfBoundsException");
-		} catch (IndexOutOfBoundsException e) {
-			// expected
-		}
-		
-		try {
-			raf.write(byteArray, -1, 1);
-			fail("should throw IndexOutOfBoundsException");
-		} catch (IndexOutOfBoundsException e) {
-			// expected
-		}
+        try {
+            raf.write(byteArray, -1, 0);
+            fail("should throw IndexOutOfBoundsException");
+        } catch (IndexOutOfBoundsException e) {
+            // expected
+        }
+        
+        try {
+            raf.write(byteArray, -1, 1);
+            fail("should throw IndexOutOfBoundsException");
+        } catch (IndexOutOfBoundsException e) {
+            // expected
+        }
 
-		try {
-			raf.write(byteArray, 0, -1);
-			fail("should throw IndexOutOfBoundsException");
-		} catch (IndexOutOfBoundsException e) {
-			// expected
-		}
+        try {
+            raf.write(byteArray, 0, -1);
+            fail("should throw IndexOutOfBoundsException");
+        } catch (IndexOutOfBoundsException e) {
+            // expected
+        }
 
-		raf.write(byteArray, 0, 0);
+        raf.write(byteArray, 0, 0);
         raf.write(byteArray, 0, byteArray.length);
-		raf.write(byteArray, 1, 0);
+        raf.write(byteArray, 1, 0);
         raf.write(byteArray, byteArray.length, 0);
-		
-		try {
-			raf.write(byteArray, byteArray.length + 1, 0);
-			fail("should throw IndexOutOfBoundsException");
-		} catch (IndexOutOfBoundsException e) {
-			//expected
-		}
-		
-		try {
-			raf.write(byteArray, byteArray.length + 1, 1);
-			fail("should throw IndexOutOfBoundsException");
-		} catch (IndexOutOfBoundsException e) {
-			//expected
-		}
+        
+        try {
+            raf.write(byteArray, byteArray.length + 1, 0);
+            fail("should throw IndexOutOfBoundsException");
+        } catch (IndexOutOfBoundsException e) {
+            //expected
+        }
+        
+        try {
+            raf.write(byteArray, byteArray.length + 1, 1);
+            fail("should throw IndexOutOfBoundsException");
+        } catch (IndexOutOfBoundsException e) {
+            //expected
+        }
 
-		raf.close();
+        raf.close();
 
-		try {
-			raf.write(nullByteArray, -1, -1);
-			fail("should throw NullPointerException");
-		} catch (NullPointerException e) {
-			// expected
-		}
-		
-		try {
-			raf.write(byteArray, -1, -1);
-			fail("should throw IndexOutOfBoundsException");
-		} catch (IndexOutOfBoundsException e) {
-			// expected
-		}
-		
-		try {
-	        raf.write(byteArray, 0, 1);
-	        fail("should throw IOException");
-		} catch (IOException e) {
-			//expected
-		}
-		
-		try {
-	        raf.write(byteArray, 0, byteArray.length);
-	        fail("should throw IOException");
-		} catch (IOException e) {
-			//expected
-		}
-		
-		try {
-			raf.write(byteArray, 1, 1);
-	        fail("should throw IOException");
-		} catch (IOException e) {
-			//expected
-		}
-		
-		try {
-			raf.write(byteArray, byteArray.length + 1, 0);
-			fail("should throw IndexOutOfBoundsException");
-		} catch (IndexOutOfBoundsException e) {
-			//expected
-		}
-		
-		// will not throw IOException if count = 0
-		raf.write(byteArray, 0, 0);
-		raf.write(byteArray, byteArray.length, 0);
+        try {
+            raf.write(nullByteArray, -1, -1);
+            fail("should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        
+        try {
+            raf.write(byteArray, -1, -1);
+            fail("should throw IndexOutOfBoundsException");
+        } catch (IndexOutOfBoundsException e) {
+            // expected
+        }
+        
+        try {
+            raf.write(byteArray, 0, 1);
+            fail("should throw IOException");
+        } catch (IOException e) {
+            //expected
+        }
+        
+        try {
+            raf.write(byteArray, 0, byteArray.length);
+            fail("should throw IOException");
+        } catch (IOException e) {
+            //expected
+        }
+        
+        try {
+            raf.write(byteArray, 1, 1);
+            fail("should throw IOException");
+        } catch (IOException e) {
+            //expected
+        }
+        
+        try {
+            raf.write(byteArray, byteArray.length + 1, 0);
+            fail("should throw IndexOutOfBoundsException");
+        } catch (IndexOutOfBoundsException e) {
+            //expected
+        }
+        
+        // will not throw IOException if count = 0
+        raf.write(byteArray, 0, 0);
+        raf.write(byteArray, byteArray.length, 0);
     }
     
 
     /**
      * @tests java.io.RandomAccessFile#write(int)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "write",
+          methodArgs = {int.class}
+        )
+    })
     public void test_writeI() throws IOException {
         // Test for method void java.io.RandomAccessFile.write(int)
         byte[] rbuf = new byte[4000];
@@ -595,6 +862,15 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.RandomAccessFile#writeBoolean(boolean)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "writeBoolean",
+          methodArgs = {boolean.class}
+        )
+    })
     public void test_writeBooleanZ() throws IOException {
         // Test for method void java.io.RandomAccessFile.writeBoolean(boolean)
         RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
@@ -607,6 +883,15 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.RandomAccessFile#writeByte(int)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "writeByte",
+          methodArgs = {int.class}
+        )
+    })
     public void test_writeByteI() throws IOException {
         // Test for method void java.io.RandomAccessFile.writeByte(int)
         RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
@@ -619,6 +904,15 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.RandomAccessFile#writeBytes(java.lang.String)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "writeBytes",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_writeBytesLjava_lang_String() throws IOException {
         // Test for method void
         // java.io.RandomAccessFile.writeBytes(java.lang.String)
@@ -636,6 +930,15 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.RandomAccessFile#writeChar(int)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "writeChar",
+          methodArgs = {int.class}
+        )
+    })
     public void test_writeCharI() throws IOException {
         // Test for method void java.io.RandomAccessFile.writeChar(int)
         RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
@@ -648,6 +951,15 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.RandomAccessFile#writeChars(java.lang.String)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "writeChars",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_writeCharsLjava_lang_String() throws IOException {
         // Test for method void
         // java.io.RandomAccessFile.writeChars(java.lang.String)
@@ -664,6 +976,15 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.RandomAccessFile#writeDouble(double)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "writeDouble",
+          methodArgs = {double.class}
+        )
+    })
     public void test_writeDoubleD() throws IOException {
         // Test for method void java.io.RandomAccessFile.writeDouble(double)
         RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
@@ -677,6 +998,15 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.RandomAccessFile#writeFloat(float)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "writeFloat",
+          methodArgs = {float.class}
+        )
+    })
     public void test_writeFloatF() throws IOException {
         // Test for method void java.io.RandomAccessFile.writeFloat(float)
         RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
@@ -690,6 +1020,15 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.RandomAccessFile#writeInt(int)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "writeInt",
+          methodArgs = {int.class}
+        )
+    })
     public void test_writeIntI() throws IOException {
         // Test for method void java.io.RandomAccessFile.writeInt(int)
         RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
@@ -703,6 +1042,15 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.RandomAccessFile#writeLong(long)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "writeLong",
+          methodArgs = {long.class}
+        )
+    })
     public void test_writeLongJ() throws IOException {
         // Test for method void java.io.RandomAccessFile.writeLong(long)
         RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
@@ -716,6 +1064,15 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.RandomAccessFile#writeShort(int)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "writeShort",
+          methodArgs = {int.class}
+        )
+    })
     public void test_writeShortI() throws IOException {
         // Test for method void java.io.RandomAccessFile.writeShort(int)
         RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
@@ -729,6 +1086,15 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.RandomAccessFile#writeUTF(java.lang.String)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "writeUTF",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_writeUTFLjava_lang_String() throws IOException {
         // Test for method void
         // java.io.RandomAccessFile.writeUTF(java.lang.String)
@@ -744,6 +1110,15 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
      * 
      * Regression for HARMONY-374
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Checks exception",
+      targets = {
+        @TestTarget(
+          methodName = "seek",
+          methodArgs = {long.class}
+        )
+    })
     public void test_seekI() throws IOException {
         RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
         try {
@@ -758,6 +1133,15 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
      * 
      * Regression for HARMONY-377
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Regression. Checks exceptions, IOException missed.",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {byte[].class, int.class, int.class}
+        )
+    })
     public void test_readBII() throws IOException {
         RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
         try {
@@ -796,6 +1180,15 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.RandomAccessFile#read(byte[],int,int) 
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Checks IndexOutOfBoundsException",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {byte[].class, int.class, int.class}
+        )
+    })
     public void test_read_$BII_IndexOutOfBoundsException() throws IOException {
         FileOutputStream fos = new java.io.FileOutputStream(fileName);
         fos.write(fileString.getBytes(), 0, fileString.length());
@@ -815,6 +1208,15 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.RandomAccessFile#read(byte[],int,int) 
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Functional test. Probably planned for IOException testing.",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {byte[].class, int.class, int.class}
+        )
+    })
     public void test_read_$BII_IOException() throws IOException {
         FileOutputStream fos = new java.io.FileOutputStream(fileName);
         fos.write(fileString.getBytes(), 0, fileString.length());
@@ -830,6 +1232,15 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.RandomAccessFile#read(byte[])
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Functional test. Probably planned for IOException testing.",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {byte[].class}
+        )
+    })
     public void test_read_$B_IOException() throws IOException {
         FileOutputStream fos = new java.io.FileOutputStream(fileName);
         fos.write(fileString.getBytes(), 0, fileString.length());
@@ -845,6 +1256,15 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.RandomAccessFile#read(byte[],int,int) 
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Checks NullPointerException",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {byte[].class, int.class, int.class}
+        )
+    })
     public void test_read_$BII_NullPointerException() throws IOException {
         RandomAccessFile raf = new RandomAccessFile(File.createTempFile("tmp",
                 "tmp"), "r");
@@ -862,6 +1282,15 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
      * 
      * Regression for HARMONY-377
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Regression test.",
+      targets = {
+        @TestTarget(
+          methodName = "write",
+          methodArgs = {byte[].class, int.class, int.class}
+        )
+    })
     public void test_writeBII() throws IOException {
         RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "rw");
         try {
@@ -899,6 +1328,15 @@ public class RandomAccessFileTest extends junit.framework.TestCase {
     /**
      * Regression for HARMONY-69
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Regression test. Checks NonWritableChannelException.",
+      targets = {
+        @TestTarget(
+          methodName = "RandomAccessFile",
+          methodArgs = {java.lang.String.class, java.lang.String.class}
+        )
+    })
     public void testRandomAccessFile_String_String() throws IOException {
         f.createNewFile();
         RandomAccessFile raf = new java.io.RandomAccessFile(fileName, "r");

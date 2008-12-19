@@ -55,6 +55,18 @@
   operation) and/or moved from a low result register to a high register
   (after the operation).
 </li>
+<li>There are several "pseudo-instructions" that are used to hold
+  variable-length data referred to by regular instructions (for example,
+  <code>fill-array-data</code>). Such instructions must never be
+  encountered during the normal flow of execution. In addition, the
+  instructions must be located on even-numbered bytecode offsets (that is,
+  4-byte aligned). In order to meet this requirement, dex generation tools
+  should emit an extra <code>nop</code> instruction as a spacer if such an
+  instruction would otherwise be unaligned. Finally, though not required,
+  it is expected that most tools will choose to emit these instructions at
+  the ends of methods, since otherwise it would likely be the case that
+  additional instructions would be needed to branch around them.
+</li>
 <li>When installed on a running system, some instructions may be altered,
   changing their format, as an install-time static linking optimization.
   This is to allow for faster execution once linkage is known.
@@ -445,15 +457,12 @@
   <td>fill-array-data vAA, +BBBBBBBB <i>(with supplemental data as specified
     below in "<code>fill-array-data</code> Format")</i></td>
   <td><code>A:</code> array reference (8 bits)<br/>
-    <code>B:</code> signed "branch" offset to table data (32 bits)</td>
+    <code>B:</code> signed "branch" offset to table data pseudo-instruction
+    (32 bits)
+  </td>
   <td>Fill the given array with the indicated data. The reference must be
     to an array of primitives, and the data table must match it in type and
     size.
-    <p><b>Note:</b>
-    The address of the table is guaranteed to be even
-    (that is, 4-byte aligned). If the code size of the method is otherwise
-    odd, then an extra code unit is inserted between the main code and the
-    table whose value is the same as a <code>nop</code>.</p>
   </td>
 </tr>
 <tr>
@@ -495,17 +504,13 @@
   <td>packed-switch vAA, +BBBBBBBB <i>(with supplemental data as
     specified below in "<code>packed-switch</code> Format")</i></td>
   <td><code>A:</code> register to test<br/>
-    <code>B:</code> signed "branch" offset to table data (32 bits)</td>
+    <code>B:</code> signed "branch" offset to table data pseudo-instruction
+    (32 bits)
+  </td>
   <td>Jump to a new instruction based on the value in the
     given register, using a table of offsets corresponding to each value
     in a particular integral range, or fall through to the next
     instruction if there is no match.
-    <p><b>Note:</b>
-    The address of the
-    table is guaranteed to be even (that is, 4-byte aligned). If the
-    code size of the method is otherwise odd, then an extra code unit
-    is inserted between the main code and the table whose value is
-    the same as a <code>nop</code>.</p>
   </td>
 </tr>
 <tr>
@@ -513,13 +518,12 @@
   <td>sparse-switch vAA, +BBBBBBBB <i>(with supplemental data as
     specified below in "<code>sparse-switch</code> Format")</i></td>
   <td><code>A:</code> register to test<br/>
-    <code>B:</code> signed "branch" offset to table data (32 bits)</td>
+    <code>B:</code> signed "branch" offset to table data pseudo-instruction
+    (32 bits)
+  </td>
   <td>Jump to a new instruction based on the value in the given
     register, using an ordered table of value-offset pairs, or fall
     through to the next instruction if there is no match.
-    <p><b>Note:</b>
-    Alignment and padding considerations are identical to
-    <code>packed-switch</code>, above.</p>
   </td>
 </tr>
 <tr>

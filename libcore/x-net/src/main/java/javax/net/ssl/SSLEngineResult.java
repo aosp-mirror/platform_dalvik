@@ -15,16 +15,13 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package javax.net.ssl;
 
 /**
- * @com.intel.drl.spec_ref
+ * The result object describing the state of the {@code SSLEngine} produced
+ * by the {@code wrap()} and {@code unwrap()} operations.
  * 
+ * @since Android 1.0
  */
 public class SSLEngineResult {
     
@@ -41,7 +38,22 @@ public class SSLEngineResult {
     private final int bytesProduced;
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code SSLEngineResult} instance with the specified state
+     * values.
+     * 
+     * @param status
+     *            the return value of the {@code SSLEngine} operation.
+     * @param handshakeStatus
+     *            the status of the current handshake
+     * @param bytesConsumed
+     *            the number of bytes retrieved from the source buffer(s).
+     * @param bytesProduced
+     *            the number of bytes transferred to the destination buffer(s).
+     * @throws IllegalArgumentException
+     *             if {@code status} or {@code handshakeStatus} is {@code null},
+     *             or if {@code bytesConsumed} or {@code bytesProduces} are
+     *             negative.
+     * @since Android 1.0
      */
     public SSLEngineResult(SSLEngineResult.Status status,
             SSLEngineResult.HandshakeStatus handshakeStatus, int bytesConsumed,
@@ -65,35 +77,50 @@ public class SSLEngineResult {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the return value of the {@code SSLEngine} operation.
+     * 
+     * @return the return value of the {@code SSLEngine} operation.
+     * @since Android 1.0
      */
     public final Status getStatus() {
         return status;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the status of the current handshake.
+     * 
+     * @return the status of the current handshake.
+     * @since Android 1.0
      */
     public final HandshakeStatus getHandshakeStatus() {
         return handshakeStatus;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the number of bytes retrieved from the source buffer(s).
+     * 
+     * @return the number of bytes retrieved from the source buffer(s).
+     * @since Android 1.0
      */
     public final int bytesConsumed() {
         return bytesConsumed;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the number of bytes transferred to the destination buffer(s).
+     * 
+     * @return the number of bytes transferred to the destination buffer(s).
+     * @since Android 1.0
      */
     public final int bytesProduced() {
         return bytesProduced;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns a string representation of this instance.
+     * 
+     * @return a string representation of this instance.
+     * @since Android 1.0
      */
     public String toString() {
         StringBuffer sb = new StringBuffer("SSLEngineReport: Status = ");
@@ -108,23 +135,79 @@ public class SSLEngineResult {
     }
 
     /**
-     * @com.intel.drl.spec_ref 
+     * The {@code enum} describing the state of the current handshake.
+     * 
+     * @since Android 1.0
      */
     public enum HandshakeStatus {
+        /**
+         * No handshake in progress.
+         * 
+         * @since Android 1.0
+         */
         NOT_HANDSHAKING,
+        /**
+         * The handshake is finished.
+         * 
+         * @since Android 1.0
+         */
         FINISHED,
+        /**
+         * The results of one (or more) delegated tasks are needed to continue
+         * the handshake.
+         * 
+         * @since Android 1.0
+         */
         NEED_TASK,
+        /**
+         * The engine must send data to the remote side to continue the
+         * handshake.
+         * 
+         * @since Android 1.0
+         */
         NEED_WRAP,
+        /**
+         * The engine needs to receive data from the remote side to continue the
+         * handshake.
+         * 
+         * @since Android 1.0
+         */
         NEED_UNWRAP
     }
 
     /**
-     * @com.intel.drl.spec_ref 
+     * The {@code enum} describing the result of the {@code SSLEngine}
+     * operation.
+     * 
+     * @since Android 1.0
      */
     public static enum Status {
+        /**
+         * The size of the destination buffer is too small to hold the result of
+         * the current operation.
+         * 
+         * @since Android 1.0
+         */
         BUFFER_OVERFLOW,
+        /**
+         * There were not enough bytes available in the source buffer to
+         * complete the current operation.
+         * 
+         * @since Android 1.0
+         */
         BUFFER_UNDERFLOW,
+        /**
+         * The operation closed this side of the communication or was already
+         * closed.
+         * 
+         * @since Android 1.0
+         */
         CLOSED,
+        /**
+         * The operation completed successfully.
+         * 
+         * @since Android 1.0
+         */
         OK
     }
 }

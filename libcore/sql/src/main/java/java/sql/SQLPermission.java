@@ -22,13 +22,20 @@ import java.security.BasicPermission;
 import java.security.Guard;
 
 /**
- * Permission relating to security access control in the java.sql package.
+ * A Permission relating to security access control in the {@code java.sql}
+ * package.
  * <p>
- * Currently, the only permission supported has the name "setLog". The setLog
- * permission controls whether a Java application or applet can open a logging
- * stream using the DriverManager.setLogWriter method or the
- * DriverManager.setLogStream method. This is a potentially dangerous operation
- * since the logging stream can contain usernames, passwords
+ * Currently, the only permission supported has the name " {@code setLog}". The
+ * {@code setLog} permission controls whether a Java application or applet can
+ * open a logging stream using the {@code DriverManager.setLogWriter} method or
+ * the {@code DriverManager.setLogStream} method. This is a potentially
+ * dangerous operation since the logging stream can contain sensitive
+ * information such as usernames and passwords.
+ * </p>
+ * 
+ * @see DriverManager
+ * 
+ * @since Android 1.0
  */
 public final class SQLPermission extends BasicPermission implements Guard,
         Serializable {
@@ -36,23 +43,23 @@ public final class SQLPermission extends BasicPermission implements Guard,
     private static final long serialVersionUID = -1439323187199563495L;
 
     /**
-     * Creates a new SQLPermission object with the specified name.
+     * Creates a new {@code SQLPermission} object with the specified name.
      * 
      * @param name
-     *            the name to use for this SQLPermission
+     *            the name to use for this {@code SQLPermission}.
      */
     public SQLPermission(String name) {
         super(name);
     }
 
     /**
-     * Creates a new SQLPermission object with the specified name.
+     * Creates a new {@code SQLPermission} object with the specified name.
      * 
      * @param name
-     *            is the name of the SQLPermission. Currently only "setLog" is
-     *            allowed.
+     *            is the name of the {@code SQLPermission}. Currently only
+     *            {@code "setLog"} is allowed.
      * @param actions
-     *            is currently unused and should be set to null
+     *            is currently unused and should be set to {@code null}.
      */
     public SQLPermission(String name, String actions) {
         super(name, null);

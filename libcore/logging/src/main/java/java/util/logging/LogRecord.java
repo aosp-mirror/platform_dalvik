@@ -27,21 +27,22 @@ import java.util.ResourceBundle;
 import org.apache.harmony.logging.internal.nls.Messages;
 
 /**
- * A <code>LogRecord</code> object represents a logging request. It is passed
- * between the logging framework and individual logging handlers. Client
- * applications should not modify a <code>LogRecord</code> object that has
- * been passed into the logging framework.
+ * A {@code LogRecord} object represents a logging request. It is passed between
+ * the logging framework and individual logging handlers. Client applications
+ * should not modify a {@code LogRecord} object that has been passed into the
+ * logging framework.
  * <p>
- * The <code>LogRecord</code> class will infer the source method name and
- * source class name the first time they are accessed if the client application
- * didn't specify them explicitly. This automatic inference is based on the
- * analysis of the call stack and is not guaranteed to be precise. Client
- * applications should force the initialization of these two fields by calling
- * <code>getSourceClassName</code> or <code>getSourceMethodName</code> if
- * they expect to use them after passing the <code>LogRecord</code> object to
- * another thread or transmitting it over RMI.
+ * The {@code LogRecord} class will infer the source method name and source
+ * class name the first time they are accessed if the client application didn't
+ * specify them explicitly. This automatic inference is based on the analysis of
+ * the call stack and is not guaranteed to be precise. Client applications
+ * should force the initialization of these two fields by calling
+ * {@code getSourceClassName} or {@code getSourceMethodName} if they expect to
+ * use them after passing the {@code LogRecord} object to another thread or
+ * transmitting it over RMI.
  * </p>
  * 
+ * @since Android 1.0
  */
 public class LogRecord implements Serializable {
 
@@ -112,7 +113,7 @@ public class LogRecord implements Serializable {
     private long millis;
 
     /**
-     * The associated <code>Throwable</code> object if any.
+     * The associated {@code Throwable} object if any.
      * 
      * @serial
      */
@@ -142,16 +143,19 @@ public class LogRecord implements Serializable {
     private transient boolean sourceInited;
 
     /**
-     * Constructs a <code>LogRecord</code> object using the supplied the
-     * logging level and message. The millis property is set to the current
-     * time. The sequence property is set to a new unique value, allocated in
-     * increasing order within a VM. The thread ID is set to a unique value for
-     * the current thread. All other properties are set to <code>null</code>.
+     * Constructs a {@code LogRecord} object using the supplied the logging
+     * level and message. The millis property is set to the current time. The
+     * sequence property is set to a new unique value, allocated in increasing
+     * order within the virtual machine. The thread ID is set to a unique value
+     * for the current thread. All other properties are set to {@code null}.
      * 
      * @param level
-     *            the logging level which may not be null
+     *            the logging level, may not be {@code null}.
      * @param msg
-     *            the raw message
+     *            the raw message.
+     * @throws NullPointerException
+     *             if {@code level} is {@code null}.
+     * @since Android 1.0
      */
     public LogRecord(Level level, String msg) {
         if (null == level) {
@@ -185,7 +189,8 @@ public class LogRecord implements Serializable {
     /**
      * Gets the logging level.
      * 
-     * @return the logging level
+     * @return the logging level.
+     * @since Android 1.0
      */
     public Level getLevel() {
         return level;
@@ -195,7 +200,10 @@ public class LogRecord implements Serializable {
      * Sets the logging level.
      * 
      * @param level
-     *            the level to set
+     *            the level to set.
+     * @throws NullPointerException
+     *             if {@code level} is {@code null}.
+     * @since Android 1.0
      */
     public void setLevel(Level level) {
         if (null == level) {
@@ -208,7 +216,8 @@ public class LogRecord implements Serializable {
     /**
      * Gets the name of the logger.
      * 
-     * @return the logger name
+     * @return the logger name.
+     * @since Android 1.0
      */
     public String getLoggerName() {
         return loggerName;
@@ -218,7 +227,8 @@ public class LogRecord implements Serializable {
      * Sets the name of the logger.
      * 
      * @param loggerName
-     *            the logger name to set
+     *            the logger name to set.
+     * @since Android 1.0
      */
     public void setLoggerName(String loggerName) {
         this.loggerName = loggerName;
@@ -227,36 +237,42 @@ public class LogRecord implements Serializable {
     /**
      * Gets the raw message.
      * 
-     * @return the raw message
+     * @return the raw message, may be {@code null}.
+     * @since Android 1.0
      */
     public String getMessage() {
         return message;
     }
 
     /**
-     * Sets the raw message.
+     * Sets the raw message. When this record is formatted by a logger that has
+     * a localization resource bundle that contains an entry for {@code message},
+     * then the raw message is replaced with its localized version.
      * 
      * @param message
-     *            the raw message to set
+     *            the raw message to set, may be {@code null}.
+     * @since Android 1.0
      */
     public void setMessage(String message) {
         this.message = message;
     }
 
     /**
-     * Gets the time that the event occurred, in milliseconds since 1970.
+     * Gets the time when this event occurred, in milliseconds since 1970.
      * 
-     * @return the time that the event occurred, in milliseconds since 1970
+     * @return the time when this event occurred, in milliseconds since 1970.
+     * @since Android 1.0
      */
     public long getMillis() {
         return millis;
     }
 
     /**
-     * Sets the time that the event occurred, in milliseconds since 1970.
+     * Sets the time when this event occurred, in milliseconds since 1970.
      * 
      * @param millis
-     *            the time that the event occurred, in milliseconds since 1970
+     *            the time when this event occurred, in milliseconds since 1970.
+     * @since Android 1.0
      */
     public void setMillis(long millis) {
         this.millis = millis;
@@ -265,7 +281,9 @@ public class LogRecord implements Serializable {
     /**
      * Gets the parameters.
      * 
-     * @return the array of parameters
+     * @return the array of parameters or {@code null} if there are no
+     *         parameters.
+     * @since Android 1.0
      */
     public Object[] getParameters() {
         return parameters;
@@ -275,7 +293,8 @@ public class LogRecord implements Serializable {
      * Sets the parameters.
      * 
      * @param parameters
-     *            the array of parameters to set
+     *            the array of parameters to set, may be {@code null}.
+     * @since Android 1.0
      */
     public void setParameters(Object[] parameters) {
         this.parameters = parameters;
@@ -285,18 +304,20 @@ public class LogRecord implements Serializable {
      * Gets the resource bundle used to localize the raw message during
      * formatting.
      * 
-     * @return the associated resource bundle
+     * @return the associated resource bundle, {@code null} if none is
+     *         available or the message is not localizable.
+     * @since Android 1.0
      */
     public ResourceBundle getResourceBundle() {
         return resourceBundle;
     }
 
     /**
-     * Sets the resource bundle used to localize the raw message during
-     * formatting.
+     * Sets the resource bundle. 
      * 
      * @param resourceBundle
-     *            the resource bundle to set
+     *            the resource bundle to set, may be {@code null}.
+     * @since Android 1.0            
      */
     public void setResourceBundle(ResourceBundle resourceBundle) {
         this.resourceBundle = resourceBundle;
@@ -305,7 +326,9 @@ public class LogRecord implements Serializable {
     /**
      * Gets the name of the resource bundle.
      * 
-     * @return the name of the resource bundle
+     * @return the name of the resource bundle, {@code null} if none is
+     *         available or the message is not localizable.
+     * @since Android 1.0
      */
     public String getResourceBundleName() {
         return resourceBundleName;
@@ -315,7 +338,8 @@ public class LogRecord implements Serializable {
      * Sets the name of the resource bundle.
      * 
      * @param resourceBundleName
-     *            the name of the resource bundle to set
+     *            the name of the resource bundle to set.
+     * @since Android 1.0            
      */
     public void setResourceBundleName(String resourceBundleName) {
         this.resourceBundleName = resourceBundleName;
@@ -324,28 +348,32 @@ public class LogRecord implements Serializable {
     /**
      * Gets the sequence number.
      * 
-     * @return the sequence number
+     * @return the sequence number.
+     * @since Android 1.0
      */
     public long getSequenceNumber() {
         return sequenceNumber;
     }
 
     /**
-     * Sets the sequence number. It is usually unnecessary to call this method
+     * Sets the sequence number. It is usually not necessary to call this method
      * to change the sequence number because the number is allocated when this
      * instance is constructed.
      * 
      * @param sequenceNumber
-     *            the sequence number to set
+     *            the sequence number to set.
+     * @since Android 1.0
      */
     public void setSequenceNumber(long sequenceNumber) {
         this.sequenceNumber = sequenceNumber;
     }
 
     /**
-     * Gets the name of the class that issued the logging call.
+     * Gets the name of the class that is the source of this log record. This
+     * information can be changed, may be {@code null} and is untrusted.
      * 
-     * @return the name of the class that issued the logging call
+     * @return the name of the source class of this log record (possiblity {@code null})
+     * @since Android 1.0
      */
     public String getSourceClassName() {
         initSource();
@@ -378,10 +406,12 @@ public class LogRecord implements Serializable {
     }
 
     /**
-     * Sets the name of the class that issued the logging call.
+     * Sets the name of the class that is the source of this log record.
      * 
      * @param sourceClassName
-     *            the name of the class that issued the logging call
+     *            the name of the source class of this log record, may be
+     *            {@code null}.
+     * @since Android 1.0
      */
     public void setSourceClassName(String sourceClassName) {
         sourceInited = true;
@@ -389,9 +419,10 @@ public class LogRecord implements Serializable {
     }
 
     /**
-     * Gets the name of the method that issued the logging call.
+     * Gets the name of the method that is the source of this log record.
      * 
-     * @return the name of the method that issued the logging call
+     * @return the name of the source method of this log record.
+     * @since Android 1.0
      */
     public String getSourceMethodName() {
         initSource();
@@ -399,10 +430,12 @@ public class LogRecord implements Serializable {
     }
 
     /**
-     * Sets the name of the method that issued the logging call.
+     * Sets the name of the method that is the source of this log record.
      * 
      * @param sourceMethodName
-     *            the name of the method that issued the logging call
+     *            the name of the source method of this log record, may be
+     *            {@code null}.
+     * @since Android 1.0
      */
     public void setSourceMethodName(String sourceMethodName) {
         sourceInited = true;
@@ -410,40 +443,47 @@ public class LogRecord implements Serializable {
     }
 
     /**
-     * Gets the ID of the thread originating the message.
+     * Gets a unique ID of the thread originating the log record. Every thread
+     * becomes a different ID.
+     * <p>
+     * Notice : the ID doesn't necessary map the OS thread ID
+     * </p>
      * 
-     * @return the ID of the thread originating the message
+     * @return the ID of the thread originating this log record.
+     * @since Android 1.0
      */
     public int getThreadID() {
         return threadID;
     }
 
     /**
-     * Sets the ID of the thread originating the message.
+     * Sets the ID of the thread originating this log record.
      * 
      * @param threadID
-     *            the ID of the thread originating the message
+     *            the new ID of the thread originating this log record.
+     * @since Android 1.0
      */
     public void setThreadID(int threadID) {
         this.threadID = threadID;
     }
 
     /**
-     * Gets the <code>Throwable</code> object associated with this log record.
+     * Gets the {@code Throwable} object associated with this log record.
      * 
-     * @return the <code>Throwable</code> object associated with this log
-     *         record
+     * @return the {@code Throwable} object associated with this log record.
+     * @since Android 1.0
      */
     public Throwable getThrown() {
         return thrown;
     }
 
     /**
-     * Sets the <code>Throwable</code> object associated with this log record.
+     * Sets the {@code Throwable} object associated with this log record.
      * 
      * @param thrown
-     *            the <code>Throwable</code> object associated with this log
-     *            record
+     *            the new {@code Throwable} object to associate with this log
+     *            record.
+     * @since Android 1.0
      */
     public void setThrown(Throwable thrown) {
         this.thrown = thrown;

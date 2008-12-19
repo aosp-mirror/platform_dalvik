@@ -17,19 +17,23 @@
 package java.lang.reflect;
 
 /**
- * Common interface for entities that have type variables.
+ * Common interface for language constructs that declare type parameters.
  * 
  * @since 1.5
+ * @since Android 1.0
  */
 public interface GenericDeclaration {
 
     /**
-     * Returns the generic declared types in declaration order. If there are no
-     * generic types this method returns a zero length array.
+     * Returns the declared type parameters in declaration order. If there are
+     * no type parameters, this method returns a zero length array.
      * 
-     * @return array of generic declared type variables.
+     * @return the declared type parameters in declaration order
+     * 
      * @throws GenericSignatureFormatError
-     *             if the signature is malformed.
+     *             if the signature is malformed
+     * 
+     * @since Android 1.0
      */
     TypeVariable<?>[] getTypeParameters();
 }

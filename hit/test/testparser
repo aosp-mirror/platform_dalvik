@@ -1,0 +1,4 @@
+#!/bin/sh
+
+find ../src -name \*java | xargs javac -d build
+java -cp build com.android.hit.Main ../samples/android.hprof

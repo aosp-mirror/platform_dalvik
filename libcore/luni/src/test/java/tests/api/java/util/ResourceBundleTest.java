@@ -17,6 +17,11 @@
 
 package tests.api.java.util;
 
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass; 
+
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -30,12 +35,22 @@ import java.util.Vector;
 import tests.support.resource.Support_Resources;
 import tests.api.java.util.support.B;
 
+@TestTargetClass(ResourceBundle.class) 
 public class ResourceBundleTest extends junit.framework.TestCase {
 
     /**
      * @tests java.util.ResourceBundle#getBundle(java.lang.String,
      *        java.util.Locale)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies positive functionality.",
+      targets = {
+        @TestTarget(
+          methodName = "getBundle",
+          methodArgs = {java.lang.String.class, java.util.Locale.class}
+        )
+    })
     public void test_getBundleLjava_lang_StringLjava_util_Locale() {
         ResourceBundle bundle;
         String name = "tests.support.Support_TestResource";
@@ -97,7 +112,17 @@ public class ResourceBundleTest extends junit.framework.TestCase {
      * @tests java.util.ResourceBundle#getBundle(java.lang.String,
      *        java.util.Locale, java.lang.ClassLoader)
      */
-    public void test_getBundleLjava_lang_StringLjava_util_LocaleLjava_lang_ClassLoader() {
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify NullPointerException, MissingResourceException.",
+      targets = {
+        @TestTarget(
+          methodName = "getBundle",
+          methodArgs = {java.lang.String.class, java.util.Locale.class, 
+                  java.lang.ClassLoader.class}
+        )
+    })
+    public void _test_getBundleLjava_lang_StringLjava_util_LocaleLjava_lang_ClassLoader() {
         String classPath = System.getProperty("java.class.path");
         StringTokenizer tok = new StringTokenizer(classPath, File.pathSeparator);
         Vector urlVec = new Vector();
@@ -138,6 +163,15 @@ public class ResourceBundleTest extends junit.framework.TestCase {
     /**
      * @tests java.util.ResourceBundle#getString(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "getBundle",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_getStringLjava_lang_String() {
         ResourceBundle bundle;
         String name = "tests.support.Support_TestResource";
@@ -158,7 +192,15 @@ public class ResourceBundleTest extends junit.framework.TestCase {
         assertEquals("Wrong value child1", 
                 "frFRVARChildValue1", bundle.getString("child1"));
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Regression test. Doesn't verify NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "getBundle",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_getBundle_getClassName() {
         // Regression test for Harmony-1759
         Locale locale = Locale.GERMAN;

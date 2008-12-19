@@ -15,16 +15,31 @@
  */
 package tests.api.java.io;
 
+import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestLevel;
+
 import java.io.IOException;
 import java.io.Writer;
 
 import junit.framework.TestCase;
 
+@TestTargetClass(Writer.class) 
 public class WriterTest extends TestCase {
 
     /**
      * @tests java.io.Writer#append(char)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "IOException checking missed.",
+              targets = {
+                @TestTarget(
+                  methodName = "append",
+                  methodArgs = {char.class}
+                )
+            })
     public void test_appendChar() throws IOException {
         char testChar = ' ';
         MockWriter writer = new MockWriter(20);
@@ -37,6 +52,15 @@ public class WriterTest extends TestCase {
     /**
      * @tests java.io.Writer#append(CharSequence)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "IOException checking missed.",
+              targets = {
+                @TestTarget(
+                  methodName = "append",
+                  methodArgs = {java.lang.CharSequence.class}
+                )
+            })
     public void test_appendCharSequence() throws IOException {
         String testString = "My Test String";
         MockWriter writer = new MockWriter(20);
@@ -49,6 +73,15 @@ public class WriterTest extends TestCase {
     /**
      * @tests java.io.Writer#append(CharSequence, int, int)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "IndexOutOfBoundsException & IOException checking missed.",
+              targets = {
+                @TestTarget(
+                  methodName = "append",
+                  methodArgs = {java.lang.CharSequence.class, int.class, int.class}
+                )
+            })
     public void test_appendCharSequenceIntInt() throws IOException {
         String testString = "My Test String";
         MockWriter writer = new MockWriter(20);

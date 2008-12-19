@@ -20,31 +20,40 @@ package javax.sql;
 import java.sql.SQLException;
 
 /**
- * An interface which provides functionality for a disconnected RowSet to get
- * data from a data source into its rows. The RowSet calls the RowSetReader
- * interface when the RowSet's execute method is invoked - a RowSetReader must
- * first be registered with the RowSet for this to work.
+ * An interface which provides functionality for a disconnected {@code RowSet}
+ * to get data from a database into its rows. The {@code RowSet} calls the
+ * {@code RowSetReader} interface when the {@code RowSet}'s execute method is
+ * invoked - a {@code RowSetReader} must first be registered with the {@code
+ * RowSet} for this to work.
+ * 
+ * @see RowSet
+ * @since Android 1.0
  */
 public interface RowSetReader {
 
     /**
-     * Reads new data into the RowSet. The calling RowSet object must itself
-     * implement the RowSetInternal interface and the RowSetReader must be
-     * registered as a Reader on the RowSet.
+     * Reads new data into the {@code RowSet}. The calling {@code RowSet} object
+     * must itself implement the {@code RowSetInternal} interface and the
+     * {@code RowSetReader} must be registered as a reader on the 
+     * {@code RowSet}.
      * <p>
-     * This method adds rows into the calling RowSet. The Reader may invoke any
-     * of the RowSet's methods except for the <code>execute</code> method
-     * (calling execute will cause an SQLException to be thrown). However, when
-     * the Reader calls the RowSet's methods, no events are sent to listeners -
-     * any listeners are informed by the calling RowSet's execute method once
-     * the Reader returns from the readData method.
+     * This method adds rows into the calling {@code RowSet}. The reader may
+     * invoke any of the {@code RowSet}'s methods except for the {@code execute}
+     * method (calling {@code execute} will cause an {@code SQLException} to be
+     * thrown). However, when the reader calls the {@code RowSet}'s methods, no
+     * events are sent to listeners - any listeners are informed by the calling
+     * {@code RowSet}'s {@code execute} method once the reader returns from the
+     * {@code readData} method.
+     * </p>
      * 
      * @param theCaller
-     *            must be the calling RowSet object, which must have implemented
-     *            the RowSetInternal interface.
+     *            must be the calling {@code RowSet} object, which must have
+     *            implemented the {@code RowSetInternal} interface.
      * @throws SQLException
-     *             if a problem occurs accessing the database or if the Reader
-     *             calls the RowSet.execute method.
+     *             if a problem occurs accessing the database or if the reader
+     *             calls the {@link RowSet#execute()} method.
+     * @see RowSetInternal
+     * @since Android 1.0
      */
     public void readData(RowSetInternal theCaller) throws SQLException;
 }

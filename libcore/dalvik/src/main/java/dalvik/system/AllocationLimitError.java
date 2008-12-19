@@ -17,18 +17,22 @@
 package dalvik.system;
 
 /**
- * This is thrown when an allocation limit is exceeded.
+ * Is thrown when an allocation limit is exceeded.
+ * 
+ * @since Android 1.0
  */
 public class AllocationLimitError extends VirtualMachineError {
     /**
-     * Initialize exception with default values.
+     * Creates a new exception instance and initializes it with default values.
      */
     public AllocationLimitError() {
         super();
     }
 
     /**
-     * Initialize exception with the supplied message string.
+     * Creates a new exception instance and initializes it with a given message.
+     * 
+     * @param detailMessage the error message
      */
     public AllocationLimitError(String detailMessage) {
         super(detailMessage);

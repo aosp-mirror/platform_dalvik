@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vladimir N. Molotkov
-* @version $Revision$
-*/
-
 package java.security.cert;
 
 import java.security.InvalidAlgorithmParameterException;
@@ -37,8 +32,15 @@ import java.util.Set;
 import org.apache.harmony.security.internal.nls.Messages;
 
 /**
- * @com.intel.drl.spec_ref
+ * This class implements the parameters for the {@code PKIX CertPathValidator}.
+ * <p>
+ * The parameters must be created with <i>trusted</i> certificate authorities
+ * (trust anchors).
+ * </p>
  * 
+ * @see CertPathValidator
+ * @see CertPathParameters
+ * @since Android 1.0
  */
 public class PKIXParameters implements CertPathParameters {
     // Set of trust anchors - most trusted CAs
@@ -70,7 +72,14 @@ public class PKIXParameters implements CertPathParameters {
     private boolean policyQualifiersRejected = true;
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code PKIXParameters} instance with the specified set of
+     * <i>trusted</i> certificate authorities.
+     * 
+     * @param trustAnchors
+     *            the trusted CAs.
+     * @throws InvalidAlgorithmParameterException
+     *             if {@code trustAnchors} is empty.
+     * @since Android 1.0
      */
     public PKIXParameters(Set<TrustAnchor> trustAnchors)
         throws InvalidAlgorithmParameterException {
@@ -82,7 +91,17 @@ public class PKIXParameters implements CertPathParameters {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code PKIXParameters} instance with the trusted {@code
+     * X509Certificate} entries from the specified {@code KeyStore}.
+     * 
+     * @param keyStore
+     *            the key store containing trusted certificates.
+     * @throws KeyStoreException
+     *             if the {@code keyStore} is not initialized.
+     * @throws InvalidAlgorithmParameterException
+     *             if {@code keyStore} does not contained any trusted
+     *             certificate entry.
+     * @since Android 1.0
      */
     public PKIXParameters(KeyStore keyStore)
         throws KeyStoreException,
@@ -115,14 +134,23 @@ public class PKIXParameters implements CertPathParameters {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns a unmodifiable set of the <i>trusted</i> certificate authorities.
+     * 
+     * @return a unmodifiable set of the <i>trusted</i> certificate authorities.
+     * @since Android 1.0
      */
     public Set<TrustAnchor> getTrustAnchors() {
         return Collections.unmodifiableSet(trustAnchors);
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Sets the set of <i>trusted</i> certificate authorities.
+     * 
+     * @param trustAnchors
+     *            the set of <i>trusted</i> certificate authorities.
+     * @throws InvalidAlgorithmParameterException
+     *             if {@code trustAnchors} is empty.
+     * @since Android 1.0
      */
     public void setTrustAnchors(Set<TrustAnchor> trustAnchors)
         throws InvalidAlgorithmParameterException {
@@ -136,21 +164,38 @@ public class PKIXParameters implements CertPathParameters {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns whether the <i>any policy OID</i> will be inhibited if it's
+     * included in a certificate.
+     * 
+     * @return {@code true} if the <i>any policy OID</i> will be inhibited,
+     *         otherwise {@code false}.
+     * @since Android 1.0
      */
     public boolean isAnyPolicyInhibited() {
         return anyPolicyInhibited;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Sets whether the <i>any policy OID</i> should be inhibited if it's
+     * included in a certificate.
+     * 
+     * @param anyPolicyInhibited
+     *            {@code true} if the <i>any policy OID</i> should be inhibited,
+     *            otherwise {@code false}.
+     * @since Android 1.0
      */
     public void setAnyPolicyInhibited(boolean anyPolicyInhibited) {
         this.anyPolicyInhibited = anyPolicyInhibited;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the list of checkers for the certification path.
+     * <p>
+     * The list is unmodifiable and the entries in the list are cloned.
+     * </p>
+     * 
+     * @return the list of checkers for the certification path.
+     * @since Android 1.0
      */
     public List<PKIXCertPathChecker> getCertPathCheckers() {
         if (certPathCheckers == null) {
@@ -174,7 +219,15 @@ public class PKIXParameters implements CertPathParameters {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Sets the list of checkers for the certification path.
+     * <p>
+     * The list is copied and the entries are cloned.
+     * </p>
+     * 
+     * @param certPathCheckers
+     *            the list of checkers for the certification path, or {@code
+     *            null} to clear the checkers.
+     * @since Android 1.0
      */
     public void setCertPathCheckers(List<PKIXCertPathChecker> certPathCheckers) {
         if (certPathCheckers == null || certPathCheckers.isEmpty()) {
@@ -195,7 +248,13 @@ public class PKIXParameters implements CertPathParameters {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Adds the specified {@code PKIXCertPathChecker} to the list of
+     * certification path checkers.
+     * 
+     * @param checker
+     *            the {@code PKIXCertPathChecker} to add, if {@code null}, it
+     *            will be ignored.
+     * @since Android 1.0
      */
     public void addCertPathChecker(PKIXCertPathChecker checker) {
         if (checker == null) {
@@ -211,7 +270,11 @@ public class PKIXParameters implements CertPathParameters {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the list of certificate stores that are used to find certificates
+     * and CRLs.
+     * 
+     * @return an immutable list of certificate stores.
+     * @since Android 1.0
      */
     public List<CertStore> getCertStores() {
         if (certStores == null) {
@@ -231,7 +294,11 @@ public class PKIXParameters implements CertPathParameters {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Set the list of certificate stores that are used to find certificates and
+     * CRLs.
+     * 
+     * @param certStores the list of certificate stores.
+     * @since Android 1.0
      */
     public void setCertStores(List<CertStore> certStores) {
         if (certStores == null || certStores.isEmpty()) {
@@ -253,7 +320,12 @@ public class PKIXParameters implements CertPathParameters {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Adds a certificate store to the list of certificate stores that are used
+     * to find certificates and CRLs.
+     * 
+     * @param store
+     *            the store to add, if {@code null}, it will be ignored.
+     * @since Android 1.0
      */
     public void addCertStore(CertStore store) {
         if (store == null) {
@@ -269,35 +341,62 @@ public class PKIXParameters implements CertPathParameters {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the time for which the validation of the certification path
+     * should be evaluated.
+     * 
+     * @return the time for the validation, or {@code null} for the current
+     *         time.
+     * @since Android 1.0
      */
     public Date getDate() {
         return date == null ? null : (Date)date.clone();
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Sets the time for which the validation of the certification path sould be
+     * evaluated.
+     * 
+     * @param date
+     *            the time for the validation, or {@code null} for the current
+     *            time.
+     * @since Android 1.0
      */
     public void setDate(Date date) {
         this.date = (date == null ? null : new Date(date.getTime()));
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns whether an acceptable policy needs to be explicit identified in
+     * every certificate.
+     * 
+     * @return {@code true} if an explicit policy is required, otherwise {@code
+     *         false}.
+     * @since Android 1.0
      */
     public boolean isExplicitPolicyRequired() {
         return explicitPolicyRequired;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Sets whether an an acceptable policy needs to be explicit identified in
+     * every certificate.
+     * 
+     * @param explicitPolicyRequired
+     *            {@code true} if an explicit policy is required, otherwise
+     *            {@code false}.
+     * @since Android 1.0
      */
     public void setExplicitPolicyRequired(boolean explicitPolicyRequired) {
         this.explicitPolicyRequired = explicitPolicyRequired;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the list of policies (as OID strings) that would be acceptable
+     * for the purpose of certification path processing.
+     * 
+     * @return the unmodifiable list of policies, or an empty set if any policy
+     *         is acceptable.
+     * @since Android 1.0
      */
     public Set<String> getInitialPolicies() {
         if (initialPolicies == null) {
@@ -316,7 +415,13 @@ public class PKIXParameters implements CertPathParameters {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Sets the list of policies (as OID strings) that would be acceptable for
+     * the purpose of certification path processing.
+     * 
+     * @param initialPolicies
+     *            the list of policies, or an empty set or {@code null} if any
+     *            policy is acceptable.
+     * @since Android 1.0
      */
     public void setInitialPolicies(Set<String> initialPolicies) {
         if (initialPolicies == null || initialPolicies.isEmpty()) {
@@ -339,63 +444,111 @@ public class PKIXParameters implements CertPathParameters {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns whether policy mapping is inhibited.
+     * 
+     * @return {@code true} if policy mapping is inhibited, otherwise {@code
+     *         false}.
+     * @since Android 1.0
      */
     public boolean isPolicyMappingInhibited() {
         return policyMappingInhibited;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Sets whether policy mapping is to be inhibited.
+     * 
+     * @param policyMappingInhibited
+     *            {@code true} if policy mapping is to be inhibited, otherwise
+     *            {@code false}.
+     * @since Android 1.0
      */
     public void setPolicyMappingInhibited(boolean policyMappingInhibited) {
         this.policyMappingInhibited = policyMappingInhibited;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns whether certificates are rejected that include policy
+     * qualifiers in a certificate policy extension that is marked as critical.
+     * 
+     * @return {@code true} if the certificates should be rejected, otherwise
+     *         {@code false}.
+     * @since Android 1.0
      */
     public boolean getPolicyQualifiersRejected() {
         return policyQualifiersRejected;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Sets whether certificates should be rejected that include policy
+     * qualifiers in a certificate policy extension that is marked as critical.
+     * 
+     * @param policyQualifiersRejected
+     *            {@code true} if the certificates should be rejected, otherwise
+     *            {@code false}.
+     * @since Android 1.0
      */
     public void setPolicyQualifiersRejected(boolean policyQualifiersRejected) {
         this.policyQualifiersRejected = policyQualifiersRejected;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns whether the default revocation checking mechanism of the
+     * underlying service provider is used.
+     * 
+     * @return {@code true} if the default revocation checking mechanism is
+     *         used, otherwise {@code false}.
+     * @since Android 1.0
      */
     public boolean isRevocationEnabled() {
         return revocationEnabled;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Sets whether the default revocation checking mechanism of the underlying
+     * service provider should be used.
+     * 
+     * @param revocationEnabled
+     *            {@code true} id the default revocation checking mechanism
+     *            should be used, otherwise {@code false}.
+     * @since Android 1.0
      */
     public void setRevocationEnabled(boolean revocationEnabled) {
         this.revocationEnabled = revocationEnabled;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the name of the signature provider.
+     * 
+     * @return the name of the signature provider, or {@code null} if none is
+     *         set.
+     * @since Android 1.0
      */
     public String getSigProvider() {
         return sigProvider;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Sets the name of the preferred signature provider.
+     * <p>
+     * If set, the specified provider will be preferred for creating signatures.
+     * If not set, the first provider found supporting creation of signatures
+     * will be used.
+     * 
+     * @param sigProvider
+     *            the name of the preferred signature provider, or {@code null}
+     *            if none is preferred.
+     * @since Android 1.0
      */
     public void setSigProvider(String sigProvider) {
         this.sigProvider = sigProvider;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the constraints that are required for the target certificate.
+     * 
+     * @return the constraints for the target certificate, or {@code null} if
+     *         none are set.
+     * @since Android 1.0
      */
     public CertSelector getTargetCertConstraints() {
         return (targetCertConstraints == null ? null
@@ -403,7 +556,12 @@ public class PKIXParameters implements CertPathParameters {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Sets the constraints that are required for the target certificate.
+     * 
+     * @param targetCertConstraints
+     *            the constraints for the target certificate, or {@code null} if
+     *            none should be used.
+     * @since Android 1.0
      */
     public void setTargetCertConstraints(CertSelector targetCertConstraints) {
         this.targetCertConstraints = (targetCertConstraints == null ? null
@@ -411,7 +569,10 @@ public class PKIXParameters implements CertPathParameters {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Clones this {@code PKIXParameters} instance.
+     * 
+     * @return the cloned instance.
+     * @since Android 1.0
      */
     public Object clone() {
         try {
@@ -431,7 +592,10 @@ public class PKIXParameters implements CertPathParameters {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns a string representation of this {@code PKIXParameters} instance.
+     * 
+     * @return a string representation of this {@code PKIXParameters} instance.
+     * @since Android 1.0
      */
     public String toString() {
         StringBuffer sb =

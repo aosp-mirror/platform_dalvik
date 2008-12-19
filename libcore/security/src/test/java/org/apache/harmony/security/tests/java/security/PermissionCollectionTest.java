@@ -21,13 +21,18 @@
 */
 
 package org.apache.harmony.security.tests.java.security;
+
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.security.Permission;
 import java.security.PermissionCollection;
 import java.util.*;
 
 import junit.framework.TestCase;
-
-
+@TestTargetClass(PermissionCollection.class)
 /**
  * Tests for <code>PermissionCollection</code>
  * 
@@ -70,6 +75,19 @@ public class PermissionCollectionTest extends TestCase {
     }
         
     /** Test read-only flag. Should be false by default and can be set once forever. */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isReadOnly",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "setReadOnly",
+          methodArgs = {}
+        )
+    })
     public void testReadOnly()
     {
         PermissionCollection pc = new RealPermissionCollection(null);

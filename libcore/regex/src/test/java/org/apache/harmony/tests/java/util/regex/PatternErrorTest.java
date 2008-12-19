@@ -19,7 +19,7 @@ package org.apache.harmony.tests.java.util.regex;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestStatus;
+import dalvik.annotation.TestLevel;
 
 import java.util.regex.Pattern;
 import junit.framework.TestCase;
@@ -31,10 +31,11 @@ import junit.framework.TestCase;
  */
 public class PatternErrorTest extends TestCase {
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies compile(String regex) and " +
+            level = TestLevel.PARTIAL,
+            purpose = "Verifies compile(String regex) and " +
                     "compile(String regex, int flag) method with " +
-                    "invalid parameters.",
+                    "invalid parameters. Doesn't verify " +
+                    "IllegalArgumentException, PatternSyntaxException.",
             targets = { @TestTarget(methodName = "compile", 
                                     methodArgs = { java.lang.String.class }),
                         @TestTarget(methodName = "compile", 

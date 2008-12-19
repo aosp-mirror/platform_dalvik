@@ -130,6 +130,13 @@ DEX_INLINE int dexGetInstrWidthAbs(const InstructionWidth* widths,OpCode opCode)
     return val;
 }
 
+/*
+ * Return the width of the specified instruction, or 0 if not defined.  Also
+ * works for special OP_NOP entries, including switch statement data tables
+ * and array data.
+ */
+int dexGetInstrOrTableWidthAbs(const InstructionWidth* widths, const u2* insns);
+
 
 /*
  * Allocate and populate a 256-element array with instruction flags.

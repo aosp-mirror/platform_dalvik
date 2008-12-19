@@ -16,6 +16,12 @@
  */
 package org.apache.harmony.luni.tests.java.lang;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
+@TestTargetClass(Object.class) 
 public class ObjectTest extends junit.framework.TestCase {
 
     /**
@@ -35,6 +41,15 @@ public class ObjectTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Object#Object()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Object",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         // Test for method java.lang.Object()
         assertNotNull("Constructor failed !!!", new Object());
@@ -43,6 +58,15 @@ public class ObjectTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Object#equals(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "equals",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_equalsLjava_lang_Object() {
         // Test for method boolean java.lang.Object.equals(java.lang.Object)
         assertTrue("Same object should be equal", obj1.equals(obj1));
@@ -52,6 +76,15 @@ public class ObjectTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Object#getClass()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getClass",
+          methodArgs = {}
+        )
+    })
     public void test_getClass() {
         // Test for method java.lang.Class java.lang.Object.getClass()
         String classNames[] = { "java.lang.Object", "java.lang.Throwable",
@@ -78,6 +111,15 @@ public class ObjectTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Object#hashCode()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "hashCode",
+          methodArgs = {}
+        )
+    })
     public void test_hashCode() {
         // Test for method int java.lang.Object.hashCode()
         assertTrue("Same object should have same hash.",
@@ -89,6 +131,15 @@ public class ObjectTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Object#notify()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IllegalMonitorStateException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "notify",
+          methodArgs = {}
+        )
+    })
     public void test_notify() {
         // Test for method void java.lang.Object.notify()
 
@@ -159,6 +210,15 @@ public class ObjectTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Object#notifyAll()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IllegalMonitorStateException  is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "notifyAll",
+          methodArgs = {}
+        )
+    })
     public void test_notifyAll() {
         // Test for method void java.lang.Object.notifyAll()
 
@@ -232,6 +292,15 @@ public class ObjectTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Object#toString()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public void test_toString() {
         // Test for method java.lang.String java.lang.Object.toString()
         assertNotNull("Object toString returned null.", obj1.toString());
@@ -240,6 +309,15 @@ public class ObjectTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Object#wait()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions are not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "wait",
+          methodArgs = {}
+        )
+    })
     public void test_wait() {
         // Test for method void java.lang.Object.wait()
 
@@ -256,7 +334,7 @@ public class ObjectTest extends junit.framework.TestCase {
                 }
             }
         }
-        ;
+        
 
         // Start of test code.
 
@@ -287,6 +365,15 @@ public class ObjectTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Object#wait(long)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions are not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "wait",
+          methodArgs = {long.class}
+        )
+    })
     public void test_waitJ() {
         // Test for method void java.lang.Object.wait(long)
 
@@ -343,6 +430,15 @@ public class ObjectTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Object#wait(long, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions are not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "wait",
+          methodArgs = {long.class, int.class}
+        )
+    })
     public void test_waitJI() {
         // Test for method void java.lang.Object.wait(long, int)
 

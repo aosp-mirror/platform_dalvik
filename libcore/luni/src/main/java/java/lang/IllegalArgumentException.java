@@ -17,48 +17,60 @@
 
 package java.lang;
 
-
 /**
- * This runtime exception is thrown when a method is invoked with an argument
- * which it can not reasonably deal with.
+ * Thrown when a method is invoked with an argument which it can not reasonably
+ * deal with.
+ * 
+ * @since Android 1.0
  */
 public class IllegalArgumentException extends RuntimeException {
 
     private static final long serialVersionUID = -5365630128856068164L;
 
     /**
-     * Constructs a new instance of this class with its walkback filled in.
+     * Constructs a new {@code IllegalArgumentException} that includes the
+     * current stack trace.
+     * 
+     * @since Android 1.0
      */
     public IllegalArgumentException() {
         super();
     }
 
     /**
-     * Constructs a new instance of this class with its walkback and message
-     * filled in.
+     * Constructs a new {@code IllegalArgumentException} with the current stack
+     * trace and the specified detail message.
      * 
      * @param detailMessage
-     *            String The detail message for the exception.
+     *            the detail message for this exception.
+     * @since Android 1.0
      */
     public IllegalArgumentException(String detailMessage) {
         super(detailMessage);
     }
     
     /**
-     * <p>Constructs a new instance with a message and cause.</p>
-     * @param message The message to assign to this exception.
-     * @param cause The optional cause of this exception; may be <code>null</code>.
-     * @since 1.5
+     * Constructs a new {@code IllegalArgumentException} with the current stack
+     * trace, the specified detail message and the specified cause.
+     * 
+     * @param message
+     *            the detail message for this exception.
+     * @param cause
+     *            the cause of this exception, may be {@code null}.
+     * @since Android 1.0
      */
     public IllegalArgumentException(String message, Throwable cause) {
         super(message, cause);
     }
     
     /**
-     * <p>Constructs a new instance with a cause.</p>
-     * @param cause The optional cause of this exception; may be <code>null</code>.
-     * @since 1.5
-     */
+     * Constructs a new {@code IllegalArgumentException} with the current stack
+     * trace and the specified cause.
+     * 
+     * @param cause
+     *            the cause of this exception, may be {@code null}.
+     * @since Android 1.0
+     */    
     public IllegalArgumentException(Throwable cause) {
         super((cause == null ? null : cause.toString()), cause);
     }

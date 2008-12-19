@@ -16,19 +16,34 @@
 
 package org.apache.harmony.luni.tests.java.util;
 
-import java.io.Serializable;
-import java.util.MissingFormatArgumentException;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
+
+import java.io.Serializable;
+import java.util.MissingFormatArgumentException;
 
 import org.apache.harmony.testframework.serialization.SerializationTest;
 import org.apache.harmony.testframework.serialization.SerializationTest.SerializableAssert;
 
+@TestTargetClass(MissingFormatArgumentException.class) 
 public class MissingFormatArgumentExceptionTest extends TestCase {
 
     /**
      * @tests java.util.MissingFormatArgumentException#MissingFormatArgumentException(String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "MissingFormatArgumentException",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_missingFormatArgumentException() {
 
         try {
@@ -42,6 +57,15 @@ public class MissingFormatArgumentExceptionTest extends TestCase {
     /**
      * @tests java.util.MissingFormatArgumentException#getFormatSpecifier()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getFormatSpecifier",
+          methodArgs = {}
+        )
+    })
     public void test_getFormatSpecifier() {
         String s = "MYTESTSTRING";
         MissingFormatArgumentException missingFormatArgumentException = new MissingFormatArgumentException(
@@ -52,6 +76,15 @@ public class MissingFormatArgumentExceptionTest extends TestCase {
     /**
      * @tests java.util.MissingFormatArgumentException#getMessage()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getMessage",
+          methodArgs = {}
+        )
+    })
     public void test_getMessage() {
         String s = "MYTESTSTRING";
         MissingFormatArgumentException missingFormatArgumentException = new MissingFormatArgumentException(
@@ -79,6 +112,15 @@ public class MissingFormatArgumentExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization.
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationSelf",
+          methodArgs = {}
+        )
+    })
     public void testSerializationSelf() throws Exception {
 
         SerializationTest.verifySelf(new MissingFormatArgumentException(
@@ -88,6 +130,15 @@ public class MissingFormatArgumentExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationGolden",
+          methodArgs = {}
+        )
+    })
     public void testSerializationCompatibility() throws Exception {
 
         SerializationTest.verifyGolden(this,

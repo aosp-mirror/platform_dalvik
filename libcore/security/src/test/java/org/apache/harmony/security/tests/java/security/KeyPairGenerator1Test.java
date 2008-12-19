@@ -22,6 +22,11 @@
 
 package org.apache.harmony.security.tests.java.security;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.math.BigInteger;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidParameterException;
@@ -38,7 +43,7 @@ import org.apache.harmony.security.tests.support.MyKeyPairGenerator2;
 import org.apache.harmony.security.tests.support.SpiEngUtils;
 
 import junit.framework.TestCase;
-
+@TestTargetClass(KeyPairGenerator.class)
 /**
  * Tests for <code>KeyPairGenerator</code> class constructors and methods.
  * 
@@ -106,6 +111,15 @@ public class KeyPairGenerator1Test extends TestCase {
      * throws NullPointerException  when algorithm is null
      * throws NoSuchAlgorithmException when algorithm is incorrect; 
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getInstance",
+          methodArgs = {String.class}
+        )
+    })
     public void testKeyPairGenerator01() throws NoSuchAlgorithmException {
         try {
             KeyPairGenerator.getInstance(null);
@@ -127,6 +141,15 @@ public class KeyPairGenerator1Test extends TestCase {
      * Test for <code>getInstance(String algorithm)</code> method 
      * Assertion: returns KeyPairGenerator object
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getInstance",
+          methodArgs = {String.class}
+        )
+    })
     public void testKeyPairGenerator02() throws NoSuchAlgorithmException {
         if (!DSASupported) {
             fail(NotSupportMsg);
@@ -145,6 +168,15 @@ public class KeyPairGenerator1Test extends TestCase {
      * method 
      * Assertion: throws IllegalArgumentException when provider is null or empty
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getInstance",
+          methodArgs = {String.class, String.class}
+        )
+    })
     public void testKeyPairGenerator03() throws NoSuchAlgorithmException,
             NoSuchProviderException {
         if (!DSASupported) {
@@ -170,9 +202,17 @@ public class KeyPairGenerator1Test extends TestCase {
      * Test for <code>getInstance(String algorithm, String provider)</code>
      * method 
      * Assertion:
-     * throws NullPointerException  when algorithm is null
-     * throws NoSuchAlgorithmException when algorithm is incorrect; 
+     * throws NoSuchProviderException when provider is not available
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getInstance",
+          methodArgs = {String.class, String.class}
+        )
+    })
     public void testKeyPairGenerator04() throws NoSuchAlgorithmException,
             IllegalArgumentException {
         if (!DSASupported) {
@@ -196,8 +236,19 @@ public class KeyPairGenerator1Test extends TestCase {
      * Test for <code>getInstance(String algorithm, String provider)</code>
      * method 
      * Assertion: throws NoSuchAlgorithmException when algorithm is not
-     * available oe null
+     * available
+     * throws NullPointerException  when algorithm is null
+     * throws NoSuchAlgorithmException when algorithm is incorrect;
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getInstance",
+          methodArgs = {String.class, String.class}
+        )
+    })
     public void testKeyPairGenerator05() throws NoSuchProviderException,
             IllegalArgumentException {
         if (!DSASupported) {
@@ -227,6 +278,15 @@ public class KeyPairGenerator1Test extends TestCase {
      * method 
      * Assertion: returns KeyPairGenerator object
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getInstance",
+          methodArgs = {String.class, String.class}
+        )
+    })
     public void testKeyPairGenerator06() throws NoSuchProviderException,
             NoSuchAlgorithmException, IllegalArgumentException {
         if (!DSASupported) {
@@ -248,6 +308,15 @@ public class KeyPairGenerator1Test extends TestCase {
      * method 
      * Assertion: throws IllegalArgumentException when provider is null
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getInstance",
+          methodArgs = {String.class, Provider.class}
+        )
+    })
     public void testKeyPairGenerator07() throws NoSuchAlgorithmException {
         if (!DSASupported) {
             fail(NotSupportMsg);
@@ -270,6 +339,15 @@ public class KeyPairGenerator1Test extends TestCase {
      * throws NullPointerException  when algorithm is null
      * throws NoSuchAlgorithmException when algorithm is incorrect; 
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getInstance",
+          methodArgs = {String.class, Provider.class}
+        )
+    })
     public void testKeyPairGenerator08() throws IllegalArgumentException {
         if (!DSASupported) {
             fail(NotSupportMsg);
@@ -297,6 +375,15 @@ public class KeyPairGenerator1Test extends TestCase {
      * method 
      * Assertion: returns KeyPairGenerator object
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getInstance",
+          methodArgs = {String.class, Provider.class}
+        )
+    })
     public void testKeyPairGenerator09() throws NoSuchAlgorithmException,
             IllegalArgumentException {
         if (!DSASupported) {
@@ -318,6 +405,20 @@ public class KeyPairGenerator1Test extends TestCase {
      * Assertion: KeyPairGenerator was initialized before the invocation 
      * of these methods
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "generateKeyPair",
+          methodArgs = {}
+        ),
+       @TestTarget(
+          methodName = "genKeyPair",
+          methodArgs = {}
+        )
+
+    })
     public void testKeyPairGenerator10() throws NoSuchAlgorithmException,
             NoSuchProviderException, IllegalArgumentException {
             if (!DSASupported) {
@@ -348,7 +449,28 @@ public class KeyPairGenerator1Test extends TestCase {
      * Assertion: throws InvalidParameterException or
      * InvalidAlgorithmParameterException when parameters keysize or param are
      * incorrect
-     */   
+     */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "initialize",
+          methodArgs = {AlgorithmParameterSpec.class}
+        ),
+        @TestTarget(
+          methodName = "initialize",
+          methodArgs = {AlgorithmParameterSpec.class, SecureRandom.class}
+        ),
+        @TestTarget(
+          methodName = "initialize",
+          methodArgs = {int.class}
+        ),
+        @TestTarget(
+          methodName = "initialize",
+          methodArgs = {int.class, SecureRandom.class}
+        )
+    })
     public void testKeyPairGenerator11() throws NoSuchAlgorithmException,
             NoSuchProviderException {
         if (!DSASupported) {
@@ -391,6 +513,27 @@ public class KeyPairGenerator1Test extends TestCase {
      * incorrect Assertion: generateKeyPair() and genKeyPair() return null
      * KeyPair Additional class MyKeyPairGenerator1 is used
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "initialize",
+          methodArgs = {AlgorithmParameterSpec.class}
+        ),
+        @TestTarget(
+          methodName = "initialize",
+          methodArgs = {AlgorithmParameterSpec.class, SecureRandom.class}
+        ),
+        @TestTarget(
+          methodName = "initialize",
+          methodArgs = {int.class}
+        ),
+        @TestTarget(
+          methodName = "initialize",
+          methodArgs = {int.class, SecureRandom.class}
+        )
+    })
     public void testKeyPairGenerator12() {
         int[] keys = { -1, -250, 1, 64, 512, 1024 };
         SecureRandom random = new SecureRandom();
@@ -467,6 +610,27 @@ public class KeyPairGenerator1Test extends TestCase {
      * genKeyPair() return not null KeyPair Additional class MyKeyPairGenerator2
      * is used
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "initialize",
+          methodArgs = {AlgorithmParameterSpec.class}
+        ),
+        @TestTarget(
+          methodName = "initialize",
+          methodArgs = {AlgorithmParameterSpec.class, SecureRandom.class}
+        ),
+        @TestTarget(
+          methodName = "initialize",
+          methodArgs = {int.class}
+        ),
+        @TestTarget(
+          methodName = "initialize",
+          methodArgs = {int.class, SecureRandom.class}
+        )
+    })
     public void testKeyPairGenerator13() {
         int[] keys = { -1, -250, 1, 63, -512, -1024 };
         SecureRandom random = new SecureRandom();

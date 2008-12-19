@@ -27,15 +27,17 @@ import java.security.AccessController;
 import java.security.PrivilegedExceptionAction;
 
 /**
- * This class roots the implementation of interruptible channels.
+ * {@code AbstractInterruptibleChannel} is the root class for interruptible
+ * channels.
  * <p>
  * The basic usage pattern for an interruptible channel is to invoke
- * <code>begin()</code> before any IO operations, then
- * <code>end(boolean)</code> after completing the operation. The argument to
- * the end method shows whether there has been any change to the java
- * environment that is visible to the API user.
+ * {@code begin()} before any I/O operation that potentially blocks
+ * indefinitely, then {@code end(boolean)} after completing the operation. The
+ * argument to the {@code end} method should indicate if the I/O operation has
+ * actually completed so that any change may be visible to the invoker.
  * </p>
  * 
+ * @since Android 1.0
  */
 public abstract class AbstractInterruptibleChannel implements Channel,
         InterruptibleChannel {
@@ -67,29 +69,42 @@ public abstract class AbstractInterruptibleChannel implements Channel,
 
     /**
      * Default constructor.
+     * 
+     * @since Android 1.0
      */
     protected AbstractInterruptibleChannel() {
         super();
     }
 
     /**
-     * Returns whether the channel is open.
+     * Indicates whether this channel is open.
      * 
-     * @return true if the channel is open, and false if it is closed.
+     * @return {@code true} if this channel is open, {@code false} if it is
+     *         closed.
      * @see java.nio.channels.Channel#isOpen()
+     * @since Android 1.0
      */
     public synchronized final boolean isOpen() {
         return !closed;
     }
 
     /**
-     * Closes the channel.
+     * Closes an open channel. If the channel is already closed then this method
+     * has no effect, otherwise it closes the receiver via the
+     * {@code implCloseChannel} method.
      * <p>
-     * If the channel is already closed then this method has no effect,
-     * otherwise it closes the receiver via the implCloseChannel method.
+     * If an attempt is made to perform an operation on a closed channel then a
+     * {@link java.nio.channels.ClosedChannelException} is thrown.
+     * </p>
+     * <p>
+     * If multiple threads attempt to simultaneously close a channel, then only
+     * one thread will run the closure code and the others will be blocked until
+     * the first one completes.
      * </p>
      * 
-     * @see java.nio.channels.Channel#close()
+     * @throws IOException
+     *             if a problem occurs while closing this channel.
+     * @since Android 1.0
      */
     public final void close() throws IOException {
         if (!closed) {
@@ -103,10 +118,11 @@ public abstract class AbstractInterruptibleChannel implements Channel,
     }
 
     /**
-     * Start an IO operation that is potentially blocking.
-     * <p>
-     * Once the operation is completed the application should invoke a
-     * corresponding <code>end(boolean)</code>.
+     * Indicates the beginning of a code section that includes an I/O operation
+     * that is potentially blocking. After this operation, the application
+     * should invoke the corresponding {@code end(boolean)} method.
+     * 
+     * @since Android 1.0
      */
     protected final void begin() {
         // FIXME: be accommodate before VM actually provides
@@ -131,16 +147,19 @@ public abstract class AbstractInterruptibleChannel implements Channel,
     }
 
     /**
-     * End an IO operation that was previously started with <code>begin()</code>.
+     * Indicates the end of a code section that has been started with
+     * {@code begin()} and that includes a potentially blocking I/O operation.
      * 
      * @param success
-     *            pass true if the operation succeeded and had a side effect on
-     *            the Java system, or false if not.
+     *            pass {@code true} if the blocking operation has succeeded and
+     *            has had a noticeable effect; {@code false} otherwise.
      * @throws AsynchronousCloseException
-     *             the channel was closed while the IO operation was in
-     *             progress.
-     * @throws java.nio.channels.ClosedByInterruptException
-     *             the thread conducting the IO operation was interrupted.
+     *             if this channel is closed by another thread while this method
+     *             is executing.
+     * @throws ClosedByInterruptException
+     *             if another thread interrupts the calling thread while this
+     *             method is executing.
+     * @since Android 1.0
      */
     protected final void end(boolean success) throws AsynchronousCloseException {
         // FIXME: be accommodate before VM actually provides
@@ -163,18 +182,21 @@ public abstract class AbstractInterruptibleChannel implements Channel,
     }
 
     /**
-     * Implements the close channel behavior.
+     * Implements the channel closing behavior.
      * <p>
      * Closes the channel with a guarantee that the channel is not currently
-     * closed via <code>close()</code> and that the method is thread-safe.
+     * closed through another invocation of {@code close()} and that the method
+     * is thread-safe.
      * </p>
      * <p>
-     * any outstanding threads blocked on IO operations on this channel must be
-     * released with either a normal return code, or an
-     * <code>AsynchronousCloseException</code>.
+     * Any outstanding threads blocked on I/O operations on this channel must be
+     * released with either a normal return code, or by throwing an
+     * {@code AsynchronousCloseException}.
+     * </p>
      * 
      * @throws IOException
-     *             if a problem occurs closing the channel.
+     *             if a problem occurs while closing the channel.
+     * @since Android 1.0
      */
     protected abstract void implCloseChannel() throws IOException;
 }

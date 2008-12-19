@@ -17,8 +17,14 @@
 
 package tests.api.java.lang.reflect;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.lang.reflect.AccessibleObject;
 
+@TestTargetClass(AccessibleObject.class) 
 public class AccessibleObjectTest extends junit.framework.TestCase {
 
     public class TestClass {
@@ -28,6 +34,15 @@ public class AccessibleObjectTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.AccessibleObject#isAccessible()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isAccessible",
+          methodArgs = {}
+        )
+    })
     public void test_isAccessible() {
         // Test for method boolean
         // java.lang.reflect.AccessibleObject.isAccessible()
@@ -46,6 +61,15 @@ public class AccessibleObjectTest extends junit.framework.TestCase {
      * @tests java.lang.reflect.AccessibleObject#setAccessible(java.lang.reflect.AccessibleObject[],
      *        boolean)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify SecurityException.",
+      targets = {
+        @TestTarget(
+          methodName = "setAccessible",
+          methodArgs = {java.lang.reflect.AccessibleObject[].class, boolean.class}
+        )
+    })
     public void test_setAccessible$Ljava_lang_reflect_AccessibleObjectZ() {
         // Test for method void
         // java.lang.reflect.AccessibleObject.setAccessible(java.lang.reflect.AccessibleObject
@@ -65,6 +89,16 @@ public class AccessibleObjectTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.AccessibleObject#setAccessible(boolean)
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test, setAccessible(boolean) method is not " +
+            "verified.",
+      targets = {
+        @TestTarget(
+          methodName = "setAccessible",
+          methodArgs = {boolean.class}
+        )
+    })
     public void test_setAccessibleZ() {
         // Test for method void
         // java.lang.reflect.AccessibleObject.setAccessible(boolean)

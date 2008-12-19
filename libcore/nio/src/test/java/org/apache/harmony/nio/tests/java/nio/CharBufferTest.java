@@ -17,6 +17,11 @@
 
 package org.apache.harmony.nio.tests.java.nio;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.io.IOException;
 import java.nio.BufferOverflowException;
 import java.nio.BufferUnderflowException;
@@ -29,6 +34,7 @@ import java.nio.ReadOnlyBufferException;
  * Tests java.nio.CharBuffer
  * 
  */
+@TestTargetClass(CharBuffer.class)
 public class CharBufferTest extends AbstractBufferTest {
     protected static final int SMALL_TEST_LENGTH = 5;
 
@@ -55,7 +61,15 @@ public class CharBufferTest extends AbstractBufferTest {
      * following usecases: 1. case for check CharBuffer testBuf properties 2.
      * case expected IllegalArgumentException
      */
-    
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "allocate",
+          methodArgs = {int.class}
+        )
+    })
     public void test_AllocateI() {
         // case: CharBuffer testBuf properties is satisfy the conditions
         // specification
@@ -73,7 +87,15 @@ public class CharBufferTest extends AbstractBufferTest {
         }
 
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "The same test code as in testArrayOffset method.",
+      targets = {
+        @TestTarget(
+          methodName = "array",
+          methodArgs = {}
+        )
+    })
     public void testArray() {
         char array[] = buf.array();
         assertContentEquals(buf, array, buf.arrayOffset(), buf.capacity());
@@ -90,7 +112,15 @@ public class CharBufferTest extends AbstractBufferTest {
         loadTestData2(buf);
         assertContentEquals(buf, array, buf.arrayOffset(), buf.capacity());
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "The same test code as in testArrayOffset method.",
+      targets = {
+        @TestTarget(
+          methodName = "arrayOffset",
+          methodArgs = {}
+        )
+    })
     public void testArrayOffset() {
         char array[] = buf.array();
         assertContentEquals(buf, array, buf.arrayOffset(), buf.capacity());
@@ -107,7 +137,15 @@ public class CharBufferTest extends AbstractBufferTest {
         loadTestData2(buf);
         assertContentEquals(buf, array, buf.arrayOffset(), buf.capacity());
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "asReadOnlyBuffer",
+          methodArgs = {}
+        )
+    })
     public void testAsReadOnlyBuffer() {
         buf.clear();
         buf.mark();
@@ -157,7 +195,15 @@ public class CharBufferTest extends AbstractBufferTest {
         buf.reset();
         assertEquals(buf.position(), originalPosition);
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "compact",
+          methodArgs = {}
+        )
+    })
     public void testCompact() {
         // case: buffer is full
         buf.clear();
@@ -208,7 +254,15 @@ public class CharBufferTest extends AbstractBufferTest {
             // expected
         }
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "compareTo",
+          methodArgs = {java.nio.CharBuffer.class}
+        )
+    })
     public void testCompareTo() {
         // compare to self
         assertEquals(0, buf.compareTo(buf));
@@ -234,7 +288,15 @@ public class CharBufferTest extends AbstractBufferTest {
         assertTrue(buf.compareTo(other) > 0);
         assertTrue(other.compareTo(buf) < 0);
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "duplicate",
+          methodArgs = {}
+        )
+    })
     public void testDuplicate() {
         // mark the position 0
         buf.clear();
@@ -296,7 +358,15 @@ public class CharBufferTest extends AbstractBufferTest {
             assertContentEquals(buf, duplicate);
         }
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "equals",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void testEquals() {
         // equal to self
         assertTrue(buf.equals(buf));
@@ -322,6 +392,15 @@ public class CharBufferTest extends AbstractBufferTest {
     /*
      * Class under test for char get()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "get",
+          methodArgs = {}
+        )
+    })
     public void testGet() {
         buf.clear();
         for (int i = 0; i < buf.capacity(); i++) {
@@ -339,6 +418,15 @@ public class CharBufferTest extends AbstractBufferTest {
     /*
      * Class under test for java.nio.CharBuffer get(char[])
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify different arrays: empty, null and etc.",
+      targets = {
+        @TestTarget(
+          methodName = "get",
+          methodArgs = {char[].class}
+        )
+    })
     public void testGetcharArray() {
         char array[] = new char[1];
         buf.clear();
@@ -359,6 +447,15 @@ public class CharBufferTest extends AbstractBufferTest {
     /*
      * Class under test for java.nio.CharBuffer get(char[], int, int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "get",
+          methodArgs = {char[].class, int.class, int.class}
+        )
+    })
     public void testGetcharArrayintint() {
         buf.clear();
         char array[] = new char[buf.capacity()];
@@ -426,6 +523,15 @@ public class CharBufferTest extends AbstractBufferTest {
     /*
      * Class under test for char get(int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "get",
+          methodArgs = {int.class}
+        )
+    })
     public void testGetint() {
         buf.clear();
         for (int i = 0; i < buf.capacity(); i++) {
@@ -445,7 +551,15 @@ public class CharBufferTest extends AbstractBufferTest {
             // expected
         }
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "hashCode",
+          methodArgs = {}
+        )
+    })
     public void testHashCode() {
         buf.clear();
         loadTestData1(buf);
@@ -460,6 +574,15 @@ public class CharBufferTest extends AbstractBufferTest {
     /*
      * Class under test for java.nio.CharBuffer put(char)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify ReadOnlyBufferException.",
+      targets = {
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {char.class}
+        )
+    })
     public void testPutchar() {
         buf.clear();
         for (int i = 0; i < buf.capacity(); i++) {
@@ -479,6 +602,15 @@ public class CharBufferTest extends AbstractBufferTest {
     /*
      * Class under test for java.nio.CharBuffer put(char[])
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify ReadOnlyBufferException.",
+      targets = {
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {char[].class}
+        )
+    })
     public void testPutcharArray() {
         char array[] = new char[1];
 
@@ -507,6 +639,15 @@ public class CharBufferTest extends AbstractBufferTest {
     /*
      * Class under test for java.nio.CharBuffer put(char[], int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify ReadOnlyBufferException.",
+      targets = {
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {char[].class, int.class, int.class}
+        )
+    })
     public void testPutcharArrayintint() {
         buf.clear();
         char array[] = new char[buf.capacity()];
@@ -579,6 +720,15 @@ public class CharBufferTest extends AbstractBufferTest {
     /*
      * Class under test for java.nio.CharBuffer put(java.nio.CharBuffer)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify ReadOnlyBufferException.",
+      targets = {
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {java.nio.CharBuffer.class}
+        )
+    })
     public void testPutCharBuffer() {
         CharBuffer other = CharBuffer.allocate(buf.capacity());
 
@@ -621,6 +771,15 @@ public class CharBufferTest extends AbstractBufferTest {
     /*
      * Class under test for java.nio.CharBuffer put(int, char)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify ReadOnlyBufferException.",
+      targets = {
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {int.class, char.class}
+        )
+    })
     public void testPutintchar() {
         buf.clear();
         for (int i = 0; i < buf.capacity(); i++) {
@@ -642,7 +801,15 @@ public class CharBufferTest extends AbstractBufferTest {
             // expected
         }
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "slice",
+          methodArgs = {}
+        )
+    })
     public void testSlice() {
         assertTrue(buf.capacity() > 5);
         buf.position(1);
@@ -670,7 +837,15 @@ public class CharBufferTest extends AbstractBufferTest {
             assertEquals(slice.get(1), 500);
         }
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public void testToString() {
         String expected = "";
         for (int i = buf.position(); i < buf.limit(); i++) {
@@ -679,7 +854,15 @@ public class CharBufferTest extends AbstractBufferTest {
         String str = buf.toString();
         assertEquals(expected, str);
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "charAt",
+          methodArgs = {int.class}
+        )
+    })
     public void testCharAt() {
         for (int i = 0; i < buf.remaining(); i++) {
             assertEquals(buf.get(buf.position() + i), buf.charAt(i));
@@ -697,11 +880,27 @@ public class CharBufferTest extends AbstractBufferTest {
             // expected
         }
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "length",
+          methodArgs = {}
+        )
+    })
     public void testLength() {
         assertEquals(buf.length(), buf.remaining());
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "subSequence",
+          methodArgs = {int.class, int.class}
+        )
+    })
     public void testSubSequence() {
         try {
             buf.subSequence(-1, buf.length());
@@ -737,7 +936,15 @@ public class CharBufferTest extends AbstractBufferTest {
                     .toString().substring(1, buf.length() - 1));
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify ReadOnlyBufferException.",
+      targets = {
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void testPutString() {
         String str = " ";
 
@@ -762,7 +969,15 @@ public class CharBufferTest extends AbstractBufferTest {
             // expected
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify ReadOnlyBufferException.",
+      targets = {
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {java.lang.String.class, int.class, int.class}
+        )
+    })
     public void testPutStringintint() {
         buf.clear();
         String str = String.valueOf(new char[buf.capacity()]);
@@ -877,7 +1092,16 @@ public class CharBufferTest extends AbstractBufferTest {
             value = (char) (value + 1);
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies append method with the same CharSequence object " +
+            "for which it's called.",
+      targets = {
+        @TestTarget(
+          methodName = "append",
+          methodArgs = {java.lang.CharSequence.class}
+        )
+    })
     public void testAppendSelf() throws Exception {
         CharBuffer cb = CharBuffer.allocate(10);
         CharBuffer cb2 = cb.duplicate();
@@ -903,7 +1127,23 @@ public class CharBufferTest extends AbstractBufferTest {
         cb2.clear();
         assertEquals(cb, cb2);
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies BufferOverflowException.",
+      targets = {
+        @TestTarget(
+          methodName = "append",
+          methodArgs = {char.class}
+        ),
+        @TestTarget(
+          methodName = "append",
+          methodArgs = {java.lang.CharSequence.class}
+        ),
+        @TestTarget(
+          methodName = "append",
+          methodArgs = {java.lang.CharSequence.class, int.class, int.class}
+        )
+    })
     public void testAppendOverFlow() throws IOException {
         CharBuffer cb = CharBuffer.allocate(1);
         CharSequence cs = "String";
@@ -927,7 +1167,23 @@ public class CharBufferTest extends AbstractBufferTest {
             // expected;
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies ReadOnlyBufferException.",
+      targets = {
+        @TestTarget(
+          methodName = "append",
+          methodArgs = {char.class}
+        ),
+        @TestTarget(
+          methodName = "append",
+          methodArgs = {java.lang.CharSequence.class}
+        ),
+        @TestTarget(
+          methodName = "append",
+          methodArgs = {java.lang.CharSequence.class, int.class, int.class}
+        )
+    })
     public void testReadOnlyMap() throws IOException {
         CharBuffer cb = CharBuffer.wrap("ABCDE").asReadOnlyBuffer();
         CharSequence cs = "String";
@@ -951,14 +1207,30 @@ public class CharBufferTest extends AbstractBufferTest {
         }
         cb.append(cs, 1, 1);
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "append",
+          methodArgs = {char.class}
+        )
+    })
     public void testAppendCNormal() throws IOException {
         CharBuffer cb = CharBuffer.allocate(2);
         cb.put('A');
         assertSame(cb, cb.append('B'));
         assertEquals('B', cb.get(1));
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "append",
+          methodArgs = {java.lang.CharSequence.class}
+        )
+    })
     public void testAppendCharSequenceNormal() throws IOException {
         CharBuffer cb = CharBuffer.allocate(10);
         cb.put('A');
@@ -967,7 +1239,16 @@ public class CharBufferTest extends AbstractBufferTest {
         cb.append(null);
         assertEquals("null", cb.flip().toString());
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies positive case, and null as CharSequence " +
+            "parameter.",
+      targets = {
+        @TestTarget(
+          methodName = "append",
+          methodArgs = {java.lang.CharSequence.class, int.class, int.class}
+        )
+    })
     public void testAppendCharSequenceIINormal() throws IOException {
         CharBuffer cb = CharBuffer.allocate(10);
         cb.put('A');
@@ -977,7 +1258,15 @@ public class CharBufferTest extends AbstractBufferTest {
         cb.append(null, 0, 1);
         assertEquals("n", cb.flip().toString());
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies IndexOutOfBoundsException.",
+      targets = {
+        @TestTarget(
+          methodName = "append",
+          methodArgs = {java.lang.CharSequence.class, int.class, int.class}
+        )
+    })
     public void testAppendCharSequenceII_IllegalArgument() throws IOException {
         CharBuffer cb = CharBuffer.allocate(10);
         cb.append("String", 0, 0);
@@ -1013,7 +1302,15 @@ public class CharBufferTest extends AbstractBufferTest {
             // expected;
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify ReadOnlyBufferException.",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {java.nio.CharBuffer.class}
+        )
+    })
     public void testReadCharBuffer() throws IOException {
         CharBuffer source = CharBuffer.wrap("String");
         CharBuffer target = CharBuffer.allocate(10);
@@ -1030,7 +1327,15 @@ public class CharBufferTest extends AbstractBufferTest {
         }
 
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies ReadOnlyBufferException.",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {java.nio.CharBuffer.class}
+        )
+    })
     public void testReadReadOnly() throws IOException {
         CharBuffer source = CharBuffer.wrap("String");
         CharBuffer target = CharBuffer.allocate(10).asReadOnlyBuffer();
@@ -1044,7 +1349,16 @@ public class CharBufferTest extends AbstractBufferTest {
         target.flip();
         assertEquals(0, source.read(target));
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies read method with CharBuffer parameter which length " +
+            "is less than read CharBuffer.",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {java.nio.CharBuffer.class}
+        )
+    })
     public void testReadOverflow() throws IOException {
         CharBuffer source = CharBuffer.wrap("String");
         CharBuffer target = CharBuffer.allocate(1);
@@ -1052,7 +1366,15 @@ public class CharBufferTest extends AbstractBufferTest {
         assertEquals("S", target.flip().toString());
         assertEquals(1, source.position());
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies IllegalArgumentException.",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {java.nio.CharBuffer.class}
+        )
+    })
     public void testReadSelf() throws Exception {
         CharBuffer source = CharBuffer.wrap("abuffer");
         try {
@@ -1062,19 +1384,51 @@ public class CharBufferTest extends AbstractBufferTest {
             //expected
         }
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Abstract method.",
+      targets = {
+        @TestTarget(
+          methodName = "isDirect",
+          methodArgs = {}
+        )
+    })
     public void testIsDirect() {
         assertFalse(buf.isDirect());
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify false returned value.",
+      targets = {
+        @TestTarget(
+          methodName = "hasArray",
+          methodArgs = {}
+        )
+    })
     public void testHasArray() {
         assertTrue(buf.hasArray());
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "order",
+          methodArgs = {}
+        )
+    })
     public void testOrder() {
         assertEquals(ByteOrder.nativeOrder(), buf.order());
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Abstract method.",
+      targets = {
+        @TestTarget(
+          methodName = "isReadOnly",
+          methodArgs = {}
+        )
+    })
     public void testIsReadOnly() {
         assertFalse(buf.isReadOnly());
     }
@@ -1085,7 +1439,15 @@ public class CharBufferTest extends AbstractBufferTest {
      * for check equal between buf2 and char array[] 3. case for check a buf2
      * dependens to array[]
      */
-    
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "wrap",
+          methodArgs = {char[].class}
+        )
+    })
     public void test_Wrap$C() {
         char array[] = new char[BUFFER_LENGTH];
         loadTestData1(array, 0, BUFFER_LENGTH);
@@ -1113,7 +1475,15 @@ public class CharBufferTest extends AbstractBufferTest {
      * 3. case for check a buf2 dependens to array[]
      * 4. case expected IndexOutOfBoundsException  
      */
-    
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "wrap",
+          methodArgs = {char[].class, int.class, int.class}
+        )
+    })
     public void test_Wrap$CII() {
         char array[] = new char[BUFFER_LENGTH];
         int offset = 5;
@@ -1152,7 +1522,15 @@ public class CharBufferTest extends AbstractBufferTest {
      * 3. case for check String
      * 4. case for check CharBuffer
      */
-    
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "wrap",
+          methodArgs = {java.lang.CharSequence.class}
+        )
+    })
     public void test_WrapLjava_lang_CharSequence() {
         // added this if clause to prevent Tests failing under special conditions. 
         // If the test extending this test is made for a read only buffer it fails 
@@ -1209,7 +1587,15 @@ public class CharBufferTest extends AbstractBufferTest {
      * 3. case for check String
      * 4. case for check CharBuffer
      */
-    
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify exception.",
+      targets = {
+        @TestTarget(
+          methodName = "wrap",
+          methodArgs = {java.lang.CharSequence.class, int.class, int.class}
+        )
+    })
     public void test_WrapLjava_lang_CharSequenceII() {
         int start = buf.position();
         int end = buf.limit();

@@ -20,33 +20,43 @@ package javax.sql;
 import java.sql.SQLException;
 
 /**
- * An interface which provides functionality for a disconnected RowSet to put
- * data updates back to the data source from which the RowSet was originally
- * populated. An object implementing this interface is called a Writer.
+ * An interface which provides functionality for a disconnected {@code RowSet}
+ * to put data updates back to the data source from which the {@code RowSet} was
+ * originally populated. An object implementing this interface is called a
+ * writer.
  * <p>
- * The Writer must establish a connection to the RowSet's data source before
- * writing the data. The RowSet calling this interface must implement the
- * RowSetInternal interface.
+ * The writer must establish a connection to the {@code RowSet}'s database
+ * before writing the data. The {@code RowSet} calling this interface must
+ * implement the {@code RowSetInternal} interface.
+ * </p>
  * <p>
- * The Writer may encounter a situation where the updated data being written
- * back to the data source has already been updated in the data source. How a
- * conflict of this kind is handled is determined by the implementation of the
- * Writer.
+ * The writer may encounter a situation where the updated data needs to be
+ * written back to the database, but has already been updated there in the mean
+ * time. How a conflict of this kind is handled is determined by the
+ * implementation of this writer.
+ * </p>
+ * 
+ * @see RowSetInternal
+ * @since Android 1.0
  */
 public interface RowSetWriter {
 
     /**
-     * Writes changes in the RowSet associated with this RowSetWriter back to
-     * its data source.
+     * Writes changes made in the {@code RowSet}, which is associated with this
+     * {@code RowSetWriter}, back to the database.
      * 
      * @param theRowSet
-     *            the RowSet object. This RowSet must a) Implement the
-     *            RowSetInternal interface and b) have have this RowSetWriter
-     *            registered with it and c) must call this method internally
-     * @return true if the modified data was written, false otherwise (which
-     *         typically implies some form of conflict)
+     *            a row set that fulfills the following criteria:
+     *            <ul>
+     *            <li>it must implement the {@code RowSetInternal} interface,</li>
+     *            <li>have this {@code RowSetWriter} registered with it,</li>
+     *            <li>must call this method internally.</li>
+     *            </ul>
+     * @return {@code true} if the modified data was written, {@code false}
+     *         otherwise (which typically implies some form of conflict).
      * @throws SQLException
-     *             if a problem occurs accessing the database
+     *             if a problem occurs accessing the database.
+     * @since Android 1.0
      */
     public boolean writeData(RowSetInternal theRowSet) throws SQLException;
 }

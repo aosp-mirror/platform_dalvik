@@ -16,8 +16,14 @@
  */
 package org.apache.harmony.text.tests.java.text;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.text.ParsePosition;
 
+@TestTargetClass(ParsePosition.class) 
 public class ParsePositionTest extends junit.framework.TestCase {
 
     ParsePosition pp;
@@ -25,6 +31,15 @@ public class ParsePositionTest extends junit.framework.TestCase {
     /**
      * @tests java.text.ParsePosition#ParsePosition(int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "ParsePosition",
+          methodArgs = {int.class}
+        )
+    })
     public void test_ConstructorI() {
         // Test for method java.text.ParsePosition(int)
         try {
@@ -41,6 +56,15 @@ public class ParsePositionTest extends junit.framework.TestCase {
     /**
      * @tests java.text.ParsePosition#equals(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "equals",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_equalsLjava_lang_Object() {
         // Test for method boolean
         // java.text.ParsePosition.equals(java.lang.Object)
@@ -55,6 +79,15 @@ public class ParsePositionTest extends junit.framework.TestCase {
     /**
      * @tests java.text.ParsePosition#getErrorIndex()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setErrorIndex",
+          methodArgs = {int.class}
+        )
+    })
     public void test_getErrorIndex() {
         // Test for method int java.text.ParsePosition.getErrorIndex()
         pp.setErrorIndex(56);
@@ -64,6 +97,15 @@ public class ParsePositionTest extends junit.framework.TestCase {
     /**
      * @tests java.text.ParsePosition#getIndex()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getIndex",
+          methodArgs = {}
+        )
+    })
     public void test_getIndex() {
         // Test for method int java.text.ParsePosition.getIndex()
         assertTrue("getIndex failed.", pp.getIndex() == Integer.MAX_VALUE);
@@ -72,6 +114,15 @@ public class ParsePositionTest extends junit.framework.TestCase {
     /**
      * @tests java.text.ParsePosition#hashCode()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "hashCode",
+          methodArgs = {}
+        )
+    })
     public void test_hashCode() {
         // Test for method int java.text.ParsePosition.hashCode()
         assertTrue("Wrong hashCode returned", (pp.hashCode() == pp.getIndex()
@@ -81,6 +132,15 @@ public class ParsePositionTest extends junit.framework.TestCase {
     /**
      * @tests java.text.ParsePosition#setErrorIndex(int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "setErrorIndex",
+          methodArgs = {int.class}
+        )
+    })
     public void test_setErrorIndexI() {
         // Test for method void java.text.ParsePosition.setErrorIndex(int)
         pp.setErrorIndex(4564);
@@ -90,6 +150,15 @@ public class ParsePositionTest extends junit.framework.TestCase {
     /**
      * @tests java.text.ParsePosition#setIndex(int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setIndex",
+          methodArgs = {int.class}
+        )
+    })
     public void test_setIndexI() {
         // Test for method void java.text.ParsePosition.setIndex(int)
         pp.setIndex(4564);
@@ -99,6 +168,15 @@ public class ParsePositionTest extends junit.framework.TestCase {
     /**
      * @tests java.text.ParsePosition#toString()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public void test_toString() {
         // Test for method java.lang.String java.text.ParsePosition.toString()
         assertEquals("toString failed.",

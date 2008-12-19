@@ -17,6 +17,11 @@
 
 package tests.api.java.util;
 
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass; 
+
 import java.io.Serializable;
 import java.text.CollationKey;
 import java.text.Collator;
@@ -35,6 +40,7 @@ import org.apache.harmony.testframework.serialization.SerializationTest;
 import tests.support.Support_MapTest2;
 import tests.support.Support_UnmodifiableCollectionTest;
 
+@TestTargetClass(TreeMap.class) 
 public class TreeMapTest extends junit.framework.TestCase {
 
     public static class ReversedComparator implements Comparator {
@@ -85,6 +91,15 @@ public class TreeMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TreeMap#TreeMap()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "TreeMap",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         // Test for method java.util.TreeMap()
         new Support_MapTest2(new TreeMap()).runTest();
@@ -95,6 +110,15 @@ public class TreeMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TreeMap#TreeMap(java.util.Comparator)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "TreeMap",
+          methodArgs = {java.util.Comparator.class}
+        )
+    })
     public void test_ConstructorLjava_util_Comparator() {
         // Test for method java.util.TreeMap(java.util.Comparator)
         Comparator comp = new ReversedComparator();
@@ -113,6 +137,15 @@ public class TreeMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TreeMap#TreeMap(java.util.Map)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "TreeMap",
+          methodArgs = {java.util.Map.class}
+        )
+    })
     public void test_ConstructorLjava_util_Map() {
         // Test for method java.util.TreeMap(java.util.Map)
         TreeMap myTreeMap = new TreeMap(new HashMap(tm));
@@ -126,6 +159,15 @@ public class TreeMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TreeMap#TreeMap(java.util.SortedMap)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NullPointerException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "TreeMap",
+          methodArgs = {java.util.SortedMap.class}
+        )
+    })
     public void test_ConstructorLjava_util_SortedMap() {
         // Test for method java.util.TreeMap(java.util.SortedMap)
         Comparator comp = new ReversedComparator();
@@ -145,6 +187,15 @@ public class TreeMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TreeMap#clear()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "clear",
+          methodArgs = {}
+        )
+    })
     public void test_clear() {
         // Test for method void java.util.TreeMap.clear()
         tm.clear();
@@ -154,6 +205,15 @@ public class TreeMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TreeMap#clone()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "clone",
+          methodArgs = {}
+        )
+    })
     public void test_clone() {
         // Test for method java.lang.Object java.util.TreeMap.clone()
         TreeMap clonedMap = (TreeMap) tm.clone();
@@ -191,6 +251,15 @@ public class TreeMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TreeMap#comparator()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "comparator",
+          methodArgs = {}
+        )
+    })
     public void test_comparator() {
         // Test for method java.util.Comparator java.util.TreeMap.comparator()\
         Comparator comp = new ReversedComparator();
@@ -208,6 +277,16 @@ public class TreeMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TreeMap#containsKey(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "[Doesn't check exceptions and Objects (not only String) as " +
+              "a parameter.]",
+      targets = {
+        @TestTarget(
+          methodName = "containsKey",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_containsKeyLjava_lang_Object() {
         // Test for method boolean
         // java.util.TreeMap.containsKey(java.lang.Object)
@@ -218,6 +297,15 @@ public class TreeMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TreeMap#containsValue(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "containsValue",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_containsValueLjava_lang_Object() {
         // Test for method boolean
         // java.util.TreeMap.containsValue(java.lang.Object)
@@ -230,6 +318,15 @@ public class TreeMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TreeMap#entrySet()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "entrySet",
+          methodArgs = {}
+        )
+    })
     public void test_entrySet() {
         // Test for method java.util.Set java.util.TreeMap.entrySet()
         Set anEntrySet = tm.entrySet();
@@ -247,6 +344,15 @@ public class TreeMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TreeMap#firstKey()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NoSuchElementException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "firstKey",
+          methodArgs = {}
+        )
+    })
     public void test_firstKey() {
         // Test for method java.lang.Object java.util.TreeMap.firstKey()
         assertEquals("Returned incorrect first key", "0", tm.firstKey());
@@ -255,6 +361,15 @@ public class TreeMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TreeMap#get(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "get",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_getLjava_lang_Object() {
         // Test for method java.lang.Object
         // java.util.TreeMap.get(java.lang.Object)
@@ -267,6 +382,15 @@ public class TreeMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TreeMap#headMap(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "headMap",
+          methodArgs = {Object.class}
+        )
+    })
     public void test_headMapLjava_lang_Object() {
         // Test for method java.util.SortedMap
         // java.util.TreeMap.headMap(java.lang.Object)
@@ -332,6 +456,15 @@ public class TreeMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TreeMap#keySet()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "keySet",
+          methodArgs = {}
+        )
+    })
     public void test_keySet() {
         // Test for method java.util.Set java.util.TreeMap.keySet()
         Set ks = tm.keySet();
@@ -346,6 +479,15 @@ public class TreeMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TreeMap#lastKey()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NoSuchElementException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "lastKey",
+          methodArgs = {}
+        )
+    })
     public void test_lastKey() {
         // Test for method java.lang.Object java.util.TreeMap.lastKey()
         assertTrue("Returned incorrect last key", tm.lastKey().equals(
@@ -355,6 +497,15 @@ public class TreeMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TreeMap#put(java.lang.Object, java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NullPointerException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {Object.class, Object.class}
+        )
+    })
     public void test_putLjava_lang_ObjectLjava_lang_Object() {
         // Test for method java.lang.Object
         // java.util.TreeMap.put(java.lang.Object, java.lang.Object)
@@ -383,6 +534,15 @@ public class TreeMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TreeMap#putAll(java.util.Map)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "ClassCastException & NullPointerException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "putAll",
+          methodArgs = {java.util.Map.class}
+        )
+    })
     public void test_putAllLjava_util_Map() {
         // Test for method void java.util.TreeMap.putAll(java.util.Map)
         TreeMap x = new TreeMap();
@@ -397,6 +557,15 @@ public class TreeMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TreeMap#remove(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "ClassCastException & NullPointerException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "remove",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_removeLjava_lang_Object() {
         // Test for method java.lang.Object
         // java.util.TreeMap.remove(java.lang.Object)
@@ -408,6 +577,15 @@ public class TreeMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TreeMap#size()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "size",
+          methodArgs = {}
+        )
+    })
     public void test_size() {
         // Test for method int java.util.TreeMap.size()
         assertEquals("Returned incorrect size", 1000, tm.size());
@@ -416,6 +594,15 @@ public class TreeMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TreeMap#subMap(java.lang.Object, java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "ClassCastException and NullPointerException are not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "subMap",
+          methodArgs = {Object.class, Object.class}
+        )
+    })
     public void test_subMapLjava_lang_ObjectLjava_lang_Object() {
         // Test for method java.util.SortedMap
         // java.util.TreeMap.subMap(java.lang.Object, java.lang.Object)
@@ -456,6 +643,15 @@ public class TreeMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TreeMap#tailMap(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions are not tested.",
+      targets = {
+        @TestTarget(
+          methodName = "tailMap",
+          methodArgs = {Object.class}
+        )
+    })
     public void test_tailMapLjava_lang_Object() {
         // Test for method java.util.SortedMap
         // java.util.TreeMap.tailMap(java.lang.Object)
@@ -474,6 +670,15 @@ public class TreeMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TreeMap#values()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "values",
+          methodArgs = {}
+        )
+    })
     public void test_values() {
         // Test for method java.util.Collection java.util.TreeMap.values()
         Collection vals = tm.values();
@@ -502,6 +707,15 @@ public class TreeMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TreeMap#SerializationTest()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Verifies serialization/deserialization.",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationSelf",
+          methodArgs = {}
+        )
+    })
     // Regression for Harmony-1066
     public void test_SubMap_Serializable() throws Exception {
         TreeMap<Integer, Double> map = new TreeMap<Integer, Double>();
@@ -527,7 +741,16 @@ public class TreeMapTest extends junit.framework.TestCase {
      * Tests that no ClassCastException will be thrown in all cases.
      * Regression test for HARMONY-1639.
      */
-    public void test_equals() throws Exception {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "equals",
+          methodArgs = {Object.class}
+        )
+    })
+    public void _test_equals() throws Exception {
         // comparing TreeMaps with different object types
         Map m1 = new TreeMap();
         Map m2 = new TreeMap();

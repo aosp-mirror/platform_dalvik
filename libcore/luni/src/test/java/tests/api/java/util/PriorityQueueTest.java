@@ -16,6 +16,11 @@
 
 package tests.api.java.util;
 
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass; 
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -31,6 +36,7 @@ import tests.util.SerializationTester;
 
 import junit.framework.TestCase;
 
+@TestTargetClass(PriorityQueue.class) 
 public class PriorityQueueTest extends TestCase {
 
     private static final String SERIALIZATION_FILE_NAME = "/serialization/tests/api/java/util/PriorityQueue.golden.ser"; //$NON-NLS-1$    
@@ -38,6 +44,15 @@ public class PriorityQueueTest extends TestCase {
     /**
      * @tests java.util.PriorityQueue#iterator()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "iterator",
+          methodArgs = {}
+        )
+    })
     public void test_iterator() {
         PriorityQueue<Integer> integerQueue = new PriorityQueue<Integer>();
         Integer[] array = { 2, 45, 7, -12, 9 };
@@ -59,6 +74,15 @@ public class PriorityQueueTest extends TestCase {
     /**
      * @tests java.util.PriorityQueue#iterator()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies NoSuchElementException, IllegalStateException.",
+      targets = {
+        @TestTarget(
+          methodName = "iterator",
+          methodArgs = {}
+        )
+    })
     public void test_iterator_empty() {
         PriorityQueue<Integer> integerQueue = new PriorityQueue<Integer>();
         Iterator<Integer> iter = integerQueue.iterator();
@@ -81,6 +105,15 @@ public class PriorityQueueTest extends TestCase {
     /**
      * @tests java.util.PriorityQueue#iterator()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies NoSuchElementException.",
+      targets = {
+        @TestTarget(
+          methodName = "iterator",
+          methodArgs = {}
+        )
+    })
     public void test_iterator_outofbound() {
         PriorityQueue<Integer> integerQueue = new PriorityQueue<Integer>();
         integerQueue.offer(0);
@@ -107,6 +140,15 @@ public class PriorityQueueTest extends TestCase {
     /**
      * @tests java.util.PriorityQueue#iterator()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "iterator",
+          methodArgs = {}
+        )
+    })
     public void test_iterator_remove() {
         PriorityQueue<Integer> integerQueue = new PriorityQueue<Integer>();
         Integer[] array = { 2, 45, 7, -12, 9 };
@@ -139,6 +181,15 @@ public class PriorityQueueTest extends TestCase {
     /**
      * @tests java.util.PriorityQueue#iterator()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies IllegalStateException.",
+      targets = {
+        @TestTarget(
+          methodName = "iterator",
+          methodArgs = {}
+        )
+    })
     public void test_iterator_remove_illegalState() {
         PriorityQueue<Integer> integerQueue = new PriorityQueue<Integer>();
         Integer[] array = { 2, 45, 7, -12, 9 };
@@ -167,6 +218,15 @@ public class PriorityQueueTest extends TestCase {
     /**
      * @tests java.util.PriorityQueue.size()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "size",
+          methodArgs = {}
+        )
+    })
     public void test_size() {
         PriorityQueue<Integer> integerQueue = new PriorityQueue<Integer>();
         assertEquals(0, integerQueue.size());
@@ -180,6 +240,15 @@ public class PriorityQueueTest extends TestCase {
     /**
      * @tests java.util.PriorityQueue#PriorityQueue()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "PriorityQueue",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         PriorityQueue<Object> queue = new PriorityQueue<Object>();
         assertNotNull(queue);
@@ -190,6 +259,15 @@ public class PriorityQueueTest extends TestCase {
     /**
      * @tests java.util.PriorityQueue#PriorityQueue(int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify IllegalArgumentException.",
+      targets = {
+        @TestTarget(
+          methodName = "PriorityQueue",
+          methodArgs = {int.class}
+        )
+    })
     public void test_ConstructorI() {
         PriorityQueue<Object> queue = new PriorityQueue<Object>(100);
         assertNotNull(queue);
@@ -200,6 +278,15 @@ public class PriorityQueueTest extends TestCase {
     /**
      * @tests java.util.PriorityQueue#PriorityQueue(int, Comparator<? super E>)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify IllegalArgumentException.",
+      targets = {
+        @TestTarget(
+          methodName = "PriorityQueue",
+          methodArgs = {int.class, java.util.Comparator.class}
+        )
+    })
     public void test_ConstructorILjava_util_Comparator() {
         PriorityQueue<Object> queue = new PriorityQueue<Object>(100,
                 (Comparator<Object>) null);
@@ -217,6 +304,15 @@ public class PriorityQueueTest extends TestCase {
     /**
      * @tests java.util.PriorityQueue#PriorityQueue(int, Comparator<? super E>)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies IllegalArgumentException.",
+      targets = {
+        @TestTarget(
+          methodName = "PriorityQueue",
+          methodArgs = {int.class, java.util.Comparator.class}
+        )
+    })
     public void test_ConstructorILjava_util_Comparator_illegalCapacity() {
         try {
             new PriorityQueue<Object>(0, new MockComparator<Object>());
@@ -236,6 +332,15 @@ public class PriorityQueueTest extends TestCase {
     /**
      * @tests java.util.PriorityQueue#PriorityQueue(int, Comparator<? super E>)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify IllegalArgumentException.",
+      targets = {
+        @TestTarget(
+          methodName = "PriorityQueue",
+          methodArgs = {int.class, java.util.Comparator.class}
+        )
+    })
     public void test_ConstructorILjava_util_Comparator_cast() {
         MockComparatorCast<Object> objectComparator = new MockComparatorCast<Object>();
         PriorityQueue<Integer> integerQueue = new PriorityQueue<Integer>(100,
@@ -253,6 +358,15 @@ public class PriorityQueueTest extends TestCase {
     /**
      * @tests java.util.PriorityQueue#PriorityQueue(Collection)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify ClassCastException, NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "PriorityQueue",
+          methodArgs = {java.util.Collection.class}
+        )
+    })
     public void test_ConstructorLjava_util_Colleciton() {
         Integer[] array = { 2, 45, 7, -12, 9 };
         List<Integer> list = Arrays.asList(array);
@@ -268,6 +382,15 @@ public class PriorityQueueTest extends TestCase {
     /**
      * @tests java.util.PriorityQueue#PriorityQueue(Collection)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "PriorityQueue",
+          methodArgs = {java.util.Collection.class}
+        )
+    })
     public void test_ConstructorLjava_util_Colleciton_null() {
         ArrayList<Object> list = new ArrayList<Object>();
         list.add(new Float(11));
@@ -284,6 +407,15 @@ public class PriorityQueueTest extends TestCase {
     /**
      * @tests java.util.PriorityQueue#PriorityQueue(Collection)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies ClassCastException.",
+      targets = {
+        @TestTarget(
+          methodName = "PriorityQueue",
+          methodArgs = {java.util.Collection.class}
+        )
+    })
     public void test_ConstructorLjava_util_Colleciton_non_comparable() {
         ArrayList<Object> list = new ArrayList<Object>();
         list.add(new Float(11));
@@ -299,6 +431,15 @@ public class PriorityQueueTest extends TestCase {
     /**
      * @tests java.util.PriorityQueue#PriorityQueue(Collection)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify ClassCastException, NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "PriorityQueue",
+          methodArgs = {java.util.Collection.class}
+        )
+    })
     public void test_ConstructorLjava_util_Colleciton_from_priorityqueue() {
         String[] array = { "AAAAA", "AA", "AAAA", "AAAAAAAA" };
         PriorityQueue<String> queue = new PriorityQueue<String>(4,
@@ -318,6 +459,15 @@ public class PriorityQueueTest extends TestCase {
     /**
      * @tests java.util.PriorityQueue#PriorityQueue(Collection)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify ClassCastException, NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "PriorityQueue",
+          methodArgs = {java.util.Collection.class}
+        )
+    })
     public void test_ConstructorLjava_util_Colleciton_from_sortedset() {
         int[] array = { 3, 5, 79, -17, 5 };
         TreeSet<Integer> treeSet = new TreeSet<Integer>(new MockComparator<Integer>());
@@ -338,6 +488,15 @@ public class PriorityQueueTest extends TestCase {
      * @tests java.util.PriorityQueue#PriorityQueue(PriorityQueue<? * extends
      *        E>)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify ClassCastException, NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "PriorityQueue",
+          methodArgs = {java.util.PriorityQueue.class}
+        )
+    })
     public void test_ConstructorLjava_util_PriorityQueue() {
         PriorityQueue<Integer> integerQueue = new PriorityQueue<Integer>();
         int[] array = { 2, 45, 7, -12, 9 };
@@ -358,6 +517,15 @@ public class PriorityQueueTest extends TestCase {
      * @tests java.util.PriorityQueue#PriorityQueue(PriorityQueue<? * extends
      *        E>)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "PriorityQueue",
+          methodArgs = {java.util.PriorityQueue.class}
+        )
+    })
     public void test_ConstructorLjava_util_PriorityQueue_null() {
         try {
             new PriorityQueue<Object>((PriorityQueue<Integer>) null);
@@ -370,6 +538,15 @@ public class PriorityQueueTest extends TestCase {
     /**
      * @tests java.util.PriorityQueue#PriorityQueue(SortedSet<? extends E>)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify ClassCastException, NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "PriorityQueue",
+          methodArgs = {java.util.SortedSet.class}
+        )
+    })
     public void test_ConstructorLjava_util_SortedSet() {
         int[] array = { 3, 5, 79, -17, 5 };
         TreeSet<Integer> treeSet = new TreeSet<Integer>();
@@ -386,6 +563,15 @@ public class PriorityQueueTest extends TestCase {
     /**
      * @tests java.util.PriorityQueue#PriorityQueue(SortedSet<? extends E>)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "PriorityQueue",
+          methodArgs = {java.util.SortedSet.class}
+        )
+    })
     public void test_ConstructorLjava_util_SortedSet_null() {
         try {
             new PriorityQueue<Integer>((SortedSet<? extends Integer>) null);
@@ -398,6 +584,15 @@ public class PriorityQueueTest extends TestCase {
     /**
      * @tests java.util.PriorityQueue#offer(Object)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "offer",
+          methodArgs = {Object.class}
+        )
+    })
     public void test_offerLjava_lang_Object() {
         PriorityQueue<String> queue = new PriorityQueue<String>(10,
                 new MockComparatorStringByLength());
@@ -416,6 +611,15 @@ public class PriorityQueueTest extends TestCase {
     /**
      * @tests java.util.PriorityQueue#offer(Object)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "offer",
+          methodArgs = {Object.class}
+        )
+    })
     public void test_offerLjava_lang_Object_null() {
         PriorityQueue<Object> queue = new PriorityQueue<Object>();
         try {
@@ -429,6 +633,15 @@ public class PriorityQueueTest extends TestCase {
     /**
      * @tests java.util.PriorityQueue#offer(Object)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies ClassCastException.",
+      targets = {
+        @TestTarget(
+          methodName = "offer",
+          methodArgs = {Object.class}
+        )
+    })
     public void test_offer_Ljava_lang_Object_non_Comparable() {
         PriorityQueue<Object> queue = new PriorityQueue<Object>();
         queue.offer(new Integer(10));
@@ -452,6 +665,15 @@ public class PriorityQueueTest extends TestCase {
     /**
      * @tests java.util.PriorityQueue#poll()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "poll",
+          methodArgs = {}
+        )
+    })
     public void test_poll() {
         PriorityQueue<String> stringQueue = new PriorityQueue<String>();
         String[] array = { "MYTESTSTRING", "AAAAA", "BCDEF", "ksTRD", "AAAAA" };
@@ -469,6 +691,15 @@ public class PriorityQueueTest extends TestCase {
     /**
      * @tests java.util.PriorityQueue#poll()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies poll method for empty queue.",
+      targets = {
+        @TestTarget(
+          methodName = "poll",
+          methodArgs = {}
+        )
+    })
     public void test_poll_empty() {
         PriorityQueue<Object> queue = new PriorityQueue<Object>();
         assertEquals(0, queue.size());
@@ -478,6 +709,15 @@ public class PriorityQueueTest extends TestCase {
     /**
      * @tests java.util.PriorityQueue#peek()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "peek",
+          methodArgs = {}
+        )
+    })
     public void test_peek() {
         PriorityQueue<Integer> integerQueue = new PriorityQueue<Integer>();
         int[] array = { 2, 45, 7, -12, 9 };
@@ -492,6 +732,15 @@ public class PriorityQueueTest extends TestCase {
     /**
      * @tests java.util.PriorityQueue#peek()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies peek method for empty queue.",
+      targets = {
+        @TestTarget(
+          methodName = "peek",
+          methodArgs = {}
+        )
+    })
     public void test_peek_empty() {
         PriorityQueue<Object> queue = new PriorityQueue<Object>();
         assertEquals(0, queue.size());
@@ -502,6 +751,15 @@ public class PriorityQueueTest extends TestCase {
     /**
      * @tests java.util.PriorityQueue#Clear()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "clear",
+          methodArgs = {}
+        )
+    })
     public void test_clear() {
         PriorityQueue<Integer> integerQueue = new PriorityQueue<Integer>();
         int[] array = { 2, 45, 7, -12, 9 };
@@ -515,6 +773,15 @@ public class PriorityQueueTest extends TestCase {
     /**
      * @tests java.util.PriorityQueue#add(Object)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify NullPointerException, ClassCastException.",
+      targets = {
+        @TestTarget(
+          methodName = "add",
+          methodArgs = {Object.class}
+        )
+    })
     public void test_add_Ljava_lang_Object() {
         PriorityQueue<Integer> integerQueue = new PriorityQueue<Integer>();
         Integer[] array = { 2, 45, 7, -12, 9 };
@@ -532,6 +799,15 @@ public class PriorityQueueTest extends TestCase {
     /**
      * @tests java.util.PriorityQueue#add(Object)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "add",
+          methodArgs = {Object.class}
+        )
+    })
     public void test_add_Ljava_lang_Object_null() {
         PriorityQueue<Object> queue = new PriorityQueue<Object>();
         try {
@@ -545,6 +821,15 @@ public class PriorityQueueTest extends TestCase {
     /**
      * @tests java.util.PriorityQueue#add(Object)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies ClassCastException.",
+      targets = {
+        @TestTarget(
+          methodName = "add",
+          methodArgs = {Object.class}
+        )
+    })
     public void test_add_Ljava_lang_Object_non_Comparable() {
         PriorityQueue<Object> queue = new PriorityQueue<Object>();
         queue.add(new Integer(10));
@@ -569,6 +854,15 @@ public class PriorityQueueTest extends TestCase {
      * @tests java.util.PriorityQueue#remove(Object)
      * 
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "remove",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_remove_Ljava_lang_Object() {
         Integer[] array = { 2, 45, 7, -12, 9, 23, 17, 1118, 10, 16, 39 };
         List<Integer> list = Arrays.asList(array);
@@ -586,6 +880,15 @@ public class PriorityQueueTest extends TestCase {
      * @tests java.util.PriorityQueue#remove(Object)
      * 
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "remove",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_remove_Ljava_lang_Object_using_comparator() {
         PriorityQueue<String> queue = new PriorityQueue<String>(10,
                 new MockComparatorStringByLength());
@@ -601,6 +904,15 @@ public class PriorityQueueTest extends TestCase {
      * @tests java.util.PriorityQueue#remove(Object)
      * 
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies ClassCastException.",
+      targets = {
+        @TestTarget(
+          methodName = "remove",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_remove_Ljava_lang_Object_not_exists() {
         Integer[] array = { 2, 45, 7, -12, 9, 23, 17, 1118, 10, 16, 39 };
         List<Integer> list = Arrays.asList(array);
@@ -619,6 +931,15 @@ public class PriorityQueueTest extends TestCase {
      * @tests java.util.PriorityQueue#remove(Object)
      * 
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies null as a parameter.",
+      targets = {
+        @TestTarget(
+          methodName = "remove",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_remove_Ljava_lang_Object_null() {
         Integer[] array = { 2, 45, 7, -12, 9, 23, 17, 1118, 10, 16, 39 };
         List<Integer> list = Arrays.asList(array);
@@ -630,6 +951,15 @@ public class PriorityQueueTest extends TestCase {
      * @tests java.util.PriorityQueue#remove(Object)
      * 
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies ClassCastException.",
+      targets = {
+        @TestTarget(
+          methodName = "remove",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_remove_Ljava_lang_Object_not_Compatible() {
         Integer[] array = { 2, 45, 7, -12, 9, 23, 17, 1118, 10, 16, 39 };
         List<Integer> list = Arrays.asList(array);
@@ -663,6 +993,15 @@ public class PriorityQueueTest extends TestCase {
     /**
      * @tests java.util.PriorityQueue#comparator()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "comparator",
+          methodArgs = {}
+        )
+    })
     public void test_comparator() {
         PriorityQueue<Object> queue = new PriorityQueue<Object>();
         assertNull(queue.comparator());
@@ -675,6 +1014,15 @@ public class PriorityQueueTest extends TestCase {
     /**
      * @tests serialization/deserialization.
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Verifies serialization/deserialization.",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationSelf",
+          methodArgs = {}
+        )
+    })
     public void test_Serialization() throws Exception {
         Integer[] array = { 2, 45, 7, -12, 9, 23, 17, 1118, 10, 16, 39 };
         List<Integer> list = Arrays.asList(array);
@@ -692,6 +1040,15 @@ public class PriorityQueueTest extends TestCase {
     /**
      * @tests serialization/deserialization.
      */
+    @TestInfo(
+              level = TestLevel.COMPLETE,
+              purpose = "Verifies serialization/deserialization.",
+              targets = {
+                @TestTarget(
+                  methodName = "!SerializationSelf",
+                  methodArgs = {}
+                )
+            })    
     public void test_Serialization_casting() throws Exception {
         Integer[] array = { 2, 45, 7, -12, 9, 23, 17, 1118, 10, 16, 39 };
         List<Integer> list = Arrays.asList(array);
@@ -709,6 +1066,15 @@ public class PriorityQueueTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
+    @TestInfo(
+              level = TestLevel.COMPLETE,
+              purpose = "Verifies serialization/deserialization compatibility.",
+              targets = {
+                @TestTarget(
+                  methodName = "!SerializationGolden",
+                  methodArgs = {}
+                )
+            })    
     public void test_SerializationCompatibility_cast() throws Exception {
         Integer[] array = { 2, 45, 7, -12, 9, 23, 17, 1118, 10, 16, 39 };
         List<Integer> list = Arrays.asList(array);

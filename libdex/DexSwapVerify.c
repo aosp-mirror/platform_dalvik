@@ -2813,16 +2813,7 @@ int dexFixByteOrdering(u1* addr, int len)
         }
     }
 
-    if (okay) {
-        /*
-         * Rewrite the checksum.  We leave the SHA-1 signature alone.
-         */
-        uLong adler = adler32(0L, Z_NULL, 0);
-        const int nonSum = sizeof(pHeader->magic) + sizeof(pHeader->checksum);
-
-        adler = adler32(adler, addr + nonSum, len - nonSum);
-        pHeader->checksum = adler;
-    } else {
+    if (!okay) {
         LOGE("ERROR: Byte swap + verify failed\n");
     }
 

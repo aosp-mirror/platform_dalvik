@@ -22,7 +22,7 @@ import org.apache.harmony.kernel.vm.LangAccess;
  * Holder for special cross-package access objects.
  */
 /*package*/ final class SpecialAccess {
-    /** non-null; package access to <code>java.lang</code> */
+    /** non-null; package access to {@code java.lang} */
     static /*package*/ final LangAccess LANG;
 
     static {

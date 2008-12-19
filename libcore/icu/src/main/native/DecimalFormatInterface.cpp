@@ -121,7 +121,7 @@ static jstring getSymbol(JNIEnv *env, jclass clazz, jint addr, jint symbol) {
 
     uint32_t resultlength, reslenneeded;
 
-    // the errorcode returned by unum_setSymbol
+    // the errorcode returned by unum_getSymbol
     UErrorCode status = U_ZERO_ERROR;
 
     // get the pointer to the number format    
@@ -173,7 +173,7 @@ static jint getAttribute(JNIEnv *env, jclass clazz, jint addr, jint symbol) {
 static void setTextAttribute(JNIEnv *env, jclass clazz, jint addr, jint symbol, 
         jstring text) {
 
-    // the errorcode returned by unum_setSymbol
+    // the errorcode returned by unum_setTextAttribute
     UErrorCode status = U_ZERO_ERROR;
 
     // get the pointer to the number format    
@@ -195,7 +195,7 @@ static jstring getTextAttribute(JNIEnv *env, jclass clazz, jint addr,
 
     uint32_t resultlength, reslenneeded;
 
-    // the errorcode returned by unum_setSymbol
+    // the errorcode returned by unum_getTextAttribute
     UErrorCode status = U_ZERO_ERROR;
 
     // get the pointer to the number format    
@@ -231,7 +231,7 @@ static jstring getTextAttribute(JNIEnv *env, jclass clazz, jint addr,
 static void applyPatternImpl(JNIEnv *env, jclass clazz, jint addr, 
         jboolean localized, jstring pattern) {
 
-    // the errorcode returned by unum_setSymbol
+    // the errorcode returned by unum_applyPattern
     UErrorCode status = U_ZERO_ERROR;
 
     // get the pointer to the number format    
@@ -252,7 +252,7 @@ static jstring toPatternImpl(JNIEnv *env, jclass clazz, jint addr,
 
     uint32_t resultlength, reslenneeded;
 
-    // the errorcode returned by unum_setSymbol
+    // the errorcode returned by unum_toPattern
     UErrorCode status = U_ZERO_ERROR;
 
     // get the pointer to the number format    
@@ -744,13 +744,14 @@ static jobject parse(JNIEnv *env, jclass clazz, jint addr, jstring text,
             return env->NewObject(longClass, longInitMethodID, 
                     (jlong) resultInt64);
         default:
-            break;
+            return NULL;
         }
     }
     else
     {
         int scale = digits.fCount - digits.fDecimalAt;
-        digits.fDigits[digits.fCount] = 0;  // mc: ATTENTION: Abuse of Implementation Knowlegde!
+        // ATTENTION: Abuse of Implementation Knowlegde!
+        digits.fDigits[digits.fCount] = 0;
         if (digits.fIsPositive) {
             resultStr = env->NewStringUTF(digits.fDigits);
         } else {
@@ -758,7 +759,8 @@ static jobject parse(JNIEnv *env, jclass clazz, jint addr, jstring text,
                 env->CallVoidMethod(position, setIndexMethodID, (jint) parsePos);
                 return env->NewObject(doubleClass, dblInitMethodID, (jdouble)-0);
             } else {
-                *(digits.fDigits - 1) = '-';  // mc: ATTENTION: Abuse of Implementation Knowlegde!
+                // ATTENTION: Abuse of Implementation Knowlegde!
+                *(digits.fDigits - 1) = '-';
                 resultStr = env->NewStringUTF(digits.fDigits - 1);
             }
         }
@@ -769,7 +771,6 @@ static jobject parse(JNIEnv *env, jclass clazz, jint addr, jstring text,
         resultObject2 = env->NewObject(bigDecimalClass, bigDecimalInitMethodID, resultObject1, scale);
         return resultObject2;
     }
-    return NULL;    // Don't see WHY, however!!! (Control never reaches here!!!)
 }
 
 static jint cloneImpl(JNIEnv *env, jclass clazz, jint addr) {

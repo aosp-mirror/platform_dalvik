@@ -15,36 +15,59 @@
  *  limitations under the License.
  */
 
-/**
-* @author Aleksei Y. Semenov
-* @version $Revision$
-*/
-
 package java.security.acl;
 
 import java.security.Principal;
 
 /**
- * @com.intel.drl.spec_ref
+ * The interface to manage owners of objects that require ownership.
  * 
+ * @see Acl
+ * @see Principal
+ * @since Android 1.0
  */
-
 public interface Owner {
     
     /**
-     * @com.intel.drl.spec_ref
+     * Adds a principal to the list of owners.
+     * 
+     * @param caller
+     *            the invoking principal.
+     * @param owner
+     *            the owner to added.
+     * @return {@code true} if the owner was added, {@code false} if it was already an owner.
+     * @throws NotOwnerException
+     *             if the invoking principal is not an owner.
+     * @since Android 1.0
      */
     boolean addOwner(Principal caller, Principal owner) 
                  throws NotOwnerException;
     
     /**
-     * @com.intel.drl.spec_ref
+     * Removes a principal from the list of owners.
+     * 
+     * @param caller
+     *            the invoking principal.
+     * @param owner
+     *            the owner to be removed.
+     * @return {@code true} if the owner was removed, {@code false} if it was not an owner.
+     * @throws NotOwnerException
+     *             if the invoking principal is not an owner.
+     * @throws LastOwnerException
+     *             if the owner to be removed is the last owner and hence removing it
+     *             would make this object owner-less.
+     * @since Android 1.0
      */
     boolean deleteOwner(Principal caller, Principal owner) 
                 throws NotOwnerException, LastOwnerException;
     
     /**
-     * @com.intel.drl.spec_ref
+     * Checks whether the specified principal is an owner of this object.
+     * 
+     * @param owner
+     *            the principal to check.
+     * @return {@code true} if the specified principal is an owner, otherwise {@code false}.
+     * @since Android 1.0
      */
     boolean isOwner(Principal owner);
 }

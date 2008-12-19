@@ -16,6 +16,11 @@
 
 package org.apache.harmony.nio.tests.java.nio.channels;
 
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+
 import java.io.IOException;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectableChannel;
@@ -27,11 +32,21 @@ import junit.framework.TestCase;
 /*
  * Tests for SelectableChannel
  */
+@TestTargetClass(SelectableChannel.class)
 public class SelectableChannelTest extends TestCase {
 
     /**
      * @tests SelectableChannel#register(Selector, int)
      */
+    @TestInfo(
+          level = TestLevel.COMPLETE,
+          purpose = "Abstract method.",
+          targets = {
+            @TestTarget(
+              methodName = "register",
+              methodArgs = {java.nio.channels.Selector.class, int.class}
+            )
+        })
     public void test_register_LSelectorI() throws IOException {
         MockSelectableChannel msc = new MockSelectableChannel();
         // Verify that calling register(Selector, int) leads to the method

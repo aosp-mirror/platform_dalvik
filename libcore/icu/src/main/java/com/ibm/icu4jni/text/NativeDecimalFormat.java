@@ -19,7 +19,7 @@ package com.ibm.icu4jni.text;
 import java.text.FieldPosition;
 import java.text.ParsePosition;
 
-public final class NativeDecimalFormat {
+final class NativeDecimalFormat {
 
     enum UNumberFormatSymbol {
         UNUM_DECIMAL_SEPARATOR_SYMBOL, 

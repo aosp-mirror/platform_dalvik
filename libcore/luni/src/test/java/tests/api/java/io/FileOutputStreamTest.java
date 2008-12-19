@@ -17,11 +17,17 @@
 
 package tests.api.java.io;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass; 
+
 import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 
+@TestTargetClass(FileOutputStream.class) 
 public class FileOutputStreamTest extends junit.framework.TestCase {
 
     public String fileName;
@@ -39,6 +45,13 @@ public class FileOutputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.FileOutputStream#FileOutputStream(java.io.File)
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "SecurityException & FileNotFoundException checking missed.",
+            targets = { @TestTarget(methodName = "FileOutputStream", 
+                                    methodArgs = {java.io.File.class})                         
+            }
+        )    
     public void test_ConstructorLjava_io_File() throws Exception {
         // Test for method java.io.FileOutputStream(java.io.File)
         f = new File(fileName = System.getProperty("user.home"), "fos.tst");
@@ -48,6 +61,13 @@ public class FileOutputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.FileOutputStream#FileOutputStream(java.io.FileDescriptor)
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "SecurityException checking missed.",
+            targets = { @TestTarget(methodName = "FileOutputStream", 
+                                    methodArgs = {java.io.FileDescriptor.class})                         
+            }
+        )      
     public void test_ConstructorLjava_io_FileDescriptor() throws Exception {
         // Test for method java.io.FileOutputStream(java.io.FileDescriptor)
         f = new File(fileName = System.getProperty("user.home"), "fos.tst");
@@ -64,6 +84,13 @@ public class FileOutputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.FileOutputStream#FileOutputStream(java.lang.String)
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "SecurityException & FileNotFoundException checking missed.",
+            targets = { @TestTarget(methodName = "FileOutputStream", 
+                                    methodArgs = {java.lang.String.class})                         
+            }
+        )    
     public void test_ConstructorLjava_lang_String() throws Exception {
         // Test for method java.io.FileOutputStream(java.lang.String)
         f = new File(fileName = System.getProperty("user.home"), "fos.tst");
@@ -75,6 +102,13 @@ public class FileOutputStreamTest extends junit.framework.TestCase {
      * @tests java.io.FileOutputStream#FileOutputStream(java.lang.String,
      *        boolean)
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "SecurityException & FileNotFoundException checking missed.",
+            targets = { @TestTarget(methodName = "FileOutputStream", 
+                                    methodArgs = {java.lang.String.class, boolean.class})                         
+            }
+        )     
     public void test_ConstructorLjava_lang_StringZ() throws Exception {
         // Test for method java.io.FileOutputStream(java.lang.String, boolean)
         f = new java.io.File(System.getProperty("user.home"), "fos.tst");
@@ -94,6 +128,13 @@ public class FileOutputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.FileOutputStream#close()
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "IOException checking missed.",
+            targets = { @TestTarget(methodName = "close", 
+                                    methodArgs = {})                         
+            }
+        )     
     public void test_close() throws Exception {
         // Test for method void java.io.FileOutputStream.close()
 
@@ -113,6 +154,13 @@ public class FileOutputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.FileOutputStream#getFD()
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "IOException checking missed.",
+            targets = { @TestTarget(methodName = "getFD", 
+                                    methodArgs = {})                         
+            }
+        )       
     public void test_getFD() throws Exception {
         // Test for method java.io.FileDescriptor
         // java.io.FileOutputStream.getFD()
@@ -127,6 +175,13 @@ public class FileOutputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.FileOutputStream#write(byte[])
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "IOException checking missed.",
+            targets = { @TestTarget(methodName = "write", 
+                                    methodArgs = {byte[].class})                         
+            }
+        )     
     public void test_write$B() throws Exception {
         // Test for method void java.io.FileOutputStream.write(byte [])
         f = new java.io.File(System.getProperty("user.home"), "output.tst");
@@ -142,6 +197,13 @@ public class FileOutputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.FileOutputStream#write(byte[], int, int)
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "IOException checking missed.",
+            targets = { @TestTarget(methodName = "write", 
+                                    methodArgs = {byte[].class, int.class, int.class})                         
+            }
+        )        
     public void test_write$BII() throws Exception {
         // Test for method void java.io.FileOutputStream.write(byte [], int,
         // int)
@@ -158,6 +220,13 @@ public class FileOutputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.FileOutputStream#write(int)
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "IOException checking missed.",
+            targets = { @TestTarget(methodName = "write", 
+                                    methodArgs = {int.class})                         
+            }
+        )        
     public void test_writeI() throws Exception {
         // Test for method void java.io.FileOutputStream.write(int)
         f = new java.io.File(System.getProperty("user.home"), "output.tst");
@@ -170,6 +239,13 @@ public class FileOutputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.FileOutputStream#write(byte[], int, int)
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "IOException checking missed.",
+            targets = { @TestTarget(methodName = "write", 
+                                    methodArgs = {byte[].class, int.class, int.class})                         
+            }
+        )       
     public void test_write$BII2() throws Exception {
         // Regression for HARMONY-437
 
@@ -211,6 +287,13 @@ public class FileOutputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.FileOutputStream#write(byte[], int, int)
      */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Regression test. IOException checking missed.",
+            targets = { @TestTarget(methodName = "write", 
+                                    methodArgs = {byte[].class, int.class, int.class})                         
+            }
+        )     
     public void test_write$BII3() throws Exception {
         // Regression for HARMONY-834
         //no exception expected
@@ -220,20 +303,27 @@ public class FileOutputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.FileOutputStream#getChannel()
      */
+    @TestInfo(
+            level = TestLevel.COMPLETE,
+            purpose = "Verifies getChannel() method.",
+            targets = { @TestTarget(methodName = "getChannel", 
+                                    methodArgs = {})                         
+            }
+        )       
     public void test_getChannel() throws Exception {
-		// Regression for HARMONY-508
-		File tmpfile = File.createTempFile("FileOutputStream", "tmp");
-		tmpfile.deleteOnExit();
-		FileOutputStream fos = new FileOutputStream(tmpfile);
-		byte[] b = new byte[10];
-		for (int i = 10; i < b.length; i++) {
-			b[i] = (byte) i;
-		}
-		fos.write(b);
-		fos.flush();
-		fos.close();
-		FileOutputStream f = new FileOutputStream(tmpfile, true);
-		assertEquals(10, f.getChannel().position()); 
+        // Regression for HARMONY-508
+        File tmpfile = File.createTempFile("FileOutputStream", "tmp");
+        tmpfile.deleteOnExit();
+        FileOutputStream fos = new FileOutputStream(tmpfile);
+        byte[] b = new byte[10];
+        for (int i = 10; i < b.length; i++) {
+            b[i] = (byte) i;
+        }
+        fos.write(b);
+        fos.flush();
+        fos.close();
+        FileOutputStream f = new FileOutputStream(tmpfile, true);
+        assertEquals(10, f.getChannel().position()); 
     }
 
     /**

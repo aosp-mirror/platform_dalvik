@@ -16,6 +16,11 @@
  */
 package org.apache.harmony.archive.tests.java.util.zip;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.BufferedInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -28,6 +33,7 @@ import java.util.zip.ZipException;
 
 import tests.support.resource.Support_Resources;
 
+@TestTargetClass(Inflater.class) 
 public class InflaterTest extends junit.framework.TestCase {
     byte outPutBuff1[] = new byte[500];
 
@@ -36,6 +42,15 @@ public class InflaterTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.Inflater#end()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "end",
+          methodArgs = {}
+        )
+    })
     public void test_end() {
         // test method of java.util.zip.inflater.end()
         byte byteArray[] = { 5, 2, 3, 7, 8 };
@@ -61,6 +76,15 @@ public class InflaterTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.Inflater#finished()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "finished",
+          methodArgs = {}
+        )
+    })
     public void test_finished() {
         // test method of java.util.zip.inflater.finished()
         byte byteArray[] = { 1, 3, 4, 7, 8, 'e', 'r', 't', 'y', '5' };
@@ -92,6 +116,15 @@ public class InflaterTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.Inflater#getAdler()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getAdler",
+          methodArgs = {}
+        )
+    })
     public void test_getAdler() {
         // test method of java.util.zip.inflater.getAdler()
         byte dictionaryArray[] = { 'e', 'r', 't', 'a', 'b', 2, 3 };
@@ -112,6 +145,15 @@ public class InflaterTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.Inflater#getRemaining()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getRemaining",
+          methodArgs = {}
+        )
+    })
     public void test_getRemaining() {
         // test method of java.util.zip.inflater.getRemaining()
         byte byteArray[] = { 1, 3, 5, 6, 7 };
@@ -127,6 +169,15 @@ public class InflaterTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.Inflater#getTotalIn()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getTotalIn",
+          methodArgs = {}
+        )
+    })
     public void test_getTotalIn() {
         // test method of java.util.zip.inflater.getTotalIn()
         // creating the decompressed data
@@ -184,6 +235,15 @@ public class InflaterTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.Inflater#getTotalOut()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getTotalOut",
+          methodArgs = {}
+        )
+    })
     public void test_getTotalOut() {
         // test method of java.util.zip.inflater.Inflater()
         // creating the decompressed data
@@ -250,6 +310,15 @@ public class InflaterTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.Inflater#inflate(byte[])
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "DataFormatException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "inflate",
+          methodArgs = {byte[].class}
+        )
+    })
     public void test_inflate$B() {
         // test method of java.util.zip.inflater.inflate(byte)
 
@@ -317,6 +386,15 @@ public class InflaterTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.Inflater#inflate(byte[], int, int)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "DataFormatException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "inflate",
+          methodArgs = {byte[].class, int.class, int.class}
+        )
+    })
     public void test_inflate$BII() {
         // test method of java.util.zip.inflater.inflate(byte,int,int)
 
@@ -364,6 +442,15 @@ public class InflaterTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.Inflater#Inflater()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Inflater",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         // test method of java.util.zip.inflater.Inflater()
         try {
@@ -380,6 +467,15 @@ public class InflaterTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.Inflater#Inflater(boolean)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Inflater",
+          methodArgs = {boolean.class}
+        )
+    })
     public void test_ConstructorZ() {
         // test method of java.util.zip.inflater.Inflater(boolean)
         // note does not throw exception if deflater has a header, but inflater
@@ -412,6 +508,15 @@ public class InflaterTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.Inflater#needsDictionary()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "needsDictionary",
+          methodArgs = {}
+        )
+    })
     public void test_needsDictionary() {
         // test method of java.util.zip.inflater.needsDictionary()
         // note: this flag is set after inflate is called
@@ -457,6 +562,15 @@ public class InflaterTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.Inflater#needsInput()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "needsInput",
+          methodArgs = {}
+        )
+    })
     public void test_needsInput() {
         // test method of java.util.zip.inflater.needsInput()
         Inflater inflate = new Inflater();
@@ -481,6 +595,15 @@ public class InflaterTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.Inflater#reset()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "reset",
+          methodArgs = {}
+        )
+    })
     public void test_reset() {
         // test method of java.util.zip.inflater.reset()
         byte byteArray[] = { 1, 3, 4, 7, 8, 'e', 'r', 't', 'y', '5' };
@@ -532,6 +655,15 @@ public class InflaterTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.Inflater#setDictionary(byte[])
      */
+@TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Test is empty",
+      targets = {
+        @TestTarget(
+          methodName = "setDictionary",
+          methodArgs = {byte[].class}
+        )
+    })
     public void test_setDictionary$B() {
         //FIXME This test doesn't pass in Harmony classlib or Sun 5.0_7 RI
         /*
@@ -587,6 +719,15 @@ public class InflaterTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.Inflater#setInput(byte[])
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setInput",
+          methodArgs = {byte[].class}
+        )
+    })
     public void test_setInput$B() {
         // test method of java.util.zip.inflater.setInput(byte)
         byte byteArray[] = { 2, 3, 4, 't', 'y', 'u', 'e', 'w', 7, 6, 5, 9 };
@@ -599,6 +740,15 @@ public class InflaterTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.Inflater#setInput(byte[], int, int)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setInput",
+          methodArgs = {byte[].class, int.class, int.class}
+        )
+    })
     public void test_setInput$BII() {
         // test method of java.util.zip.inflater.setInput(byte,int,int)
         byte byteArray[] = { 2, 3, 4, 't', 'y', 'u', 'e', 'w', 7, 6, 5, 9 };
@@ -653,6 +803,15 @@ public class InflaterTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.Deflater#getBytesRead()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getBytesRead",
+          methodArgs = {}
+        )
+    })
     public void test_getBytesRead() throws DataFormatException,
             UnsupportedEncodingException {
         // Regression test for HARMONY-158
@@ -680,6 +839,15 @@ public class InflaterTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.Deflater#getBytesRead()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getBytesWritten",
+          methodArgs = {}
+        )
+    })
     public void test_getBytesWritten() throws DataFormatException, UnsupportedEncodingException {
         // Regression test for HARMONY-158
         Deflater def = new Deflater();
@@ -706,6 +874,15 @@ public class InflaterTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.Deflater#inflate(byte[], int, int)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Regression test",
+      targets = {
+        @TestTarget(
+          methodName = "inflate",
+          methodArgs = {byte[].class, int.class, int.class}
+        )
+    })
     public void testInflate() throws Exception {
         // Regression for HARMONY-81 
         Inflater inf = new Inflater();

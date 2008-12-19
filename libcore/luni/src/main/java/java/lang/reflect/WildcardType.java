@@ -18,36 +18,47 @@
 package java.lang.reflect;
 
 /**
- * Represents a wildcard type, such as <code>?</code> or
- * <code>? extends Comparable</code>.
+ * This interface represents a wildcard type, such as the simple wildcard
+ * {@code '?'}, the upper bounded wildcard {@code '? extends Closeable'}, the
+ * multiple upper bounded wildcard {@code '? extends Closeable & Flushable'} or
+ * the lower bounded wildcard {@code '? super OutputStream'}.
  * 
  * @since 1.5
+ * @since Android 1.0
  */
 public interface WildcardType extends Type {
+    
     /**
-     * Gets the array of types that represent the upper bounds of this type. The
-     * default upper bound is {@link Object}.
+     * Returns the array of types that represent the upper bounds of this type.
+     * The default upper bound is {@code Object}.
+     *
+     * @return an array containing the upper bounds types
      * 
-     * @return An array of {@link Type} instances.
      * @throws TypeNotPresentException
-     *             if the component type points to a missing type.
+     *             if any of the bounds points to a missing type
      * @throws MalformedParameterizedTypeException
-     *             if the component type points to a type that can't be
-     *             instantiated for some reason.
+     *             if any bound points to a type that cannot be instantiated for
+     *             some reason
+     * 
+     * @since Android 1.0
      */
     Type[] getUpperBounds();
 
     /**
-     * Gets the array of types that represent the lower bounds of this type. The
-     * default lower bound is <code>null</code>, in which case a empty array
-     * is returned.
+     * Returns the array of types that represent the lower bounds of this type.
+     * The default lower bound is {@code null}, in which case an empty array is
+     * returned. Since only one lower bound is allowed, the returned array's
+     * length will never exceed one.
      * 
-     * @return An array of {@link Type} instances.
+     * @return an array containing the lower bounds types
+     * 
      * @throws TypeNotPresentException
-     *             if the component type points to a missing type.
+     *             if any of the bounds points to a missing type
      * @throws MalformedParameterizedTypeException
-     *             if the component type points to a type that can't be
-     *             instantiated for some reason.
+     *             if any of the bounds points to a type that cannot be
+     *             instantiated for some reason
+     * 
+     * @since Android 1.0
      */
     Type[] getLowerBounds();
 }

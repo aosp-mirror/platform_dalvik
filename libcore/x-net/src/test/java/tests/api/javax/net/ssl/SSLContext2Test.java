@@ -17,6 +17,11 @@
 
 package tests.api.javax.net.ssl;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -30,13 +35,14 @@ import javax.net.ssl.KeyManager;
 import javax.net.ssl.TrustManager;
 
 import org.apache.harmony.security.tests.support.SpiEngUtils;
+
 import junit.framework.TestCase;
 
 /**
  * Tests for SSLContext class constructors and methods
  * 
  */
-
+@TestTargetClass(SSLContext.class) 
 public class SSLContext2Test extends TestCase {
     
     private static String srvSSLContext = "SSLContext";
@@ -149,6 +155,15 @@ public class SSLContext2Test extends TestCase {
      * throws NoSuchAlgorithmException when protocol is not correct;
      * returns SSLContext object
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getInstance",
+          methodArgs = {String.class}
+        )
+    })
     public void test_getInstanceLjava_lang_String() throws NoSuchAlgorithmException, 
             KeyManagementException {
         try {
@@ -187,6 +202,15 @@ public class SSLContext2Test extends TestCase {
      * throws NoSuchProviderException when provider is available;
      * returns SSLContext object
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getInstance",
+          methodArgs = {String.class, String.class}
+        )
+    })
     public void test_getInstanceLjava_lang_StringLjava_lang_String() throws NoSuchAlgorithmException,
             NoSuchProviderException, IllegalArgumentException, 
             KeyManagementException {
@@ -252,6 +276,15 @@ public class SSLContext2Test extends TestCase {
      * throws IllegalArgumentException when provider is null;
      * returns SSLContext object
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getInstance",
+          methodArgs = {String.class, Provider.class}
+        )
+    })
     public void test_getInstanceLjava_lang_StringLjava_security_Provider()
         throws NoSuchAlgorithmException,
         IllegalArgumentException, KeyManagementException {

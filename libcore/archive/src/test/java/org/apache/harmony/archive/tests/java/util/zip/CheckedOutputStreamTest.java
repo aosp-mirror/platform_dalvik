@@ -16,6 +16,11 @@
  */
 package org.apache.harmony.archive.tests.java.util.zip;
 
+import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -23,12 +28,22 @@ import java.util.zip.Adler32;
 import java.util.zip.CRC32;
 import java.util.zip.CheckedOutputStream;
 
+@TestTargetClass(CheckedOutputStream.class) 
 public class CheckedOutputStreamTest extends junit.framework.TestCase {
 
     /**
      * @tests java.util.zip.CheckedOutputStream#CheckedOutputStream(java.io.OutputStream,
      *        java.util.zip.Checksum)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "CheckedOutputStream",
+          methodArgs = {java.io.OutputStream.class, java.util.zip.Checksum.class}
+        )
+    })
     public void test_ConstructorLjava_io_OutputStreamLjava_util_zip_Checksum() {
         // test method java.util.zip.checkedOutputStream.constructor
         try {
@@ -49,6 +64,15 @@ public class CheckedOutputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.CheckedOutputStream#getChecksum()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getChecksum",
+          methodArgs = {}
+        )
+    })
     public void test_getChecksum() {
         // test method java.util.zip.checkedOutputStream.getChecksum()
         byte byteArray[] = { 1, 2, 3, 'e', 'r', 't', 'g', 3, 6 };
@@ -81,6 +105,15 @@ public class CheckedOutputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.CheckedOutputStream#write(int)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "write",
+          methodArgs = {int.class}
+        )
+    })
     public void test_writeI() {
         // test method java.util.zip.checkedOutputStream.writeI()
         byte byteArray[] = { 1, 2, 3, 'e', 'r', 't', 'g', 3, 6 };
@@ -105,6 +138,15 @@ public class CheckedOutputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.CheckedOutputStream#write(byte[], int, int)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "write",
+          methodArgs = {byte[].class, int.class, int.class}
+        )
+    })
     public void test_write$BII() {
         // test method java.util.zip.checkOutputStream.writeBII()
         byte byteArray[] = { 1, 2, 3, 'e', 'r', 't', 'g', 3, 6 };

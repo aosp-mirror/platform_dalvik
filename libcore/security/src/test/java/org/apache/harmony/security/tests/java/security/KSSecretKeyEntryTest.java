@@ -22,12 +22,17 @@
 
 package org.apache.harmony.security.tests.java.security;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.security.KeyStore;
 
 import javax.crypto.SecretKey;
 
 import junit.framework.TestCase;
-
+@TestTargetClass(KeyStore.SecretKeyEntry.class)
 /**
  * Tests for <code>KeyStore.SecretKeyEntry</code> class constructor and methods 
  * 
@@ -46,6 +51,15 @@ public class KSSecretKeyEntryTest extends TestCase {
      * Test for <code>SecretKeyEntry(SecretKey secretKey)</code> constructor
      * Assertion: throws NullPointerException when secretKey is null
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verification of positive case with non null parameter missed",
+      targets = {
+        @TestTarget(
+          methodName = "SecretKeyEntry",
+          methodArgs = {SecretKey.class}
+        )
+    })
     public void testSecretKeyEntry() {
         SecretKey sk = null;
         try {
@@ -59,6 +73,15 @@ public class KSSecretKeyEntryTest extends TestCase {
      * Test for <code>getSecretKey()</code> method
      * Assertion: returns SecretKey from the given entry
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getSecretKey",
+          methodArgs = {}
+        )
+    })
     public void testGetSecretKey() {
         SecretKey sk = new tmpSecretKey();
         KeyStore.SecretKeyEntry ske = new KeyStore.SecretKeyEntry(sk);
@@ -69,6 +92,15 @@ public class KSSecretKeyEntryTest extends TestCase {
      * Test for <code>toString()</code> method
      * Assertion: returns non null string
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public void testToString() {
         SecretKey sk = new tmpSecretKey();
         KeyStore.SecretKeyEntry ske = new KeyStore.SecretKeyEntry(sk);

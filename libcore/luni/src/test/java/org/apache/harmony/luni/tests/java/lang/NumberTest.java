@@ -17,11 +17,26 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
+@TestTargetClass(Number.class) 
 public class NumberTest extends junit.framework.TestCase {
 
     /**
      * @tests java.lang.Number#byteValue()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "byteValue",
+          methodArgs = {}
+        )
+    })
     public void test_byteValue() {
         int number = 1231243;
         assertTrue("Incorrect byte returned for: " + number,
@@ -44,6 +59,15 @@ public class NumberTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Number#shortValue()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "shortValue",
+          methodArgs = {}
+        )
+    })
     public void test_shortValue() {
         int number = 1231243;
         assertTrue("Incorrect byte returned for: " + number,

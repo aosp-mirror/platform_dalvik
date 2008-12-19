@@ -17,67 +17,91 @@
 
 package tests.api.java.io;
 
+import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestLevel;
+
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.UTFDataFormatException;
 
+@TestTargetClass(UTFDataFormatException.class) 
 public class UTFDataFormatExceptionTest extends junit.framework.TestCase {
 
-	/**
-	 * @tests java.io.UTFDataFormatException#UTFDataFormatException()
-	 */
-	public void test_Constructor() {
-		// Test for method java.io.UTFDataFormatException()
-		try {
-			int stringBufferSize = 70000;
-			int loopCount = 66;
-			StringBuffer sb = new StringBuffer(stringBufferSize);
-			for (int i = 0; i < (loopCount); i++)
-				sb
-						.append("qwertyuiopasdfghjklzxcvbnmlkjhgfdsaqwertyuioplkjhgqwertyuiopasdfghjklzxcvbnmlkjhgfdsaqwertyuioplkjhg");
-			DataOutputStream dos = new DataOutputStream(
-					new ByteArrayOutputStream());
-			dos.writeUTF(sb.toString());
-		} catch (UTFDataFormatException e) {
-			return;
-		} catch (Exception e) {
-			fail("Exeption during Constructor test : " + e.getMessage());
-		}
-	}
+    /**
+     * @tests java.io.UTFDataFormatException#UTFDataFormatException()
+     */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "Test does not checks constructor functionality (doing this indirectly and which constructor used non obvious)",
+              targets = {
+                @TestTarget(
+                  methodName = "UTFDataFormatException",
+                  methodArgs = {}
+                )
+            })
+    public void test_Constructor() {
+        // Test for method java.io.UTFDataFormatException()
+        try {
+            int stringBufferSize = 70000;
+            int loopCount = 66;
+            StringBuffer sb = new StringBuffer(stringBufferSize);
+            for (int i = 0; i < (loopCount); i++)
+                sb
+                        .append("qwertyuiopasdfghjklzxcvbnmlkjhgfdsaqwertyuioplkjhgqwertyuiopasdfghjklzxcvbnmlkjhgfdsaqwertyuioplkjhg");
+            DataOutputStream dos = new DataOutputStream(
+                    new ByteArrayOutputStream());
+            dos.writeUTF(sb.toString());
+        } catch (UTFDataFormatException e) {
+            return;
+        } catch (Exception e) {
+            fail("Exeption during Constructor test : " + e.getMessage());
+        }
+    }
 
-	/**
-	 * @tests java.io.UTFDataFormatException#UTFDataFormatException(java.lang.String)
-	 */
-	public void test_ConstructorLjava_lang_String() {
-		// Test for method java.io.UTFDataFormatException(java.lang.String)
-		try {
-			int stringBufferSize = 70000;
-			int loopCount = 66;
-			StringBuffer sb = new StringBuffer(stringBufferSize);
-			for (int i = 0; i < (loopCount); i++)
-				sb
-						.append("qwertyuiopasdfghjklzxcvbnmlkjhgfdsaqwertyuioplkjhgqwertyuiopasdfghjklzxcvbnmlkjhgfdsaqwertyuioplkjhg");
-			DataOutputStream dos = new DataOutputStream(
-					new ByteArrayOutputStream());
-			dos.writeUTF(sb.toString());
-		} catch (UTFDataFormatException e) {
-			return;
-		} catch (Exception e) {
-			fail("Exeption during Constructor test : " + e.getMessage());
-		}
-	}
+    /**
+     * @tests java.io.UTFDataFormatException#UTFDataFormatException(java.lang.String)
+     */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "Test does not checks constructor functionality (doing this indirectly and which constructor used non obvious)",
+              targets = {
+                @TestTarget(
+                  methodName = "UTFDataFormatException",
+                  methodArgs = {java.lang.String.class}
+                )
+            })
+    public void test_ConstructorLjava_lang_String() {
+        // Test for method java.io.UTFDataFormatException(java.lang.String)
+        try {
+            int stringBufferSize = 70000;
+            int loopCount = 66;
+            StringBuffer sb = new StringBuffer(stringBufferSize);
+            for (int i = 0; i < (loopCount); i++)
+                sb
+                        .append("qwertyuiopasdfghjklzxcvbnmlkjhgfdsaqwertyuioplkjhgqwertyuiopasdfghjklzxcvbnmlkjhgfdsaqwertyuioplkjhg");
+            DataOutputStream dos = new DataOutputStream(
+                    new ByteArrayOutputStream());
+            dos.writeUTF(sb.toString());
+        } catch (UTFDataFormatException e) {
+            return;
+        } catch (Exception e) {
+            fail("Exeption during Constructor test : " + e.getMessage());
+        }
+    }
 
-	/**
-	 * Sets up the fixture, for example, open a network connection. This method
-	 * is called before a test is executed.
-	 */
-	protected void setUp() {
-	}
+    /**
+     * Sets up the fixture, for example, open a network connection. This method
+     * is called before a test is executed.
+     */
+    protected void setUp() {
+    }
 
-	/**
-	 * Tears down the fixture, for example, close a network connection. This
-	 * method is called after a test is executed.
-	 */
-	protected void tearDown() {
-	}
+    /**
+     * Tears down the fixture, for example, close a network connection. This
+     * method is called after a test is executed.
+     */
+    protected void tearDown() {
+    }
 }

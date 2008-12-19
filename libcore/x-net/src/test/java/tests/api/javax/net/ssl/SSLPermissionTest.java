@@ -17,39 +17,63 @@
 
 package tests.api.javax.net.ssl;
 
-import javax.net.ssl.SSLPermission;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
 
+import javax.net.ssl.SSLPermission;
 import junit.framework.TestCase;
 
+ 
 /**
  * Tests for <code>SSLPermission</code> class constructors.
  *  
  */
+@TestTargetClass(SSLPermission.class)
 public class SSLPermissionTest extends TestCase {
 
     /*
      * Class under test for void SSLPermission(String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Null parameter checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "SSLPermission",
+          methodArgs = {String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() {
-    	try {
-    		SSLPermission p = new SSLPermission("name");
-    		assertEquals("Incorrect permission name", "name", p.getName());
+        try {
+            SSLPermission p = new SSLPermission("name");
+            assertEquals("Incorrect permission name", "name", p.getName());
         } catch (Exception e) {
-        	fail("Unexpected exception " + e.toString());
+            fail("Unexpected exception " + e.toString());
         }
     }
 
     /*
      * Class under test for void SSLPermission(String, String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Null parameters checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "SSLPermission",
+          methodArgs = {String.class, String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_StringLjava_lang_String() {
-    	try {
-    		SSLPermission p = new SSLPermission("name", "value");
-    		assertEquals("Incorrect permission name", "name", p.getName());
-    		assertEquals("Incorrect default permission actions",
-    				"", p.getActions());
+        try {
+            SSLPermission p = new SSLPermission("name", "value");
+            assertEquals("Incorrect permission name", "name", p.getName());
+            assertEquals("Incorrect default permission actions",
+                    "", p.getActions());
         } catch (Exception e) {
-        	fail("Unexpected exception " + e.toString());
+            fail("Unexpected exception " + e.toString());
         }
     }
 }

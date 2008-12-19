@@ -21,6 +21,8 @@ import java.util.Iterator;
 
 /**
  * The service provider class for character sets.
+ * 
+ * @since Android 1.0
  */
 public abstract class CharsetProvider {
 
@@ -34,6 +36,7 @@ public abstract class CharsetProvider {
      * @throws SecurityException
      *             if there is a security manager installed that does not permit
      *             the runtime permission labeled "charsetProvider".
+     * @since Android 1.0
      */
     protected CharsetProvider() {
         SecurityManager securityManager = System.getSecurityManager();
@@ -45,6 +48,7 @@ public abstract class CharsetProvider {
      * Returns an iterator over all the available charsets.
      * 
      * @return the iterator.
+     * @since Android 1.0
      */
     public abstract Iterator<Charset> charsets();
 
@@ -52,10 +56,12 @@ public abstract class CharsetProvider {
      * Returns the named charset.
      * <p>
      * If the charset is unavailable the method returns <code>null</code>.
+     * </p>
      * 
      * @param charsetName
      *            the canonical or alias name of a character set.
      * @return the charset, or <code>null</code> if unavailable.
+     * @since Android 1.0
      */
     public abstract Charset charsetForName(String charsetName);
 }

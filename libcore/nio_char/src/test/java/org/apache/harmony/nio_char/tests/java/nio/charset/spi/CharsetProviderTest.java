@@ -16,13 +16,18 @@
 
 package org.apache.harmony.nio_char.tests.java.nio.charset.spi;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestLevel;
+
 import java.nio.charset.Charset;
 import java.nio.charset.spi.CharsetProvider;
 import java.security.Permission;
 import java.util.Iterator;
 
 import junit.framework.TestCase;
-
+@TestTargetClass(CharsetProvider.class)
 /**
  * Test class java.nio.charset.spi.CharsetProvider.
  */
@@ -31,6 +36,15 @@ public class CharsetProviderTest extends TestCase {
     /*
      * Test the security check in the constructor.
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Normal condition does not checked.",
+      targets = {
+        @TestTarget(
+          methodName = "CharsetProvider",
+          methodArgs = {}
+        )
+    })
     public void testConstructor() {
         // with sufficient privilege
         new MockCharsetProvider();

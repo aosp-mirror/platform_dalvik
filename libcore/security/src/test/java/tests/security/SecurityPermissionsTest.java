@@ -16,27 +16,13 @@
 
 package tests.security;
 
-import java.io.File;
-import java.io.FileDescriptor;
-import java.io.FileFilter;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.NotActiveException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
-import java.io.RandomAccessFile;
-import java.io.SerializablePermission;
-import java.io.StreamCorruptedException;
-import java.security.Permission;
+import dalvik.annotation.TestTargetClass;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
+@TestTargetClass(java.security.Permissions.class)
 /*
  * This class tests the secrity permissions which are documented in
  * http://java.sun.com/j2se/1.5.0/docs/guide/security/permissions.html#PermsAndMethods
@@ -46,10 +32,12 @@ public class SecurityPermissionsTest extends TestCase {
     public static final Test suite() {
         TestSuite suite = new TestSuite("Tests for security permissions");
 
-        suite.addTestSuite(tests.security.permissions.JavaIoFileStreamTest.class);
+        suite.addTestSuite(tests.security.permissions.JavaIoFileInputStreamTest.class);
+        suite.addTestSuite(tests.security.permissions.JavaIoFileOutputStreamTest.class);
         suite.addTestSuite(tests.security.permissions.JavaIoRandomAccessFileTest.class);
         suite.addTestSuite(tests.security.permissions.JavaIoFileTest.class);
-        suite.addTestSuite(tests.security.permissions.JavaIoObjectStreamTest.class);
+        suite.addTestSuite(tests.security.permissions.JavaIoObjectInputStreamTest.class);
+        suite.addTestSuite(tests.security.permissions.JavaIoObjectOutputStreamTest.class);
         suite.addTestSuite(tests.security.permissions.JavaLangSystemTest.class);
         suite.addTestSuite(tests.security.permissions.JavaLangClassTest.class);
         suite.addTestSuite(tests.security.permissions.JavaLangClassLoaderTest.class);

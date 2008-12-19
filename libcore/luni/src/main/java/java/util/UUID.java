@@ -39,8 +39,7 @@ import org.apache.harmony.luni.util.Msg;
  * details.
  * </p>
  * 
- * @since 1.5
- * @author Nathan Beyer (Harmony)
+ * @since Android 1.0
  */
 public final class UUID implements Serializable, Comparable<UUID> {
 
@@ -63,8 +62,11 @@ public final class UUID implements Serializable, Comparable<UUID> {
      * Constructs an instance with the specified bits.
      * </p>
      * 
-     * @param mostSigBits The 64 most significant bits of the UUID.
-     * @param leastSigBits The 64 least significant bits of the UUID.
+     * @param mostSigBits
+     *            The 64 most significant bits of the UUID.
+     * @param leastSigBits
+     *            The 64 least significant bits of the UUID.
+     * @since Android 1.0
      */
     public UUID(long mostSigBits, long leastSigBits) {
         super();
@@ -76,7 +78,7 @@ public final class UUID implements Serializable, Comparable<UUID> {
     /**
      * <p>
      * Sets up the transient fields of this instance based on the current values
-     * of the <code>mostSigBits</code> and <code>leastSigBits</code> fields.
+     * of the {@code mostSigBits} and {@code leastSigBits} fields.
      * </p>
      */
     private void init() {
@@ -123,7 +125,8 @@ public final class UUID implements Serializable, Comparable<UUID> {
      * <a href="http://www.ietf.org/rfc/rfc4122.txt">RFC 4122</a>.
      * </p>
      * 
-     * @return A UUID instance.
+     * @return an UUID instance.
+     * @since Android 1.0
      */
     public static UUID randomUUID() {
         byte[] data;
@@ -163,7 +166,10 @@ public final class UUID implements Serializable, Comparable<UUID> {
      * href="http://www.ietf.org/rfc/rfc4122.txt">RFC 4122</a>.
      * </p>
      * 
-     * @return A UUID instance.
+     * @param name
+     *            the name used as byte array to create an UUID.
+     * @return an UUID instance.
+     * @since Android 1.0
      */
     public static UUID nameUUIDFromBytes(byte[] name) {
         if (name == null) {
@@ -205,11 +211,12 @@ public final class UUID implements Serializable, Comparable<UUID> {
      * Parses a UUID string with the format defined by {@link #toString()}.
      * </p>
      * 
-     * @param uuid The UUID string to parse.
-     * @return A UUID instance.
-     * @throws NullPointerException if <code>uuid</code> is <code>null</code>.
-     * @throws IllegalArgumentException if <code>uuid</code> is not formatted
-     *         correctly.
+     * @param uuid
+     *            the UUID string to parse.
+     * @return an UUID instance.
+     * @throws IllegalArgumentException
+     *             if {@code uuid} is not formatted correctly.
+     * @since Android 1.0
      */
     public static UUID fromString(String uuid) {
         if (uuid == null) {
@@ -251,7 +258,8 @@ public final class UUID implements Serializable, Comparable<UUID> {
      * The 64 least significant bits of the UUID.
      * </p>
      * 
-     * @return A long value.
+     * @return the 64 least significant bits.
+     * @since Android 1.0
      */
     public long getLeastSignificantBits() {
         return leastSigBits;
@@ -262,7 +270,8 @@ public final class UUID implements Serializable, Comparable<UUID> {
      * The 64 most significant bits of the UUID.
      * </p>
      * 
-     * @return A long value.
+     * @return the 64 most significant bits.
+     * @since Android 1.0
      */
     public long getMostSignificantBits() {
         return mostSigBits;
@@ -282,7 +291,8 @@ public final class UUID implements Serializable, Comparable<UUID> {
      * <li>5 - Name-based with SHA-1 hashing UUID</li>
      * </ul>
      * 
-     * @return An int value.
+     * @return an {@code int} value.
+     * @since Android 1.0
      */
     public int version() {
         return version;
@@ -300,7 +310,8 @@ public final class UUID implements Serializable, Comparable<UUID> {
      * <li>7 - Reserved for future use</li>
      * </ul>
      * 
-     * @return An int value.
+     * @return an {@code int} value.
+     * @since Android 1.0
      */
     public int variant() {
         return variant;
@@ -312,8 +323,10 @@ public final class UUID implements Serializable, Comparable<UUID> {
      * href="http://www.ietf.org/rfc/rfc4122.txt">RFC 4122</a>.
      * </p>
      * 
-     * @return A long value.
-     * @throws UnsupportedOperationException if {@link #version()} is not 1.
+     * @return a {@code long} value.
+     * @throws UnsupportedOperationException
+     *             if {@link #version()} is not 1.
+     * @since Android 1.0
      */
     public long timestamp() {
         if (version != 1) {
@@ -328,8 +341,10 @@ public final class UUID implements Serializable, Comparable<UUID> {
      * href="http://www.ietf.org/rfc/rfc4122.txt">RFC 4122</a>.
      * </p>
      * 
-     * @return A long value.
-     * @throws UnsupportedOperationException if {@link #version()} is not 1.
+     * @return a {@code long} value.
+     * @throws UnsupportedOperationException
+     *             if {@link #version()} is not 1.
+     * @since Android 1.0
      */
     public int clockSequence() {
         if (version != 1) {
@@ -344,8 +359,10 @@ public final class UUID implements Serializable, Comparable<UUID> {
      * href="http://www.ietf.org/rfc/rfc4122.txt">RFC 4122</a>.
      * </p>
      * 
-     * @return A long value.
-     * @throws UnsupportedOperationException if {@link #version()} is not 1.
+     * @return a {@code long} value.
+     * @throws UnsupportedOperationException
+     *             if {@link #version()} is not 1.
+     * @since Android 1.0
      */
     public long node() {
         if (version != 1) {
@@ -361,9 +378,11 @@ public final class UUID implements Serializable, Comparable<UUID> {
      * significant.
      * </p>
      * 
-     * @param uuid The UUID to compare to.
-     * @return A value of -1, 0 or 1 if this UUID is less than, equal to or
-     *         greater than <code>uuid</code>.
+     * @param uuid
+     *            the UUID to compare to.
+     * @return a value of -1, 0 or 1 if this UUID is less than, equal to or
+     *         greater than {@code uuid}.
+     * @since Android 1.0
      */
     public int compareTo(UUID uuid) {
         if (uuid == this) {
@@ -387,14 +406,16 @@ public final class UUID implements Serializable, Comparable<UUID> {
 
     /**
      * <p>
-     * Compares this UUID to another object for equality. If <code>object</code>
-     * is not <code>null</code>, a UUID instance and all bits are equals,
-     * then <code>true</code> is returned.
+     * Compares this UUID to another object for equality. If {@code object}
+     * is not {@code null}, is a UUID instance, and all bits are equal, then
+     * {@code true} is returned.
      * </p>
      * 
-     * @param object The Object to compare to.
-     * @return A <code>true</code> if this UUID is equal to
-     *         <code>object</code> or <code>false</code> if not.
+     * @param object
+     *            the {@code Object} to compare to.
+     * @return {@code true} if this UUID is equal to {@code object}
+     *         or {@code false} if not.
+     * @since Android 1.0
      */
     @Override
     public boolean equals(Object object) {
@@ -422,7 +443,8 @@ public final class UUID implements Serializable, Comparable<UUID> {
      * {@link #equals(Object)} method.
      * </p>
      * 
-     * @return An int value.
+     * @return an {@code int} value.
+     * @since Android 1.0
      */
     @Override
     public int hashCode() {
@@ -453,7 +475,8 @@ public final class UUID implements Serializable, Comparable<UUID> {
      *                &quot;A&quot; / &quot;B&quot; / &quot;C&quot; / &quot;D&quot; / &quot;E&quot; / &quot;F&quot;
      * </pre>
      * 
-     * @return A String instance.
+     * @return a String instance.
+     * @since Android 1.0
      */
     @Override
     public String toString() {
@@ -486,9 +509,12 @@ public final class UUID implements Serializable, Comparable<UUID> {
      * Resets the transient fields to match the behavior of the constructor.
      * </p>
      * 
-     * @param in The InputStream to read from.
-     * @throws IOException if <code>in</code> throws it.
-     * @throws ClassNotFoundException if <code>in</code> throws it.
+     * @param in
+     *            the {@code InputStream} to read from.
+     * @throws IOException
+     *             if {@code in} throws it.
+     * @throws ClassNotFoundException
+     *             if {@code in} throws it.
      */
     private void readObject(ObjectInputStream in) throws IOException,
             ClassNotFoundException {

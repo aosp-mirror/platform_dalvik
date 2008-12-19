@@ -21,11 +21,16 @@
 */
 
 package org.apache.harmony.security.tests.java.security;
+
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.security.KeyStoreException;
 
 import junit.framework.TestCase;
-
-
+@TestTargetClass(KeyStoreException.class)
 /**
  * Tests for <code>KeyStoreException</code> class constructors and methods.
  * 
@@ -55,6 +60,15 @@ public class KeyStoreExceptionTest extends TestCase {
      * Test for <code>KeyStoreException()</code> constructor Assertion:
      * constructs KeyStoreException with no detail message
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "KeyStoreException",
+          methodArgs = {}
+        )
+    })
     public void testKeyStoreException01() {
         KeyStoreException tE = new KeyStoreException();
         assertNull("getMessage() must return null.", tE.getMessage());
@@ -66,6 +80,15 @@ public class KeyStoreExceptionTest extends TestCase {
      * constructs KeyStoreException with detail message msg. Parameter
      * <code>msg</code> is not null.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "KeyStoreException",
+          methodArgs = {String.class}
+        )
+    })
     public void testKeyStoreException02() {
         KeyStoreException tE;
         for (int i = 0; i < msgs.length; i++) {
@@ -80,6 +103,15 @@ public class KeyStoreExceptionTest extends TestCase {
      * Test for <code>KeyStoreException(String)</code> constructor Assertion:
      * constructs KeyStoreException when <code>msg</code> is null
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "KeyStoreException",
+          methodArgs = {String.class}
+        )
+    })
     public void testKeyStoreException03() {
         String msg = null;
         KeyStoreException tE = new KeyStoreException(msg);
@@ -91,6 +123,15 @@ public class KeyStoreExceptionTest extends TestCase {
      * Test for <code>KeyStoreException(Throwable)</code> constructor
      * Assertion: constructs KeyStoreException when <code>cause</code> is null
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "KeyStoreException",
+          methodArgs = {Throwable.class}
+        )
+    })
     public void testKeyStoreException04() {
         Throwable cause = null;
         KeyStoreException tE = new KeyStoreException(cause);
@@ -103,6 +144,15 @@ public class KeyStoreExceptionTest extends TestCase {
      * Assertion: constructs KeyStoreException when <code>cause</code> is not
      * null
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "KeyStoreException",
+          methodArgs = {Throwable.class}
+        )
+    })
     public void testKeyStoreException05() {
         KeyStoreException tE = new KeyStoreException(tCause);
         if (tE.getMessage() != null) {
@@ -121,6 +171,15 @@ public class KeyStoreExceptionTest extends TestCase {
      * Assertion: constructs KeyStoreException when <code>cause</code> is null
      * <code>msg</code> is null
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "KeyStoreException",
+          methodArgs = {String.class, Throwable.class}
+        )
+    })
     public void testKeyStoreException06() {
         KeyStoreException tE = new KeyStoreException(null, null);
         assertNull("getMessage() must return null", tE.getMessage());
@@ -132,6 +191,15 @@ public class KeyStoreExceptionTest extends TestCase {
      * Assertion: constructs KeyStoreException when <code>cause</code> is null
      * <code>msg</code> is not null
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "KeyStoreException",
+          methodArgs = {String.class, Throwable.class}
+        )
+    })
     public void testKeyStoreException07() {
         KeyStoreException tE;
         for (int i = 0; i < msgs.length; i++) {
@@ -147,6 +215,15 @@ public class KeyStoreExceptionTest extends TestCase {
      * Assertion: constructs KeyStoreException when <code>cause</code> is not
      * null <code>msg</code> is null
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "KeyStoreException",
+          methodArgs = {String.class, Throwable.class}
+        )
+    })
     public void testKeyStoreException08() {
         KeyStoreException tE = new KeyStoreException(null, tCause);
         if (tE.getMessage() != null) {
@@ -165,6 +242,15 @@ public class KeyStoreExceptionTest extends TestCase {
      * Assertion: constructs KeyStoreException when <code>cause</code> is not
      * null <code>msg</code> is not null
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "KeyStoreException",
+          methodArgs = {String.class, Throwable.class}
+        )
+    })
     public void testKeyStoreException09() {
         KeyStoreException tE;
         for (int i = 0; i < msgs.length; i++) {

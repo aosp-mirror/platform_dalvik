@@ -16,15 +16,21 @@
 
 package org.apache.harmony.nio.tests.java.nio.channels.spi;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.io.IOException;
 import java.nio.channels.IllegalBlockingModeException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.spi.SelectorProvider;
+import java.nio.channels.spi.AbstractSelector;
 
 import junit.framework.TestCase;
-
+@TestTargetClass(AbstractSelector.class)
 /**
  * Tests for AbstractSelector and register of its default implementation
  */ 
@@ -33,6 +39,15 @@ public class AbstractSelectorTest extends TestCase {
     /**
      * @tests AbstractSelector#provider()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "provider",
+          methodArgs = {}
+        )
+    })
     public void test_provider() throws IOException {
         Selector mockSelector = new MockAbstractSelector(SelectorProvider
                 .provider());
@@ -45,6 +60,15 @@ public class AbstractSelectorTest extends TestCase {
     /**
      * @tests AbstractSelector#close()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "close",
+          methodArgs = {}
+        )
+    })
     public void test_close() throws IOException {
         MockAbstractSelector mockSelector = new MockAbstractSelector(
                 SelectorProvider.provider());
@@ -56,6 +80,19 @@ public class AbstractSelectorTest extends TestCase {
      * 
      * @tests AbstractSelector#begin/end()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "begin",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "end",
+          methodArgs = {}
+        )        
+    })
     public void test_begin_end() throws IOException {
         MockAbstractSelector mockSelector = new MockAbstractSelector(
                 SelectorProvider.provider());     
@@ -100,6 +137,15 @@ public class AbstractSelectorTest extends TestCase {
     /**
      * @tests AbstractSelector#isOpen()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isOpen",
+          methodArgs = {}
+        )
+    })
     public void test_isOpen() throws Exception {
         Selector acceptSelector = SelectorProvider.provider().openSelector();
         assertTrue(acceptSelector.isOpen());
@@ -110,6 +156,16 @@ public class AbstractSelectorTest extends TestCase {
     /**
      * @tests AbstractSelector#register(Selector,int)
      */
+    @TestInfo(
+            level = TestLevel.TODO,
+            purpose = "Verifies register method from SelectableChannel " +
+                    "class.",
+            targets = {
+              @TestTarget(
+                methodName = "register",
+                methodArgs = {Selector.class, int.class}
+              )
+     })   
     public void test_register_LSelectorI() throws Exception {
         Selector acceptSelector = SelectorProvider.provider().openSelector();
         ServerSocketChannel ssc = ServerSocketChannel.open();
@@ -126,6 +182,16 @@ public class AbstractSelectorTest extends TestCase {
     /**
      * @tests AbstractSelector#register(Selector,int)
      */
+    @TestInfo(
+            level = TestLevel.TODO,
+            purpose = "Verifies register method from SelectableChannel " +
+                    "class.",
+            targets = {
+              @TestTarget(
+                methodName = "register",
+                methodArgs = {Selector.class, int.class}
+              )
+     })    
     public void test_register_LSelectorI_error() throws IOException {
         Selector acceptSelector = SelectorProvider.provider().openSelector();
         ServerSocketChannel ssc = ServerSocketChannel.open();

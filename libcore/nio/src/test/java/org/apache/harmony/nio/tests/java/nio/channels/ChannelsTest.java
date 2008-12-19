@@ -15,6 +15,11 @@
  */
 package org.apache.harmony.nio.tests.java.nio.channels;
 
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -46,7 +51,7 @@ import junit.framework.TestCase;
  * characters : "P@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]"
  * 
  */
-
+@TestTargetClass(Channels.class)
 public class ChannelsTest extends TestCase {
     private static final String CODE_SET = "GB2312"; //$NON-NLS-1$
 
@@ -112,6 +117,15 @@ public class ChannelsTest extends TestCase {
     }
 
     // test if new Channel to input is null
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "newChannel",
+          methodArgs = {java.io.InputStream.class}
+        )
+    })
     public void testNewChannelInputStream_InputNull() throws IOException {
         ByteBuffer byteBuf = ByteBuffer.allocate(this.testNum);
         this.fins = null;
@@ -128,6 +142,15 @@ public class ChannelsTest extends TestCase {
     }
 
     // test if buffer to read is null
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "newChannel",
+          methodArgs = {java.io.InputStream.class}
+        )
+    })
     public void testNewChannelInputStream_BufferNull() throws IOException {
         ByteBuffer byteBuf = ByteBuffer.allocate(this.testNum);
         int readres = this.testNum;
@@ -153,6 +176,15 @@ public class ChannelsTest extends TestCase {
     /*
      * Test method for 'java.nio.channels.Channels.NewChannel'
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "newChannel",
+          methodArgs = {java.io.InputStream.class}
+        )
+    })
     public void testNewChannelInputStream() throws IOException {
         int bufSize = 10;
         int readres = 0;
@@ -181,6 +213,15 @@ public class ChannelsTest extends TestCase {
     }
 
     // test if fout to change is null
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "newChannel",
+          methodArgs = {java.io.OutputStream.class}
+        )
+    })
     public void testNewChannelOutputStream_inputNull() throws IOException {
         int writeres = this.testNum;
         ByteBuffer writebuf = ByteBuffer.allocate(this.writebufSize);
@@ -201,6 +242,15 @@ public class ChannelsTest extends TestCase {
     }
 
     // test if write buf is null
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "newChannel",
+          methodArgs = {java.io.OutputStream.class}
+        )
+    })
     public void testNewChannelOutputStream_BufNull() throws IOException {
         int writeres = this.testNum;
         ByteBuffer writebuf = null;
@@ -223,6 +273,15 @@ public class ChannelsTest extends TestCase {
     /*
      * Test method for 'java.nio.channels.Channels.NewChannel(OutputStream)'
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "newChannel",
+          methodArgs = {java.io.OutputStream.class}
+        )
+    })
     public void testNewChannelOutputStream() throws IOException {
         int writeNum = 0;
         ByteBuffer writebuf = ByteBuffer.allocateDirect(this.writebufSize);
@@ -267,7 +326,15 @@ public class ChannelsTest extends TestCase {
             // correct
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "newInputStream",
+          methodArgs = {java.nio.channels.ReadableByteChannel.class}
+        )
+    })
     public void testNewInputStreamReadableByteChannel_InputNull()
             throws Exception {
         byte[] readbuf = new byte[this.testNum];
@@ -293,7 +360,16 @@ public class ChannelsTest extends TestCase {
         }
 
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify IllegalBlockingModeException for read methods " +
+            "according to the specification.",
+      targets = {
+        @TestTarget(
+          methodName = "newInputStream",
+          methodArgs = {java.nio.channels.ReadableByteChannel.class}
+        )
+    })
     public void testNewInputStreamReadableByteChannel() throws Exception {
         ByteBuffer readbcbuf = ByteBuffer.allocateDirect(this.testNum);
         byte[] readbuf = new byte[this.testNum];
@@ -320,7 +396,15 @@ public class ChannelsTest extends TestCase {
             // correct
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "newOutputStream",
+          methodArgs = {java.nio.channels.WritableByteChannel.class}
+        )
+    })
     public void testNewOutputStreamWritableByteChannel_InputNull()
             throws Exception {
         byte[] writebuf = new byte[this.testNum];
@@ -349,7 +433,16 @@ public class ChannelsTest extends TestCase {
             // correct
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify IllegalBlockingModeException for write methods " +
+            "according to the specification.",
+      targets = {
+        @TestTarget(
+          methodName = "newOutputStream",
+          methodArgs = {java.nio.channels.WritableByteChannel.class}
+        )
+    })
     public void testNewOutputStreamWritableByteChannel() throws Exception {
         byte[] writebuf = new byte[this.testNum];
         ByteBuffer writebcbuf = ByteBuffer.allocateDirect(this.testNum);
@@ -376,7 +469,16 @@ public class ChannelsTest extends TestCase {
             // correct
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies UnsupportedCharsetException.",
+      targets = {
+        @TestTarget(
+          methodName = "newReader",
+          methodArgs = {java.nio.channels.ReadableByteChannel.class, 
+                  java.nio.charset.CharsetDecoder.class, int.class}
+        )
+    })
     public void testnewReaderCharsetError() throws Exception {
         this.fins = new FileInputStream(tmpFile);
 
@@ -390,7 +492,17 @@ public class ChannelsTest extends TestCase {
             // correct
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify IllegalBlockingModeException for " +
+            "non-blocking mode.",
+      targets = {
+        @TestTarget(
+          methodName = "newWriter",
+          methodArgs = {java.nio.channels.WritableByteChannel.class, 
+                  java.nio.charset.CharsetEncoder.class, int.class}
+        )
+    })
     public void testnewWriterCharsetError() throws Exception {
         this.fouts = new FileOutputStream(tmpFile);
         WritableByteChannel wbChannel = Channels.newChannel(this.fouts);
@@ -407,6 +519,16 @@ public class ChannelsTest extends TestCase {
      * Test method for
      * 'java.nio.channels.Channels.newReader(ReadableByteChannel, String)'
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "newReader",
+          methodArgs = {java.nio.channels.ReadableByteChannel.class, 
+                  java.nio.charset.CharsetDecoder.class, int.class}
+        )
+    })
     public void testNewReaderReadableByteChannelString_InputNull()
             throws IOException {
         int bufSize = this.testNum;
@@ -452,6 +574,17 @@ public class ChannelsTest extends TestCase {
      * Test method for
      * 'java.nio.channels.Channels.newReader(ReadableByteChannel, String)'
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check IllegalBlockingModeException exception while " +
+            "read method.",
+      targets = {
+        @TestTarget(
+          methodName = "newReader",
+          methodArgs = {java.nio.channels.ReadableByteChannel.class, 
+                  java.nio.charset.CharsetDecoder.class, int.class}
+        )
+    })
     public void testNewReaderReadableByteChannelString_internalBufferZero()
             throws IOException {
         int bufSize = this.testNum;
@@ -497,6 +630,16 @@ public class ChannelsTest extends TestCase {
      * Test method for
      * 'java.nio.channels.Channels.newReader(ReadableByteChannel, String)'
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify UnsupportedCharsetException.",
+      targets = {
+        @TestTarget(
+          methodName = "newReader",
+          methodArgs = {java.nio.channels.ReadableByteChannel.class, 
+                  java.lang.String.class}
+        )
+    })
     public void testNewReaderReadableByteChannelString() throws IOException {
         int bufSize = this.testNum;
         int readres = 0;
@@ -533,6 +676,15 @@ public class ChannelsTest extends TestCase {
     /*
      * Zero-Buffer
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "newWriter",
+          methodArgs = {java.nio.channels.WritableByteChannel.class, java.nio.charset.CharsetEncoder.class, int.class}
+        )
+    })
     public void testNewWriterWritableByteChannelString_internalBufZero()
             throws IOException {
 
@@ -584,6 +736,16 @@ public class ChannelsTest extends TestCase {
     /*
      * this test cannot be passed when buffer set to 0!
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify IllegalBlockingModeException for write methods.",
+      targets = {
+        @TestTarget(
+          methodName = "newWriter",
+          methodArgs = {java.nio.channels.WritableByteChannel.class, 
+                  java.nio.charset.CharsetEncoder.class, int.class}
+        )
+    })
     public void testNewWriterWritableByteChannelString_InputNull()
             throws IOException {
         this.fouts = new FileOutputStream(tmpFile);
@@ -607,6 +769,16 @@ public class ChannelsTest extends TestCase {
      * Test method for
      * 'java.nio.channels.Channels.newWriter(WritableByteChannel, String)'
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify UnsupportedCharsetException.",
+      targets = {
+        @TestTarget(
+          methodName = "newWriter",
+          methodArgs = {java.nio.channels.WritableByteChannel.class, 
+                  java.lang.String.class}
+        )
+    })
     public void testNewWriterWritableByteChannelString() throws IOException {
         this.fouts = new FileOutputStream(tmpFile);
         WritableByteChannel wbChannel = Channels.newChannel(this.fouts);
@@ -651,6 +823,16 @@ public class ChannelsTest extends TestCase {
      * @tests java.nio.channels.Channels#newReader(ReadableByteChannel channel,
      *        String charsetName)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies IllegalBlockingModeException.",
+      targets = {
+        @TestTarget(
+          methodName = "newReader",
+          methodArgs = {java.nio.channels.ReadableByteChannel.class, 
+                  java.lang.String.class}
+        )
+    })
     public void test_newReader_LReadableByteChannel_LString()
             throws IOException {
         InetSocketAddress localAddr = new InetSocketAddress("127.0.0.1",

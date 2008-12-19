@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Support for -Xcheck:jni (the "careful" version of the JNI interfaces).
  *
@@ -31,6 +32,8 @@
  */
 #include "Dalvik.h"
 #include "JniInternal.h"
+
+#include <zlib.h>
 
 #define JNI_ENTER()     dvmChangeStatus(NULL, THREAD_RUNNING)
 #define JNI_EXIT()      dvmChangeStatus(NULL, THREAD_NATIVE)
@@ -91,8 +94,12 @@
     checkObject(_env, _obj, __FUNCTION__)
 #define CHECK_ARRAY(_env, _array)                                           \
     checkArray(_env, _array, __FUNCTION__)
+#define CHECK_RELEASE_MODE(_env, _mode)                                     \
+    checkReleaseMode(_env, _mode, __FUNCTION__)
 #define CHECK_LENGTH_POSITIVE(_env, _length)                                \
     checkLengthPositive(_env, _length, __FUNCTION__)
+#define CHECK_NON_NULL(_env, _ptr)                                          \
+    checkNonNull(_env, _ptr, __FUNCTION__)
 
 #define CHECK_SIG(_env, _methid, _sigbyte, _isstatic)                       \
     checkSig(_env, _methid, _sigbyte, _isstatic, __FUNCTION__)
@@ -134,7 +141,8 @@ static void showLocation(const Method* meth, const char* func)
  */
 static inline void abortMaybe()
 {
-    if (gDvm.jniWarnError) {
+    JavaVMExt* vm = (JavaVMExt*) gDvm.vmList;
+    if (vm->warnError) {
         dvmDumpThread(dvmThreadSelf(), false);
         dvmAbort();
     }
@@ -507,12 +515,35 @@ static void checkArray(JNIEnv* env, jarray array, const char* func)
 }
 
 /*
+ * Verify that the "mode" argument passed to a primitive array Release
+ * function is one of the valid values.
+ */
+static void checkReleaseMode(JNIEnv* env, jint mode, const char* func)
+{
+    if (mode != 0 && mode != JNI_COMMIT && mode != JNI_ABORT) {
+        LOGW("JNI WARNING: bad value for mode (%d) (%s)\n", mode, func);
+        abortMaybe();
+    }
+}
+
+/*
  * Verify that the length argument to array-creation calls is >= 0.
  */
 static void checkLengthPositive(JNIEnv* env, jsize length, const char* func)
 {
     if (length < 0) {
         LOGW("JNI WARNING: negative length for array allocation (%s)\n", func);
+        abortMaybe();
+    }
+}
+
+/*
+ * Verify that the pointer value is non-NULL.
+ */
+static void checkNonNull(JNIEnv* env, const void* ptr, const char* func)
+{
+    if (ptr == NULL) {
+        LOGW("JNI WARNING: invalid null pointer (%s)\n", func);
         abortMaybe();
     }
 }
@@ -591,6 +622,271 @@ static void checkInstanceFieldID(JNIEnv* env, jobject obj, jfieldID fieldID)
     LOGW("JNI WARNING: inst fieldID %p not valid for class %s\n",
         fieldID, ((Object*)obj)->clazz->descriptor);
     abortMaybe();
+}
+
+
+/*
+ * ===========================================================================
+ *      Guarded arrays
+ * ===========================================================================
+ */
+
+#define kGuardLen       512         /* must be multiple of 2 */
+#define kGuardPattern   0xd5e3      /* uncommon values; d5e3d5e3 invalid addr */
+#define kGuardMagic     0xffd5aa96
+#define kGuardExtra     sizeof(GuardExtra)
+
+/* this gets tucked in at the start of the buffer; struct size must be even */
+typedef struct GuardExtra {
+    u4          magic;
+    uLong       adler;
+    size_t      originalLen;
+    const void* originalPtr;
+} GuardExtra;
+
+/* find the GuardExtra given the pointer into the "live" data */
+inline static GuardExtra* getGuardExtra(const void* dataBuf)
+{
+    u1* fullBuf = ((u1*) dataBuf) - kGuardLen / 2;
+    return (GuardExtra*) fullBuf;
+}
+
+/*
+ * Create an oversized buffer to hold the contents of "buf".  Copy it in,
+ * filling in the area around it with guard data.
+ *
+ * We use a 16-bit pattern to make a rogue memset less likely to elude us.
+ */
+static void* createGuardedCopy(const void* buf, size_t len, bool modOkay)
+{
+    GuardExtra* pExtra;
+    size_t newLen = (len + kGuardLen +1) & ~0x01;
+    u1* newBuf;
+    u2* pat;
+    int i;
+
+    newBuf = (u1*)malloc(newLen);
+    if (newBuf == NULL) {
+        LOGE("createGuardedCopy failed on alloc of %d bytes\n", newLen);
+        dvmAbort();
+    }
+
+    /* fill it in with a pattern */
+    pat = (u2*) newBuf;
+    for (i = 0; i < (int)newLen / 2; i++)
+        *pat++ = kGuardPattern;
+
+    /* copy the data in; note "len" could be zero */
+    memcpy(newBuf + kGuardLen / 2, buf, len);
+
+    /* if modification is not expected, grab a checksum */
+    uLong adler = 0;
+    if (!modOkay) {
+        adler = adler32(0L, Z_NULL, 0);
+        adler = adler32(adler, buf, len);
+        *(uLong*)newBuf = adler;
+    }
+
+    pExtra = (GuardExtra*) newBuf;
+    pExtra->magic = kGuardMagic;
+    pExtra->adler = adler;
+    pExtra->originalPtr = buf;
+    pExtra->originalLen = len;
+
+    return newBuf + kGuardLen / 2;
+}
+
+/*
+ * Verify the guard area and, if "modOkay" is false, that the data itself
+ * has not been altered.
+ */
+static bool checkGuardedCopy(const void* dataBuf, bool modOkay)
+{
+    const u1* fullBuf = ((const u1*) dataBuf) - kGuardLen / 2;
+    const GuardExtra* pExtra = getGuardExtra(dataBuf);
+    size_t len = pExtra->originalLen;
+    const u2* pat;
+    int i;
+
+    if (pExtra->magic != kGuardMagic) {
+        LOGE("JNI: guard magic does not match (found 0x%08x) "
+             "-- incorrect data pointer %p?\n",
+            pExtra->magic, dataBuf);
+        return false;
+    }
+
+    /* check bottom half of guard; skip over optional checksum storage */
+    pat = (u2*) fullBuf;
+    for (i = kGuardExtra / 2; i < (int) (kGuardLen / 2 - kGuardExtra) / 2; i++)
+    {
+        if (pat[i] != kGuardPattern) {
+            LOGE("JNI: guard pattern(1) disturbed at %p + %d\n",
+                fullBuf, i*2);
+            return false;
+        }
+    }
+
+    int offset = kGuardLen / 2 + len;
+    if (offset & 0x01) {
+        /* odd byte; expected value depends on endian-ness of host */
+        const u2 patSample = kGuardPattern;
+        if (fullBuf[offset] != ((const u1*) &patSample)[1]) {
+            LOGE("JNI: guard pattern disturbed in odd byte after %p "
+                 "(+%d) 0x%02x 0x%02x\n",
+                fullBuf, offset, fullBuf[offset], ((const u1*) &patSample)[1]);
+            return false;
+        }
+        offset++;
+    }
+
+    /* check top half of guard */
+    pat = (u2*) (fullBuf + offset);
+    for (i = 0; i < kGuardLen / 4; i++) {
+        if (pat[i] != kGuardPattern) {
+            LOGE("JNI: guard pattern(2) disturbed at %p + %d\n",
+                fullBuf, offset + i*2);
+            return false;
+        }
+    }
+
+    /*
+     * If modification is not expected, verify checksum.  Strictly speaking
+     * this is wrong: if we told the client that we made a copy, there's no
+     * reason they can't alter the buffer.
+     */
+    if (!modOkay) {
+        uLong adler = adler32(0L, Z_NULL, 0);
+        adler = adler32(adler, dataBuf, len);
+        if (pExtra->adler != adler) {
+            LOGE("JNI: buffer modified (0x%08lx vs 0x%08lx) at addr %p\n",
+                pExtra->adler, adler, dataBuf);
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/*
+ * Free up the guard buffer, scrub it, and return the original pointer.
+ */
+static void* freeGuardedCopy(void* dataBuf)
+{
+    u1* fullBuf = ((u1*) dataBuf) - kGuardLen / 2;
+    const GuardExtra* pExtra = getGuardExtra(dataBuf);
+    void* originalPtr = (void*) pExtra->originalPtr;
+    size_t len = pExtra->originalLen;
+
+    memset(dataBuf, len, 0xdd);
+    free(fullBuf);
+    return originalPtr;
+}
+
+/*
+ * Just pull out the original pointer.
+ */
+static void* getGuardedCopyOriginalPtr(const void* dataBuf)
+{
+    const GuardExtra* pExtra = getGuardExtra(dataBuf);
+    return (void*) pExtra->originalPtr;
+}
+
+/*
+ * Grab the data length.
+ */
+static size_t getGuardedCopyOriginalLen(const void* dataBuf)
+{
+    const GuardExtra* pExtra = getGuardExtra(dataBuf);
+    return pExtra->originalLen;
+}
+
+/*
+ * Return the width, in bytes, of a primitive type.
+ */
+static int dvmPrimitiveTypeWidth(PrimitiveType primType)
+{
+    static const int lengths[PRIM_MAX] = {
+        1,      // boolean
+        2,      // char
+        4,      // float
+        8,      // double
+        1,      // byte
+        2,      // short
+        4,      // int
+        8,      // long
+        -1,     // void
+    };
+    assert(primType >= 0 && primType < PRIM_MAX);
+    return lengths[primType];
+}
+
+/*
+ * Create a guarded copy of a primitive array.  Modifications to the copied
+ * data are allowed.  Returns a pointer to the copied data.
+ */
+static void* createGuardedPACopy(const ArrayObject* array, jboolean* isCopy)
+{
+    PrimitiveType primType = array->obj.clazz->elementClass->primitiveType;
+    int len = array->length * dvmPrimitiveTypeWidth(primType);
+    void* result;
+
+    result = createGuardedCopy(array->contents, len, true);
+
+    if (isCopy != NULL)
+        *isCopy = JNI_TRUE;
+
+    return result;
+}
+
+/*
+ * Perform the array "release" operation, which may or may not copy data
+ * back into the VM, and may or may not release the underlying storage.
+ */
+static void* releaseGuardedPACopy(ArrayObject* array, void* dataBuf, int mode)
+{
+    PrimitiveType primType = array->obj.clazz->elementClass->primitiveType;
+    //int len = array->length * dvmPrimitiveTypeWidth(primType);
+    bool release, copyBack;
+    u1* result;
+
+    if (!checkGuardedCopy(dataBuf, true)) {
+        LOGE("JNI: failed guarded copy check in releaseGuardedPACopy\n");
+        abortMaybe();
+    }
+
+    switch (mode) {
+    case 0:
+        release = copyBack = true;
+        break;
+    case JNI_ABORT:
+        release = true;
+        copyBack = false;
+        break;
+    case JNI_COMMIT:
+        release = false;
+        copyBack = true;
+        break;
+    default:
+        LOGE("JNI: bad release mode %d\n", mode);
+        dvmAbort();
+        return NULL;
+    }
+
+    if (copyBack) {
+        size_t len = getGuardedCopyOriginalLen(dataBuf);
+        memcpy(array->contents, dataBuf, len);
+    }
+
+    if (release) {
+        result = (u1*) freeGuardedCopy(dataBuf);
+    } else {
+        result = (u1*) getGuardedCopyOriginalPtr(dataBuf);
+    }
+
+    /* pointer is to the array contents; back up to the array object */
+    result -= offsetof(ArrayObject, contents);
+
+    return result;
 }
 
 
@@ -1216,6 +1512,12 @@ static const jchar* Check_GetStringChars(JNIEnv* env, jstring string,
     CHECK_STRING(env, string);
     const jchar* result;
     result = BASE_ENV(env)->GetStringChars(env, string, isCopy);
+    if (((JNIEnvExt*)env)->forceDataCopy && result != NULL) {
+        int len = dvmStringLen(string) * 2;
+        result = (const jchar*) createGuardedCopy(result, len, false);
+        if (isCopy != NULL)
+            *isCopy = JNI_TRUE;
+    }
     CHECK_EXIT(env);
     return result;
 }
@@ -1225,6 +1527,14 @@ static void Check_ReleaseStringChars(JNIEnv* env, jstring string,
 {
     CHECK_ENTER(env, kFlag_Default | kFlag_ExcepOkay);
     CHECK_STRING(env, string);
+    CHECK_NON_NULL(env, chars);
+    if (((JNIEnvExt*)env)->forceDataCopy) {
+        if (!checkGuardedCopy(chars, false)) {
+            LOGE("JNI: failed guarded copy check in ReleaseStringChars\n");
+            abortMaybe();
+        }
+        chars = (const jchar*) freeGuardedCopy((jchar*)chars);
+    }
     BASE_ENV(env)->ReleaseStringChars(env, string, chars);
     CHECK_EXIT(env);
 }
@@ -1256,6 +1566,12 @@ static const char* Check_GetStringUTFChars(JNIEnv* env, jstring string,
     CHECK_STRING(env, string);
     const char* result;
     result = BASE_ENV(env)->GetStringUTFChars(env, string, isCopy);
+    if (((JNIEnvExt*)env)->forceDataCopy && result != NULL) {
+        int len = dvmStringUtf8ByteLen(string) + 1;
+        result = (const char*) createGuardedCopy(result, len, false);
+        if (isCopy != NULL)
+            *isCopy = JNI_TRUE;
+    }
     CHECK_EXIT(env);
     return result;
 }
@@ -1265,6 +1581,15 @@ static void Check_ReleaseStringUTFChars(JNIEnv* env, jstring string,
 {
     CHECK_ENTER(env, kFlag_ExcepOkay);
     CHECK_STRING(env, string);
+    CHECK_NON_NULL(env, utf);
+    if (((JNIEnvExt*)env)->forceDataCopy) {
+        //int len = dvmStringUtf8ByteLen(string) + 1;
+        if (!checkGuardedCopy(utf, false)) {
+            LOGE("JNI: failed guarded copy check in ReleaseStringUTFChars\n");
+            abortMaybe();
+        }
+        utf = (const char*) freeGuardedCopy((char*)utf);
+    }
     BASE_ENV(env)->ReleaseStringUTFChars(env, string, utf);
     CHECK_EXIT(env);
 }
@@ -1313,7 +1638,7 @@ static void Check_SetObjectArrayElement(JNIEnv* env, jobjectArray array,
     CHECK_EXIT(env);
 }
 
-#define NEW_PRIMITIVE_ARRAY(_artype, _jname, _typechar)                     \
+#define NEW_PRIMITIVE_ARRAY(_artype, _jname)                                \
     static _artype Check_New##_jname##Array(JNIEnv* env, jsize length)      \
     {                                                                       \
         CHECK_ENTER(env, kFlag_Default);                                    \
@@ -1323,14 +1648,15 @@ static void Check_SetObjectArrayElement(JNIEnv* env, jobjectArray array,
         CHECK_EXIT(env);                                                    \
         return result;                                                      \
     }
-NEW_PRIMITIVE_ARRAY(jbooleanArray, Boolean, 'Z');
-NEW_PRIMITIVE_ARRAY(jbyteArray, Byte, 'B');
-NEW_PRIMITIVE_ARRAY(jcharArray, Char, 'C');
-NEW_PRIMITIVE_ARRAY(jshortArray, Short, 'S');
-NEW_PRIMITIVE_ARRAY(jintArray, Int, 'I');
-NEW_PRIMITIVE_ARRAY(jlongArray, Long, 'J');
-NEW_PRIMITIVE_ARRAY(jfloatArray, Float, 'F');
-NEW_PRIMITIVE_ARRAY(jdoubleArray, Double, 'D');
+NEW_PRIMITIVE_ARRAY(jbooleanArray, Boolean);
+NEW_PRIMITIVE_ARRAY(jbyteArray, Byte);
+NEW_PRIMITIVE_ARRAY(jcharArray, Char);
+NEW_PRIMITIVE_ARRAY(jshortArray, Short);
+NEW_PRIMITIVE_ARRAY(jintArray, Int);
+NEW_PRIMITIVE_ARRAY(jlongArray, Long);
+NEW_PRIMITIVE_ARRAY(jfloatArray, Float);
+NEW_PRIMITIVE_ARRAY(jdoubleArray, Double);
+
 
 #define GET_PRIMITIVE_ARRAY_ELEMENTS(_ctype, _jname)                        \
     static _ctype* Check_Get##_jname##ArrayElements(JNIEnv* env,            \
@@ -1341,6 +1667,10 @@ NEW_PRIMITIVE_ARRAY(jdoubleArray, Double, 'D');
         _ctype* result;                                                     \
         result = BASE_ENV(env)->Get##_jname##ArrayElements(env,             \
             array, isCopy);                                                 \
+        if (((JNIEnvExt*)env)->forceDataCopy && result != NULL) {           \
+            result = (_ctype*)                                              \
+                createGuardedPACopy((ArrayObject*) array, isCopy);          \
+        }                                                                   \
         CHECK_EXIT(env);                                                    \
         return result;                                                      \
     }
@@ -1351,6 +1681,12 @@ NEW_PRIMITIVE_ARRAY(jdoubleArray, Double, 'D');
     {                                                                       \
         CHECK_ENTER(env, kFlag_Default | kFlag_ExcepOkay);                  \
         CHECK_ARRAY(env, array);                                            \
+        CHECK_NON_NULL(env, elems);                                         \
+        CHECK_RELEASE_MODE(env, mode);                                      \
+        if (((JNIEnvExt*)env)->forceDataCopy) {                             \
+            elems = (_ctype*) releaseGuardedPACopy((ArrayObject*) array,    \
+                elems, mode);                                               \
+        }                                                                   \
         BASE_ENV(env)->Release##_jname##ArrayElements(env,                  \
             array, elems, mode);                                            \
         CHECK_EXIT(env);                                                    \
@@ -1378,20 +1714,21 @@ NEW_PRIMITIVE_ARRAY(jdoubleArray, Double, 'D');
         CHECK_EXIT(env);                                                    \
     }
 
-#define PRIMITIVE_ARRAY_FUNCTIONS(_ctype, _jname)                           \
+#define PRIMITIVE_ARRAY_FUNCTIONS(_ctype, _jname, _typechar)                \
     GET_PRIMITIVE_ARRAY_ELEMENTS(_ctype, _jname);                           \
     RELEASE_PRIMITIVE_ARRAY_ELEMENTS(_ctype, _jname);                       \
     GET_PRIMITIVE_ARRAY_REGION(_ctype, _jname);                             \
     SET_PRIMITIVE_ARRAY_REGION(_ctype, _jname);
 
-PRIMITIVE_ARRAY_FUNCTIONS(jboolean, Boolean);
-PRIMITIVE_ARRAY_FUNCTIONS(jbyte, Byte);
-PRIMITIVE_ARRAY_FUNCTIONS(jchar, Char);
-PRIMITIVE_ARRAY_FUNCTIONS(jshort, Short);
-PRIMITIVE_ARRAY_FUNCTIONS(jint, Int);
-PRIMITIVE_ARRAY_FUNCTIONS(jlong, Long);
-PRIMITIVE_ARRAY_FUNCTIONS(jfloat, Float);
-PRIMITIVE_ARRAY_FUNCTIONS(jdouble, Double);
+/* TODO: verify primitive array type matches call type */
+PRIMITIVE_ARRAY_FUNCTIONS(jboolean, Boolean, 'Z');
+PRIMITIVE_ARRAY_FUNCTIONS(jbyte, Byte, 'B');
+PRIMITIVE_ARRAY_FUNCTIONS(jchar, Char, 'C');
+PRIMITIVE_ARRAY_FUNCTIONS(jshort, Short, 'S');
+PRIMITIVE_ARRAY_FUNCTIONS(jint, Int, 'I');
+PRIMITIVE_ARRAY_FUNCTIONS(jlong, Long, 'J');
+PRIMITIVE_ARRAY_FUNCTIONS(jfloat, Float, 'F');
+PRIMITIVE_ARRAY_FUNCTIONS(jdouble, Double, 'D');
 
 static jint Check_RegisterNatives(JNIEnv* env, jclass clazz,
     const JNINativeMethod* methods, jint nMethods)
@@ -1468,6 +1805,9 @@ static void* Check_GetPrimitiveArrayCritical(JNIEnv* env, jarray array,
     CHECK_ARRAY(env, array);
     void* result;
     result = BASE_ENV(env)->GetPrimitiveArrayCritical(env, array, isCopy);
+    if (((JNIEnvExt*)env)->forceDataCopy && result != NULL) {
+        result = createGuardedPACopy((ArrayObject*) array, isCopy);
+    }
     CHECK_EXIT(env);
     return result;
 }
@@ -1477,6 +1817,11 @@ static void Check_ReleasePrimitiveArrayCritical(JNIEnv* env, jarray array,
 {
     CHECK_ENTER(env, kFlag_CritRelease | kFlag_ExcepOkay);
     CHECK_ARRAY(env, array);
+    CHECK_NON_NULL(env, carray);
+    CHECK_RELEASE_MODE(env, mode);
+    if (((JNIEnvExt*)env)->forceDataCopy) {
+        carray = releaseGuardedPACopy((ArrayObject*) array, carray, mode);
+    }
     BASE_ENV(env)->ReleasePrimitiveArrayCritical(env, array, carray, mode);
     CHECK_EXIT(env);
 }
@@ -1488,6 +1833,12 @@ static const jchar* Check_GetStringCritical(JNIEnv* env, jstring string,
     CHECK_STRING(env, string);
     const jchar* result;
     result = BASE_ENV(env)->GetStringCritical(env, string, isCopy);
+    if (((JNIEnvExt*)env)->forceDataCopy && result != NULL) {
+        int len = dvmStringLen(string) * 2;
+        result = (const jchar*) createGuardedCopy(result, len, false);
+        if (isCopy != NULL)
+            *isCopy = JNI_TRUE;
+    }
     CHECK_EXIT(env);
     return result;
 }
@@ -1497,6 +1848,14 @@ static void Check_ReleaseStringCritical(JNIEnv* env, jstring string,
 {
     CHECK_ENTER(env, kFlag_CritRelease | kFlag_ExcepOkay);
     CHECK_STRING(env, string);
+    CHECK_NON_NULL(env, carray);
+    if (((JNIEnvExt*)env)->forceDataCopy) {
+        if (!checkGuardedCopy(carray, false)) {
+            LOGE("JNI: failed guarded copy check in ReleaseStringCritical\n");
+            abortMaybe();
+        }
+        carray = (const jchar*) freeGuardedCopy((jchar*)carray);
+    }
     BASE_ENV(env)->ReleaseStringCritical(env, string, carray);
     CHECK_EXIT(env);
 }

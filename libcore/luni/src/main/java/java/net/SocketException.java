@@ -20,26 +20,32 @@ package java.net;
 import java.io.IOException;
 
 /**
- * This SocketException may be thrown during socket creation or setting options,
- * and is the superclass of all other socket related exceptions.
+ * This {@code SocketException} may be thrown during socket creation or setting
+ * options, and is the superclass of all other socket related exceptions.
+ * 
+ * @since Android 1.0
  */
 public class SocketException extends IOException {
 
     private static final long serialVersionUID = -5935874303556886934L;
 
     /**
-     * Constructs a new instance of this class with its walkback filled in.
+     * Constructs a new {@code SocketException} instance with its walkback
+     * filled in.
+     * 
+     * @since Android 1.0
      */
     public SocketException() {
         super();
     }
 
     /**
-     * Constructs a new instance of this class with its walkback and message
-     * filled in.
+     * Constructs a new {@code SocketException} instance with its walkback and
+     * message filled in.
      * 
      * @param detailMessage
-     *            String The detail message for the exception.
+     *            the detail message of this exception.
+     * @since Android 1.0
      */
     public SocketException(String detailMessage) {
         super(detailMessage);

@@ -16,7 +16,12 @@
 
 package org.apache.harmony.nio.tests.java.nio;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
 
+@TestTargetClass(java.nio.ByteBuffer.class)
 public class ReadOnlyDirectByteBufferTest extends DirectByteBufferTest {
 
     protected void setUp() throws Exception {
@@ -28,15 +33,39 @@ public class ReadOnlyDirectByteBufferTest extends DirectByteBufferTest {
     protected void tearDown() throws Exception {
         super.tearDown();
     }
-    
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies isReadOnly method for read only ByteBuffer.",
+      targets = {
+        @TestTarget(
+          methodName = "isReadOnly",
+          methodArgs = {}
+        )
+    })
     public void testIsReadOnly() {
         assertTrue(buf.isReadOnly());
     }
-    
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies that hasArray method returns false.",
+      targets = {
+        @TestTarget(
+          methodName = "hasArray",
+          methodArgs = {}
+        )
+    })
     public void testHasArray() {
         assertFalse(buf.hasArray());
     }
-    
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "hashCode",
+          methodArgs = {}
+        )
+    })
     public void testHashCode() {
         super.readOnlyHashCode();
     }

@@ -18,16 +18,21 @@
 package java.net;
 
 /**
- * Defines a factory which creates URL Stream (protocol) Handler It is used by
- * the classes <code>URL</code>
+ * Defines a factory which creates an {@code URLStreamHandler} for a specified
+ * protocol. It is used by the class {@code URL}.
+ * 
+ * @since Android 1.0
  */
 public interface URLStreamHandlerFactory {
+    
     /**
-     * Creates a new <code>URL Stream Handler</code> instance.
+     * Creates a new {@code URLStreamHandler} instance for the given {@code
+     * protocol}.
      * 
-     * @return java.net.URLStreamHandler
      * @param protocol
-     *            java.lang.String
+     *            the protocol for which a handler is needed.
+     * @return the created handler.
+     * @since Android 1.0
      */
     URLStreamHandler createURLStreamHandler(String protocol);
 }

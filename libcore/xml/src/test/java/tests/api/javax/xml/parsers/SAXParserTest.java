@@ -16,37 +16,44 @@
 
 package tests.api.javax.xml.parsers;
 
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.File;
-import java.io.OutputStream;
-import java.util.HashMap;
-import java.util.Vector;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
 
-import org.xml.sax.helpers.DefaultHandler;
+import junit.framework.TestCase;
+
+import org.xml.sax.Attributes;
+import org.xml.sax.HandlerBase;
 import org.xml.sax.InputSource;
-
+import org.xml.sax.Locator;
 import org.xml.sax.Parser;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXNotRecognizedException;
 import org.xml.sax.SAXNotSupportedException;
-import org.xml.sax.HandlerBase;
+import org.xml.sax.SAXParseException;
 import org.xml.sax.XMLReader;
+import org.xml.sax.helpers.DefaultHandler;
 
 import tests.api.javax.xml.parsers.SAXParserTestSupport.MyDefaultHandler;
 import tests.api.javax.xml.parsers.SAXParserTestSupport.MyHandler;
 
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.HashMap;
+import java.util.Vector;
 
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParserFactory;
 import javax.xml.parsers.SAXParser;
-
-import junit.framework.TestCase;
+import javax.xml.parsers.SAXParserFactory;
 
 @SuppressWarnings("deprecation")
+@TestTargetClass(SAXParser.class) 
 public class SAXParserTest extends TestCase {
 
     private class MockSAXParser extends SAXParser {
@@ -252,7 +259,16 @@ public class SAXParserTest extends TestCase {
     /**
      * @tests javax.xml.parser.SAXParser#SAXParser().
      */
-    public void test_Constructor() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "SAXParser",
+          methodArgs = {}
+        )
+    })
+    public void _test_Constructor() {
         try {
             new MockSAXParser();
         } catch (Exception e) {
@@ -284,7 +300,16 @@ public class SAXParserTest extends TestCase {
      * @test javax.xml.parsers.SAXParser#isNamespaceAware()
      *
      */
-    public void test_isNamespaceAware() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isNamespaceAware",
+          methodArgs = {}
+        )
+    })
+    public void _test_isNamespaceAware() {
 
         spf.setNamespaceAware(true);
         assertTrue(spf.isNamespaceAware());
@@ -298,7 +323,16 @@ public class SAXParserTest extends TestCase {
      * @test javax.xml.parsers.SAXParser#isValidating()
      *
      */
-    public void test_isValidating() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isValidating",
+          methodArgs = {}
+        )
+    })
+    public void _test_isValidating() {
         assertFalse(parser.isValidating());
         spf.setValidating(true);
         assertFalse(parser.isValidating());
@@ -320,7 +354,17 @@ public class SAXParserTest extends TestCase {
      * @test javax.xml.parsers.SAXParser#parse(java.io.File,
      *     org.xml.sax.helpers.DefaultHandler)
      */
-    public void test_parseLjava_io_FileLorg_xml_sax_helpers_DefaultHandler()
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify positive functionality properly; " +
+            "not all exceptions are verified.",
+      targets = {
+        @TestTarget(
+          methodName = "parse",
+          methodArgs = {java.io.File.class, org.xml.sax.helpers.DefaultHandler.class}
+        )
+    })
+    public void _test_parseLjava_io_FileLorg_xml_sax_helpers_DefaultHandler()
     throws Exception {
 
         for(int i = 0; i < list_wf.length; i++) {
@@ -360,8 +404,18 @@ public class SAXParserTest extends TestCase {
      * @test javax.xml.parsers.SAXParser#parse(java.io.File,
      *     org.xml.sax.HandlerBase)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify positive functionality properly; " +
+            "not all exceptions are verified.",
+      targets = {
+        @TestTarget(
+          methodName = "parse",
+          methodArgs = {java.io.File.class, org.xml.sax.HandlerBase.class}
+        )
+    })
     @SuppressWarnings("deprecation")
-    public void test_parseLjava_io_FileLorg_xml_sax_HandlerBase()
+    public void _test_parseLjava_io_FileLorg_xml_sax_HandlerBase()
     throws Exception {
         for(int i = 0; i < list_wf.length; i++) {
             HashMap<String, String> hm = sp.readFile(list_out_hb[i].getPath());
@@ -399,7 +453,16 @@ public class SAXParserTest extends TestCase {
      * @test javax.xml.parsers.SAXParser#parse(org.xml.sax.InputSource,
      *     org.xml.sax.helpers.DefaultHandler)
      */
-    public void test_parseLorg_xml_sax_InputSourceLorg_xml_sax_helpers_DefaultHandler()
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify IOException.",
+      targets = {
+        @TestTarget(
+          methodName = "parse",
+          methodArgs = {org.xml.sax.InputSource.class, org.xml.sax.helpers.DefaultHandler.class}
+        )
+    })
+    public void _test_parseLorg_xml_sax_InputSourceLorg_xml_sax_helpers_DefaultHandler()
     throws Exception {
 
         for(int i = 0; i < list_wf.length; i++) {
@@ -444,8 +507,17 @@ public class SAXParserTest extends TestCase {
      * @test javax.xml.parsers.SAXParser#parse(org.xml.sax.InputSource,
      *     org.xml.sax.HandlerBase)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify IOException.",
+      targets = {
+        @TestTarget(
+          methodName = "parse",
+          methodArgs = {org.xml.sax.InputSource.class, org.xml.sax.HandlerBase.class}
+        )
+    })
     @SuppressWarnings("deprecation")
-    public void test_parseLorg_xml_sax_InputSourceLorg_xml_sax_HandlerBase()
+    public void _test_parseLorg_xml_sax_InputSourceLorg_xml_sax_HandlerBase()
     throws Exception {
         for(int i = 0; i < list_wf.length; i++) {
             HashMap<String, String> hm = sp.readFile(list_out_hb[i].getPath());
@@ -487,7 +559,16 @@ public class SAXParserTest extends TestCase {
      * @test javax.xml.parsers.SAXParser#parse(java.io.InputStream,
      *     org.xml.sax.helpers.DefaultHandler)
      */
-    public void test_parseLjava_io_InputStreamLorg_xml_sax_helpers_DefaultHandler()
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify IOException.",
+      targets = {
+        @TestTarget(
+          methodName = "parse",
+          methodArgs = {java.io.InputStream.class, org.xml.sax.helpers.DefaultHandler.class}
+        )
+    })
+    public void _test_parseLjava_io_InputStreamLorg_xml_sax_helpers_DefaultHandler()
     throws Exception {
 
         for(int i = 0; i < list_wf.length; i++) {
@@ -531,7 +612,16 @@ public class SAXParserTest extends TestCase {
      * @test javax.xml.parsers.SAXParser#parse(java.io.InputStream,
      *     org.xml.sax.helpers.DefaultHandler, java.lang.String)
      */
-    public void test_parseLjava_io_InputStreamLorg_xml_sax_helpers_DefaultHandlerLjava_lang_String()
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify  IOException.",
+      targets = {
+        @TestTarget(
+          methodName = "parse",
+          methodArgs = {java.io.InputStream.class, org.xml.sax.helpers.DefaultHandler.class, java.lang.String.class}
+        )
+    })
+    public void _test_parseLjava_io_InputStreamLorg_xml_sax_helpers_DefaultHandlerLjava_lang_String()
     throws Exception {
         for(int i = 0; i < list_wf.length; i++) {
 
@@ -588,8 +678,18 @@ public class SAXParserTest extends TestCase {
      * @test javax.xml.parsers.SAXParser#parse(java.io.InputStream,
      *     org.xml.sax.HandlerBase)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify positive functionality properly; " +
+            "not all exceptions are verified.",
+      targets = {
+        @TestTarget(
+          methodName = "parse",
+          methodArgs = {java.io.InputStream.class, org.xml.sax.HandlerBase.class}
+        )
+    })
     @SuppressWarnings("deprecation")
-    public void test_parseLjava_io_InputStreamLorg_xml_sax_HandlerBase()
+    public void _test_parseLjava_io_InputStreamLorg_xml_sax_HandlerBase()
     throws Exception {
         for(int i = 0; i < list_wf.length; i++) {
             HashMap<String, String> hm = sp.readFile(list_out_hb[i].getPath());
@@ -630,8 +730,17 @@ public class SAXParserTest extends TestCase {
      * @test javax.xml.parsers.SAXParser#parse(java.io.InputStream,
      *     org.xml.sax.HandlerBase, java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "parse",
+          methodArgs = {java.io.InputStream.class, org.xml.sax.HandlerBase.class, java.lang.String.class}
+        )
+    })
     @SuppressWarnings("deprecation")
-    public void test_parseLjava_io_InputStreamLorg_xml_sax_HandlerBaseLjava_lang_String() {
+    public void _test_parseLjava_io_InputStreamLorg_xml_sax_HandlerBaseLjava_lang_String() {
         for(int i = 0; i < list_wf.length; i++) {
             try {
                 HashMap<String, String> hm = sp.readFile(
@@ -710,7 +819,16 @@ public class SAXParserTest extends TestCase {
      * @test javax.xml.parsers.SAXParser#parse(java.lang.String,
      *     org.xml.sax.helpers.DefaultHandler)
      */
-    public void test_parseLjava_lang_StringLorg_xml_sax_helpers_DefaultHandler()
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify IOException.",
+      targets = {
+        @TestTarget(
+          methodName = "parse",
+          methodArgs = {java.lang.String.class, org.xml.sax.helpers.DefaultHandler.class}
+        )
+    })
+    public void _test_parseLjava_lang_StringLorg_xml_sax_helpers_DefaultHandler()
     throws Exception {
 
         for(int i = 0; i < list_wf.length; i++) {
@@ -751,8 +869,17 @@ public class SAXParserTest extends TestCase {
      * @tests javax.xml.parsers.SAXParser#parse(java.lang.String,
      *    org.xml.sax.HandlerBase)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify IOException.",
+      targets = {
+        @TestTarget(
+          methodName = "parse",
+          methodArgs = {java.lang.String.class, org.xml.sax.HandlerBase.class}
+        )
+    })
     @SuppressWarnings("deprecation")
-    public void test_parseLjava_lang_StringLorg_xml_sax_HandlerBase()
+    public void _test_parseLjava_lang_StringLorg_xml_sax_HandlerBase()
     throws Exception {
         for(int i = 0; i < list_wf.length; i++) {
             HashMap<String, String> hm = sp.readFile(list_out_hb[i].getPath());
@@ -789,7 +916,17 @@ public class SAXParserTest extends TestCase {
     /**
      * @tests javax.xml.parsers.SAXParser#reset().
      */
-    public void test_reset() {
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check that SAXParser is reset to the same state " +
+            "as it was created.",
+      targets = {
+        @TestTarget(
+          methodName = "reset",
+          methodArgs = {}
+        )
+    })
+    public void _test_reset() {
         try {
             spf = SAXParserFactory.newInstance();
             parser = spf.newSAXParser();

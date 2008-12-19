@@ -28,211 +28,246 @@ import org.apache.harmony.luni.platform.Platform;
 import org.apache.harmony.luni.util.Msg;
 
 /**
- * The abstract superclass of all classes that implement streaming sockets.
- * 
- * Streaming sockets are wrapped by two classes, ServerSocket and Socket at the
- * server and client end of a connection respectively. At the server there are
- * two types of sockets engaged in communication, the <code>ServerSocket</code>
- * on a well known port (hereafter refered to as the listener) used to establish
- * a connection and the resulting <code>Socket</code> (hereafter refered to as
+ * This class is the base of all streaming socket implementation classes.
+ * Streaming sockets are wrapped by two classes, {@code ServerSocket} and
+ * {@code Socket} at the server and client end of a connection. At the server,
+ * there are two types of sockets engaged in communication, the {@code
+ * ServerSocket} on a well known port (referred to as listener) used to
+ * establish a connection and the resulting {@code Socket} (referred to as
  * host).
  * 
- * Some of the <code>SocketImpl</code> instance variable values must be
- * interpreted in the context of the wrapper. See the getter methods for these
- * details.
+ * @since Android 1.0
  */
 public abstract class SocketImpl implements SocketOptions {
 
+    /**
+     * The remote address this socket is connected to.
+     * 
+     * @since Android 1.0
+     */
     protected InetAddress address;
 
+    /**
+     * The remote port this socket is connected to.
+     * 
+     * @since Android 1.0
+     */
     protected int port;
 
+    /**
+     * The file descriptor of this socket.
+     * 
+     * @since Android 1.0
+     */
     protected FileDescriptor fd;
 
+    /**
+     * The local port this socket is connected to.
+     * 
+     * @since Android 1.0
+     */
     protected int localport;
 
     INetworkSystem netImpl;
-    
-    protected int receiveTimeout;
-    
+
+    // BEGIN android-removed
+    // int receiveTimeout;
+    // END android-removed
+
     boolean streaming = true;
 
     boolean shutdownInput;
 
     /**
-     * Construct a connection-oriented SocketImpl.
+     * Creates a new connection-oriented socket implementation.
      * 
      * @see SocketImplFactory
+     * @since Android 1.0
      */
     public SocketImpl() {
         this.netImpl = Platform.getNetworkSystem();
     }
 
     /**
-     * Accepts a connection on the provided socket.
+     * Waits for an incoming request and blocks until the connection is opened
+     * on the given socket.
      * 
      * @param newSocket
-     *            the socket to accept connections on
-     * @exception SocketException
-     *                if an error occurs while accepting
+     *            the socket to accept connections on.
+     * @throws IOException
+     *             if an error occurs while accepting a new connection.
+     * @since Android 1.0
      */
     protected abstract void accept(SocketImpl newSocket) throws IOException;
 
     /**
-     * Answer the number of bytes that may be read from this socket without
-     * blocking. This call does not block.
+     * Returns the available number of bytes which are readable from this socket
+     * without blocking.
      * 
-     * @return int the number of bytes that may be read without blocking
-     * @exception SocketException
-     *                if an error occurs while peeking
+     * @return the number of bytes that may be read without blocking.
+     * @throws IOException
+     *             if an error occurs while reading the number of bytes.
+     * @since Android 1.0
      */
     protected abstract int available() throws IOException;
 
     /**
-     * Binds this socket to the specified local host/port.
+     * Binds this socket to the specified local host address and port number.
      * 
      * @param address
-     *            the local machine address to bind the socket to
+     *            the local machine address to bind this socket to.
      * @param port
-     *            the port on the local machine to bind the socket to
-     * @exception IOException
-     *                if an error occurs while binding
+     *            the port on the local machine to bind this socket to.
+     * @throws IOException
+     *             if an error occurs while binding this socket.
+     * @since Android 1.0
      */
     protected abstract void bind(InetAddress address, int port)
             throws IOException;
 
     /**
-     * Close the socket. Usage thereafter is invalid.
+     * Closes this socket. This makes later access invalid.
      * 
-     * @exception IOException
-     *                if an error occurs while closing
+     * @throws IOException
+     *             if an error occurs while closing this socket.
+     * @since Android 1.0
      */
     protected abstract void close() throws IOException;
 
     /**
-     * Connects this socket to the specified remote host/port.
+     * Connects this socket to the specified remote host and port number.
      * 
      * @param host
-     *            the remote host to connect to
+     *            the remote host this socket has to be connected to.
      * @param port
-     *            the remote port to connect to
-     * @exception IOException
-     *                if an error occurs while connecting
+     *            the remote port on which this socket has to be connected.
+     * @throws IOException
+     *             if an error occurs while connecting to the remote host.
+     * @since Android 1.0
      */
     protected abstract void connect(String host, int port) throws IOException;
 
     /**
-     * Connects this socket to the specified remote host address/port.
+     * Connects this socket to the specified remote host address and port
+     * number.
      * 
      * @param address
-     *            the remote host address to connect to
+     *            the remote host address this socket has to be connected to.
      * @param port
-     *            the remote port to connect to
-     * @exception IOException
-     *                if an error occurs while connecting
+     *            the remote port on which this socket has to be connected.
+     * @throws IOException
+     *             if an error occurs while connecting to the remote host.
+     * @since Android 1.0
      */
     protected abstract void connect(InetAddress address, int port)
             throws IOException;
 
     /**
-     * Creates a new unconnected socket. If streaming is true, create a stream
-     * socket, else a datagram socket.
+     * Creates a new unconnected socket. The argument {@code isStreaming}
+     * defines whether the new socket is a streaming or a datagram socket.
      * 
      * @param isStreaming
-     *            true, if the socket is type streaming
-     * @exception SocketException
-     *                if an error occurs while creating the socket
+     *            defines whether the type of the new socket is streaming or
+     *            datagram.
+     * @throws IOException
+     *             if an error occurs while creating the socket.
+     * @since Android 1.0
      */
     protected abstract void create(boolean isStreaming) throws IOException;
 
     /**
-     * Answer the socket's file descriptor.
+     * Gets the file descriptor of this socket.
      * 
-     * @return FileDescriptor the socket FileDescriptor
+     * @return the file descriptor of this socket.
+     * @since Android 1.0
      */
     protected FileDescriptor getFileDescriptor() {
         return fd;
     }
 
     /**
-     * Answer the socket's address. Refering to the class comment: Listener: The
-     * local machines IP address to which this socket is bound. Host: The client
-     * machine, to which this socket is connected. Client: The host machine, to
-     * which this socket is connected.
+     * Gets the remote address this socket is connected to.
      * 
-     * @return InetAddress the socket address
+     * @return the remote address of this socket.
+     * @since Android 1.0
      */
     protected InetAddress getInetAddress() {
         return address;
     }
 
     /**
-     * Answer the socket input stream.
+     * Gets the input stream of this socket.
      * 
-     * @return InputStream an InputStream on the socket
-     * @exception IOException
-     *                thrown if an error occurs while accessing the stream
+     * @return the input stream of this socket.
+     * @throws IOException
+     *             if an error occurs while accessing the input stream.
+     * @since Android 1.0
      */
     protected abstract InputStream getInputStream() throws IOException;
 
     /**
-     * Answer the socket's localport. The field is initialized to -1 and upon
-     * demand will go to the IP stack to get the bound value. See the class
-     * comment for the context of the local port.
+     * Gets the local port number of this socket. The field is initialized to
+     * {@code -1} and upon demand will go to the IP stack to get the bound
+     * value. See the class comment for the context of the local port.
      * 
-     * @return int the socket localport
+     * @return the local port number this socket is bound to.
+     * @since Android 1.0
      */
-
     protected int getLocalPort() {
         return localport;
     }
-    
+
     /**
-     * Answer the nominated socket option.
+     * Gets the value of the given socket option.
      * 
      * @param optID
-     *            the socket option to retrieve
-     * @return Object the option value
-     * @exception SocketException
-     *                thrown if an error occurs while accessing the option
+     *            the socket option to retrieve.
+     * @return the option value.
+     * @throws SocketException
+     *             if an error occurs while accessing the option.
+     * @since Android 1.0
      */
     public abstract Object getOption(int optID) throws SocketException;
 
     /**
-     * Answer the socket output stream.
+     * Gets the output stream of this socket.
      * 
-     * @return OutputStream an OutputStream on the socket
-     * @exception IOException
-     *                thrown if an error occurs while accessing the stream
+     * @return the output stream of this socket.
+     * @throws IOException
+     *             if an error occurs while accessing the output stream.
+     * @since Android 1.0
      */
     protected abstract OutputStream getOutputStream() throws IOException;
 
     /**
-     * Answer the socket's remote port. This value is not meaningful when the
-     * socketImpl is wrapped by a ServerSocket.
+     * Gets the remote port number of this socket. This value is not meaningful
+     * when this instance is wrapped by a {@code ServerSocket}.
      * 
-     * @return int the remote port the socket is connected to
+     * @return the remote port this socket is connected to.
+     * @since Android 1.0
      */
     protected int getPort() {
         return port;
     }
 
     /**
-     * Listen for connection requests on this stream socket. Incoming connection
-     * requests are queued, up to the limit nominated by backlog. Additional
-     * requests are rejected. listen() may only be invoked on stream sockets.
+     * Listens for connection requests on this streaming socket. Incoming
+     * connection requests are queued up to the limit specified by {@code
+     * backlog}. Additional requests are rejected. The method {@code listen()}
+     * may only be invoked on streaming sockets.
      * 
      * @param backlog
-     *            the max number of outstanding connection requests
-     * @exception IOException
-     *                thrown if an error occurs while listening
+     *            the maximum number of outstanding connection requests.
+     * @throws IOException
+     *             if an error occurs while listening.
+     * @since Android 1.0
      */
     protected abstract void listen(int backlog) throws IOException;
 
     /**
-     * In the IP stack, read at most <code>count</code> bytes off the socket
-     * into the <code>buffer</code>, at the <code>offset</code>. If the
-     * timeout is zero, block indefinitely waiting for data, otherwise wait the
+     * In the IP stack, read at most {@code count} bytes off the socket
+     * into the {@code buffer}, at the {@code offset}. If the timeout
+     * is zero, block indefinitely waiting for data, otherwise wait the
      * specified period (in milliseconds).
      * 
      * @param buffer
@@ -250,6 +285,9 @@ public abstract class SocketImpl implements SocketOptions {
             return -1;
         }
         try {
+            // BEGIN android-added
+            int receiveTimeout = (Integer)getOption(SocketOptions.SO_TIMEOUT);
+            // END android-added
             int read = this.netImpl.receiveStream(fd, buffer, offset, count,
                     receiveTimeout);
             if (read == -1) {
@@ -262,23 +300,25 @@ public abstract class SocketImpl implements SocketOptions {
     }
 
     /**
-     * Set the nominated socket option.
+     * Sets the value for the specified socket option.
      * 
      * @param optID
-     *            the socket option to set
+     *            the socket option to be set.
      * @param val
-     *            the option value
-     * @exception SocketException
-     *                thrown if an error occurs while setting the option
+     *            the option value.
+     * @throws SocketException
+     *             if an error occurs while setting the option.
+     * @since Android 1.0
      */
     public abstract void setOption(int optID, Object val)
-            throws SocketException;    
-     
+            throws SocketException;
+
     /**
      * Returns a string containing a concise, human-readable description of the
      * socket.
      * 
-     * @return String the description
+     * @return the textual representation of this socket.
+     * @since Android 1.0
      */
     @SuppressWarnings("nls")
     @Override
@@ -289,8 +329,8 @@ public abstract class SocketImpl implements SocketOptions {
     }
 
     /**
-     * In the IP stack, write at most <code>count</code> bytes on the socket
-     * from the <code>buffer</code>, from the <code>offset</code>.
+     * In the IP stack, write at most {@code count} bytes on the socket
+     * from the {@code buffer}, from the {@code offset}.
      * 
      * @param buffer
      *            the buffer to read into
@@ -304,20 +344,25 @@ public abstract class SocketImpl implements SocketOptions {
      */
     int write(byte[] buffer, int offset, int count) throws IOException {
         if (!streaming) {
-            this.netImpl
+            // BEGIN android-changed
+            // copied from newer harmony version
+            return this.netImpl
                     .sendDatagram2(fd, buffer, offset, count, port, address);
+            // END android-changed
         }
         return this.netImpl.sendStream(fd, buffer, offset, count);
     }
 
     /**
-     * Shutdown the input portion of the socket.
+     * Closes the input channel of this socket.
+     * <p>
+     * This default implementation always throws an {@link IOException} to
+     * indicate that the subclass should have overridden this method.
+     * </p>
      * 
-     * The default implementation always throws an {@link IOException}
-     * to indicate that the subclass should have overridden this
-     * method.
-     * 
-     * @throws IOException Always.  Designed to be subclassed.
+     * @throws IOException
+     *             always because this method should be overridden.
+     * @since Android 1.0
      */
     protected void shutdownInput() throws IOException {
         // KA025=Method has not been implemented
@@ -325,13 +370,15 @@ public abstract class SocketImpl implements SocketOptions {
     }
 
     /**
-     * Shutdown the output portion of the socket.
+     * Closes the output channel of this socket.
+     * <p>
+     * This default implementation always throws an {@link IOException} to
+     * indicate that the subclass should have overridden this method.
+     * </p>
      * 
-     * The default implementation always throws an {@link IOException}
-     * to indicate that the subclass should have overridden this
-     * method.
-     * 
-     * @throws IOException Always.  Designed to be subclassed.
+     * @throws IOException
+     *             always because this method should be overridden.
+     * @since Android 1.0
      */
     protected void shutdownOutput() throws IOException {
         // KA025=Method has not been implemented
@@ -339,52 +386,54 @@ public abstract class SocketImpl implements SocketOptions {
     }
 
     /**
-     * Connect the socket to the host/port specified by the SocketAddress with a
-     * specified timeout.
+     * Connects this socket to the remote host address and port number specified
+     * by the {@code SocketAddress} object with the given timeout. This method
+     * will block indefinitely if the timeout is set to zero.
      * 
      * @param remoteAddr
-     *            the remote machine address and port to connect to
+     *            the remote host address and port number to connect to.
      * @param timeout
-     *            the millisecond timeout value, the connect will block
-     *            indefinitely for a zero value.
-     * 
-     * @exception IOException
-     *                if a problem occurs during the connect
+     *            the timeout value in milliseconds.
+     * @throws IOException
+     *             if an error occurs while connecting.
+     * @since Android 1.0
      */
     protected abstract void connect(SocketAddress remoteAddr, int timeout)
             throws IOException;
 
     /**
-     * Answer if the socket supports urgent data. Subclasses should override
-     * this method.
+     * Returns whether the socket supports urgent data or not. Subclasses should
+     * override this method.
      * 
-     * @return false, subclasses must override
+     * @return {@code false} because subclasses must override this method.
+     * @since Android 1.0
      */
     protected boolean supportsUrgentData() {
         return false;
     }
 
     /**
-     * Send the single byte of urgent data on the socket.
+     * Sends the single byte of urgent data on the socket.
      * 
      * @param value
-     *            the byte of urgent data
-     * 
-     * @exception IOException
-     *                when an error occurs sending urgent data
+     *            the byte of urgent data.
+     * @throws IOException
+     *             if an error occurs sending urgent data.
+     * @since Android 1.0
      */
     protected abstract void sendUrgentData(int value) throws IOException;
 
     /**
-     * Sets performance preference for connectionTime, latency and bandwidth.
+     * Sets performance preference for connection time, latency and bandwidth.
      * Does nothing by default.
      * 
      * @param connectionTime
-     *            the importance of connect time
+     *            the importance of connect time.
      * @param latency
-     *            the importance of latency
+     *            the importance of latency.
      * @param bandwidth
-     *            the importance of bandwidth
+     *            the importance of bandwidth.
+     * @since Android 1.0
      */
     protected void setPerformancePreferences(int connectionTime, int latency,
             int bandwidth) {

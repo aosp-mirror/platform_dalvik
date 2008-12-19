@@ -18,11 +18,12 @@
 package java.util;
 
 /**
- * The TimerTask class is represents a task to run at specified time. The task
+ * The {@code TimerTask} class represents a task to run at a specified time. The task
  * may be run once or repeatedly.
  * 
  * @see Timer
  * @see java.lang.Object#wait(long)
+ * @since Android 1.0
  */
 public abstract class TimerTask implements Runnable {
     /* Lock object for synchronization. It's also used by Timer class. */
@@ -65,7 +66,7 @@ public abstract class TimerTask implements Runnable {
     /*
      * Is TimerTask scheduled into any timer?
      * 
-     * @return <code>true</code> if the timer task is scheduled, <code>false</code>
+     * @return {@code true} if the timer task is scheduled, {@code false}
      * otherwise.
      */
     boolean isScheduled() {
@@ -74,17 +75,23 @@ public abstract class TimerTask implements Runnable {
         }
     }
 
+    /**
+     * Creates a new {@code TimerTask}.
+     * 
+     * @since Android 1.0
+     */
     protected TimerTask() {
         super();
     }
 
     /**
-     * Cancels the Task and removes it from the Timer's queue. Generally, it
-     * returns false if the call did not prevent a TimerTask from running at
+     * Cancels the {@code TimerTask} and removes it from the {@code Timer}'s queue. Generally, it
+     * returns {@code false} if the call did not prevent a {@code TimerTask} from running at
      * least once. Subsequent calls have no effect.
      * 
-     * @return <code>true</code> if the call prevented a scheduled execution
-     *         from taking place, <code>false</code> otherwise.
+     * @return {@code true} if the call prevented a scheduled execution
+     *         from taking place, {@code false} otherwise.
+     * @since Android 1.0
      */
     public boolean cancel() {
         synchronized (lock) {
@@ -96,10 +103,11 @@ public abstract class TimerTask implements Runnable {
 
     /**
      * Returns the scheduled execution time. If the task execution is in
-     * progress returns the execution time of ongoing task. Tasks which have not
-     * yet run return an undefined value.
+     * progress it returns the execution time of the ongoing task. Tasks which
+     * have not yet run return an undefined value.
      * 
      * @return the most recent execution time.
+     * @since Android 1.0
      */
     public long scheduledExecutionTime() {
         synchronized (lock) {
@@ -108,8 +116,10 @@ public abstract class TimerTask implements Runnable {
     }
 
     /**
-     * The task to run should be specified in the implementation of the run()
+     * The task to run should be specified in the implementation of the {@code run()}
      * method.
+     * 
+     * @since Android 1.0
      */
     public abstract void run();
 

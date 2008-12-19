@@ -21,6 +21,12 @@
 */
 
 package org.apache.harmony.security.tests.java.security;
+
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
@@ -31,8 +37,7 @@ import java.security.SecureRandom;
 import org.apache.harmony.security.tests.support.SpiEngUtils;
 
 import junit.framework.TestCase;
-
-
+@TestTargetClass(KeyPairGenerator.class)
 /**
  * Tests for KeyPairGenerator class
  * 
@@ -93,6 +98,19 @@ public class KeyPairGenerator3Test extends TestCase {
      * Assertion: KeyPairGenerator was initialized before the invocation 
      * of these methods
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "generateKeyPair",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "genKeyPair",
+          methodArgs = {}
+        )
+    })
     public void testGenKeyPair01() throws NoSuchAlgorithmException,
             NoSuchProviderException, IllegalArgumentException {
         if (!DSASupported) {
@@ -119,6 +137,19 @@ public class KeyPairGenerator3Test extends TestCase {
      * methods
      * Assertion: these methods are used without previously initialization
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "generateKeyPair",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "genKeyPair",
+          methodArgs = {}
+        )
+    })
     public void testGenKeyPair02() throws NoSuchAlgorithmException,
             NoSuchProviderException, IllegalArgumentException {
         if (!DSASupported) {

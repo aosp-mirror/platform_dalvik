@@ -16,6 +16,11 @@
 
 package org.apache.harmony.nio.tests.java.nio.channels;
 
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -47,6 +52,7 @@ import org.apache.harmony.luni.platform.Platform;
 
 import junit.framework.TestCase;
 
+@TestTargetClass(FileChannel.class)
 public class FileChannelTest extends TestCase {
 
     private static final int CAPACITY = 100;
@@ -229,6 +235,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#force(boolean)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify force method with false parameter.",
+      targets = {
+        @TestTarget(
+          methodName = "force",
+          methodArgs = {boolean.class}
+        )
+    })
     public void test_forceJ() throws Exception {
         ByteBuffer writeBuffer = ByteBuffer.wrap(CONTENT_AS_BYTES);
         writeOnlyFileChannel.write(writeBuffer);
@@ -243,6 +258,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#force(boolean)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "force",
+          methodArgs = {boolean.class}
+        )
+    })
     public void test_forceJ_closed() throws Exception {
         writeOnlyFileChannel.close();
         try {
@@ -263,6 +287,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#force(boolean)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "force",
+          methodArgs = {boolean.class}
+        )
+    })
     public void test_forceJ_ReadOnlyChannel() throws Exception {
         // force on a read only file channel has no effect.
         readOnlyFileChannel.force(true);
@@ -272,6 +305,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#position()
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL_OK,
+              purpose = "",
+              targets = {
+                @TestTarget(
+                  methodName = "position",
+                  methodArgs = {}
+                )
+            })
     public void test_position_Init() throws Exception {
         assertEquals(0, readOnlyFileChannel.position());
         assertEquals(0, writeOnlyFileChannel.position());
@@ -281,6 +323,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#position()
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL_OK,
+              purpose = "",
+              targets = {
+                @TestTarget(
+                  methodName = "position",
+                  methodArgs = {}
+                )
+            })
     public void test_position_ReadOnly() throws Exception {
         writeDataToFile(fileOfReadOnlyFileChannel);
 
@@ -331,6 +382,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#position()
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL_OK,
+              purpose = "",
+              targets = {
+                @TestTarget(
+                  methodName = "position",
+                  methodArgs = {}
+                )
+            })
     public void test_position_WriteOnly() throws Exception {
         ByteBuffer writeBuffer = ByteBuffer.wrap(CONTENT_AS_BYTES);
         writeOnlyFileChannel.write(writeBuffer);
@@ -340,6 +400,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#position()
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL_OK,
+              purpose = "",
+              targets = {
+                @TestTarget(
+                  methodName = "position",
+                  methodArgs = {}
+                )
+            })
     public void test_position_ReadWrite() throws Exception {
         writeDataToFile(fileOfReadWriteFileChannel);
 
@@ -356,6 +425,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#position()
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL_OK,
+              purpose = "Verifies ClosedChannelException.",
+              targets = {
+                @TestTarget(
+                  methodName = "position",
+                  methodArgs = {}
+                )
+            })
     public void test_position_Closed() throws Exception {
         readOnlyFileChannel.close();
         try {
@@ -385,6 +463,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#position(long)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies ClosedChannelException.",
+      targets = {
+        @TestTarget(
+          methodName = "position",
+          methodArgs = {long.class}
+        )
+    })
     public void test_positionJ_Closed() throws Exception {
         final long POSITION = 100;
 
@@ -416,6 +503,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#position(long)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL_OK,
+              purpose = "Verifies IllegalArgumentException.",
+              targets = {
+                @TestTarget(
+                  methodName = "position",
+                  methodArgs = {long.class}
+                )
+            })
     public void test_positionJ_Negative() throws Exception {
         final long NEGATIVE_POSITION = -1;
         try {
@@ -443,6 +539,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#position(long)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL_OK,
+              purpose = "",
+              targets = {
+                @TestTarget(
+                  methodName = "position",
+                  methodArgs = {long.class}
+                )
+            })
     public void test_positionJ_ReadOnly() throws Exception {
         writeDataToFile(fileOfReadOnlyFileChannel);
 
@@ -467,6 +572,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#position(long)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL_OK,
+              purpose = "",
+              targets = {
+                @TestTarget(
+                  methodName = "position",
+                  methodArgs = {long.class}
+                )
+            })
     public void test_positionJ_WriteOnly() throws Exception {
         writeDataToFile(fileOfWriteOnlyFileChannel);
 
@@ -501,6 +615,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#size()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies zero size.",
+      targets = {
+        @TestTarget(
+          methodName = "size",
+          methodArgs = {}
+        )
+    })
     public void test_size_Init() throws Exception {
         assertEquals(0, readOnlyFileChannel.size());
         assertEquals(0, writeOnlyFileChannel.size());
@@ -510,6 +633,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#size()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies positive case.",
+      targets = {
+        @TestTarget(
+          methodName = "size",
+          methodArgs = {}
+        )
+    })
     public void test_size() throws Exception {
         writeDataToFile(fileOfReadOnlyFileChannel);
         assertEquals(fileOfReadOnlyFileChannel.length(), readOnlyFileChannel
@@ -519,6 +651,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#size()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies ClosedChannelException.",
+      targets = {
+        @TestTarget(
+          methodName = "size",
+          methodArgs = {}
+        )
+    })
     public void test_size_Closed() throws Exception {
         readOnlyFileChannel.close();
         try {
@@ -548,6 +689,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#truncate(long)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies ClosedChannelException.",
+      targets = {
+        @TestTarget(
+          methodName = "truncate",
+          methodArgs = {long.class}
+        )
+    })
     public void test_truncateJ_Closed() throws Exception {
         readOnlyFileChannel.close();
         try {
@@ -577,6 +727,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#truncate(long)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies IllegalArgumentException.",
+      targets = {
+        @TestTarget(
+          methodName = "truncate",
+          methodArgs = {long.class}
+        )
+    })
     public void test_truncateJ_IllegalArgument() throws Exception {
         // regression test for Harmony-941
         try {
@@ -604,6 +763,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#truncate(long)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies NonWritableChannelException.",
+      targets = {
+        @TestTarget(
+          methodName = "truncate",
+          methodArgs = {long.class}
+        )
+    })
     public void test_truncateJ_ReadOnly() throws Exception {
         writeDataToFile(fileOfReadOnlyFileChannel);
         try {
@@ -624,6 +792,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#truncate(long)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "truncate",
+          methodArgs = {long.class}
+        )
+    })
     public void test_truncateJ() throws Exception {
         writeDataToFile(fileOfReadWriteFileChannel);
 
@@ -646,6 +823,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#lock()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "lock",
+          methodArgs = {}
+        )
+    })
     public void test_lock() throws Exception {
         MockFileChannel mockFileChannel = new MockFileChannel();
         // Verify that calling lock() leads to the method
@@ -659,6 +845,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#lock(long, long, boolean)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies ClosedChannelException.",
+      targets = {
+        @TestTarget(
+          methodName = "lock",
+          methodArgs = {long.class, long.class, boolean.class}
+        )
+    })
     public void test_lockJJZ_Closed() throws Exception {
         readOnlyFileChannel.close();
         try {
@@ -696,6 +891,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#lock(long, long, boolean)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies IllegalArgumentException.",
+      targets = {
+        @TestTarget(
+          methodName = "lock",
+          methodArgs = {long.class, long.class, boolean.class}
+        )
+    })
     public void test_lockJJZ_IllegalArgument() throws Exception {
         try {
             writeOnlyFileChannel.lock(0, -1, false);
@@ -729,6 +933,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#lock(long, long, boolean)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies NonWritableChannelException.",
+      targets = {
+        @TestTarget(
+          methodName = "lock",
+          methodArgs = {long.class, long.class, boolean.class}
+        )
+    })
     public void test_lockJJZ_NonWritable() throws Exception {
         try {
             readOnlyFileChannel.lock(0, 10, false);
@@ -749,6 +962,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#lock(long, long, boolean)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies NonReadableChannelException.",
+      targets = {
+        @TestTarget(
+          methodName = "lock",
+          methodArgs = {long.class, long.class, boolean.class}
+        )
+    })
     public void test_lockJJZ_NonReadable() throws Exception {
         try {
             writeOnlyFileChannel.lock(0, 10, true);
@@ -769,6 +991,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#lock(long, long, boolean)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies shared channel.",
+      targets = {
+        @TestTarget(
+          methodName = "lock",
+          methodArgs = {long.class, long.class, boolean.class}
+        )
+    })
     public void test_lockJJZ_Shared() throws Exception {
         final long POSITION = 100;
         final long SIZE = 200;
@@ -785,6 +1016,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#lock(long, long, boolean)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies that unshared channel.",
+      targets = {
+        @TestTarget(
+          methodName = "lock",
+          methodArgs = {long.class, long.class, boolean.class}
+        )
+    })
     public void test_lockJJZ_NotShared() throws Exception {
         final long POSITION = 100;
         final long SIZE = 200;
@@ -799,6 +1039,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#lock(long, long, boolean)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies lok method with Long max value as a size.",
+      targets = {
+        @TestTarget(
+          methodName = "lock",
+          methodArgs = {long.class, long.class, boolean.class}
+        )
+    })
     public void test_lockJJZ_Long_MAX_VALUE() throws Exception {
         final long POSITION = 0;
         final long SIZE = Long.MAX_VALUE;
@@ -813,6 +1062,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#lock(long, long, boolean)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies OverlappingFileLockException.",
+      targets = {
+        @TestTarget(
+          methodName = "lock",
+          methodArgs = {long.class, long.class, boolean.class}
+        )
+    })
     public void test_lockJJZ_Overlapping() throws Exception {
         final long POSITION = 100;
         final long SIZE = 200;
@@ -830,6 +1088,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#lock(long, long, boolean)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies that not overlaping regions can be locked.",
+      targets = {
+        @TestTarget(
+          methodName = "lock",
+          methodArgs = {long.class, long.class, boolean.class}
+        )
+    })
     public void test_lockJJZ_NotOverlapping() throws Exception {
         final long POSITION = 100;
         final long SIZE = 200;
@@ -843,6 +1110,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#lock(long,long,boolean)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies functionality after release method.",
+      targets = {
+        @TestTarget(
+          methodName = "lock",
+          methodArgs = {long.class, long.class, boolean.class}
+        )
+    })
     public void test_lockJJZ_After_Release() throws Exception {
         fileLock = writeOnlyFileChannel.lock(0, 10, false);
         fileLock.release();
@@ -854,6 +1130,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#tryLock()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "tryLock",
+          methodArgs = {}
+        )
+    })
     public void test_tryLock() throws Exception {
         MockFileChannel mockFileChannel = new MockFileChannel();
         // Verify that calling tryLock() leads to the method
@@ -867,6 +1152,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#tryLock(long, long, boolean)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "Verifies ClosedChannelException.",
+              targets = {
+                @TestTarget(
+                  methodName = "tryLock",
+                  methodArgs = {long.class, long.class, boolean.class}
+                )
+            })
     public void test_tryLockJJZ_Closed() throws Exception {
         readOnlyFileChannel.close();
         try {
@@ -904,6 +1198,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#tryLock(long, long, boolean)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "Verifies IllegalArgumentException.",
+              targets = {
+                @TestTarget(
+                  methodName = "tryLock",
+                  methodArgs = {long.class, long.class, boolean.class}
+                )
+            })
     public void test_tryLockJJZ_IllegalArgument() throws Exception {
         try {
             writeOnlyFileChannel.tryLock(0, -1, false);
@@ -937,6 +1240,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#tryLock(long, long, boolean)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "Verifies NonWritableChannelException.",
+              targets = {
+                @TestTarget(
+                  methodName = "tryLock",
+                  methodArgs = {long.class, long.class, boolean.class}
+                )
+            })
     public void test_tryLockJJZ_NonWritable() throws Exception {
         try {
             readOnlyFileChannel.tryLock(0, 10, false);
@@ -957,6 +1269,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#tryLock(long, long, boolean)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "Verifies NonReadableChannelException.",
+              targets = {
+                @TestTarget(
+                  methodName = "tryLock",
+                  methodArgs = {long.class, long.class, boolean.class}
+                )
+            })
     public void test_tryLockJJZ_NonReadable() throws Exception {
         try {
             writeOnlyFileChannel.tryLock(0, 10, true);
@@ -977,6 +1298,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#tryLock(long, long, boolean)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "",
+              targets = {
+                @TestTarget(
+                  methodName = "tryLock",
+                  methodArgs = {long.class, long.class, boolean.class}
+                )
+            })
     public void test_tryLockJJZ_Shared() throws Exception {
         final long POSITION = 100;
         final long SIZE = 200;
@@ -993,6 +1323,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#tryLock(long, long, boolean)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "",
+              targets = {
+                @TestTarget(
+                  methodName = "tryLock",
+                  methodArgs = {long.class, long.class, boolean.class}
+                )
+            })
     public void test_tryLockJJZ_NotShared() throws Exception {
         final long POSITION = 100;
         final long SIZE = 200;
@@ -1007,6 +1346,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#tryLock(long, long, boolean)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "",
+              targets = {
+                @TestTarget(
+                  methodName = "tryLock",
+                  methodArgs = {long.class, long.class, boolean.class}
+                )
+            })
     public void test_tryLockJJZ_Long_MAX_VALUE() throws Exception {
         final long POSITION = 0;
         final long SIZE = Long.MAX_VALUE;
@@ -1021,6 +1369,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#tryLock(long, long, boolean)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "Verifies OverlappingFileLockException.",
+              targets = {
+                @TestTarget(
+                  methodName = "tryLock",
+                  methodArgs = {long.class, long.class, boolean.class}
+                )
+            })
     public void test_tryLockJJZ_Overlapping() throws Exception {
         final long POSITION = 100;
         final long SIZE = 200;
@@ -1038,6 +1395,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#tryLock(long, long, boolean)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "",
+              targets = {
+                @TestTarget(
+                  methodName = "tryLock",
+                  methodArgs = {long.class, long.class, boolean.class}
+                )
+            })
     public void test_tryLockJJZ_NotOverlapping() throws Exception {
         final long POSITION = 100;
         final long SIZE = 200;
@@ -1053,6 +1419,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#tryLock(long,long,boolean)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "tryLock",
+          methodArgs = {long.class, long.class, boolean.class}
+        )
+    })
     public void test_tryLockJJZ_After_Release() throws Exception {
         fileLock = writeOnlyFileChannel.tryLock(0, 10, false);
         fileLock.release();
@@ -1065,6 +1440,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#read(ByteBuffer)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {java.nio.ByteBuffer.class}
+        )
+    })
     public void test_readLByteBuffer_Null() throws Exception {
         ByteBuffer readBuffer = null;
 
@@ -1086,6 +1470,17 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#read(ByteBuffer)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies ClosedChannelException. Doesn't verify " +
+            "AsynchronousCloseException, ClosedByInterruptException, " +
+            "IOException.",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {java.nio.ByteBuffer.class}
+        )
+    })
     public void test_readLByteBuffer_Closed() throws Exception {
         ByteBuffer readBuffer = ByteBuffer.allocate(CAPACITY);
 
@@ -1126,6 +1521,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#read(ByteBuffer)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies NonReadableChannelException.",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {java.nio.ByteBuffer.class}
+        )
+    })
     public void test_readLByteBuffer_WriteOnly() throws Exception {
         ByteBuffer readBuffer = ByteBuffer.allocate(CAPACITY);
 
@@ -1149,6 +1553,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#read(ByteBuffer)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {java.nio.ByteBuffer.class}
+        )
+    })
     public void test_readLByteBuffer_EmptyFile() throws Exception {
         ByteBuffer readBuffer = ByteBuffer.allocate(CAPACITY);
         int result = readOnlyFileChannel.read(readBuffer);
@@ -1159,6 +1572,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#read(ByteBuffer)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {java.nio.ByteBuffer.class}
+        )
+    })
     public void test_readLByteBuffer_LimitedCapacity() throws Exception {
         writeDataToFile(fileOfReadOnlyFileChannel);
 
@@ -1175,6 +1597,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#read(ByteBuffer)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {java.nio.ByteBuffer.class}
+        )
+    })
     public void test_readLByteBuffer() throws Exception {
         writeDataToFile(fileOfReadOnlyFileChannel);
 
@@ -1191,6 +1622,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#read(ByteBuffer, long)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {java.nio.ByteBuffer.class, long.class}
+        )
+    })
     public void test_readLByteBufferJ_Null() throws Exception {
         ByteBuffer readBuffer = null;
 
@@ -1238,6 +1678,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#read(ByteBuffer, long)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies ClosedChannelException.",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {java.nio.ByteBuffer.class, long.class}
+        )
+    })
     public void test_readLByteBufferJ_Closed() throws Exception {
         ByteBuffer readBuffer = ByteBuffer.allocate(CAPACITY);
 
@@ -1261,6 +1710,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#read(ByteBuffer, long)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies IllegalArgumentException.",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {java.nio.ByteBuffer.class, long.class}
+        )
+    })
     public void test_readLByteBufferJ_IllegalArgument() throws Exception {
         ByteBuffer readBuffer = ByteBuffer.allocate(CAPACITY);
 
@@ -1298,6 +1756,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#read(ByteBuffer, long)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {java.nio.ByteBuffer.class, long.class}
+        )
+    })
     public void test_readLByteBufferJ_WriteOnly() throws Exception {
         ByteBuffer readBuffer = ByteBuffer.allocate(CAPACITY);
 
@@ -1321,6 +1788,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#read(ByteBuffer,long)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {java.nio.ByteBuffer.class, long.class}
+        )
+    })
     public void test_readLByteBufferJ_Emptyfile() throws Exception {
         ByteBuffer readBuffer = ByteBuffer.allocate(CAPACITY);
         int result = readOnlyFileChannel.read(readBuffer, 0);
@@ -1331,6 +1807,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#read(ByteBuffer,long)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {java.nio.ByteBuffer.class, long.class}
+        )
+    })
     public void test_readLByteBufferJ_Postion_BeyondFileLimit()
             throws Exception {
 
@@ -1346,6 +1831,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#read(ByteBuffer,long)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies IOException.",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {java.nio.ByteBuffer.class, long.class}
+        )
+    })
     public void test_readLByteBufferJ_Postion_As_Long() throws Exception {
         ByteBuffer readBuffer = ByteBuffer.allocate(CAPACITY);
         try {
@@ -1358,6 +1852,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#read(ByteBuffer,long)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {java.nio.ByteBuffer.class, long.class}
+        )
+    })
     public void test_readLByteBufferJ() throws Exception {
         writeDataToFile(fileOfReadOnlyFileChannel);
         ByteBuffer readBuffer = ByteBuffer.allocate(CAPACITY);
@@ -1380,6 +1883,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#read(ByteBuffer[])
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {java.nio.ByteBuffer[].class}
+        )
+    })
     public void test_read$LByteBuffer() throws Exception {
         // regression test for Harmony-849
         writeDataToFile(fileOfReadOnlyFileChannel);
@@ -1400,6 +1912,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#read(ByteBuffer[])
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {java.nio.ByteBuffer[].class}
+        )
+    })
     public void test_read$LByteBuffer_mock() throws Exception {
         FileChannel mockChannel = new MockFileChannel();
         ByteBuffer[] buffers = new ByteBuffer[2];
@@ -1412,6 +1933,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#read(ByteBuffer[], int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {java.nio.ByteBuffer[].class, int.class, int.class}
+        )
+    })
     public void test_read$LByteBufferII_Null() throws Exception {
         ByteBuffer[] readBuffers = null;
 
@@ -1456,6 +1986,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#read(ByteBuffer[], int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies ClosedChannelException.",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {java.nio.ByteBuffer[].class, int.class, int.class}
+        )
+    })
     public void test_read$LByteBufferII_Closed() throws Exception {
         ByteBuffer[] readBuffers = new ByteBuffer[2];
         readBuffers[0] = ByteBuffer.allocate(CAPACITY);
@@ -1509,6 +2048,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#read(ByteBuffer[], int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {java.nio.ByteBuffer[].class, int.class, int.class}
+        )
+    })
     public void test_read$LByteBufferII_WriteOnly() throws Exception {
         ByteBuffer[] readBuffers = new ByteBuffer[2];
         readBuffers[0] = ByteBuffer.allocate(CAPACITY);
@@ -1533,6 +2081,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#read(ByteBuffer[], int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies IndexOutOfBoundsException.",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {java.nio.ByteBuffer[].class, int.class, int.class}
+        )
+    })
     public void test_read$LByteBufferII_IndexOutOfBound() throws Exception {
         ByteBuffer[] readBuffers = new ByteBuffer[2];
         readBuffers[0] = ByteBuffer.allocate(CAPACITY);
@@ -1579,6 +2136,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#read(ByteBuffer[], int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {java.nio.ByteBuffer[].class, int.class, int.class}
+        )
+    })
     public void test_read$LByteBufferII_EmptyFile() throws Exception {
         ByteBuffer[] readBuffers = new ByteBuffer[2];
         readBuffers[0] = ByteBuffer.allocate(CAPACITY);
@@ -1592,6 +2158,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#read(ByteBuffer[], int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {java.nio.ByteBuffer[].class, int.class, int.class}
+        )
+    })
     public void test_read$LByteBufferII_EmptyBuffers() throws Exception {
         ByteBuffer[] readBuffers = new ByteBuffer[2];
         try {
@@ -1615,6 +2190,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#read(ByteBuffer[], int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {java.nio.ByteBuffer[].class, int.class, int.class}
+        )
+    })
     public void test_read$LByteBufferII_EmptyFile_EmptyBuffers()
             throws Exception {
         ByteBuffer[] readBuffers = new ByteBuffer[2];
@@ -1626,6 +2210,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#read(ByteBuffer[], int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {java.nio.ByteBuffer[].class, int.class, int.class}
+        )
+    })
     public void test_read$LByteBufferII_Length_Zero() throws Exception {
         writeDataToFile(fileOfReadOnlyFileChannel);
         ByteBuffer[] readBuffers = new ByteBuffer[2];
@@ -1638,6 +2231,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#read(ByteBuffer[], int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {java.nio.ByteBuffer[].class, int.class, int.class}
+        )
+    })
     public void test_read$LByteBufferII_LimitedCapacity() throws Exception {
         writeDataToFile(fileOfReadOnlyFileChannel);
         ByteBuffer[] readBuffers = new ByteBuffer[2];
@@ -1659,6 +2261,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#read(ByteBuffer[], int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {java.nio.ByteBuffer[].class, int.class, int.class}
+        )
+    })
     public void test_read$LByteBufferII() throws Exception {
         writeDataToFile(fileOfReadOnlyFileChannel);
         ByteBuffer[] readBuffers = new ByteBuffer[2];
@@ -1680,6 +2291,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#isOpen()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Regression test. Doesn't verify that isOpen returns true.",
+      targets = {
+        @TestTarget(
+          methodName = "isOpen",
+          methodArgs = {}
+        )
+    })
     public void test_isOpen() throws Exception {
         // Regression for HARMONY-40
         File logFile = File.createTempFile("out", "tmp");
@@ -1694,6 +2314,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#position()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "position",
+          methodArgs = {}
+        )
+    })
     public void test_position_append() throws Exception {
         // Regression test for Harmony-508
         File tmpfile = File.createTempFile("FileOutputStream", "tmp");
@@ -1715,6 +2344,18 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#map(MapMode,long,long)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies NonReadableChannelException, " +
+            "NonWritableChannelException , ClosedChannelException, " +
+            "IllegalArgumentException, IOException. ",
+      targets = {
+        @TestTarget(
+          methodName = "map",
+          methodArgs = {java.nio.channels.FileChannel.MapMode.class, 
+                        long.class, long.class}
+        )
+    })
     public void test_map_AbnormalMode() throws IOException {
         try {
             writeOnlyFileChannel.map(MapMode.READ_ONLY, 0, CONTENT_LENGTH);
@@ -1806,6 +2447,16 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#map(MapMode,long,long)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL_OK,
+              purpose = "",
+              targets = {
+                @TestTarget(
+                  methodName = "map",
+                  methodArgs = {java.nio.channels.FileChannel.MapMode.class, 
+                                long.class, long.class}
+                )
+            })
     public void test_map_ReadOnly_CloseChannel() throws IOException {
         // close channel has no effect on map if mapped
         assertEquals(0, readWriteFileChannel.size());
@@ -1819,6 +2470,16 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#map(MapMode,long,long)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL_OK,
+              purpose = "",
+              targets = {
+                @TestTarget(
+                  methodName = "map",
+                  methodArgs = {java.nio.channels.FileChannel.MapMode.class, 
+                                long.class, long.class}
+                )
+            })
     public void test_map_Private_CloseChannel() throws IOException {
         MappedByteBuffer mapped = readWriteFileChannel.map(MapMode.PRIVATE, 0,
                 CONTENT_LENGTH);
@@ -1831,6 +2492,16 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#map(MapMode,long,long)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL_OK,
+              purpose = "",
+              targets = {
+                @TestTarget(
+                  methodName = "map",
+                  methodArgs = {java.nio.channels.FileChannel.MapMode.class, 
+                                long.class, long.class}
+                )
+            })
     public void test_map_ReadOnly() throws IOException {
         MappedByteBuffer mapped = null;
         // try put something to readonly map
@@ -1862,6 +2533,16 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#map(MapMode,long,long)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL_OK,
+              purpose = "",
+              targets = {
+                @TestTarget(
+                  methodName = "map",
+                  methodArgs = {java.nio.channels.FileChannel.MapMode.class, 
+                                long.class, long.class}
+                )
+            })
     public void test_map_ReadOnly_NonZeroPosition() throws IOException {
         this.writeDataToFile(fileOfReadOnlyFileChannel);
         MappedByteBuffer mapped = readOnlyFileChannel.map(MapMode.READ_ONLY,
@@ -1874,6 +2555,16 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#map(MapMode,long,long)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL_OK,
+              purpose = "",
+              targets = {
+                @TestTarget(
+                  methodName = "map",
+                  methodArgs = {java.nio.channels.FileChannel.MapMode.class, 
+                                long.class, long.class}
+                )
+            })
     public void test_map_Private() throws IOException {
         this.writeDataToFile(fileOfReadWriteFileChannel);
         MappedByteBuffer mapped = readWriteFileChannel.map(MapMode.PRIVATE, 0,
@@ -1899,6 +2590,16 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#map(MapMode,long,long)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL_OK,
+              purpose = "",
+              targets = {
+                @TestTarget(
+                  methodName = "map",
+                  methodArgs = {java.nio.channels.FileChannel.MapMode.class, 
+                                long.class, long.class}
+                )
+            })
     public void test_map_Private_NonZeroPosition() throws IOException {
         MappedByteBuffer mapped = readWriteFileChannel.map(MapMode.PRIVATE, 10,
                 CONTENT_LENGTH - 10);
@@ -1910,6 +2611,16 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#map(MapMode,long,long)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL_OK,
+              purpose = "",
+              targets = {
+                @TestTarget(
+                  methodName = "map",
+                  methodArgs = {java.nio.channels.FileChannel.MapMode.class, 
+                                long.class, long.class}
+                )
+            })
     public void test_map_ReadWrite() throws IOException {
         MappedByteBuffer mapped = null;
         writeDataToFile(fileOfReadWriteFileChannel);
@@ -1937,6 +2648,16 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#map(MapMode,long,long)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL_OK,
+              purpose = "",
+              targets = {
+                @TestTarget(
+                  methodName = "map",
+                  methodArgs = {java.nio.channels.FileChannel.MapMode.class, 
+                                long.class, long.class}
+                )
+            })
     public void test_map_ReadWrite_NonZeroPosition() throws IOException {
         // test position non-zero
         writeDataToFile(fileOfReadWriteFileChannel);
@@ -1959,6 +2680,15 @@ public class FileChannelTest extends TestCase {
      *
      * @tests java.nio.channels.FileChannel#map(MapMode,long,long)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL_OK,
+              purpose = "",
+              targets = {
+                @TestTarget(
+                  methodName = "map",
+                  methodArgs = {java.nio.channels.FileChannel.MapMode.class, long.class, long.class}
+                )
+            })
     public void test_map_LargePosition() throws IOException {
         // Regression test for HARMONY-3085
         int[] sizes = {
@@ -2001,6 +2731,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#write(ByteBuffer)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "Verifies ClosedChannelException.",
+              targets = {
+                @TestTarget(
+                  methodName = "write",
+                  methodArgs = {java.nio.ByteBuffer.class}
+                )
+            })
     public void test_writeLByteBuffer_Null() throws Exception {
         ByteBuffer writeBuffer = null;
 
@@ -2022,6 +2761,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#write(ByteBuffer)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "Verifies ClosedChannelException.",
+              targets = {
+                @TestTarget(
+                  methodName = "write",
+                  methodArgs = {java.nio.ByteBuffer.class}
+                )
+            })
     public void test_writeLByteBuffer_Closed() throws Exception {
         ByteBuffer writeBuffer = ByteBuffer.allocate(CAPACITY);
 
@@ -2062,6 +2810,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#write(ByteBuffer)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "Verifies NonWritableChannelException.",
+              targets = {
+                @TestTarget(
+                  methodName = "write",
+                  methodArgs = {java.nio.ByteBuffer.class}
+                )
+            })
     public void test_writeLByteBuffer_ReadOnly() throws Exception {
         ByteBuffer writeBuffer = ByteBuffer.allocate(CAPACITY);
 
@@ -2085,6 +2842,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#write(ByteBuffer)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "write",
+          methodArgs = {java.nio.ByteBuffer.class}
+        )
+    })
     public void test_writeLByteBuffer() throws Exception {
         ByteBuffer writeBuffer = ByteBuffer.wrap(CONTENT_AS_BYTES);
 
@@ -2105,6 +2871,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#write(ByteBuffer)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "",
+              targets = {
+                @TestTarget(
+                  methodName = "write",
+                  methodArgs = {java.nio.ByteBuffer.class}
+                )
+            })
     public void test_writeLByteBuffer_positioned() throws Exception {
         final int pos = 5;
         ByteBuffer writeBuffer = ByteBuffer.wrap(CONTENT_AS_BYTES);
@@ -2127,6 +2902,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#write(ByteBuffer, long)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "Verifies NullPointerException.",
+              targets = {
+                @TestTarget(
+                  methodName = "write",
+                  methodArgs = {java.nio.ByteBuffer.class, long.class}
+                )
+            })
     public void test_writeLByteBufferJ_Null() throws Exception {
         ByteBuffer writeBuffer = null;
 
@@ -2172,6 +2956,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#write(ByteBuffer, long)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "Verifies ClosedChannelException.",
+              targets = {
+                @TestTarget(
+                  methodName = "write",
+                  methodArgs = {java.nio.ByteBuffer.class, long.class}
+                )
+            })
     public void test_writeLByteBufferJ_Closed() throws Exception {
         ByteBuffer writeBuffer = ByteBuffer.allocate(CAPACITY);
 
@@ -2195,6 +2988,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#write(ByteBuffer, long)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "Verifies NonWritableChannelException.",
+              targets = {
+                @TestTarget(
+                  methodName = "write",
+                  methodArgs = {java.nio.ByteBuffer.class, long.class}
+                )
+            })
     public void test_writeLByteBufferJ_ReadOnly() throws Exception {
         ByteBuffer writeBuffer = ByteBuffer.allocate(CAPACITY);
 
@@ -2236,6 +3038,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#write(ByteBuffer, long)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "Verifies IllegalArgumentException.",
+              targets = {
+                @TestTarget(
+                  methodName = "write",
+                  methodArgs = {java.nio.ByteBuffer.class, long.class}
+                )
+            })
     public void test_writeLByteBufferJ_IllegalArgument() throws Exception {
         ByteBuffer writeBuffer = ByteBuffer.allocate(CAPACITY);
 
@@ -2273,6 +3084,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#write(ByteBuffer,long)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "write",
+          methodArgs = {java.nio.ByteBuffer.class, long.class}
+        )
+    })
     public void test_writeLByteBufferJ() throws Exception {
         writeDataToFile(fileOfWriteOnlyFileChannel);
 
@@ -2299,6 +3119,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#write(ByteBuffer[])
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "write",
+          methodArgs = {java.nio.ByteBuffer[].class}
+        )
+    })
     public void test_write$LByteBuffer() throws Exception {
         ByteBuffer[] writeBuffers = new ByteBuffer[2];
         MockFileChannel mockFileChannel = new MockFileChannel();
@@ -2311,6 +3140,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#write(ByteBuffer[],int,int)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "Verifies NullPointerException.",
+              targets = {
+                @TestTarget(
+                  methodName = "write",
+                  methodArgs = {java.nio.ByteBuffer[].class, int.class, int.class}
+                )
+            })
     public void test_write$LByteBufferII_Null() throws Exception {
         ByteBuffer[] writeBuffers = null;
 
@@ -2348,6 +3186,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#write(ByteBuffer[],int,int)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "Verifies ClosedChannelException.",
+              targets = {
+                @TestTarget(
+                  methodName = "write",
+                  methodArgs = {java.nio.ByteBuffer[].class, int.class, int.class}
+                )
+            })
     public void test_write$LByteBufferII_Closed() throws Exception {
         ByteBuffer[] writeBuffers = new ByteBuffer[2];
         writeBuffers[0] = ByteBuffer.allocate(CAPACITY);
@@ -2390,6 +3237,16 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#write(ByteBuffer[],int,int)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "Verifies NonWritableChannelException, " +
+                    "IndexOutOfBoundsException, NullPointerException.",
+              targets = {
+                @TestTarget(
+                  methodName = "write",
+                  methodArgs = {java.nio.ByteBuffer[].class, int.class, int.class}
+                )
+            })
     public void test_write$LByteBufferII_ReadOnly() throws Exception {
         ByteBuffer[] writeBuffers = new ByteBuffer[2];
         writeBuffers[0] = ByteBuffer.allocate(CAPACITY);
@@ -2432,6 +3289,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#write(ByteBuffer[],int,int)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "Verifies NullPointerException.",
+              targets = {
+                @TestTarget(
+                  methodName = "write",
+                  methodArgs = {java.nio.ByteBuffer[].class, int.class, int.class}
+                )
+            })
     public void test_write$LByteBufferII_EmptyBuffers() throws Exception {
         ByteBuffer[] writeBuffers = new ByteBuffer[2];
         try {
@@ -2452,6 +3318,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#write(ByteBuffer[],int,int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "write",
+          methodArgs = {java.nio.ByteBuffer[].class, int.class, int.class}
+        )
+    })
     public void test_write$LByteBufferII() throws Exception {
         ByteBuffer[] writeBuffers = new ByteBuffer[2];
         writeBuffers[0] = ByteBuffer.wrap(CONTENT_AS_BYTES);
@@ -2480,6 +3355,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#transferFrom(ReadableByteChannel,long,long)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies ClosedChannelException.",
+      targets = {
+        @TestTarget(
+          methodName = "transferFrom",
+          methodArgs = {java.nio.channels.ReadableByteChannel.class, long.class, long.class}
+        )
+    })
     public void test_transferFromLReadableByteChannelJJ_Closed()
             throws Exception {
         readByteChannel = DatagramChannel.open();
@@ -2519,6 +3403,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#transferFrom(ReadableByteChannel,long,long)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "",
+              targets = {
+                @TestTarget(
+                  methodName = "transferFrom",
+                  methodArgs = {java.nio.channels.ReadableByteChannel.class, long.class, long.class}
+                )
+            })
     public void test_transferFromLReadableByteChannelJJ_SourceClosed()
             throws Exception {
         readByteChannel = DatagramChannel.open();
@@ -2557,6 +3450,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#transferFrom(ReadableByteChannel,long,long)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "Verifies IllegalArgumentException.",
+              targets = {
+                @TestTarget(
+                  methodName = "transferFrom",
+                  methodArgs = {java.nio.channels.ReadableByteChannel.class, long.class, long.class}
+                )
+            })
     public void test_transferFromLReadableByteChannelJJ_IllegalArgument()
             throws Exception {
         readByteChannel = DatagramChannel.open();
@@ -2578,6 +3480,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#transferFrom(ReadableByteChannel,long,long)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "",
+              targets = {
+                @TestTarget(
+                  methodName = "transferFrom",
+                  methodArgs = {java.nio.channels.ReadableByteChannel.class, long.class, long.class}
+                )
+            })
     public void test_transferFromLReadableByteChannelJJ_NonWritable()
             throws Exception {
         readByteChannel = DatagramChannel.open();
@@ -2592,6 +3503,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#transferFrom(ReadableByteChannel,long,long)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "",
+              targets = {
+                @TestTarget(
+                  methodName = "transferFrom",
+                  methodArgs = {java.nio.channels.ReadableByteChannel.class, long.class, long.class}
+                )
+            })
     public void test_transferFromLReadableByteChannelJJ_SourceNonReadable()
             throws Exception {
         try {
@@ -2609,6 +3529,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#transferFrom(ReadableByteChannel,long,long)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "",
+              targets = {
+                @TestTarget(
+                  methodName = "transferFrom",
+                  methodArgs = {java.nio.channels.ReadableByteChannel.class, long.class, long.class}
+                )
+            })
     public void test_transferFromLReadableByteChannelJJ_PositionBeyondSize()
             throws Exception {
         // init data to file.
@@ -2631,6 +3560,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#transferFrom(ReadableByteChannel,long,long)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "",
+              targets = {
+                @TestTarget(
+                  methodName = "transferFrom",
+                  methodArgs = {java.nio.channels.ReadableByteChannel.class, long.class, long.class}
+                )
+            })
     public void test_transferFromLReadableByteChannelJJ_FileChannel()
             throws Exception {
         // init data to file.
@@ -2668,6 +3606,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#transferFrom(ReadableByteChannel,long,long)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "",
+              targets = {
+                @TestTarget(
+                  methodName = "transferFrom",
+                  methodArgs = {java.nio.channels.ReadableByteChannel.class, long.class, long.class}
+                )
+            })    
     public void test_transferFromLReadableByteChannelJJ_DatagramChannel()
             throws Exception {
         // connects two datagramChannels.
@@ -2709,6 +3656,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#transferFrom(ReadableByteChannel,long,long)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "",
+              targets = {
+                @TestTarget(
+                  methodName = "transferFrom",
+                  methodArgs = {java.nio.channels.ReadableByteChannel.class, long.class, long.class}
+                )
+            })
     public void test_transferFromLReadableByteChannelJJ_SocketChannel()
             throws Exception {
         // connects two socketChannels.
@@ -2748,6 +3704,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#transferFrom(ReadableByteChannel,long,long)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "",
+              targets = {
+                @TestTarget(
+                  methodName = "transferFrom",
+                  methodArgs = {java.nio.channels.ReadableByteChannel.class, long.class, long.class}
+                )
+            })
     public void test_transferFromLReadableByteChannelJJ_Pipe() throws Exception {
         // inits data in file.
         writeDataToFile(fileOfWriteOnlyFileChannel);
@@ -2783,6 +3748,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#transferTo(long,long,WritableByteChannel)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "",
+              targets = {
+                @TestTarget(
+                  methodName = "transferTo",
+                  methodArgs = {long.class, long.class, java.nio.channels.WritableByteChannel.class}
+                )
+            })
     public void test_transferToJJLWritableByteChannel_Null() throws Exception {
         writableByteChannel = null;
         try {
@@ -2819,6 +3793,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#transferTo(long,long,WritableByteChannel)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "transferTo",
+          methodArgs = {long.class, long.class, java.nio.channels.WritableByteChannel.class}
+        )
+    })
     public void test_transferToJJLWritableByteChannel_Closed() throws Exception {
         writableByteChannel = DatagramChannel.open();
         readOnlyFileChannel.close();
@@ -2857,6 +3840,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#transferTo(long,long,WritableByteChannel)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "",
+              targets = {
+                @TestTarget(
+                  methodName = "transferTo",
+                  methodArgs = {long.class, long.class, java.nio.channels.WritableByteChannel.class}
+                )
+            })
     public void test_transferToJJLWritableByteChannel_SourceClosed()
             throws Exception {
         writableByteChannel = DatagramChannel.open();
@@ -2895,6 +3887,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#transferTo(long,long,WritableByteChannel)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "",
+              targets = {
+                @TestTarget(
+                  methodName = "transferTo",
+                  methodArgs = {long.class, long.class, java.nio.channels.WritableByteChannel.class}
+                )
+            })
     public void test_transferToJJLWritableByteChannel_IllegalArgument()
             throws Exception {
         writableByteChannel = DatagramChannel.open();
@@ -2916,6 +3917,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#transferTo(long,long,WritableByteChannel)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "",
+              targets = {
+                @TestTarget(
+                  methodName = "transferTo",
+                  methodArgs = {long.class, long.class, java.nio.channels.WritableByteChannel.class}
+                )
+            })
     public void test_transferToJJLWritableByteChannel_NonReadable()
             throws Exception {
         writableByteChannel = DatagramChannel.open();
@@ -2930,6 +3940,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#transferTo(long,long,WritableByteChannel)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "",
+              targets = {
+                @TestTarget(
+                  methodName = "transferTo",
+                  methodArgs = {long.class, long.class, java.nio.channels.WritableByteChannel.class}
+                )
+            })
     public void test_transferToJJLWritableByteChannel_TargetNonWritable()
             throws Exception {
         try {
@@ -2968,6 +3987,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#transferTo(long,long,WritableByteChannel)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "",
+              targets = {
+                @TestTarget(
+                  methodName = "transferTo",
+                  methodArgs = {long.class, long.class, java.nio.channels.WritableByteChannel.class}
+                )
+            })
     public void test_transferToJJLWritableByteChannel_PositionBeyondSize()
             throws Exception {
         // init data to file.
@@ -2990,6 +4018,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#transferTo(long,long,WritableByteChannel)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "",
+              targets = {
+                @TestTarget(
+                  methodName = "transferTo",
+                  methodArgs = {long.class, long.class, java.nio.channels.WritableByteChannel.class}
+                )
+            })
     public void test_transferToJJLWritableByteChannel_FileChannel()
             throws Exception {
         // init data to file.
@@ -3028,6 +4065,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#transferTo(long,long,WritableByteChannel)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "",
+              targets = {
+                @TestTarget(
+                  methodName = "transferTo",
+                  methodArgs = {long.class, long.class, java.nio.channels.WritableByteChannel.class}
+                )
+            })
     public void test_transferToJJLWritableByteChannel_SocketChannel()
             throws Exception {
         // inits data into file.
@@ -3086,6 +4132,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#transferTo(long,long,WritableByteChannel)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "",
+              targets = {
+                @TestTarget(
+                  methodName = "transferTo",
+                  methodArgs = {long.class, long.class, java.nio.channels.WritableByteChannel.class}
+                )
+            })
     public void test_transferToJJLWritableByteChannel_DatagramChannel()
             throws Exception {
         // inits data to file.
@@ -3135,6 +4190,15 @@ public class FileChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.FileChannel#transferTo(long,long,WritableByteChannel)
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "",
+              targets = {
+                @TestTarget(
+                  methodName = "transferTo",
+                  methodArgs = {long.class, long.class, java.nio.channels.WritableByteChannel.class}
+                )
+            })
     public void test_transferToJJLWritableByteChannel_Pipe() throws Exception {
         // inits data in file.
         writeDataToFile(fileOfReadOnlyFileChannel);

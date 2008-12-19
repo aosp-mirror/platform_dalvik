@@ -20,7 +20,7 @@
 
 // Contributors: Bjorn Aadland, Chris Bartley, Nicola Fankhauser,
 //               Victor Havin,  Christian Kurzke, Bogdan Onoiu,
-//               Jain Sanjay, David Santoro.
+//                Elias Ross, Jain Sanjay, David Santoro.
 
 package org.kxml2.wap;
 
@@ -32,6 +32,11 @@ import org.xmlpull.v1.*;
 
 
 public class WbxmlParser implements XmlPullParser {
+
+    static final String HEX_DIGITS = "0123456789abcdef";
+    
+    /** Parser event type for Wbxml-specific events. The Wbxml event code can be 
+     * accessed with getWapCode() */
     
     public static final int WAP_EXTENSION = 64;
     
@@ -64,9 +69,8 @@ public class WbxmlParser implements XmlPullParser {
     
     private Vector tables = new Vector();
     
-    int version;
-    int publicIdentifierId;
-    int charSet;
+    private int version;
+    private int publicIdentifierId;
     
     //    StartTag current;
     //    ParseEvent next;
@@ -75,16 +79,15 @@ public class WbxmlParser implements XmlPullParser {
     private String namespace;
     private String name;
     private String text;
-    //    private String encoding;
+
     private Object wapExtensionData;
-    private int wapExtensionCode;
+    private int wapCode;
     
     private int type;
-    private int codePage;
     
     private boolean degenerated;
     private boolean isWhitespace;
-    private String encoding = null;
+    private String encoding;
     
     public boolean getFeature(String feature) {
         if (XmlPullParser
@@ -96,7 +99,6 @@ public class WbxmlParser implements XmlPullParser {
     }
     
     public String getInputEncoding() {
-        // should return someting depending on charSet here!!!!!
         return encoding;
     }
     
@@ -315,6 +317,10 @@ public class WbxmlParser implements XmlPullParser {
         return type;
     }
     
+    
+    // TODO: Reuse resolveWapExtension here? Raw Wap extensions would still be accessible
+    // via nextToken();  ....?
+    
     public int next() throws XmlPullParserException, IOException {
         
         isWhitespace = true;
@@ -338,6 +344,7 @@ public class WbxmlParser implements XmlPullParser {
                 switch(peekId()) {
                     case Wbxml.ENTITY:
                     case Wbxml.STR_I:
+                    case Wbxml.STR_T:
                     case Wbxml.LITERAL:
                     case Wbxml.LITERAL_C:
                     case Wbxml.LITERAL_A:
@@ -408,7 +415,7 @@ public class WbxmlParser implements XmlPullParser {
         || (namespace != null && !namespace.equals(getNamespace()))
         || (name != null && !name.equals(getName())))
             exception(
-            "expected: " + TYPES[type] + " {" + namespace + "}" + name);
+            "expected: " + (type == WAP_EXTENSION ? "WAP Ext." : (TYPES[type] + " {" + namespace + "}" + name)));
     }
     
     
@@ -698,7 +705,10 @@ public class WbxmlParser implements XmlPullParser {
             case Wbxml.EXT_1 :
             case Wbxml.EXT_2 :
             case Wbxml.OPAQUE :
-                parseWapExtension(id);
+                
+                type = WAP_EXTENSION;
+                wapCode = id;
+                wapExtensionData = parseWapExtension(id);
                 break;
                 
             case Wbxml.PI :
@@ -722,48 +732,42 @@ public class WbxmlParser implements XmlPullParser {
         //        return next;
     }
     
+    /** Overwrite this method to intercept all wap events */
     
-    
-    public void parseWapExtension(int id)
-    throws IOException, XmlPullParserException {
-        
-        type = WAP_EXTENSION;
-        wapExtensionCode = id;
+    public Object parseWapExtension(int id)  throws IOException, XmlPullParserException {
         
         switch (id) {
             case Wbxml.EXT_I_0 :
             case Wbxml.EXT_I_1 :
             case Wbxml.EXT_I_2 :
-                wapExtensionData = readStrI();
-                break;
+                return readStrI();
                 
             case Wbxml.EXT_T_0 :
             case Wbxml.EXT_T_1 :
             case Wbxml.EXT_T_2 :
-                wapExtensionData = new Integer(readInt());
-                break;
+                return new Integer(readInt());
                 
             case Wbxml.EXT_0 :
             case Wbxml.EXT_1 :
             case Wbxml.EXT_2 :
-                break;
+                return null;
                 
             case Wbxml.OPAQUE : 
             {
-                int len = readInt();
-                byte[] buf = new byte[len];
+                int count = readInt();
+                byte[] buf = new byte[count];
                 
-                for (int i = 0;
-                i < len;
-                i++) // enhance with blockread!
-                    buf[i] = (byte) readByte();
+                while(count > 0){
+                    count -= in.read(buf, buf.length-count, count);
+                }
                 
-                wapExtensionData = buf;
+                return buf;
             } // case OPAQUE
-            break;
+    
             
             default:
                 exception("illegal id: "+id);
+                return null; // dead code
         } // SWITCH
     }
     
@@ -824,20 +828,8 @@ public class WbxmlParser implements XmlPullParser {
                     case Wbxml.EXT_1 :
                     case Wbxml.EXT_2 :
                     case Wbxml.OPAQUE :
-                        
-                        throw new RuntimeException("wap extension in attr not supported yet");
-                        
-                        /*
-                                                ParseEvent e = parseWapExtension(id);
-                                                if (!(e.getType() != Xml.TEXT
-                                                    && e.getType() != Xml.WHITESPACE))
-                                                    throw new RuntimeException("parse WapExtension must return Text Event in order to work inside Attributes!");
-                         
-                                                value.append(e.getText());
-                         
-                                                //value.append (handleExtension (id)); // skip EXT in ATTR
-                                                //break;
-                         */
+                        value.append(resolveWapExtension(id, parseWapExtension(id)));
+                        break;
                         
                     case Wbxml.STR_T :
                         value.append(readStrT());
@@ -869,18 +861,38 @@ public class WbxmlParser implements XmlPullParser {
         return nextId;
     }
     
+    /** overwrite for own WAP extension handling in attributes and high level parsing 
+     * (above nextToken() level) */
     
-    
+    protected String resolveWapExtension(int id, Object data){
+        
+        if(data instanceof byte[]){
+            StringBuffer sb = new StringBuffer();
+            byte[] b = (byte[]) data;
+            
+            for (int i = 0; i < b.length; i++) {
+                sb.append(HEX_DIGITS.charAt((b[i] >> 4) & 0x0f));
+                sb.append(HEX_DIGITS.charAt(b[i] & 0x0f));
+            }
+            return sb.toString();
+        }
+
+        return "$("+data+")";
+    }
     
     String resolveId(String[] tab, int id) throws IOException {
         int idx = (id & 0x07f) - 5;
-        if (idx == -1)
+        if (idx == -1){
+            wapCode = -1;
             return readStrT();
+        }
         if (idx < 0
         || tab == null
         || idx >= tab.length
         || tab[idx] == null)
             throw new IOException("id " + id + " undef.");
+        
+        wapCode = idx+5;
         
         return tab[idx];
     }
@@ -1022,7 +1034,7 @@ public class WbxmlParser implements XmlPullParser {
     }
     
     /** Sets the attribute start Table for a given page.
-     *    The first string in the array defines attribute
+     *  The first string in the array defines attribute
      *  5, the second attribute 6 etc. Please use the
      *  character '=' (without quote!) as delimiter
      *  between the attribute name and the (start of the) value
@@ -1036,7 +1048,7 @@ public class WbxmlParser implements XmlPullParser {
     }
     
     /** Sets the attribute value Table for a given page.
-     *    The first string in the array defines attribute value 0x85,
+     *  The first string in the array defines attribute value 0x85,
      *  the second attribute value 0x86 etc.
      */
     
@@ -1046,5 +1058,18 @@ public class WbxmlParser implements XmlPullParser {
         
         setTable(page, ATTR_VALUE_TABLE, table);
     }
+    
+    /** Returns the token ID for start tags or the event type for wap proprietary events
+     * such as OPAQUE.
+     */
+    
+    public int getWapCode(){
+        return wapCode;
+    }
+    
+    public Object getWapExtensionData(){
+        return wapExtensionData;
+    }
+    
     
 }

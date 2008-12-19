@@ -17,14 +17,20 @@
 package dalvik.system;
 
 /**
- * VM-specific debug features. Though this class and many of its members
- * are public, this class is meant to be wrapped in a more friendly way
- * for use by application developers. On the Android platform, the
+ * Provides access to some VM-specific debug features. Though this class and
+ * many of its members are public, this class is meant to be wrapped in a more
+ * friendly way for use by application developers. On the Android platform, the
  * recommended way to access this functionality is through the class
  * <code>android.os.Debug</code>.
+ * 
+ * @cts Please complete the spec.
+ * 
+ * @since Android 1.0
  */
 public final class VMDebug {
-    /** default method trace data file name */
+    /**
+     * Specifies the default method trace data file name.
+     */
     static public final String DEFAULT_METHOD_TRACE_FILE_NAME = "/sdcard/dmtrace.trace";
 
     /**
@@ -88,13 +94,24 @@ public final class VMDebug {
     private VMDebug() {}
 
     /**
-     * Time, in msec, since the last debugger activity.  -1 if debugger is
-     * not connected.
+     * Returns the time since the last known debugger activity.
+     * 
+     * @return the time in milliseconds, or -1 if the debugger is not connected
      */
     public static native long lastDebuggerActivity();
 
     /**
-     * Determine if a debugger is currently attached.
+     * Determines if debugging is enabled in this VM.  If debugging is not
+     * enabled, a debugger cannot be attached.
+     *
+     * @return true if debugging is enabled
+     */
+    public static native boolean isDebuggingEnabled();
+
+    /**
+     * Determines if a debugger is currently attached.
+     * 
+     * @return true if (and only if) a debugger is connected
      */
     public static native boolean isDebuggerConnected();
 
@@ -134,30 +151,31 @@ public final class VMDebug {
         int bufferSize, int flags);
 
     /**
-     * Stop method tracing.
+     * Stops method tracing.
      */
     public static native void stopMethodTracing();
 
     /**
-     * Start sending Dalvik method trace info to the emulator.
+     * Starts sending Dalvik method trace info to the emulator.
      */
     public static native void startEmulatorTracing();
 
     /**
-     * Stop sending Dalvik method trace info to the emulator.
+     * Stops sending Dalvik method trace info to the emulator.
      */
     public static native void stopEmulatorTracing();
 
     /**
-     * Get an indication of thread CPU usage.  The value returned
-     * indicates the amount of time that the current thread has spent
-     * executing code or waiting for certain types of I/O.
-     *
-     * The time is expressed in nanoseconds, and is only meaningful
-     * when compared to the result from an earlier call.  Note that
-     * nanosecond resolution does not imply nanosecond accuracy.
-     *
-     * On system which don't support this operation, the call returns -1.
+     * Get an indication of thread CPU usage. The value returned indicates the
+     * amount of time that the current thread has spent executing code or
+     * waiting for certain types of I/O.
+     * <p>
+     * The time is expressed in nanoseconds, and is only meaningful when
+     * compared to the result from an earlier call. Note that nanosecond
+     * resolution does not imply nanosecond accuracy.
+     * 
+     * @return the CPU usage. A value of -1 means the system does not support
+     *         this feature.
      */
     public static native long threadCpuTimeNanos();
 
@@ -171,23 +189,34 @@ public final class VMDebug {
     public static native void resetAllocCount(int kinds);
 
     /**
-     * Establish an object allocation limit in the current thread.  Useful
-     * for catching regressions in code that is expected to operate
-     * without causing any allocations.
-     *
-     * Use -1 to disable the limit.
-     *
-     * Returns the previous limit.
+     * Establishes an object allocation limit in the current thread. Useful for
+     * catching regressions in code that is expected to operate without causing
+     * any allocations. The limit is valid from the return of this method until
+     * it is either changed or the thread terminates.
+     * 
+     * @param limit
+     *            the new limit. A value of 0 means not a single new object may
+     *            be allocated. A value of -1 disables the limit.
+     * 
+     * @return the previous limit, or -1 if no limit was set
+     * 
+     * @see #setGlobalAllocationLimit(int)
      */
     public static native int setAllocationLimit(int limit);
 
     /**
-     * Establish an object allocation limit for the entire VM.  Very much
-     * like setAllocationLimit().
-     *
-     * Use -1 to disable the limit.
-     *
-     * Returns the previous limit.
+     * Establishes an object allocation limit for the entire VM. Useful for
+     * catching regressions in code that is expected to operate without causing
+     * any allocations. The limit is valid from the return of this method until
+     * it is either changed or the thread terminates.
+     * 
+     * @param limit
+     *            the new limit. A value of 0 means not a single new object may
+     *            be allocated. A value of -1 disables the limit.
+     * 
+     * @return the previous limit, or -1 if no limit was set
+     * 
+     * @see #setAllocationLimit(int)
      */
     public static native int setGlobalAllocationLimit(int limit);
 
@@ -200,12 +229,14 @@ public final class VMDebug {
     public static native void resetInstructionCount();
 
     /**
-     * Dump a list of loaded class to the log file.
+     * Dumps a list of loaded class to the log file.
      */
     public static native void printLoadedClasses(int flags);
 
     /**
-     * Get the number of loaded classes.
+     * Gets the number of loaded classes.
+     * 
+     * @return the number of loaded classes
      */
     public static native int getLoadedClassCount();
 

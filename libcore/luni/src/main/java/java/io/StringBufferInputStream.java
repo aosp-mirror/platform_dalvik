@@ -20,33 +20,46 @@ package java.io;
 import org.apache.harmony.luni.util.Msg;
 
 /**
- * StringBufferInputStream is a class for to allow a String to be used as an
- * InputStream.
+ * A specialized {@link InputStream} that reads bytes from a {@code String} in
+ * a sequential manner.
  * 
  * @deprecated Use {@link StringReader}
+ * 
+ * @since Android 1.0
  */
 @Deprecated
 public class StringBufferInputStream extends InputStream {
     /**
-     * The String containing the data to read.
+     * The source string containing the data to read.
+     * 
+     * @since Android 1.0
      */
     protected String buffer;
 
     /**
-     * The total number of characters inside the buffer.
+     * The total number of characters in the source string.
+     * 
+     * @since Android 1.0
      */
     protected int count;
 
     /**
-     * The current position within the String buffer.
+     * The current position within the source string.
+     * 
+     * @since Android 1.0
      */
     protected int pos;
 
     /**
-     * Constructs a new StringBufferInputStream on the String <code>str</code>.
+     * Construct a new {@code StringBufferInputStream} with {@code str} as
+     * source. The size of the stream is set to the {@code length()} of the
+     * string.
      * 
      * @param str
-     *            the String to read characters from.
+     *            the source string for this stream.
+     * @throws NullPointerException
+     *             if {@code str} is {@code null}.
+     * @since Android 1.0
      */
     public StringBufferInputStream(String str) {
         if (str == null) {
@@ -57,11 +70,11 @@ public class StringBufferInputStream extends InputStream {
     }
 
     /**
-     * Returns an int representing then number of characters that are available
-     * to read.
+     * Returns the number of bytes that are available before this stream will
+     * block.
      * 
-     * @return the number of characters available.
-     * 
+     * @return the number of bytes available before blocking.
+     * @since Android 1.0
      */
     @Override
     public synchronized int available() {
@@ -69,11 +82,13 @@ public class StringBufferInputStream extends InputStream {
     }
 
     /**
-     * Reads a single byte from this InputStream and returns the result as an
-     * int. The low-order byte is returned or -1 of the end of stream was
-     * encountered.
+     * Reads a single byte from the source string and returns it as an integer
+     * in the range from 0 to 255. Returns -1 if the end of the source string
+     * has been reached.
      * 
-     * @return the byte read or -1 if end of stream.
+     * @return the byte read or -1 if the end of the source string has been
+     *         reached.
+     * @since Android 1.0
      */
     @Override
     public synchronized int read() {
@@ -81,21 +96,31 @@ public class StringBufferInputStream extends InputStream {
     }
 
     /**
-     * Reads at most <code>length</code> bytes from this InputStream and
-     * stores them in byte array <code>b</code> starting at
-     * <code>offset</code>. Answer the number of bytes actually read or -1 if
-     * no bytes were read and end of stream was encountered.
+     * Reads at most {@code length} bytes from the source string and stores them
+     * in the byte array {@code b} starting at {@code offset}.
      * 
      * @param b
-     *            the byte array in which to store the read bytes.
+     *            the byte array in which to store the bytes read.
      * @param offset
-     *            the offset in <code>b</code> to store the read bytes.
+     *            the initial position in {@code b} to store the bytes read from
+     *            this stream.
      * @param length
-     *            the maximum number of bytes to store in <code>b</code>.
-     * @return the number of bytes actually read or -1 if end of stream.
+     *            the maximum number of bytes to store in {@code b}.
+     * @return the number of bytes actually read or -1 if the end of the source
+     *         string has been reached.
+     * @throws ArrayIndexOutOfBoundsException
+     *             if {@code offset < 0} or {@code length < 0}, or if
+     *             {@code offset + length} is greater than the length of
+     *             {@code b}.
+     * @throws NullPointerException
+     *             if {@code b} is {@code null}.
+     * @since Android 1.0
      */
     @Override
-    public synchronized int read(byte b[], int offset, int length) {
+    public synchronized int read(byte[] b, int offset, int length) {
+        // BEGIN android-note
+        // changed array notation to be consistent with the rest of harmony
+        // END android-note
         // According to 22.7.6 should return -1 before checking other
         // parameters.
         if (pos >= count) {
@@ -105,10 +130,15 @@ public class StringBufferInputStream extends InputStream {
             throw new NullPointerException(Msg.getString("K0047")); //$NON-NLS-1$
         }
         // avoid int overflow
-        if (offset < 0 || offset > b.length || length < 0
-                || length > b.length - offset) {
-            throw new ArrayIndexOutOfBoundsException();
+        // BEGIN android-changed
+        // Exception priorities (in case of multiple errors) differ from
+        // RI, but are spec-compliant.
+        // removed redundant check, used (offset | length) < 0
+        // instead of (offset < 0) || (length < 0) to safe one operation
+        if ((offset | length) < 0 || length > b.length - offset) {
+            throw new ArrayIndexOutOfBoundsException(Msg.getString("K002f")); //$NON-NLS-1$
         }
+        // END android-changed
         if (length == 0) {
             return 0;
         }
@@ -122,9 +152,9 @@ public class StringBufferInputStream extends InputStream {
     }
 
     /**
-     * Reset this InputStream to position 0. Reads/Skips will now take place
-     * from this position.
+     * Resets this stream to the beginning of the source string.
      * 
+     * @since Android 1.0
      */
     @Override
     public synchronized void reset() {
@@ -132,13 +162,15 @@ public class StringBufferInputStream extends InputStream {
     }
 
     /**
-     * Skips <code>count</code> number of characters in this InputStream.
-     * Subsequent <code>read()</code>'s will not return these characters
-     * unless <code>reset()</code> is used.
+     * Skips {@code n} characters in the source string. It does nothing and
+     * returns 0 if {@code n} is negative. Less than {@code n} characters are
+     * skipped if the end of the source string is reached before the operation
+     * completes.
      * 
      * @param n
      *            the number of characters to skip.
      * @return the number of characters actually skipped.
+     * @since Android 1.0
      */
     @Override
     public synchronized long skip(long n) {

@@ -18,8 +18,23 @@
 package java.io;
 
 /**
- * Objects that want to be serialized/deserialized using
- * ObjectOutputStream/ObjectInputStream should implement this interface.
+ * An empty marker interface for classes that want to support serialization and
+ * deserialization based on the {@code ObjectOutputStream} and {@code
+ * ObjectInputStream} classes. Implementing this interface is enough to make
+ * most classes serializable. If a class needs more fine-grained control over
+ * the serialization process (for example to implement compatibility with older
+ * versions of the class), it can achieve this by providing the following two
+ * methods (signatures must match exactly):
+ * <p>
+ * {@code private void writeObject(java.io.ObjectOutputStream out) throws
+ * IOException}
+ * </p>
+ * <p>
+ * {@code private void readObject(java.io.ObjectInputStream in) throws
+ * IOException, ClassNotFoundException}
+ * </p>
+ * 
+ * @since Android 1.0
  */
 public interface Serializable {
     /* empty */

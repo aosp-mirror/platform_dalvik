@@ -21,21 +21,36 @@ import java.nio.CharBuffer;
 import java.nio.ReadOnlyBufferException;
 
 /**
- * Reader is an Abstract class for reading Character Streams. Subclasses of
- * Reader must implement the methods <code>read(char[], int, int)</code> and
- * <code>close()</code>.
+ * The base class for all readers. A reader is a means of reading data from a
+ * source in a character-wise manner. Some readers also support marking a
+ * position in the input and returning to this position later.
+ * <p>
+ * This abstract class does not provide a fully working implementation, so it
+ * needs to be subclassed, and at least the {@link #read(char[], int, int)} and
+ * {@link #close()} methods needs to be overridden. Overriding some of the
+ * non-abstract methods is also often advised, since it might result in higher
+ * efficiency.
+ * <p>
+ * Many specialized readers for purposes like reading from a file already exist
+ * in this package.
  * 
  * @see Writer
+ * 
+ * @since Android 1.0
  */
 public abstract class Reader implements Readable, Closeable {
     /**
      * The object used to synchronize access to the reader.
+     * 
+     * @since Android 1.0
      */
     protected Object lock;
 
     /**
-     * Constructs a new character stream Reader using <code>this</code> as the
-     * Object to synchronize critical regions around.
+     * Constructs a new {@code Reader} with {@code this} as the object used to
+     * synchronize critical sections.
+     * 
+     * @since Android 1.0
      */
     protected Reader() {
         super();
@@ -43,12 +58,14 @@ public abstract class Reader implements Readable, Closeable {
     }
 
     /**
-     * Constructs a new character stream Reader using <code>lock</code> as the
-     * Object to synchronize critical regions around.
+     * Constructs a new {@code Reader} with {@code lock} used to synchronize
+     * critical sections.
      * 
      * @param lock
-     *            the <code>Object</code> to synchronize critical regions
-     *            around.
+     *            the {@code Object} used to synchronize critical sections.
+     * @throws NullPointerException
+     *             if {@code lock} is {@code null}.
+     * @since Android 1.0
      */
     protected Reader(Object lock) {
         if (lock == null) {
@@ -58,56 +75,62 @@ public abstract class Reader implements Readable, Closeable {
     }
 
     /**
-     * Close this Reader. This must be implemented by any concrete subclasses.
-     * The implementation should free any resources associated with the Reader.
+     * Closes this reader. Implementations of this method should free any
+     * resources associated with the reader.
      * 
      * @throws IOException
-     *             If an error occurs attempting to close this Reader.
+     *             if an error occurs while closing this reader.
+     * @since Android 1.0
      */
     public abstract void close() throws IOException;
 
     /**
-     * Set a Mark position in this Reader. The parameter <code>readLimit</code>
-     * indicates how many characters can be read before a mark is invalidated.
-     * Sending reset() will reposition the reader back to the marked position
-     * provided <code>readLimit</code> has not been surpassed.
+     * Sets a mark position in this reader. The parameter {@code readLimit}
+     * indicates how many characters can be read before the mark is invalidated.
+     * Calling {@code reset()} will reposition the reader back to the marked
+     * position if {@code readLimit} has not been surpassed.
      * <p>
-     * This default implementation simply throws IOException and concrete
-     * subclasses must provide their own implementations.
+     * This default implementation simply throws an {@code IOException};
+     * subclasses must provide their own implementation.
+     * </p>
      * 
      * @param readLimit
-     *            an int representing how many characters must be read before
-     *            invalidating the mark.
-     * 
+     *            the number of characters that can be read before the mark is
+     *            invalidated.
+     * @throws IllegalArgumentException
+     *             if {@code readLimit < 0}.
      * @throws IOException
-     *             If an error occurs attempting mark this Reader.
+     *             if an error occurs while setting a mark in this reader.
+     * @see #markSupported()
+     * @see #reset()
+     * @since Android 1.0
      */
     public void mark(int readLimit) throws IOException {
         throw new IOException();
     }
 
     /**
-     * Returns a boolean indicating whether or not this Reader supports mark()
-     * and reset(). This class a default implementation which returns false.
+     * Indicates whether this reader supports the {@code mark()} and
+     * {@code reset()} methods. This default implementation returns
+     * {@code false}.
      * 
-     * @return <code>true</code> if mark() and reset() are supported,
-     *         <code>false</code> otherwise. This implementation returns
-     *         <code>false</code>.
+     * @return always {@code false}.
+     * @since Android 1.0
      */
     public boolean markSupported() {
         return false;
     }
 
     /**
-     * Reads a single character from this reader and returns the result as an
-     * int. The 2 higher-order characters are set to 0. If the end of reader was
-     * encountered then return -1.
+     * Reads a single character from this reader and returns it as an integer
+     * with the two higher-order bytes set to 0. Returns -1 if the end of the
+     * reader has been reached.
      * 
-     * @return the character read or -1 if end of reader.
-     * 
+     * @return the character read or -1 if the end of the reader has been
+     *         reached.
      * @throws IOException
-     *             If the Reader is already closed or some other IO error
-     *             occurs.
+     *             if this reader is closed or some other I/O error occurs.
+     * @since Android 1.0
      */
     public int read() throws IOException {
         synchronized (lock) {
@@ -120,93 +143,102 @@ public abstract class Reader implements Readable, Closeable {
     }
 
     /**
-     * Reads characters from this Reader and stores them in the character array
-     * <code>buf</code> starting at offset 0. Returns the number of characters
-     * actually read or -1 if the end of reader was encountered.
+     * Reads characters from this reader and stores them in the character array
+     * {@code buf} starting at offset 0. Returns the number of characters
+     * actually read or -1 if the end of the reader has been reached.
      * 
      * @param buf
-     *            character array to store the read characters
-     * @return how many characters were successfully read in or else -1 if the
-     *         end of the reader was detected.
-     * 
+     *            character array to store the characters read.
+     * @return the number of characters read or -1 if the end of the reader has
+     *         been reached.
      * @throws IOException
-     *             If the Reader is already closed or some other IO error
-     *             occurs.
+     *             if this reader is closed or some other I/O error occurs.
+     * @since Android 1.0
      */
-    public int read(char buf[]) throws IOException {
+    public int read(char[] buf) throws IOException {
+        // BEGIN android-note
+        // changed array notation to be consistent with the rest of harmony
+        // END android-note
         return read(buf, 0, buf.length);
     }
 
     /**
-     * Reads at most <code>count</code> characters from this Reader and stores
-     * them at <code>offset</code> in the character array <code>buf</code>.
-     * Returns the number of characters actually read or -1 if the end of reader
-     * was encountered.
+     * Reads at most {@code count} characters from this reader and stores them
+     * at {@code offset} in the character array {@code buf}. Returns the number
+     * of characters actually read or -1 if the end of the reader has been
+     * reached.
      * 
      * @param buf
-     *            character array to store the read characters
+     *            the character array to store the characters read.
      * @param offset
-     *            offset in buf to store the read characters
+     *            the initial position in {@code buffer} to store the characters
+     *            read from this reader.
      * @param count
-     *            how many characters should be read in
-     * @return how many characters were successfully read in or else -1 if the
-     *         end of the reader was detected.
-     * 
+     *            the maximum number of characters to read.
+     * @return the number of characters read or -1 if the end of the reader has
+     *         been reached.
      * @throws IOException
-     *             If the Reader is already closed or some other IO error
-     *             occurs.
+     *             if this reader is closed or some other I/O error occurs.
+     * @since Android 1.0
      */
-    public abstract int read(char buf[], int offset, int count)
+    public abstract int read(char[] buf, int offset, int count)
             throws IOException;
+    // BEGIN android-note
+    // changed array notation to be consistent with the rest of harmony
+    // END android-note
 
     /**
-     * Returns a <code>boolean</code> indicating whether or not this Reader is
-     * ready to be read without blocking. If the result is <code>true</code>,
-     * the next <code>read()</code> will not block. If the result is
-     * <code>false</code> this Reader may or may not block when
-     * <code>read()</code> is sent.
+     * Indicates whether this reader is ready to be read without blocking.
+     * Returns {@code true} if this reader will not block when {@code read} is
+     * called, {@code false} if unknown or blocking will occur. This default
+     * implementation always returns {@code false}.
      * 
-     * @return <code>true</code> if the receiver will not block when
-     *         <code>read()</code> is called, <code>false</code> if unknown
-     *         or blocking will occur.
-     * 
+     * @return always {@code false}.
      * @throws IOException
-     *             If the Reader is already closed or some other IO error
-     *             occurs.
+     *             if this reader is closed or some other I/O error occurs.
+     * @see #read()
+     * @see #read(char[])
+     * @see #read(char[], int, int)
+     * @since Android 1.0
      */
     public boolean ready() throws IOException {
         return false;
     }
 
     /**
-     * Reset this Readers position to the last <code>mark()</code> location.
-     * Invocations of <code>read()/skip()</code> will occur from this new
-     * location. If this Reader was not marked, the implementation of
-     * <code>reset()</code> is implementation specific. See the comment for
-     * the specific Reader subclass for implementation details. The default
-     * action is to throw <code>IOException</code>.
+     * Resets this reader's position to the last {@code mark()} location.
+     * Invocations of {@code read()} and {@code skip()} will occur from this new
+     * location. If this reader has not been marked, the behavior of
+     * {@code reset()} is implementation specific. This default
+     * implementation throws an {@code IOException}.
      * 
      * @throws IOException
-     *             If a problem occured or the receiver does not support
-     *             <code>mark()/reset()</code>.
+     *             always thrown in this default implementation.
+     * @see #mark(int)
+     * @see #markSupported()
+     * @since Android 1.0
      */
     public void reset() throws IOException {
         throw new IOException();
     }
 
     /**
-     * Skips <code>count</code> number of characters in this Reader.
-     * Subsequent <code>read()</code>'s will not return these characters
-     * unless <code>reset()</code> is used. This method may perform multiple
-     * reads to read <code>count</code> characters.
+     * Skips {@code amount} characters in this reader. Subsequent calls of
+     * {@code read} methods will not return these characters unless {@code
+     * reset()} is used. This method may perform multiple reads to read {@code
+     * count} characters.
      * 
      * @param count
-     *            how many characters should be passed over
-     * @return how many characters were successfully passed over
-     * 
+     *            the maximum number of characters to skip.
+     * @return the number of characters actually skipped.
+     * @throws IllegalArgumentException
+     *             if {@code amount < 0}.
      * @throws IOException
-     *             If the Reader is closed when the call is made or if an IO
-     *             error occurs during the operation.
+     *             if this reader is closed or some other I/O error occurs.
+     * @see #mark(int)
+     * @see #markSupported()
+     * @see #reset()
+     * @since Android 1.0
      */
     public long skip(long count) throws IOException {
         if (count < 0) {
@@ -234,19 +266,19 @@ public abstract class Reader implements Readable, Closeable {
     }
 
     /**
-     * Read chars from the Reader and then put them to the <code>target</code>
-     * CharBuffer. Only put method is called on the <code>target</code>.
+     * Reads characters and puts them into the {@code target} character buffer.
      * 
      * @param target
-     *            the destination CharBuffer
-     * @return the actual number of chars put to the <code>target</code>. -1
-     *         when the Reader has reached the end before the method is called.
+     *            the destination character buffer.
+     * @return the number of characters put into {@code target} or -1 if the end
+     *         of this reader has been reached before a character has been read.
      * @throws IOException
-     *             if any I/O error raises in the procedure
+     *             if any I/O error occurs while reading from this reader.
      * @throws NullPointerException
-     *             if the target CharBuffer is null
+     *             if {@code target} is {@code null}.
      * @throws ReadOnlyBufferException
-     *             if the target CharBuffer is readonly
+     *             if {@code target} is read-only.
+     * @since Android 1.0
      */
     public int read(CharBuffer target) throws IOException {
         if (null == target) {

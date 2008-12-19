@@ -60,14 +60,6 @@ typedef struct DvmDex {
     MemMapping          memMap;
 } DvmDex;
 
-#if 0
-/*
- * Retrieve the DvmDex from the DexFile.
- */
-INLINE DvmDex* dvmDexFile(const DexFile* pDexFile) {
-    return (DvmDex*) pDexFile->auxData;
-}
-#endif
 
 /*
  * Given a file descriptor for an open "optimized" DEX file, map it into
@@ -89,6 +81,8 @@ int dvmDexFileOpenPartial(const void* addr, int len, DvmDex** ppDvmDex);
 void dvmDexFileFree(DvmDex* pDvmDex);
 
 
+#if DVM_RESOLVER_CACHE == DVM_RC_DISABLED
+/* 1:1 mapping */
 
 /*
  * Return the requested item if it has been resolved, or NULL if it hasn't.
@@ -147,5 +141,179 @@ INLINE void dvmDexSetResolvedField(DvmDex* pDvmDex, u4 fieldIdx,
     pDvmDex->pResFields[fieldIdx] = field;
 }
 
+#elif DVM_RESOLVER_CACHE == DVM_RC_REDUCING
+/* reduce request to fit in a less-than-full-size cache table */
+
+/*
+ * Return the requested item if it has been resolved, or NULL if it hasn't.
+ *
+ * If we have a mapping table defined for this category, but there's no
+ * entry for this index, we always return NULL.  Otherwise, we return the
+ * entry.  (To regain some performance we may want to assume that the
+ * table exists when compiled in this mode -- avoids a null check but
+ * prevents us from switching back and forth without rebuilding the VM.)
+ *
+ * We could save an integer compare here by ensuring that map[kNoIndexMapping]
+ * always evalutes to NULL (e.g. set kNoIndexMapping = 0).
+ */
+INLINE struct StringObject* dvmDexGetResolvedString(const DvmDex* pDvmDex,
+    u4 stringIdx)
+{
+    const DexIndexMap* pIndexMap = &pDvmDex->pDexFile->indexMap;
+
+    assert(stringIdx < pDvmDex->pHeader->stringIdsSize);
+    if (pIndexMap->stringReducedCount > 0) {
+        stringIdx = pIndexMap->stringMap[stringIdx];
+        if (stringIdx == kNoIndexMapping)
+            return NULL;
+    }
+    return pDvmDex->pResStrings[stringIdx];
+}
+INLINE struct ClassObject* dvmDexGetResolvedClass(const DvmDex* pDvmDex,
+    u4 classIdx)
+{
+    const DexIndexMap* pIndexMap = &pDvmDex->pDexFile->indexMap;
+
+    assert(classIdx < pDvmDex->pHeader->typeIdsSize);
+    if (pIndexMap->classReducedCount > 0) {
+        classIdx = pIndexMap->classMap[classIdx];
+        if (classIdx == kNoIndexMapping)
+            return NULL;
+    }
+    return pDvmDex->pResClasses[classIdx];
+}
+INLINE struct Method* dvmDexGetResolvedMethod(const DvmDex* pDvmDex,
+    u4 methodIdx)
+{
+    const DexIndexMap* pIndexMap = &pDvmDex->pDexFile->indexMap;
+
+    assert(methodIdx < pDvmDex->pHeader->methodIdsSize);
+    if (pIndexMap->methodReducedCount > 0) {
+        methodIdx = pIndexMap->methodMap[methodIdx];
+        if (methodIdx == kNoIndexMapping)
+            return NULL;
+    }
+    return pDvmDex->pResMethods[methodIdx];
+}
+INLINE struct Field* dvmDexGetResolvedField(const DvmDex* pDvmDex,
+    u4 fieldIdx)
+{
+    const DexIndexMap* pIndexMap = &pDvmDex->pDexFile->indexMap;
+
+    assert(fieldIdx < pDvmDex->pHeader->fieldIdsSize);
+    if (pIndexMap->fieldReducedCount > 0) {
+        fieldIdx = pIndexMap->fieldMap[fieldIdx];
+        if (fieldIdx == kNoIndexMapping)
+            return NULL;
+    }
+    return pDvmDex->pResFields[fieldIdx];
+}
+
+/*
+ * Update the resolved item table.  Resolution always produces the same
+ * result, so we're not worried about atomicity here.
+ */
+INLINE void dvmDexSetResolvedString(DvmDex* pDvmDex, u4 stringIdx,
+    struct StringObject* str)
+{
+    const DexIndexMap* pIndexMap = &pDvmDex->pDexFile->indexMap;
+    u4 newIdx;
+
+    assert(stringIdx < pDvmDex->pHeader->stringIdsSize);
+    if (pIndexMap->stringReducedCount > 0) {
+        newIdx = pIndexMap->stringMap[stringIdx];
+        if (newIdx != kNoIndexMapping)
+            pDvmDex->pResStrings[newIdx] = str;
+    }
+}
+INLINE void dvmDexSetResolvedClass(DvmDex* pDvmDex, u4 classIdx,
+    struct ClassObject* clazz)
+{
+    const DexIndexMap* pIndexMap = &pDvmDex->pDexFile->indexMap;
+    u4 newIdx;
+
+    assert(classIdx < pDvmDex->pHeader->typeIdsSize);
+    if (pIndexMap->classReducedCount > 0) {
+        newIdx = pIndexMap->classMap[classIdx];
+        if (newIdx != kNoIndexMapping)
+            pDvmDex->pResClasses[newIdx] = clazz;
+    }
+}
+INLINE void dvmDexSetResolvedMethod(DvmDex* pDvmDex, u4 methodIdx,
+    struct Method* method)
+{
+    const DexIndexMap* pIndexMap = &pDvmDex->pDexFile->indexMap;
+    u4 newIdx;
+
+    assert(methodIdx < pDvmDex->pHeader->methodIdsSize);
+    if (pIndexMap->methodReducedCount > 0) {
+        newIdx = pIndexMap->methodMap[methodIdx];
+        if (newIdx != kNoIndexMapping)
+            pDvmDex->pResMethods[newIdx] = method;
+    }
+}
+INLINE void dvmDexSetResolvedField(DvmDex* pDvmDex, u4 fieldIdx,
+    struct Field* field)
+{
+    const DexIndexMap* pIndexMap = &pDvmDex->pDexFile->indexMap;
+    u4 newIdx;
+
+    assert(fieldIdx < pDvmDex->pHeader->fieldIdsSize);
+    if (pIndexMap->fieldReducedCount > 0) {
+        newIdx = pIndexMap->fieldMap[fieldIdx];
+        if (newIdx != kNoIndexMapping)
+            pDvmDex->pResFields[newIdx] = field;
+    }
+}
+
+#elif DVM_RESOLVER_CACHE == DVM_RC_EXPANDING
+
+#error "not implemented"    /* TODO */
+
+#elif DVM_RESOLVER_CACHE == DVM_RC_NO_CACHE
+
+/*
+ * There's no cache, so we always return NULL.
+ */
+INLINE struct StringObject* dvmDexGetResolvedString(const DvmDex* pDvmDex,
+    u4 stringIdx)
+{
+    return NULL;
+}
+INLINE struct ClassObject* dvmDexGetResolvedClass(const DvmDex* pDvmDex,
+    u4 classIdx)
+{
+    return NULL;
+}
+INLINE struct Method* dvmDexGetResolvedMethod(const DvmDex* pDvmDex,
+    u4 methodIdx)
+{
+    return NULL;
+}
+INLINE struct Field* dvmDexGetResolvedField(const DvmDex* pDvmDex,
+    u4 fieldIdx)
+{
+    return NULL;
+}
+
+/*
+ * Update the resolved item table.  There is no table, so do nothing.
+ */
+INLINE void dvmDexSetResolvedString(DvmDex* pDvmDex, u4 stringIdx,
+    struct StringObject* str)
+{}
+INLINE void dvmDexSetResolvedClass(DvmDex* pDvmDex, u4 classIdx,
+    struct ClassObject* clazz)
+{}
+INLINE void dvmDexSetResolvedMethod(DvmDex* pDvmDex, u4 methodIdx,
+    struct Method* method)
+{}
+INLINE void dvmDexSetResolvedField(DvmDex* pDvmDex, u4 fieldIdx,
+    struct Field* field)
+{}
+
+#else
+#error "huh?"
+#endif /*DVM_RESOLVER_CACHE==N*/
 
 #endif /*_DALVIK_DVMDEX*/

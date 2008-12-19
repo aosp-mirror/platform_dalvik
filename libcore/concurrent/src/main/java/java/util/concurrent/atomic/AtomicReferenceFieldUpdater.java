@@ -138,7 +138,6 @@ public abstract class AtomicReferenceFieldUpdater<T, V>  {
         // BEGIN android-changed
         private static final Unsafe unsafe = UnsafeAccess.THE_ONE;
         // END android-changed
-
         private final long offset;
         private final Class<T> tclass;
         private final Class<V> vclass;

@@ -19,34 +19,35 @@ package java.lang.reflect;
 import org.apache.harmony.kernel.vm.ReflectionAccess;
 
 /**
- * Implementation of bridge from <code>java.lang</code> to
- * <code>java.lang.reflect</code>.
+ * Implementation of bridge from {@code java.lang} to
+ * {@code java.lang.reflect}.
  */
 /*package*/ final class ReflectionAccessImpl implements ReflectionAccess {
     /** non-null; unique instance of this class */
     /*package*/ static final ReflectionAccessImpl THE_ONE =
         new ReflectionAccessImpl();
 
-    /** 
+    /**
      * This class is not publicly instantiable. Use {@link #THE_ONE}.
      */
     private ReflectionAccessImpl() {
         // This space intentionally left blank.
     }
 
-    /** {@inheritDoc} */
     public Method clone(Method method) {
         return new Method(method);
     }
 
-    /** {@inheritDoc} */
+    public Field clone(Field field) {
+        return new Field(field);
+    }
+
     public Method accessibleClone(Method method) {
         Method result = new Method(method);
         result.setAccessibleNoCheck(true);
         return result;
     }
 
-    /** {@inheritDoc} */
     public void setAccessibleNoCheck(AccessibleObject ao, boolean accessible) {
         ao.setAccessibleNoCheck(accessible);
     }

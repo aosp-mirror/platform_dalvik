@@ -19,58 +19,63 @@ package java.nio.channels;
 
 import java.io.IOException;
 
-// BEGIN android-note
-//   - fixed bad htm in javadoc comments -joeo
-// END android-note
-
 /**
- * A <code>FileLock</code> represents a locked region of a file.
+ * A {@code FileLock} represents a locked region of a file.
  * <p>
  * Locks have certain properties that enable collaborating processes to avoid
- * the lost update problem, or reading inconsistent data.
- * </p>
- * <p>
- * logically, a file lock can be 'exclusive' or 'shared'. Multiple processes can
- * hold shared locks on the same region of a file, but only a single process can
- * hold an exclusive lock on a given region of a file and no other process can
+ * the lost update problem or reading inconsistent data. Logically, a file lock
+ * can be <em>exclusive</em> or <em>shared</em>. Multiple processes can hold
+ * shared locks on the same region of a file, but only a single process can hold
+ * an exclusive lock on a given region of a file and no other process can
  * simultaneously hold a shared lock overlapping the exclusive lock. An
- * application can determine whether a FileLock is shared or exclusive via the
- * <code>isShared()</code> API.
+ * application can determine whether a {@code FileLock} is shared or exclusive
+ * via the {@code isShared()} method.
  * </p>
  * <p>
  * Locks held by a particular process cannot overlap one another. Applications
- * can determine whether a proposed lock will overlap by using the
- * <code>overlaps(long, long)</code>) API.  Locks held in
- * other processes may overlap locks held in this process.</p>
+ * can determine whether a proposed lock will overlap by using the {@code
+ * overlaps(long, long)}) method. Locks held in other processes may overlap
+ * locks held in this process. Locks are shared amongst all threads in the
+ * acquiring process, and are therefore unsuitable for intra-process
+ * synchronization.
+ * </p>
  * <p>
- * Locks are shared amongst all threads in the acquiring process, and are therefore unsuitable for
- * intra-process synchronization.</p>
+ * Once a lock is acquired, it is immutable in all its state except {@code
+ * isValid()}. The lock will initially be valid, but may be rendered invalid by
+ * explicit removal of the lock, using {@code release()}, or implicitly by
+ * closing the channel or exiting the process (terminating the virtual machine).
+ * </p>
+ * <h3>Platform dependencies</h3>
  * <p>
- * Once a lock is acquired it is immutable in all its state except <code>isValid()</code>.  The lock
- * will initially be valid, but may be rendered invalid by explicit removal of the lock, using <code>
- * release()</code>, or implicitly by closing the channel or exiting the process (terminating the JVM).</p>
+ * Locks are intended to be true platform operating system file locks, and
+ * therefore locks held by the virtual machine process will be visible to other
+ * operating system processes.
+ * </p>
  * <p>
- * <em>Platform dependencies</em></p>
+ * The characteristics of the underlying operating system locks will show
+ * through in the Java implementation. For example, some platforms' locks are
+ * 'mandatory' -- meaning the operating system enforces the locks on processes
+ * that attempt to access locked regions of files; whereas other platforms'
+ * locks are only 'advisory' -- meaning that processes are required to
+ * collaborate to ensure locks are acquired and there is a potential for
+ * processes to not play well. To be on the safe side, it is best to assume that
+ * the platform is adopting advisory locks and always acquire shared locks when
+ * reading a region of a file.
+ * </p>
  * <p>
- * Locks are intended to be true platform operating system file locks, and therefore locks held by the
- * JVM process will be visible to other OS processes.</p>
+ * On some platforms, the presence of a lock will prevent the file from being
+ * memory-mapped. On some platforms, closing a channel on a given file handle
+ * will release all the locks held on that file -- even if there are other
+ * channels open on the same file; their locks will also be released. The safe
+ * option here is to ensure that you only acquire locks on a single channel for
+ * a particular file and that becomes the synchronization point.
+ * </p>
  * <p>
- * The characteristics of the underlying OS locks will show through in the Java implementation.  For
- * example, some platforms' locks are 'mandatory' -- meaning the operating system enforces the locks
- * on processes that attempt to access locked regions of file; whereas other platforms' locks are
- * only 'advisory' -- meaning that processes are required to collaborate on ensuring locks are acquired
- * and there is a potential for processes not to play well.  The only safe answer is to assume that
- * the platform is adopting advisory locks an always acquire shared locks when reading a region of file.</p>
- * <p>
- * On some platforms the presence of a lock will prevent the file being memory mapped.  On some platforms
- * closing a channel on a given file handle will release all the locks held on that file -- even if there
- * are other channels open on the same file (their locks will be released).  The safe option here is to
- * ensure that you only acquire locks on a single channel for a particular file, and that becomes the
- * synchronization point.</p>
- * <p>
- * Further care should be exercised when locking files maintained on network file systems since they often
- * have further limitations.</p>  
- *
+ * Further care should be exercised when locking files maintained on network
+ * file systems, since they often have further limitations.
+ * </p>
+ * 
+ * @since Android 1.0
  */
 public abstract class FileLock {
 
@@ -87,18 +92,19 @@ public abstract class FileLock {
     private final boolean shared;
 
     /**
-     * Constructor for a new file lock instance for a given channel. The
-     * constructor enforces the starting position, stretch, and shared status of
-     * the lock.
+     * Constructs a new file lock instance for a given channel. The constructor
+     * enforces the starting position, length and sharing mode of the lock.
      * 
      * @param channel
-     *            underlying file channel that holds the lock.
+     *            the underlying file channel that holds the lock.
      * @param position
-     *            starting point for the lock.
+     *            the starting point for the lock.
      * @param size
-     *            length of lock in number of bytes.
+     *            the length of the lock in number of bytes.
      * @param shared
-     *            shared status of lock (true is shared, false is exclusive).
+     *            the lock's sharing mode of lock; {@code true} is shared,
+     *            {@code false} is exclusive.
+     * @since Android 1.0
      */
     protected FileLock(FileChannel channel, long position, long size,
             boolean shared) {
@@ -113,9 +119,10 @@ public abstract class FileLock {
     }
 
     /**
-     * Returns the lock's FileChannel.
+     * Returns the lock's {@link FileChannel}.
      * 
      * @return the channel.
+     * @since Android 1.0
      */
     public final FileChannel channel() {
         return channel;
@@ -125,6 +132,7 @@ public abstract class FileLock {
      * Returns the lock's starting position in the file.
      * 
      * @return the lock position.
+     * @since Android 1.0
      */
     public final long position() {
         return position;
@@ -133,31 +141,35 @@ public abstract class FileLock {
     /**
      * Returns the length of the file lock in bytes.
      * 
-     * @return the size of file lock in bytes.
+     * @return the size of the file lock in bytes.
+     * @since Android 1.0
      */
     public final long size() {
         return size;
     }
 
     /**
-     * Returns true if the file lock is shared with other processes and false if
-     * it is not.
+     * Indicates if the file lock is shared with other processes or if it is
+     * exclusive.
      * 
-     * @return true if the lock is a shared lock, and false if it is exclusive.
+     * @return {@code true} if the lock is a shared lock, {@code false} if it is
+     *         exclusive.
+     * @since Android 1.0
      */
     public final boolean isShared() {
         return shared;
     }
 
     /**
-     * Returns true if the receiver's lock region overlapps the region described
-     * in the parameter list,and returns false otherwise.
+     * Indicates if the receiver's lock region overlaps the region described
+     * in the parameter list.
      * 
      * @param start
      *            the starting position for the comparative lock.
      * @param length
      *            the length of the comparative lock.
-     * @return true if there is an overlap, and false otherwise.
+     * @return {@code true} if there is an overlap, {@code false} otherwise.
+     * @since Android 1.0
      */
     public final boolean overlaps(long start, long length) {
         final long end = position + size - 1;
@@ -169,23 +181,25 @@ public abstract class FileLock {
     }
 
     /**
-     * Returns whether the receiver is a valid file lock or not. The lock is
+     * Indicates whether this lock is a valid file lock. The lock is
      * valid unless the underlying channel has been closed or it has been
      * explicitly released.
      * 
-     * @return true if the lock is valid, and false otherwise.
+     * @return {@code true} if the lock is valid, {@code false} otherwise.
+     * @since Android 1.0
      */
     public abstract boolean isValid();
 
     /**
      * Releases this particular lock on the file. If the lock is invalid then
-     * this method has no effect. Once released the lock becomes invalid.
+     * this method has no effect. Once released, the lock becomes invalid.
      * 
      * @throws ClosedChannelException
      *             if the channel is already closed when an attempt to release
      *             the lock is made.
      * @throws IOException
-     *             some other IO exception occurred.
+     *             if another I/O error occurs.
+     * @since Android 1.0
      */
     public abstract void release() throws IOException;
 
@@ -194,6 +208,7 @@ public abstract class FileLock {
      * to an end user.
      * 
      * @return the display string.
+     * @since Android 1.0
      */
     public final String toString() {
         StringBuffer buffer = new StringBuffer(64); // Guess length of string

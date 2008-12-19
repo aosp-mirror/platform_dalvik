@@ -16,6 +16,11 @@
 
 package org.apache.harmony.nio.tests.java.nio.channels;
 
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
@@ -31,6 +36,7 @@ import tests.support.Support_PortManager;
 /*
  * Tests for SelectionKey and its default implementation
  */
+@TestTargetClass(SelectionKey.class)
 public class SelectionKeyTest extends TestCase {
 
     Selector selector;
@@ -96,6 +102,15 @@ public class SelectionKeyTest extends TestCase {
     /**
      * @tests java.nio.channels.SelectionKey#attach(Object)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "attach",
+          methodArgs = {Object.class}
+        )
+    })
     public void test_attach() {
         MockSelectionKey mockSelectionKey = new MockSelectionKey(SelectionKey.OP_ACCEPT);
         // no previous, return null
@@ -114,6 +129,15 @@ public class SelectionKeyTest extends TestCase {
     /**
      * @tests java.nio.channels.SelectionKey#attachment()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "attachment",
+          methodArgs = {}
+        )
+    })
     public void test_attachment() {
         MockSelectionKey mockSelectionKey = new MockSelectionKey(SelectionKey.OP_ACCEPT);
         assertNull(mockSelectionKey.attachment());
@@ -125,6 +149,15 @@ public class SelectionKeyTest extends TestCase {
     /**
      * @tests java.nio.channels.SelectionKey#channel()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "channel",
+          methodArgs = {}
+        )
+    })
     public void test_channel() {
         assertSame(sc, selectionKey.channel());
         // can be invoked even canceled
@@ -135,6 +168,15 @@ public class SelectionKeyTest extends TestCase {
     /**
      * @tests java.nio.channels.SelectionKey#interestOps()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "interestOps",
+          methodArgs = {}
+        )
+    })
     public void test_interestOps() {
         assertEquals(SelectionKey.OP_CONNECT, selectionKey.interestOps());
     }
@@ -142,6 +184,15 @@ public class SelectionKeyTest extends TestCase {
     /**
      * @tests java.nio.channels.SelectionKey#interestOps(int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify CancelledKeyException.",
+      targets = {
+        @TestTarget(
+          methodName = "interestOps",
+          methodArgs = {int.class}
+        )
+    })
     public void test_interestOpsI() {
         selectionKey.interestOps(SelectionKey.OP_WRITE);
         assertEquals(SelectionKey.OP_WRITE, selectionKey.interestOps());
@@ -171,6 +222,15 @@ public class SelectionKeyTest extends TestCase {
     /**
      * @tests java.nio.channels.SelectionKey#isValid()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isValid",
+          methodArgs = {}
+        )
+    })
     public void test_isValid() {
         assertTrue(selectionKey.isValid());
     }
@@ -178,6 +238,15 @@ public class SelectionKeyTest extends TestCase {
     /**
      * @tests java.nio.channels.SelectionKey#isValid()
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL_OK,
+              purpose = "",
+              targets = {
+                @TestTarget(
+                  methodName = "isValid",
+                  methodArgs = {}
+                )
+            })    
     public void test_isValid_KeyCancelled() {
         selectionKey.cancel();
         assertFalse(selectionKey.isValid());
@@ -186,6 +255,15 @@ public class SelectionKeyTest extends TestCase {
     /**
      * @tests java.nio.channels.SelectionKey#isValid()
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL_OK,
+              purpose = "",
+              targets = {
+                @TestTarget(
+                  methodName = "isValid",
+                  methodArgs = {}
+                )
+            })    
     public void test_isValid_ChannelColsed() throws IOException {
         sc.close();
         assertFalse(selectionKey.isValid());
@@ -194,6 +272,15 @@ public class SelectionKeyTest extends TestCase {
     /**
      * @tests java.nio.channels.SelectionKey#isValid()
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL_OK,
+              purpose = "",
+              targets = {
+                @TestTarget(
+                  methodName = "isValid",
+                  methodArgs = {}
+                )
+            })    
     public void test_isValid_SelectorClosed() throws IOException {
         selector.close();
         assertFalse(selectionKey.isValid());
@@ -202,6 +289,15 @@ public class SelectionKeyTest extends TestCase {
     /**
      * @tests java.nio.channels.SelectionKey#isAcceptable()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isAcceptable",
+          methodArgs = {}
+        )
+    })
     public void test_isAcceptable() throws IOException {
         MockSelectionKey mockSelectionKey1 = new MockSelectionKey(SelectionKey.OP_ACCEPT);
         assertTrue(mockSelectionKey1.isAcceptable());
@@ -212,6 +308,15 @@ public class SelectionKeyTest extends TestCase {
     /**
      * @tests java.nio.channels.SelectionKey#isConnectable()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isConnectable",
+          methodArgs = {}
+        )
+    })
     public void test_isConnectable() {
         MockSelectionKey mockSelectionKey1 = new MockSelectionKey(SelectionKey.OP_CONNECT);
         assertTrue(mockSelectionKey1.isConnectable());
@@ -222,6 +327,15 @@ public class SelectionKeyTest extends TestCase {
     /**
      * @tests java.nio.channels.SelectionKey#isReadable()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isReadable",
+          methodArgs = {}
+        )
+    })
     public void test_isReadable() {
         MockSelectionKey mockSelectionKey1 = new MockSelectionKey(SelectionKey.OP_READ);
         assertTrue(mockSelectionKey1.isReadable());
@@ -232,6 +346,15 @@ public class SelectionKeyTest extends TestCase {
     /**
      * @tests java.nio.channels.SelectionKey#isWritable()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify CancelledKeyException.",
+      targets = {
+        @TestTarget(
+          methodName = "isWritable",
+          methodArgs = {}
+        )
+    })
     public void test_isWritable() {
         MockSelectionKey mockSelectionKey1 = new MockSelectionKey(SelectionKey.OP_WRITE);
         assertTrue(mockSelectionKey1.isWritable());
@@ -242,6 +365,15 @@ public class SelectionKeyTest extends TestCase {
     /**
      * @tests java.nio.channels.SelectionKey#cancel()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "cancel",
+          methodArgs = {}
+        )
+    })
     public void test_cancel() {
         selectionKey.cancel();
         try {
@@ -294,6 +426,15 @@ public class SelectionKeyTest extends TestCase {
     /**
      * @tests java.nio.channels.SelectionKey#readyOps()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify CancelledKeyException.",
+      targets = {
+        @TestTarget(
+          methodName = "readyOps",
+          methodArgs = {}
+        )
+    })
     public void test_readyOps() throws IOException {
         int port = Support_PortManager.getNextPort();
         ServerSocket ss = new ServerSocket(port);
@@ -313,6 +454,15 @@ public class SelectionKeyTest extends TestCase {
     /**
      * @tests java.nio.channels.SelectionKey#selector()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "selector",
+          methodArgs = {}
+        )
+    })
     public void test_selector() {
         assertSame(selector, selectionKey.selector());
         selectionKey.cancel();

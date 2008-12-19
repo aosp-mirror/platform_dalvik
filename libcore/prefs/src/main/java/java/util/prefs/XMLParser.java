@@ -33,7 +33,6 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
-import java.util.ArrayList;
 import java.util.Properties;
 import java.util.StringTokenizer;
 
@@ -41,12 +40,16 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
+// BEGIN android-removed
+// import javax.xml.transform.TransformerException;
+// END android-removed
 
 import org.apache.harmony.prefs.internal.nls.Messages;
+// BEGIN android-removed
+// import org.apache.xpath.XPathAPI;
+// END android-removed
 import org.w3c.dom.Document;
-import org.w3c.dom.DocumentType;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.ErrorHandler;
@@ -54,9 +57,16 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
+// BEGIN android-added
+import java.util.ArrayList;
+import org.w3c.dom.DocumentType;
+import org.w3c.dom.Node;
+// END android-added
+
 /**
- * Utility class for the Preferences import/export from XML file.
+ * Utility class for importing and exporting {@code Preferences} data from an XML file.
  * 
+ * @since Android 1.0
  */
 class XMLParser {
 
@@ -119,7 +129,9 @@ class XMLParser {
      */
     static {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        // BEGIN android-changed
         factory.setValidating(false);
+        // END android-changed
         try {
             builder = factory.newDocumentBuilder();
         } catch (ParserConfigurationException e) {
@@ -357,7 +369,7 @@ class XMLParser {
         try {
             // load XML document
             Document doc = builder.parse(new InputSource(in));
-            
+
             // check preferences' export version
             Element preferences;
             preferences = doc.getDocumentElement();
@@ -386,12 +398,22 @@ class XMLParser {
         } catch (SAXException e) {
             throw new InvalidPreferencesFormatException(e);
         }
+        // BEGIN android-removed
+        // catch (TransformerException e) {
+        //     throw new InvalidPreferencesFormatException(e);
+        // }
+        // END android-removed
     }
 
     private static void loadNode(Preferences prefs, Element node) {
+        // BEGIN android-note
+        // removed throw clause for TransformerException
+        // END android-note
         // load preferences
+        // BEGIN android-changed
         NodeList children = selectNodeList(node, "node"); //$NON-NLS-1$
         NodeList entries = selectNodeList(node, "map/entry"); //$NON-NLS-1$
+        // END android-changed
         int childNumber = children.getLength();
         Preferences[] prefChildren = new Preferences[childNumber];
         int entryNumber = entries.getLength();
@@ -419,8 +441,8 @@ class XMLParser {
         }
     }
 
-    
-    // ??? PREFS TODO dirty implementation of a method from javax.xml.xpath
+    // BEGIN android-added
+    // TODO dirty implementation of a method from javax.xml.xpath
     // should be replaced with a call to a good impl of this method
     private static NodeList selectNodeList(Element documentElement, String string) {
         
@@ -466,6 +488,7 @@ class XMLParser {
         
         return result;
     }
+    // END android-added
     
     /***************************************************************************
      * utilities for FilePreferencesImpl, which is default implementation of Linux platform
@@ -509,8 +532,10 @@ class XMLParser {
                 FileChannel channel = istream.getChannel();
                 lock = channel.lock(0L, Long.MAX_VALUE, true);
                 Document doc = builder.parse(in);
+                // BEGIN android-modified
                 NodeList entries = selectNodeList(doc
                         .getDocumentElement(), "entry"); //$NON-NLS-1$
+                // END android-modified
                 int length = entries.getLength();
                 for (int i = 0; i < length; i++) {
                     Element node = (Element) entries.item(i);

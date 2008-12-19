@@ -17,6 +17,11 @@
 
 package tests.api.java.net;
 
+import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.FileDescriptor;
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -26,10 +31,20 @@ import java.net.NetworkInterface;
 import java.net.SocketAddress;
 import java.net.SocketException;
 
+@TestTargetClass(DatagramSocketImpl.class) 
 public class DatagramSocketImplTest extends junit.framework.TestCase {
     /**
      * @tests java.net.DatagramSocketImpl#DatagramSocketImpl()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "DatagramSocketImpl",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() throws Exception {
         // regression test for Harmony-1117
         MockDatagramSocketImpl impl = new MockDatagramSocketImpl();

@@ -21,31 +21,36 @@ import java.util.EventObject;
 import java.io.Serializable;
 
 /**
- * An event which is sent when specific events happen to a RowSet object. The
- * events are sent to inform registered listeners that changes have occurred to
- * the RowSet. The events covered are:
+ * An event which is sent when specific events happen to a {@link RowSet}
+ * object. The events are sent to inform registered listeners that changes have
+ * occurred to the {@code RowSet}. The events covered are:
  * <ol>
- * <li>A single row in the RowSet changes</li>
- * <li>The whole set of data in the RowSet changes</li>
- * <li>The RowSet cursor position changes</li>
+ * <li>A single row in the {@code RowSet} changes.</li>
+ * <li>The whole set of data in the {@code RowSet} changes.</li>
+ * <li>The {@code RowSet} cursor position changes.</li>
  * </ol>
- * The event contains a reference to the RowSet object which generated the
- * message so that the listeners can extract whatever information they need from
- * that reference.
+ * <p>
+ * The event contains a reference to the {@code RowSet} object which generated
+ * the message so that the listeners can extract whatever information they need
+ * from that reference.
+ * </p>
  * 
+ * @since Android 1.0
  */
 public class RowSetEvent extends EventObject implements Serializable {
 
     private static final long serialVersionUID = -1875450876546332005L;
 
     /**
-     * Creates a RowSetEvent object containing a reference to the RowSet object
-     * that generated the event. Information about the changes that have
-     * occurred to the RowSet can be extracted from the RowSet using one or more
-     * of the query methods available on the RowSet.
+     * Creates a {@code RowSetEvent} object containing a reference to the
+     * {@link RowSet} object that generated the event. Information about the
+     * changes that have occurred to the {@code RowSet} can be extracted from
+     * the {@code RowSet} using one or more of the query methods available on
+     * the {@code RowSet}.
      * 
      * @param theSource
-     *            the RowSet which generated the event
+     *            the {@code RowSet} which generated the event.
+     * @since Android 1.0
      */
     public RowSetEvent(RowSet theSource) {
         super(theSource);

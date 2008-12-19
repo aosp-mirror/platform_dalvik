@@ -85,8 +85,11 @@ public class RuleBasedNumberFormat extends NumberFormat {
      * @param locale the locale to use for this rule based number format
      */
     public void open(RBNFType type, Locale locale) {
-        this.addr = openRBNFImpl(type.getType(),
-                locale.toString());
+        String loc = locale.toString();
+        if (loc == null) {
+            throw new NullPointerException();
+        }
+        this.addr = openRBNFImpl(type.getType(), loc);
     }
     
     private static native int openRBNFImpl(int type, String loc);
@@ -99,6 +102,9 @@ public class RuleBasedNumberFormat extends NumberFormat {
      * @param rule the rule for the rule based number format
      */
     public void open(String rule) {
+        if (rule == null) {
+            throw new NullPointerException();
+        }
         this.addr = openRBNFImpl(rule, Locale.getDefault().toString());
     }
 
@@ -111,6 +117,10 @@ public class RuleBasedNumberFormat extends NumberFormat {
      * @param locale the locale to use for this rule based number format
      */
     public void open(String rule, Locale locale) {
+        String loc = locale.toString();
+        if (loc == null || rule == null) {
+            throw new NullPointerException();
+        }
         this.addr = openRBNFImpl(rule, locale.toString());
     }
     
@@ -178,6 +188,9 @@ public class RuleBasedNumberFormat extends NumberFormat {
 
     @Override
     public Number parse(String string, ParsePosition position) {
+        if (string == null || position == null) {
+            throw new NullPointerException();
+        }
         return parseRBNFImpl(this.addr, string, position, false);
     }
     
@@ -194,6 +207,9 @@ public class RuleBasedNumberFormat extends NumberFormat {
      * @return the Number resulting from the parse, or null if there is an error
      */
     public Number parseLenient(String string, ParsePosition position) {
+        if (string == null || position == null) {
+            throw new NullPointerException();
+        }
         return parseRBNFImpl(this.addr, string, position, true);
     }
     

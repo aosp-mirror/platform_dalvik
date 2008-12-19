@@ -16,6 +16,11 @@
  */
 package tests.api.java.util;
 
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass; 
+
 import java.util.AbstractSequentialList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -24,6 +29,7 @@ import java.util.ListIterator;
 
 import junit.framework.TestCase;
 
+@TestTargetClass(AbstractSequentialList.class) 
 public class AbstractSequentialListTest extends TestCase {
 
     @Override
@@ -54,6 +60,15 @@ public class AbstractSequentialListTest extends TestCase {
     /**
      * @tests {@link java.util.AbstractSequentialList#addAll(int, java.util.Collection)}
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify all exceptions according to the specification.",
+      targets = {
+        @TestTarget(
+          methodName = "addAll",
+          methodArgs = {int.class, java.util.Collection.class}
+        )
+    })
     public void test_addAll_ILCollection() {
         AbstractSequentialList<String> al = new ASLT<String>();
         String[] someList = { "Aardvark"  ,  //$NON-NLS-1$

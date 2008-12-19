@@ -14,6 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/**
+*******************************************************************************
+* Copyright (C) 1996-2007, International Business Machines Corporation and    *
+* others. All Rights Reserved.                                                *
+*******************************************************************************
+*/
+
+// BEGIN android-note
+// The class javadoc and some of the method descriptions are copied from ICU4J
+// source files. Changes have been made to the copied descriptions.
+// The icu license header was added to this file.
+// The icu implementation used was changed from icu4j to icu4jni.
+// END android-note
 
 package java.text;
 
@@ -25,9 +38,95 @@ import java.util.Vector;
 import org.apache.harmony.luni.util.PriviAction;
 
 /**
- * Collator is an abstract class which is the root of classes which provide
- * Locale specific String comparison to determine their ordering with respect to
- * each other.
+ * Performs locale-sensitive string comparison. A concrete subclass,
+ * {@link RuleBasedCollator}, allows customization of the collation ordering by
+ * the use of rule sets.
+ * <p>
+ * Following the <a href=http://www.unicode.org>Unicode Consortium</a>'s
+ * specifications for the <a
+ * href="http://www.unicode.org/unicode/reports/tr10/"> Unicode Collation
+ * Algorithm (UCA)</a>, there are 4 different levels of strength used in
+ * comparisons:
+ * </p>
+ * <ul>
+ * <li>PRIMARY strength: Typically, this is used to denote differences between
+ * base characters (for example, "a" &lt; "b"). It is the strongest difference.
+ * For example, dictionaries are divided into different sections by base
+ * character.
+ * <li>SECONDARY strength: Accents in the characters are considered secondary
+ * differences (for example, "as" &lt; "&agrave;s" &lt; "at"). Other differences
+ * between letters can also be considered secondary differences, depending on
+ * the language. A secondary difference is ignored when there is a primary
+ * difference anywhere in the strings.
+ * <li>TERTIARY strength: Upper and lower case differences in characters are
+ * distinguished at tertiary strength (for example, "ao" &lt; "Ao" &lt;
+ * "a&ograve;"). In addition, a variant of a letter differs from the base form
+ * on the tertiary strength (such as "A" and "&#9398;"). Another example is the
+ * difference between large and small Kana. A tertiary difference is ignored
+ * when there is a primary or secondary difference anywhere in the strings.
+ * <li>IDENTICAL strength: When all other strengths are equal, the IDENTICAL
+ * strength is used as a tiebreaker. The Unicode code point values of the NFD
+ * form of each string are compared, just in case there is no difference. For
+ * example, Hebrew cantellation marks are only distinguished at this strength.
+ * This strength should be used sparingly, as only code point value differences
+ * between two strings are an extremely rare occurrence. Using this strength
+ * substantially decreases the performance for both comparison and collation key
+ * generation APIs. This strength also increases the size of the collation key.
+ * </ul>
+ * <p>
+ * This {@code Collator} deals only with two decomposition modes, the canonical
+ * decomposition mode and one that does not use any decomposition. The
+ * compatibility decomposition mode
+ * {@code java.text.Collator.FULL_DECOMPOSITION} is not supported here. If the
+ * canonical decomposition mode is set, {@code Collator} handles un-normalized
+ * text properly, producing the same results as if the text were normalized in
+ * NFD. If canonical decomposition is turned off, it is the user's
+ * responsibility to ensure that all text is already in the appropriate form
+ * before performing a comparison or before getting a {@link CollationKey}.
+ * </p>
+ * <p>
+ * <em>Examples:</em>
+ * </p>
+ * <blockquote>
+ * 
+ * <pre>
+ * // Get the Collator for US English and set its strength to PRIMARY
+ * Collator usCollator = Collator.getInstance(Locale.US);
+ * usCollator.setStrength(Collator.PRIMARY);
+ * if (usCollator.compare(&quot;abc&quot;, &quot;ABC&quot;) == 0) {
+ *     System.out.println(&quot;Strings are equivalent&quot;);
+ * }
+ * </pre>
+ * 
+ * </blockquote>
+ * <p>
+ * The following example shows how to compare two strings using the collator for
+ * the default locale.
+ * </p>
+ * <blockquote>
+ * 
+ * <pre>
+ * // Compare two strings in the default locale
+ * Collator myCollator = Collator.getInstance();
+ * myCollator.setDecomposition(Collator.NO_DECOMPOSITION);
+ * if (myCollator.compare(&quot;\u00e0\u0325&quot;, &quot;a\u0325\u0300&quot;) != 0) {
+ *     System.out.println(&quot;\u00e0\u0325 is not equal to a\u0325\u0300 without decomposition&quot;);
+ *     myCollator.setDecomposition(Collator.CANONICAL_DECOMPOSITION);
+ *     if (myCollator.compare(&quot;\u00e0\u0325&quot;, &quot;a\u0325\u0300&quot;) != 0) {
+ *         System.out.println(&quot;Error: \u00e0\u0325 should be equal to a\u0325\u0300 with decomposition&quot;);
+ *     } else {
+ *         System.out.println(&quot;\u00e0\u0325 is equal to a\u0325\u0300 with decomposition&quot;);
+ *     }
+ * } else {
+ *     System.out.println(&quot;Error: \u00e0\u0325 should be not equal to a\u0325\u0300 without decomposition&quot;);
+ * }
+ * </pre>
+ * 
+ * </blockquote>
+ * 
+ * @see RuleBasedCollator
+ * @see CollationKey
+ * @since Android 1.0
  */
 public abstract class Collator implements Comparator<Object>, Cloneable {
 
@@ -39,36 +138,51 @@ public abstract class Collator implements Comparator<Object>, Cloneable {
 
     /**
      * Constant used to specify the decomposition rule.
+     * 
+     * @since Android 1.0
      */
     public static final int NO_DECOMPOSITION = 0;
 
     /**
      * Constant used to specify the decomposition rule.
+     * 
+     * @since Android 1.0
      */
     public static final int CANONICAL_DECOMPOSITION = 1;
 
     /**
-     * Constant used to specify the decomposition rule.
+     * Constant used to specify the decomposition rule. This value for
+     * decomposition is not supported.
+     * 
+     * @since Android 1.0
      */
     public static final int FULL_DECOMPOSITION = 2;
 
     /**
      * Constant used to specify the collation strength.
+     * 
+     * @since Android 1.0
      */
     public static final int PRIMARY = 0;
 
     /**
      * Constant used to specify the collation strength.
+     * 
+     * @since Android 1.0
      */
     public static final int SECONDARY = 1;
 
     /**
      * Constant used to specify the collation strength.
+     * 
+     * @since Android 1.0
      */
     public static final int TERTIARY = 2;
 
     /**
      * Constant used to specify the collation strength.
+     * 
+     * @since Android 1.0
      */
     public static final int IDENTICAL = 3;
 
@@ -91,7 +205,7 @@ public abstract class Collator implements Comparator<Object>, Cloneable {
 
     private static Vector<Collator> cache = new Vector<Collator>(CACHE_SIZE);
 
-    // Wrapper class of ICU4J Collator
+    // Wrapper class of ICU4JNI Collator
     com.ibm.icu4jni.text.Collator icuColl;
 
     Collator(com.ibm.icu4jni.text.Collator wrapper) {
@@ -99,18 +213,24 @@ public abstract class Collator implements Comparator<Object>, Cloneable {
     }
 
     /**
-     * Constructs a new instance of this Collator.
+     * Constructs a new {@code Collator} instance.
+     * 
+     * @since Android 1.0
      */
     protected Collator() {
         super();
+        // BEGIN android-added
+        icuColl = com.ibm.icu4jni.text.Collator.getInstance(Locale.getDefault());
+        // END android-added
     }
 
     /**
-     * Returns a new Collator with the same decomposition rule and strength
-     * value as this Collator.
+     * Returns a new collator with the same decomposition mode and
+     * strength value as this collator.
      * 
-     * @return a shallow copy of this Collator
+     * @return a shallow copy of this collator.
      * @see java.lang.Cloneable
+     * @since Android 1.0
      */
     @Override
     public Object clone() {
@@ -124,46 +244,50 @@ public abstract class Collator implements Comparator<Object>, Cloneable {
     }
 
     /**
-     * Compares the two objects to determine their relative ordering. The
-     * objects must be Strings.
+     * Compares two objects to determine their relative order. The objects must
+     * be strings.
      * 
      * @param object1
-     *            the first String to compare
+     *            the first string to compare.
      * @param object2
-     *            the second String to compare
-     * @return an int < 0 if object1 is less than object2, 0 if they are equal,
-     *         and > 0 if object1 is greater than object2
-     * 
+     *            the second string to compare.
+     * @return a negative value if {@code object1} is less than {@code object2},
+     *         0 if they are equal, and a positive value if {@code object1} is
+     *         greater than {@code object2}.
      * @exception ClassCastException
-     *                when the objects are not Strings
+     *                if {@code object1} or {@code object2} is not a
+     *                {@code String}.
+     * @since Android 1.0
      */
     public int compare(Object object1, Object object2) {
         return compare((String) object1, (String) object2);
     }
 
     /**
-     * Compares the two Strings to determine their relative ordering.
+     * Compares two strings to determine their relative order.
      * 
      * @param string1
-     *            the first String to compare
+     *            the first string to compare.
      * @param string2
-     *            the second String to compare
-     * @return an int < 0 if string1 is less than string2, 0 if they are equal,
-     *         and > 0 if string1 is greater than string2
+     *            the second string to compare.
+     * @return a negative value if {@code string1} is less than {@code string2},
+     *         0 if they are equal and a positive value if {@code string1} is
+     *         greater than {@code string2}.
+     * @since Android 1.0
      */
     public abstract int compare(String string1, String string2);
 
     /**
-     * Compares the specified object to this Collator and answer if they are
-     * equal. The object must be an instance of Collator and have the same
-     * strength and decomposition values.
+     * Compares this collator with the specified object and indicates if they
+     * are equal.
      * 
      * @param object
-     *            the object to compare with this object
-     * @return true if the specified object is equal to this Collator, false
-     *         otherwise
-     * 
+     *            the object to compare with this object.
+     * @return {@code true} if {@code object} is a {@code Collator} object and
+     *         it has the same strength and decomposition values as this
+     *         collator; {@code false} otherwise.
      * @see #hashCode
+     * @since Android 1.0
      */
     @Override
     public boolean equals(Object object) {
@@ -176,65 +300,74 @@ public abstract class Collator implements Comparator<Object>, Cloneable {
     }
 
     /**
-     * Compares the two Strings using the collation rules to determine if they
-     * are equal.
+     * Compares two strings using the collation rules to determine if they are
+     * equal.
      * 
      * @param string1
-     *            the first String to compare
+     *            the first string to compare.
      * @param string2
-     *            the second String to compare
-     * @return true if the strings are equal using the collation rules, false
-     *         otherwise
+     *            the second string to compare.
+     * @return {@code true} if {@code string1} and {@code string2} are equal
+     *         using the collation rules, false otherwise.
+     * @since Android 1.0
      */
     public boolean equals(String string1, String string2) {
         return compare(string1, string2) == 0;
     }
 
     /**
-     * Gets the list of installed Locales which support Collator.
+     * Gets the list of installed {@link java.util.Locale} objects which support
+     * {@code Collator}.
      * 
-     * @return an array of Locale
+     * @return an array of {@code Locale}.
+     * @since Android 1.0
      */
     public static Locale[] getAvailableLocales() {
         return com.ibm.icu4jni.text.Collator.getAvailableLocales();
     }
 
     /**
-     * Returns a CollationKey for the specified String for this Collator with
-     * the current decomposition rule and strength value.
+     * Returns a {@link CollationKey} for the specified string for this collator
+     * with the current decomposition rule and strength value.
      * 
      * @param string
-     *            the collation key.
-     * @return a CollationKey
+     *            the source string that is converted into a collation key.
+     * @return the collation key for {@code string}.
+     * @since Android 1.0
      */
     public abstract CollationKey getCollationKey(String string);
 
     /**
-     * Returns the decomposition rule for this Collator.
+     * Returns the decomposition rule for this collator.
      * 
-     * @return the decomposition rule, either NO_DECOMPOSITION,
-     *         CANONICAL_DECOMPOSITION or FULL_DECOMPOSITION
+     * @return the decomposition rule, either {@code NO_DECOMPOSITION} or
+     *         {@code CANONICAL_DECOMPOSITION}. {@code FULL_DECOMPOSITION} is
+     *         not supported.
+     * @since Android 1.0
      */
     public int getDecomposition() {
         return decompositionMode_ICU_Java(this.icuColl.getDecomposition());
     }
 
     /**
-     * Returns a Collator instance which is appropriate for the default Locale.
+     * Returns a {@code Collator} instance which is appropriate for the default
+     * {@code Locale}.
      * 
-     * @return a Collator
+     * @return the collator for the default locale.
+     * @since Android 1.0
      */
     public static Collator getInstance() {
         return getInstance(Locale.getDefault());
     }
 
     /**
-     * Returns a Collator instance which is appropriate for the specified
-     * Locale.
+     * Returns a {@code Collator} instance which is appropriate for the
+     * specified {@code Locale}.
      * 
      * @param locale
-     *            the Locale
-     * @return a Collator
+     *            the locale.
+     * @return the collator for {@code locale}.
+     * @since Android 1.0
      */
     public static Collator getInstance(Locale locale) {
         String key = locale.toString();
@@ -249,50 +382,54 @@ public abstract class Collator implements Comparator<Object>, Cloneable {
     }
 
     /**
-     * Returns the strength value for this Collator.
+     * Returns the strength value for this collator.
      * 
-     * @return the strength value, either PRIMARY, SECONDARY, TERTIARY, or
-     *         IDENTICAL
+     * @return the strength value, either PRIMARY, SECONDARY, TERTIARY or
+     *         IDENTICAL.
+     * @since Android 1.0
      */
     public int getStrength() {
         return strength_ICU_Java(this.icuColl.getStrength());
     }
 
     /**
-     * Returns an integer hash code for the receiver. Objects which are equal
-     * answer the same value for this method.
+     * Returns an integer hash code for this collator.
      * 
-     * @return the receiver's hash
+     * @return this collator's hash code.
      * 
      * @see #equals(Object)
      * @see #equals(String, String)
+     * @since Android 1.0
      */
     @Override
     public abstract int hashCode();
 
     /**
-     * Sets the decomposition rule for this Collator.
+     * Sets the decomposition rule for this collator.
      * 
      * @param value
-     *            the decomposition rule, either NO_DECOMPOSITION,
-     *            CANONICAL_DECOMPOSITION or FULL_DECOMPOSITION
-     * 
+     *            the decomposition rule, either {@code NO_DECOMPOSITION} or
+     *            {@code CANONICAL_DECOMPOSITION}. {@code FULL_DECOMPOSITION}
+     *            is not supported.
      * @exception IllegalArgumentException
-     *                when the decomposition rule is not valid
+     *                if the provided decomposition rule is not valid. This 
+     *                includes {@code FULL_DECOMPOSITION}.
+     * @since Android 1.0
      */
     public void setDecomposition(int value) {
         this.icuColl.setDecomposition(decompositionMode_Java_ICU(value));
     }
 
     /**
-     * Sets the strength value for this Collator.
+     * Sets the strength value for this collator.
      * 
      * @param value
      *            the strength value, either PRIMARY, SECONDARY, TERTIARY, or
-     *            IDENTICAL
+     *            IDENTICAL.
      * 
      * @exception IllegalArgumentException
-     *                when the strength value is not valid
+     *                if the provided strength value is not valid.
+     * @since Android 1.0
      */
     public void setStrength(int value) {
         this.icuColl.setStrength(strength_Java_ICU(value));

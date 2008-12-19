@@ -21,6 +21,12 @@
 */
 
 package org.apache.harmony.security.tests.java.security;
+
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+
 import java.security.IdentityScope;
 import java.security.KeyPair;
 import java.security.Permission;
@@ -35,13 +41,12 @@ import org.apache.harmony.security.tests.support.SignerStub;
 
 import junit.framework.TestCase;
 
-
-
 /**
  * tests for class Signer
  * 
  */
 @SuppressWarnings("deprecation")
+@TestTargetClass(Signer.class)
 public class SignerTest extends TestCase {
 
     public static class MySecurityManager extends SecurityManager {
@@ -66,6 +71,15 @@ public class SignerTest extends TestCase {
     /**
      * @tests java.security.Signer#toString()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public void test_toString() throws Exception {
         Signer s1 = new SignerStub("testToString1");
         assertEquals("[Signer]testToString1", s1.toString());
@@ -84,6 +98,15 @@ public class SignerTest extends TestCase {
     /**
      * verify Signer() creates instance
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Signer",
+          methodArgs = {}
+        )
+    })
     public void testSigner() {
         Signer s = new SignerStub();
         assertNotNull(s);
@@ -94,6 +117,15 @@ public class SignerTest extends TestCase {
     /**
      * verify Signer(String) creates instance
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verification with null/empty parameter missed",
+      targets = {
+        @TestTarget(
+          methodName = "Signer",
+          methodArgs = {String.class}
+        )
+    })
     public void testSignerString() throws Exception {
         Signer s = new SignerStub("sss3");
         assertNotNull(s);
@@ -104,6 +136,16 @@ public class SignerTest extends TestCase {
     /**
      * verify  Signer(String, IdentityScope) creates instance
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "1. Verification with null/empty parameter missed. " +
+                  "2. KeyManagementException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "Signer",
+          methodArgs = {String.class, IdentityScope.class}
+        )
+    })
     public void testSignerStringIdentityScope() throws Exception {
         Signer s = new SignerStub("sss4", IdentityScope.getSystemScope());
         assertNotNull(s);
@@ -115,6 +157,15 @@ public class SignerTest extends TestCase {
     /**
      * verify Signer.getPrivateKey() returns null or private key
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getPrivateKey",
+          methodArgs = {}
+        )
+    })
     public void testGetPrivateKey() throws Exception {
         byte [] privateKeyData = { 1, 2, 3, 4, 5};  
         PrivateKeyStub privateKey = new PrivateKeyStub("private", "fff", privateKeyData);
@@ -132,6 +183,15 @@ public class SignerTest extends TestCase {
     /**
      * verify Signer.getPrivateKey() throws SecurityException if permission is denied
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getPrivateKey",
+          methodArgs = {}
+        )
+    })
     public void testGetPrivateKey_denied() throws Exception {
         MySecurityManager sm = new MySecurityManager();
         sm.denied.add(new SecurityPermission("getSignerPrivateKey"));
@@ -152,6 +212,15 @@ public class SignerTest extends TestCase {
     /**
      * @tests java.security.Signer#setKeyPair(java.security.KeyPair) 
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "InvalidParameterException, KeyException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "setKeyPair",
+          methodArgs = {KeyPair.class}
+        )
+    })
     public void test_setKeyPairLjava_security_KeyPair() throws Exception {
         
         // Regression for HARMONY-2408

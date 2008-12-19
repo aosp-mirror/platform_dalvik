@@ -17,10 +17,16 @@
 
 package tests.api.java.lang.ref;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
 
+@TestTargetClass(ReferenceQueue.class) 
 public class ReferenceQueueTest extends junit.framework.TestCase {
     static Boolean b;
 
@@ -56,6 +62,15 @@ public class ReferenceQueueTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.ref.ReferenceQueue#poll()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check that poll() can return null.",
+      targets = {
+        @TestTarget(
+          methodName = "poll",
+          methodArgs = {}
+        )
+    })
     public void test_poll() {
         // store in a static so it won't be gc'ed because the jit
         // optimized it out
@@ -73,6 +88,15 @@ public class ReferenceQueueTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.ref.ReferenceQueue#remove()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "InterruptedException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "remove",
+          methodArgs = {}
+        )
+    })
     public void test_remove() {
         // store in a static so it won't be gc'ed because the jit
         // optimized it out
@@ -90,6 +114,15 @@ public class ReferenceQueueTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.ref.ReferenceQueue#remove(long)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions are not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "remove",
+          methodArgs = {long.class}
+        )
+    })
     public void test_removeJ() {
         try {
             assertNull("Queue should be empty. (poll)", rq.poll());
@@ -110,6 +143,15 @@ public class ReferenceQueueTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.ref.ReferenceQueue#ReferenceQueue()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test.",
+      targets = {
+        @TestTarget(
+          methodName = "ReferenceQueue",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         assertTrue("Used for testing.", true);
     }

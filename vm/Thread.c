@@ -271,7 +271,7 @@ bool dvmThreadStartup(void)
      */
     gDvm.threadSleepMon = dvmCreateMonitor(NULL);
 
-    gDvm.threadIdMap = dvmAllocBitVector(kMaxThreadId, true);
+    gDvm.threadIdMap = dvmAllocBitVector(kMaxThreadId, false);
 
     thread = allocThread(gDvm.stackSize);
     if (thread == NULL)
@@ -919,8 +919,16 @@ static void setThreadSelf(Thread* thread)
 
     cc = pthread_setspecific(gDvm.pthreadKeySelf, thread);
     if (cc != 0) {
-        LOGE("pthread_setspecific failed, err=%d\n", cc);
-        //dvmAbort();     /* the world is fundamentally hosed */
+        /*
+         * Sometimes this fails under Bionic with EINVAL during shutdown.
+         * This can happen if the timing is just right, e.g. a thread
+         * fails to attach during shutdown, but the "fail" path calls
+         * here to ensure we clean up after ourselves.
+         */
+        if (thread != NULL) {
+            LOGE("pthread_setspecific(%p) failed, err=%d\n", thread, cc);
+            dvmAbort();     /* the world is fundamentally hosed */
+        }
     }
 }
 
@@ -967,7 +975,13 @@ static void assignThreadId(Thread* thread)
      * The thin locking magic requires that the low bit is always
      * set, so we do it once, here.
      */
-    thread->threadId = ((dvmAllocBit(gDvm.threadIdMap) + 1) << 1) | 1;
+    int num = dvmAllocBit(gDvm.threadIdMap);
+    if (num < 0) {
+        LOGE("Ran out of thread IDs\n");
+        dvmAbort();     // TODO: make this a non-fatal error result
+    }
+
+    thread->threadId = ((num + 1) << 1) | 1;
 
     assert(thread->threadId != 0);
     assert(thread->threadId != DVM_LOCK_INITIAL_THIN_VALUE);
@@ -979,7 +993,7 @@ static void assignThreadId(Thread* thread)
 static void releaseThreadId(Thread* thread)
 {
     assert(thread->threadId > 0);
-    dvmFreeBit(gDvm.threadIdMap, (thread->threadId >> 1) - 1);
+    dvmClearBit(gDvm.threadIdMap, (thread->threadId >> 1) - 1);
     thread->threadId = 0;
 }
 
@@ -2254,6 +2268,13 @@ static void dumpWedgedThread(Thread* thread)
  * This does not return until the other thread has stopped running.
  * Eventually we time out and the VM aborts.
  *
+ * This does not try to detect the situation where two threads are
+ * waiting for each other to suspend.  In normal use this is part of a
+ * suspend-all, which implies that the suspend-all lock is held, or as
+ * part of a debugger action in which the JDWP thread is always the one
+ * doing the suspending.  (We may need to re-evaluate this now that
+ * getThreadStackTrace is implemented as suspend-snapshot-resume.)
+ *
  * TODO: track basic stats about time required to suspend VM.
  */
 static void waitForThreadSuspend(Thread* self, Thread* thread)
@@ -2580,14 +2601,15 @@ bool dvmCheckSuspendPending(Thread* self)
     if (self->suspendCount == 0)
         return false;
 
-    lockThreadSuspendCount();
+    lockThreadSuspendCount();   /* grab gDvm.threadSuspendCountLock */
 
-    assert(self->suspendCount >= 0);
+    assert(self->suspendCount >= 0);        /* XXX: valid? useful? */
 
     didSuspend = (self->suspendCount != 0);
     self->isSuspended = true;
     LOG_THREAD("threadid=%d: self-suspending\n", self->threadId);
     while (self->suspendCount != 0) {
+        /* wait for wakeup signal; releases lock */
         int cc;
         cc = pthread_cond_wait(&gDvm.threadSuspendCountCond,
                 &gDvm.threadSuspendCountLock);

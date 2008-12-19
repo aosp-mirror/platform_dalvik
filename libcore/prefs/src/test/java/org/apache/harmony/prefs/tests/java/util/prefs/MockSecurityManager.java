@@ -24,37 +24,37 @@ import java.security.Permission;
  */
 class MockSecurityManager extends SecurityManager {
 
-	SecurityManager dflt;
+    SecurityManager dflt;
 
-	public MockSecurityManager() {
-		super();
-		dflt = System.getSecurityManager();
-	}
+    public MockSecurityManager() {
+        super();
+        dflt = System.getSecurityManager();
+    }
 
-	public void install() {
-		System.setSecurityManager(this);
-	}
+    public void install() {
+        System.setSecurityManager(this);
+    }
 
-	public void restoreDefault() {
-		System.setSecurityManager(dflt);
-	}
+    public void restoreDefault() {
+        System.setSecurityManager(dflt);
+    }
 
-	public void checkPermission(Permission perm) {
-		if (perm instanceof RuntimePermission
-				&& perm.getName().equals("preferences")) {
-			throw new SecurityException();
-		} else if (dflt != null) {
-			dflt.checkPermission(perm);
-		}
-	}
+    public void checkPermission(Permission perm) {
+        if (perm instanceof RuntimePermission
+                && perm.getName().equals("preferences")) {
+            throw new SecurityException();
+        } else if (dflt != null) {
+            dflt.checkPermission(perm);
+        }
+    }
 
-	public void checkPermission(Permission perm, Object ctx) {
-		if (perm instanceof RuntimePermission
-				&& perm.getName().equals("preferences")) {
-			throw new SecurityException();
-		} else if (dflt != null) {
-			dflt.checkPermission(perm, ctx);
-		}
-	}
+    public void checkPermission(Permission perm, Object ctx) {
+        if (perm instanceof RuntimePermission
+                && perm.getName().equals("preferences")) {
+            throw new SecurityException();
+        } else if (dflt != null) {
+            dflt.checkPermission(perm, ctx);
+        }
+    }
 
 }

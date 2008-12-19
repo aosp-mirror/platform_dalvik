@@ -15,39 +15,67 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package javax.net.ssl;
 
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
 /**
- * @com.intel.drl.spec_ref
+ * The trust manager for X509 certificates to be used to perform authentication
+ * for secure sockets. 
  * 
+ * @since Android 1.0
  */
 public interface X509TrustManager extends TrustManager {
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Checks whether the specified certificate chain (partial or complete) can
+     * be validated and is trusted for client authentication for the specified
+     * authentication type.
+     * 
+     * @param chain
+     *            the certificate chain to validate.
+     * @param authType
+     *            the authentication type used.
+     * @throws CertificateException
+     *             if the certificate chain can't be validated or isn't trusted.
+     * @throws IllegalArgumentException
+     *             if the specified certificate chain is empty or {@code null},
+     *             or if the specified authentication type is {@code null} or an
+     *             empty string.
+     * @since Android 1.0
      */
     public void checkClientTrusted(X509Certificate[] chain, String authType)
             throws CertificateException;
 
+
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Checks whether the specified certificate chain (partial or complete) can
+     * be validated and is trusted for server authentication for the specified
+     * key exchange algorithm.
+     * 
+     * @param chain
+     *            the certificate chain to validate.
+     * @param authType
+     *            the key exchange algorithm name.
+     * @throws CertificateException
+     *             if the certificate chain can't be validated or isn't trusted.
+     * @throws IllegalArgumentException
+     *             if the specified certificate chain is empty or {@code null},
+     *             or if the specified authentication type is {@code null} or an
+     *             empty string.
+     * @since Android 1.0
      */
     public void checkServerTrusted(X509Certificate[] chain, String authType)
             throws CertificateException;
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Returns the list of certificate issuer authorities which are trusted for
+     * authentication of peers.
+     * 
+     * @return the list of certificate issuer authorities which are trusted for
+     *         authentication of peers.
+     * @since Android 1.0
      */
     public X509Certificate[] getAcceptedIssuers();
 }

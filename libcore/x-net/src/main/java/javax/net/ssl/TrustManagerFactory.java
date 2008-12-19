@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package javax.net.ssl;
 
 import java.security.AccessController;
@@ -34,11 +29,13 @@ import java.security.Security;
 import org.apache.harmony.security.fortress.Engine;
 
 
-/**
- * @com.intel.drl.spec_ref
- * 
- */
 
+/**
+ * The factory for {@code TrustManager}s based on {@code KeyStore} or provider
+ * specific implementation.
+ * 
+ * @since Android 1.0
+ */
 public class TrustManagerFactory {
     // Store TrustManager service name
     private static final String SERVICE = "TrustManagerFactory";
@@ -59,8 +56,15 @@ public class TrustManagerFactory {
     private final String algorithm;
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Creates a new {@code TrustManagerFactory} instance.
+     * 
+     * @param factorySpi
+     *            the implementation delegate.
+     * @param provider
+     *            the provider
+     * @param algorithm
+     *            the algorithm name.
+     * @since Android 1.0
      */
     protected TrustManagerFactory(TrustManagerFactorySpi factorySpi,
             Provider provider, String algorithm) {
@@ -70,18 +74,30 @@ public class TrustManagerFactory {
     }
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Returns the name of this {@code TrustManagerFactory} algorithm
+     * implementation.
+     * 
+     * @return the name of this {@code TrustManagerFactory} algorithm
+     *         implementation.
+     * @since Android 1.0
      */
     public final String getAlgorithm() {
         return algorithm;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code TrustManagerFactory} instance for the specified
+     * trust management algorithm.
      * 
-     * throws NullPointerException if algorithm is null (instead of
-     * NoSuchAlgorithmException as in 1.4 release)
+     * @param algorithm
+     *            the name of the requested trust management algorithm.
+     * @return a trust manager factory for the requested algorithm.
+     * @throws NoSuchAlgorithmException
+     *             if no installed provider can provide the requested algorithm.
+     * @throws NullPointerException
+     *             if {@code algorithm} is {@code null} (instead of
+     *             NoSuchAlgorithmException as in 1.4 release)
+     * @since Android 1.0
      */
     public static final TrustManagerFactory getInstance(String algorithm)
             throws NoSuchAlgorithmException {
@@ -96,10 +112,24 @@ public class TrustManagerFactory {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code TrustManagerFactory} instance for the specified
+     * trust management algorithm from the specified provider.
      * 
-     * throws NullPointerException if algorithm is null (instead of
-     * NoSuchAlgorithmException as in 1.4 release)
+     * @param algorithm
+     *            the name of the requested trust management algorithm name.
+     * @param provider
+     *            the name of the provider that provides the requested
+     *            algorithm.
+     * @return a trust manager factory for the requested algorithm.
+     * @throws NoSuchAlgorithmException
+     *             if the specified provider cannot provide the requested
+     *             algorithm.
+     * @throws NoSuchProviderException
+     *             if the specified provider does not exist.
+     * @throws NullPointerException
+     *             if {@code algorithm} is {@code null} (instead of
+     *             NoSuchAlgorithmException as in 1.4 release)
+     * @since Android 1.0
      */
     public static final TrustManagerFactory getInstance(String algorithm,
             String provider) throws NoSuchAlgorithmException,
@@ -115,10 +145,21 @@ public class TrustManagerFactory {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code TrustManagerFactory} instance for the specified
+     * trust management algorithm from the specified provider.
      * 
-     * throws NullPointerException if algorithm is null (instead of
-     * NoSuchAlgorithmException as in 1.4 release)
+     * @param algorithm
+     *            the name of the requested key management algorithm name.
+     * @param provider
+     *            the provider that provides the requested algorithm.
+     * @return a key manager factory for the requested algorithm.
+     * @throws NoSuchAlgorithmException
+     *             if the specified provider cannot provide the requested
+     *             algorithm.
+     * @throws NullPointerException
+     *             if {@code algorithm} is {@code null} (instead of
+     *             NoSuchAlgorithmException as in 1.4 release)
+     * @since Android 1.0
      */
     public static final TrustManagerFactory getInstance(String algorithm,
             Provider provider) throws NoSuchAlgorithmException {
@@ -136,24 +177,38 @@ public class TrustManagerFactory {
     }
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Returns the provider for this {@code TrustManagerFactory} instance.
+     * 
+     * @return the provider for this {@code TrustManagerFactory} instance.
+     * @since Android 1.0
      */
     public final Provider getProvider() {
         return provider;
     }
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Initializes this factory instance with the specified keystore as source
+     * of certificate authorities and trust material.
+     * 
+     * @param ks
+     *            the keystore or {@code null}.
+     * @throws KeyStoreException
+     *             if the initialization fails.
+     * @since Android 1.0
      */
     public final void init(KeyStore ks) throws KeyStoreException {
         spiImpl.engineInit(ks);
     }
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Initializes this factory instance with the specified provider-specific
+     * parameters for a source of trust material.
+     * 
+     * @param spec
+     *            the provider-specific parameters.
+     * @throws InvalidAlgorithmParameterException
+     *             if the initialization fails.
+     * @since Android 1.0
      */
     public final void init(ManagerFactoryParameters spec)
             throws InvalidAlgorithmParameterException {
@@ -161,16 +216,23 @@ public class TrustManagerFactory {
     }
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Returns the list of {@code TrustManager}s with one entry for each type
+     * of trust material.
+     * 
+     * @return the list of {@code TrustManager}s
+     * @since Android 1.0
      */
     public final TrustManager[] getTrustManagers() {
         return spiImpl.engineGetTrustManagers();
     }
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Returns the default algorithm name for the {@code TrustManagerFactory}. The
+     * default algorithm name is specified by the security property
+     * {@code 'ssl.TrustManagerFactory.algorithm'}.
+     * 
+     * @return the default algorithm name.
+     * @since Android 1.0
      */
     public static final String getDefaultAlgorithm() {
         return AccessController

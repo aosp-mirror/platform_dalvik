@@ -18,15 +18,19 @@ package java.nio.channels;
 
 
 /**
- * Thrown when attempting to read from a channel that is not open for reading.
+ * A {@code NonReadableChannelException} is thrown when attempting to read from
+ * a channel that is not open for reading.
  * 
+ * @since Android 1.0
  */
 public class NonReadableChannelException extends IllegalStateException {
 
     private static final long serialVersionUID = -3200915679294993514L;
 
     /**
-     * Default constructor.
+     * Constructs a {@code NonReadableChannelException}.
+     * 
+     * @since Android 1.0
      */
     public NonReadableChannelException() {
         super();

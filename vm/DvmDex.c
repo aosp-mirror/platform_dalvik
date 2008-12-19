@@ -39,6 +39,7 @@ static DvmDex* allocateAuxStructures(DexFile* pDexFile)
 {
     DvmDex* pDvmDex;
     const DexHeader* pHeader;
+    u4 stringCount, classCount, methodCount, fieldCount;
 
     pDvmDex = (DvmDex*) calloc(1, sizeof(DvmDex));
     if (pDvmDex == NULL)
@@ -49,24 +50,40 @@ static DvmDex* allocateAuxStructures(DexFile* pDexFile)
 
     pHeader = pDvmDex->pHeader;
 
+    stringCount = pHeader->stringIdsSize;
+    classCount = pHeader->typeIdsSize;
+    methodCount = pHeader->methodIdsSize;
+    fieldCount = pHeader->fieldIdsSize;
+
+#if (DVM_RESOLVER_CACHE == DVM_RC_REDUCING) || \
+    (DVM_RESOLVER_CACHE == DVM_RC_EXPANDING)
+    if (pDexFile->indexMap.stringReducedCount > 0)
+        stringCount = pDexFile->indexMap.stringReducedCount;
+    if (pDexFile->indexMap.classReducedCount > 0)
+        classCount = pDexFile->indexMap.classReducedCount;
+    if (pDexFile->indexMap.methodReducedCount > 0)
+        methodCount = pDexFile->indexMap.methodReducedCount;
+    if (pDexFile->indexMap.fieldReducedCount > 0)
+        fieldCount = pDexFile->indexMap.fieldReducedCount;
+#elif (DVM_RESOLVER_CACHE == DVM_RC_NO_CACHE)
+    stringCount = classCount = methodCount = fieldCount = 0;
+#endif
+
     pDvmDex->pResStrings = (struct StringObject**)
-        calloc(pHeader->stringIdsSize, sizeof(struct StringObject*));
+        calloc(stringCount, sizeof(struct StringObject*));
 
     pDvmDex->pResClasses = (struct ClassObject**)
-        calloc(pHeader->typeIdsSize, sizeof(struct ClassObject*));
+        calloc(classCount, sizeof(struct ClassObject*));
 
     pDvmDex->pResMethods = (struct Method**)
-        calloc(pHeader->methodIdsSize, sizeof(struct Method*));
+        calloc(methodCount, sizeof(struct Method*));
 
     pDvmDex->pResFields = (struct Field**)
-        calloc(pHeader->fieldIdsSize, sizeof(struct Field*));
+        calloc(fieldCount, sizeof(struct Field*));
 
     LOGV("+++ DEX %p: allocateAux %d+%d+%d+%d * 4 = %d bytes\n",
-        pDvmDex,
-        pHeader->stringIdsSize, pHeader->typeIdsSize,
-        pHeader->methodIdsSize, pHeader->fieldIdsSize,
-        (pHeader->stringIdsSize + pHeader->typeIdsSize +
-         pHeader->methodIdsSize + pHeader->fieldIdsSize) * 4);
+        pDvmDex, stringCount, classCount, methodCount, fieldCount,
+        (stringCount + classCount + methodCount + fieldCount) * 4);
 
     pDvmDex->pInterfaceCache = dvmAllocAtomicCache(DEX_INTERFACE_CACHE_SIZE);
 
@@ -112,7 +129,7 @@ int dvmDexFileOpenFromFd(int fd, DvmDex** ppDvmDex)
         goto bail;
     }
 
-    pDexFile = dexFileParse(memMap.addr, memMap.length);
+    pDexFile = dexFileParse(memMap.addr, memMap.length, kDexParseDefault);
     if (pDexFile == NULL) {
         LOGE("DEX parse failed\n");
         sysReleaseShmem(&memMap);
@@ -149,7 +166,7 @@ int dvmDexFileOpenPartial(const void* addr, int len, DvmDex** ppDvmDex)
     DexFile* pDexFile;
     int result = -1;
 
-    pDexFile = dexFileParse(addr, len);
+    pDexFile = dexFileParse(addr, len, kDexParseDefault);
     if (pDexFile == NULL) {
         LOGE("DEX parse failed\n");
         goto bail;

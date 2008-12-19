@@ -18,11 +18,13 @@
 package org.apache.harmony.luni.util;
 
 
-import java.lang.ref.WeakReference;
 import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
+// BEGIN android-added
+import java.lang.ref.WeakReference;
 import java.util.logging.Logger;
+// END android-added
 
 import org.apache.harmony.luni.util.MsgHelp;
 
@@ -41,9 +43,10 @@ import org.apache.harmony.luni.util.MsgHelp;
  * 
  */
 public class Msg {
-    
+    // BEGIN android-changed
     private static final String sResource =
         "org.apache.harmony.luni.util.ExternalMessages";
+    // END android-changed
 
     /**
      * Retrieves a message which has no arguments.
@@ -53,10 +56,12 @@ public class Msg {
      * @return String the message for that key in the system message bundle.
      */
     static public String getString(String msg) {
+        // BEGIN android-changed
         ResourceBundle bundle = MsgHelp.loadBundle(sResource);
         if (bundle == null) {
             return msg;
         }
+        // END android-changed
         try {
             return bundle.getString(msg);
         } catch (MissingResourceException e) {
@@ -129,7 +134,9 @@ public class Msg {
      */
     static public String getString(String msg, Object[] args) {
         String format = msg;
+        // BEGIN android-added
         ResourceBundle bundle = MsgHelp.loadBundle(sResource);
+        // END android-added
         if (bundle != null) {
             try {
                 format = bundle.getString(msg);

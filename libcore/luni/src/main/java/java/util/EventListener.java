@@ -21,7 +21,8 @@ package java.util;
 /**
  * EventListener is the superclass of all event listener interfaces.
  *
- * @see            EventObject
+ * @see EventObject
+ * @since Android 1.0
  */
 public interface EventListener {
     /*empty*/

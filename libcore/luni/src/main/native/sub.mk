@@ -12,11 +12,9 @@ LOCAL_SRC_FILES := \
 	java_lang_Float.c \
 	java_lang_Math.c \
 	java_lang_StrictMath.c \
-	java_lang_reflect_Proxy.c \
 	java_net_InetAddress.cpp \
 	java_net_NetworkInterface.c \
 	cbigint.c \
-	exceptions.c \
 	commonDblParce.c \
 	org_apache_harmony_luni_util_fltparse.c \
 	org_apache_harmony_luni_util_NumberConvert.c \

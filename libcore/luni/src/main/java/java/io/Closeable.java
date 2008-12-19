@@ -17,17 +17,22 @@
 package java.io;
 
 /**
- * Closeable represents the source or destination of some data which can be
- * called its close method to release resources it holds.
+ * Defines an interface for classes that can (or need to) be closed once they
+ * are not used any longer. This usually includes all sorts of
+ * {@link InputStream}s and {@link OutputStream}s. Calling the {@code close}
+ * method releases resources that the object holds.
+ * 
+ * @since Android 1.0
  */
 public interface Closeable {
 
     /**
-     * Close the object and release any system resources it holds. If the object
-     * has been close, then invoke this method has no effect.
+     * Closes the object and release any system resources it holds. If the
+     * object has already been closed, then invoking this method has no effect.
      * 
      * @throws IOException
-     *             if any error raises when closing the object.
+     *             if any error occurs when closing the object.
+     * @since Android 1.0
      */
     public void close() throws IOException;
 }

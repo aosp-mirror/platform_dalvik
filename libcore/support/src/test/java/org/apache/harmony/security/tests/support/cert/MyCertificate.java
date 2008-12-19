@@ -22,6 +22,7 @@
 
 package org.apache.harmony.security.tests.support.cert;
 
+import java.io.ObjectStreamException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -36,8 +37,11 @@ import java.security.cert.CertificateException;
  */
 public class MyCertificate extends Certificate {
 
+    private static final long serialVersionUID = -1835303280727190066L;
     // MyCertificate encoding
     private final byte[] encoding;
+
+    public CertificateRep rep;
 
     /**
      * Constructs new object of class <code>MyCertificate</code>
@@ -83,11 +87,16 @@ public class MyCertificate extends Certificate {
         return "[My test Certificate, type: " + getType() + "]";
     }
 
+    public Object writeReplace() throws ObjectStreamException {
+        return super.writeReplace();
+    }
+
     /**
      * Returns public key (stub) from <code>MyCertificate</code> object
      */
     public PublicKey getPublicKey() {
         return new PublicKey() {
+           private static final long serialVersionUID = 788077928335589816L;
             public String getAlgorithm() {
                 return "TEST";
             }
@@ -100,4 +109,35 @@ public class MyCertificate extends Certificate {
         };
     }
 
+    public Certificate.CertificateRep getCertificateRep()
+            throws ObjectStreamException {
+        Object obj = super.writeReplace();
+        return (MyCertificateRep) obj;
+    }
+
+    public class MyCertificateRep extends Certificate.CertificateRep {
+
+        private static final long serialVersionUID = -3474284043994635553L;
+
+        private String type;
+        private byte[] data; 
+        
+        public MyCertificateRep(String type, byte[] data) {
+            super(type, data);
+            this.data = data;
+            this.type = type;
+        }
+
+        public Object readResolve() throws ObjectStreamException {
+            return super.readResolve();
+        }
+        
+        public String getType() {
+            return type;
+        }
+        
+        public byte[] getData() {
+            return data;
+        }
+    }
 }

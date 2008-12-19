@@ -16,8 +16,9 @@
 
 package org.apache.harmony.luni.platform;
 
-
-import org.apache.harmony.kernel.vm.VM;
+// BEGIN android-changed
+import dalvik.system.VMStack;
+// END android-changed
 
 /**
  * Platform
@@ -40,9 +41,11 @@ public class Platform {
     }
 
     private static final void accessCheck() {
-        if (VM.callerClassLoader() != null) {
+        // BEGIN android-changed
+        if (VMStack.getCallingClassLoader() != null) {
             throw new SecurityException();
         }
+        // END android-changed
     }
 
     public static IFileSystem getFileSystem() {

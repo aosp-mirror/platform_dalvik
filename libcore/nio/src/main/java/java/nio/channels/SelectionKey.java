@@ -19,47 +19,73 @@ package java.nio.channels;
 import java.nio.channels.Selector;
 
 /**
- * A key that representing the relationship of a channel and the selector.
+ * A {@code SelectionKey} represents the relationship between a channel and a
+ * selector for which the channel is registered.
+ * <h3>Operation set</h3>
+ * An operation set is represented by an integer value. The bits of an operation
+ * set represent categories of operations for a key's channel: Accepting socket
+ * connections ({@code OP_ACCEPT}), connecting with a socket ({@code OP_CONNECT}),
+ * reading ({@code OP_READ}) and writing ({@code OP_WRITE}).
+ * <h4>Interest set</h4>
+ * The interest set is an operation set that defines the operations that a
+ * {@link SelectableChannel channel} is interested in performing.
+ * <h4>Ready set</h4>
+ * The ready set is an operation set that shows the operations that a
+ * {@code channel} is ready to execute.
  * 
+ * @since Android 1.0
  */
 public abstract class SelectionKey {
 
     /**
-     * Interesting operation mask bit for socket-accept operations.
+     * Interest set mask bit for socket-accept operations.
+     * 
+     * @since Android 1.0
      */
     public static final int OP_ACCEPT = 16;
 
     /**
-     * Interesting operation mask bit for socket-connect operations.
+     * Interest set mask bit for socket-connect operations.
+     * 
+     * @since Android 1.0
      */
     public static final int OP_CONNECT = 8;
 
     /**
      * Interesting operation mask bit for read operations.
+     * 
+     * @since Android 1.0
      */
     public static final int OP_READ = 1;
 
     /**
-     * Interesting operation mask bit for write operations.
+     * Interest set mask bit for write operations.
+     * 
+     * @since Android 1.0
      */
     public static final int OP_WRITE = 4;
 
     private volatile Object attachment = null;
 
     /**
-     * The constructor.
+     * Constructs a new {@code SelectionKey}.
      * 
+     * @since Android 1.0
      */
     protected SelectionKey() {
         super();
     }
 
     /**
-     * Attaches an object to the key.
+     * Attaches an object to this key. It is acceptable to attach {@code null},
+     * this discards the old attachment.
      * 
      * @param anObject
-     *            the object to attach
-     * @return the last attached object
+     *            the object to attach, or {@code null} to discard the current
+     *            attachment.
+     * @return the last attached object or {@code null} if no object has been
+     *         attached.
+     * @since Android 1.0
      */
     public final Object attach(Object anObject) {
         Object oldAttachment = attachment;
@@ -70,7 +96,9 @@ public abstract class SelectionKey {
     /**
      * Gets the attached object.
      * 
-     * @return the attached object or null if no object has been attached
+     * @return the attached object or {@code null} if no object has been
+     *         attached.
+     * @since Android 1.0
      */
     public final Object attachment() {
         return attachment;
@@ -78,112 +106,144 @@ public abstract class SelectionKey {
 
     /**
      * Cancels this key.
+     * <p>
+     * A key that has been canceled is no longer valid. Calling this method on
+     * an already canceled key does nothing.
+     * </p>
+     * <p>
+     * Calling this method is safe at any time. The call might block until
+     * another ongoing call to a method of this selector has finished. The
+     * reason is that it is synchronizing on the key set of the selector. After
+     * this call finishes, the key will have been added to the selectors
+     * canceled-keys set and will not be included in any future selects of this
+     * selector.
+     * </p>
      * 
+     * @since Android 1.0
      */
     public abstract void cancel();
 
     /**
      * Gets the channel of this key.
      * 
-     * @return the channel of this key
+     * @return the channel of this key.
+     * @since Android 1.0
      */
     public abstract SelectableChannel channel();
 
     /**
-     * Gets the interesting operation of this key.
+     * Gets this key's {@link SelectionKey interest set}. The returned set has
+     * only those bits set that are valid for this key's channel.
      * 
-     * @return the interesting operation of this key
+     * @return the interest set of this key.
      * @throws CancelledKeyException
-     *             If the key has been cancelled already
+     *             if the key has already been canceled.
+     * @since Android 1.0
      */
     public abstract int interestOps();
 
     /**
-     * Sets the interesting operation for this key.
+     * Sets the {@link SelectionKey interest set} for this key.
      * 
      * @param operations
-     *            the interesting operation to set
-     * @return this key
+     *            the new interest set.
+     * @return this key.
      * @throws IllegalArgumentException
-     *             if the given operation is not in the key's interesting
-     *             operation set
+     *             if a bit in {@code operations} is not in the set of
+     *             {@link SelectableChannel#validOps() valid operations} of this
+     *             key's channel.
      * @throws CancelledKeyException
-     *             If the key has been cancelled already
+     *             if the key has already been canceled.
+     * @since Android 1.0
      */
     public abstract SelectionKey interestOps(int operations);
 
     /**
-     * Tells whether the channel of this key is interested in accept operation
-     * and ready for acceptation.
+     * Indicates whether this key's channel is interested in the accept
+     * operation and is ready to accept new connections. A call to this method
+     * is equal to executing {@code (readyOps() & OP_ACCEPT) == OP_ACCEPT}.
      * 
-     * @return true if the channel is interested in accept operation and ready
-     *         for acceptation
+     * @return {@code true} if the channel is interested in the accept operation
+     *         and is ready to accept new connections, {@code false} otherwise.
      * @throws CancelledKeyException
-     *             If the key has been cancelled already
+     *             if the key has already been canceled.
+     * @since Android 1.0
      */
     public final boolean isAcceptable() {
         return (readyOps() & OP_ACCEPT) == OP_ACCEPT;
     }
 
     /**
-     * Tells whether the channel of this key is interested in connect operation
-     * and ready for connection.
+     * Indicates whether this key's channel is interested in the connect
+     * operation and is ready to connect. A call to this method is equal to
+     * executing {@code (readyOps() & OP_CONNECT) == OP_CONNECT}.
      * 
-     * @return true if the channel is interested in connect operation and ready
-     *         for connection
+     * @return {@code true} if the channel is interested in the connect
+     *         operation and is ready to connect, {@code false} otherwise.
      * @throws CancelledKeyException
-     *             If the key has been cancelled already
-     */
+     *             if the key has already been canceled.
+     * @since Android 1.0
+     */    
     public final boolean isConnectable() {
         return (readyOps() & OP_CONNECT) == OP_CONNECT;
     }
 
     /**
-     * Tells whether the channel of this key is interested in read operation and
-     * ready for reading.
+     * Indicates whether this key's channel is interested in the read operation
+     * and is ready to read. A call to this method is equal to executing
+     * {@code (readyOps() & OP_READ) == OP_READ}.
      * 
-     * @return true if the channel is interested in read operation and ready for
-     *         reading
+     * @return {@code true} if the channel is interested in the read operation
+     *         and is ready to read, {@code false} otherwise.
      * @throws CancelledKeyException
-     *             If the key has been cancelled already
+     *             if the key has already been canceled.
+     * @since Android 1.0
      */
     public final boolean isReadable() {
         return (readyOps() & OP_READ) == OP_READ;
     }
 
     /**
-     * Tells whether the key is valid.
+     * Indicates whether this key is valid. A key is valid as long as it has not
+     * been canceled.
      * 
-     * @return true if the key has not been cancelled
+     * @return {@code true} if this key has not been canceled, {@code false}
+     *         otherwise.
+     * @since Android 1.0
      */
     public abstract boolean isValid();
 
     /**
-     * Tells whether the channel of this key is interested in write operation
-     * and ready for writing.
+     * Indicates whether this key's channel is interested in the write operation
+     * and is ready to write. A call to this method is equal to executing
+     * {@code (readyOps() & OP_WRITE) == OP_WRITE}.
      * 
-     * @return true if the channel is interested in write operation and ready
-     *         for writing
+     * @return {@code true} if the channel is interested in the wrie operation
+     *         and is ready to write, {@code false} otherwise.
      * @throws CancelledKeyException
-     *             If the key has been cancelled already
+     *             if the key has already been canceled.
+     * @since Android 1.0
      */
     public final boolean isWritable() {
         return (readyOps() & OP_WRITE) == OP_WRITE;
     }
 
     /**
-     * Gets the ready operation.
+     * Gets the set of operations that are ready. The returned set has only
+     * those bits set that are valid for this key's channel.
      * 
-     * @return the ready operation
+     * @return the operations for which this key's channel is ready.
      * @throws CancelledKeyException
-     *             If the key has been cancelled already
+     *             if the key has already been canceled.
+     * @since Android 1.0
      */
     public abstract int readyOps();
 
     /**
-     * Gets the related selector.
+     * Gets the selector for which this key's channel is registered.
      * 
-     * @return the related selector
+     * @return the related selector.
+     * @since Android 1.0
      */
     public abstract Selector selector();
 }

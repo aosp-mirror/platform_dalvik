@@ -19,14 +19,17 @@
 #include "OpCodeNames.h"
 
 /*
- * This works, but slashes and dashes both turn into underscores, and the
- * strings are all upper case.  The output is easier to read if we do the
- * strings by hand (could probably write a conversion function easily enough
- * if maintenance becomes annoying).
+ * The following two lines work, but slashes and dashes both turn into
+ * underscores, and the strings are all upper case.  The output is easier
+ * to read if we do the strings by hand (could probably write a
+ * post-processing function easily enough if maintenance becomes annoying).
  */
 //#define H(_op) #_op
 //DEFINE_GOTO_TABLE(gOpNames)
 
+/*
+ * Dalvik opcode names.
+ */
 static const char* gOpNames[256] = {
     /* 0x00 */
     "nop",

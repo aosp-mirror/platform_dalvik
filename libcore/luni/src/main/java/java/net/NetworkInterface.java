@@ -24,8 +24,12 @@ import java.util.Vector;
 import org.apache.harmony.luni.util.Msg;
 
 /**
- * This class provides an methods that are used to get information about the
- * network interfaces supported by the system
+ * This class is used to represent a network interface of the local device. An
+ * interface is defined by its address and a platform dependent name. The class
+ * provides methods to get all information about the available interfaces of the
+ * system or to identify the local interface of a joined multicast group.
+ * 
+ * @since Android 1.0
  */
 public final class NetworkInterface extends Object {
 
@@ -49,12 +53,12 @@ public final class NetworkInterface extends Object {
     private int hashCode;
 
     /**
-     * This native returns the list of network interfaces supported by the
-     * system. An array is returned which is easier to generate and which can
-     * easily be converted into the required enumeration on the java side
+     * This {@code native} method returns the list of network interfaces
+     * supported by the system. An array is returned which is easier to generate
+     * and which can easily be converted into the required enumeration on the
+     * java side.
      * 
-     * @return an array of zero or more NetworkInterface objects
-     * 
+     * @return an array of zero or more {@code NetworkInterface} objects
      * @throws SocketException
      *             if an error occurs when getting network interface information
      */
@@ -63,17 +67,17 @@ public final class NetworkInterface extends Object {
 
     /**
      * This constructor is used by the native method in order to construct the
-     * NetworkInterface objects in the array that it returns
+     * NetworkInterface objects in the array that it returns.
      * 
      * @param name
-     *            internal name associated with the interface
+     *            internal name associated with the interface.
      * @param displayName
-     *            a user interpretable name for the interface
+     *            a user interpretable name for the interface.
      * @param addresses
-     *            the Internet addresses associated with the interface
+     *            the Internet addresses associated with the interface.
      * @param interfaceIndex
      *            an index for the interface. Only set for platforms that
-     *            support IPV6
+     *            support IPV6.
      */
     NetworkInterface(String name, String displayName, InetAddress addresses[],
             int interfaceIndex) {
@@ -108,18 +112,20 @@ public final class NetworkInterface extends Object {
     }
 
     /**
-     * Returns the name associated with the network interface
+     * Gets the name associated with this network interface.
      * 
-     * @return name associated with the network interface
+     * @return the name of this {@code NetworkInterface} instance.
+     * @since Android 1.0
      */
     public String getName() {
         return name;
     }
 
     /**
-     * Returns the list of internet addresses bound to the interface
+     * Gets a list of addresses bound to this network interface.
      * 
-     * @return list of internet addresses bound to the interface
+     * @return the address list of the represented network interface.
+     * @since Android 1.0
      */
     public Enumeration<InetAddress> getInetAddresses() {
         /*
@@ -182,10 +188,11 @@ public final class NetworkInterface extends Object {
     }
 
     /**
-     * Returns the user readable name associated with the network interface
+     * Gets the human-readable name associated with this network interface.
      * 
-     * @return display name associated with the network interface or null if one
-     *         is not available
+     * @return the display name of this network interface or the name if the
+     *         display name is not available.
+     * @since Android 1.0
      */
     public String getDisplayName() {
         /*
@@ -199,14 +206,18 @@ public final class NetworkInterface extends Object {
     }
 
     /**
-     * Returns the network interface with the specified name, if one exists
+     * Gets the specific network interface according to a given name.
      * 
-     * @return network interface for name specified if it exists, otherwise null
-     * 
+     * @param interfaceName
+     *            the name to identify the searched network interface.
+     * @return the network interface with the specified name if one exists or
+     *         {@code null} otherwise.
      * @throws SocketException
-     *             if an error occurs when getting network interface information
+     *             if an error occurs while getting the network interface
+     *             information.
      * @throws NullPointerException
-     *             if the interface name passed in is null
+     *             if the given interface's name is {@code null}.
+     * @since Android 1.0
      */
     public static NetworkInterface getByName(String interfaceName)
             throws SocketException {
@@ -232,18 +243,18 @@ public final class NetworkInterface extends Object {
     }
 
     /**
-     * Returns the network interface which has the specified internet address
-     * bound to it, if one exists.
+     * Gets the specific network interface according to the given address.
      * 
      * @param address
-     *            address of interest
-     * @return network interface for internet address specified if it exists,
-     *         otherwise null
-     * 
+     *            the address to identify the searched network interface.
+     * @return the network interface with the specified address if one exists or
+     *         {@code null} otherwise.
      * @throws SocketException
-     *             if an error occurs when getting network interface information
+     *             if an error occurs while getting the network interface
+     *             information.
      * @throws NullPointerException
-     *             if the address passed in is null
+     *             if the given interface address is invalid.
+     * @since Android 1.0
      */
     public static NetworkInterface getByInetAddress(InetAddress address)
             throws SocketException {
@@ -283,14 +294,15 @@ public final class NetworkInterface extends Object {
     }
 
     /**
-     * Returns the list of network interfaces supported by the system or null if
-     * no interfaces are supported by the system
+     * Gets a list of all network interfaces available on the local system or
+     * {@code null} if no interface is available.
      * 
-     * @return Enumeration containing one NetworkInterface object for each
-     *         interface supported by the system
-     * 
+     * @return the list of {@code NetworkInterface} instances representing the
+     *         available interfaces.
      * @throws SocketException
-     *             if an error occurs when getting network interface information
+     *             if an error occurs while getting the network interface
+     *             information.
+     * @since Android 1.0
      */
     public static Enumeration<NetworkInterface> getNetworkInterfaces()
             throws SocketException {
@@ -321,16 +333,17 @@ public final class NetworkInterface extends Object {
     }
 
     /**
-     * Compares the specified object to this NetworkInterface and answer if they
-     * are equal. The object must be an instance of NetworkInterface with the
-     * same name, displayName and list of network interfaces to be the same
+     * Compares the specified object to this {@code NetworkInterface} and
+     * returns whether they are equal or not. The object must be an instance of
+     * {@code NetworkInterface} with the same name, {@code displayName} and list
+     * of network interfaces to be equal.
      * 
      * @param obj
-     *            the object to compare
-     * @return true if the specified object is equal to this NetworkInterfcae,
-     *         false otherwise
-     * 
+     *            the object to compare with this instance.
+     * @return {@code true} if the specified object is equal to this {@code
+     *         NetworkInterface}, {@code false} otherwise.
      * @see #hashCode
+     * @since Android 1.0
      */
     @Override
     public boolean equals(Object obj) {
@@ -394,11 +407,12 @@ public final class NetworkInterface extends Object {
     }
 
     /**
-     * Returns a hash code for this NetworkInterface object. Since the name
-     * should be unique for each network interface the hash code is generated
-     * using this name
+     * Gets the hashcode for this {@code NetworkInterface} instance. Since the
+     * name should be unique for each network interface the hashcode is
+     * generated using this name.
      * 
-     * @return the hashcode for hashtable indexing
+     * @return the hashcode value for this {@code NetworkInterface} instance.
+     * @since Android 1.0
      */
     @Override
     public int hashCode() {
@@ -409,10 +423,11 @@ public final class NetworkInterface extends Object {
     }
 
     /**
-     * Returns a string containing a concise, human-readable description of the
-     * network interface
+     * Gets a string containing a concise, human-readable description of this
+     * network interface.
      * 
-     * @return a printable representation for the network interface
+     * @return the textual representation for this network interface.
+     * @since Android 1.0
      */
     @Override
     public String toString() {

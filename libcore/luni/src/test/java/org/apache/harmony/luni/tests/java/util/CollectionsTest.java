@@ -17,6 +17,13 @@
 
 package org.apache.harmony.luni.tests.java.util;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
+import junit.framework.TestCase;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -39,9 +46,9 @@ import java.util.Vector;
 import org.apache.harmony.testframework.serialization.SerializationTest;
 import org.apache.harmony.testframework.serialization.SerializationTest.SerializableAssert;
 
-import junit.framework.TestCase;
 import tests.util.SerializationTester;
 
+@TestTargetClass(Collections.class) 
 public class CollectionsTest extends TestCase {
 
     private static final SerializableAssert comparator = new SerializableAssert() {
@@ -54,6 +61,15 @@ public class CollectionsTest extends TestCase {
      * @tests java.util.Collections#binarySearch(java.util.List,
      *        java.lang.Object, java.util.Comparator)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions are not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "binarySearch",
+          methodArgs = {java.util.List.class, java.lang.Object.class, java.util.Comparator.class}
+        )
+    })
     public void test_binarySearchLjava_util_ListLjava_lang_ObjectLjava_util_Comparator() {
         // Regression for HARMONY-94
         LinkedList<Integer> lst = new LinkedList<Integer>();
@@ -67,6 +83,15 @@ public class CollectionsTest extends TestCase {
      * @tests java.util.Collections#binarySearch(java.util.List,
      *        java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions are not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "binarySearch",
+          methodArgs = {java.util.List.class, java.lang.Object.class}
+        )
+    })
     @SuppressWarnings("unchecked")
     public void test_binarySearchLjava_util_ListLjava_lang_Object() {
         // regression for Harmony-1367
@@ -84,6 +109,15 @@ public class CollectionsTest extends TestCase {
     /**
      * @tests java.util.Collections#rotate(java.util.List, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "UnsupportedOperationException is not tested.",
+      targets = {
+        @TestTarget(
+          methodName = "rotate",
+          methodArgs = {java.util.List.class, int.class}
+        )
+    })
     public void test_rotateLjava_util_ListI() {
         // Regression for HARMONY-19 Rotate an *empty* list
         Collections.rotate(new ArrayList<Object>(), 25);
@@ -112,6 +146,15 @@ public class CollectionsTest extends TestCase {
     /**
      * @tests java.util.Collections#synchronizedCollection(java.util.Collection)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "synchronizedCollection",
+          methodArgs = {java.util.Collection.class}
+        )
+    })
     public void test_synchronizedCollectionLjava_util_Collection() {
         try {
             // Regression for HARMONY-93
@@ -125,6 +168,15 @@ public class CollectionsTest extends TestCase {
     /**
      * @tests java.util.Collections#synchronizedSortedMap(java.util.SortedMap)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "synchronizedSortedMap",
+          methodArgs = {java.util.SortedMap.class}
+        )
+    })
     public void test_synchronizedSortedMapLjava_util_SortedMap() {
         try {
             // Regression for HARMONY-93
@@ -138,6 +190,15 @@ public class CollectionsTest extends TestCase {
     /**
      * @tests java.util.Collections#synchronizedMap(java.util.Map)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "synchronizedMap",
+          methodArgs = {java.util.Map.class}
+        )
+    })
     public void test_synchronizedMapLjava_util_Map() {
         try {
             // Regression for HARMONY-93
@@ -151,6 +212,15 @@ public class CollectionsTest extends TestCase {
     /**
      * @tests java.util.Collections#synchronizedSet(java.util.Set)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "synchronizedSet",
+          methodArgs = {java.util.Set.class}
+        )
+    })
     public void test_synchronizedSetLjava_util_Set() {
         try {
             // Regression for HARMONY-93
@@ -164,6 +234,15 @@ public class CollectionsTest extends TestCase {
     /**
      * @tests java.util.Collections#synchronizedSortedSet(java.util.SortedSet)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "synchronizedSortedSet",
+          methodArgs = {java.util.SortedSet.class}
+        )
+    })
     public void test_synchronizedSortedSetLjava_util_SortedSet() {
         try {
             // Regression for HARMONY-93
@@ -177,6 +256,15 @@ public class CollectionsTest extends TestCase {
     /**
      * @tests java.util.Collections#unmodifiableCollection(java.util.Collection)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "unmodifiableCollection",
+          methodArgs = {java.util.Collection.class}
+        )
+    })
     public void test_unmodifiableCollectionLjava_util_Collection() {
         try {
             // Regression for HARMONY-93
@@ -190,6 +278,15 @@ public class CollectionsTest extends TestCase {
     /**
      * @tests java.util.Collections#unmodifiableMap(java.util.Map)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "unmodifiableMap",
+          methodArgs = {java.util.Map.class}
+        )
+    })
     public void test_unmodifiableMapLjava_util_Map() {
         try {
             // Regression for HARMONY-93
@@ -203,6 +300,15 @@ public class CollectionsTest extends TestCase {
     /**
      * @tests java.util.Collections#unmodifiableSet(java.util.Set)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "unmodifiableSet",
+          methodArgs = {java.util.Set.class}
+        )
+    })
     public void test_unmodifiableSetLjava_util_Set() {
         try {
             // Regression for HARMONY-93
@@ -216,6 +322,15 @@ public class CollectionsTest extends TestCase {
     /**
      * @tests java.util.Collections#unmodifiableSortedMap(java.util.SortedMap)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "unmodifiableSortedMap",
+          methodArgs = {java.util.SortedMap.class}
+        )
+    })
     public void test_unmodifiableSortedMapLjava_util_SortedMap() {
         try {
             // Regression for HARMONY-93
@@ -229,6 +344,15 @@ public class CollectionsTest extends TestCase {
     /**
      * @tests java.util.Collections#unmodifiableSortedSet(java.util.SortedSet)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "unmodifiableSortedSet",
+          methodArgs = {java.util.SortedSet.class}
+        )
+    })
     public void test_unmodifiableSortedSetLjava_util_SortedSet() {
         try {
             // Regression for HARMONY-93
@@ -242,6 +366,15 @@ public class CollectionsTest extends TestCase {
     /**
      * @tests java.util.Collections#frequency(java.util.Collection,Object)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "frequency",
+          methodArgs = {java.util.Collection.class, java.lang.Object.class}
+        )
+    })
     public void test_frequencyLjava_util_CollectionLint() {
         try {
             Collections.frequency(null, null);
@@ -278,6 +411,15 @@ public class CollectionsTest extends TestCase {
     /**
      * @tests java.util.Collections#reverseOrder()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "reverseOrder",
+          methodArgs = {}
+        )
+    })
     public void test_reverseOrder() {
         Comparator<String> roc = Collections.reverseOrder();
         assertNotNull("Assert 0: comparator must not be null", roc);
@@ -295,6 +437,15 @@ public class CollectionsTest extends TestCase {
     /**
      * @tests java.util.Collections#reverseOrder(java.util.Comparator)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "reverseOrder",
+          methodArgs = {Comparator.class}
+        )
+    })
     public void test_reverseOrderLjava_util_Comparator() {
         Comparator<String> roc = Collections
                 .reverseOrder(String.CASE_INSENSITIVE_ORDER);
@@ -320,7 +471,15 @@ public class CollectionsTest extends TestCase {
         assertTrue("Assert 5: the arrays are not equal, the sort failed",
                 Arrays.equals(fixtureDesc, numbers));
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions are not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "addAll",
+          methodArgs = {java.util.Collection.class, Object[].class}
+        )
+    })
     public void test_AddAll() {
         List<Object> l = new ArrayList<Object>();
         assertFalse(Collections.addAll(l, new Object[] {}));
@@ -331,7 +490,15 @@ public class CollectionsTest extends TestCase {
         assertTrue(l.equals(Arrays.asList(new Object[] { new Integer(1),
                 new Integer(2), new Integer(3) })));
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NullPointerException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "disjoint",
+          methodArgs = {java.util.Collection.class, java.util.Collection.class}
+        )
+    })
     public void test_Disjoint() {
         Object[] arr1 = new Object[10];
         for (int i = 0; i < arr1.length; i++) {
@@ -394,6 +561,15 @@ public class CollectionsTest extends TestCase {
     /**
      * @tests java.util.Collections.EmptyList#readResolve()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationSelf",
+          methodArgs = {}
+        )
+    })
     public void test_EmptyList_readResolve() throws Exception {
         SerializationTest.verifySelf(Collections.EMPTY_LIST, comparator);
     }
@@ -401,6 +577,15 @@ public class CollectionsTest extends TestCase {
     /**
      * @tests java.util.Collections.EmptyMap#readResolve()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationSelf",
+          methodArgs = {}
+        )
+    })
     public void test_EmptyMap_readResolve() throws Exception {
         SerializationTest.verifySelf(Collections.EMPTY_MAP, comparator);
     }
@@ -408,50 +593,115 @@ public class CollectionsTest extends TestCase {
     /**
      * @tests java.util.Collections.EmptySet#readResolve()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationSelf",
+          methodArgs = {}
+        )
+    })
     public void test_EmptySet_readResolve() throws Exception {
         SerializationTest.verifySelf(Collections.EMPTY_SET, comparator);
     }
-    
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationGolden",
+          methodArgs = {}
+        )
+    })
     public void test_checkedCollectionSerializationCompatability() throws Exception {
         Collection<String> c = Collections.emptySet();
         c = Collections.checkedCollection(c, String.class);
         SerializationTester.assertCompabilityEquals(c, "/serialization/org/apache/harmony/luni/tests/java/util/Collections_CheckedCollection.golden.ser");
     }
-    
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationGolden",
+          methodArgs = {}
+        )
+    })
     public void test_checkedListRandomAccessSerializationCompatability() throws Exception {
         List<String> c = new ArrayList<String>();
         assertTrue(c instanceof RandomAccess);
         c = Collections.checkedList(c, String.class);
         SerializationTester.assertCompabilityEquals(c, "/serialization/org/apache/harmony/luni/tests/java/util/Collections_CheckedListRandomAccess.golden.ser");
     }
-    
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationGolden",
+          methodArgs = {}
+        )
+    })
     public void test_checkedListSerializationCompatability() throws Exception {
         List<String> c = new LinkedList<String>();
         assertFalse(c instanceof RandomAccess);
         c = Collections.checkedList(c, String.class);
         SerializationTester.assertCompabilityEquals(c, "/serialization/org/apache/harmony/luni/tests/java/util/Collections_CheckedList.golden.ser");
     }
-    
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationGolden",
+          methodArgs = {}
+        )
+    })
     public void test_checkedSetSerializationCompatability() throws Exception {
         Set<String> c = new HashSet<String>();
         assertFalse(c instanceof SortedSet);
         c = Collections.checkedSet(c, String.class);
         SerializationTester.assertCompabilityEquals(c, "/serialization/org/apache/harmony/luni/tests/java/util/Collections_CheckedSet.golden.ser");
     }
-    
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationGolden",
+          methodArgs = {}
+        )
+    })
     public void test_checkedMapSerializationCompatability() throws Exception {
         Map<String, String> c = new HashMap<String, String>();
         assertFalse(c instanceof SortedMap);
         c = Collections.checkedMap(c, String.class, String.class);
         SerializationTester.assertCompabilityEquals(c, "/serialization/org/apache/harmony/luni/tests/java/util/Collections_CheckedMap.golden.ser");
     }
-    
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationGolden",
+          methodArgs = {}
+        )
+    })
     public void test_checkedSortedSetSerializationCompatability() throws Exception {
         SortedSet<String> c = new TreeSet<String>();
         c = Collections.checkedSortedSet(c, String.class);
         SerializationTester.assertCompabilityEquals(c, "/serialization/org/apache/harmony/luni/tests/java/util/Collections_CheckedSortedSet.golden.ser");
     }
-    
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationGolden",
+          methodArgs = {}
+        )
+    })
     public void test_checkedSortedMapSerializationCompatability() throws Exception {
         SortedMap<String, String> c = new TreeMap<String, String>();
         c = Collections.checkedSortedMap(c, String.class, String.class);

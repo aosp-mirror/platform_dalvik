@@ -17,6 +17,11 @@
 
 package org.apache.harmony.luni.tests.java.net;
 
+import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.Serializable;
 import java.net.Inet4Address;
 import java.net.InetAddress;
@@ -24,11 +29,21 @@ import java.net.InetAddress;
 import org.apache.harmony.testframework.serialization.SerializationTest;
 import org.apache.harmony.testframework.serialization.SerializationTest.SerializableAssert;
 
+@TestTargetClass(Inet4Address.class) 
 public class Inet4AddressTest extends junit.framework.TestCase {
 
     /**
      * @tests java.net.Inet4Address#isMulticastAddress()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isMulticastAddress",
+          methodArgs = {}
+        )
+    })
     public void test_isMulticastAddress() {
 
         // Create 2 IP v4 addresses and call "isMulticastAddress()"
@@ -61,6 +76,15 @@ public class Inet4AddressTest extends junit.framework.TestCase {
     /**
      * @tests java.net.Inet4Address#isAnyLocalAddress()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isAnyLocalAddress",
+          methodArgs = {}
+        )
+    })
     public void test_isAnyLocalAddress() {
         String addrName = "";
         try {
@@ -76,6 +100,15 @@ public class Inet4AddressTest extends junit.framework.TestCase {
     /**
      * @tests java.net.Inet4Address#isLoopbackAddress()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isLoopbackAddress",
+          methodArgs = {}
+        )
+    })
     public void test_isLoopbackAddress() {
         // Create some IP V4 addresses and test if they are local...
 
@@ -108,6 +141,15 @@ public class Inet4AddressTest extends junit.framework.TestCase {
     /**
      * @tests java.net.Inet4Address#isLinkLocalAddress()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isLinkLocalAddress",
+          methodArgs = {}
+        )
+    })
     public void test_isLinkLocalAddress() {
 
         String addrName = "";
@@ -128,6 +170,15 @@ public class Inet4AddressTest extends junit.framework.TestCase {
     /**
      * @tests java.net.Inet4Address#isSiteLocalAddress()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isSiteLocalAddress",
+          methodArgs = {}
+        )
+    })
     public void test_isSiteLocalAddress() {
         String addrName = "";
         try {
@@ -147,6 +198,15 @@ public class Inet4AddressTest extends junit.framework.TestCase {
     /**
      * @tests java.net.Inet4Address#isMCGlobal()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isMCGlobal",
+          methodArgs = {}
+        )
+    })
     public void test_isMCGlobal() {
 
         // Create an IPv4 mulitcast address. It should return
@@ -199,6 +259,15 @@ public class Inet4AddressTest extends junit.framework.TestCase {
     /**
      * @tests java.net.Inet4Address#isMCNodeLocal()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isMCNodeLocal",
+          methodArgs = {}
+        )
+    })
     public void test_isMCNodeLocal() {
         // Create an IPv4 mulitcast address. It should return
         // false for node-local mutlicast. There are no valid IPv4
@@ -230,6 +299,15 @@ public class Inet4AddressTest extends junit.framework.TestCase {
     /**
      * @tests java.net.Inet4Address#isMCLinkLocal()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isMCLinkLocal",
+          methodArgs = {}
+        )
+    })
     public void test_isMCLinkLocal() {
         // Create an IPv4 mulitcast address. It should return
         // false for link-local mutlicast. There are no valid IPv4
@@ -273,6 +351,15 @@ public class Inet4AddressTest extends junit.framework.TestCase {
     /**
      * @tests java.net.Inet4Address#isMCSiteLocal()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isMCSiteLocal",
+          methodArgs = {}
+        )
+    })
     public void test_isMCSiteLocal() {
         // Create an IPv4 mulitcast address. It should return
         // false for site-local mutlicast. There are no valid IPv4
@@ -322,6 +409,15 @@ public class Inet4AddressTest extends junit.framework.TestCase {
     /**
      * @tests java.net.Inet4Address#isMCOrgLocal()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isMCOrgLocal",
+          methodArgs = {}
+        )
+    })
     public void test_isMCOrgLocal() {
         // Create an IPv4 mulitcast address. It should return
         // false for organization-local mutlicast. There are no valid IPv4
@@ -384,6 +480,15 @@ public class Inet4AddressTest extends junit.framework.TestCase {
     /**
      * @tests serialization/deserialization compatibility.
      */
+    @TestInfo(
+              level = TestLevel.COMPLETE,
+              purpose = "Checks serialization",
+              targets = {
+                @TestTarget(
+                  methodName = "!SerializationSelf",
+                  methodArgs = {}
+                )
+            })
     public void testSerializationSelf() throws Exception {
 
         SerializationTest.verifySelf(Inet4Address.getByName("localhost"),
@@ -393,6 +498,15 @@ public class Inet4AddressTest extends junit.framework.TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
+    @TestInfo(
+              level = TestLevel.COMPLETE,
+              purpose = "Checks serialization",
+              targets = {
+                @TestTarget(
+                  methodName = "!SerializationGolden",
+                  methodArgs = {}
+                )
+            })
     public void testSerializationCompatibility() throws Exception {
 
         SerializationTest.verifyGolden(this, Inet4Address

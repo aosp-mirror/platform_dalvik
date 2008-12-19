@@ -15,23 +15,24 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vladimir N. Molotkov
-* @version $Revision$
-*/
-
 package java.security.spec;
 
 /**
- * @com.intel.drl.spec_ref
+ * The abstract key specification for a public or a private key in encoded
+ * format.
  * 
+ * @since Android 1.0
  */
 public abstract class EncodedKeySpec implements KeySpec {
     // Encoded key
     private final byte[] encodedKey;
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code EncodedKeySpec} with the specified encoded key bytes.
+     * 
+     * @param encodedKey
+     *            the encoded key bytes.
+     * @since Android 1.0
      */
     public EncodedKeySpec(byte[] encodedKey) {
         // Defensively copies parameter
@@ -42,7 +43,10 @@ public abstract class EncodedKeySpec implements KeySpec {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the encoded key bytes.
+     * 
+     * @return the encoded key bytes.
+     * @since Android 1.0
      */
     public byte[] getEncoded() {
         // Defensively copies private array
@@ -53,7 +57,12 @@ public abstract class EncodedKeySpec implements KeySpec {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the name of the encoding format of this encoded key
+     * specification.
+     * 
+     * @return the name of the encoding format of this encoded key
+     *         specification.
+     * @since Android 1.0
      */
     public abstract String getFormat();
 }

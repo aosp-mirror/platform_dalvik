@@ -23,7 +23,11 @@ import java.util.Map;
 import org.apache.harmony.luni.util.PriviAction;
 
 /**
- * This class is used to manage the negative name lookup cache.
+ * This class is used to maintain the negative name lookup cache, which caches
+ * host names which could not be resolved, as a security feature.
+ * 
+ * @see NegCacheElement
+ * @since Android 1.0
  */
 class NegativeCache<K, V> extends LinkedHashMap<K, V> {
 
@@ -38,22 +42,24 @@ class NegativeCache<K, V> extends LinkedHashMap<K, V> {
     static final float LOADING = 0.75F;
 
     /**
-     * Returns the hostname for the cache element
+     * Returns the hostname for the cache element.
      * 
-     * @return hostName name of the host on which the lookup failed
+     * @return hostName name of the host for which the lookup failed.
+     * @since Android 1.0
      */
     NegativeCache(int initialCapacity, float loadFactor, boolean accessOrder) {
         super(initialCapacity, loadFactor, accessOrder);
     }
 
     /**
-     * Returns if we should remove the Eldest entry. We remove the eldest entry
-     * if the size has grown beyond the maximum size allowed for the cache. We
-     * create the LinkedHashMap such that this deletes the least recently used
-     * entry
+     * Returns whether the eldest entry should be removed. It is removed if the
+     * size has grown beyond the maximum size allowed for the cache. A {@code
+     * LinkedHashMap} is created such that the least recently used entry is
+     * deleted.
      * 
      * @param eldest
-     *            the map entry which will be deleted if we return true
+     *            the map entry which will be deleted if we return {@code true}.
+     * @since Android 1.0
      */
     @Override
     protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
@@ -62,12 +68,13 @@ class NegativeCache<K, V> extends LinkedHashMap<K, V> {
 
     /**
      * Adds the host name and the corresponding name lookup fail message to the
-     * cache
+     * cache.
      * 
      * @param hostName
-     *            the name of the host for which the lookup failed
+     *            the name of the host for which the lookup failed.
      * @param failedMessage
-     *            the message returned when we failed the lookup
+     *            the message returned when the lookup fails.
+     * @since Android 1.0
      */
     static void put(String hostName, String failedMessage) {
         checkCacheExists();
@@ -75,13 +82,14 @@ class NegativeCache<K, V> extends LinkedHashMap<K, V> {
     }
 
     /**
-     * Returns the message that occurred when we failed to lookup the host if
-     * such a failure is within the cache and the entry has not yet expired
+     * Returns the message of the negative cache if the entry has not yet
+     * expired.
      * 
      * @param hostName
-     *            the name of the host for which we are looking for an entry
-     * @return the message which was returned when the host failed to be looked
-     *         up if there is still a valid entry within the cache
+     *            the name of the host for which we look up the entry.
+     * @return the message which was returned when the host lookup failed if the
+     *         entry has not yet expired.
+     * @since Android 1.0
      */
     static String getFailedMessage(String hostName) {
         checkCacheExists();
@@ -102,12 +110,14 @@ class NegativeCache<K, V> extends LinkedHashMap<K, V> {
                 negCache.clear();
                 element = null;
             } else if (ttl != -1) {
+                // BEGIN android-changed
                 long delta = System.nanoTime() - element.nanoTimeAdded;
                 if (delta > secondsToNanos(ttl)) {
                     // remove the element from the cache and return null
                     negCache.remove(hostName);
                     element = null;
                 }
+                // END android-changed
             }
         }
         if (element != null) {
@@ -116,15 +126,18 @@ class NegativeCache<K, V> extends LinkedHashMap<K, V> {
         return null;
     }
 
+    // BEGIN android-added
     /**
      * Multiplies value by 1 billion.
      */
     private static int secondsToNanos(int ttl) {
         return ttl * 1000000000;
     }
+    // END android-added
 
     /**
-     * This method checks if we have created the cache and if not creates it
+     * This method checks whether the cache was already created and if not
+     * creates it.
      */
     static void checkCacheExists() {
         if (negCache == null) {

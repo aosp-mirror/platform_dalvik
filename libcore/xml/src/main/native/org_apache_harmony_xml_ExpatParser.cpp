@@ -1,4 +1,4 @@
-/*parsingContext->env
+/*
  * Copyright (C) 2008 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -441,7 +441,7 @@ static size_t fillBuffer(ParsingContext* parsingContext, const char* characters,
     strcpylen8to16((char16_t*) nativeBuffer, characters, length, &utf16length);
 
     // Release our native reference.
-    env->ReleaseCharArrayElements(buffer, nativeBuffer, JNI_ABORT);
+    env->ReleaseCharArrayElements(buffer, nativeBuffer, 0);
 
     return utf16length;
 }

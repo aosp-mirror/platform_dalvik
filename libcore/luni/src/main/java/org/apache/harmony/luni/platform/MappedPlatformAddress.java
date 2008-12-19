@@ -13,6 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+// BEGIN android-note
+// address length was changed from long to int for performance reasons.
+// END android-note
+
 package org.apache.harmony.luni.platform;
 
 public class MappedPlatformAddress extends PlatformAddress {
@@ -49,4 +54,9 @@ public class MappedPlatformAddress extends PlatformAddress {
     public final PlatformAddress offsetBytes(int offset) {
         return PlatformAddressFactory.mapOn(osaddr + offset, size - offset);
     }
+    // BEGIN android-removed
+    // public final PlatformAddress offsetBytes(long offset) {
+    //     return PlatformAddressFactory.mapOn(osaddr + offset, size - offset);
+    // }
+    // END android-removed
 }

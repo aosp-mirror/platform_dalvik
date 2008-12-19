@@ -17,11 +17,16 @@
 
 package org.apache.harmony.sql.tests.java.sql;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.sql.DriverPropertyInfo;
 import java.util.Arrays;
 
 import junit.framework.TestCase;
-
+@TestTargetClass(DriverPropertyInfo.class)
 /**
  * JUnit Testcase for the java.sql.DriverPropertyInfo class
  * 
@@ -32,6 +37,15 @@ public class DriverPropertyInfoTest extends TestCase {
     /*
      * Public statics test
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "",
+          methodArgs = {}
+        )
+    })
     public void testPublicStatics() {
 
     } // end method testPublicStatics
@@ -39,6 +53,15 @@ public class DriverPropertyInfoTest extends TestCase {
     /*
      * Constructor test
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verification with invalid parameters missed",
+      targets = {
+        @TestTarget(
+          methodName = "DriverPropertyInfo",
+          methodArgs = {String.class, String.class}
+        )
+    })
     public void testDriverPropertyInfoStringString() {
 
         DriverPropertyInfo aDriverPropertyInfo = new DriverPropertyInfo(
@@ -67,6 +90,15 @@ public class DriverPropertyInfoTest extends TestCase {
 
     static String updateName = "updateName";
 
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Field testing",
+      targets = {
+        @TestTarget(
+          methodName = "!Constants",
+          methodArgs = {}
+        )
+    })
     public void testPublicFields() {
 
         // Constructor here...

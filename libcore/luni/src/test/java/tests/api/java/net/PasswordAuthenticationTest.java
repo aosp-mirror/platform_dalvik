@@ -17,58 +17,91 @@
 
 package tests.api.java.net;
 
+import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.net.PasswordAuthentication;
 
+@TestTargetClass(PasswordAuthentication.class) 
 public class PasswordAuthenticationTest extends junit.framework.TestCase {
 
-	/**
-	 * @tests java.net.PasswordAuthentication#PasswordAuthentication(java.lang.String,
-	 *        char[])
-	 */
-	public void test_ConstructorLjava_lang_String$C() {
-		// Test for method java.net.PasswordAuthentication(java.lang.String,
-		// char [])
-		char[] password = new char[] { 'd', 'r', 'o', 'w', 's', 's', 'a', 'p' };
-		final String name = "Joe Blow";
-		PasswordAuthentication pa = new PasswordAuthentication(name, password);
-		char[] returnedPassword = pa.getPassword();
-		assertTrue("Incorrect name", pa.getUserName().equals(name));
-		assertTrue("Password was not cloned", returnedPassword != password);
-		assertTrue("Passwords not equal length",
-				returnedPassword.length == password.length);
-		for (int counter = password.length - 1; counter >= 0; counter--)
-			assertTrue("Passwords not equal",
-					returnedPassword[counter] == password[counter]);
-	}
+    /**
+     * @tests java.net.PasswordAuthentication#PasswordAuthentication(java.lang.String,
+     *        char[])
+     */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "PasswordAuthentication",
+          methodArgs = {String.class, char[].class}
+        )
+    })
+    public void test_ConstructorLjava_lang_String$C() {
+        // Test for method java.net.PasswordAuthentication(java.lang.String,
+        // char [])
+        char[] password = new char[] { 'd', 'r', 'o', 'w', 's', 's', 'a', 'p' };
+        final String name = "Joe Blow";
+        PasswordAuthentication pa = new PasswordAuthentication(name, password);
+        char[] returnedPassword = pa.getPassword();
+        assertTrue("Incorrect name", pa.getUserName().equals(name));
+        assertTrue("Password was not cloned", returnedPassword != password);
+        assertTrue("Passwords not equal length",
+                returnedPassword.length == password.length);
+        for (int counter = password.length - 1; counter >= 0; counter--)
+            assertTrue("Passwords not equal",
+                    returnedPassword[counter] == password[counter]);
+    }
 
-	/**
-	 * @tests java.net.PasswordAuthentication#getPassword()
-	 */
-	public void test_getPassword() {
-		// Test for method char [] java.net.PasswordAuthentication.getPassword()
-		assertTrue("Used to test", true);
-	}
+    /**
+     * @tests java.net.PasswordAuthentication#getPassword()
+     */
+@TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test.",
+      targets = {
+        @TestTarget(
+          methodName = "getPassword",
+          methodArgs = {}
+        )
+    })
+    public void test_getPassword() {
+        // Test for method char [] java.net.PasswordAuthentication.getPassword()
+        assertTrue("Used to test", true);
+    }
 
-	/**
-	 * @tests java.net.PasswordAuthentication#getUserName()
-	 */
-	public void test_getUserName() {
-		// Test for method java.lang.String
-		// java.net.PasswordAuthentication.getUserName()
-		assertTrue("Used to test", true);
-	}
+    /**
+     * @tests java.net.PasswordAuthentication#getUserName()
+     */
+@TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test.",
+      targets = {
+        @TestTarget(
+          methodName = "getUserName",
+          methodArgs = {}
+        )
+    })
+    public void test_getUserName() {
+        // Test for method java.lang.String
+        // java.net.PasswordAuthentication.getUserName()
+        assertTrue("Used to test", true);
+    }
 
-	/**
-	 * Sets up the fixture, for example, open a network connection. This method
-	 * is called before a test is executed.
-	 */
-	protected void setUp() {
-	}
+    /**
+     * Sets up the fixture, for example, open a network connection. This method
+     * is called before a test is executed.
+     */
+    protected void setUp() {
+    }
 
-	/**
-	 * Tears down the fixture, for example, close a network connection. This
-	 * method is called after a test is executed.
-	 */
-	protected void tearDown() {
-	}
+    /**
+     * Tears down the fixture, for example, close a network connection. This
+     * method is called after a test is executed.
+     */
+    protected void tearDown() {
+    }
 }

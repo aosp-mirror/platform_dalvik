@@ -16,19 +16,34 @@
 
 package org.apache.harmony.luni.tests.java.util;
 
-import java.io.Serializable;
-import java.util.IllegalFormatFlagsException;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
+
+import java.io.Serializable;
+import java.util.IllegalFormatFlagsException;
 
 import org.apache.harmony.testframework.serialization.SerializationTest;
 import org.apache.harmony.testframework.serialization.SerializationTest.SerializableAssert;
 
+@TestTargetClass(IllegalFormatFlagsException.class) 
 public class IllegalFormatFlagsExceptionTest extends TestCase {
 
     /**
      * @tests java.util.IllegalFormatFlagsException#IllegalFormatFlagsException(String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "IllegalFormatFlagsException",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_illegalFormatFlagsException() {
         try {
             new IllegalFormatFlagsException(null);
@@ -41,6 +56,15 @@ public class IllegalFormatFlagsExceptionTest extends TestCase {
     /**
      * @tests java.util.IllegalFormatFlagsException.getFlags()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getFlags",
+          methodArgs = {}
+        )
+    })
     public void test_getFlags() {
         String flags = "TESTFLAGS";
         IllegalFormatFlagsException illegalFormatFlagsException = new IllegalFormatFlagsException(
@@ -51,6 +75,15 @@ public class IllegalFormatFlagsExceptionTest extends TestCase {
     /**
      * @tests java.util.IllegalFormatFlagsException.getMessage()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getMessage",
+          methodArgs = {}
+        )
+    })
     public void test_getMessage() {
         String flags = "TESTFLAGS";
         IllegalFormatFlagsException illegalFormatFlagsException = new IllegalFormatFlagsException(
@@ -77,6 +110,15 @@ public class IllegalFormatFlagsExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization.
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationSelf",
+          methodArgs = {}
+        )
+    })
     public void testSerializationSelf() throws Exception {
 
         SerializationTest.verifySelf(new IllegalFormatFlagsException(
@@ -86,6 +128,15 @@ public class IllegalFormatFlagsExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationGolden",
+          methodArgs = {}
+        )
+    })
     public void testSerializationCompatibility() throws Exception {
 
         SerializationTest.verifyGolden(this, new IllegalFormatFlagsException(

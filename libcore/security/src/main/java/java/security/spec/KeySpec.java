@@ -15,16 +15,13 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package java.security.spec;
 
 /**
- * @com.intel.drl.spec_ref
+ * The marker interface for key specifications. The purpose is
+ * to group key specifications for cryptographic keys.
  * 
+ * @since Android 1.0
  */
 public interface KeySpec {
 }

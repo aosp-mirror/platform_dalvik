@@ -17,8 +17,14 @@
 
 package tests.api.java.util;
 
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass; 
+
 import java.util.Random;
 
+@TestTargetClass(Random.class) 
 public class RandomTest extends junit.framework.TestCase {
 
     Random r;
@@ -26,6 +32,15 @@ public class RandomTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Random#Random()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Random",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         // Test for method java.util.Random()
         assertTrue("Used to test", true);
@@ -34,6 +49,15 @@ public class RandomTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Random#Random(long)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Random",
+          methodArgs = {long.class}
+        )
+    })
     public void test_ConstructorJ() {
         Random r = new Random(8409238L);
         Random r2 = new Random(8409238L);
@@ -45,6 +69,15 @@ public class RandomTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Random#nextBoolean()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "nextBoolean",
+          methodArgs = {}
+        )
+    })
     public void test_nextBoolean() {
         // Test for method boolean java.util.Random.nextBoolean()
         boolean falseAppeared = false, trueAppeared = false;
@@ -62,6 +95,15 @@ public class RandomTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Random#nextBytes(byte[])
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "nextBytes",
+          methodArgs = {byte[].class}
+        )
+    })
     public void test_nextBytes$B() {
         // Test for method void java.util.Random.nextBytes(byte [])
         boolean someDifferent = false;
@@ -79,6 +121,15 @@ public class RandomTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Random#nextDouble()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "nextDouble",
+          methodArgs = {}
+        )
+    })
     public void test_nextDouble() {
         // Test for method double java.util.Random.nextDouble()
         double lastNum = r.nextDouble();
@@ -103,6 +154,15 @@ public class RandomTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Random#nextFloat()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "nextFloat",
+          methodArgs = {}
+        )
+    })
     public void test_nextFloat() {
         // Test for method float java.util.Random.nextFloat()
         float lastNum = r.nextFloat();
@@ -126,6 +186,15 @@ public class RandomTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Random#nextGaussian()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "nextGaussian",
+          methodArgs = {}
+        )
+    })
     public void test_nextGaussian() {
         // Test for method double java.util.Random.nextGaussian()
         double lastNum = r.nextGaussian();
@@ -150,6 +219,15 @@ public class RandomTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Random#nextInt()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "nextInt",
+          methodArgs = {}
+        )
+    })
     public void test_nextInt() {
         // Test for method int java.util.Random.nextInt()
         int lastNum = r.nextInt();
@@ -168,6 +246,15 @@ public class RandomTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Random#nextInt(int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "nextInt",
+          methodArgs = {int.class}
+        )
+    })
     public void test_nextIntI() {
         // Test for method int java.util.Random.nextInt(int)
         final int range = 10;
@@ -194,6 +281,15 @@ public class RandomTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Random#nextLong()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "nextLong",
+          methodArgs = {}
+        )
+    })
     public void test_nextLong() {
         // Test for method long java.util.Random.nextLong()
         long lastNum = r.nextLong();
@@ -212,6 +308,15 @@ public class RandomTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Random#setSeed(long)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setSeed",
+          methodArgs = {long.class}
+        )
+    })
     public void test_setSeedJ() {
         // Test for method void java.util.Random.setSeed(long)
         long[] randomArray = new long[100];

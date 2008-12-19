@@ -16,6 +16,11 @@
 
 package tests.api.java.net;
 
+import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.net.Authenticator;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
@@ -25,11 +30,21 @@ import java.net.Authenticator.RequestorType;
 
 import junit.framework.TestCase;
 
+@TestTargetClass(Authenticator.class) 
 public class AuthenticatorTest extends TestCase {
 
     /**
      * @tests java.net.Authenticator.RequestorType#valueOf(String)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Test for checking RequestorType values.",
+      targets = {
+        @TestTarget(
+          methodName = "!Constants",
+          methodArgs = {}
+        )
+    })
     public void test_RequestorType_valueOfLjava_lang_String() throws Exception {
         assertEquals(RequestorType.PROXY, Authenticator.RequestorType
                 .valueOf("PROXY"));
@@ -42,7 +57,7 @@ public class AuthenticatorTest extends TestCase {
             // correct
         }
         // Some old RIs throw IllegalArgumentException 
-		// Latest RIs throw NullPointerException.
+        // Latest RIs throw NullPointerException.
         try {
             Authenticator.RequestorType.valueOf(null);
             fail("Must throw an exception");
@@ -56,6 +71,15 @@ public class AuthenticatorTest extends TestCase {
     /**
      * @tests java.net.Authenticator.RequestorType#values()
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "Test for checking RequestorType values.",
+          targets = {
+            @TestTarget(
+              methodName = "!Constants",
+              methodArgs = {}
+            )
+        })
     public void test_RequestorType_values() throws Exception {        
         RequestorType[] rt = RequestorType.values();
         assertEquals(RequestorType.PROXY, rt[0]);
@@ -65,6 +89,15 @@ public class AuthenticatorTest extends TestCase {
     /**
      * @tests java.net.Authenticator#requestPasswordAuthentication(java.net.InetAddress, int, String, String, String)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SecurityException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "requestPasswordAuthentication",
+          methodArgs = {InetAddress.class, int.class, String.class, String.class, String.class}
+        )
+    })
     public void test_requestPasswordAuthentication_InetAddress_int_String_String_String() throws Exception {
         // Regression test for Harmony-2413
         MockAuthenticator mock = new MockAuthenticator();
@@ -77,6 +110,15 @@ public class AuthenticatorTest extends TestCase {
     /**
      * @tests java.net.Authenticator#requestPasswordAuthentication(String, java.net.InetAddress, int, String, String, String)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SecurityException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "requestPasswordAuthentication",
+          methodArgs = {String.class, InetAddress.class, int.class, String.class, String.class, String.class}
+        )
+    })
     public void test_requestPasswordAuthentication_String_InetAddress_int_String_String_String() throws Exception {
         // Regression test for Harmony-2413
         MockAuthenticator mock = new MockAuthenticator();
@@ -89,8 +131,17 @@ public class AuthenticatorTest extends TestCase {
     /**
      * 
      * @tests java.net.Authenticator#
-     * 		requestPasswordAuthentication_String_InetAddress_int_String_String_String_URL_Authenticator_RequestorType()
+     *         requestPasswordAuthentication_String_InetAddress_int_String_String_String_URL_Authenticator_RequestorType()
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SecurityException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "requestPasswordAuthentication",
+          methodArgs = {String.class, InetAddress.class, int.class, String.class, String.class, String.class, URL.class, Authenticator.RequestorType.class}
+        )
+    })
     public void test_requestPasswordAuthentication_String_InetAddress_int_String_String_String_URL_Authenticator_RequestorType()
             throws UnknownHostException, MalformedURLException {
         MockAuthenticator mock = new MockAuthenticator();
@@ -106,7 +157,16 @@ public class AuthenticatorTest extends TestCase {
      * 
      * @tests java.net.Authenticator#getRequestingURL()
      */
-    public void test_getRequestingURL() throws Exception {
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getRequestingURL",
+          methodArgs = {}
+        )
+    })
+        public void test_getRequestingURL() throws Exception {
         MockAuthenticator mock = new MockAuthenticator();
         assertNull(mock.getRequestingURL());
     }
@@ -115,6 +175,15 @@ public class AuthenticatorTest extends TestCase {
      * 
      * @tests java.net.Authenticator#getRequestorType()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getRequestorType",
+          methodArgs = {}
+        )
+    })
     public void test_getRequestorType() throws Exception {
         MockAuthenticator mock = new MockAuthenticator();
         assertNull(mock.getRequestorType());

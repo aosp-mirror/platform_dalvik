@@ -17,134 +17,172 @@
 
 package java.io;
 
+// BEGIN android-added
+import org.apache.harmony.luni.util.Msg;
+// END android-added
+
 /**
- * InputStream is an abstract class for all byte input streams. It provides
- * basic method implementations for reading bytes from a stream.
+ * The base class for all input streams. An input stream is a means of reading
+ * data from a source in a byte-wise manner.
+ * <p>
+ * Some input streams also support marking a position in the input stream and
+ * returning to this position later. This abstract class does not provide a
+ * fully working implementation, so it needs to be subclassed, and at least the
+ * {@link #read()} method needs to be overridden. Overriding some of the
+ * non-abstract methods is also often advised, since it might result in higher
+ * efficiency.
+ * <p>
+ * Many specialized input streams for purposes like reading from a file already
+ * exist in this package.
  * 
  * @see OutputStream
+ * 
+ * @since Android 1.0
  */
 public abstract class InputStream extends Object implements Closeable {
 
     private static byte[] skipBuf;
 
     /**
-     * This constructor does nothing interesting. Provided for signature
+     * This constructor does nothing. It is provided for signature
      * compatibility.
+     * 
+     * @since Android 1.0
      */
     public InputStream() {
         /* empty */
     }
 
     /**
-     * Returns a int representing then number of bytes that are available before
-     * this InputStream will block. This method always returns 0. Subclasses
-     * should override and indicate the correct number of bytes available.
+     * Returns the number of bytes that are available before this stream will
+     * block. This implementation always returns 0. Subclasses should override
+     * and indicate the correct number of bytes available.
      * 
      * @return the number of bytes available before blocking.
-     * 
      * @throws IOException
-     *             If an error occurs in this InputStream.
+     *             if an error occurs in this stream.
+     * @since Android 1.0
      */
     public int available() throws IOException {
         return 0;
     }
 
     /**
-     * Close the InputStream. Concrete implementations of this class should free
+     * Closes this stream. Concrete implementations of this class should free
      * any resources during close. This implementation does nothing.
      * 
      * @throws IOException
-     *             If an error occurs attempting to close this InputStream.
+     *             if an error occurs while closing this stream.
+     * @since Android 1.0
      */
     public void close() throws IOException {
         /* empty */
     }
 
     /**
-     * Set a Mark position in this InputStream. The parameter
-     * <code>readLimit</code> indicates how many bytes can be read before a
-     * mark is invalidated. Sending reset() will reposition the Stream back to
-     * the marked position provided <code>readLimit</code> has not been
-     * surpassed.
+     * Sets a mark position in this InputStream. The parameter {@code readlimit}
+     * indicates how many bytes can be read before the mark is invalidated.
+     * Sending {@code reset()} will reposition the stream back to the marked
+     * position provided {@code readLimit} has not been surpassed.
      * <p>
      * This default implementation does nothing and concrete subclasses must
-     * provide their own implementations.
+     * provide their own implementation.
+     * </p>
      * 
      * @param readlimit
-     *            the number of bytes to be able to read before invalidating the
-     *            mark.
+     *            the number of bytes that can be read from this stream before
+     *            the mark is invalidated.
+     * @see #markSupported()
+     * @see #reset()
+     * @since Android 1.0
      */
     public void mark(int readlimit) {
         /* empty */
     }
 
     /**
-     * Returns a boolean indicating whether or not this InputStream supports
-     * mark() and reset(). This class provides a default implementation which
-     * returns false.
+     * Indicates whether this stream supports the {@code mark()} and
+     * {@code reset()} methods. The default implementation returns {@code false}.
      * 
-     * @return <code>true</code> if mark() and reset() are supported,
-     *         <code>false</code> otherwise.
+     * @return always {@code false}.
+     * @see #mark(int)
+     * @see #reset()
+     * @since Android 1.0
      */
     public boolean markSupported() {
         return false;
     }
 
     /**
-     * Reads a single byte from this InputStream and returns the result as an
-     * int. The low-order byte is returned or -1 of the end of stream was
-     * encountered. This abstract implementation must be provided by concrete
-     * subclasses.
+     * Reads a single byte from this stream and returns it as an integer in the
+     * range from 0 to 255. Returns -1 if the end of the stream has been
+     * reached. Blocks until one byte has been read, the end of the source
+     * stream is detected or an exception is thrown.
      * 
-     * @return the byte read or -1 if end of stream.
-     * 
+     * @return the byte read or -1 if the end of stream has been reached.
      * @throws IOException
-     *             If the stream is already closed or another IOException
-     *             occurs.
+     *             if the stream is closed or another IOException occurs.
+     * @since Android 1.0
      */
     public abstract int read() throws IOException;
 
     /**
-     * Reads bytes from the Stream and stores them in byte array <code>b</code>.
-     * Answer the number of bytes actually read or -1 if no bytes were read and
-     * end of stream was encountered.
+     * Reads bytes from this stream and stores them in the byte array {@code b}.
      * 
      * @param b
-     *            the byte array in which to store the read bytes.
-     * @return the number of bytes actually read or -1 if end of stream.
-     * 
+     *            the byte array in which to store the bytes read.
+     * @return the number of bytes actually read or -1 if the end of the stream
+     *         has been reached.
      * @throws IOException
-     *             If the stream is already closed or another IOException
-     *             occurs.
+     *             if this stream is closed or another IOException occurs.
+     * @since Android 1.0
      */
-    public int read(byte b[]) throws IOException {
+    public int read(byte[] b) throws IOException {
+        // BEGIN android-note
+        // changed array notation to be consistent with the rest of harmony
+        // END android-note
         return read(b, 0, b.length);
     }
 
     /**
-     * Reads at most <code>length</code> bytes from the Stream and stores them
-     * in byte array <code>b</code> starting at <code>offset</code>. Answer
-     * the number of bytes actually read or -1 if no bytes were read and end of
-     * stream was encountered.
+     * Reads at most {@code length} bytes from this stream and stores them in
+     * the byte array {@code b} starting at {@code offset}.
      * 
      * @param b
-     *            the byte array in which to store the read bytes.
+     *            the byte array in which to store the bytes read.
      * @param offset
-     *            the offset in <code>b</code> to store the read bytes.
+     *            the initial position in {@code buffer} to store the bytes read
+     *            from this stream.
      * @param length
-     *            the maximum number of bytes to store in <code>b</code>.
-     * @return the number of bytes actually read or -1 if end of stream.
-     * 
+     *            the maximum number of bytes to store in {@code b}.
+     * @return the number of bytes actually read or -1 if the end of the stream
+     *         has been reached.
+     * @throws ArrayIndexOutOfBoundsException
+     *             if {@code offset < 0} or {@code length < 0}, or if
+     *             {@code offset + length} is greater than the length of
+     *             {@code b}.
      * @throws IOException
-     *             If the stream is already closed or another IOException
-     *             occurs.
+     *             if the stream is closed or another IOException occurs.
+     * @since Android 1.0
      */
-    public int read(byte b[], int offset, int length) throws IOException {
+    public int read(byte[] b, int offset, int length) throws IOException {
+        // BEGIN android-note
+        // changed array notation to be consistent with the rest of harmony
+        // END android-note
         // avoid int overflow, check null b
-        if (offset < 0 || offset > b.length || length < 0
-                || length > b.length - offset) {
-            throw new ArrayIndexOutOfBoundsException();
+        // BEGIN android-changed
+        // Exception priorities (in case of multiple errors) differ from
+        // RI, but are spec-compliant.
+        // removed redundant check, made implicit null check explicit,
+        // used (offset | length) < 0 instead of (offset < 0) || (length < 0)
+        // to safe one operation
+        if (b == null) {
+            throw new NullPointerException(Msg.getString("K0047")); //$NON-NLS-1$
         }
+        if ((offset | length) < 0 || length > b.length - offset) {
+            throw new ArrayIndexOutOfBoundsException(Msg.getString("K002f")); //$NON-NLS-1$
+        }
+        // END android-changed
         for (int i = 0; i < length; i++) {
             int c;
             try {
@@ -157,40 +195,44 @@ public abstract class InputStream extends Object implements Closeable {
                 }
                 throw e;
             }
-            b[offset + i] = (byte) c;
+            b[offset + i] = (byte)c;
         }
         return length;
     }
 
     /**
-     * Reset this InputStream to the last marked location. If the
-     * <code>readlimit</code> has been passed or no <code>mark</code> has
-     * been set, throw IOException. This implementation throws IOException and
-     * concrete subclasses should provide proper implementations.
+     * Resets this stream to the last marked location. Throws an
+     * {@code IOException} if the number of bytes read since the mark has been
+     * set is greater than the limit provided to {@code mark}, or if no mark
+     * has been set.
+     * <p>
+     * This implementation always throws an {@code IOException} and concrete
+     * subclasses should provide the proper implementation.
+     * </p>
      * 
      * @throws IOException
-     *             If the stream is already closed or another IOException
-     *             occurs.
+     *             if this stream is closed or another IOException occurs.
+     * @since Android 1.0
      */
     public synchronized void reset() throws IOException {
         throw new IOException();
     }
 
     /**
-     * Skips <code>n</code> number of bytes in this InputStream. Subsequent
-     * <code>read()</code>'s will not return these bytes unless
-     * <code>reset()</code> is used. This method may perform multiple reads to
-     * read <code>n</code> bytes. This default implementation reads
-     * <code>n</code> bytes into a temporary buffer. Concrete subclasses
-     * should provide their own implementation.
+     * Skips at most {@code n} bytes in this stream. It does nothing and returns
+     * 0 if {@code n} is negative. Less than {@code n} characters are skipped if
+     * the end of this stream is reached before the operation completes.
+     * <p>
+     * This default implementation reads {@code n} bytes into a temporary
+     * buffer. Concrete subclasses should provide their own implementation.
+     * </p>
      * 
      * @param n
      *            the number of bytes to skip.
      * @return the number of bytes actually skipped.
-     * 
      * @throws IOException
-     *             If the stream is already closed or another IOException
-     *             occurs.
+     *             if this stream is closed or another IOException occurs.
+     * @since Android 1.0
      */
     public long skip(long n) throws IOException {
         if (n <= 0) {

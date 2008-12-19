@@ -19,55 +19,61 @@ package java.lang;
 
 
 /**
- * This class is the superclass of all classes which represent unrecoverable
- * errors. When Errors are thrown, they should not be caught by application
+ * {@code Error} is the superclass of all classes that represent unrecoverable
+ * errors. When errors are thrown, they should not be caught by application
  * code.
  * 
  * @see Throwable
  * @see Exception
  * @see RuntimeException
+ * @since Android 1.0
  */
 public class Error extends Throwable {
 
     private static final long serialVersionUID = 4980196508277280342L;
 
     /**
-     * Constructs a new instance of this class with its walkback filled in.
+     * Constructs a new {@code Error} that includes the current stack trace.
+     * 
+     * @since Android 1.0
      */
     public Error() {
         super();
     }
 
     /**
-     * Constructs a new instance of this class with its walkback and message
-     * filled in.
+     * Constructs a new {@code Error} with the current stack trace and the
+     * specified detail message.
      * 
      * @param detailMessage
-     *            String The detail message for the exception.
+     *            the detail message for this error.
+     * @since Android 1.0
      */
     public Error(String detailMessage) {
         super(detailMessage);
     }
 
     /**
-     * Constructs a new instance of this class with its walkback, message and
-     * cause filled in.
+     * Constructs a new {@code Error} with the current stack trace, the
+     * specified detail message and the specified cause.
      * 
      * @param detailMessage
-     *            String The detail message for the exception.
+     *            the detail message for this error.
      * @param throwable
-     *            The cause of this Throwable
+     *            the cause of this error.
+     * @since Android 1.0
      */
     public Error(String detailMessage, Throwable throwable) {
         super(detailMessage, throwable);
     }
 
     /**
-     * Constructs a new instance of this class with its walkback and cause
-     * filled in.
+     * Constructs a new {@code Error} with the current stack trace and the
+     * specified cause.
      * 
      * @param throwable
-     *            The cause of this Throwable
+     *            the cause of this error.
+     * @since Android 1.0
      */
     public Error(Throwable throwable) {
         super(throwable);

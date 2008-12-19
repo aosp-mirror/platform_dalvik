@@ -17,30 +17,54 @@
 
 package tests.api.java.net;
 
+import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 
 import tests.support.Support_Configuration;
 
+@TestTargetClass(URLDecoder.class) 
 public class URLDecoderTest extends junit.framework.TestCase {
 
-	/**
+    /**
      * @tests java.net.URLDecoder#URLDecoder()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "URLDecoder",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() throws Exception {
         URLDecoder ud = new URLDecoder();
         assertNotNull("Constructor failed.", ud);
     }
 
-	/**
-	 * @tests java.net.URLDecoder#decode(java.lang.String)
-	 */
-	public void test_decodeLjava_lang_String() throws Exception {
-		// Test for method java.lang.String
-		// java.net.URLDecoder.decode(java.lang.String)
-		final String URL = "http://" + Support_Configuration.HomeAddress;
-		final String URL2 = "telnet://justWantToHaveFun.com:400";
+    /**
+     * @tests java.net.URLDecoder#decode(java.lang.String)
+     */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "decode",
+          methodArgs = {java.lang.String.class}
+        )
+    })
+    public void test_decodeLjava_lang_String() throws Exception {
+        // Test for method java.lang.String
+        // java.net.URLDecoder.decode(java.lang.String)
+        final String URL = "http://" + Support_Configuration.HomeAddress;
+        final String URL2 = "telnet://justWantToHaveFun.com:400";
         final String URL3 = "file://myServer.org/a file with spaces.jpg";
         assertTrue("1. Incorrect encoding/decoding", URLDecoder.decode(
                 URLEncoder.encode(URL)).equals(URL));
@@ -48,11 +72,20 @@ public class URLDecoderTest extends junit.framework.TestCase {
                 URLEncoder.encode(URL2)).equals(URL2));
         assertTrue("3. Incorrect encoding/decoding", URLDecoder.decode(
                 URLEncoder.encode(URL3)).equals(URL3));
-	}
+    }
 
     /**
      * @tests java.net.URLDecoder#decode(java.lang.String, java.lang.String)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Regression test",
+      targets = {
+        @TestTarget(
+          methodName = "decode",
+          methodArgs = {java.lang.String.class, java.lang.String.class}
+        )
+    })
     public void test_decodeLjava_lang_String_Ljava_lang_String() {
         // Regression for HARMONY-467
         try {

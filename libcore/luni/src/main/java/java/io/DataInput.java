@@ -18,214 +18,247 @@
 package java.io;
 
 /**
- * DataInput is an interface which declares methods for reading in typed data
- * from a Stream. Typically, this stream has been written by a class which
- * implements DataOutput. Types that can be read include byte, 16-bit short,
- * 32-bit int, 32-bit float, 64-bit long, 64-bit double, byte strings, and UTF
- * Strings.
+ * Defines an interface for classes that are able to read typed data from some
+ * source. Typically, this data has been written by a class which implements
+ * {@link DataOutput}. Types that can be read include byte, 16-bit short, 32-bit
+ * int, 32-bit float, 64-bit long, 64-bit double, byte strings, and MUTF-8
+ * strings.
+ *  
+ * <h3>MUTF-8 (Modified UTF-8) Encoding</h3>
+ * <p>
+ * When encoding strings as UTF, implementations of {@code DataInput} and
+ * {@code DataOutput} use a slightly modified form of UTF-8, hereafter referred
+ * to as MUTF-8. This form is identical to standard UTF-8, except:
+ * </p>
+ * <ul>
+ * <li>Only the one-, two-, and three-byte encodings are used.</li>
+ * <li>Code points in the range <code>U+10000</code> &hellip;
+ * <code>U+10ffff</code> are encoded as a surrogate pair, each of which is
+ * represented as a three-byte encoded value.</li>
+ * <li>The code point <code>U+0000</code> is encoded in two-byte form.</li>
+ * </ul>
+ * <p>
+ * Please refer to <a href="http://unicode.org">The Unicode Standard</a> for
+ * further information about character encoding. MUTF-8 is actually closer to
+ * the (relatively less well-known) encoding <a
+ * href="http://www.unicode.org/reports/tr26/">CESU-8</a> than to UTF-8 per se.
+ * </p>
  * 
  * @see DataInputStream
  * @see RandomAccessFile
+ * 
+ * @since Android 1.0
  */
 public interface DataInput {
     /**
-     * Reads a boolean from this stream.
+     * Reads a boolean.
      * 
-     * @return the next boolean value from the source stream.
-     * 
+     * @return the next boolean value.
+     * @throws EOFException if the end of the input is reached before the read
+     *         request can be satisfied.
      * @throws IOException
-     *             If a problem occurs reading from this stream.
-     * 
+     *             if an I/O error occurs while reading.
      * @see DataOutput#writeBoolean(boolean)
+     * @since Android 1.0
      */
     public abstract boolean readBoolean() throws IOException;
 
     /**
-     * Reads an 8-bit byte value from this stream.
+     * Reads an 8-bit byte value.
      * 
-     * @return the next byte value from the source stream.
-     * 
+     * @return the next byte value.
+     * @throws EOFException if the end of the input is reached before the read
+     *         request can be satisfied.
      * @throws IOException
-     *             If a problem occurs reading from this stream.
-     * 
+     *             if an I/O error occurs while reading.
      * @see DataOutput#writeByte(int)
+     * @since Android 1.0
      */
     public abstract byte readByte() throws IOException;
 
     /**
-     * Reads a 16-bit character value from this stream.
+     * Reads a 16-bit character value.
      * 
-     * @return the next <code>char</code> value from the source stream.
-     * 
+     * @return the next char value.
+     * @throws EOFException if the end of the input is reached before the read
+     *         request can be satisfied.
      * @throws IOException
-     *             If a problem occurs reading from this stream.
-     * 
+     *             if an I/O error occurs while reading.
      * @see DataOutput#writeChar(int)
+     * @since Android 1.0
      */
     public abstract char readChar() throws IOException;
 
     /**
-     * Reads a 64-bit <code>double</code> value from this stream.
+     * Reads a 64-bit double value.
      * 
-     * @return the next <code>double</code> value from the source stream.
-     * 
+     * @return the next double value.
+     * @throws EOFException if the end of the input is reached before the read
+     *         request can be satisfied.
      * @throws IOException
-     *             If a problem occurs reading from this stream.
-     * 
+     *             if an I/O error occurs while reading.
      * @see DataOutput#writeDouble(double)
+     * @since Android 1.0
      */
     public abstract double readDouble() throws IOException;
 
     /**
-     * Reads a 32-bit <code>float</code> value from this stream.
+     * Reads a 32-bit float value.
      * 
-     * @return the next <code>float</code> value from the source stream.
-     * 
+     * @return the next float value.
+     * @throws EOFException if the end of the input is reached before the read
+     *         request can be satisfied.
      * @throws IOException
-     *             If a problem occurs reading from this stream.
-     * 
+     *             if an I/O error occurs while reading.
      * @see DataOutput#writeFloat(float)
+     * @since Android 1.0
      */
     public abstract float readFloat() throws IOException;
 
     /**
-     * Reads bytes from this stream into the byte array <code>buffer</code>.
-     * This method will block until <code>buffer.length</code> number of bytes
-     * have been read.
+     * Reads bytes into the byte array {@code buffer}. This method will block
+     * until {@code buffer.length} number of bytes have been read.
      * 
      * @param buffer
-     *            the buffer to read bytes into
-     * 
+     *            the buffer to read bytes into.
+     * @throws EOFException if the end of the input is reached before the read
+     *         request can be satisfied.
      * @throws IOException
-     *             If a problem occurs reading from this stream.
-     * 
+     *             if an I/O error occurs while reading.
      * @see DataOutput#write(byte[])
      * @see DataOutput#write(byte[], int, int)
+     * @since Android 1.0
      */
     public abstract void readFully(byte[] buffer) throws IOException;
 
     /**
-     * Read bytes from this stream and stores them in byte array
-     * <code>buffer</code> starting at offset <code>offset</code>. This
-     * method blocks until <code>count</code> number of bytes have been read.
+     * Reads bytes and stores them in the byte array {@code buffer} starting at
+     * offset {@code offset}. This method blocks until {@code count} number of
+     * bytes have been read.
      * 
      * @param buffer
-     *            the byte array in which to store the read bytes.
+     *            the byte array in which to store the bytes read.
      * @param offset
-     *            the offset in <code>buffer</code> to store the read bytes.
+     *            the initial position in {@code buffer} to store the bytes
+     *            read.
      * @param count
-     *            the maximum number of bytes to store in <code>buffer</code>.
-     * 
+     *            the maximum number of bytes to store in {@code buffer}.
+     * @throws EOFException if the end of the input is reached before the read
+     *         request can be satisfied.
      * @throws IOException
-     *             If a problem occurs reading from this stream.
-     * 
+     *             if an I/O error occurs while reading.
      * @see DataOutput#write(byte[])
      * @see DataOutput#write(byte[], int, int)
+     * @since Android 1.0
      */
     public abstract void readFully(byte[] buffer, int offset, int count)
             throws IOException;
 
     /**
-     * Reads a 32-bit integer value from this stream.
+     * Reads a 32-bit integer value.
      * 
-     * @return the next <code>int</code> value from the source stream.
-     * 
+     * @return the next int value.
+     * @throws EOFException if the end of the input is reached before the read
+     *         request can be satisfied.
      * @throws IOException
-     *             If a problem occurs reading from this stream.
-     * 
+     *             if an I/O error occurs while reading.
      * @see DataOutput#writeInt(int)
+     * @since Android 1.0
      */
     public abstract int readInt() throws IOException;
 
     /**
-     * Returns a <code>String</code> representing the next line of text
-     * available in this BufferedReader. A line is represented by 0 or more
-     * characters followed by <code>'\n'</code>, <code>'\r'</code>,
-     * <code>"\n\r"</code> or end of stream. The <code>String</code> does
-     * not include the newline sequence.
+     * Returns a string containing the next line of text available from this
+     * stream. A line is made of zero or more characters followed by {@code
+     * '\n'}, {@code '\r'}, {@code "\r\n"} or the end of the stream. The string
+     * does not include the newline sequence.
      * 
-     * @return the contents of the line or null if no characters were read
-     *         before end of stream.
-     * 
+     * @return the contents of the line or null if no characters have been read
+     *         before the end of the stream.
+     * @throws EOFException if the end of the input is reached before the read
+     *         request can be satisfied.
      * @throws IOException
-     *             If a problem occurs reading from this stream.
+     *             if an I/O error occurs while reading.
+     * @since Android 1.0
      */
     public abstract String readLine() throws IOException;
 
     /**
-     * Reads a 64-bit <code>long</code> value from this stream.
+     * Reads a 64-bit long value.
      * 
-     * @return the next <code>long</code> value from the source stream.
-     * 
+     * @return the next long value.
+     * @throws EOFException if the end of the input is reached before the read
+     *         request can be satisfied.
      * @throws IOException
-     *             If a problem occurs reading from this stream.
-     * 
+     *             if an I/O error occurs while reading.
      * @see DataOutput#writeLong(long)
+     * @since Android 1.0
      */
     public abstract long readLong() throws IOException;
 
     /**
-     * Reads a 16-bit <code>short</code> value from this stream.
+     * Reads a 16-bit short value.
      * 
-     * @return the next <code>short</code> value from the source stream.
-     * 
+     * @return the next short value.
+     * @throws EOFException if the end of the input is reached before the read
+     *         request can be satisfied.
      * @throws IOException
-     *             If a problem occurs reading from this stream.
-     * 
+     *             if an I/O error occurs while reading.
      * @see DataOutput#writeShort(int)
+     * @since Android 1.0
      */
     public abstract short readShort() throws IOException;
 
     /**
-     * Reads an unsigned 8-bit <code>byte</code> value from this stream and
-     * returns it as an int.
+     * Reads an unsigned 8-bit byte value and returns it as an int.
      * 
-     * @return the next unsigned byte value from the source stream.
-     * 
+     * @return the next unsigned byte value.
+     * @throws EOFException if the end of the input is reached before the read
+     *         request can be satisfied.
      * @throws IOException
-     *             If a problem occurs reading from this stream.
-     * 
+     *             if an I/O error occurs while reading.
      * @see DataOutput#writeByte(int)
+     * @since Android 1.0
      */
     public abstract int readUnsignedByte() throws IOException;
 
     /**
-     * Reads a 16-bit unsigned <code>short</code> value from this stream and
-     * returns it as an int.
+     * Reads a 16-bit unsigned short value and returns it as an int.
      * 
-     * @return the next unsigned <code>short</code> value from the source
-     *         stream.
-     * 
+     * @return the next unsigned short value.
+     * @throws EOFException if the end of the input is reached before the read
+     *         request can be satisfied.
      * @throws IOException
-     *             If a problem occurs reading from this stream.
-     * 
+     *             if an I/O error occurs while reading.
      * @see DataOutput#writeShort(int)
+     * @since Android 1.0
      */
     public abstract int readUnsignedShort() throws IOException;
 
     /**
-     * Reads a UTF format String from this Stream.
+     * Reads a string encoded with {@link DataInput modified UTF-8}.
      * 
-     * @return the next UTF String from the source stream.
-     * 
+     * @return the next string encoded with {@link DataInput modified UTF-8}.
+     * @throws EOFException if the end of the input is reached before the read
+     *         request can be satisfied.
      * @throws IOException
-     *             If a problem occurs reading from this stream.
-     * 
+     *             if an I/O error occurs while reading.
      * @see DataOutput#writeUTF(java.lang.String)
+     * @since Android 1.0
      */
     public abstract String readUTF() throws IOException;
 
     /**
-     * Skips <code>count</code> number of bytes in this stream. Subsequent
-     * <code>read()</code>'s will not return these bytes unless
-     * <code>reset()</code> is used.
+     * Skips {@code count} number of bytes. This method will not throw an
+     * {@link EOFException} if the end of the input is reached before
+     * {@code count} bytes where skipped.
      * 
      * @param count
      *            the number of bytes to skip.
      * @return the number of bytes actually skipped.
-     * 
      * @throws IOException
-     *             If a problem occurs reading from this stream.
+     *             if a problem occurs during skipping.
+     * @since Android 1.0
      */
     public abstract int skipBytes(int count) throws IOException;
 }

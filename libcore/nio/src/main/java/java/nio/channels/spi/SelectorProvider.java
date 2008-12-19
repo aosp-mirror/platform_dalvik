@@ -34,16 +34,17 @@ import org.apache.harmony.luni.platform.Platform;
 import org.apache.harmony.nio.internal.SelectorProviderImpl;
 
 /**
- * Provider for nio selector and selectable channel.
+ * {@code SelectorProvider} is an abstract base class that declares methods for
+ * providing instances of {@link DatagramChannel}, {@link Pipe},
+ * {@link java.nio.channels.Selector} , {@link ServerSocketChannel}, and
+ * {@link SocketChannel}. All the methods of this class are thread-safe.
  * <p>
- * The provider can be got by system property or the configuration file in a jar
- * file, if not, the system default provider will return. The main function of
- * this class is to return the instance of implementation class of
- * <code>DatagramChannel</code>, <code>Pipe</code>, <code>Selector</code> ,
- * <code>ServerSocketChannel</code>, and <code>SocketChannel</code>. All
- * the methods of this class are multi-thread safe.
+ * A provider instance can be retrieved through a system property or the
+ * configuration file in a jar file; if no provide is available that way then
+ * the system default provider is returned.
  * </p>
  * 
+ * @since Android 1.0
  */
 public abstract class SelectorProvider extends Object {
 
@@ -58,11 +59,12 @@ public abstract class SelectorProvider extends Object {
     private static Channel inheritedChannel; 
 
     /**
-     * Constructor for this class.
+     * Constructs a new {@code SelectorProvider}.
      * 
      * @throws SecurityException
-     *             If there is a security manager, and it denies
-     *             RuntimePermission("selectorProvider").
+     *             if there is a security manager installed that does not permit
+     *             the runtime permission labeled "selectorProvider".
+     * @since Android 1.0
      */
     protected SelectorProvider() {
         super();
@@ -73,21 +75,21 @@ public abstract class SelectorProvider extends Object {
     }
 
     /**
-     * Get the provider by following steps in the first calling.
-     * <p>
+     * Gets a provider instance by executing the following steps when called for
+     * the first time:
      * <ul>
-     * <li> If the system property "java.nio.channels.spi.SelectorProvider" is
-     * set, the value of this property is the class name of the return provider.
-     * </li>
-     * <li>If there is a provider-configuration file named
-     * "java.nio.channels.spi.SelectorProvider" in META-INF/services of some jar
-     * file valid in the system class loader, the first class name is the return
-     * provider's class name. </li>
-     * <li> Otherwise, a system default provider will be returned. </li>
+     * <li> if the system property "java.nio.channels.spi.SelectorProvider" is
+     * set, the value of this property is the class name of the provider
+     * returned; </li>
+     * <li>if there is a provider-configuration file named
+     * "java.nio.channels.spi.SelectorProvider" in META-INF/services of a jar
+     * file valid in the system class loader, the first class name is the
+     * provider's class name; </li>
+     * <li> otherwise, a system default provider will be returned.</li>
      * </ul>
-     * </p>
      * 
-     * @return The provider.
+     * @return the provider.
+     * @since Android 1.0
      */
     synchronized public static SelectorProvider provider() {
         if (null == provider) {
@@ -195,62 +197,76 @@ public abstract class SelectorProvider extends Object {
     }
 
     /**
-     * Create a new open <code>DatagramChannel</code>.
+     * Creates a new open {@code DatagramChannel}.
      * 
-     * @return The channel.
+     * @return the new channel.
      * @throws IOException
-     *             If some I/O exception occurred.
+     *             if an I/O error occurs.
+     * @since Android 1.0
      */
     public abstract DatagramChannel openDatagramChannel() throws IOException;
 
     /**
-     * Create a new <code>Pipe</code>.
+     * Creates a new {@code Pipe}.
      * 
-     * @return The pipe.
+     * @return the new pipe.
      * @throws IOException
-     *             If some I/O exception occurred.
+     *             if an I/O error occurs.
+     * @since Android 1.0
      */
     public abstract Pipe openPipe() throws IOException;
 
     /**
-     * Create a new selector.
+     * Creates a new selector.
      * 
-     * @return The selector.
+     * @return the new selector.
      * @throws IOException
-     *             If some I/O exception occurred.
+     *             if an I/O error occurs.
+     * @since Android 1.0
      */
     public abstract AbstractSelector openSelector() throws IOException;
 
     /**
-     * Create a new open <code>ServerSocketChannel</code>.
+     * Creates a new open {@code ServerSocketChannel}.
      * 
-     * @return The channel.
+     * @return the new channel.
      * @throws IOException
-     *             If some I/O exception occurred.
+     *             if an I/O error occurs.
+     * @since Android 1.0
      */
     public abstract ServerSocketChannel openServerSocketChannel()
             throws IOException;
 
     /**
-     * Create a new open <code>SocketChannel</code>.
+     * Create a new open {@code SocketChannel}.
      * 
-     * @return The channel.
+     * @return the new channel.
      * @throws IOException
-     *             If some I/O exception occurred.
+     *             if an I/O error occurs.
+     * @since Android 1.0
      */
     public abstract SocketChannel openSocketChannel() throws IOException;
 
     /**
-     * Answer the channel inherited from the instance which created this JVM.
+     * Returns the channel inherited from the instance that created this
+     * virtual machine.
      * 
-     * @return The channel.
+     * @return the channel.
      * @throws IOException
-     *             If some I/O exception occurred.
+     *             if an I/O error occurs.
      * @throws SecurityException
-     *             If there is a security manager, and it denies
-     *             RuntimePermission("selectorProvider").
+     *             if there is a security manager installed that does not permit
+     *             the runtime permission labeled "selectorProvider".
+     * @since Android 1.0
      */
     public Channel inheritedChannel() throws IOException {
+        // BEGIN android-added
+        SecurityManager smngr = System.getSecurityManager();
+        if (smngr != null) {
+            smngr.checkPermission(
+                    new RuntimePermission("inheritedChannel")); //$NON-NLS-1$
+        }
+        // END android-added
         if (null == inheritedChannel) {
             inheritedChannel = Platform.getNetworkSystem().inheritedChannel();
         }

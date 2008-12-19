@@ -16,8 +16,14 @@
 
 package org.apache.harmony.nio.tests.java.nio;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.nio.ByteBuffer;
 
+@TestTargetClass(java.nio.ByteBuffer.class)
 public class WrappedByteBufferTest extends ByteBufferTest {
     
     protected void setUp() throws Exception {
@@ -36,6 +42,15 @@ public class WrappedByteBufferTest extends ByteBufferTest {
      * @tests java.nio.ByteBuffer#allocate(byte[],int,int)
      * 
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies IndexOutOfBoundsException, NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "wrap",
+          methodArgs = {byte[].class, int.class, int.class}
+        )
+    })
     public void testWrappedByteBuffer_IllegalArg() {
         byte array[] = new byte[BUFFER_LENGTH];
         try {
@@ -81,15 +96,39 @@ public class WrappedByteBufferTest extends ByteBufferTest {
             // expected
         }
     }
-    
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies isDirect method for non direct ByteBuffer.",
+      targets = {
+        @TestTarget(
+          methodName = "isDirect",
+          methodArgs = {}
+        )
+    })
     public void testIsDirect() {
         assertFalse(buf.isDirect());
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies hasArray method for wrapped ByteBuffer.",
+      targets = {
+        @TestTarget(
+          methodName = "hasArray",
+          methodArgs = {}
+        )
+    })
     public void testHasArray() {
         assertTrue(buf.hasArray());
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isReadOnly",
+          methodArgs = {}
+        )
+    })
     public void testIsReadOnly() {
         assertFalse(buf.isReadOnly());
     }

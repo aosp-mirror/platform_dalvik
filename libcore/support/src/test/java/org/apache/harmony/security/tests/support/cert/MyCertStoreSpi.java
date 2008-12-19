@@ -23,11 +23,13 @@
 package org.apache.harmony.security.tests.support.cert;
 
 import java.security.InvalidAlgorithmParameterException;
+import java.security.cert.CRL;
 import java.security.cert.CRLSelector;
 import java.security.cert.CertSelector;
 import java.security.cert.CertStoreException;
 import java.security.cert.CertStoreParameters;
 import java.security.cert.CertStoreSpi;
+import java.security.cert.Certificate;
 import java.util.Collection;
 
 /**
@@ -46,7 +48,7 @@ public class MyCertStoreSpi extends CertStoreSpi {
         }
     }
 
-    public Collection engineGetCertificates(CertSelector selector)
+    public Collection<Certificate> engineGetCertificates(CertSelector selector)
             throws CertStoreException {
         if (selector == null) {
             throw new CertStoreException("Parameter is null");
@@ -54,7 +56,7 @@ public class MyCertStoreSpi extends CertStoreSpi {
         return null;
     }
 
-    public Collection engineGetCRLs(CRLSelector selector)
+    public Collection<CRL> engineGetCRLs(CRLSelector selector)
             throws CertStoreException {
         if (selector == null) {
             throw new CertStoreException("Parameter is null");

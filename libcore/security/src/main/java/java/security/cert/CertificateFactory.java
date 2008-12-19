@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package java.security.cert;
 
 import java.io.InputStream;
@@ -36,9 +31,15 @@ import org.apache.harmony.security.internal.nls.Messages;
 
 
 /**
- * This class provides the functionality of a certificate factory algorithm.
+ * This class implements the functionality of a certificate factory algorithm,
+ * relying on parsing a stream of bytes.
+ * <p>
+ * It defines methods for parsing certificate chains (certificate paths) and
+ * <i>Certificate Revocation Lists</i> (CRLs).
+ * </p>
+ * 
+ * @since Android 1.0
  */
-
 public class CertificateFactory {
 
     // Store CertificateFactory service name
@@ -57,8 +58,15 @@ public class CertificateFactory {
     private final String type;
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Creates a new {@code CertificateFactory} instance.
+     * 
+     * @param certFacSpi
+     *            the implementation delegate.
+     * @param provider
+     *            the associated provider.
+     * @param type
+     *            the certificate type.
+     * @since Android 1.0
      */
     protected CertificateFactory(CertificateFactorySpi certFacSpi,
             Provider provider, String type) {
@@ -68,18 +76,18 @@ public class CertificateFactory {
     }
 
     /**
-     * Returns a new CertificateFactory of the given type.
+     * Creates a new {@code CertificateFactory} instance that provides the
+     * requested certificate type.
      * 
      * @param type
-     *            java.lang.String Type of certificate desired
-     * @return CertificateFactory a concrete implementation for the certificate
-     *         type desired.
-     * 
-     * @exception CertificateException
-     *                If the type cannot be found
-     *
-     * @exception NullPointerException
-     *                If the type is null
+     *            the certificate type.
+     * @return the new {@code CertificateFactory} instance.
+     * @throws CertificateException
+     *             if the specified certificate type is not available at any
+     *             installed provider.
+     * @throws NullPointerException
+     *             if {@code type} is {@code null}.
+     * @since Android 1.0
      */
     public static final CertificateFactory getInstance(String type)
             throws CertificateException {
@@ -98,10 +106,25 @@ public class CertificateFactory {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code CertificateFactory} instance from the specified
+     * provider that provides the requested certificate type.
      * 
-     * throws NullPointerException if algorithm is null (instead of
-     * CertificateException as in 1.4 release)
+     * @param type
+     *            the certificate type.
+     * @param provider
+     *            the name of the provider providing certificates of the
+     *            specified type.
+     * @return the new {@code CertificateFactory} instance.
+     * @throws CertificateException
+     *             if the specified certificate type is not available by the
+     *             specified provider.
+     * @throws NoSuchProviderException
+     *             if no provider with the specified name can be found.
+     * @throws IllegalArgumentException
+     *             if the specified provider name is {@code null} or empty.
+     * @throws NullPointerException
+     *             it {@code type} is {@code null}.
+     * @since Android 1.0
      */
     public static final CertificateFactory getInstance(String type,
             String provider) throws CertificateException,
@@ -117,21 +140,23 @@ public class CertificateFactory {
     }
 
     /**
-     * Returns a new CertificateFactory of the given type.
+     * Creates a new {@code CertificateFactory} instance from the specified
+     * provider that provides the requested certificate type.
      * 
      * @param type
-     *            java.lang.String Type of certificate desired
+     *            the certificate type.
      * @param provider
-     *            java.security.Provider Provider which has to implement the
-     *            algorithm
-     * @return CertificateFactory a concrete implementation for the certificate
-     *         type desired.
-     * 
-     * @exception CertificateException
-     *                If the type cannot be found
-     *
-     * @exception NullPointerException
-     *                If algorithm is null
+     *            the name of the provider providing certificates of the
+     *            specified type.
+     * @return the new {@code CertificateFactory} instance.
+     * @throws CertificateException
+     *             if the specified certificate type is not available at the
+     *             specified provider.
+     * @throws IllegalArgumentException
+     *             if the specified provider is {@code null}.
+     * @throws NullPointerException
+     *             is {@code type} is {@code null}.
+     * @since Android 1.0
      */
     public static final CertificateFactory getInstance(String type,
             Provider provider) throws CertificateException {
@@ -153,35 +178,37 @@ public class CertificateFactory {
     }
 
     /**
-     * Returns the Provider of the certificate factory represented by the
-     * receiver.
+     * Returns the {@code Provider} of the certificate factory represented by
+     * the certificate.
      * 
-     * @return Provider an instance of a subclass of java.security.Provider
+     * @return the provider of this certificate factory.
+     * @since Android 1.0
      */
     public final Provider getProvider() {
         return provider;
     }
 
     /**
-     * Returns the Certificate type
+     * Returns the Certificate type.
      * 
-     * @return String type of certificate being used
+     * @return type of certificate being used.
+     * @since Android 1.0
      */
     public final String getType() {
         return type;
     }
 
     /**
-     * Generates and initializes a Certificate from data from the
-     * provided input stream.
+     * Generates and initializes a {@code Certificate} from the provided input
+     * stream.
      * 
      * @param inStream
-     *            InputStream Stream from where data is read to create the
-     *            Certificate
-     * 
-     * @return Certificate an initialized Certificate
-     * @exception CertificateException
-     *                if parsing problems are detected
+     *            the stream from where data is read to create the {@code
+     *            Certificate}.
+     * @return an initialized Certificate.
+     * @throws CertificateException
+     *             if parsing problems are detected.
+     * @since Android 1.0
      */
     public final Certificate generateCertificate(InputStream inStream)
             throws CertificateException {
@@ -189,53 +216,52 @@ public class CertificateFactory {
     }
 
     /**
-     * Returns an Iterator over the supported CertPath encodings (as Strings).
-     * The first element is the default encoding.
+     * Returns an {@code Iterator} over the supported {@code CertPath} encodings
+     * (as Strings). The first element is the default encoding scheme to apply.
      * 
-     * @return Iterator Iterator over supported CertPath encodings (as Strings)
+     * @return an iterator over supported {@link CertPath} encodings (as
+     *         Strings).
+     * @since Android 1.0
      */
     public final Iterator<String> getCertPathEncodings() {
         return spiImpl.engineGetCertPathEncodings();
     }
 
     /**
-     * Generates a <code>CertPath</code> from data from the provided
-     * <code>InputStream</code>. The default encoding is assumed.
+     * Generates a {@code CertPath} (a certificate chain) from the provided
+     * {@code InputStream}. The default encoding scheme is applied.
      * 
      * @param inStream
-     *            InputStream with PKCS7 or PkiPath encoded data
-     * 
-     * @return CertPath a CertPath initialized from the provided data
-     * 
+     *            {@code InputStream} with encoded data.
+     * @return a {@code CertPath} initialized from the provided data.
      * @throws CertificateException
-     *             if parsing problems are detected
+     *             if parsing problems are detected.
+     * @since Android 1.0
      */
     public final CertPath generateCertPath(InputStream inStream)
             throws CertificateException {
-        Iterator it = getCertPathEncodings();
+        Iterator<String> it = getCertPathEncodings();
         if (!it.hasNext()) {
             throw new CertificateException(Messages.getString("security.74")); //$NON-NLS-1$
         }
-        return spiImpl.engineGenerateCertPath(inStream, (String) it.next());
+        return spiImpl.engineGenerateCertPath(inStream, it.next());
     }
 
     /**
-     * Generates a <code>CertPath</code> from data from the provided
-     * <code>InputStream</code>. The encoding is that specified by the
-     * encoding parameter.
+     * Generates a {@code CertPath} (a certificate chain) from the provided
+     * {@code InputStream} and the specified encoding scheme.
      * 
      * @param inStream
-     *            InputStream containing certificate path data in specified
-     *            encoding
+     *            {@code InputStream} containing certificate path data in
+     *            specified encoding.
      * @param encoding
-     *            encoding of the data in the input stream
-     * 
-     * @return CertPath a CertPath initialized from the provided data
-     * 
+     *            encoding of the data in the input stream.
+     * @return a {@code CertPath} initialized from the provided data.
      * @throws CertificateException
-     *             if parsing problems are detected
+     *             if parsing problems are detected.
      * @throws UnsupportedOperationException
-     *             if the provider does not implement this method
+     *             if the provider does not implement this method.
+     * @since Android 1.0
      */
     public final CertPath generateCertPath(InputStream inStream, String encoding)
             throws CertificateException {
@@ -243,19 +269,18 @@ public class CertificateFactory {
     }
 
     /**
-     * Generates a <code>CertPath</code> from the provided List of
-     * Certificates. The encoding is the default encoding.
+     * Generates a {@code CertPath} from the provided list of certificates. The
+     * encoding is the default encoding.
      * 
      * @param certificates
-     *            List containing certificates in a format supported by the
-     *            CertificateFactory
-     * 
-     * @return CertPath a CertPath initialized from the provided data
-     * 
+     *            the list containing certificates in a format supported by the
+     *            {@code CertificateFactory}.
+     * @return a {@code CertPath} initialized from the provided data.
      * @throws CertificateException
-     *             if parsing problems are detected
+     *             if parsing problems are detected.
      * @throws UnsupportedOperationException
-     *             if the provider does not implement this method
+     *             if the provider does not implement this method.
+     * @since Android 1.0
      */
     public final CertPath generateCertPath(List<? extends Certificate> certificates)
             throws CertificateException {
@@ -263,16 +288,16 @@ public class CertificateFactory {
     }
 
     /**
-     * Generates and initializes a collection of Certificates from
-     * data from the provided input stream.
+     * Generates and initializes a collection of (unrelated) certificates from
+     * the provided input stream.
      * 
      * @param inStream
-     *            InputStream Stream from where data is read to create the
-     *            Certificates
-     * 
-     * @return Collection an initialized collection of Certificates
-     * @exception CertificateException
-     *                if parsing problems are detected
+     *            the stream from which the data is read to create the
+     *            collection.
+     * @return an initialized collection of certificates.
+     * @throws CertificateException
+     *             if parsing problems are detected.
+     * @since Android 1.0
      */
     public final Collection<? extends Certificate> generateCertificates(InputStream inStream)
             throws CertificateException {
@@ -280,32 +305,30 @@ public class CertificateFactory {
     }
 
     /**
-     * Generates and initializes a Certificate Revocation List from data from
+     * Generates and initializes a <i>Certificate Revocation List</i> (CRL) from
      * the provided input stream.
      * 
      * @param inStream
-     *            InputStream Stream from where data is read to create the CRL
-     * 
-     * @return CRL an initialized Certificate Revocation List
+     *            the stream from where data is read to create the CRL.
+     * @return an initialized CRL.
      * @exception CRLException
-     *                if parsing problems are detected
+     *                if parsing problems are detected.
+     * @since Android 1.0
      */
     public final CRL generateCRL(InputStream inStream) throws CRLException {
         return spiImpl.engineGenerateCRL(inStream);
     }
 
     /**
-     * Generates and initializes a collection of Certificate Revocation List
-     * from data from the provided input stream.
+     * Generates and initializes a collection of <i>Certificate Revocation
+     * List</i> (CRL) from the provided input stream.
      * 
      * @param inStream
-     *            InputStream Stream from where data is read to create the CRLs
-     * 
-     * @return Collection an initialized collection of Certificate Revocation
-     *         List
+     *            the stream from which the data is read to create the CRLs.
+     * @return an initialized collection of CRLs.
      * @exception CRLException
-     *                if parsing problems are detected
-     * 
+     *                if parsing problems are detected.
+     * @since Android 1.0
      */
     public final Collection<? extends CRL> generateCRLs(InputStream inStream)
             throws CRLException {

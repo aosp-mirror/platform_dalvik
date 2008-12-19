@@ -17,6 +17,11 @@
 
 package org.apache.harmony.security.tests.java.security;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.net.URL;
 import java.security.CodeSigner;
 import java.security.CodeSource;
@@ -29,7 +34,7 @@ import java.util.Date;
 import org.apache.harmony.security.tests.support.TestCertUtils;
 
 
-
+@TestTargetClass(CodeSource.class)
 public class CodeSource2Test extends junit.framework.TestCase {
 
     /**
@@ -37,6 +42,15 @@ public class CodeSource2Test extends junit.framework.TestCase {
      * @tests java.security.CodeSource#CodeSource(java.net.URL,
      *        java.security.cert.Certificate[])
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies constructor with valid URL and null certificate array",
+      targets = {
+        @TestTarget(
+          methodName = "CodeSource",
+          methodArgs = {URL.class, Certificate[].class}
+        )
+    })
     public void test_ConstructorLjava_net_URL$Ljava_security_cert_Certificate()
             throws Exception {
         // Test for method java.security.CodeSource(java.net.URL,
@@ -49,6 +63,15 @@ public class CodeSource2Test extends junit.framework.TestCase {
      * @tests java.security.CodeSource#CodeSource(java.net.URL,
      *        java.security.CodeSigner[])
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "CodeSource",
+          methodArgs = {URL.class, CodeSigner[].class}
+        )
+    })
     public void test_ConstructorLjava_net_URL$Ljava_security_CodeSigner() {
         // Test for method java.security.CodeSource(java.net.URL,
         // java.security.cert.CodeSigner [])
@@ -83,6 +106,15 @@ public class CodeSource2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.CodeSource#equals(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "CodeSource object was created with CodeSource(URL url, Certificate[] certs) only",
+      targets = {
+        @TestTarget(
+          methodName = "equals",
+          methodArgs = {Object.class}
+        )
+    })
     public void test_equalsLjava_lang_Object() throws Exception {
         // Test for method boolean
         // java.security.CodeSource.equals(java.lang.Object)
@@ -96,6 +128,15 @@ public class CodeSource2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.CodeSource#hashCode()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "hashCode",
+          methodArgs = {}
+        )
+    })
     public void test_hashCode() throws Exception {
         URL url = new java.net.URL("file:///test");
         CodeSource cs = new CodeSource(url, (Certificate[]) null);
@@ -106,6 +147,15 @@ public class CodeSource2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.CodeSource#getCertificates()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies case for null certificates only",
+      targets = {
+        @TestTarget(
+          methodName = "getCertificates",
+          methodArgs = {}
+        )
+    })
     public void test_getCertificates() throws Exception {
         CodeSource cs = new CodeSource(new java.net.URL("file:///test"),
                 (Certificate[]) null);
@@ -116,6 +166,15 @@ public class CodeSource2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.CodeSource#getLocation()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getLocation",
+          methodArgs = {}
+        )
+    })
     public void test_getLocation() throws Exception {
         // Test for method java.net.URL java.security.CodeSource.getLocation()
         CodeSource cs = new CodeSource(new java.net.URL("file:///test"),
@@ -127,6 +186,15 @@ public class CodeSource2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.CodeSource#implies(java.security.CodeSource)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "implies",
+          methodArgs = {CodeSource.class}
+        )
+    })
     public void test_impliesLjava_security_CodeSource() throws Exception {
         // Test for method boolean
         // java.security.CodeSource.implies(java.security.CodeSource)

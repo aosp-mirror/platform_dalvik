@@ -23,31 +23,32 @@
 package java.security;
 
 /**
- * This class represents exceptions if a key cannot be found in the keystore.
+ * {@code UnrecoverableKeyException} indicates, that a key cannot be recovered
+ * from a {@code KeyStore}.
  * 
+ * @see KeyStore
+ * @since Android 1.0
  */
 public class UnrecoverableKeyException extends GeneralSecurityException {
 
-    /**
-     * @com.intel.drl.spec_ref
-     */
     private static final long serialVersionUID = 7275063078190151277L;
 
     /**
-     * Constructs a new instance of this class with its walkback and message
-     * filled in.
-     * 
+     * Constructs a new instance of {@code UnrecoverableKeyException} with the
+     * given message.
      * 
      * @param msg
-     *            String The detail message for the exception.
+     *            the detail message for this exception
+     * @since Android 1.0
      */
     public UnrecoverableKeyException(String msg) {
         super(msg);
     }
 
     /**
-     * Constructs a new instance of this class with its walkback filled in.
+     * Constructs a new instance of {@code UnrecoverableKeyException}.
      * 
+     * @since Android 1.0
      */
     public UnrecoverableKeyException() {
     }

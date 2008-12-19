@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package java.security.cert;
 
 import java.security.GeneralSecurityException;
@@ -27,33 +22,50 @@ import java.security.GeneralSecurityException;
 import org.apache.harmony.security.internal.nls.Messages;
 
 /**
- * @com.intel.drl.spec_ref
+ * The exception that is thrown when a certification path (or certificate chain)
+ * cannot be validated.
+ * <p>
+ * A {@code CertPathValidatorException} may optionally include the certification
+ * path instance that failed the validation and the index of the failed
+ * certificate.
+ * </p>
  * 
+ * @since Android 1.0
  */
 public class CertPathValidatorException extends GeneralSecurityException {
-    /**
-     * @com.intel.drl.spec_ref
-     */
+
     private static final long serialVersionUID = -3083180014971893139L;
 
     /**
-     * @com.intel.drl.spec_ref
-     * 
-     * Serialized field for storing certPath which is defined in constructor
-     * CertPathValidatorException(msg, cause, certPath, index)
+     * the certification path.
      */
     private CertPath certPath;
 
     /**
-     * @com.intel.drl.spec_ref
-     * 
-     * Serialized field for storing index which is defined in constructor
-     * CertPathValidatorException(msg, cause, certPath, index)
+     * the index of the certificate.
      */
     private int index = -1;
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code CertPathValidatorException} with the specified
+     * message , cause, certification path and certificate index in the
+     * certification path.
+     * 
+     * @param msg
+     *            the detail message for this exception.
+     * @param cause
+     *            the cause.
+     * @param certPath
+     *            the certification path that failed the validation.
+     * @param index
+     *            the index of the failed certificate.
+     * @throws IllegalArgumentException
+     *             if {@code certPath} is {@code null} and index is not {@code
+     *             -1}.
+     * @throws IndexOutOfBoundsException
+     *             if {@code certPath} is not {@code null} and index is not
+     *             referencing an certificate in the certification path.
+     * @since Android 1.0
      */
     public CertPathValidatorException(String msg, Throwable cause,
             CertPath certPath, int index) {
@@ -72,41 +84,68 @@ public class CertPathValidatorException extends GeneralSecurityException {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code CertPathValidatorException} with the specified
+     * message and cause.
+     * 
+     * @param msg
+     *            the detail message for this exception.
+     * @param cause
+     *            the cause why the path could not be validated.
+     * @since Android 1.0
      */
     public CertPathValidatorException(String msg, Throwable cause) {
         super(msg, cause);
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code CertPathValidatorException} with the specified
+     * cause.
+     * 
+     * @param cause
+     *            the cause why the path could not be validated.
+     * @since Android 1.0
      */
     public CertPathValidatorException(Throwable cause) {
         super(cause);
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code CertPathValidatorException} with the specified
+     * message.
+     * 
+     * @param msg
+     *            the detail message for this exception.
+     * @since Android 1.0
      */
     public CertPathValidatorException(String msg) {
         super(msg);
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code CertPathValidatorException}.
+     * 
+     * @since Android 1.0
      */
     public CertPathValidatorException() {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the certification path that failed validation.
+     * 
+     * @return the certification path that failed validation, or {@code null} if
+     *         none was specified.
+     * @since Android 1.0
      */
     public CertPath getCertPath() {
         return certPath;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the index of the failed certificate in the certification path.
+     * 
+     * @return the index of the failed certificate in the certification path, or
+     *         {@code -1} if none was specified.
+     * @since Android 1.0
      */
     public int getIndex() {
         return index;

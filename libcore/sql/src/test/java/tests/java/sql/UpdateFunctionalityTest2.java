@@ -16,6 +16,11 @@
 
 package tests.java.sql;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
@@ -31,6 +36,7 @@ import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
+@TestTargetClass(Statement.class)
 public class UpdateFunctionalityTest2 extends TestCase {
 
     private static Connection conn = null;
@@ -137,6 +143,15 @@ public class UpdateFunctionalityTest2 extends TestCase {
      * @tests UpdateFunctionalityTest2#testUpdate1(). Updates row with no
      *        referencing ones and RESTRICT action
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Functionality test: Updates row with no referencing ones and RESTRICT action",
+      targets = {
+        @TestTarget(
+          methodName = "execute",
+          methodArgs = {String.class}
+        )
+    })
     public void testUpdate1() throws SQLException {
         DatabaseCreator.fillFKStrictTable(conn);
         statement.execute("UPDATE " + DatabaseCreator.PARENT_TABLE
@@ -165,6 +180,15 @@ public class UpdateFunctionalityTest2 extends TestCase {
      * @tests UpdateFunctionalityTest2#testUpdate3(). Deletes all referencing
      *        rows and then updates referenced one
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Functionality test: Deletes all referencing rows and then updates referenced one",
+      targets = {
+        @TestTarget(
+          methodName = "execute",
+          methodArgs = {String.class}
+        )
+    })
     public void testUpdate3() throws SQLException {
         DatabaseCreator.fillFKStrictTable(conn);
         statement.execute("DELETE FROM " + DatabaseCreator.FKSTRICT_TABLE
@@ -195,6 +219,20 @@ public class UpdateFunctionalityTest2 extends TestCase {
      *        referencing ones and CASCADE action - expecting that all
      *        referencing rows will also be updated
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Functionality test: Updates row with referencing ones and " +
+                "CASCADE action - expecting that all referencing rows will also be updated",
+      targets = {
+        @TestTarget(
+          methodName = "execute",
+          methodArgs = {String.class}
+        ),
+        @TestTarget(
+          methodName = "executeQuery",
+          methodArgs = {String.class}
+      )
+    })
     public void testUpdate5() throws SQLException {
         DatabaseCreator.fillFKCascadeTable(conn);
         statement.execute("UPDATE " + DatabaseCreator.PARENT_TABLE
@@ -251,6 +289,19 @@ public class UpdateFunctionalityTest2 extends TestCase {
      * @tests UpdateFunctionalityTest2#testUpdate8(). Updates table using scalar
      *        subquery as new field value
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Functionality test: Updates table using scalar subquery as new field value",
+      targets = {
+        @TestTarget(
+          methodName = "execute",
+          methodArgs = {String.class}
+        ),
+        @TestTarget(
+          methodName = "executeQuery",
+          methodArgs = {String.class}
+        )
+    })
     public void testUpdate8() throws SQLException {
         statement.execute("UPDATE " + DatabaseCreator.SIMPLE_TABLE3
                 + " SET speed = (SELECT MAX(speed) FROM "
@@ -272,6 +323,15 @@ public class UpdateFunctionalityTest2 extends TestCase {
      * @tests UpdateFunctionalityTest2#testUpdate9(). Updates table using
      *        PreparedStatement
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Functionality test: Updates table using PreparedStatement",
+      targets = {
+        @TestTarget(
+          methodName = "executeQuery",
+          methodArgs = {String.class}
+        )
+    })
     public void testUpdate9() throws SQLException {
         DatabaseCreator.fillTestTable5(conn);
         PreparedStatement stat = conn.prepareStatement("UPDATE "

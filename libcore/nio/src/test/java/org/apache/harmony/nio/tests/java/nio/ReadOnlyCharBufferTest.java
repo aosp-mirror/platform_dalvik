@@ -15,9 +15,15 @@
  */
 package org.apache.harmony.nio.tests.java.nio;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.nio.CharBuffer;
 import java.nio.ReadOnlyBufferException;
 
+@TestTargetClass(java.nio.CharBuffer.class)
 public class ReadOnlyCharBufferTest extends CharBufferTest {
 
     protected void setUp() throws Exception {
@@ -32,15 +38,41 @@ public class ReadOnlyCharBufferTest extends CharBufferTest {
         baseBuf = null;
         super.tearDown();
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies that isReadOnly returns true for read only " +
+            "CharBuffer.",
+      targets = {
+        @TestTarget(
+          methodName = "isReadOnly",
+          methodArgs = {}
+        )
+    })
     public void testIsReadOnly() {
         assertTrue(buf.isReadOnly());
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies that hasArray returns false for read only " +
+            "CharBuffer.",
+      targets = {
+        @TestTarget(
+          methodName = "hasArray",
+          methodArgs = {}
+        )
+    })
     public void testHasArray() {
         assertFalse(buf.hasArray());
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies ReadOnlyBufferException.",
+      targets = {
+        @TestTarget(
+          methodName = "array",
+          methodArgs = {}
+        )
+    })
     public void testArray() {
         try {
             buf.array();
@@ -48,12 +80,28 @@ public class ReadOnlyCharBufferTest extends CharBufferTest {
         } catch (ReadOnlyBufferException e) {
         }
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "hashCode",
+          methodArgs = {}
+        )
+    })
     public void testHashCode() {
         CharBuffer duplicate = buf.duplicate();
         assertEquals(buf.hashCode(), duplicate.hashCode());
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies UnsupportedOperationException.",
+      targets = {
+        @TestTarget(
+          methodName = "arrayOffset",
+          methodArgs = {}
+        )
+    })
     public void testArrayOffset() {
         try {
             buf.arrayOffset();
@@ -61,7 +109,15 @@ public class ReadOnlyCharBufferTest extends CharBufferTest {
         } catch (UnsupportedOperationException e) {
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies ReadOnlyBufferException.",
+      targets = {
+        @TestTarget(
+          methodName = "compact",
+          methodArgs = {}
+        )
+    })
     public void testCompact() {
         try {
             buf.compact();
@@ -70,7 +126,15 @@ public class ReadOnlyCharBufferTest extends CharBufferTest {
             // expected
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies ReadOnlyBufferException.",
+      targets = {
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {char.class}
+        )
+    })
     public void testPutchar() {
         try {
             buf.put((char) 0);
@@ -79,7 +143,15 @@ public class ReadOnlyCharBufferTest extends CharBufferTest {
             // expected
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies ReadOnlyBufferException and NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {char[].class}
+        )
+    })
     public void testPutcharArray() {
         char array[] = new char[1];
         try {
@@ -95,7 +167,15 @@ public class ReadOnlyCharBufferTest extends CharBufferTest {
             // expected
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies ReadOnlyBufferException.",
+      targets = {
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {char[].class, int.class, int.class}
+        )
+    })
     public void testPutcharArrayintint() {
         char array[] = new char[1];
         try {
@@ -123,7 +203,15 @@ public class ReadOnlyCharBufferTest extends CharBufferTest {
             // expected
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies ReadOnlyBufferException.",
+      targets = {
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {java.nio.CharBuffer.class}
+        )
+    })
     public void testPutCharBuffer() {
         CharBuffer other = CharBuffer.allocate(1);
         try {
@@ -145,7 +233,15 @@ public class ReadOnlyCharBufferTest extends CharBufferTest {
             // expected
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies ReadOnlyBufferException.",
+      targets = {
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {int.class, char.class}
+        )
+    })
     public void testPutintchar() {
         try {
             buf.put(0, (char) 0);
@@ -160,7 +256,15 @@ public class ReadOnlyCharBufferTest extends CharBufferTest {
             // expected
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies ReadOnlyBufferException.",
+      targets = {
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {java.lang.String.class, int.class, int.class}
+        )
+    })
     public void testPutStringintint() {
         buf.clear();
         String str = String.valueOf(new char[buf.capacity()]);
@@ -190,7 +294,15 @@ public class ReadOnlyCharBufferTest extends CharBufferTest {
             // expected
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies ReadOnlyBufferException.",
+      targets = {
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void testPutString() {
         String str = " ";
         try {

@@ -17,9 +17,15 @@
 
 package org.apache.harmony.archive.tests.java.util.zip;
 
+import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.zip.Adler32;
+
 import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
 import java.util.zip.Inflater;
@@ -27,6 +33,7 @@ import java.util.zip.Inflater;
 import junit.framework.TestCase;
 import tests.support.resource.Support_Resources;
 
+@TestTargetClass(Deflater.class) 
 public class DeflaterTest extends TestCase {
 
     class MyDeflater extends Deflater {
@@ -66,6 +73,15 @@ public class DeflaterTest extends TestCase {
     /**
      * @tests java.util.zip.Deflater#deflate(byte[])
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "deflate",
+          methodArgs = {byte[].class}
+        )
+    })
     public void test_deflate$B() {
         byte outPutBuf[] = new byte[50];
         byte byteArray[] = { 1, 3, 4, 7, 8 };
@@ -108,6 +124,15 @@ public class DeflaterTest extends TestCase {
     /**
      * @tests java.util.zip.Deflater#deflate(byte[], int, int)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "deflate",
+          methodArgs = {byte[].class, int.class, int.class}
+        )
+    })
     public void test_deflate$BII() {
         byte outPutBuf[] = new byte[50];
         byte byteArray[] = { 5, 2, 3, 7, 8 };
@@ -173,6 +198,15 @@ public class DeflaterTest extends TestCase {
     /**
      * @tests java.util.zip.Deflater#end()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "end",
+          methodArgs = {}
+        )
+    })
     public void test_end() {
         byte byteArray[] = { 5, 2, 3, 7, 8 };
         byte outPutBuf[] = new byte[100];
@@ -190,6 +224,15 @@ public class DeflaterTest extends TestCase {
     /**
      * @tests java.util.zip.Deflater#finalize()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "finalize",
+          methodArgs = {}
+        )
+    })
     public void test_finalize() {
         MyDeflater mdefl = new MyDeflater();
         mdefl.myFinalize();
@@ -200,6 +243,15 @@ public class DeflaterTest extends TestCase {
     /**
      * @tests java.util.zip.Deflater#finish()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "finish",
+          methodArgs = {}
+        )
+    })
     public void test_finish() throws Exception {
         // This test already here, its the same as test_deflate()
         byte byteArray[] = { 5, 2, 3, 7, 8 };
@@ -243,6 +295,15 @@ public class DeflaterTest extends TestCase {
     /**
      * @tests java.util.zip.Deflater#finished()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "finished",
+          methodArgs = {}
+        )
+    })
     public void test_finished() {
         byte byteArray[] = { 5, 2, 3, 7, 8 };
         byte outPutBuf[] = new byte[100];
@@ -263,6 +324,15 @@ public class DeflaterTest extends TestCase {
     /**
      * @tests java.util.zip.Deflater#getAdler()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getAdler",
+          methodArgs = {}
+        )
+    })
     public void test_getAdler() {
         byte byteArray[] = { 'a', 'b', 'c', 1, 2, 3 };
         byte outPutBuf[] = new byte[100];
@@ -289,6 +359,15 @@ public class DeflaterTest extends TestCase {
     /**
      * @tests java.util.zip.Deflater#getTotalIn()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getTotalIn",
+          methodArgs = {}
+        )
+    })
     public void test_getTotalIn() {
         byte outPutBuf[] = new byte[5];
         byte byteArray[] = { 1, 3, 4, 7, 8 };
@@ -318,6 +397,15 @@ public class DeflaterTest extends TestCase {
     /**
      * @tests java.util.zip.Deflater#getTotalOut()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getTotalOut",
+          methodArgs = {}
+        )
+    })
     public void test_getTotalOut() {
         // the getTotalOut should equal the sum of value returned by deflate()
         byte outPutBuf[] = new byte[5];
@@ -348,6 +436,15 @@ public class DeflaterTest extends TestCase {
     /**
      * @tests java.util.zip.Deflater#needsInput()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "needsInput",
+          methodArgs = {}
+        )
+    })
     public void test_needsInput() {
         Deflater defl = new Deflater();
         assertTrue(
@@ -385,6 +482,15 @@ public class DeflaterTest extends TestCase {
     /**
      * @tests java.util.zip.Deflater#reset()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "reset",
+          methodArgs = {}
+        )
+    })
     public void test_reset() {
         byte outPutBuf[] = new byte[100];
         byte outPutInf[] = new byte[100];
@@ -447,6 +553,15 @@ public class DeflaterTest extends TestCase {
     /**
      * @tests java.util.zip.Deflater#setDictionary(byte[])
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setDictionary",
+          methodArgs = {byte[].class}
+        )
+    })
     public void test_setDictionary$B() {
         // This test is very close to getAdler()
         byte dictionaryArray[] = { 'e', 'r', 't', 'a', 'b', 2, 3 };
@@ -486,6 +601,15 @@ public class DeflaterTest extends TestCase {
     /**
      * @tests java.util.zip.Deflater#setDictionary(byte[], int, int)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setDictionary",
+          methodArgs = {byte[].class, int.class, int.class}
+        )
+    })
     public void test_setDictionary$BII() {
         // This test is very close to getAdler()
         byte dictionaryArray[] = { 'e', 'r', 't', 'a', 'b', 2, 3, 'o', 't' };
@@ -548,6 +672,15 @@ public class DeflaterTest extends TestCase {
     /**
      * @tests java.util.zip.Deflater#setInput(byte[])
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setInput",
+          methodArgs = {byte[].class}
+        )
+    })
     public void test_setInput$B() {
         byte[] byteArray = { 1, 2, 3 };
         byte[] outPutBuf = new byte[50];
@@ -585,6 +718,15 @@ public class DeflaterTest extends TestCase {
     /**
      * @tests java.util.zip.Deflater#setInput(byte[], int, int)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setInput",
+          methodArgs = {byte[].class, int.class, int.class}
+        )
+    })
     public void test_setInput$BII() throws Exception {
         byte[] byteArray = { 1, 2, 3, 4, 5 };
         byte[] outPutBuf = new byte[50];
@@ -638,6 +780,15 @@ public class DeflaterTest extends TestCase {
     /**
      * @tests java.util.zip.Deflater#setLevel(int)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setLevel",
+          methodArgs = {int.class}
+        )
+    })
     public void test_setLevelI() throws Exception {
         // Very similar to test_Constructor(int)
         byte[] byteArray = new byte[100];
@@ -697,6 +848,15 @@ public class DeflaterTest extends TestCase {
     /**
      * @tests java.util.zip.Deflater#setStrategy(int)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setStrategy",
+          methodArgs = {int.class}
+        )
+    })
     public void test_setStrategyI() throws Exception {
         byte[] byteArray = new byte[100];
             InputStream inFile = Support_Resources.getStream("hyts_checkInput.txt");
@@ -758,6 +918,15 @@ public class DeflaterTest extends TestCase {
     /**
      * @tests java.util.zip.Deflater#Deflater()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Deflater",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() throws Exception {
         byte[] byteArray = new byte[100];
         InputStream inFile = Support_Resources.getStream("hyts_checkInput.txt");
@@ -796,6 +965,15 @@ public class DeflaterTest extends TestCase {
     /**
      * @tests java.util.zip.Deflater#Deflater(int, boolean)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Deflater",
+          methodArgs = {int.class, boolean.class}
+        )
+    })
     public void test_ConstructorIZ() throws Exception {
         byte byteArray[] = { 4, 5, 3, 2, 'a', 'b', 6, 7, 8, 9, 0, 's', '3',
                 'w', 'r' };
@@ -891,6 +1069,15 @@ public class DeflaterTest extends TestCase {
     /**
      * @tests java.util.zip.Deflater#Deflater(int)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Deflater",
+          methodArgs = {int.class}
+        )
+    })
     public void test_ConstructorI() throws Exception {
         byte[] byteArray = new byte[100];
         InputStream inFile = Support_Resources.getStream("hyts_checkInput.txt");
@@ -1026,21 +1213,19 @@ public class DeflaterTest extends TestCase {
     }
 
     /**
-     * @tests java.util.zip.Deflater()
-     */
-    public void test_needsDictionary() {
-        Deflater inf = new Deflater();
-        assertEquals(0, inf.getTotalIn());
-        assertEquals(0, inf.getTotalOut());
-        assertEquals(0, inf.getBytesRead());
-        assertEquals(0, inf.getBytesWritten());
-    }
-
-    /**
      * @throws DataFormatException
      * @throws UnsupportedEncodingException
      * @tests java.util.zip.Deflater#getBytesRead()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getBytesRead",
+          methodArgs = {}
+        )
+    })
     public void test_getBytesRead() throws DataFormatException,
             UnsupportedEncodingException {
         // Regression test for HARMONY-158
@@ -1067,6 +1252,15 @@ public class DeflaterTest extends TestCase {
      * @throws UnsupportedEncodingException
      * @tests java.util.zip.Deflater#getBytesRead()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getBytesWritten",
+          methodArgs = {}
+        )
+    })
     public void test_getBytesWritten() throws DataFormatException,
             UnsupportedEncodingException {
         // Regression test for HARMONY-158

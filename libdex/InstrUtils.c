@@ -1018,7 +1018,7 @@ InstructionFormat* dexCreateInstrFormatTable(void)
 /*
  * Copied from InterpCore.h.  Used for instruction decoding.
  */
-#define FETCH(_offset)     (insns[(_offset)])
+#define FETCH(_offset)      (insns[(_offset)])
 #define INST_INST(_inst)    ((_inst) & 0xff)
 #define INST_A(_inst)       (((u2)(_inst) >> 8) & 0x0f)
 #define INST_B(_inst)       ((u2)(_inst) >> 12)
@@ -1039,7 +1039,8 @@ void dexDecodeInstruction(const InstructionFormat* fmts, const u2* insns,
 
     switch (dexGetInstrFormat(fmts, pDec->opCode)) {
     case kFmt10x:        // op
-        /* nothing to do */
+        /* nothing to do; copy the AA bits out for the verifier */
+        pDec->vA = INST_AA(inst);
         break;
     case kFmt12x:        // op vA, vB
         pDec->vA = INST_A(inst);
@@ -1103,7 +1104,7 @@ void dexDecodeInstruction(const InstructionFormat* fmts, const u2* insns,
         pDec->vA = FETCH(1) | ((u4) FETCH(2) << 16); // signed 32-bit value
         break;
     case kFmt31t:        // op vAA, +BBBBBBBB
-    case kFmt31c:        // op vAA, thing@BBBBBBBB        
+    case kFmt31c:        // op vAA, thing@BBBBBBBB
         pDec->vA = INST_AA(inst);
         pDec->vB = FETCH(1) | ((u4) FETCH(2) << 16); // 32-bit value
         break;
@@ -1128,6 +1129,8 @@ void dexDecodeInstruction(const InstructionFormat* fmts, const u2* insns,
              *
              * Current plan is to leave the verifier alone.  We can fix it
              * later if it's architecturally unbearable.
+             *
+             * Bottom line: method constant is always in vB.
              */
             u2 regList;
             int i, count;
@@ -1206,3 +1209,27 @@ void dexDecodeInstruction(const InstructionFormat* fmts, const u2* insns,
 bail:
     ;
 }
+
+/*
+ * Return the width of the specified instruction, or 0 if not defined.  Also
+ * works for special OP_NOP entries, including switch statement data tables
+ * and array data.
+ */
+int dexGetInstrOrTableWidthAbs(const InstructionWidth* widths, const u2* insns)
+{
+    int width;
+
+    if (*insns == kPackedSwitchSignature) {
+        width = 4 + insns[1] * 2;
+    } else if (*insns == kSparseSwitchSignature) {
+        width = 2 + insns[1] * 4;
+    } else if (*insns == kArrayDataSignature) {
+        u2 elemWidth = insns[1];
+        u4 len = insns[2] | (((u4)insns[3]) << 16);
+        width = 4 + (elemWidth * len + 1) / 2;
+    } else {
+        width = dexGetInstrWidthAbs(widths, INST_INST(insns[0]));
+    }
+    return width;
+}
+

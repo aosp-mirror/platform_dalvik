@@ -20,67 +20,66 @@ package java.util.logging;
 import java.util.List;
 
 /**
+ * {@code LoggingMXBean} is the management interface for the logging sub-system.
  * <p>
- * The management interface for the logging sub-system.
+ * The ObjectName for identifying the {@code LoggingMXBean} in a bean server is
+ * {@link LogManager#LOGGING_MXBEAN_NAME}.
  * </p>
  * 
- * <p>
- * ObjectName =
- * {@link LogManager#LOGGING_MXBEAN_NAME java.util.logging:type=Logging}
- * </p>
- * 
- * @since 1.5
+ * @since Android 1.0
  */
 public interface LoggingMXBean {
     /**
-     * <p>
-     * Gets the String value of the logging level of a logger. An empty String
-     * is returned when the logger's level is defined by its parent.
-     * </p>
+     * Gets the string value of the logging level of a logger. An empty string
+     * is returned when the logger's level is defined by its parent. A
+     * {@code null} is returned if the specified logger does not exist.
      * 
-     * @param loggerName The name of the logger lookup.
-     * @return A String if the logger was found, otherwise <code>null</code>.
+     * @param loggerName
+     *            the name of the logger lookup.
+     * @return a {@code String} if the logger is found, otherwise {@code null}.
      * @see Level#getName()
+     * @since Android 1.0
      */
     String getLoggerLevel(String loggerName);
 
     /**
-     * <p>
-     * Gets a list of all currently registered logger's names. This is performed
+     * Gets a list of all currently registered logger names. This is performed
      * using the {@link LogManager#getLoggerNames()}.
-     * </p>
      * 
-     * @return A List of String instances.
+     * @return a list of logger names.
+     * @since Android 1.0
      */
     List<String> getLoggerNames();
 
     /**
-     * <p>
      * Gets the name of the parent logger of a logger. If the logger doesn't
-     * exist then <code>null</code> is returned. If the logger is the root
-     * logger, then an empty String is returned.
-     * </p>
+     * exist then {@code null} is returned. If the logger is the root logger,
+     * then an empty {@code String} is returned.
      * 
-     * @param loggerName The name of the logger to lookup.
-     * @return A String if the logger was found, otherwise <code>null</code>.
+     * @param loggerName
+     *            the name of the logger to lookup.
+     * @return a {@code String} if the logger was found, otherwise {@code null}.
+     * @since Android 1.0
      */
     String getParentLoggerName(String loggerName);
 
     /**
-     * <p>
-     * Sets the log level of a logger.
-     * </p>
+     * Sets the log level of a logger. LevelName set to {@code null} means the
+     * level is inherited from the nearest non-null ancestor.
      * 
-     * @param loggerName The name of the logger to set the level on, which must
-     *        not be <code>null</code>.
-     * @param levelName The level to set on the logger, which may be
-     *        <code>null</code>.
-     * @throws IllegalArgumentException if <code>loggerName</code> is not a
-     *         registered logger or if <code>levelName</code> is not null and
-     *         an invalid value.
-     * @throws SecurityException if a security manager exists and the caller
-     *         doesn't have LoggingPermission("control").
+     * @param loggerName
+     *            the name of the logger to set the level on, which must not be
+     *            {@code null}.
+     * @param levelName
+     *            the level to set on the logger, which may be {@code null}.
+     * @throws IllegalArgumentException
+     *             if {@code loggerName} is not a registered logger or if
+     *             {@code levelName} is not null and not valid.
+     * @throws SecurityException
+     *             if a security manager exists and the caller doesn't have
+     *             LoggingPermission("control").
      * @see Level#parse(String)
+     * @since Android 1.0
      */
     void setLoggerLevel(String loggerName, String levelName);
 }

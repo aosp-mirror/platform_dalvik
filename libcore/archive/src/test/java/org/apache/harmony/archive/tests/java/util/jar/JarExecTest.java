@@ -16,6 +16,11 @@
  */
 package org.apache.harmony.archive.tests.java.util.jar;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestLevel;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -34,11 +39,21 @@ import tests.support.resource.Support_Resources;
  *
  */
 
+@TestTargetClass(JarOutputStream.class)
 public class JarExecTest extends junit.framework.TestCase {
     /**
      * regression test for HARMONY-1562 issue 
      *
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Regression functional test. Exception checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "putNextEntry",
+          methodArgs = {java.util.zip.ZipEntry.class}
+        )
+    })
     public void test_1562() throws Exception {
         // create the manifest
         Manifest man = new Manifest();
@@ -74,6 +89,15 @@ public class JarExecTest extends junit.framework.TestCase {
      * tests Class-Path entry in manifest
      * @throws Exception in case of troubles
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Functional test.",
+      targets = {
+        @TestTarget(
+          methodName = "JarOutputStream",
+          methodArgs = {java.io.OutputStream.class, java.util.jar.Manifest.class}
+        )
+    })
     public void test_jar_class_path() throws Exception {
         File fooJar = File.createTempFile("hyts_", ".jar");
         File barJar = File.createTempFile("hyts_", ".jar");
@@ -135,6 +159,15 @@ public class JarExecTest extends junit.framework.TestCase {
      * tests case when Main-Class is not in the jar launched but in another jar referenced by Class-Path
      * @throws Exception in case of troubles
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Functional test.",
+      targets = {
+        @TestTarget(
+          methodName = "JarOutputStream",
+          methodArgs = {java.io.OutputStream.class, java.util.jar.Manifest.class}
+        )
+    })
     public void test_main_class_in_another_jar() throws Exception {
         File fooJar = File.createTempFile("hyts_", ".jar");
         File barJar = File.createTempFile("hyts_", ".jar");
@@ -169,6 +202,15 @@ public class JarExecTest extends junit.framework.TestCase {
                 .startsWith("FOOBAR"));
     }
     
+@TestInfo(
+        level = TestLevel.PARTIAL,
+        purpose = "Functional test.",
+        targets = {
+          @TestTarget(
+            methodName = "JarOutputStream",
+            methodArgs = {java.io.OutputStream.class, java.util.jar.Manifest.class}
+          )
+      })
     public void test_classpath() throws Exception {
         File resources = Support_Resources.createTempFolder();
 

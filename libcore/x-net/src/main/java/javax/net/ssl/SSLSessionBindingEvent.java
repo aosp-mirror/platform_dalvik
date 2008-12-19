@@ -15,38 +15,57 @@
  *  limitations under the License.
  */
 
-/**
-* @author Boris V. Kuznetsov
-* @version $Revision$
-*/
-
 package javax.net.ssl;
 
 import java.io.Serializable;
 import java.util.EventObject;
 
 /**
- * @com.intel.drl.spec_ref
+ * The event sent to an {@code SSLSessionBindingListener} when the listener
+ * object is bound ({@link SSLSession#putValue(String, Object)}) or unbound 
+ * ({@link SSLSession#removeValue(String)}) to an {@code SSLSession}.
  * 
+ * @since Android 1.0
  */
 public class SSLSessionBindingEvent extends EventObject implements Serializable {
 
-    /**
-     * @serial
-     * The 5.0 spec. doesn't declare this serialVersionUID field
-     * In order to be compatible it is explicitly declared here
-     */
     private static final long serialVersionUID = 3989172637106345L;
 
     private String name;
 
+    /**
+     * Creates a new {@code SSLSessionBindingEvent} for the specified session
+     * indicating a binding event for the specified name.
+     * 
+     * @param session
+     *            the session for which the event occurs.
+     * @param name
+     *            the name of the object being (un)bound.
+     * @since Android 1.0
+     */
     public SSLSessionBindingEvent(SSLSession session, String name) {
         super(session);
         this.name = name;
     }
+    
+    /**
+     * Returns the name of the binding being added or removed.
+     * 
+     * @return the name of the binding.
+     * @since Android 1.0
+     */
     public String getName() {
         return name;
     }
+    
+    /**
+     * Returns the session to which the binding is added or from which it is
+     * removed.
+     * 
+     * @return the session to which the binding is added or from which it is
+     *         removed.
+     * @since Android 1.0
+     */
     public SSLSession getSession() {
         return (SSLSession)this.source;
     }

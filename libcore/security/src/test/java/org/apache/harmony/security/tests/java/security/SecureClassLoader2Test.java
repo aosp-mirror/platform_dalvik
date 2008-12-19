@@ -17,6 +17,11 @@
 
 package org.apache.harmony.security.tests.java.security;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,12 +33,22 @@ import java.security.cert.Certificate;
 import java.util.Enumeration;
 import java.util.jar.JarFile;
 
+@TestTargetClass(SecureClassLoader.class)
 public class SecureClassLoader2Test extends junit.framework.TestCase {
 
     /**
      * @tests java.security.SecureClassLoader#getPermissions(java.security.CodeSource)
      */
-    public void test_getPermissionsLjava_security_CodeSource() {
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verification with null parameter missed",
+      targets = {
+        @TestTarget(
+          methodName = "getPermissions",
+          methodArgs = {CodeSource.class}
+        )
+    })
+    public void _test_getPermissionsLjava_security_CodeSource() {
         class MyClassLoader extends SecureClassLoader {
             public PermissionCollection getPerms() {
                 return super.getPermissions(new CodeSource(null,

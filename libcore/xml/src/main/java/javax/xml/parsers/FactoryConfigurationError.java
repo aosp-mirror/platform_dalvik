@@ -17,36 +17,42 @@
 package javax.xml.parsers;
 
 /**
- * Represents an error that occured during the configuration of parser factory.
+ * Represents an error that occurred during the configuration of parser factory.
+ * 
+ * @since Android 1.0
  */
 public class FactoryConfigurationError extends Error {
 
     /**
      * The nested exception that caused this exception. Note that the nested
-     * exception will be stored in a special attribute, and can be queried
-     * using the getException() method. It does not use the facility the
-     * Exception class provides for storing nested exceptions, since the XML
-     * API predates that facility.
+     * exception will be stored in a special attribute, and can be queried using
+     * the {@link #getException()} method. It does not use the facility the
+     * {@link Exception} class provides for storing nested exceptions, since the
+     * XML API predates that facility.
      */
     private Exception cause;
     
     /**
-     * Creates a new FactoryConfigurationError with no error message an no
-     * cause.
+     * Creates a new {@code FactoryConfigurationError} with no error message and
+     * no cause.
+     * 
+     * @since Android 1.0
      */
     public FactoryConfigurationError() {
         super();
     }
 
     /**
-     * Creates a new FactoryConfigurationError with no error message and a given
-     * cause.
+     * Creates a new {@code FactoryConfigurationError} with no error message and
+     * a given cause.
      * 
-     * @param cause The cause of the error. Note that the nested
-     *          exception will be stored in a special attribute, and can be
-     *          queried using the getException() method. It does not use the
-     *          facility the Exception class provides for storing nested
-     *          exceptions, since the XML API predates that facility.
+     * @param cause the cause of the error. Note that the nested exception will
+     *        be stored in a special attribute, and can be queried using the
+     *        {@link #getException()} method. It does not use the facility the
+     *        Exception class provides for storing nested exceptions, since the
+     *        XML API predates that facility.
+     * 
+     * @since Android 1.0
      */
     public FactoryConfigurationError(Exception cause) {
         super();
@@ -54,15 +60,17 @@ public class FactoryConfigurationError extends Error {
     }
 
     /**
-     * Creates a new FactoryConfigurationError with a given error message and
-     * cause.
+     * Creates a new {@code FactoryConfigurationError} with a given error
+     * message and cause.
      * 
-     * @param cause The cause of the error. Note that the nested
-     *          exception will be stored in a special attribute, and can be
-     *          queried using the getException() method. It does not use the
-     *          facility the Exception class provides for storing nested
-     *          exceptions, since the XML API predates that facility.
+     * @param cause the cause of the error. Note that the nested exception will
+     *        be stored in a special attribute, and can be queried using the
+     *        {@link #getException()} method. It does not use the facility the
+     *        {@link Exception} class provides for storing nested exceptions,
+     *        since the XML API predates that facility.
      * @param message The error message.
+     * 
+     * @since Android 1.0
      */
     public FactoryConfigurationError(Exception cause, String message) {
         super(message);
@@ -70,10 +78,12 @@ public class FactoryConfigurationError extends Error {
     }
 
     /**
-     * Creates a new FactoryConfigurationError with a given error message and no
-     * cause.
+     * Creates a new {@code FactoryConfigurationError} with a given error
+     * message and no cause.
      * 
-     * @param message The error message.
+     * @param message the error message.
+     * 
+     * @since Android 1.0
      */
     public FactoryConfigurationError(String message) {
         super(message);
@@ -82,21 +92,27 @@ public class FactoryConfigurationError extends Error {
     /**
      * Returns the cause of the error, in case there is one.
      * 
-     * @return The exception that caused the error, or null if none is set.
+     * @return the exception that caused the error, or {@code null} if none is
+     *         set.
+     * 
+     * @since Android 1.0
      */
-    public java.lang.Exception getException() {
+    public Exception getException() {
         return cause;
     }
 
     /**
      * Returns the message of the error, in case there is one.
      * 
-     * @return The message. If an explicit error message has been assigned to
+     * @return the message. If an explicit error message has been assigned to
      *         the exception, this one is returned. If not, and there is an
      *         underlying exception (the cause), then the result of invoking
-     *         toString() for that is returned. Otherwise, null is returned.
+     *         {@link #toString()} on that object is returned. Otherwise, {@code
+     *         null} is returned.
+     * 
+     * @since Android 1.0
      */
-    public java.lang.String getMessage() {
+    public String getMessage() {
         String message = super.getMessage();
 
         if (message != null) {

@@ -15,9 +15,15 @@
  */
 package org.apache.harmony.nio.tests.java.nio;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.nio.ReadOnlyBufferException;
 import java.nio.ShortBuffer;
 
+@TestTargetClass(java.nio.ShortBuffer.class)
 public class ReadOnlyShortBufferTest extends ShortBufferTest {
     protected void setUp() throws Exception {
         super.setUp();
@@ -28,15 +34,39 @@ public class ReadOnlyShortBufferTest extends ShortBufferTest {
     protected void tearDown() throws Exception {
         super.tearDown();
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies isReadOnly method for read only ShortBuffer.",
+      targets = {
+        @TestTarget(
+          methodName = "isReadOnly",
+          methodArgs = {}
+        )
+    })
     public void testIsReadOnly() {
         assertTrue(buf.isReadOnly());
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies hasArray method for read only ShortBuffer.",
+      targets = {
+        @TestTarget(
+          methodName = "hasArray",
+          methodArgs = {}
+        )
+    })
     public void testHasArray() {
         assertFalse(buf.hasArray());
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies ReadOnlyBufferException.",
+      targets = {
+        @TestTarget(
+          methodName = "array",
+          methodArgs = {}
+        )
+    })
     public void testArray() {
         try {
             buf.array();
@@ -45,12 +75,28 @@ public class ReadOnlyShortBufferTest extends ShortBufferTest {
             //expected
         }
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "hashCode",
+          methodArgs = {}
+        )
+    })
     public void testHashCode() {
         ShortBuffer duplicate = buf.duplicate();
         assertEquals(buf.hashCode(), duplicate.hashCode());
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies UnsupportedOperationException.",
+      targets = {
+        @TestTarget(
+          methodName = "arrayOffset",
+          methodArgs = {}
+        )
+    })
     public void testArrayOffset() {
         try {
             buf.arrayOffset();
@@ -59,7 +105,15 @@ public class ReadOnlyShortBufferTest extends ShortBufferTest {
             //expected
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies ReadOnlyBufferException.",
+      targets = {
+        @TestTarget(
+          methodName = "compact",
+          methodArgs = {}
+        )
+    })
     public void testCompact() {
         try {
             buf.compact();
@@ -68,7 +122,15 @@ public class ReadOnlyShortBufferTest extends ShortBufferTest {
             // expected
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies ReadOnlyBufferException.",
+      targets = {
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {short.class}
+        )
+    })
     public void testPutshort() {
         try {
             buf.put((short)0);
@@ -77,7 +139,15 @@ public class ReadOnlyShortBufferTest extends ShortBufferTest {
             // expected
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies ReadOnlyBufferException.",
+      targets = {
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {short[].class}
+        )
+    })
     public void testPutshortArray() {
         short array[] = new short[1];
         try {
@@ -93,7 +163,15 @@ public class ReadOnlyShortBufferTest extends ShortBufferTest {
             // expected
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies ReadOnlyBufferException.",
+      targets = {
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {short[].class, int.class, int.class}
+        )
+    })
     public void testPutshortArrayintint() {
         short array[] = new short[1];
         try {
@@ -121,7 +199,15 @@ public class ReadOnlyShortBufferTest extends ShortBufferTest {
             // expected
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies ReadOnlyBufferException.",
+      targets = {
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {java.nio.ShortBuffer.class}
+        )
+    })
     public void testPutShortBuffer() {
         ShortBuffer other = ShortBuffer.allocate(1);
         try {
@@ -143,7 +229,15 @@ public class ReadOnlyShortBufferTest extends ShortBufferTest {
             // expected
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies ReadOnlyBufferException.",
+      targets = {
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {int.class, short.class}
+        )
+    })
     public void testPutintshort() {
         try {
             buf.put(0, (short) 0);

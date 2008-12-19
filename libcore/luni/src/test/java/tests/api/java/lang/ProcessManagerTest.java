@@ -16,6 +16,11 @@
 
 package tests.api.java.lang;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import junit.framework.TestCase;
 
 import java.io.BufferedReader;
@@ -25,8 +30,18 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 
+@TestTargetClass(Process.class) 
 public class ProcessManagerTest extends TestCase {
 
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getOutputStream",
+          methodArgs = {}
+        )
+    })
     public void testCat() throws IOException, InterruptedException {
         String[] commands = { "cat" };
         Process process = Runtime.getRuntime().exec(commands, null, null);
@@ -39,13 +54,29 @@ public class ProcessManagerTest extends TestCase {
 
         assertEquals(greeting, readLine(process));
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "InterruptedException  is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "waitFor",
+          methodArgs = {}
+        )
+    })
     public void testSleep() throws IOException, InterruptedException {
         String[] commands = { "sleep", "1" };
         Process process = Runtime.getRuntime().exec(commands, null, null);
         assertEquals(0, process.waitFor());
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getInputStream",
+          methodArgs = {}
+        )
+    })
     public void testPwd() throws IOException, InterruptedException {
         String[] commands = { "sh", "-c", "pwd" };
         Process process = Runtime.getRuntime().exec(
@@ -53,7 +84,15 @@ public class ProcessManagerTest extends TestCase {
         logErrors(process);
         assertEquals("/", readLine(process));
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getInputStream",
+          methodArgs = {}
+        )
+    })
     public void testEnvironment() throws IOException, InterruptedException {
         String[] commands = { "sh", "-c", "echo $FOO" };
 

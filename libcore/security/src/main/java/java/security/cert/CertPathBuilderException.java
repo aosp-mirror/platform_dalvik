@@ -15,49 +15,60 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package java.security.cert;
 
 import java.security.GeneralSecurityException;
 
 /**
- * @com.intel.drl.spec_ref
+ * The exception that is thrown when a {@code CertPathBuilder} method fails.
  * 
+ * @since Android 1.0
  */
 public class CertPathBuilderException extends GeneralSecurityException {
 
-    /**
-     * @com.intel.drl.spec_ref
-     */
     private static final long serialVersionUID = 5316471420178794402L;
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code CertPathBuilderException} with the specified message
+     * and cause.
+     * 
+     * @param msg
+     *            the detail message for the exception
+     * @param cause
+     *            why the building of the certification path failed.
+     * @since Android 1.0
      */
     public CertPathBuilderException(String msg, Throwable cause) {
         super(msg, cause);
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code CertPathBuilderException} with the specified cause.
+     * 
+     * @param cause
+     *            why the building of the certification path failed.
+     * @since Android 1.0
      */
     public CertPathBuilderException(Throwable cause) {
         super(cause);
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code CertPathBuilderException} with the specified
+     * message.
+     * 
+     * @param msg
+     *            the detail message for the exception.
+     * @since Android 1.0
      */
     public CertPathBuilderException(String msg) {
         super(msg);
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code CertPathBuilderException}.
+     * 
+     * @since Android 1.0
      */
     public CertPathBuilderException() {
     }

@@ -17,11 +17,28 @@
 
 package org.apache.harmony.sql.tests.javax.sql;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
+import javax.sql.RowSet;
 import javax.sql.RowSetEvent;
 import junit.framework.TestCase;
 
+@TestTargetClass(RowSetEvent.class)
 public class RowSetEventTest extends TestCase {
 
+    /**
+     * @tests {@link javax.sql.RowSetEvent#RowSetEvent(javax.sql.RowSet)}.
+     */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "Verifies RowSetEvent() constructor.",
+            targets = { @TestTarget(methodName = "RowSetEvent", 
+                                    methodArgs = {RowSet.class})                         
+            }
+    )    
     public void testConstructor() {
         try {
             new RowSetEvent(null);

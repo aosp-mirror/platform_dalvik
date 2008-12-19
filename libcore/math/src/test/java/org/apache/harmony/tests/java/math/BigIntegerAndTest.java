@@ -21,9 +21,15 @@
 
 package org.apache.harmony.tests.java.math;
 
-import junit.framework.TestCase;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.math.BigInteger;
 
+import junit.framework.TestCase;
+@TestTargetClass(BigInteger.class)
 /**
  * Class:  java.math.BigInteger
  * Method: and 
@@ -32,6 +38,15 @@ public class BigIntegerAndTest extends TestCase {
     /**
      * And for zero and a positive number
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "This is a complete subset of tests for and method.",
+      targets = {
+        @TestTarget(
+          methodName = "and",
+          methodArgs = {java.math.BigInteger.class}
+        )
+    })
     public void testZeroPos() {
         byte aBytes[] = {0};
         byte bBytes[] = {-2, -3, -4, -4, 5, 14, 23, 39, 48, 57, 66, 5, 14, 23};
@@ -52,6 +67,15 @@ public class BigIntegerAndTest extends TestCase {
     /**
      * And for zero and a negative number
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for and method.",
+          targets = {
+            @TestTarget(
+              methodName = "and",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testZeroNeg() {
         byte aBytes[] = {0};
         byte bBytes[] = {-2, -3, -4, -4, 5, 14, 23, 39, 48, 57, 66, 5, 14, 23};
@@ -72,6 +96,15 @@ public class BigIntegerAndTest extends TestCase {
     /**
      * And for a positive number and zero 
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for and method.",
+          targets = {
+            @TestTarget(
+              methodName = "and",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testPosZero() {
         byte aBytes[] = {-2, -3, -4, -4, 5, 14, 23, 39, 48, 57, 66, 5, 14, 23};
         byte bBytes[] = {0};
@@ -92,6 +125,15 @@ public class BigIntegerAndTest extends TestCase {
     /**
      * And for a negative number and zero  
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for and method.",
+          targets = {
+            @TestTarget(
+              methodName = "and",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testNegPos() {
         byte aBytes[] = {-2, -3, -4, -4, 5, 14, 23, 39, 48, 57, 66, 5, 14, 23};
         byte bBytes[] = {0};
@@ -112,6 +154,15 @@ public class BigIntegerAndTest extends TestCase {
     /**
      * And for zero and zero
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for and method.",
+          targets = {
+            @TestTarget(
+              methodName = "and",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testZeroZero() {
         byte aBytes[] = {0};
         byte bBytes[] = {0};
@@ -132,6 +183,15 @@ public class BigIntegerAndTest extends TestCase {
     /**
      * And for zero and one
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for and method.",
+          targets = {
+            @TestTarget(
+              methodName = "and",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testZeroOne() {
         BigInteger aNumber = BigInteger.ZERO;
         BigInteger bNumber = BigInteger.ONE;
@@ -143,6 +203,15 @@ public class BigIntegerAndTest extends TestCase {
     /**
      * And for one and one
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for and method.",
+          targets = {
+            @TestTarget(
+              methodName = "and",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testOneOne() {
         BigInteger aNumber = BigInteger.ONE;
         BigInteger bNumber = BigInteger.ONE;
@@ -154,6 +223,15 @@ public class BigIntegerAndTest extends TestCase {
     /**
      * And for two positive numbers of the same length
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for and method.",
+          targets = {
+            @TestTarget(
+              methodName = "and",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testPosPosSameLength() {
         byte aBytes[] = {-128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, -117};
         byte bBytes[] = {-2, -3, -4, -4, 5, 14, 23, 39, 48, 57, 66, 5, 14, 23};
@@ -174,6 +252,15 @@ public class BigIntegerAndTest extends TestCase {
     /**
      * And for two positive numbers; the first is longer
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for and method.",
+          targets = {
+            @TestTarget(
+              methodName = "and",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testPosPosFirstLonger() {
         byte aBytes[] = {-128, 9, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, -117, 23, 87, -25, -75};
         byte bBytes[] = {-2, -3, -4, -4, 5, 14, 23, 39, 48, 57, 66, 5, 14, 23};
@@ -194,6 +281,15 @@ public class BigIntegerAndTest extends TestCase {
     /**
      * And for two positive numbers; the first is shorter
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for and method.",
+          targets = {
+            @TestTarget(
+              methodName = "and",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testPosPosFirstShorter() {
         byte aBytes[] = {-2, -3, -4, -4, 5, 14, 23, 39, 48, 57, 66, 5, 14, 23};
         byte bBytes[] = {-128, 9, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, -117, 23, 87, -25, -75};
@@ -214,6 +310,15 @@ public class BigIntegerAndTest extends TestCase {
     /**
      * And for two negative numbers of the same length
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for and method.",
+          targets = {
+            @TestTarget(
+              methodName = "and",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testNegNegSameLength() {
         byte aBytes[] = {-128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, -117};
         byte bBytes[] = {-2, -3, -4, -4, 5, 14, 23, 39, 48, 57, 66, 5, 14, 23};
@@ -234,6 +339,15 @@ public class BigIntegerAndTest extends TestCase {
     /**
      * And for two negative numbers; the first is longer
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for and method.",
+          targets = {
+            @TestTarget(
+              methodName = "and",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testNegNegFirstLonger() {
         byte aBytes[] = {-128, 9, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, -117, 23, 87, -25, -75};
         byte bBytes[] = {-2, -3, -4, -4, 5, 14, 23, 39, 48, 57, 66, 5, 14, 23};
@@ -254,6 +368,15 @@ public class BigIntegerAndTest extends TestCase {
     /**
      * And for two negative numbers; the first is shorter
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for and method.",
+          targets = {
+            @TestTarget(
+              methodName = "and",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testNegNegFirstShorter() {
         byte aBytes[] = {-2, -3, -4, -4, 5, 14, 23, 39, 48, 57, 66, 5, 14, 23};
         byte bBytes[] = {-128, 9, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, -117, 23, 87, -25, -75};
@@ -274,6 +397,15 @@ public class BigIntegerAndTest extends TestCase {
     /**
      * And for two numbers of different signs and the same length
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for and method.",
+          targets = {
+            @TestTarget(
+              methodName = "and",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testPosNegSameLength() {
         byte aBytes[] = {-128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, -117};
         byte bBytes[] = {-2, -3, -4, -4, 5, 14, 23, 39, 48, 57, 66, 5, 14, 23};
@@ -294,6 +426,15 @@ public class BigIntegerAndTest extends TestCase {
     /**
      * And for two numbers of different signs and the same length
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for and method.",
+          targets = {
+            @TestTarget(
+              methodName = "and",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testNegPosSameLength() {
         byte aBytes[] = {-128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, -117};
         byte bBytes[] = {-2, -3, -4, -4, 5, 14, 23, 39, 48, 57, 66, 5, 14, 23};
@@ -314,6 +455,15 @@ public class BigIntegerAndTest extends TestCase {
     /**
      * And for a negative and a positive numbers; the first is longer
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for and method.",
+          targets = {
+            @TestTarget(
+              methodName = "and",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testNegPosFirstLonger() {
         byte aBytes[] = {-128, 9, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, -117, 23, 87, -25, -75};
         byte bBytes[] = {-2, -3, -4, -4, 5, 14, 23, 39, 48, 57, 66, 5, 14, 23};
@@ -334,6 +484,15 @@ public class BigIntegerAndTest extends TestCase {
     /**
      * And for a negative and a positive numbers; the first is shorter
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for and method.",
+          targets = {
+            @TestTarget(
+              methodName = "and",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testNegPosFirstShorter() {
         byte aBytes[] = {-2, -3, -4, -4, 5, 14, 23, 39, 48, 57, 66, 5, 14, 23};
         byte bBytes[] = {-128, 9, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, -117, 23, 87, -25, -75};
@@ -354,6 +513,15 @@ public class BigIntegerAndTest extends TestCase {
     /**
      * And for a positive and a negative numbers; the first is longer
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for and method.",
+          targets = {
+            @TestTarget(
+              methodName = "and",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testPosNegFirstLonger() {
         byte aBytes[] = {-128, 9, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, -117, 23, 87, -25, -75};
         byte bBytes[] = {-2, -3, -4, -4, 5, 14, 23, 39, 48, 57, 66, 5, 14, 23};
@@ -374,6 +542,15 @@ public class BigIntegerAndTest extends TestCase {
     /**
      * And for a positive and a negative numbers; the first is shorter
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for and method.",
+          targets = {
+            @TestTarget(
+              methodName = "and",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testPosNegFirstShorter() {
         byte aBytes[] = {-2, -3, -4, -4, 5, 14, 23, 39, 48, 57, 66, 5, 14, 23};
         byte bBytes[] = {-128, 9, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, -117, 23, 87, -25, -75};
@@ -394,6 +571,15 @@ public class BigIntegerAndTest extends TestCase {
     /**
      * Test for a special case
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for and method.",
+          targets = {
+            @TestTarget(
+              methodName = "and",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testSpecialCase1() {
         byte aBytes[] = {-1, -1, -1, -1};
         byte bBytes[] = {5, -4, -3, -2};
@@ -414,6 +600,15 @@ public class BigIntegerAndTest extends TestCase {
     /**
      * Test for a special case
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for and method.",
+          targets = {
+            @TestTarget(
+              methodName = "and",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testSpecialCase2() {
         byte aBytes[] = {-51};
         byte bBytes[] = {-52, -51, -50, -49, -48};

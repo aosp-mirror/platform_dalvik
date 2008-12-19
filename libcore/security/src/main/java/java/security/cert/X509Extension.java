@@ -15,38 +15,58 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package java.security.cert;
 
 import java.util.Set;
 
 /**
- * @com.intel.drl.spec_ref
+ * The interface specifying an X.509 Certificate or CRL extension.
  * 
+ * @since Android 1.0
  */
 public interface X509Extension {
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the set of OIDs of the extension(s) marked as CRITICAL, that this
+     * implementation manages.
+     * 
+     * @return the set of extension OIDs marked as CRITIAL, an empty set if none
+     *         are marked as CRITICAL, or {@code null} if no extensions are
+     *         present.
+     * @since Android 1.0
      */
     public Set<String> getCriticalExtensionOIDs();
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the extension value as DER-encoded OCTET string for the specified
+     * OID.
+     * 
+     * @param oid
+     *            the object identifier to get the extension value for.
+     * @return the extension value as DER-encoded OCTET string, or {@code null}
+     *         if no extension for the specified OID can be found.
+     * @since Android 1.0
      */
     public byte[] getExtensionValue(String oid);
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the set of OIDs of the extension(s) marked as NON-CRITICAL, that
+     * this implementation manages.
+     * 
+     * @return the set of extension OIDs marked as NON-CRITIAL, an empty set if
+     *         none are marked as NON-.CRITICAL, or {@code null} if no
+     *         extensions are present.
+     * @since Android 1.0
      */
     public Set<String> getNonCriticalExtensionOIDs();
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns whether this instance has an extension marked as CRITICAL that it
+     * cannot support.
+     * 
+     * @return {@code true} if an unsupported CRITICAL extension is present,
+     *         {@code false} otherwise.
+     * @since Android 1.0
      */
     public boolean hasUnsupportedCriticalExtension();
 }

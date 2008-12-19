@@ -16,6 +16,11 @@
 
 package tests.api.java.nio.charset;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestLevel;
+
 import java.nio.BufferOverflowException;
 import java.nio.BufferUnderflowException;
 import java.nio.charset.CoderResult;
@@ -23,7 +28,7 @@ import java.nio.charset.MalformedInputException;
 import java.nio.charset.UnmappableCharacterException;
 
 import junit.framework.TestCase;
-
+@TestTargetClass(CoderResult.class)
 /**
  * Test class java.nio.charset.CoderResult.
  */
@@ -46,6 +51,36 @@ public class CoderResultTest extends TestCase {
     /*
      * Test the constant OVERFLOW and UNDERFLOW.
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isError",
+          methodArgs = {}
+        ), @TestTarget(
+          methodName = "isMalformed",
+          methodArgs = {}
+        ), @TestTarget(
+          methodName = "isOverflow",
+          methodArgs = {}
+        ), @TestTarget(
+          methodName = "isUnderflow",
+          methodArgs = {}
+        ), @TestTarget(
+          methodName = "isUnmappable",
+          methodArgs = {}
+        ), @TestTarget(
+          methodName = "length",
+          methodArgs = {}
+        ), @TestTarget(
+          methodName = "throwException",
+          methodArgs = {}
+        ), @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public void testConstants() throws Exception {
         assertNotSame(CoderResult.OVERFLOW, CoderResult.UNDERFLOW);
 
@@ -94,6 +129,21 @@ public class CoderResultTest extends TestCase {
      * Test method isError().
      * 
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isError",
+          methodArgs = {}
+        ), @TestTarget(
+          methodName = "malformedForLength",
+          methodArgs = {int.class}
+        ), @TestTarget(
+          methodName = "unmappableForLength",
+          methodArgs = {int.class}
+        )
+    })
     public void testIsError() {
         assertFalse(CoderResult.UNDERFLOW.isError());
         assertFalse(CoderResult.OVERFLOW.isError());
@@ -105,6 +155,21 @@ public class CoderResultTest extends TestCase {
      * Test method isMalformed().
      * 
      */
+@TestInfo(
+          level = TestLevel.COMPLETE,
+          purpose = "",
+          targets = {
+            @TestTarget(
+              methodName = "isMalformed",
+              methodArgs = {}
+            ), @TestTarget(
+              methodName = "malformedForLength",
+              methodArgs = {int.class}
+            ),  @TestTarget(
+              methodName = "unmappableForLength",
+              methodArgs = {int.class}
+            )
+        })
     public void testIsMalformed() {
         assertFalse(CoderResult.UNDERFLOW.isMalformed());
         assertFalse(CoderResult.OVERFLOW.isMalformed());
@@ -116,6 +181,21 @@ public class CoderResultTest extends TestCase {
      * Test method isMalformed().
      * 
      */
+@TestInfo(
+          level = TestLevel.COMPLETE,
+          purpose = "",
+          targets = {
+            @TestTarget(
+              methodName = "isUnmappable",
+              methodArgs = {}
+            ), @TestTarget(
+              methodName = "malformedForLength",
+              methodArgs = {int.class}
+            ),  @TestTarget(
+              methodName = "unmappableForLength",
+              methodArgs = {int.class}
+            )
+        })
     public void testIsUnmappable() {
         assertFalse(CoderResult.UNDERFLOW.isUnmappable());
         assertFalse(CoderResult.OVERFLOW.isUnmappable());
@@ -127,6 +207,21 @@ public class CoderResultTest extends TestCase {
      * Test method isOverflow().
      * 
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isOverflow",
+          methodArgs = {}
+        ), @TestTarget(
+          methodName = "malformedForLength",
+          methodArgs = {int.class}
+        ),  @TestTarget(
+          methodName = "unmappableForLength",
+          methodArgs = {int.class}
+        )
+    })
     public void testIsOverflow() {
         assertFalse(CoderResult.UNDERFLOW.isOverflow());
         assertTrue(CoderResult.OVERFLOW.isOverflow());
@@ -138,6 +233,21 @@ public class CoderResultTest extends TestCase {
      * Test method isUnderflow().
      * 
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isUnderflow",
+          methodArgs = {}
+        ), @TestTarget(
+          methodName = "malformedForLength",
+          methodArgs = {int.class}
+        ),  @TestTarget(
+          methodName = "unmappableForLength",
+          methodArgs = {int.class}
+        )
+    })
     public void testIsUnderflow() {
         assertTrue(CoderResult.UNDERFLOW.isUnderflow());
         assertFalse(CoderResult.OVERFLOW.isUnderflow());
@@ -149,6 +259,21 @@ public class CoderResultTest extends TestCase {
      * Test method length().
      * 
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "length",
+          methodArgs = {}
+        ), @TestTarget(
+          methodName = "malformedForLength",
+          methodArgs = {int.class}
+        ),  @TestTarget(
+          methodName = "unmappableForLength",
+          methodArgs = {int.class}
+        )
+    })
     public void testLength() {
         try {
             CoderResult.UNDERFLOW.length();
@@ -171,6 +296,15 @@ public class CoderResultTest extends TestCase {
      * Test method malformedForLength(int).
      * 
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "malformedForLength",
+          methodArgs = {int.class}
+        )
+    })
     public void testMalformedForLength() {
         assertNotNull(CoderResult.malformedForLength(Integer.MAX_VALUE));
         assertNotNull(CoderResult.malformedForLength(1));
@@ -198,6 +332,15 @@ public class CoderResultTest extends TestCase {
      * Test method unmappableForLength(int).
      * 
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "unmappableForLength",
+          methodArgs = {int.class}
+        )
+    })
     public void testUnmappableForLength() {
         assertNotNull(CoderResult.unmappableForLength(Integer.MAX_VALUE));
         assertNotNull(CoderResult.unmappableForLength(1));
@@ -223,6 +366,21 @@ public class CoderResultTest extends TestCase {
      * Test method throwException().
      * 
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "throwException",
+          methodArgs = {}
+        ), @TestTarget(
+          methodName = "malformedForLength",
+          methodArgs = {int.class}
+        ),  @TestTarget(
+          methodName = "unmappableForLength",
+          methodArgs = {int.class}
+        )
+    })
     public void testThrowException() throws Exception {
         try {
             CoderResult.OVERFLOW.throwException();
@@ -254,6 +412,21 @@ public class CoderResultTest extends TestCase {
      * Test method toString().
      * 
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        ), @TestTarget(
+          methodName = "malformedForLength",
+          methodArgs = {int.class}
+        ),  @TestTarget(
+          methodName = "unmappableForLength",
+          methodArgs = {int.class}
+        )
+    })
     public void testToString() throws Exception {
         assertTrue(CoderResult.OVERFLOW.toString().indexOf("OVERFLOW") != -1);
         assertTrue(CoderResult.UNDERFLOW.toString().indexOf("UNDERFLOW") != -1);

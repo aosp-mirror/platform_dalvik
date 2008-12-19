@@ -17,16 +17,31 @@
 
 package tests.api.java.util;
 
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass; 
+
 import java.util.Enumeration;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.Vector;
 
+@TestTargetClass(java.util.ListResourceBundle.class) 
 public class ListResourceBundleTest extends junit.framework.TestCase {
 
     /**
      * @tests java.util.ListResourceBundle#getKeys()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getKeys",
+          methodArgs = {}
+        )
+    })
     public void test_getKeys() {
         ResourceBundle bundle;
         String name = "tests.support.Support_TestResource";

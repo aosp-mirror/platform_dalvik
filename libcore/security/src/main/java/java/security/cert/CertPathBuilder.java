@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package java.security.cert;
 
 import java.security.AccessController;
@@ -34,10 +29,11 @@ import org.apache.harmony.security.internal.nls.Messages;
 
 
 /**
- * @com.intel.drl.spec_ref
+ * This class implements the functionality of a builder for an unverified
+ * <i>Certification Path</i>s from a specified certificate to a trust anchor.
  * 
+ * @since Android 1.0
  */
-
 public class CertPathBuilder {
 
     // Store CertPathBuilder service name
@@ -63,7 +59,15 @@ public class CertPathBuilder {
     private final String algorithm;
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code CertPathBuilder}.
+     * 
+     * @param builderSpi
+     *            the implementation delegate.
+     * @param provider
+     *            the provider.
+     * @param algorithm
+     *            the desired algorithm available at the provider.
+     * @since Android 1.0
      */
     protected CertPathBuilder(CertPathBuilderSpi builderSpi, Provider provider,
             String algorithm) {
@@ -73,24 +77,37 @@ public class CertPathBuilder {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the algorithm name of this instance.
+     * 
+     * @return the algorithm name of this instance.
+     * @since Android 1.0
      */
     public final String getAlgorithm() {
         return algorithm;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the provider of this instance.
+     * 
+     * @return the provider of this instance.
+     * @since Android 1.0
      */
     public final Provider getProvider() {
         return provider;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code CertPathBuilder} instance with the specified
+     * algorithm.
      * 
-     * throws NullPointerException if algorithm is null (instead of
-     * NoSuchAlgorithmException as in 1.4 release)
+     * @param algorithm
+     *            the name of the algorithm.
+     * @return a builder for the requested algorithm.
+     * @throws NullPointerException
+     *             if the algorithm is {@code null}.
+     * @throws NoSuchAlgorithmException
+     *             if no installed provider can provide the algorithm.
+     * @since Android 1.0
      */
     public static CertPathBuilder getInstance(String algorithm)
             throws NoSuchAlgorithmException {
@@ -105,13 +122,23 @@ public class CertPathBuilder {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code CertPathBuilder} instance from the specified
+     * provider providing the specified algorithm.
      * 
-     * throws NullPointerException if algorithm is null (instead of
-     * NoSuchAlgorithmException as in 1.4 release)
-     * 
-     * FIXME: jrockit-j2re1.4.2_04 throws IllegalArgumentException when provider
-     * is empty
+     * @param algorithm
+     *            the name of the algorithm.
+     * @param provider
+     *            the name of the provider.
+     * @return a builder for the requested algorithm.
+     * @throws NoSuchAlgorithmException
+     *             if the specified provider cannot provide the algorithm.
+     * @throws NoSuchProviderException
+     *             if no provider with the specified name can be found.
+     * @throws NullPointerException
+     *             if algorithm is {@code null}.
+     * @throws IllegalArgumentException
+     *             if provider is {@code null} or empty.
+     * @since Android 1.0
      */
     public static CertPathBuilder getInstance(String algorithm, String provider)
             throws NoSuchAlgorithmException, NoSuchProviderException {
@@ -127,10 +154,21 @@ public class CertPathBuilder {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code CertPathBuilder} instance from the specified
+     * provider providing the specified algorithm.
      * 
-     * throws NullPointerException if algorithm is null (instead of
-     * NoSuchAlgorithmException as in 1.4 release)
+     * @param algorithm
+     *            the name of the algorithm.
+     * @param provider
+     *            the provider.
+     * @return a builder for the requested algorithm
+     * @throws NoSuchAlgorithmException
+     *             if the specified provider cannot provide the algorithm.
+     * @throws IllegalArgumentException
+     *             if provider is {@code null}.
+     * @throws NullPointerException
+     *             if algorithm is {@code null}.
+     * @since Android 1.0
      */
     public static CertPathBuilder getInstance(String algorithm,
             Provider provider) throws NoSuchAlgorithmException {
@@ -148,7 +186,18 @@ public class CertPathBuilder {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Builds a certification path with the specified algorithm parameters.
+     * 
+     * @param params
+     *            the algorithm parameters.
+     * @return the built certification path.
+     * @throws CertPathBuilderException
+     *             if the build fails.
+     * @throws InvalidAlgorithmParameterException
+     *             if the specified parameters cannot be used to build with this
+     *             builder.
+     * @see CertPathBuilderResult
+     * @since Android 1.0
      */
     public final CertPathBuilderResult build(CertPathParameters params)
             throws CertPathBuilderException, InvalidAlgorithmParameterException {
@@ -156,7 +205,13 @@ public class CertPathBuilder {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the default {@code CertPathBuilder} type from the <i>Security
+     * Properties</i>.
+     * 
+     * @return the default {@code CertPathBuilder} type from the <i>Security
+     *         Properties</i>, or the string "{@code PKIX}" if it cannot be
+     *         determined.
+     * @since Android 1.0
      */
     public static final String getDefaultType() {
         String defaultType = AccessController

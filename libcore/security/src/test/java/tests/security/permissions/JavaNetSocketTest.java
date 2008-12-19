@@ -16,16 +16,21 @@
 
 package tests.security.permissions;
 
-import java.io.IOException;
-import java.net.Socket;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
 
+import java.io.IOException;
+import java.net.Socket;
 /*
  * This class tests the secrity permissions which are documented in
  * http://java.sun.com/j2se/1.5.0/docs/guide/security/permissions.html#PermsAndMethods
  * for class java.net.Socket
  */
+@TestTargetClass(SecurityManager.class)
 public class JavaNetSocketTest extends TestCase {
     
     SecurityManager old;
@@ -41,7 +46,16 @@ public class JavaNetSocketTest extends TestCase {
         System.setSecurityManager(old);
         super.tearDown();
     }
-    
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies that java.net.ServerSocket constructor calls " +
+            "checkConnect of security permissions.",
+      targets = {
+        @TestTarget(
+          methodName = "checkConnect",
+          methodArgs = {java.lang.String.class, int.class}
+        )
+    })
     public void test_ctor() throws IOException {
         class TestSecurityManager extends SecurityManager {
             boolean called = false;

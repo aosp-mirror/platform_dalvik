@@ -16,6 +16,11 @@
 
 package org.apache.harmony.prefs.tests.java.util.prefs;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.FilePermission;
 import java.io.IOException;
 import java.security.Permission;
@@ -25,11 +30,12 @@ import java.util.prefs.Preferences;
 
 import junit.framework.TestCase;
 
+@TestTargetClass(java.util.prefs.Preferences.class)
 public class FilePreferencesImplTest extends TestCase {
 
     private String prevFactory;
-	private Preferences uroot;
-	private Preferences sroot;
+    private Preferences uroot;
+    private Preferences sroot;
     
     public FilePreferencesImplTest() {
         super();
@@ -39,7 +45,7 @@ public class FilePreferencesImplTest extends TestCase {
      //   prevFactory = System.getProperty("java.util.prefs.PreferencesFactory");
     //    System.setProperty("java.util.prefs.PreferencesFactory", "java.util.prefs.FilePreferencesFactoryImpl");
         
-	//	uroot = (AbstractPreferences) Preferences.userRoot();
+    //    uroot = (AbstractPreferences) Preferences.userRoot();
         uroot = Preferences.userRoot();
         sroot = Preferences.systemRoot();
     }
@@ -52,163 +58,208 @@ public class FilePreferencesImplTest extends TestCase {
         sroot = null;
     }
 
-	public void testPutGet() throws IOException, BackingStoreException {
-		uroot.put("ukey1", "value1");
-		assertEquals("value1", uroot.get("ukey1", null));
-		String[] names = uroot.keys();
-		assertTrue(names.length >= 1);
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions checking missed, but method is abstract, probably it is OK",
+      targets = {
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {java.lang.String.class, java.lang.String.class}
+        ), @TestTarget(
+          methodName = "get",
+          methodArgs = {java.lang.String.class, java.lang.String.class}
+        ), @TestTarget(
+          methodName = "keys",
+          methodArgs = {}
+        )
+    })
+    public void testPutGet() throws IOException, BackingStoreException {
+        uroot.put("ukey1", "value1");
+        assertEquals("value1", uroot.get("ukey1", null));
+        String[] names = uroot.keys();
+        assertTrue(names.length >= 1);
 
-		uroot.put("ukey2", "value3");
-		assertEquals("value3", uroot.get("ukey2", null));
-		uroot.put("\u4e2d key1", "\u4e2d value1");
-		assertEquals("\u4e2d value1", uroot.get("\u4e2d key1", null));
-		names = uroot.keys();
-		assertEquals(3, names.length);
+        uroot.put("ukey2", "value3");
+        assertEquals("value3", uroot.get("ukey2", null));
+        uroot.put("\u4e2d key1", "\u4e2d value1");
+        assertEquals("\u4e2d value1", uroot.get("\u4e2d key1", null));
+        names = uroot.keys();
+        assertEquals(3, names.length);
 
-		uroot.clear();
-		names = uroot.keys();
-		assertEquals(0, names.length);
+        uroot.clear();
+        names = uroot.keys();
+        assertEquals(0, names.length);
 
-		sroot.put("skey1", "value1");
-		assertEquals("value1", sroot.get("skey1", null));
-		sroot.put("\u4e2d key1", "\u4e2d value1");
-		assertEquals("\u4e2d value1", sroot.get("\u4e2d key1", null));
-	}
+        sroot.put("skey1", "value1");
+        assertEquals("value1", sroot.get("skey1", null));
+        sroot.put("\u4e2d key1", "\u4e2d value1");
+        assertEquals("\u4e2d value1", sroot.get("\u4e2d key1", null));
+    }
 
-	public void testChildNodes() throws Exception {
-		Preferences child1 = uroot.node("child1");
-		Preferences child2 = uroot.node("\u4e2d child2");
-		Preferences grandchild = child1.node("grand");
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions checking missed, but method is abstract, probably it is OK",
+      targets = {
+        @TestTarget(
+          methodName = "childrenNames",
+          methodArgs = {}
+        )
+    })
+    public void _testChildNodes() throws Exception {
+        Preferences child1 = uroot.node("child1");
+        Preferences child2 = uroot.node("\u4e2d child2");
+        Preferences grandchild = child1.node("grand");
         assertNotNull(grandchild);
 
-		String[] childNames = uroot.childrenNames();
-		assertEquals(4, childNames.length);
-		for (int i = 0; i < childNames.length; i++) {
-			System.out.println(childNames[i]);
-		}
+        String[] childNames = uroot.childrenNames();
+        assertEquals(4, childNames.length);
+        for (int i = 0; i < childNames.length; i++) {
+            System.out.println(childNames[i]);
+        }
 
-		childNames = child1.childrenNames();
-		assertEquals(1, childNames.length);
-		for (int i = 0; i < childNames.length; i++) {
-			System.out.println(childNames[i]);
-		}
+        childNames = child1.childrenNames();
+        assertEquals(1, childNames.length);
+        for (int i = 0; i < childNames.length; i++) {
+            System.out.println(childNames[i]);
+        }
 
-		childNames = child2.childrenNames();
-		assertEquals(0, childNames.length);
-		for (int i = 0; i < childNames.length; i++) {
-			System.out.println(childNames[i]);
-		}
+        childNames = child2.childrenNames();
+        assertEquals(0, childNames.length);
+        for (int i = 0; i < childNames.length; i++) {
+            System.out.println(childNames[i]);
+        }
 
-		child1.removeNode();
-		childNames = uroot.childrenNames();
-		assertEquals(3, childNames.length);
-		for (int i = 0; i < childNames.length; i++) {
-			System.out.println(childNames[i]);
-		}
-		// child2.removeNode();
-		// childNames = uroot.childrenNames();
-		// assertEquals(0, childNames.length);
+        child1.removeNode();
+        childNames = uroot.childrenNames();
+        assertEquals(3, childNames.length);
+        for (int i = 0; i < childNames.length; i++) {
+            System.out.println(childNames[i]);
+        }
+        // child2.removeNode();
+        // childNames = uroot.childrenNames();
+        // assertEquals(0, childNames.length);
 
-		child1 = sroot.node("child1");
-		child2 = sroot.node("child2");
-		grandchild = child1.node("grand");
+        child1 = sroot.node("child1");
+        child2 = sroot.node("child2");
+        grandchild = child1.node("grand");
 
-		childNames = sroot.childrenNames();
+        childNames = sroot.childrenNames();
 
-		for (int i = 0; i < childNames.length; i++) {
-			System.out.println(childNames[i]);
-		}
-	//	assertEquals(2, childNames.length);
+        for (int i = 0; i < childNames.length; i++) {
+            System.out.println(childNames[i]);
+        }
+    //    assertEquals(2, childNames.length);
 
-		childNames = child1.childrenNames();
-		assertEquals(1, childNames.length);
-		for (int i = 0; i < childNames.length; i++) {
-			System.out.println(childNames[i]);
-		}
+        childNames = child1.childrenNames();
+        assertEquals(1, childNames.length);
+        for (int i = 0; i < childNames.length; i++) {
+            System.out.println(childNames[i]);
+        }
 
-		childNames = child2.childrenNames();
-		assertEquals(0, childNames.length);
-		for (int i = 0; i < childNames.length; i++) {
-			System.out.println(childNames[i]);
-		}
-	}
+        childNames = child2.childrenNames();
+        assertEquals(0, childNames.length);
+        for (int i = 0; i < childNames.length; i++) {
+            System.out.println(childNames[i]);
+        }
+    }
 
-	public void testSecurityException() throws BackingStoreException {
-		Preferences child1 = uroot.node("child1");
-		MockFileSecurityManager manager = new MockFileSecurityManager();
-		manager.install();
-		try {
-			try {
-				uroot.node("securityNode");
-				fail("should throw security exception");
-			} catch (SecurityException e) {
-			}
-			try {
-				// need FilePermission(delete);
-				child1.removeNode();
-				fail("should throw security exception");
-			} catch (SecurityException e) {
-			}
-			try {
-				uroot.childrenNames();
-				fail("should throw security exception");
-			} catch (SecurityException e) {
-			}
-			uroot.keys();
-			uroot.put("securitykey", "value1");
-			uroot.remove("securitykey");
-			try {
-				uroot.flush();
-				fail("should throw security exception");
-			} catch (SecurityException e) {
-			} catch (BackingStoreException e) {
-				assertTrue(e.getCause() instanceof SecurityException);
-			}
-			try {
-				uroot.sync();
-				fail("should throw security exception");
-			} catch (SecurityException e) {
-			} catch (BackingStoreException e) {
-				assertTrue(e.getCause() instanceof SecurityException);
-			}
-		} finally {
-			manager.restoreDefault();
-		}
-	}
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SecurityException checking only, but methods are abstract, probably it is OK",
+      targets = {
+        @TestTarget(
+          methodName = "node",
+          methodArgs = {java.lang.String.class}
+        ), @TestTarget(
+          methodName = "removeNode",
+          methodArgs = {}
+        ), @TestTarget(
+          methodName = "childrenNames",
+          methodArgs = {}
+        ), @TestTarget(
+          methodName = "flush",
+          methodArgs = {}
+        ), @TestTarget(
+          methodName = "sync",
+          methodArgs = {}
+        )
+    })
+    public void testSecurityException() throws BackingStoreException {
+        Preferences child1 = uroot.node("child1");
+        MockFileSecurityManager manager = new MockFileSecurityManager();
+        manager.install();
+        try {
+            try {
+                uroot.node("securityNode");
+                fail("should throw security exception");
+            } catch (SecurityException e) {
+            }
+            try {
+                // need FilePermission(delete);
+                child1.removeNode();
+                fail("should throw security exception");
+            } catch (SecurityException e) {
+            }
+            try {
+                uroot.childrenNames();
+                fail("should throw security exception");
+            } catch (SecurityException e) {
+            }
+            uroot.keys();
+            uroot.put("securitykey", "value1");
+            uroot.remove("securitykey");
+            try {
+                uroot.flush();
+                fail("should throw security exception");
+            } catch (SecurityException e) {
+            } catch (BackingStoreException e) {
+                assertTrue(e.getCause() instanceof SecurityException);
+            }
+            try {
+                uroot.sync();
+                fail("should throw security exception");
+            } catch (SecurityException e) {
+            } catch (BackingStoreException e) {
+                assertTrue(e.getCause() instanceof SecurityException);
+            }
+        } finally {
+            manager.restoreDefault();
+        }
+    }
 
-	static class MockFileSecurityManager extends SecurityManager {
+    static class MockFileSecurityManager extends SecurityManager {
 
-		SecurityManager dflt;
+        SecurityManager dflt;
 
-		public MockFileSecurityManager() {
-			super();
-			dflt = System.getSecurityManager();
-		}
+        public MockFileSecurityManager() {
+            super();
+            dflt = System.getSecurityManager();
+        }
 
-		public void install() {
-			System.setSecurityManager(this);
-		}
+        public void install() {
+            System.setSecurityManager(this);
+        }
 
-		public void restoreDefault() {
-			System.setSecurityManager(dflt);
-		}
+        public void restoreDefault() {
+            System.setSecurityManager(dflt);
+        }
 
-		public void checkPermission(Permission perm) {
-			if (perm instanceof FilePermission) {
-				throw new SecurityException();
-			} else if (dflt != null) {
-				dflt.checkPermission(perm);
-			}
-		}
+        public void checkPermission(Permission perm) {
+            if (perm instanceof FilePermission) {
+                throw new SecurityException();
+            } else if (dflt != null) {
+                dflt.checkPermission(perm);
+            }
+        }
 
-		public void checkPermission(Permission perm, Object ctx) {
-			if (perm instanceof FilePermission) {
-				System.out.println(perm.getActions());
-				throw new SecurityException();
-			} else if (dflt != null) {
-				dflt.checkPermission(perm, ctx);
-			}
-		}
+        public void checkPermission(Permission perm, Object ctx) {
+            if (perm instanceof FilePermission) {
+                System.out.println(perm.getActions());
+                throw new SecurityException();
+            } else if (dflt != null) {
+                dflt.checkPermission(perm, ctx);
+            }
+        }
 
-	}
+    }
 }

@@ -420,6 +420,7 @@ static void getTimeZonesNative(JNIEnv* env, jclass clazz,
         const UnicodeString zoneID((UChar *)res, length);
         env->ReleaseStringChars(strObj, res);
         zones[i] = TimeZone::createTimeZone(zoneID);
+        env->DeleteLocalRef(strObj);
     }
 
     // 15th January 2008

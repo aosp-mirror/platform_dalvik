@@ -16,10 +16,13 @@
 
 package tests.api.java.nio.charset;
 
+import dalvik.annotation.TestTargetClass;
+
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
+@TestTargetClass(java.nio.charset.CharsetDecoder.class)
 /**
  * test gb18030 decoder
  */

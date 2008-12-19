@@ -22,6 +22,11 @@
 
 package tests.java.security;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.security.NoSuchAlgorithmException;
 import java.security.Provider;
 import java.security.SecureRandom;
@@ -30,7 +35,7 @@ import java.security.Security;
 import org.apache.harmony.security.tests.support.RandomImpl;
 
 import junit.framework.TestCase;
-
+@TestTargetClass(SecureRandom.class)
 /**
  * Tests for <code>SecureRandom</code> constructor and methods
  * 
@@ -59,6 +64,15 @@ public class SecureRandomTest extends TestCase {
         Security.removeProvider(p.getName());
     }
 
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verification of negative and boundary parameters missed",
+      targets = {
+        @TestTarget(
+          methodName = "next",
+          methodArgs = {int.class}
+        )
+    })
     public final void testNext() {
         MySecureRandom sr = new MySecureRandom();
         if (sr.nextElement(1) != 1 || sr.nextElement(2) != 3 || sr.nextElement(3) != 7) {
@@ -69,6 +83,15 @@ public class SecureRandomTest extends TestCase {
     /*
      * Class under test for void setSeed(long)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verification of boundary parameter missed",
+      targets = {
+        @TestTarget(
+          methodName = "setSeed",
+          methodArgs = {long.class}
+        )
+    })
     public final void testSetSeedlong() {
         SecureRandom sr = new SecureRandom();
         sr.setSeed(12345);
@@ -77,6 +100,15 @@ public class SecureRandomTest extends TestCase {
         }    
     }
 
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Null parameter verification missed",
+      targets = {
+        @TestTarget(
+          methodName = "nextBytes",
+          methodArgs = {byte[].class}
+        )
+    })
     public final void testNextBytes() {
         byte[] b = new byte[5];
         SecureRandom sr = new SecureRandom();
@@ -91,6 +123,15 @@ public class SecureRandomTest extends TestCase {
     /*
      * Class under test for void SecureRandom()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "SecureRandom",
+          methodArgs = {}
+        )
+    })
     public final void testSecureRandom() {
         SecureRandom sr = new SecureRandom();
         if (!sr.getAlgorithm().equals("someRandom")  ||
@@ -102,6 +143,15 @@ public class SecureRandomTest extends TestCase {
     /*
      * Class under test for void SecureRandom(byte[])
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Null parameter checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "SecureRandom",
+          methodArgs = {byte[].class}
+        )
+    })
     public final void testSecureRandombyteArray() {
         byte[] b = {1,2,3};
         new SecureRandom(b);
@@ -114,6 +164,15 @@ public class SecureRandomTest extends TestCase {
     /*
      * Class under test for SecureRandom getInstance(String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NoSuchAlgorithmException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getInstance",
+          methodArgs = {String.class}
+        )
+    })
     public final void testGetInstanceString() {
         SecureRandom sr = null;
         try {
@@ -129,6 +188,15 @@ public class SecureRandomTest extends TestCase {
     /*
      * Class under test for SecureRandom getInstance(String, String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NoSuchAlgorithmException, NoSuchProviderException, IllegalArgumentException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getInstance",
+          methodArgs = {String.class, String.class}
+        )
+    })
     public final void testGetInstanceStringString() throws Exception {
         SecureRandom sr = SecureRandom.getInstance("someRandom", "SRProvider");    
         if (sr.getProvider() != p || !"someRandom".equals(sr.getAlgorithm())) {
@@ -139,6 +207,15 @@ public class SecureRandomTest extends TestCase {
     /*
      * Class under test for SecureRandom getInstance(String, Provider)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NoSuchAlgorithmException, IllegalArgumentException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getInstance",
+          methodArgs = {String.class, Provider.class}
+        )
+    })
     public final void testGetInstanceStringProvider() throws Exception {
         Provider p = new SRProvider();
         SecureRandom sr = SecureRandom.getInstance("someRandom", p);
@@ -150,6 +227,15 @@ public class SecureRandomTest extends TestCase {
     /*
      * Class under test for void setSeed(byte[])
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verification with null parameter missed",
+      targets = {
+        @TestTarget(
+          methodName = "setSeed",
+          methodArgs = {byte[].class}
+        )
+    })
     public final void testSetSeedbyteArray() {
         byte[] b = {1,2,3};
         SecureRandom sr = new SecureRandom();
@@ -159,6 +245,15 @@ public class SecureRandomTest extends TestCase {
         }
     }
 
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verification with invalid parameter missed",
+      targets = {
+        @TestTarget(
+          methodName = "getSeed",
+          methodArgs = {int.class}
+        )
+    })
     public final void testGetSeed() {
         byte[] b = SecureRandom.getSeed(4);
         if( b.length != 4) {
@@ -166,6 +261,15 @@ public class SecureRandomTest extends TestCase {
         }
     }
 
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verification with invalid parameter missed",
+      targets = {
+        @TestTarget(
+          methodName = "generateSeed",
+          methodArgs = {int.class}
+        )
+    })
     public final void testGenerateSeed() {
         SecureRandom sr = new SecureRandom();
         byte[] b = sr.generateSeed(4);

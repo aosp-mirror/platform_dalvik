@@ -23,32 +23,31 @@
 package java.security;
 
 /**
- * Instances of this class are thrown when an attempt is made to access a
- * provider by name which is not currently available.
+ * {@code NoSuchProviderException} indicates that a requested security provider
+ * could not be found.
  * 
- * 
- * @see Throwable
+ * @since Android 1.0
  */
 public class NoSuchProviderException extends GeneralSecurityException {
-    /**
-     * @com.intel.drl.spec_ref
-     */
+
     private static final long serialVersionUID = 8488111756688534474L;
 
     /**
-     * Constructs a new instance of this class with its walkback and message
-     * filled in.
+     * Constructs a new instance of {@code NoSuchProviderException} with the
+     * given message.
      * 
      * @param msg
-     *            String The detail message for the exception.
+     *            the detail message for this exception.
+     * @since Android 1.0
      */
     public NoSuchProviderException(String msg) {
         super(msg);
     }
 
     /**
-     * Constructs a new instance of this class with its walkback filled in.
+     * Constructs a new instance of {@code NoSuchProviderException}.
      * 
+     * @since Android 1.0
      */
     public NoSuchProviderException() {
     }

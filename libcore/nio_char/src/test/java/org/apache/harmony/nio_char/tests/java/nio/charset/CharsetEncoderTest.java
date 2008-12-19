@@ -16,6 +16,11 @@
 
 package org.apache.harmony.nio_char.tests.java.nio.charset;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestLevel;
+
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
@@ -26,13 +31,25 @@ import java.nio.charset.CoderMalfunctionError;
 import java.nio.charset.CoderResult;
 
 import junit.framework.TestCase;
-
+@TestTargetClass(CharsetEncoder.class)
 public class CharsetEncoderTest extends TestCase {
 
     /**
      * @tests java.nio.charset.CharsetEncoder.CharsetEncoder(
      *        java.nio.charset.Charset, float, float)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Checks IllegalArgumentException",
+      targets = {
+        @TestTarget(
+          methodName = "CharsetEncoder",
+          methodArgs = {java.nio.charset.Charset.class, float.class, float.class}
+        ), @TestTarget(
+          methodName = "CharsetEncoder",
+          methodArgs = {java.nio.charset.Charset.class, float.class, float.class, byte[].class}
+        )
+    })
     public void test_ConstructorLjava_nio_charset_CharsetFF() {
         // Regression for HARMONY-141
         try {
@@ -57,6 +74,15 @@ public class CharsetEncoderTest extends TestCase {
      * @tests java.nio.charset.CharsetEncoder.CharsetEncoder(
      *        java.nio.charset.Charset, float, float)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "CharsetEncoder",
+          methodArgs = {java.nio.charset.Charset.class, float.class, float.class}
+        )
+    })
     public void test_ConstructorLjava_nio_charset_CharsetNull() {
         // Regression for HARMONY-491
         CharsetEncoder ech = new MockCharsetEncoderForHarmony491(null, 1, 1);
@@ -104,6 +130,15 @@ public class CharsetEncoderTest extends TestCase {
     /*
      * Test malfunction encode(CharBuffer)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Regression test checks CoderMalfunctionError",
+      targets = {
+        @TestTarget(
+          methodName = "encode",
+          methodArgs = {java.nio.CharBuffer.class}
+        )
+    })
     public void test_EncodeLjava_nio_CharBuffer() throws Exception {
         MockMalfunctionCharset cs = new MockMalfunctionCharset("mock", null);
         try {
@@ -153,6 +188,15 @@ public class CharsetEncoderTest extends TestCase {
     /*
      * Test reserve bytes encode(CharBuffer,ByteBuffer,boolean)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Functional test.",
+      targets = {
+        @TestTarget(
+          methodName = "encode",
+          methodArgs = {java.nio.CharBuffer.class, java.nio.ByteBuffer.class, boolean.class}
+        )
+    })
     public void test_EncodeLjava_nio_CharBufferLjava_nio_ByteBufferB() {
         CharsetEncoder encoder = Charset.forName("utf-8").newEncoder();
         CharBuffer in1 = CharBuffer.wrap("\ud800");

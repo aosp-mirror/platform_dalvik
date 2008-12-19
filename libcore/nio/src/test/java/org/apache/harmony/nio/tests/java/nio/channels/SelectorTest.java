@@ -16,6 +16,11 @@
 
 package org.apache.harmony.nio.tests.java.nio.channels;
 
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
@@ -35,6 +40,7 @@ import tests.support.Support_PortManager;
 /*
  * Tests for Selector and its default implementation
  */
+@TestTargetClass(Selector.class)
 public class SelectorTest extends TestCase {
 
     private static final int WAIT_TIME = 100;
@@ -79,6 +85,15 @@ public class SelectorTest extends TestCase {
     /**
      * @tests java.nio.channels.Selector#open()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "open",
+          methodArgs = {}
+        )
+    })
     public void test_open() throws IOException {
         assertNotNull(selector);
     }
@@ -86,6 +101,15 @@ public class SelectorTest extends TestCase {
     /**
      * @tests Selector#isOpen()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isOpen",
+          methodArgs = {}
+        )
+    })
     public void test_isOpen() throws IOException {
         assertTrue(selector.isOpen());
         selector.close();
@@ -95,6 +119,15 @@ public class SelectorTest extends TestCase {
     /**
      * @tests java.nio.channels.Selector#provider()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "provider",
+          methodArgs = {}
+        )
+    })
     public void test_provider() throws IOException {
         // should be system default provider
         assertNotNull(selector.provider());
@@ -104,6 +137,15 @@ public class SelectorTest extends TestCase {
     /**
      * @tests java.nio.channels.Selector#keys()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "keys",
+          methodArgs = {}
+        )
+    })
     public void test_keys() throws IOException {
         SelectionKey key = ssc.register(selector, SelectionKey.OP_ACCEPT);
         
@@ -150,6 +192,15 @@ public class SelectorTest extends TestCase {
     /**
      * @tests java.nio.channels.Selector#keys()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "selectedKeys",
+          methodArgs = {}
+        )
+    })
     public void test_selectedKeys() throws IOException {
         SocketChannel sc = SocketChannel.open();
         ssc.register(selector, SelectionKey.OP_ACCEPT);
@@ -195,6 +246,17 @@ public class SelectorTest extends TestCase {
     /**
      * @tests java.nio.channel.Selector#selectNow()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies selectNow() method for Selector registered with " +
+           "SelectionKeys.OP_ACCEPT,  SelectionKeys.OP_CONNECT, " +
+           "SelectionKeys.OP_READ, SelectionKeys.OP_WRITE keys.",
+      targets = {
+        @TestTarget(
+          methodName = "selectNow",
+          methodArgs = {}
+        )
+    })
     public void test_selectNow() throws IOException {
         assert_select_OP_ACCEPT(SelectType.NOW, 0);
         assert_select_OP_CONNECT(SelectType.NOW, 0);
@@ -205,6 +267,16 @@ public class SelectorTest extends TestCase {
     /**
      * @tests java.nio.channel.Selector#selectNow()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies that ClosedSelectorException is thrown " +
+            "if selectNow() method is called for closed Selector.",
+      targets = {
+        @TestTarget(
+          methodName = "selectNow",
+          methodArgs = {}
+        )
+    })
     public void test_selectNow_SelectorClosed() throws IOException {
         assert_select_SelectorClosed(SelectType.NOW, 0);
     }
@@ -212,6 +284,15 @@ public class SelectorTest extends TestCase {
     /**
      * @test java.nio.channels.Selector#selectNow()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies that selectNow() method doesn't block.",
+      targets = {
+        @TestTarget(
+          methodName = "selectNow",
+          methodArgs = {}
+        )
+    })
     public void test_selectNow_Timeout() throws IOException {
         // make sure selectNow doesn't block
         selector.selectNow();
@@ -220,6 +301,17 @@ public class SelectorTest extends TestCase {
     /**
      * @tests java.nio.channel.Selector#select()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies select() method for Selector registered with " +
+            "SelectionKeys.OP_ACCEPT,  SelectionKeys.OP_CONNECT, " +
+            "SelectionKeys.OP_READ, SelectionKeys.OP_WRITE keys.",
+      targets = {
+        @TestTarget(
+          methodName = "select",
+          methodArgs = {}
+        )
+    })
     public void test_select() throws IOException {
         assert_select_OP_ACCEPT(SelectType.NULL, 0);
         assert_select_OP_CONNECT(SelectType.NULL, 0);
@@ -230,6 +322,16 @@ public class SelectorTest extends TestCase {
     /**
      * @tests java.nio.channel.Selector#select()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies that ClosedSelectorException is thrown " +
+            "if select() method is called for closed Selector.",
+      targets = {
+        @TestTarget(
+          methodName = "select",
+          methodArgs = {}
+        )
+    })
     public void test_select_SelectorClosed() throws IOException {
         assert_select_SelectorClosed(SelectType.NULL, 0);
     }
@@ -237,6 +339,18 @@ public class SelectorTest extends TestCase {
     /**
      * @tests java.nio.channel.Selector#select(long)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies select(long) method for Selector registered with " +
+           "SelectionKeys.OP_ACCEPT,  SelectionKeys.OP_CONNECT, " +
+           "SelectionKeys.OP_READ, SelectionKeys.OP_WRITE keys and different " +
+           "timeout's values.",
+      targets = {
+        @TestTarget(
+          methodName = "select",
+          methodArgs = {long.class}
+        )
+    })
     public void test_selectJ() throws IOException {
         assert_select_OP_ACCEPT(SelectType.TIMEOUT, 0);
         assert_select_OP_CONNECT(SelectType.TIMEOUT, 0);
@@ -252,6 +366,16 @@ public class SelectorTest extends TestCase {
     /**
      * @tests java.nio.channel.Selector#select(long)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies that ClosedSelectorException is thrown " +
+            "if select(long) method is called for closed Selector.",
+      targets = {
+        @TestTarget(
+          methodName = "select",
+          methodArgs = {long.class}
+        )
+    })
     public void test_selectJ_SelectorClosed() throws IOException {
         assert_select_SelectorClosed(SelectType.TIMEOUT, 0);
         selector = Selector.open();
@@ -261,6 +385,15 @@ public class SelectorTest extends TestCase {
     /**
      * @tests java.nio.channel.Selector#select(long)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies IllegalArgumentException.",
+      targets = {
+        @TestTarget(
+          methodName = "select",
+          methodArgs = {long.class}
+        )
+    })
     public void test_selectJ_Exception() throws IOException {
         try {
             selector.select(-1);
@@ -272,6 +405,15 @@ public class SelectorTest extends TestCase {
     /**
      * @test java.nio.channels.Selector#select(long)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies that select(timeout) doesn't block.",
+      targets = {
+        @TestTarget(
+          methodName = "select",
+          methodArgs = {long.class}
+        )
+    })
     public void test_selectJ_Timeout() throws IOException {
         // make sure select(timeout) doesn't block
         selector.select(WAIT_TIME);
@@ -280,6 +422,15 @@ public class SelectorTest extends TestCase {
     /**
      * @tests java.nio.channels.Selector#wakeup()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "wakeup",
+          methodArgs = {}
+        )
+    })
     public void test_wakeup() throws IOException {
         /*
          * make sure the test does not block on select

@@ -17,10 +17,15 @@
 
 package org.apache.harmony.sql.tests.java.sql;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.sql.SQLPermission;
 
 import junit.framework.TestCase;
-
+@TestTargetClass(SQLPermission.class)
 /**
  * JUnit Testcase for the java.sql.SQLPermission class
  * 
@@ -35,6 +40,15 @@ public class SQLPermissionTest extends TestCase {
     /*
      * Constructor test
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Null/invalid parameters checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "SQLPermission",
+          methodArgs = {String.class, String.class}
+        )
+    })
     public void testSQLPermissionStringString() {
         String validName = "setLog";
         String validActions = "theActions";
@@ -51,6 +65,15 @@ public class SQLPermissionTest extends TestCase {
     /*
      * Constructor test
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Null parameter checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "SQLPermission",
+          methodArgs = {String.class}
+        )
+    })
     public void testSQLPermissionString() {
         String validName = "setLog";
 

@@ -17,15 +17,29 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import junit.framework.TestCase;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
 
+import junit.framework.TestCase;
 import org.apache.harmony.testframework.serialization.SerializationTest;
 
+@TestTargetClass(SecurityException.class) 
 public class SecurityExceptionTest extends TestCase {
     
     /**
      * @tests java.lang.SecurityException#SecurityException()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "SecurityException",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         SecurityException e = new SecurityException();
         assertNull(e.getMessage());
@@ -36,6 +50,15 @@ public class SecurityExceptionTest extends TestCase {
     /**
      * @tests java.lang.SecurityException#SecurityException(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "SecurityException",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() {
         SecurityException e = new SecurityException("fixture");
         assertEquals("fixture", e.getMessage());
@@ -45,6 +68,15 @@ public class SecurityExceptionTest extends TestCase {
     /**
      * @tests java.lang.SecurityException#SecurityException(String, Throwable)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "SecurityException",
+          methodArgs = {java.lang.String.class, java.lang.Throwable.class}
+        )
+    })
     @SuppressWarnings("nls")
     public void test_ConstructorLjava_lang_StringLjava_lang_Throwable() {
         NullPointerException npe = new NullPointerException();
@@ -56,6 +88,15 @@ public class SecurityExceptionTest extends TestCase {
     /**
      * @tests java.lang.SecurityException#SecurityException(Throwable)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "SecurityException",
+          methodArgs = {java.lang.Throwable.class}
+        )
+    })
     @SuppressWarnings("nls")
     public void test_ConstructorLjava_lang_Throwable() {
         NullPointerException npe = new NullPointerException();
@@ -66,6 +107,15 @@ public class SecurityExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization.
      */
+    @TestInfo(
+            level = TestLevel.COMPLETE,
+            purpose = "Verifies serialization/deserialization compatibility.",
+            targets = {
+              @TestTarget(
+                methodName = "!SerializationSelf",
+                methodArgs = {}
+              )
+          })    
     public void testSerializationSelf() throws Exception {
 
         SerializationTest.verifySelf(new SecurityException());
@@ -74,6 +124,15 @@ public class SecurityExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Verifies serialization/deserialization compatibility.",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationGolden",
+          methodArgs = {}
+        )
+    })
     public void testSerializationCompatibility() throws Exception {
 
         SerializationTest.verifyGolden(this, new SecurityException());

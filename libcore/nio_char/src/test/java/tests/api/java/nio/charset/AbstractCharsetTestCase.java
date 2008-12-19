@@ -1,11 +1,16 @@
 package tests.api.java.nio.charset;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestLevel;
+
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 
 import junit.framework.TestCase;
-
+@TestTargetClass(java.nio.charset.Charset.class)
 /**
  * Super class for concrete charset test suites.
  */
@@ -59,6 +64,15 @@ public abstract class AbstractCharsetTestCase extends TestCase {
     /*
      * Test canEncode.
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "canEncode",
+          methodArgs = {}
+        )
+    })
     public void testCanEncode() {
         assertEquals(this.canEncode, this.testingCharset.canEncode());
     }
@@ -66,6 +80,15 @@ public abstract class AbstractCharsetTestCase extends TestCase {
     /*
      * Test isRegistered.
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isRegistered",
+          methodArgs = {}
+        )
+    })
     public void testIsRegistered() {
         assertEquals(this.isRegistered, this.testingCharset.isRegistered());
     }
@@ -73,6 +96,15 @@ public abstract class AbstractCharsetTestCase extends TestCase {
     /*
      * Test name.
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "name",
+          methodArgs = {}
+        )
+    })
     public void testName() {
         assertEquals(this.canonicalName, this.testingCharset.name());
         // assertEquals(this.canonicalName, this.testingCharset.displayName());
@@ -83,6 +115,15 @@ public abstract class AbstractCharsetTestCase extends TestCase {
     /*
      * Test aliases.
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Test functionality completely missed.",
+      targets = {
+        @TestTarget(
+          methodName = "aliases",
+          methodArgs = {}
+        )
+    })
     public void testAliases() {
         for (int i = 0; i < this.aliases.length; i++) {
             Charset c = Charset.forName(this.aliases[i]);
@@ -95,6 +136,15 @@ public abstract class AbstractCharsetTestCase extends TestCase {
     /*
      * Test the method encode(String) with null.
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "encode",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void testEncode_String_Null() {
         try {
             this.testingCharset.encode((String) null);
@@ -107,6 +157,15 @@ public abstract class AbstractCharsetTestCase extends TestCase {
     /*
      * Test the method encode(CharBuffer) with null.
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "encode",
+          methodArgs = {java.nio.CharBuffer.class}
+        )
+    })
     public void testEncode_CharBuffer_Null() {
         try {
             this.testingCharset.encode((CharBuffer) null);
@@ -134,6 +193,15 @@ public abstract class AbstractCharsetTestCase extends TestCase {
     /*
      * Test encoding.
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Super class for testing.",
+      targets = {
+        @TestTarget(
+          methodName = "",
+          methodArgs = {}
+        )
+    })
     public abstract void testEncode_Normal();
 
     /*
@@ -154,5 +222,14 @@ public abstract class AbstractCharsetTestCase extends TestCase {
     /*
      * Test decoding.
      */
+    @TestInfo(
+            level = TestLevel.COMPLETE,
+            purpose = "Super class for testing.",
+            targets = {
+              @TestTarget(
+                methodName = "",
+                methodArgs = {}
+              )
+          })
     public abstract void testDecode_Normal();
 }

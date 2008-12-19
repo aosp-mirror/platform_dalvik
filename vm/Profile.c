@@ -345,9 +345,9 @@ void dvmMethodTraceStart(const char* traceFileName, int bufferSize, int flags)
     }
     state->traceFile = fopen(traceFileName, "w");
     if (state->traceFile == NULL) {
-        LOGE("trace %s=%p errno=%d\n",
-            traceFileName, state->traceFile, errno);
-        dvmThrowException("Ljava/lang/InternalError;", "file open failed");
+        LOGE("Unable to open trace file '%s': %s\n",
+            traceFileName, strerror(errno));
+        dvmThrowException("Ljava/lang/RuntimeException;", "file open failed");
         goto fail;
     }
     memset(state->buf, 0xee, bufferSize);
@@ -490,6 +490,10 @@ void dvmMethodTraceStop(void)
     LOGI("TRACE STOPPED%s: writing %d records\n",
         state->overflow ? " (NOTE: overflowed buffer)" : "",
         (state->curOffset - TRACE_HEADER_LEN) / TRACE_REC_SIZE);
+    if (gDvm.debuggerActive) {
+        LOGW("WARNING: a debugger is active; method-tracing results "
+             "will be skewed\n");
+    }
 
     /*
      * Do a quick calibration test to see how expensive our clock call is.
@@ -527,7 +531,8 @@ void dvmMethodTraceStop(void)
     fprintf(state->traceFile, "%cend\n", TOKEN_CHAR);
 
     if (fwrite(state->buf, state->curOffset, 1, state->traceFile) != 1) {
-        dvmThrowException("Ljava/lang/InternalError;", "data write failed");
+        LOGE("trace fwrite(%d) failed, errno=%d\n", state->curOffset, errno);
+        dvmThrowException("Ljava/lang/RuntimeException;", "data write failed");
         goto bail;
     }
 

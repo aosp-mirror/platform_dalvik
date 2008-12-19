@@ -19,113 +19,131 @@ package java.util;
 
 
 /**
- * Map has a set of keys, each key is mapped to a single value.
+ * A {@code Map} is a data structure consisting of a set of keys and values
+ * in which each key is mapped to a single value.  The class of the objects
+ * used as keys is declared when the {@code Map} is declared, as is the 
+ * class of the corresponding values.
+ * <p>A {@code Map} provides helper methods to iterate through all of the 
+ * keys contained in it, as well as various methods to access and update 
+ * the key/value pairs.  
+ * </p>  
+ *  
+ * @since Android 1.0
  */
 public interface Map<K,V> {
+
     /**
-     * Map.Entry is a key/value mapping which is contained in a Map.
-     * 
+     * {@code Map.Entry} is a key/value mapping contained in a {@code Map}.
+     *      
+     * @since Android 1.0
      */
-    public abstract static interface Entry<K,V> {
+    public static interface Entry<K,V> {
         /**
-         * Compares the specified object to this Map.Entry and answer if they
-         * are equal. The object must be an instance of Map.Entry and have the
+         * Compares the specified object to this {@code Map.Entry} and returns if they
+         * are equal. To be equal, the object must be an instance of {@code Map.Entry} and have the
          * same key and value.
          * 
          * @param object
-         *            the object to compare with this object
-         * @return true if the specified object is equal to this Map.Entry,
-         *         false otherwise
-         * 
-         * @see #hashCode
+         *            the {@code Object} to compare with this {@code Object}.
+         * @return {@code true} if the specified {@code Object} is equal to this
+         *         {@code Map.Entry}, {@code false} otherwise.
+         * @see #hashCode()
+         * @since Android 1.0
          */
         public boolean equals(Object object);
 
         /**
-         * Gets the key.
+         * Returns the key.
          * 
          * @return the key
+         * @since Android 1.0
          */
         public K getKey();
 
         /**
-         * Gets the value.
+         * Returns the value.
          * 
          * @return the value
+         * @since Android 1.0
          */
         public V getValue();
 
         /**
-         * Returns an integer hash code for the receiver. Objects which are
-         * equal answer the same value for this method.
+         * Returns an integer hash code for the receiver. {@code Object} which are
+         * equal return the same value for this method.
          * 
-         * @return the receiver's hash
-         * 
-         * @see #equals
+         * @return the receiver's hash code.
+         * @see #equals(Object)
+         * @since Android 1.0
          */
         public int hashCode();
 
         /**
-         * Sets the value.
+         * Sets the value of this entry to the specified value, replacing any
+         * existing value.
          * 
          * @param object
-         *            the new value
-         * @return object
+         *            the new value to set.
+         * @return object the replaced value of this entry.
+         * @since Android 1.0
          */
         public V setValue(V object);
     };
 
     /**
-     * Removes all elements from this Map, leaving it empty.
+     * Removes all elements from this {@code Map}, leaving it empty.
      * 
-     * @exception UnsupportedOperationException
-     *                when removing from this Map is not supported
-     * 
-     * @see #isEmpty
-     * @see #size
+     * @throws UnsupportedOperationException
+     *                if removing elements from this {@code Map} is not supported.
+     * @see #isEmpty()
+     * @see #size()
+     * @since Android 1.0
      */
     public void clear();
 
     /**
-     * Searches this Map for the specified key.
+     * Returns whether this {@code Map} contains the specified key.
      * 
      * @param key
-     *            the object to search for
-     * @return true if <code>key</code> is a key of this Map, false otherwise
+     *            the key to search for.
+     * @return {@code true} if this map contains the specified key,
+     *         {@code false} otherwise.
+     * @since Android 1.0
      */
     public boolean containsKey(Object key);
 
     /**
-     * Searches this Map for the specified value.
+     * Returns whether this {@code Map} contains the specified value.
      * 
      * @param value
-     *            the object to search for
-     * @return true if <code>value</code> is a value of this Map, false
-     *         otherwise
+     *            the value to search for.
+     * @return {@code true} if this map contains the specified value,
+     *         {@code false} otherwise.
+     * @since Android 1.0
      */
     public boolean containsValue(Object value);
 
     /**
-     * Returns a <code>Set</code> whose elements comprise all of the mappings
-     * that are to be found in this <code>Map</code>. Information on each of
-     * the mappings is encapsulated in a separate {@link Map.Entry} instance. As
-     * the <code>Set</code> is backed by this <code>Map</code>, users
-     * should be aware that changes in one will be immediately visible in the
-     * other.
+     * Returns a {@code Set} containing all of the mappings in this {@code Map}. Each mapping is
+     * an instance of {@link Map.Entry}. As the {@code Set} is backed by this {@code Map},
+     * changes in one will be reflected in the other.
      * 
-     * @return a <code>Set</code> of the mappings
+     * @return a set of the mappings
+     * @since Android 1.0
      */
     public Set<Map.Entry<K,V>> entrySet();
 
     /**
-     * Compares the argument to the receiver, and returns true if they represent
-     * the <em>same</em> object using a class specific comparison.
+     * Compares the argument to the receiver, and returns {@code true} if the
+     * specified object is a {@code Map} and both {@code Map}s contain the same mappings.
      * 
      * @param object
-     *            Object the object to compare with this object.
-     * @return boolean <code>true</code> if the object is the same as this
-     *         object <code>false</code> if it is different from this object.
-     * @see #hashCode
+     *            the {@code Object} to compare with this {@code Object}.
+     * @return boolean {@code true} if the {@code Object} is the same as this {@code Object}
+     *         {@code false} if it is different from this {@code Object}.
+     * @see #hashCode()
+     * @see #entrySet()
+     * @since Android 1.0
      */
     public boolean equals(Object object);
 
@@ -133,36 +151,40 @@ public interface Map<K,V> {
      * Returns the value of the mapping with the specified key.
      * 
      * @param key
-     *            the key
-     * @return the value of the mapping with the specified key
+     *            the key.
+     * @return the value of the mapping with the specified key, or {@code null}
+     *         if no mapping for the specified key is found.
+     * @since Android 1.0
      */
     public V get(Object key);
 
     /**
-     * Returns an integer hash code for the receiver. Objects which are equal
-     * answer the same value for this method.
+     * Returns an integer hash code for the receiver. {@code Object}s which are equal
+     * return the same value for this method.
      * 
-     * @return the receiver's hash
-     * 
-     * @see #equals
+     * @return the receiver's hash.
+     * @see #equals(Object)
+     * @since Android 1.0
      */
     public int hashCode();
 
     /**
-     * Returns if this Map has no elements, a size of zero.
+     * Returns whether this map is empty.
      * 
-     * @return true if this Map has no elements, false otherwise
-     * 
-     * @see #size
+     * @return {@code true} if this map has no elements, {@code false}
+     *         otherwise.
+     * @see #size()
+     * @since Android 1.0
      */
     public boolean isEmpty();
 
     /**
-     * Returns a Set of the keys contained in this Map. The set is backed by
-     * this Map so changes to one are relected by the other. The set does not
+     * Returns a set of the keys contained in this {@code Map}. The {@code Set} is backed by
+     * this {@code Map} so changes to one are reflected by the other. The {@code Set} does not
      * support adding.
      * 
-     * @return a Set of the keys
+     * @return a set of the keys.
+     * @since Android 1.0
      */
     public Set<K> keySet();
 
@@ -170,71 +192,87 @@ public interface Map<K,V> {
      * Maps the specified key to the specified value.
      * 
      * @param key
-     *            the key
+     *            the key.
      * @param value
-     *            the value
-     * @return the value of any previous mapping with the specified key or null
-     *         if there was no mapping
-     * 
-     * @exception UnsupportedOperationException
-     *                when adding to this Map is not supported
-     * @exception ClassCastException
-     *                when the class of the key or value is inappropriate for
-     *                this Map
-     * @exception IllegalArgumentException
-     *                when the key or value cannot be added to this Map
-     * @exception NullPointerException
-     *                when the key or value is null and this Map does not
-     *                support null keys or values
+     *            the value.
+     * @return the value of any previous mapping with the specified key or
+     *         {@code null} if there was no mapping.
+     * @throws UnsupportedOperationException
+     *                if adding to this {@code Map} is not supported.
+     * @throws ClassCastException
+     *                if the class of the key or value is inappropriate for
+     *                this {@code Map}.
+     * @throws IllegalArgumentException
+     *                if the key or value cannot be added to this {@code Map}.
+     * @throws NullPointerException
+     *                if the key or value is {@code null} and this {@code Map} does
+     *                not support {@code null} keys or values.
+     * @since Android 1.0
      */
     public V put(K key, V value);
 
     /**
-     * Copies every mapping in the specified Map to this Map.
+     * Copies every mapping in the specified {@code Map} to this {@code Map}.
      * 
      * @param map
-     *            the Map to copy mappings from
-     * 
-     * @exception UnsupportedOperationException
-     *                when adding to this Map is not supported
-     * @exception ClassCastException
-     *                when the class of a key or value is inappropriate for this
-     *                Map
-     * @exception IllegalArgumentException
-     *                when a key or value cannot be added to this Map
-     * @exception NullPointerException
-     *                when a key or value is null and this Map does not support
-     *                null keys or values
+     *            the {@code Map} to copy mappings from.
+     * @throws UnsupportedOperationException
+     *                if adding to this {@code Map} is not supported.
+     * @throws ClassCastException
+     *                if the class of a key or a value of the specified {@code Map} is
+     *                inappropriate for this {@code Map}.
+     * @throws IllegalArgumentException
+     *                if a key or value cannot be added to this {@code Map}.
+     * @throws NullPointerException
+     *                if a key or value is {@code null} and this {@code Map} does not
+     *                support {@code null} keys or values.
+     * @since Android 1.0
      */
     public void putAll(Map<? extends K,? extends V> map);
 
     /**
-     * Removes a mapping with the specified key from this Map.
+     * Removes a mapping with the specified key from this {@code Map}.
      * 
      * @param key
-     *            the key of the mapping to remove
-     * @return the value of the removed mapping or null if key is not a key in
-     *         this Map
-     * 
-     * @exception UnsupportedOperationException
-     *                when removing from this Map is not supported
+     *            the key of the mapping to remove.
+     * @return the value of the removed mapping or {@code null} if no mapping
+     *         for the specified key was found.
+     * @throws UnsupportedOperationException
+     *                if removing from this {@code Map} is not supported.
+     * @since Android 1.0
      */
     public V remove(Object key);
 
     /**
-     * Returns the number of elements in this Map.
+     * Returns the number of mappings in this {@code Map}.
      * 
-     * @return the number of elements in this Map
+     * @return the number of mappings in this {@code Map}.
+     * @since Android 1.0
      */
     public int size();
 
     /**
-     * Returns all of the current <code>Map</code> values in a
-     * <code>Collection</code>. As the returned <code>Collection</code> is
-     * backed by this <code>Map</code>, users should be aware that changes in
-     * one will be immediately visible in the other.
+     * Returns a {@code Collection} of the values contained in this {@code Map}. The {@code Collection}
+     * is backed by this {@code Map} so changes to one are reflected by the other. The
+     * {@code Collection} supports {@link Collection#remove}, {@link Collection#removeAll}, 
+     * {@link Collection#retainAll}, and {@link Collection#clear} operations,
+     * and it does not support {@link Collection#add} or {@link Collection#addAll} operations.
+     * <p>
+     * This method returns a {@code Collection} which is the subclass of
+     * {@link AbstractCollection}. The {@link AbstractCollection#iterator} method of this subclass returns a
+     * "wrapper object" over the iterator of this {@code Map}'s {@link #entrySet()}. The {@link AbstractCollection#size} method
+     * wraps this {@code Map}'s {@link #size} method and the {@link AbstractCollection#contains} method wraps this {@code Map}'s
+     * {@link #containsValue} method.
+     * </p>
+     * <p>
+     * The collection is created when this method is called at first time and
+     * returned in response to all subsequent calls. This method may return
+     * different Collection when multiple calls to this method, since it has no
+     * synchronization performed.
+     * </p>
      * 
-     * @return a Collection of the values
+     * @return a collection of the values contained in this map.
+     * @since Android 1.0
      */
     public Collection<V> values();
 }

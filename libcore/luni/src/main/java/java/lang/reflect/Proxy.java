@@ -23,16 +23,20 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.WeakHashMap;
 
-import org.apache.harmony.luni.internal.reflect.ProxyClassFile;
+// BEGIN android-removed
+// import org.apache.harmony.luni.internal.reflect.ProxyClassFile;
+// END android-removed
 
 import org.apache.harmony.luni.util.Msg;
 
 /**
- * This class provides methods to creating dynamic proxy classes and instances.
- * 
+ * {@code Proxy} defines methods for creating dynamic proxy classes and instances.
+ * A proxy class implements a declared set of interfaces and delegates method
+ * invocations to an {@code InvocationHandler}.
+ *
  * @see InvocationHandler
  * 
- * @since 1.3
+ * @since Android 1.0
  */
 public class Proxy implements Serializable {
 
@@ -46,40 +50,61 @@ public class Proxy implements Serializable {
 
     private static int NextClassNameIndex = 0;
 
+    /**
+     * The invocation handler on which the method calls are dispatched.
+     *
+     * @since Android 1.0
+     */
     protected InvocationHandler h;
 
     @SuppressWarnings("unused")
     private Proxy() {
     }
 
+    /**
+     * Constructs a new {@code Proxy} instance with the specified invocation
+     * handler.
+     * 
+     * @param h
+     *            the invocation handler for the newly created proxy
+     *            
+     * @since Android 1.0
+     */
     protected Proxy(InvocationHandler h) {
         this.h = h;
     }
 
-    // BEGIN android-changed
-    // Changed to be closer to the RI
     /**
-     * Return the dynamically build class for the given interfaces, build a new
-     * one when necessary. The order of the interfaces is important.
-     * 
-     * The interfaces must be visible from the supplied class loader; no
-     * duplicates are permitted. All non-public interfaces must be defined in
-     * the same package.
+     * Returns the dynamically built {@code Class} for the specified interfaces.
+     * Creates a new {@code Class} when necessary. The order of the interfaces
+     * is relevant. Invocations of this method with the same interfaces but
+     * different order result in different generated classes. The interfaces
+     * must be visible from the supplied class loader; no duplicates are
+     * permitted. All non-public interfaces must be defined in the same package.
      * 
      * @param loader
-     *            the class loader that will define the proxy class.
+     *            the class loader that will define the proxy class
      * @param interfaces
-     *            an array of <code>Class</code> objects, each one identifying
-     *            an interface that the new proxy must implement
+     *            an array of {@code Class} objects, each one identifying an
+     *            interface that will be implemented by the returned proxy
+     *            class
+     * 
      * @return a proxy class that implements all of the interfaces referred to
-     *         in the contents of <code>interfaces</code>.
-     * @exception IllegalArgumentException
-     * @exception NullPointerException
-     *                if either <code>interfaces</code> or any of its elements
-     *                are <code>null</code>.
+     *         in the contents of {@code interfaces}
+     * 
+     * @throws IllegalArgumentException
+     *                if any of the interface restrictions are violated
+     * @throws NullPointerException
+     *                if either {@code interfaces} or any of its elements are
+     *                {@code null}
+     * 
+     * @since Android 1.0
      */
     public static Class<?> getProxyClass(ClassLoader loader,
             Class<?>... interfaces) throws IllegalArgumentException {
+        // BEGIN android-note
+        // Changed parameter to be closer to the RI
+        // END android-note
         // check that interfaces are a valid array of visible interfaces
         if (interfaces == null) {
             throw new NullPointerException();
@@ -121,7 +146,6 @@ public class Proxy implements Serializable {
                 }
             }
         }
-        // END android-changed
 
         // search cache for matching proxy class using the class loader
         synchronized (loaderCache) {
@@ -182,23 +206,30 @@ public class Proxy implements Serializable {
     }
 
     /**
-     * Return an instance of the dynamically build class for the given
-     * interfaces that forwards methods to the specified invocation handler.
-     * 
-     * The interfaces must be visible from the supplied class loader; no
-     * duplicates are permitted. All non-public interfaces must be defined in
-     * the same package.
+     * Returns an instance of the dynamically built class for the specified
+     * interfaces. Method invocations on the returned instance are forwarded to
+     * the specified invocation handler. The interfaces must be visible from the
+     * supplied class loader; no duplicates are permitted. All non-public
+     * interfaces must be defined in the same package.
      * 
      * @param loader
-     *            the class loader that will define the proxy class.
+     *            the class loader that will define the proxy class
      * @param interfaces
-     *            the list of interfaces to implement.
+     *            an array of {@code Class} objects, each one identifying an
+     *            interface that will be implemented by the returned proxy
+     *            object
      * @param h
-     *            the invocation handler for the forwarded methods.
-     * @return a new proxy object that delegates to the handler <code>h</code>
-     * @exception IllegalArgumentException
-     * @exception NullPointerException
-     *                if the interfaces or any of its elements are null.
+     *            the invocation handler that handles the dispatched method
+     *            invocations
+     * 
+     * @return a new proxy object that delegates to the handler {@code h}
+     * 
+     * @throws IllegalArgumentException
+     *                if any of the interface restrictions are violated
+     * @throws NullPointerException
+     *                if the interfaces or any of its elements are null
+     * 
+     * @since Android 1.0
      */
     public static Object newProxyInstance(ClassLoader loader,
             Class<?>[] interfaces, InvocationHandler h)
@@ -227,13 +258,19 @@ public class Proxy implements Serializable {
     }
 
     /**
-     * Return whether the supplied class is a dynamically generated proxy class.
+     * Indicates whether or not the specified class is a dynamically generated
+     * proxy class.
      * 
      * @param cl
-     *            the class.
-     * @return true if the class is a proxy class and false otherwise.
-     * @exception NullPointerException
-     *                if the class is null.
+     *            the class
+     * 
+     * @return {@code true} if the class is a proxy class, {@code false}
+     *         otherwise
+     * 
+     * @throws NullPointerException
+     *                if the class is {@code null}
+     * 
+     * @since Android 1.0
      */
     public static boolean isProxyClass(Class<?> cl) {
         if (cl == null) {
@@ -245,14 +282,17 @@ public class Proxy implements Serializable {
     }
 
     /**
-     * Return the proxy instance's invocation handler.
+     * Returns the invocation handler of the specified proxy instance.
      * 
      * @param proxy
-     *            the proxy instance.
-     * @return the proxy's invocation handler object
-     * @exception IllegalArgumentException
-     *                if the supplied <code>proxy</code> is not a proxy
-     *                object.
+     *            the proxy instance
+     * 
+     * @return the invocation handler of the specified proxy instance
+     * 
+     * @throws IllegalArgumentException
+     *                if the supplied {@code proxy} is not a proxy object
+     * 
+     * @since Android 1.0
      */
     public static InvocationHandler getInvocationHandler(Object proxy)
             throws IllegalArgumentException {

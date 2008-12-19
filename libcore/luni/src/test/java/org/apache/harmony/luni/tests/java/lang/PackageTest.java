@@ -16,13 +16,17 @@
  */
 package org.apache.harmony.luni.tests.java.lang;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.io.File;
-import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
-
 import tests.support.resource.Support_Resources;
 
+@TestTargetClass(Package.class) 
 public class PackageTest extends junit.framework.TestCase {
 
     private File resources;
@@ -61,7 +65,36 @@ public class PackageTest extends junit.framework.TestCase {
      * @tests java.lang.Package#getSpecificationVersion()
      * @tests java.lang.Package#getImplementationTitle()
      */
-    public void test_helper_Attributes() throws Exception {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getImplementationTitle",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "getImplementationVendor",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "getImplementationVersion",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "getSpecificationTitle",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "getSpecificationVendor",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "getSpecificationVersion",
+          methodArgs = {}
+        )
+    })
+    public void _test_helper_Attributes() throws Exception {
 
         Package p = getTestPackage("hyts_all_attributes.jar", "p.C");
         assertEquals(
@@ -171,7 +204,16 @@ public class PackageTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Package#getName()
      */
-    public void test_getName() throws Exception {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getName",
+          methodArgs = {}
+        )
+    })
+    public void _test_getName() throws Exception {
         Package p = getTestPackage("hyts_pq.jar", "p.q.C");
         assertEquals("Package getName returns a wrong string", "p.q", p
                 .getName());
@@ -180,7 +222,16 @@ public class PackageTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Package#getPackage(java.lang.String)
      */
-    public void test_getPackageLjava_lang_String() {
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check case when null should be returned.",
+      targets = {
+        @TestTarget(
+          methodName = "getPackage",
+          methodArgs = {java.lang.String.class}
+        )
+    })
+    public void _test_getPackageLjava_lang_String() {
         assertSame("Package getPackage failed for java.lang", Package
                 .getPackage("java.lang"), Package.getPackage("java.lang"));
 
@@ -191,7 +242,16 @@ public class PackageTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Package#getPackages()
      */
-    public void test_getPackages() throws Exception {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getPackages",
+          methodArgs = {}
+        )
+    })
+    public void _test_getPackages() throws Exception {
         Package[] pckgs = Package.getPackages();
         boolean found = false;
         for (int i = 0; i < pckgs.length; i++) {
@@ -206,7 +266,16 @@ public class PackageTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Package#hashCode()
      */
-    public void test_hashCode() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "hashCode",
+          methodArgs = {}
+        )
+    })
+    public void _test_hashCode() {
         Package p1 = Package.getPackage("java.lang");
         if (p1 != null) {
             assertEquals(p1.hashCode(), "java.lang".hashCode());
@@ -216,7 +285,16 @@ public class PackageTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Package#isCompatibleWith(java.lang.String)
      */
-    public void test_isCompatibleWithLjava_lang_String() throws Exception {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isCompatibleWith",
+          methodArgs = {java.lang.String.class}
+        )
+    })
+    public void _test_isCompatibleWithLjava_lang_String() throws Exception {
         Package p = getTestPackage("hyts_c.jar", "p.C");
 
         assertTrue("Package isCompatibleWith fails with lower version", p
@@ -266,7 +344,16 @@ public class PackageTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Package#isSealed()
      */
-    public void test_isSealed() throws Exception {
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check false value.",
+      targets = {
+        @TestTarget(
+          methodName = "isSealed",
+          methodArgs = {}
+        )
+    })
+    public void _test_isSealed() throws Exception {
         Package p = getTestPackage("hyts_pq.jar", "p.q.C");
         assertTrue("Package isSealed returns wrong boolean", p.isSealed());
     }
@@ -274,7 +361,16 @@ public class PackageTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Package#isSealed(java.net.URL)
      */
-    public void test_isSealedLjava_net_URL() throws Exception {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isSealed",
+          methodArgs = {java.net.URL.class}
+        )
+    })
+    public void _test_isSealedLjava_net_URL() throws Exception {
         Package p = getTestPackage("hyts_c.jar", "p.C");
         assertFalse("Package isSealed returns wrong boolean (1)", p
                 .isSealed(new URL("file:/" + resPath + "/")));
@@ -285,7 +381,16 @@ public class PackageTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Package#toString()
      */
-    public void test_toString() throws Exception {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
+    public void _test_toString() throws Exception {
         Package p = getTestPackage("hyts_c.jar", "p.C");
         assertTrue("Package toString returns wrong string", p.toString()
                 .length() > 0);

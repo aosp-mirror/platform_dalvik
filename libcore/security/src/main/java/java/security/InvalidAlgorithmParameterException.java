@@ -23,44 +23,57 @@
 package java.security;
 
 /**
- * This class represents invalid algorithm parameters to cryptographic services.
+ * {@code InvalidAlgorithmParameterException} indicates the occurrence of
+ * invalid algorithm parameters.
  * 
+ * @since Android 1.0
  */
 public class InvalidAlgorithmParameterException extends
         GeneralSecurityException {
-    /**
-     * @com.intel.drl.spec_ref
-     */
+    
     private static final long serialVersionUID = 2864672297499471472L;
 
     /**
-     * Constructs a new instance of this class with its walkback and message
-     * filled in.
-     * 
+     * Constructs a new instance of {@code InvalidAlgorithmParameterException}
+     * with the given message.
      * 
      * @param msg
-     *            String The detail message for the exception.
+     *            the detail message for this exception.
+     * @since Android 1.0
      */
     public InvalidAlgorithmParameterException(String msg) {
         super(msg);
     }
 
     /**
-     * Constructs a new instance of this class with its walkback filled in.
+     * Constructs a new instance of {@code InvalidAlgorithmParameterException}.
      * 
+     * @since Android 1.0
      */
     public InvalidAlgorithmParameterException() {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Constructs a new instance of {@code InvalidAlgorithmParameterException} with the
+     * given message and the cause.
+     * 
+     * @param message
+     *            the detail message for this exception.
+     * @param cause
+     *            the exception which is the cause for this exception.
+     * @since Android 1.0
      */
     public InvalidAlgorithmParameterException(String message, Throwable cause) {
         super(message, cause);
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Constructs a new instance of {@code InvalidAlgorithmParameterException}
+     * with the cause.
+     * 
+     * @param cause
+     *            the exception which is the cause for this exception.
+     * @since Android 1.0
      */
     public InvalidAlgorithmParameterException(Throwable cause) {
         super(cause);

@@ -16,6 +16,11 @@
 
 package tests.api.java.io;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass; 
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -26,44 +31,61 @@ import junit.framework.TestCase;
 /**
  * TODO Type description
  */
+@TestTargetClass(RandomAccessFile.class) 
 public class OpenRandomFileTest extends TestCase {
 
-	public static void main(String[] args) {
-		new OpenRandomFileTest().testOpenEmptyFile();
-	}
+    public static void main(String[] args) {
+        new OpenRandomFileTest().testOpenEmptyFile();
+    }
 
-	public OpenRandomFileTest() {
-		super();
-	}
+    public OpenRandomFileTest() {
+        super();
+    }
+    @TestInfo(
+              level = TestLevel.PARTIAL,
+              purpose = "Exceptions checking missed.",
+              targets = {
+                @TestTarget(
+                  methodName = "RandomAccessFile",
+                  methodArgs = {java.lang.String.class, java.lang.String.class}
+                )
+            })
+    public void testOpenNonEmptyFile() {
+        try {
+            File file = File.createTempFile("test", "tmp");
+            assertTrue(file.exists());
+            file.deleteOnExit();
+            FileOutputStream fos = new FileOutputStream(file);
+            fos.write(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
+            fos.close();
 
-	public void testOpenNonEmptyFile() {
-		try {
-			File file = File.createTempFile("test", "tmp");
-			assertTrue(file.exists());
-			file.deleteOnExit();
-			FileOutputStream fos = new FileOutputStream(file);
-			fos.write(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
-			fos.close();
+            String fileName = file.getCanonicalPath();
+            RandomAccessFile raf = new RandomAccessFile(fileName, "rw");
+            raf.close();
+        } catch (IOException ex) {
+            fail(ex.getLocalizedMessage());
+        }
+    }
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "RandomAccessFile",
+          methodArgs = {java.lang.String.class, java.lang.String.class}
+        )
+    })
+    public void testOpenEmptyFile() {
+        try {
+            File file = File.createTempFile("test", "tmp");
+            assertTrue(file.exists());
+            file.deleteOnExit();
 
-			String fileName = file.getCanonicalPath();
-			RandomAccessFile raf = new RandomAccessFile(fileName, "rw");
-			raf.close();
-		} catch (IOException ex) {
-			fail(ex.getLocalizedMessage());
-		}
-	}
-
-	public void testOpenEmptyFile() {
-		try {
-			File file = File.createTempFile("test", "tmp");
-			assertTrue(file.exists());
-			file.deleteOnExit();
-
-			String fileName = file.getCanonicalPath();
-			RandomAccessFile raf = new RandomAccessFile(fileName, "rw");
-			raf.close();
-		} catch (IOException ex) {
-			fail(ex.getLocalizedMessage());
-		}
-	}
+            String fileName = file.getCanonicalPath();
+            RandomAccessFile raf = new RandomAccessFile(fileName, "rw");
+            raf.close();
+        } catch (IOException ex) {
+            fail(ex.getLocalizedMessage());
+        }
+    }
 }

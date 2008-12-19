@@ -15,6 +15,11 @@
  */
 package tests.api.java.nio.charset;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestLevel;
+
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.CharacterCodingException;
@@ -26,6 +31,7 @@ import java.nio.charset.UnmappableCharacterException;
 /**
  * test case specific activity of iso-8859-1 charset encoder
  */
+@TestTargetClass(java.nio.charset.CharsetEncoder.class)
 public class ISOCharsetEncoderTest extends CharsetEncoderTest {
 
     // charset for iso-8859-1
@@ -46,6 +52,15 @@ public class ISOCharsetEncoderTest extends CharsetEncoderTest {
         super.tearDown();
     }
 
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IllegalStateException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "canEncode",
+          methodArgs = {java.lang.CharSequence.class}
+        )
+    })
     public void testCanEncodeCharSequence() {
         // normal case for isoCS
         assertTrue(encoder.canEncode("\u0077"));
@@ -58,16 +73,49 @@ public class ISOCharsetEncoderTest extends CharsetEncoderTest {
         assertTrue(encoder.canEncode(""));
     }
 
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Regression test. IllegalStateException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "canEncode",
+          methodArgs = {char.class}
+        ), @TestTarget(
+          methodName = "canEncode",
+          methodArgs = {java.lang.CharSequence.class}
+        )
+    })
     public void testCanEncodeICUBug() {
         assertFalse(encoder.canEncode((char) '\ud800'));
         assertFalse(encoder.canEncode((String) "\ud800"));
     }
 
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IllegalStateException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "canEncode",
+          methodArgs = {char.class}
+        )
+    })
     public void testCanEncodechar() throws CharacterCodingException {
         assertTrue(encoder.canEncode('\u0077'));
         assertFalse(encoder.canEncode('\uc2a3'));
     }
 
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "averageBytesPerChar",
+          methodArgs = {}
+        ), @TestTarget(
+          methodName = "maxBytesPerChar",
+          methodArgs = {}
+        )
+    })
     public void testSpecificDefaultValue() {
         assertEquals(1, encoder.averageBytesPerChar(), 0.001);
         assertEquals(1, encoder.maxBytesPerChar(), 0.001);
@@ -89,6 +137,21 @@ public class ISOCharsetEncoderTest extends CharsetEncoderTest {
         return null;
     }
 
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Checks also: flush & encode, but not covers exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "onMalformedInput",
+          methodArgs = {java.nio.charset.CodingErrorAction.class}
+        ), @TestTarget(
+          methodName = "onUnmappableCharacter",
+          methodArgs = {java.nio.charset.CodingErrorAction.class}
+        ), @TestTarget(
+          methodName = "reset",
+          methodArgs = {}
+        )
+    })
     public void testMultiStepEncode() throws CharacterCodingException {
         encoder.onMalformedInput(CodingErrorAction.REPORT);
         encoder.onUnmappableCharacter(CodingErrorAction.REPORT);

@@ -133,8 +133,8 @@ import org.apache.harmony.security.PolicyEntry;
  * WeakHashMap; the cache is cleaned either explicitly during refresh()
  * invocation, or naturally by garbage-collecting the corresponding objects.
  * 
- * @see org.apache.harmony.security.fortress.PolicyUtils#getPolicyURLs(Properties, String,
- *      String)
+ * @see org.apache.harmony.security.fortress.PolicyUtils#getPolicyURLs(
+ *      Properties, String, String)
  */
 
 public class DefaultPolicy extends Policy {

@@ -662,6 +662,12 @@ Object* dvmCreateReflectMethodObject(const Method* meth)
     char* cp;
     int slot;
 
+    if (dvmCheckException(dvmThreadSelf())) {
+        LOGW("WARNING: dvmCreateReflectMethodObject called with "
+             "exception pending\n");
+        return NULL;
+    }
+
     dexStringCacheInit(&mangle);
 
     /* parent should guarantee init so we don't have to check on every call */

@@ -16,16 +16,30 @@
 
 package org.apache.harmony.luni.tests.java.io;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.io.File;
 import java.io.FileOutputStream;
 
 import junit.framework.TestCase;
-
+@TestTargetClass(FileOutputStream.class)
 public class FileOutputStreamTest extends TestCase {
 
     /**
      * @tests java.io.FileOutputStream#write(byte[], int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Checks NullPointerException",
+      targets = {
+        @TestTarget(
+          methodName = "write",
+          methodArgs = {byte[].class, int.class, int.class}
+        )
+    })
     public void test_write$BII() throws Exception {
         // Regression test for HARMONY-285
         File file = new File("FileOutputStream.tmp");

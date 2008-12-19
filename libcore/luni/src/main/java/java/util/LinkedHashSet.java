@@ -21,14 +21,17 @@ package java.util;
 import java.io.Serializable;
 
 /**
- * LinkedHashSet is a variant on HashSet. Its entries are kept in a doubly-linked list.
- * The iteration order is the order in which entries were inserted.
+ * LinkedHashSet is a variant of HashSet. Its entries are kept in a
+ * doubly-linked list. The iteration order is the order in which entries were
+ * inserted.
  * <p>
  * Null elements are allowed, and all the optional Set operations are supported.
  * <p>
- * Like HashSet, LinkedHashSet is not thread safe, so access by multiple threads must be synchronized
- * by an external mechanism such as Collections.synchronizedSet.
- * @since 1.4
+ * Like HashSet, LinkedHashSet is not thread safe, so access by multiple threads
+ * must be synchronized by an external mechanism such as
+ * {@link Collections#synchronizedSet(Set)}.
+ * 
+ * @since Android 1.0
  */
 public class LinkedHashSet<E> extends HashSet<E> implements Set<E>, Cloneable,
         Serializable {
@@ -36,41 +39,47 @@ public class LinkedHashSet<E> extends HashSet<E> implements Set<E>, Cloneable,
     private static final long serialVersionUID = -2851667679971038690L;
 
     /**
-     * Constructs a new empty instance of LinkedHashSet.
+     * Constructs a new empty instance of {@code LinkedHashSet}.
+     * 
+     * @since Android 1.0
      */
     public LinkedHashSet() {
         super(new LinkedHashMap<E, HashSet<E>>());
     }
 
     /**
-     * Constructs a new instance of LinkedHashSet with the specified capacity.
+     * Constructs a new instance of {@code LinkedHashSet} with the specified
+     * capacity.
      * 
      * @param capacity
-     *            the initial capacity of this HashSet
+     *            the initial capacity of this {@code LinkedHashSet}.
+     * @since Android 1.0
      */
     public LinkedHashSet(int capacity) {
         super(new LinkedHashMap<E, HashSet<E>>(capacity));
     }
 
     /**
-     * Constructs a new instance of LinkedHashSet with the specified capacity
-     * and load factor.
+     * Constructs a new instance of {@code LinkedHashSet} with the specified
+     * capacity and load factor.
      * 
      * @param capacity
-     *            the initial capacity
+     *            the initial capacity.
      * @param loadFactor
-     *            the initial load factor
+     *            the initial load factor.
+     * @since Android 1.0
      */
     public LinkedHashSet(int capacity, float loadFactor) {
         super(new LinkedHashMap<E, HashSet<E>>(capacity, loadFactor));
     }
 
     /**
-     * Constructs a new instance of LinkedHashSet containing the unique elements
-     * in the specified collection.
+     * Constructs a new instance of {@code LinkedHashSet} containing the unique
+     * elements in the specified collection.
      * 
      * @param collection
-     *            the collection of elements to add
+     *            the collection of elements to add.
+     * @since Android 1.0
      */
     public LinkedHashSet(Collection<? extends E> collection) {
         super(new LinkedHashMap<E, HashSet<E>>(collection.size() < 6 ? 11

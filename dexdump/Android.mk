@@ -56,6 +56,7 @@ endif # !SDK_ONLY
 ## Build the host command line tool dexdump
 ##
 ##
+ifneq ($(TARGET_SIMULATOR),true) # not 64 bit clean
 include $(CLEAR_VARS)
 LOCAL_MODULE := dexdump
 LOCAL_SRC_FILES := $(dexdump_src_files)
@@ -64,4 +65,5 @@ LOCAL_SHARED_LIBRARIES := $(dexdump_shared_libraries)
 LOCAL_STATIC_LIBRARIES := $(dexdump_static_libraries) liblog
 LOCAL_LDLIBS += -lpthread -lz
 include $(BUILD_HOST_EXECUTABLE)
+endif # !TARGET_SIMULATOR
 

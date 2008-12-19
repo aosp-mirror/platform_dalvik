@@ -20,26 +20,37 @@ package java.io;
 import org.apache.harmony.luni.util.Msg;
 
 /**
- * CharArrayWriter is used as a character output stream on a character array.
- * The buffer used to store the written characters will grow as needed to
- * accommodate more characters as they are written.
+ * A specialized {@link Writer} for class for writing content to an (internal)
+ * char array. As bytes are written to this writer, the char array may be
+ * expanded to hold more characters. When the writing is considered to be
+ * finished, a copy of the char array can be requested from the class.
+ * 
+ * @see CharArrayReader
+ * 
+ * @since Android 1.0
  */
 public class CharArrayWriter extends Writer {
 
     /**
-     * Buffer for characters
+     * The buffer for characters.
+     * 
+     * @since Android 1.0
      */
     protected char[] buf;
 
     /**
      * The ending index of the buffer.
+     * 
+     * @since Android 1.0
      */
     protected int count;
 
     /**
      * Constructs a new CharArrayWriter which has a buffer allocated with the
-     * default size of 32 characters. The buffer is also the <code>lock</code>
-     * used to synchronize access to this Writer.
+     * default size of 32 characters. This buffer is also used as the
+     * {@code lock} to synchronize access to this writer.
+     * 
+     * @since Android 1.0
      */
     public CharArrayWriter() {
         super();
@@ -49,11 +60,14 @@ public class CharArrayWriter extends Writer {
 
     /**
      * Constructs a new CharArrayWriter which has a buffer allocated with the
-     * size of <code>initialSize</code> characters. The buffer is also the
-     * <code>lock</code> used to synchronize access to this Writer.
+     * size of {@code initialSize} characters. The buffer is also used as the
+     * {@code lock} to synchronize access to this writer.
      * 
      * @param initialSize
      *            the initial size of this CharArrayWriters buffer.
+     * @throws IllegalArgumentException
+     *             if {@code initialSize < 0}.
+     * @since Android 1.0
      */
     public CharArrayWriter(int initialSize) {
         super();
@@ -65,8 +79,9 @@ public class CharArrayWriter extends Writer {
     }
 
     /**
-     * Close this Writer. This is the concrete implementation required. This
-     * particular implementation does nothing.
+     * Closes this writer. The implementation in CharArrayWriter does nothing.
+     * 
+     * @since Android 1.0
      */
     @Override
     public void close() {
@@ -85,8 +100,9 @@ public class CharArrayWriter extends Writer {
     }
 
     /**
-     * Flush this Writer. This is the concrete implementation required. This
-     * particular implementation does nothing.
+     * Flushes this writer. The implementation in CharArrayWriter does nothing.
+     * 
+     * @since Android 1.0
      */
     @Override
     public void flush() {
@@ -94,9 +110,11 @@ public class CharArrayWriter extends Writer {
     }
 
     /**
-     * Reset this Writer. The current write position is reset to the beginning
+     * Resets this writer. The current write position is reset to the beginning
      * of the buffer. All written characters are lost and the size of this
-     * writer is now 0.
+     * writer is set to 0.
+     * 
+     * @since Android 1.0
      */
     public void reset() {
         synchronized (lock) {
@@ -105,10 +123,12 @@ public class CharArrayWriter extends Writer {
     }
 
     /**
-     * Answer the size of this Writer in characters. This number changes if this
-     * Writer is reset or as more characters are written to it.
+     * Returns the size of this writer, that is the number of characters it
+     * stores. This number changes if this writer is reset or when more
+     * characters are written to it.
      * 
-     * @return int this CharArrayWriters current size in characters.
+     * @return this CharArrayWriter's current size in characters.
+     * @since Android 1.0
      */
     public int size() {
         synchronized (lock) {
@@ -117,11 +137,12 @@ public class CharArrayWriter extends Writer {
     }
 
     /**
-     * Answer the contents of the receiver as a char array. The array returned
-     * is a copy and any modifications made to this Writer after are not
-     * reflected in the result.
+     * Returns the contents of the receiver as a char array. The array returned
+     * is a copy and any modifications made to this writer after calling this
+     * method are not reflected in the result.
      * 
-     * @return char[] this CharArrayWriters contents as a new char array.
+     * @return this CharArrayWriter's contents as a new char array.
+     * @since Android 1.0
      */
     public char[] toCharArray() {
         synchronized (lock) {
@@ -132,11 +153,12 @@ public class CharArrayWriter extends Writer {
     }
 
     /**
-     * Answer the contents of this CharArrayWriter as a String. The String
-     * returned is a copy and any modifications made to this Writer after are
-     * not reflected in the result.
+     * Returns the contents of this CharArrayWriter as a string. The string
+     * returned is a copy and any modifications made to this writer after
+     * calling this method are not reflected in the result.
      * 
-     * @return String this CharArrayWriters contents as a new String.
+     * @return this CharArrayWriters contents as a new string.
+     * @since Android 1.0
      */
     @Override
     public String toString() {
@@ -146,23 +168,37 @@ public class CharArrayWriter extends Writer {
     }
 
     /**
-     * Writes <code>count</code> characters starting at <code>offset</code>
-     * in <code>buf</code> to this CharArrayWriter.
+     * Writes {@code count} characters starting at {@code offset} in {@code c}
+     * to this writer.
      * 
      * @param c
      *            the non-null array containing characters to write.
      * @param offset
-     *            offset in buf to retrieve characters
+     *            the index of the first character in {@code buf} to write.
      * @param len
-     *            maximum number of characters to write
+     *            maximum number of characters to write.
+     * @throws IndexOutOfBoundsException
+     *             if {@code offset < 0} or {@code len < 0}, or if
+     *             {@code offset + len} is bigger than the size of {@code c}.
+     * @since Android 1.0
      */
     @Override
     public void write(char[] c, int offset, int len) {
         // avoid int overflow
-        if (offset < 0 || offset > c.length || len < 0
-                || len > c.length - offset) {
-            throw new IndexOutOfBoundsException();
+        // BEGIN android-changed
+        // Exception priorities (in case of multiple errors) differ from
+        // RI, but are spec-compliant.
+        // made implicit null check explicit,
+        // removed redundant check,
+        // added null check, used (offset | len) < 0 instead of
+        // (offset < 0) || (len < 0) to safe one operation
+        if (c == null) {
+            throw new NullPointerException(Msg.getString("K0047")); //$NON-NLS-1$
         }
+        if ((offset | len) < 0 || len > c.length - offset) {
+            throw new IndexOutOfBoundsException(Msg.getString("K002f")); //$NON-NLS-1$
+        }
+        // END android-changed
         synchronized (lock) {
             expand(len);
             System.arraycopy(c, offset, this.buf, this.count, len);
@@ -171,12 +207,13 @@ public class CharArrayWriter extends Writer {
     }
 
     /**
-     * Writes the specified character <code>oneChar</code> to this
-     * CharArrayWriter. This implementation writes the low order two bytes to
-     * the Stream.
+     * Writes the specified character {@code oneChar} to this writer.
+     * This implementation writes the two low order bytes of the integer
+     * {@code oneChar} to the buffer.
      * 
      * @param oneChar
-     *            The character to write
+     *            the character to write.
+     * @since Android 1.0
      */
     @Override
     public void write(int oneChar) {
@@ -187,16 +224,22 @@ public class CharArrayWriter extends Writer {
     }
 
     /**
-     * Writes <code>count</code> number of characters starting at
-     * <code>offset</code> from the String <code>str</code> to this
-     * CharArrayWriter.
+     * Writes {@code count} number of characters starting at {@code offset} from
+     * the string {@code str} to this CharArrayWriter.
      * 
      * @param str
-     *            the non-null String containing the characters to write.
+     *            the non-null string containing the characters to write.
      * @param offset
-     *            the starting point to retrieve characters.
+     *            the index of the first character in {@code str} to write.
      * @param len
      *            the number of characters to retrieve and write.
+     * @throws NullPointerException
+     *             if {@code str} is null.
+     * @throws StringIndexOutOfBoundsException
+     *             if {@code offset < 0} or {@code len < 0}, or if
+     *             {@code offset + len} is bigger than the length of
+     *             {@code str}.
+     * @since Android 1.0
      */
     @Override
     public void write(String str, int offset, int len) {
@@ -204,10 +247,15 @@ public class CharArrayWriter extends Writer {
             throw new NullPointerException(Msg.getString("K0047")); //$NON-NLS-1$
         }
         // avoid int overflow
-        if (offset < 0 || offset > str.length() || len < 0
-                || len > str.length() - offset) {
-            throw new StringIndexOutOfBoundsException();
+        // BEGIN android-changed
+        // Exception priorities (in case of multiple errors) differ from
+        // RI, but are spec-compliant.
+        // removed redundant check, used (offset | len) < 0
+        // instead of (offset < 0) || (len < 0) to safe one operation
+        if ((offset | len) < 0 || len > str.length() - offset) {
+            throw new StringIndexOutOfBoundsException(Msg.getString("K002f")); //$NON-NLS-1$
         }
+        // END android-changed
         synchronized (lock) {
             expand(len);
             str.getChars(offset, offset + len, buf, this.count);
@@ -218,13 +266,15 @@ public class CharArrayWriter extends Writer {
     /**
      * Writes the contents of this CharArrayWriter to another Writer. The output
      * is all the characters that have been written to the receiver since the
-     * last reset or since the creation.
+     * last reset or since it was created.
      * 
      * @param out
      *            the non-null Writer on which to write the contents.
-     * 
+     * @throws NullPointerException
+     *             if {@code out} is null.
      * @throws IOException
-     *             If an error occurs attempting to write the contents out.
+     *             if an error occurs attempting to write out the contents.
+     * @since Android 1.0
      */
     public void writeTo(Writer out) throws IOException {
         synchronized (lock) {
@@ -233,13 +283,13 @@ public class CharArrayWriter extends Writer {
     }
 
     /**
-     * Append a char <code>c</code>to the CharArrayWriter. The
-     * CharArrayWriter.append(<code>c</code>) works the same way as
-     * CharArrayWriter.write(<code>c</code>).
+     * Appends a char {@code c} to the CharArrayWriter. The method works the
+     * same way as {@code write(c)}.
      * 
      * @param c
-     *            The character appended to the CharArrayWriter.
-     * @return The CharArrayWriter.
+     *            the character appended to the CharArrayWriter.
+     * @return this CharArrayWriter.
+     * @since Android 1.0
      */
     @Override
     public CharArrayWriter append(char c) {
@@ -248,15 +298,14 @@ public class CharArrayWriter extends Writer {
     }
 
     /**
-     * Append a CharSequence <code>csq</code> to the CharArrayWriter. The
-     * CharArrayWriter.append(<code>csq</code>) works the same way as
-     * CharArrayWriter.write(<code>csq</code>.toString()). If
-     * <code>csq</code> is null, then then "null" will be substituted for
-     * <code>csq</code>.
+     * Appends a CharSequence {@code csq} to the CharArrayWriter. The method
+     * works the same way as {@code write(csq.toString())}. If {@code csq} is
+     * null, then it will be substituted with the string "null".
      * 
      * @param csq
-     *            The CharSequence appended to the CharArrayWriter.
-     * @return The CharArrayWriter
+     *            the CharSequence appended to the CharArrayWriter, may be null.
+     * @return this CharArrayWriter.
+     * @since Android 1.0
      */
     @Override
     public CharArrayWriter append(CharSequence csq) {
@@ -269,26 +318,26 @@ public class CharArrayWriter extends Writer {
     }
 
     /**
-     * Append a subsequence of a CharSequence <code>csq</code> to the
-     * CharArrayWriter. The first char and the last char of the subsequnce is
-     * specified by the parameter <code>start</code> and <code>end</code>.
-     * The CharArrayWriter.append(<code>csq</code>) works the same way as
-     * CharArrayWriter.write(<code>csq</code>.subSequence(<code>start</code>,<code>end</code>).toString).
-     * If <code>csq</code> is null, then "null" will be substituted for
-     * <code>csq</code>.
+     * Append a subsequence of a CharSequence {@code csq} to the
+     * CharArrayWriter. The first and last characters of the subsequence are
+     * specified by the parameters {@code start} and {@code end}. The
+     * CharArrayWriter.append({@code csq}) works the same way as
+     * {@code CharArrayWriter.write(csq.subSequence(start, end).toString)}. If
+     * {@code csq} is null, then it will be substituted with the string "null".
      * 
      * @param csq
-     *            The CharSequence appended to the CharArrayWriter.
+     *            the CharSequence appended to the CharArrayWriter, may be null.
      * @param start
-     *            The index of the first char in the CharSequence appended to
-     *            the CharArrayWriter.
+     *            the index of the first character in the CharSequence appended
+     *            to the CharArrayWriter.
      * @param end
-     *            The index of the char after the last one in the CharSequence
-     *            appended to the CharArrayWriter.
-     * @return The CharArrayWriter.
+     *            the index of the character after the last one in the
+     *            CharSequence appended to the CharArrayWriter.
+     * @return this CharArrayWriter.
      * @throws IndexOutOfBoundsException
-     *             If start is less than end, end is greater than the length of
-     *             the CharSequence, or start or end is negative.
+     *             if {@code start < 0}, {@code end < 0}, {@code start > end},
+     *             or if {@code end} is greater than the length of {@code csq}.
+     * @since Android 1.0
      */
     @Override
     public CharArrayWriter append(CharSequence csq, int start, int end) {

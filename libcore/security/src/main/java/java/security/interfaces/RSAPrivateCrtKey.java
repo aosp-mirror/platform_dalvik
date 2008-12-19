@@ -15,59 +15,69 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package java.security.interfaces;
 
 import java.math.BigInteger;
 
 /**
- * @com.intel.drl.spec_ref
+ * The interface for a PKCS#1 RSA private key using CRT information values.
  * 
+ * @since Android 1.0
  */
 public interface RSAPrivateCrtKey extends RSAPrivateKey {
 
     /**
-     * @com.intel.drl.spec_ref
+     * The serial version identifier.
+     * 
+     * @since Android 1.0
      */
     public static final long serialVersionUID = -5682214253527700368L;
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Returns the CRT coefficient, {@code q^-1 mod p}.
+     * 
+     * @return the CRT coefficient.
+     * @since Android 1.0
      */
     public BigInteger getCrtCoefficient();
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Returns the prime factor {@code p} of {@code n}.
+     * 
+     * @return the prime factor {@code p} of {@code n}.
+     * @since Android 1.0
      */
     public BigInteger getPrimeP();
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Returns the prime factor {@code q} of {@code n}.
+     * 
+     * @return the prime factor {@code q} of {@code n}.
+     * @since Android 1.0
      */
     public BigInteger getPrimeQ();
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Returns the CRT exponent of the primet {@code p}.
+     * 
+     * @return the CRT exponent of the prime {@code p}.
+     * @since Android 1.0
      */
     public BigInteger getPrimeExponentP();
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Returns the CRT exponent of the prime {@code q}.
+     * 
+     * @return the CRT exponent of the prime {@code q}.
+     * @since Android 1.0
      */
     public BigInteger getPrimeExponentQ();
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Returns the public exponent {@code e}.
+     * 
+     * @return the public exponent {@code e}.
+     * @since Android 1.0
      */
     public BigInteger getPublicExponent();
 }

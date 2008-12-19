@@ -1,18 +1,17 @@
-/*
- *  Licensed to the Apache Software Foundation (ASF) under one or more
- *  contributor license agreements.  See the NOTICE file distributed with
- *  this work for additional information regarding copyright ownership.
- *  The ASF licenses this file to You under the Apache License, Version 2.0
- *  (the "License"); you may not use this file except in compliance with
- *  the License.  You may obtain a copy of the License at
- *
+/* Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ * 
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package java.lang;
@@ -21,23 +20,24 @@ import java.io.IOException;
 import java.nio.CharBuffer;
 
 /**
- * Readable marks that the implementing class provides character sequence.
- * Readable gives a reference to character sequence from within itself to caller
- * through a <code>CharBuffer</code> parameter of the <code>read</code>
- * method.
+ * Represents a sequence of characters that can be incrementally read (copied)
+ * into a {@link CharBuffer}.
+ * 
+ * @since Android 1.0
  */
 public interface Readable {
 
     /**
-     * Reads the characters into the given <code>CharBuffer</code>. The
-     * maximum number of characters read is <code>CharBuffer.remaining()</code>.
+     * Reads characters into the specified {@code CharBuffer}. The maximum
+     * number of characters read is {@code CharBuffer.remaining()}.
      * 
      * @param cb
-     *            the buffer to be filled in by the characters read
+     *            the buffer to be filled with characters read.
      * @return the number of characters actually read, or -1 if this
-     *         <code>Readable</code> reaches its end
+     *         {@code Readable} reaches its end
      * @throws IOException
-     *             if some I/O operations fail
+     *             if an I/O error occurs.
+     * @since Android 1.0
      */
     int read(CharBuffer cb) throws IOException;
 }

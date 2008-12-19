@@ -21,9 +21,15 @@
 
 package org.apache.harmony.tests.java.math;
 
-import junit.framework.TestCase;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.math.BigInteger;
 
+import junit.framework.TestCase;
+@TestTargetClass(BigInteger.class)
 /**
  * Class:  java.math.BigInteger
  * Methods: and, andNot
@@ -32,6 +38,15 @@ public class BigIntegerNotTest extends TestCase {
     /**
      * andNot for two positive numbers; the first is longer
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "This is a complete subset of tests for andNot method.",
+      targets = {
+        @TestTarget(
+          methodName = "andNot",
+          methodArgs = {java.math.BigInteger.class}
+        )
+    })
     public void testAndNotPosPosFirstLonger() {
         byte aBytes[] = {-128, 9, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, -117, 23, 87, -25, -75};
         byte bBytes[] = {-2, -3, -4, -4, 5, 14, 23, 39, 48, 57, 66, 5, 14, 23};
@@ -52,6 +67,15 @@ public class BigIntegerNotTest extends TestCase {
     /**
      * andNot for two positive numbers; the first is shorter
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for andNot method.",
+          targets = {
+            @TestTarget(
+              methodName = "andNot",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testAndNotPosPosFirstShorter() {
         byte aBytes[] = {-2, -3, -4, -4, 5, 14, 23, 39, 48, 57, 66, 5, 14, 23};
         byte bBytes[] = {-128, 9, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, -117, 23, 87, -25, -75};
@@ -72,6 +96,15 @@ public class BigIntegerNotTest extends TestCase {
     /**
      * andNot for two negative numbers; the first is longer
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for andNot method.",
+          targets = {
+            @TestTarget(
+              methodName = "andNot",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testAndNotNegNegFirstLonger() {
         byte aBytes[] = {-128, 9, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, -117, 23, 87, -25, -75};
         byte bBytes[] = {-2, -3, -4, -4, 5, 14, 23, 39, 48, 57, 66, 5, 14, 23};
@@ -92,6 +125,15 @@ public class BigIntegerNotTest extends TestCase {
     /**
      * andNot for a negative and a positive numbers; the first is longer
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for andNot method.",
+          targets = {
+            @TestTarget(
+              methodName = "andNot",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testNegPosFirstLonger() {
         byte aBytes[] = {-128, 9, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, -117, 23, 87, -25, -75};
         byte bBytes[] = {-2, -3, -4, -4, 5, 14, 23, 39, 48, 57, 66, 5, 14, 23};
@@ -112,6 +154,15 @@ public class BigIntegerNotTest extends TestCase {
     /**
      * Not for ZERO 
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "This is a complete subset of tests for not method.",
+      targets = {
+        @TestTarget(
+          methodName = "not",
+          methodArgs = {}
+        )
+    })
     public void testNotZero() {
         byte rBytes[] = {-1};
         BigInteger aNumber = BigInteger.ZERO;
@@ -127,6 +178,15 @@ public class BigIntegerNotTest extends TestCase {
     /**
      * Not for ONE
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for not method.",
+          targets = {
+            @TestTarget(
+              methodName = "not",
+              methodArgs = {}
+            )
+        })
     public void testNotOne() {
         byte rBytes[] = {-2};
         BigInteger aNumber = BigInteger.ONE;
@@ -142,6 +202,15 @@ public class BigIntegerNotTest extends TestCase {
     /**
      * Not for a positive number
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for not method.",
+          targets = {
+            @TestTarget(
+              methodName = "not",
+              methodArgs = {}
+            )
+        })
     public void testNotPos() {
         byte aBytes[] = {-128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, -117};
         int aSign = 1;
@@ -159,6 +228,15 @@ public class BigIntegerNotTest extends TestCase {
     /**
      * Not for a negative number
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for not method.",
+          targets = {
+            @TestTarget(
+              methodName = "not",
+              methodArgs = {}
+            )
+        })
     public void testNotNeg() {
         byte aBytes[] = {-128, 56, 100, -2, -76, 89, 45, 91, 3, -15, 35, 26, -117};
         int aSign = -1;
@@ -177,6 +255,15 @@ public class BigIntegerNotTest extends TestCase {
      * Not for a negative number
      */
 
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for not method.",
+          targets = {
+            @TestTarget(
+              methodName = "not",
+              methodArgs = {}
+            )
+        })
     public void testNotSpecialCase() {
         byte aBytes[] = {-1, -1, -1, -1};
         int aSign = 1;

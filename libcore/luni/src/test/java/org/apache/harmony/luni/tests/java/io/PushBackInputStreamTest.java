@@ -16,17 +16,31 @@
 
 package org.apache.harmony.luni.tests.java.io;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.PushbackInputStream;
 
 import junit.framework.TestCase;
-
+@TestTargetClass(PushbackInputStream.class)
 public class PushBackInputStreamTest extends TestCase {
 
     /*
      * @tests java.io.PushBackInputStream(InputStream)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Checks IOException",
+      targets = {
+        @TestTarget(
+          methodName = "PushbackInputStream",
+          methodArgs = {java.io.InputStream.class}
+        )
+    })
     public void test_ConstructorLjava_io_InputStream() {
         try {
             PushbackInputStream str = new PushbackInputStream(null);
@@ -40,6 +54,15 @@ public class PushBackInputStreamTest extends TestCase {
     /*
      * @tests java.io.PushBackInputStream(InputStream, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Checks IOException",
+      targets = {
+        @TestTarget(
+          methodName = "PushbackInputStream",
+          methodArgs = {java.io.InputStream.class, int.class}
+        )
+    })
     public void test_ConstructorLjava_io_InputStreamL() {
         try {
             PushbackInputStream str = new PushbackInputStream(null, 1);
@@ -49,39 +72,64 @@ public class PushBackInputStreamTest extends TestCase {
             // Expected
         }
     }
-	/**
-	 * @tests java.io.PushbackInputStream#unread(byte[], int, int)
-	 */
-	public void test_unread$BII() {
-		// Regression for HARMONY-49
-		try {
-			PushbackInputStream pb = new PushbackInputStream(
-					new ByteArrayInputStream(new byte[] { 0 }), 2);
-			pb.unread(new byte[1], 0, 5);
-			fail("Assert 0: should throw IOE");
-		} catch (IOException e) {
-			// expected
-		}
-	}
-
-	public void test_reset() {
-		PushbackInputStream pb = new PushbackInputStream(
-				new ByteArrayInputStream(new byte[] { 0 }), 2);
-		try {
-			pb.reset();
-			fail("Should throw IOException");
-		} catch (IOException e) {
-			// expected
-		}
-	}
-
-	public void test_mark() {
-		PushbackInputStream pb = new PushbackInputStream(
-				new ByteArrayInputStream(new byte[] { 0 }), 2);
-		pb.mark(Integer.MAX_VALUE);
-		pb.mark(0);
-		pb.mark(-1);
-		pb.mark(Integer.MIN_VALUE);
-	}
+    /**
+     * @tests java.io.PushbackInputStream#unread(byte[], int, int)
+     */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "unread",
+          methodArgs = {byte[].class, int.class, int.class}
+        )
+    })
+    public void test_unread$BII() {
+        // Regression for HARMONY-49
+        try {
+            PushbackInputStream pb = new PushbackInputStream(
+                    new ByteArrayInputStream(new byte[] { 0 }), 2);
+            pb.unread(new byte[1], 0, 5);
+            fail("Assert 0: should throw IOE");
+        } catch (IOException e) {
+            // expected
+        }
+    }
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "reset",
+          methodArgs = {}
+        )
+    })
+    public void test_reset() {
+        PushbackInputStream pb = new PushbackInputStream(
+                new ByteArrayInputStream(new byte[] { 0 }), 2);
+        try {
+            pb.reset();
+            fail("Should throw IOException");
+        } catch (IOException e) {
+            // expected
+        }
+    }
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "mark",
+          methodArgs = {int.class}
+        )
+    })
+    public void test_mark() {
+        PushbackInputStream pb = new PushbackInputStream(
+                new ByteArrayInputStream(new byte[] { 0 }), 2);
+        pb.mark(Integer.MAX_VALUE);
+        pb.mark(0);
+        pb.mark(-1);
+        pb.mark(Integer.MIN_VALUE);
+    }
 
 }

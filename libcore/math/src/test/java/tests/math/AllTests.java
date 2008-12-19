@@ -32,30 +32,8 @@ public class AllTests {
         TestSuite suite = new TestSuite("All Math test suites");
 
         suite.addTest(tests.api.java.math.AllTests.suite());
+        suite.addTest(org.apache.harmony.tests.java.math.AllTests.suite());
 
-        suite.addTestSuite(org.apache.harmony.tests.java.math.BigDecimalArithmeticTest.class);
-        suite.addTestSuite(org.apache.harmony.tests.java.math.BigDecimalCompareTest.class);
-        suite.addTestSuite(org.apache.harmony.tests.java.math.BigDecimalConstructorsTest.class);
-        suite.addTestSuite(org.apache.harmony.tests.java.math.BigDecimalConvertTest.class);
-        suite.addTestSuite(org.apache.harmony.tests.java.math.BigDecimalScaleOperationsTest.class);
-        suite.addTestSuite(org.apache.harmony.tests.java.math.BigIntegerAddTest.class);
-        suite.addTestSuite(org.apache.harmony.tests.java.math.BigIntegerAndTest.class);
-        suite.addTestSuite(org.apache.harmony.tests.java.math.BigIntegerCompareTest.class);
-        suite.addTestSuite(org.apache.harmony.tests.java.math.BigIntegerConstructorsTest.class);
-        suite.addTestSuite(org.apache.harmony.tests.java.math.BigIntegerConvertTest.class);
-        suite.addTestSuite(org.apache.harmony.tests.java.math.BigIntegerDivideTest.class);
-        suite.addTestSuite(org.apache.harmony.tests.java.math.BigIntegerHashCodeTest.class);
-        suite.addTestSuite(org.apache.harmony.tests.java.math.BigIntegerModPowTest.class);
-        suite.addTestSuite(org.apache.harmony.tests.java.math.BigIntegerMultiplyTest.class);
-        suite.addTestSuite(org.apache.harmony.tests.java.math.BigIntegerNotTest.class);
-        suite.addTestSuite(org.apache.harmony.tests.java.math.BigIntegerOperateBitsTest.class);
-        suite.addTestSuite(org.apache.harmony.tests.java.math.BigIntegerOrTest.class);
-        // suite.addTestSuite(org.apache.harmony.tests.java.math.BigIntegerProbablePrimeTest.class);
-        suite.addTestSuite(org.apache.harmony.tests.java.math.BigIntegerSubtractTest.class);
-        suite.addTestSuite(org.apache.harmony.tests.java.math.BigIntegerToStringTest.class);
-        suite.addTestSuite(org.apache.harmony.tests.java.math.BigIntegerXorTest.class);
-        // suite.addTestSuite(org.apache.harmony.tests.java.math.MathContextConstructorsTest.class);
-        // suite.addTestSuite(org.apache.harmony.tests.java.math.MathContextMethodsTest.class);
         return suite;
     }
 }

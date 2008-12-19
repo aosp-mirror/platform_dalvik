@@ -17,6 +17,11 @@
 
 package org.apache.harmony.archive.tests.java.util.jar;
 
+import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,6 +33,8 @@ import java.util.zip.ZipEntry;
 import junit.framework.TestCase;
 import tests.support.resource.Support_Resources;
 
+
+@TestTargetClass(JarEntry.class) 
 public class JarEntryTest extends TestCase {
     private ZipEntry zipEntry;
 
@@ -66,6 +73,15 @@ public class JarEntryTest extends TestCase {
     /**
      * @tests java.util.jar.JarEntry#JarEntry(java.util.zip.ZipEntry)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "JarEntry",
+          methodArgs = {java.util.zip.ZipEntry.class}
+        )
+    })
     public void test_ConstructorLjava_util_zip_ZipEntry() {
         assertNotNull("Jar file is null", jarFile);
         zipEntry = jarFile.getEntry(entryName);
@@ -79,6 +95,15 @@ public class JarEntryTest extends TestCase {
     /**
      * @tests java.util.jar.JarEntry#getAttributes()
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "getAttributes",
+          methodArgs = {}
+        )
+    })
     public void test_getAttributes() {
         JarFile attrJar = null;
         File file = null;
@@ -108,6 +133,15 @@ public class JarEntryTest extends TestCase {
     /**
      * @tests java.util.jar.JarEntry#getCertificates()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getCertificates",
+          methodArgs = {}
+        )
+    })
     public void test_getCertificates() throws Exception{
         zipEntry = jarFile.getEntry(entryName2);
         jarEntry = new JarEntry(zipEntry);
@@ -131,6 +165,15 @@ public class JarEntryTest extends TestCase {
     /**
      * @tests java.util.jar.JarEntry#getCodeSigners()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getCodeSigners",
+          methodArgs = {}
+        )
+    })
     public void test_getCodeSigners() throws IOException {
         String jarFileName = "TestCodeSigners.jar";
         Support_Resources.copyFile(resources, null, jarFileName);

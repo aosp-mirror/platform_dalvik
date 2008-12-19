@@ -1161,12 +1161,9 @@ void dvmThreadSleep(u8 msec, u4 nsec)
  * thread on the same mutex twice.  Doing so would leave us with an
  * incorrect value for Monitor.interrupting.
  */
-void dvmThreadInterrupt(Thread* thread)
+void dvmThreadInterrupt(volatile Thread* thread)
 {
-    static const int kMaxRetries = 4;
     Monitor* mon;
-    Thread* self;
-    int retry;
 
     /*
      * Raise the "interrupted" flag.  This will cause it to bail early out
@@ -1188,34 +1185,47 @@ void dvmThreadInterrupt(Thread* thread)
         return;
 
     /*
-     * Try to acquire the monitor, if we don't already own it.
-     * We need to hold the same mutex as the thread in order
-     * to signal the condition it's waiting on.
+     * Try to acquire the monitor, if we don't already own it.  We need
+     * to hold the same mutex as the thread in order to signal the
+     * condition it's waiting on.  When the thread goes to sleep it will
+     * release the monitor's mutex, allowing us to signal it.
      *
      * TODO: we may be able to get rid of the explicit lock by coordinating
      * this more closely with waitMonitor.
      */
-    self = dvmThreadSelf();
-    retry = 0;
-    do {
-        if (tryLockMonitor(self, mon))
-            goto gotit;
+    Thread* self = dvmThreadSelf();
+    if (!tryLockMonitor(self, mon)) {
+        /*
+         * Failed to get the monitor the thread is waiting on; most likely
+         * the other thread is in the middle of doing something.
+         */
+        const int kSpinSleepTime = 500*1000;        /* 0.5s */
+        u8 startWhen = dvmGetRelativeTimeUsec();
+        int sleepIter = 0;
 
-        /* wait a bit */
-        sched_yield();
+        while (dvmIterativeSleep(sleepIter++, kSpinSleepTime, startWhen)) {
+            /*
+             * Still time left on the clock, try to grab it again.
+             */
+            if (tryLockMonitor(self, mon))
+                goto gotit;
+
+            /*
+             * If the target thread is no longer waiting on the same monitor,
+             * the "interrupted" flag we set earlier will have caused the
+             * interrupt when the thread woke up, so we can stop now.
+             */
+            if (thread->waitMonitor != mon)
+                return;
+        }
 
         /*
-         * If they've moved on to a different monitor, the "interrupted"
-         * flag we set earlier will have taken care of things, so we don't
-         * want to continue.
+         * We have to give up or risk deadlock.
          */
-        if (thread->waitMonitor != mon)
-            return;
-    } while (retry++ < kMaxRetries);
-
-    LOGW("threadid=%d: unable to interrupt threadid=%d\n",
-        self->threadId, thread->threadId);
-    return;
+        LOGW("threadid=%d: unable to interrupt threadid=%d\n",
+            self->threadId, thread->threadId);
+        return;
+    }
 
 gotit:
     /*

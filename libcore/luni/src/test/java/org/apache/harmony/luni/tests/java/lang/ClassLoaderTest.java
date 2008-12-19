@@ -17,8 +17,14 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
+import junit.framework.TestCase;
+
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.security.CodeSource;
 import java.security.Permission;
@@ -26,8 +32,8 @@ import java.security.PermissionCollection;
 import java.security.Policy;
 import java.security.ProtectionDomain;
 import java.security.SecurityPermission;
-import junit.framework.TestCase;
 
+@TestTargetClass(ClassLoader.class) 
 public class ClassLoaderTest extends TestCase {
 
     public static volatile int flag;
@@ -36,7 +42,16 @@ public class ClassLoaderTest extends TestCase {
      * Tests that Classloader.defineClass() assigns appropriate 
      * default domains to the defined classes.
      */
-    public void test_defineClass_defaultDomain() throws Exception {
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies only positive functionality.",
+      targets = {
+        @TestTarget(
+          methodName = "defineClass",
+          methodArgs = {java.lang.String.class, byte[].class, int.class, int.class}
+        )
+    })
+    public void _test_defineClass_defaultDomain() throws Exception {
         // Regression for HARMONY-765 
         DynamicPolicy plc = new DynamicPolicy();
         Policy back = Policy.getPolicy();
@@ -135,7 +150,16 @@ public class ClassLoaderTest extends TestCase {
      * and the same classloader. It is expected that both threads succeed but
      * class must be defined just once.  
      */
-    public void test_loadClass_concurrentLoad() throws Exception 
+    @TestInfo(
+          level = TestLevel.PARTIAL,
+          purpose = "Regression test.",
+          targets = {
+            @TestTarget(
+              methodName = "loadClass",
+              methodArgs = {java.lang.String.class}
+            )
+        })
+    public void _test_loadClass_concurrentLoad() throws Exception 
     {    
         Object lock = new Object();
         SyncTestClassLoader cl = new SyncTestClassLoader(lock);
@@ -163,6 +187,15 @@ public class ClassLoaderTest extends TestCase {
     /**
      * @tests java.lang.ClassLoader#getResource(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies only positive case.",
+      targets = {
+        @TestTarget(
+          methodName = "getResource",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_getResourceLjava_lang_String() {
         // Test for method java.net.URL
         // java.lang.ClassLoader.getResource(java.lang.String)
@@ -181,6 +214,15 @@ public class ClassLoaderTest extends TestCase {
     /**
      * @tests java.lang.ClassLoader#getResourceAsStream(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies only positive case.",
+      targets = {
+        @TestTarget(
+          methodName = "getResourceAsStream",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_getResourceAsStreamLjava_lang_String() {
         // Test for method java.io.InputStream
         // java.lang.ClassLoader.getResourceAsStream(java.lang.String)
@@ -199,6 +241,15 @@ public class ClassLoaderTest extends TestCase {
     /**
      * @tests java.lang.ClassLoader#getSystemClassLoader()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getSystemClassLoader",
+          methodArgs = {}
+        )
+    })
     public void test_getSystemClassLoader() {
         // Test for method java.lang.ClassLoader
         // java.lang.ClassLoader.getSystemClassLoader()
@@ -215,6 +266,15 @@ public class ClassLoaderTest extends TestCase {
     /**
      * @tests java.lang.ClassLoader#getSystemResource(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Doesn't verify functionality.",
+      targets = {
+        @TestTarget(
+          methodName = "getSystemResource",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_getSystemResourceLjava_lang_String() {
         // Test for method java.net.URL
         // java.lang.ClassLoader.getSystemResource(java.lang.String)
@@ -225,7 +285,16 @@ public class ClassLoaderTest extends TestCase {
     
     
     //Regression Test for JIRA-2047
-    public void test_getResourceAsStream_withSharpChar() throws Exception {
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies only positive case.",
+      targets = {
+        @TestTarget(
+          methodName = "getResourceAsStream",
+          methodArgs = {java.lang.String.class}
+        )
+    })
+    public void _test_getResourceAsStream_withSharpChar() throws Exception {
         /*
          * The Harmony resource could not be found anywhere, so we take
          * our own.

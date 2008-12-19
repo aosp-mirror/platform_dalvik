@@ -17,6 +17,11 @@
 
 package tests.api.java.net;
 
+import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.FileDescriptor;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,26 +31,54 @@ import java.net.SocketAddress;
 import java.net.SocketException;
 import java.net.SocketImpl;
 
+@TestTargetClass(SocketImpl.class) 
 public class SocketImplTest extends junit.framework.TestCase {
 
-	
+    
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Regression test.",
+      targets = {
+        @TestTarget(
+          methodName = "SocketImpl",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor_fd() throws Exception {
         // regression test for Harmony-1117
         MockSocketImpl mockSocketImpl = new MockSocketImpl();
         assertNull(mockSocketImpl.getFileDescriptor());
     }
     
-	/*
-	* @tests java.net.SocketImpl#setPerformancePreference()
-	*/
-	public void test_setPerformancePreference_Int_Int_Int() throws Exception {
-		MockSocketImpl theSocket = new MockSocketImpl();
-		theSocket.setPerformancePreference(1,1,1);
-	}
+    /*
+    * @tests java.net.SocketImpl#setPerformancePreference()
+    */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setPerformancePreference",
+          methodArgs = {int.class, int.class, int.class}
+        )
+    })
+    public void test_setPerformancePreference_Int_Int_Int() throws Exception {
+        MockSocketImpl theSocket = new MockSocketImpl();
+        theSocket.setPerformancePreference(1,1,1);
+    }
 
     /*
      * @tests java.net.SocketImpl#shutdownOutput()
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checked only.",
+      targets = {
+        @TestTarget(
+          methodName = "shutdownOutput",
+          methodArgs = {}
+        )
+    })
     public void test_shutdownOutput() {
         MockSocketImpl s = new MockSocketImpl();
         try {
@@ -56,60 +89,60 @@ public class SocketImplTest extends junit.framework.TestCase {
         }
     }
 
-	// the mock class for test, leave all method empty
-	class MockSocketImpl extends SocketImpl{
-		
-		protected void accept(SocketImpl newSocket) throws IOException {
-		}
+    // the mock class for test, leave all method empty
+    class MockSocketImpl extends SocketImpl{
+        
+        protected void accept(SocketImpl newSocket) throws IOException {
+        }
 
-		protected int available() throws IOException {
-			return 0;
-		}
+        protected int available() throws IOException {
+            return 0;
+        }
 
-		protected void bind(InetAddress address, int port) throws IOException {
-		}
+        protected void bind(InetAddress address, int port) throws IOException {
+        }
 
-		protected void close() throws IOException {
-		}
+        protected void close() throws IOException {
+        }
 
-		protected void connect(String host, int port) throws IOException {
-		}
+        protected void connect(String host, int port) throws IOException {
+        }
 
-		protected void connect(InetAddress address, int port) throws IOException {
-		}
+        protected void connect(InetAddress address, int port) throws IOException {
+        }
 
-		protected void create(boolean isStreaming) throws IOException {
-		}
+        protected void create(boolean isStreaming) throws IOException {
+        }
 
-		protected InputStream getInputStream() throws IOException {
-			return null;
-		}
+        protected InputStream getInputStream() throws IOException {
+            return null;
+        }
 
-		public Object getOption(int optID) throws SocketException {
-			return null;
-		}
+        public Object getOption(int optID) throws SocketException {
+            return null;
+        }
 
-		protected OutputStream getOutputStream() throws IOException {
-			return null;
-		}
+        protected OutputStream getOutputStream() throws IOException {
+            return null;
+        }
 
-		protected void listen(int backlog) throws IOException {
-		}
+        protected void listen(int backlog) throws IOException {
+        }
 
-		public void setOption(int optID, Object val) throws SocketException {
-		}
+        public void setOption(int optID, Object val) throws SocketException {
+        }
 
-		protected void connect(SocketAddress remoteAddr, int timeout) throws IOException {
-		}
+        protected void connect(SocketAddress remoteAddr, int timeout) throws IOException {
+        }
 
-		protected void sendUrgentData(int value) throws IOException {
-		}
-		
-		public void setPerformancePreference(int connectionTime,
+        protected void sendUrgentData(int value) throws IOException {
+        }
+        
+        public void setPerformancePreference(int connectionTime,
                 int latency,
                 int bandwidth){
-			super.setPerformancePreferences(connectionTime, latency, bandwidth);
-		}
+            super.setPerformancePreferences(connectionTime, latency, bandwidth);
+        }
 
         public FileDescriptor getFileDescriptor() {
             return super.getFileDescriptor();
@@ -118,14 +151,14 @@ public class SocketImplTest extends junit.framework.TestCase {
         public void shutdownOutput() throws IOException {
             super.shutdownOutput();
         }
-	}
+    }
 
-	protected void setUp() {
-	}
+    protected void setUp() {
+    }
 
-	protected void tearDown() {
-	}
+    protected void tearDown() {
+    }
 
-	protected void doneSuite() {
-	}
+    protected void doneSuite() {
+    }
 }

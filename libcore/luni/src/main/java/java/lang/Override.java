@@ -19,6 +19,13 @@ package java.lang;
 import java.lang.annotation.Target;
 import java.lang.annotation.Retention;
 
+/**
+ * Annotation type used to mark methods that override a method declaration in a superclass.
+ * Compilers produce an error if a method annotated with @Override does not actually override
+ * a method in a superclass.
+ * 
+ * @since Android 1.0
+ */
 @Retention(value=java.lang.annotation.RetentionPolicy.SOURCE)
 @Target(value=java.lang.annotation.ElementType.METHOD)
 public @interface Override

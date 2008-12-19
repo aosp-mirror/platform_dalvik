@@ -17,6 +17,11 @@
 
 package tests.api.java.util;
 
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass; 
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -28,6 +33,7 @@ import java.util.Properties;
 
 import tests.support.resource.Support_Resources;
 
+@TestTargetClass(Properties.class) 
 public class PropertiesTest extends junit.framework.TestCase {
 
     Properties tProps;
@@ -37,6 +43,15 @@ public class PropertiesTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Properties#Properties()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Properties",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         Properties p = new Properties();
         // do something to avoid getting a variable unused warning
@@ -46,6 +61,15 @@ public class PropertiesTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Properties#Properties(java.util.Properties)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Properties",
+          methodArgs = {java.util.Properties.class}
+        )
+    })
     public void test_ConstructorLjava_util_Properties() {
         if (System.getProperty("java.vendor") != null) {
             Properties p = new Properties(System.getProperties());
@@ -57,6 +81,15 @@ public class PropertiesTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Properties#getProperty(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Verifies positive case.",
+      targets = {
+        @TestTarget(
+          methodName = "getProperty",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_getPropertyLjava_lang_String() {
         assertEquals("Did not retrieve property", "this is a test property",
                 tProps.getProperty("test.prop"));
@@ -66,6 +99,15 @@ public class PropertiesTest extends junit.framework.TestCase {
      * @tests java.util.Properties#getProperty(java.lang.String,
      *        java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies positive case.",
+      targets = {
+        @TestTarget(
+          methodName = "getProperty",
+          methodArgs = {java.lang.String.class, java.lang.String.class}
+        )
+    })
     public void test_getPropertyLjava_lang_StringLjava_lang_String() {
         assertEquals("Did not retrieve property", "this is a test property",
                 tProps.getProperty("test.prop", "Blarg"));
@@ -76,6 +118,15 @@ public class PropertiesTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Properties#getProperty(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Regression test.",
+      targets = {
+        @TestTarget(
+          methodName = "getProperty",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_getPropertyLjava_lang_String2() {
         // regression test for HARMONY-3518
         MyProperties props = new MyProperties();
@@ -86,6 +137,15 @@ public class PropertiesTest extends junit.framework.TestCase {
      * @tests java.util.Properties#getProperty(java.lang.String,
      *        java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Regression test.",
+      targets = {
+        @TestTarget(
+          methodName = "getProperty",
+          methodArgs = {java.lang.String.class, java.lang.String.class}
+        )
+    })
     public void test_getPropertyLjava_lang_StringLjava_lang_String2() {
         // regression test for HARMONY-3518
         MyProperties props = new MyProperties();
@@ -102,6 +162,15 @@ public class PropertiesTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Properties#list(java.io.PrintStream)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "list",
+          methodArgs = {java.io.PrintStream.class}
+        )
+    })
     public void test_listLjava_io_PrintStream() {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         PrintStream ps = new PrintStream(baos);
@@ -120,6 +189,15 @@ public class PropertiesTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Properties#list(java.io.PrintWriter)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "list",
+          methodArgs = {java.io.PrintWriter.class}
+        )
+    })
     public void test_listLjava_io_PrintWriter() {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         PrintWriter pw = new PrintWriter(baos);
@@ -139,6 +217,16 @@ public class PropertiesTest extends junit.framework.TestCase {
      * @throws IOException
      * @tests java.util.Properties#load(java.io.InputStream)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify IOException, IllegalArgumentException. " +
+              "Also doesn't test many cases.",
+      targets = {
+        @TestTarget(
+          methodName = "load",
+          methodArgs = {java.io.InputStream.class}
+        )
+    })
     public void test_loadLjava_io_InputStream() throws IOException {
         Properties prop = new Properties();
         InputStream is = new ByteArrayInputStream(writeProperties());
@@ -183,6 +271,15 @@ public class PropertiesTest extends junit.framework.TestCase {
      * @throws IOException
      * @tests java.util.Properties#load(java.io.InputStream)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify IOException, IllegalArgumentException.",
+      targets = {
+        @TestTarget(
+          methodName = "load",
+          methodArgs = {java.io.InputStream.class}
+        )
+    })
     public void test_loadLjava_io_InputStream_subtest0() throws IOException {
         InputStream is = Support_Resources
                 .getStream("hyts_PropertiesTest.properties");
@@ -207,7 +304,16 @@ public class PropertiesTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Properties#propertyNames()
      */
-    public void test_propertyNames() {
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "propertyNames",
+          methodArgs = {}
+        )
+    })
+    public void g() {
         Enumeration names = tProps.propertyNames();
         while (names.hasMoreElements()) {
             String p = (String) names.nextElement();
@@ -220,6 +326,15 @@ public class PropertiesTest extends junit.framework.TestCase {
      * @throws IOException
      * @tests java.util.Properties#save(java.io.OutputStream, java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify ClassCastException.",
+      targets = {
+        @TestTarget(
+          methodName = "save",
+          methodArgs = {java.io.OutputStream.class, java.lang.String.class}
+        )
+    })
     public void test_saveLjava_io_OutputStreamLjava_lang_String()
             throws IOException {
         Properties myProps = new Properties();
@@ -248,6 +363,15 @@ public class PropertiesTest extends junit.framework.TestCase {
      * @tests java.util.Properties#setProperty(java.lang.String,
      *        java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setProperty",
+          methodArgs = {java.lang.String.class, java.lang.String.class}
+        )
+    })
     public void test_setPropertyLjava_lang_StringLjava_lang_String() {
         Properties myProps = new Properties();
         myProps.setProperty("Yoink", "Yabba");
@@ -262,6 +386,16 @@ public class PropertiesTest extends junit.framework.TestCase {
      * @throws IOException
      * @tests java.util.Properties#store(java.io.OutputStream, java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify IOException, ClassCastException, " + 
+            "NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "store",
+          methodArgs = {java.io.OutputStream.class, java.lang.String.class}
+        )
+    })
     public void test_storeLjava_io_OutputStreamLjava_lang_String()
             throws IOException {
         Properties myProps = new Properties();
@@ -290,6 +424,17 @@ public class PropertiesTest extends junit.framework.TestCase {
      * @throws IOException
      * @tests java.util.Properties#loadFromXML(java.io.InputStream)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify IOException, " +
+            "InvalidPropertiesFormatException " + 
+            "NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "loadFromXML",
+          methodArgs = {java.io.InputStream.class}
+        )
+    })
     public void test_loadFromXMLLjava_io_InputStream() throws IOException {
         Properties prop = new Properties();
         InputStream is = new ByteArrayInputStream(writePropertiesXML("UTF-8"));
@@ -317,6 +462,16 @@ public class PropertiesTest extends junit.framework.TestCase {
      * @tests java.util.Properties#storeToXML(java.io.OutputStream,
      *        java.lang.String, java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify IOException, NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "storeToXML",
+          methodArgs = {java.io.OutputStream.class, java.lang.String.class, 
+                        java.lang.String.class}
+        )
+    })
     public void test_storeToXMLLjava_io_OutputStreamLjava_lang_StringLjava_lang_String()
             throws IOException {
         Properties myProps = new Properties();

@@ -18,19 +18,22 @@
 package java.io;
 
 /**
- * Objects to perform validations on other objects read with serialization
- * should implement this interface. An object's <code>readObject()</code> can
- * call <code>ObjectInputStream.registerValidation()</code> passing an object
- * that implements ObjectInputValidation.
+ * A callback interface for post-deserialization checks on objects. Allows, for
+ * example, the validation of a whole graph of objects after all of them have
+ * been loaded.
  * 
  * @see ObjectInputStream
+ * @see ObjectInputStream#registerValidation(ObjectInputValidation, int)
+ * 
+ * @since Android 1.0
  */
 public interface ObjectInputValidation {
     /**
-     * Validates an object read with serialization.
+     * Validates this object.
      * 
      * @throws InvalidObjectException
-     *             if the receiver fails to validate the object read
+     *             if this object fails to validate itself.
+     * @since Android 1.0
      */
     public void validateObject() throws InvalidObjectException;
 }

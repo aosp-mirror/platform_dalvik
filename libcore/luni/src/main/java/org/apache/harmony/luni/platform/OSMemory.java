@@ -15,6 +15,10 @@
  *  limitations under the License.
  */
 
+// BEGIN android-note
+// address length was changed from long to int for performance reasons.
+// END android-note
+
 package org.apache.harmony.luni.platform;
 
 import java.io.IOException;
@@ -78,6 +82,9 @@ final class OSMemory extends OSComponent implements IMemorySystem {
         super();
     }
 
+    // BEGIN android-note
+    // changed to private
+    // END android-note
     /**
      * Returns whether the byte order of this machine is little endian or not..
      * 

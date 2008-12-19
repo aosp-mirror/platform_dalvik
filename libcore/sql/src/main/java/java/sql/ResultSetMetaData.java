@@ -18,54 +18,66 @@
 package java.sql;
 
 /**
- * Provides information about the columns in a ResultSet.
+ * Provides information about the columns returned in a {@code ResultSet}.
+ * 
+ * @since Android 1.0
  */
 public interface ResultSetMetaData {
 
     /**
-     * Indicates that a column cannot contain NULL values
+     * Indicates that a column cannot contain {@code NULL} values.
+     * 
+     * @since Android 1.0
      */
     public static final int columnNoNulls = 0;
 
     /**
-     * Indicates that a column can contain NULL values
+     * Indicates that a column can contain {@code NULL} values.
+     * 
+     * @since Android 1.0
      */
     public static final int columnNullable = 1;
 
     /**
-     * Indicates that it is unknown whether a column can contain NULLs or not
+     * Indicates that it is unknown whether a column can contain {@code NULL}s or not.
+     * 
+     * @since Android 1.0
      */
     public static final int columnNullableUnknown = 2;
 
     /**
-     * Returns the title of indexed columns catalog
+     * Returns the title of an indexed column's catalog.
      * 
      * @param column
-     *            the column index, starting at 1
-     * @return the catalog title
+     *            the column index, starting at 1.
+     * @return the catalog title.
      * @throws SQLException
-     *             if there is a database error
+     *             if there is a database error.
+     * @since Android 1.0
      */
     public String getCatalogName(int column) throws SQLException;
 
     /**
      * Returns the fully-qualified type of the class that is produced when
-     * invoking ResultSet.getObject to recover this columns value.
+     * invoking {@code ResultSet.getObject} to recover this column's value.
      * 
      * @param column
-     *            the column index, starting at 1
-     * @return the fully-qualified class name
+     *            the column index, starting at 1.
+     * @return the fully-qualified class name.
      * @throws SQLException
-     *             if there is a database error
+     *             if there is a database error.
+     * @see ResultSet#getObject
+     * @since Android 1.0
      */
     public String getColumnClassName(int column) throws SQLException;
 
     /**
-     * Returns a count of the columns in this set of results.
+     * Returns number of columns contained in the associated result set.
      * 
-     * @return the column count
+     * @return the column count.
      * @throws SQLException
-     *             if there is a database error
+     *             if there is a database error.
+     * @since Android 1.0
      */
     public int getColumnCount() throws SQLException;
 
@@ -74,10 +86,11 @@ public interface ResultSetMetaData {
      * of characters.
      * 
      * @param column
-     *            the column index, starting at 1
-     * @return the column's max width
+     *            the column index, starting at 1.
+     * @return the column's max width.
      * @throws SQLException
-     *             if there is a database error
+     *             if there is a database error.
+     * @since Android 1.0
      */
     public int getColumnDisplaySize(int column) throws SQLException;
 
@@ -86,76 +99,85 @@ public interface ResultSetMetaData {
      * title needs to be displayed.
      * 
      * @param column
-     *            the column index, starting at 1
-     * @return the column's title
+     *            the column index, starting at 1.
+     * @return the column's title.
      * @throws SQLException
-     *             if there is a database error
+     *             if there is a database error.
+     * @since Android 1.0
      */
     public String getColumnLabel(int column) throws SQLException;
 
     /**
-     * Returns the title of the indexed column
+     * Returns the title of the indexed column.
      * 
      * @param column
-     *            the column index, starting at 1
-     * @return the column title
+     *            the column index, starting at 1.
+     * @return the column title.
      * @throws SQLException
-     *             if there is a database error
+     *             if there is a database error.
+     * @since Android 1.0
      */
     public String getColumnName(int column) throws SQLException;
 
     /**
-     * Returns the type of the indexed column
+     * Returns the type of the indexed column as SQL type code.
      * 
      * @param column
-     *            the column index, starting at 1
-     * @return the column type
+     *            the column index, starting at 1.
+     * @return the column type code.
      * @throws SQLException
-     *             if there is a database error
+     *             if there is a database error.
+     * @see Types
+     * @since Android 1.0
      */
     public int getColumnType(int column) throws SQLException;
 
     /**
-     * Returns the type name of the indexed column
+     * Returns the type name of the indexed column.
      * 
      * @param column
-     *            the column index, starting at 1
-     * @return the type name
+     *            the column index, starting at 1.
+     * @return the type name.
      * @throws SQLException
-     *             if there is a database error
+     *             if there is a database error.
+     * @since Android 1.0
      */
     public String getColumnTypeName(int column) throws SQLException;
 
     /**
-     * Returns the decimal precision of the indexed column
+     * Returns the decimal precision of the indexed column.
      * 
      * @param column
-     *            the column index, starting at 1
-     * @return the precision
+     *            the column index, starting at 1.
+     * @return the precision.
      * @throws SQLException
-     *             if there is a database error
+     *             if there is a database error.
+     * @since Android 1.0
      */
     public int getPrecision(int column) throws SQLException;
 
     /**
-     * Returns the number of decimal places in the indexed column.
+     * Returns the number of digits to the right of the decimal point of the
+     * indexed column.
      * 
      * @param column
-     *            the column index, starting at 1
-     * @return number of decimal places
+     *            the column index, starting at 1.
+     * @return number of decimal places.
      * @throws SQLException
-     *             if there is a database error
+     *             if there is a database error.
+     * @since Android 1.0
      */
     public int getScale(int column) throws SQLException;
 
     /**
-     * Returns the name of the indexed columns schema
+     * Returns the name of the indexed columns schema.
      * 
      * @param column
-     *            the column index, starting at 1
-     * @return the name of the columns schema
+     *            the column index, starting at 1.
+     * @return the name of the columns schema.
      * @throws SQLException
-     *             if there is a database error
+     *             if there is a database error.
+     * @since Android 1.0
      */
     public String getSchemaName(int column) throws SQLException;
 
@@ -163,57 +185,63 @@ public interface ResultSetMetaData {
      * Returns the title of the indexed columns table.
      * 
      * @param column
-     *            the column index, starting at 1
-     * @return the table title
+     *            the column index, starting at 1.
+     * @return the table title.
      * @throws SQLException
-     *             if there is a database error
+     *             if there is a database error.
+     * @since Android 1.0
      */
     public String getTableName(int column) throws SQLException;
 
     /**
-     * Returns and indication of whether the indexed column has automatic
-     * numbering and is therefore read-only
+     * Returns an indication of whether the indexed column is automatically
+     * incremented and is therefore read-only.
      * 
      * @param column
-     *            the column index, starting at 1
-     * @return true if it is automatically numbered, false otherwise
+     *            the column index, starting at 1.
+     * @return {@code true} if it is automatically numbered, {@code false}
+     *         otherwise.
      * @throws SQLException
-     *             if there is a database error
+     *             if there is a database error.
+     * @since Android 1.0
      */
     public boolean isAutoIncrement(int column) throws SQLException;
 
     /**
-     * Returns an indicator of whether the case of the indexed column is
-     * important
+     * Returns an indication of whether the case of the indexed column is
+     * important.
      * 
      * @param column
-     *            the column index, starting at 1
-     * @return true if case matters, false otherwise
+     *            the column index, starting at 1.
+     * @return {@code true} if case matters, {@code false} otherwise.
      * @throws SQLException
-     *             if there is a database error
+     *             if there is a database error.
+     * @since Android 1.0
      */
     public boolean isCaseSensitive(int column) throws SQLException;
 
     /**
-     * Returns if the indexed column contains a monetary amount.
+     * Returns whether the indexed column contains a monetary amount.
      * 
      * @param column
-     *            the column index, starting at 1
-     * @return true if it is a monetary value, false otherwise
+     *            the column index, starting at 1.
+     * @return {@code true} if it is a monetary value, {@code false} otherwise.
      * @throws SQLException
-     *             if there is a database error
+     *             if there is a database error.
+     * @since Android 1.0
      */
     public boolean isCurrency(int column) throws SQLException;
 
     /**
      * Returns an indication of whether writing to the indexed column is
-     * guaranteed to be successful
+     * guaranteed to be successful.
      * 
      * @param column
-     *            the column index, starting at 1
-     * @return true if the write is guaranteed, false otherwise
+     *            the column index, starting at 1.
+     * @return {@code true} if the write is guaranteed, {@code false} otherwise.
      * @throws SQLException
-     *             if there is a database error
+     *             if there is a database error.
+     * @since Android 1.0
      */
     public boolean isDefinitelyWritable(int column) throws SQLException;
 
@@ -221,22 +249,24 @@ public interface ResultSetMetaData {
      * Returns whether the indexed column is nullable.
      * 
      * @param column
-     *            the column index, starting at 1
-     * @return true if it is nullable, false otherwise
+     *            the column index, starting at 1.
+     * @return {@code true} if it is nullable, {@code false} otherwise.
      * @throws SQLException
-     *             if there is a database error
+     *             if there is a database error.
+     * @since Android 1.0
      */
     public int isNullable(int column) throws SQLException;
 
     /**
      * Returns an indication of whether writing to the indexed column is
-     * guaranteed to be unsuccessful
+     * guaranteed to be unsuccessful.
      * 
      * @param column
-     *            the column index, starting at 1
-     * @return true if the column is read-only, false otherwise
+     *            the column index, starting at 1.
+     * @return {@code true} if the column is read-only, {@code false} otherwise.
      * @throws SQLException
-     *             if there is a database error
+     *             if there is a database error.
+     * @since Android 1.0
      */
     public boolean isReadOnly(int column) throws SQLException;
 
@@ -244,22 +274,25 @@ public interface ResultSetMetaData {
      * Returns an indication of whether the indexed column is searchable.
      * 
      * @param column
-     *            the column index, starting at 1
-     * @return true if the indexed column is searchable, false otherwise.
+     *            the column index, starting at 1.
+     * @return {@code true} if the indexed column is searchable, {@code false}
+     *         otherwise.
      * @throws SQLException
-     *             if there is a database error
+     *             if there is a database error.
+     * @since Android 1.0
      */
     public boolean isSearchable(int column) throws SQLException;
 
     /**
-     * Returns an indicator of whether the values contained in the indexed
+     * Returns an indication of whether the values contained in the indexed
      * column are signed.
      * 
      * @param column
-     *            the column index, starting at 1
-     * @return true if they are signed, false otherwise
+     *            the column index, starting at 1.
+     * @return {@code true} if they are signed, {@code false} otherwise.
      * @throws SQLException
-     *             if there is a database error
+     *             if there is a database error.
+     * @since Android 1.0
      */
     public boolean isSigned(int column) throws SQLException;
 
@@ -268,10 +301,11 @@ public interface ResultSetMetaData {
      * possible.
      * 
      * @param column
-     *            the column index, starting at 1
-     * @return true if it is possible to write, false otherwise
+     *            the column index, starting at 1.
+     * @return {@code true} if it is possible to write, {@code false} otherwise.
      * @throws SQLException
-     *             if there is a database error
+     *             if there is a database error.
+     * @since Android 1.0
      */
     public boolean isWritable(int column) throws SQLException;
 }

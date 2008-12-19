@@ -109,7 +109,7 @@ bool dvmReflectAnnotationStartup(void)
         LOGE("Unable to find 4-arg constructor in android AnnotationMember\n");
         return false;
     }
-            
+
     gDvm.methOrgApacheHarmonyLangAnnotationAnnotationMember_init = meth;
 
     return true;
@@ -174,17 +174,27 @@ static ArrayObject* emptyAnnoArray(void)
 }
 
 /*
- * Return a zero-length array of arrays of Annotation objects.
- *
- * TODO: this currently allocates a new array each time, but I think we
- * can get away with returning a canonical copy.
+ * Return an array of empty arrays of Annotation objects.  
  *
  * Caller must call dvmReleaseTrackedAlloc().
  */
-static ArrayObject* emptyAnnoArrayArray(void)
+static ArrayObject* emptyAnnoArrayArray(int numElements)
 {
-    return dvmAllocArrayByClass(
-        gDvm.classJavaLangAnnotationAnnotationArrayArray, 0, ALLOC_DEFAULT);
+    Thread* self = dvmThreadSelf();
+    ArrayObject* arr;
+    int i;
+    
+    arr = dvmAllocArrayByClass(gDvm.classJavaLangAnnotationAnnotationArrayArray,
+            numElements, ALLOC_DEFAULT);
+    if (arr != NULL) {
+        ArrayObject** elems = (ArrayObject**) arr->contents;
+        for (i = 0; i < numElements; i++) {
+            elems[i] = emptyAnnoArray();
+            dvmReleaseTrackedAlloc((Object*)elems[i], self);
+        }
+    }
+
+    return arr;
 }
 
 /*
@@ -276,7 +286,7 @@ static u8 readUnsignedLong(const u1* ptr, int zwidth, bool fillOnRight)
  * to initialize the class because it's a static method, etc.  We don't have
  * that information here, so we have to do a bit of searching.
  *
- * Returns NULL if the method was not found.
+ * Returns NULL if the method was not found (exception may be pending).
  */
 static Method* resolveAmbiguousMethod(const ClassObject* referrer, u4 methodIdx)
 {
@@ -296,6 +306,7 @@ static Method* resolveAmbiguousMethod(const ClassObject* referrer, u4 methodIdx)
     pMethodId = dexGetMethodId(pDexFile, methodIdx);
     resClass = dvmResolveClass(referrer, pMethodId->classIdx, true);
     if (resClass == NULL) {
+        /* note exception will be pending */
         LOGD("resolveAmbiguousMethod: unable to find class %d\n", methodIdx);
         return NULL;
     }
@@ -338,7 +349,7 @@ typedef enum {
     kAllRaw,             /* return everything as a raw value or index */
     kPrimitivesOrObjects /* return primitives as-is but the rest as objects */
 } AnnotationResultStyle;
-    
+
 /*
  * Recursively process an annotation value.
  *
@@ -380,8 +391,9 @@ static bool processAnnotationValue(const ClassObject* clazz,
     valueArg = valueType >> kDexAnnotationValueArgShift;
     width = valueArg + 1;       /* assume, correct later */
 
-    LOGV("----- type is 0x%02x %d, ptr=%p\n",
-        valueType & kDexAnnotationValueTypeMask, valueArg, ptr-1);
+    LOGV("----- type is 0x%02x %d, ptr=%p [0x%06x]\n",
+        valueType & kDexAnnotationValueTypeMask, valueArg, ptr-1,
+        (ptr-1) - (u1*)clazz->pDvmDex->pDexFile->baseAddr);
 
     pValue->type = valueType & kDexAnnotationValueTypeMask;
 
@@ -472,6 +484,18 @@ static bool processAnnotationValue(const ClassObject* clazz,
             elemObj = (Object*) dvmResolveClass(clazz, idx, true);
             setObject = true;
             if (elemObj == NULL) {
+                /* see if it's a primitive type - not common */
+                dvmClearException(self);
+                const char* className =
+                    dexStringByTypeIdx(clazz->pDvmDex->pDexFile, idx);
+
+                if (className != NULL &&
+                    className[0] != '\0' && className[1] == '\0')
+                {
+                    elemObj = (Object*) dvmFindPrimitiveClass(className[0]);
+                }
+            }
+            if (elemObj == NULL) {
                 /* we're expected to throw a TypeNotPresentException here */
                 DexFile* pDexFile = clazz->pDvmDex->pDexFile;
                 const char* desc = dexStringByTypeIdx(pDexFile, idx);
@@ -479,8 +503,9 @@ static bool processAnnotationValue(const ClassObject* clazz,
                 dvmThrowExceptionWithClassMessage(
                         "Ljava/lang/TypeNotPresentException;", desc);
                 return false;
-            } else
+            } else {
                 dvmAddTrackedAlloc(elemObj, self);      // balance the Release
+            }
         }
         break;
     case kDexAnnotationMethod:
@@ -535,7 +560,7 @@ static bool processAnnotationValue(const ClassObject* clazz,
             u4 size;
 
             size = readUleb128(&ptr);
-            LOGVV("--- annotation array, size is %u\n", size);
+            LOGVV("--- annotation array, size is %u at %p\n", size, ptr);
             newArray = dvmAllocArrayByClass(gDvm.classJavaLangObjectArray,
                 size, ALLOC_DEFAULT);
             if (newArray == NULL) {
@@ -678,7 +703,7 @@ bail:
  * We extract the annotation's value, create a new AnnotationMember object,
  * and construct it.
  *
- * Returns NULL on failure.
+ * Returns NULL on failure; an exception may or may not be raised.
  */
 static Object* createAnnotationMember(const ClassObject* clazz,
     const ClassObject* annoClass, const u1** pPtr)
@@ -771,7 +796,8 @@ bail:
  *      AnnotationMember[] elements)
  *
  * Returns a new Annotation, which will NOT be in the local ref table and
- * not referenced elsewhere, so store it away soon.  On failure, returns NULL.
+ * not referenced elsewhere, so store it away soon.  On failure, returns NULL
+ * with an exception raised.
  */
 static Object* processEncodedAnnotation(const ClassObject* clazz,
     const u1** pPtr)
@@ -788,7 +814,7 @@ static Object* processEncodedAnnotation(const ClassObject* clazz,
     typeIdx = readUleb128(&ptr);
     size = readUleb128(&ptr);
 
-    LOGV("----- processEnc ptr=%p type=%d size=%d\n", ptr, typeIdx, size);
+    LOGVV("----- processEnc ptr=%p type=%d size=%d\n", ptr, typeIdx, size);
 
     annoClass = dvmDexGetResolvedClass(clazz->pDvmDex, typeIdx);
     if (annoClass == NULL) {
@@ -801,8 +827,9 @@ static Object* processEncodedAnnotation(const ClassObject* clazz,
         }
     }
 
-    //LOGI("Found typeIdx=%d size=%d class=%s\n",
-    //    typeIdx, size, annoClass->descriptor);
+    LOGV("----- processEnc ptr=%p [0x%06x]  typeIdx=%d size=%d class=%s\n",
+        *pPtr, *pPtr - (u1*) clazz->pDvmDex->pDexFile->baseAddr,
+        typeIdx, size, annoClass->descriptor);
 
     /*
      * Elements are parsed out and stored in an array.  The Harmony
@@ -830,6 +857,8 @@ static Object* processEncodedAnnotation(const ClassObject* clazz,
      */
     while (size--) {
         Object* newMember = createAnnotationMember(clazz, annoClass, &ptr);
+        if (newMember == NULL)
+            goto bail;
 
         /* add it to the array */
         *pElement++ = newMember;
@@ -849,6 +878,11 @@ static Object* processEncodedAnnotation(const ClassObject* clazz,
 bail:
     dvmReleaseTrackedAlloc((Object*) elementArray, NULL);
     *pPtr = ptr;
+    if (newAnno == NULL && !dvmCheckException(self)) {
+        /* make sure an exception is raised */
+        dvmThrowException("Ljava/lang/RuntimeException;",
+            "failure in processEncodedAnnotation");
+    }
     return newAnno;
 }
 
@@ -931,8 +965,9 @@ static bool skipAnnotationValue(const ClassObject* clazz, const u1** pPtr)
     valueArg = valueType >> kDexAnnotationValueArgShift;
     width = valueArg + 1;       /* assume */
 
-    LOGV("----- type is 0x%02x %d, ptr=%p\n",
-        valueType & kDexAnnotationValueTypeMask, valueArg, ptr-1);
+    LOGV("----- type is 0x%02x %d, ptr=%p [0x%06x]\n",
+        valueType & kDexAnnotationValueTypeMask, valueArg, ptr-1,
+        (ptr-1) - (u1*)clazz->pDvmDex->pDexFile->baseAddr);
 
     switch (valueType & kDexAnnotationValueTypeMask) {
     case kDexAnnotationByte:        break;
@@ -2043,10 +2078,26 @@ static const DexParameterAnnotationsItem* findAnnotationsItemForMethod(
     return NULL;
 }
 
+
+/*
+ * Count up the number of arguments the method takes.  The "this" pointer
+ * doesn't count.
+ */
+static int countMethodArguments(const Method* method)
+{
+    /* method->shorty[0] is the return type */
+    return strlen(method->shorty + 1);
+}
+
 /*
  * Return an array of arrays of Annotation objects.  The outer array has
  * one entry per method parameter, the inner array has the list of annotations
  * associated with that parameter.
+ *
+ * If the method has no parameters, we return an array of length zero.  If
+ * the method has one or more parameters, we return an array whose length
+ * is equal to the number of parameters; if a given parameter does not have
+ * an annotation, the corresponding entry will be null.
  *
  * Caller must call dvmReleaseTrackedAlloc().
  */
@@ -2061,13 +2112,13 @@ ArrayObject* dvmGetParameterAnnotations(const Method* method)
         DexFile* pDexFile = clazz->pDvmDex->pDexFile;
         const DexAnnotationSetRefList* pAnnoSetList;
         u4 size;
-        
+
         size = dexGetParameterAnnotationSetRefSize(pDexFile, pItem);
         pAnnoSetList = dexGetParameterAnnotationSetRefList(pDexFile, pItem);
         annoArrayArray = processAnnotationSetRefList(clazz, pAnnoSetList, size);
     } else {
         /* no matching annotations found */
-        annoArrayArray = emptyAnnoArrayArray();
+        annoArrayArray = emptyAnnoArrayArray(countMethodArguments(method));
     }
 
     return annoArrayArray;
@@ -2118,7 +2169,7 @@ bool dvmEncodedArrayIteratorHasNext(const EncodedArrayIterator* iterator) {
 bool dvmEncodedArrayIteratorGetNext(EncodedArrayIterator* iterator,
         AnnotationValue* value) {
     bool processed;
-    
+
     if (iterator->elementsLeft == 0) {
         return false;
     }

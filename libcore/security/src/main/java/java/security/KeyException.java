@@ -23,48 +23,53 @@
 package java.security;
 
 /**
- * This class is the superclass of all classes which represent problems with
- * keys.
+ * {@code KeyException} is the common superclass of all key related exceptions.
  * 
- * 
- * @see Throwable
- * @see Error
+ * @since Android 1.0
  */
 public class KeyException extends GeneralSecurityException {
 
-    /**
-     * @com.intel.drl.spec_ref
-     */
     private static final long serialVersionUID = -7483676942812432108L;
 
     /**
-     * Constructs a new instance of this class with its walkback and message
-     * filled in.
-     * 
+     * Constructs a new instance of {@code KeyException} with the given message.
      * 
      * @param msg
-     *            String The detail message for the exception.
+     *            the detail message for this exception.
+     * @since Android 1.0
      */
     public KeyException(String msg) {
         super(msg);
     }
 
     /**
-     * Constructs a new instance of this class with its walkback filled in.
+     * Constructs a new instance of {@code KeyException}.
      * 
+     * @since Android 1.0
      */
     public KeyException() {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Constructs a new instance of {@code KeyException} with the given message
+     * and the cause.
+     * 
+     * @param message
+     *            the detail message for this exception.
+     * @param cause
+     *            the exception which is the cause for this exception.
+     * @since Android 1.0
      */
     public KeyException(String message, Throwable cause) {
         super(message, cause);
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Constructs a new instance of {@code KeyException} with the cause.
+     * 
+     * @param cause
+     *            the exception which is the cause for this exception.
+     * @since Android 1.0
      */
     public KeyException(Throwable cause) {
         super(cause);

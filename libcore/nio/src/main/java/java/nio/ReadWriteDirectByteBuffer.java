@@ -50,13 +50,13 @@ final class ReadWriteDirectByteBuffer extends DirectByteBuffer {
     ReadWriteDirectByteBuffer(int capacity) {
         super(capacity);
     }
-    
+
     // BEGIN android-added
     ReadWriteDirectByteBuffer(int pointer, int capacity) {
         this(PlatformAddressFactory.on(pointer, capacity),capacity,0);
     }
     // END android-added
-    
+
     ReadWriteDirectByteBuffer(SafeAddress address, int capacity, int offset) {
         super(address, capacity, offset);
     }

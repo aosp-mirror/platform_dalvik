@@ -20,12 +20,15 @@ package java.nio.charset;
 import org.apache.harmony.niochar.internal.nls.Messages;
 
 /**
- * Thrown when an unsupported charset name is encountered.
+ * An {@code UnsupportedCharsetException} is thrown when an unsupported charset
+ * name is encountered.
+ * 
+ * @since Android 1.0
  */
 public class UnsupportedCharsetException extends IllegalArgumentException {
 
     /*
-     * This constant is used during deserialization to check the J2SE version
+     * This constant is used during deserialization to check the version
      * which created the serialized object.
      */
     private static final long serialVersionUID = 1490765524727386367L;
@@ -34,10 +37,11 @@ public class UnsupportedCharsetException extends IllegalArgumentException {
     private String charsetName;
 
     /**
-     * Constructs an instance of this exception with the supplied charset name.
+     * Constructs a new {@code UnsupportedCharsetException} with the supplied charset name.
      * 
      * @param charset
-     *            the encountered unsupported charset name
+     *            the encountered unsupported charset name.
+     * @since Android 1.0
      */
     public UnsupportedCharsetException(String charset) {
         // niochar.04=The unsupported charset name is "{0}".
@@ -48,7 +52,8 @@ public class UnsupportedCharsetException extends IllegalArgumentException {
     /**
      * Gets the encountered unsupported charset name.
      * 
-     * @return the encountered unsupported charset name
+     * @return the encountered unsupported charset name.
+     * @since Android 1.0
      */
     public String getCharsetName() {
         return this.charsetName;

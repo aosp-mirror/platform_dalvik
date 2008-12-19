@@ -16,78 +16,110 @@
 
 package org.apache.harmony.luni.tests.java.io;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.io.File;
 
 import org.apache.harmony.testframework.serialization.SerializationTest;
 
 import junit.framework.TestCase;
-
+@TestTargetClass(File.class)
 public class FileTest extends TestCase {
 
-	/**
-	 * @tests java.io.File#File(java.io.File, java.lang.String)
-	 */
-	public void test_ConstructorLjava_io_FileLjava_lang_String() {
-		// Regression test for HARMONY-21
-		File path = new File("/dir/file");
-		File root = new File("/");
-		File file = new File(root, "/dir/file");
-		assertEquals("Assert 1: wrong path result ", path.getPath(), file
-				.getPath());
-		assertTrue("Assert 1.1: path not absolute ", new File("\\\\\\a\b").isAbsolute());
-		
-		// Test data used in a few places below
-		String dirName = System.getProperty("user.dir");
-		String fileName = "input.tst";
+    /**
+     * @tests java.io.File#File(java.io.File, java.lang.String)
+     */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "File",
+          methodArgs = {java.io.File.class, java.lang.String.class}
+        )
+    })
+    public void test_ConstructorLjava_io_FileLjava_lang_String() {
+        // Regression test for HARMONY-21
+        File path = new File("/dir/file");
+        File root = new File("/");
+        File file = new File(root, "/dir/file");
+        assertEquals("Assert 1: wrong path result ", path.getPath(), file
+                .getPath());
+        assertTrue("Assert 1.1: path not absolute ", new File("\\\\\\a\b").isAbsolute());
+        
+        // Test data used in a few places below
+        String dirName = System.getProperty("user.dir");
+        String fileName = "input.tst";
 
-		// Check filename is preserved correctly
-		File d = new File(dirName);
-		File f = new File(d, fileName);
-		if (!dirName
-				.regionMatches((dirName.length() - 1), File.separator, 0, 1)) {
-			dirName += File.separator;
-		}
-		dirName += fileName;
-		assertTrue("Assert 2: Created incorrect file " + f.getPath(), f
-				.getPath().equals(dirName));
+        // Check filename is preserved correctly
+        File d = new File(dirName);
+        File f = new File(d, fileName);
+        if (!dirName
+                .regionMatches((dirName.length() - 1), File.separator, 0, 1)) {
+            dirName += File.separator;
+        }
+        dirName += fileName;
+        assertTrue("Assert 2: Created incorrect file " + f.getPath(), f
+                .getPath().equals(dirName));
 
-		// Check null argument is handled
-		try {
-			f = new File(d, null);
-			fail("Assert 3: NullPointerException not thrown.");
-		} catch (NullPointerException e) {
-			// Expected.
-		}
+        // Check null argument is handled
+        try {
+            f = new File(d, null);
+            fail("Assert 3: NullPointerException not thrown.");
+        } catch (NullPointerException e) {
+            // Expected.
+        }
 
-		f = new File((File) null, fileName);
-		assertTrue("Assert 4: Created incorrect file " + f.getPath(), f
-				.getAbsolutePath().equals(dirName));
-		
-		// Regression for HARMONY-46
-		File f1 = new File("a");
-		File f2 = new File("a/");
-		assertEquals("Assert 5: Trailing slash file name is incorrect", f1, f2);
-	}
-	
-	/**
-	 * @tests java.io.File#hashCode()
-	 */
-	public void test_hashCode() {
-		// Regression for HARMONY-53
-		String mixedFname = "SoMe FiLeNaMe";
-		File mfile = new File(mixedFname);
-		File lfile = new File(mixedFname.toLowerCase());
+        f = new File((File) null, fileName);
+        assertTrue("Assert 4: Created incorrect file " + f.getPath(), f
+                .getAbsolutePath().equals(dirName));
+        
+        // Regression for HARMONY-46
+        File f1 = new File("a");
+        File f2 = new File("a/");
+        assertEquals("Assert 5: Trailing slash file name is incorrect", f1, f2);
+    }
+    
+    /**
+     * @tests java.io.File#hashCode()
+     */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "hashCode",
+          methodArgs = {}
+        )
+    })
+    public void test_hashCode() {
+        // Regression for HARMONY-53
+        String mixedFname = "SoMe FiLeNaMe";
+        File mfile = new File(mixedFname);
+        File lfile = new File(mixedFname.toLowerCase());
 
-		if (mfile.equals(lfile)) {
-			assertTrue("Assert 0: wrong hashcode", mfile.hashCode() == lfile.hashCode());
-		} else {
-			assertFalse("Assert 1: wrong hashcode", mfile.hashCode() == lfile.hashCode());
-		}
-	}
+        if (mfile.equals(lfile)) {
+            assertTrue("Assert 0: wrong hashcode", mfile.hashCode() == lfile.hashCode());
+        } else {
+            assertFalse("Assert 1: wrong hashcode", mfile.hashCode() == lfile.hashCode());
+        }
+    }
 
     /**
      * @tests java.io.File#getPath()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getPath",
+          methodArgs = {}
+        )
+    })
     public void test_getPath() {
         // Regression for HARMONY-444
         File file;
@@ -103,6 +135,15 @@ public class FileTest extends TestCase {
     /**
      * @tests java.io.File#getPath()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getPath",
+          methodArgs = {}
+        )
+    })
     public void test_getPath_With_Empty_FileName() {
         // Regression for HARMONY-829
         String f1ParentName = "01";
@@ -126,6 +167,15 @@ public class FileTest extends TestCase {
     /**
      * @tests serialization/deserialization.
      */
+    @TestInfo(
+              level = TestLevel.COMPLETE,
+              purpose = "Verifies self serialization/deserialization.",
+              targets = {
+                @TestTarget(
+                  methodName = "!SerializationSelf",
+                  methodArgs = {}
+                )
+            })    
     public void test_serialization_self() throws Exception {
         File testFile = new File("test.ser");
         SerializationTest.verifySelf(testFile);
@@ -134,6 +184,15 @@ public class FileTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Verifies serialization/deserialization compatibility.",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationGolden",
+          methodArgs = {}
+        )
+    })
     public void test_serialization_compatibility() throws Exception {
         File file = new File("FileTest.golden.ser");
         SerializationTest.verifyGolden(this, file);

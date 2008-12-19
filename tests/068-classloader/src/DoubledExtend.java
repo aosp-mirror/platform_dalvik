@@ -1,11 +1,11 @@
-// Copyright 2008 Google Inc. All Rights Reserved.
+// Copyright 2008 The Android Open Source Project
 
 /**
  * Doubled sub-class, form #1.
  */
 public class DoubledExtend extends Base {
     public DoubledExtend() {
-        System.out.println("Ctor: doubled extend, type 1");
+        //System.out.println("Ctor: doubled extend, type 1");
     }
 
     @Override

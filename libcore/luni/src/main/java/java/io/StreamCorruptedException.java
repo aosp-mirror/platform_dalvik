@@ -18,31 +18,37 @@
 package java.io;
 
 /**
- * When readObject() cannot read an object from the input stream due to missing
- * information (cyclic reference that doesn't match previous instance or missing
- * class descriptor for instance to be loaded) this type of exception is thrown.
+ * Signals that the {@link ObjectInputStream#readObject()} method could not
+ * read an object due to missing information (for example, a cyclic reference
+ * that doesn't match a previous instance, or a missing class descriptor for the
+ * object to be loaded).
  * 
  * @see ObjectInputStream
  * @see OptionalDataException
  * 
+ * @since Android 1.0
  */
 public class StreamCorruptedException extends ObjectStreamException {
 
     private static final long serialVersionUID = 8983558202217591746L;
 
     /**
-     * Constructs a new instance of this class with its walkback filled in.
+     * Constructs a new {@code StreamCorruptedException} with its stack trace
+     * filled in.
+     * 
+     * @since Android 1.0
      */
     public StreamCorruptedException() {
         super();
     }
 
     /**
-     * Constructs a new instance of this class with its walkback and message
-     * filled in.
+     * Constructs a new {@code StreamCorruptedException} with its stack trace
+     * and detail message filled in.
      * 
      * @param detailMessage
-     *            the detail message for the exception.
+     *            the detail message for this exception.
+     * @since Android 1.0
      */
     public StreamCorruptedException(String detailMessage) {
         super(detailMessage);

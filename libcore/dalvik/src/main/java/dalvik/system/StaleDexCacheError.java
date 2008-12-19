@@ -17,19 +17,21 @@
 package dalvik.system;
 
 /**
- * This is thrown when the VM determines that a dex file's cache
- * is out of date, and that there is no way to recreate it.
+ * Is thrown when the VM determines that a DEX file's cache is out of date, and
+ * that there is no way to recreate it.
  */
 public class StaleDexCacheError extends VirtualMachineError {
     /**
-     * Initialize exception with default values.
+     * Creates a new exception instance and initializes it with default values.
      */
     public StaleDexCacheError() {
         super();
     }
 
     /**
-     * Initialize exception with the supplied message string.
+     * Creates a new exception instance and initializes it with a given message.
+     * 
+     * @param detailMessage the error message
      */
     public StaleDexCacheError(String detailMessage) {
         super(detailMessage);

@@ -15,18 +15,14 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vladimir N. Molotkov
-* @version $Revision$
-*/
-
 package java.security.spec;
 
 import org.apache.harmony.security.internal.nls.Messages;
 
 /**
- * @com.intel.drl.spec_ref
+ * The parameter specification used to generate elliptic curve domain parameters. 
  * 
+ * @since Android 1.0
  */
 public class ECGenParameterSpec implements AlgorithmParameterSpec {
     // Standard (or predefined) name for EC domain
@@ -34,7 +30,12 @@ public class ECGenParameterSpec implements AlgorithmParameterSpec {
     private final String name;
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code ECGenParameterSpec} with the specified standard or
+     * predefined name of the to-be-generated domain parameter.
+     * 
+     * @param name
+     *            the name of the elliptic curve domain parameter.
+     * @since Android 1.0
      */
     public ECGenParameterSpec(String name) {
         this.name = name;
@@ -44,7 +45,11 @@ public class ECGenParameterSpec implements AlgorithmParameterSpec {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the name (standard or predefined) of the to-be-generated elliptic
+     * curve domain parameter.
+     * 
+     * @return the name
+     * @since Android 1.0
      */
     public String getName() {
         return name;

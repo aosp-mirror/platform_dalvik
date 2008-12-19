@@ -17,6 +17,11 @@
 
 package org.apache.harmony.sql.tests.java.sql;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.Serializable;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
@@ -26,11 +31,21 @@ import org.apache.harmony.testframework.serialization.SerializationTest.Serializ
 
 import junit.framework.TestCase;
 
+@TestTargetClass(SQLWarning.class)
 public class SQLWarningTest extends TestCase {
 
     /*
      * ConstructorTest
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "SQLWarning",
+          methodArgs = {}
+        )
+    })
     public void testSQLWarning() {
 
         String[] theFinalStates1 = { null };
@@ -73,6 +88,15 @@ public class SQLWarningTest extends TestCase {
     /*
      * ConstructorTest
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "SQLWarning",
+          methodArgs = {String.class}
+        )
+    })
     public void testSQLWarningString() {
 
         String[] init1 = { "a", "1", "valid1", "----", "&valid*", null, 
@@ -121,6 +145,15 @@ public class SQLWarningTest extends TestCase {
     /*
      * ConstructorTest
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "SQLWarning",
+          methodArgs = {String.class, String.class}
+        )
+    })
     public void testSQLWarningStringString() {
 
         String[] init1 = { "a", "1", "valid1", "----", "&valid*", null, "",
@@ -170,6 +203,15 @@ public class SQLWarningTest extends TestCase {
     /*
      * ConstructorTest
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "SQLWarning",
+          methodArgs = {String.class, String.class, int.class}
+        )
+    })
     public void testSQLWarningStringStringint() {
 
         String[] init1 = { "a", "1", "valid1", "----", "&valid*", "----",
@@ -222,6 +264,15 @@ public class SQLWarningTest extends TestCase {
     /*
      * Method test for getNextWarning
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getNextWarning",
+          methodArgs = {}
+        )
+    })
     public void testGetNextWarning() {
 
         SQLWarning aSQLWarning;
@@ -271,6 +322,19 @@ public class SQLWarningTest extends TestCase {
     /*
      * Method test for setNextWarning
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setNextWarning",
+          methodArgs = {SQLWarning.class}
+        ),
+        @TestTarget(
+          methodName = "getNextWarning",
+          methodArgs = {}
+        )
+    })
     public void testSetNextWarningSQLWarning() {
 
         SQLWarning[] parm1 = { new SQLWarning(), null };
@@ -318,6 +382,19 @@ public class SQLWarningTest extends TestCase {
     /**
      * @tests java.sql.SQLWarning#setNextWarning(java.sql.SQLWarning)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setNextWarning",
+          methodArgs = {SQLWarning.class}
+        ),
+        @TestTarget(
+          methodName = "getNextWarning",
+          methodArgs = {}
+        )
+    })
     public void test_setNextWarning_SQLWarning() {
         SQLWarning sw = new SQLWarning("reason", "SQLState", 0);
         SQLWarning sw1 = new SQLWarning("reason", "SQLState", 1);
@@ -352,6 +429,15 @@ public class SQLWarningTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Serialization test",
+      targets = {
+        @TestTarget(
+          methodName = "SQLWarning",
+          methodArgs = {}
+        )
+    })
     public void testSerializationSelf() throws Exception {
         SQLWarning object = new SQLWarning();
         SerializationTest.verifySelf(object, SQLWARNING_COMPARATOR);
@@ -360,6 +446,15 @@ public class SQLWarningTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Serialization test",
+      targets = {
+        @TestTarget(
+          methodName = "SQLWarning",
+          methodArgs = {String.class, String.class, int.class}
+        )
+    })
     public void testSerializationCompatibility() throws Exception {
         SQLWarning object = new SQLWarning();
         

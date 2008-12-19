@@ -17,19 +17,34 @@
 
 package org.apache.harmony.annotation.tests.java.lang.annotation;
 
-import java.lang.annotation.RetentionPolicy;
-import java.util.Arrays;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
+
+import java.lang.annotation.RetentionPolicy;
+import java.util.Arrays;
 
 /**
  * Test case of java.lang.annotation.RetentionPolicy
  */
+@TestTargetClass(RetentionPolicy.class)
 public class RetentionPolicyTest extends TestCase {
     /**
      * @throws Exception
      * @tests java.lang.annotation.RetentionPolicy#valueOf(String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "valueOf",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     @SuppressWarnings("nls")
     public void test_valueOfLjava_lang_String() throws Exception {
         assertSame(RetentionPolicy.CLASS, RetentionPolicy
@@ -50,6 +65,15 @@ public class RetentionPolicyTest extends TestCase {
      * @throws Exception
      * @tests java.lang.annotation.RetentionPolicy#values()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "values",
+          methodArgs = {}
+        )
+    })
     @SuppressWarnings("nls")
     public void test_values() throws Exception {
         RetentionPolicy[] values = RetentionPolicy.values();

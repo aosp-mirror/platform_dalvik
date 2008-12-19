@@ -22,6 +22,11 @@
 
 package tests.java.security;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.security.AlgorithmParameters;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.SecureRandom;
@@ -36,7 +41,7 @@ import junit.framework.TestCase;
  * and methods.
  * 
  */
-
+@TestTargetClass(java.security.AlgorithmParameterGeneratorSpi.class)
 public class AlgorithmParameterGeneratorSpiTest extends TestCase {
 
     /**
@@ -52,6 +57,15 @@ public class AlgorithmParameterGeneratorSpiTest extends TestCase {
      * Test for <code>AlgorithmParameterGeneratorSpi</code> constructor
      * Assertion: constructs AlgorithmParameterGeneratorSpi
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "AlgorithmParameterGeneratorSpi",
+          methodArgs = {}
+        )
+    })
     public void testAlgorithmParameterGeneratorSpi01()
             throws InvalidAlgorithmParameterException {
         MyAlgorithmParameterGeneratorSpi algParGen = new MyAlgorithmParameterGeneratorSpi();

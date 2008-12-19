@@ -17,6 +17,11 @@
 
 package tests.api.java.lang.reflect;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.io.ByteArrayOutputStream;
 import java.io.CharArrayWriter;
 import java.io.PrintStream;
@@ -24,6 +29,7 @@ import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+@TestTargetClass(InvocationTargetException.class) 
 public class InvocationTargetExceptionTest extends junit.framework.TestCase {
 
     static class TestMethod {
@@ -110,6 +116,15 @@ public class InvocationTargetExceptionTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.InvocationTargetException#InvocationTargetException(java.lang.Throwable)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "InvocationTargetException",
+          methodArgs = {java.lang.Throwable.class}
+        )
+    })
     public void test_ConstructorLjava_lang_Throwable() {
         // Test for method
         // java.lang.reflect.InvocationTargetException(java.lang.Throwable)
@@ -131,6 +146,15 @@ public class InvocationTargetExceptionTest extends junit.framework.TestCase {
      * @tests java.lang.reflect.InvocationTargetException#InvocationTargetException(java.lang.Throwable,
      *        java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "InvocationTargetException",
+          methodArgs = {java.lang.Throwable.class, java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_ThrowableLjava_lang_String() {
         // Test for method
         // java.lang.reflect.InvocationTargetException(java.lang.Throwable,
@@ -153,6 +177,15 @@ public class InvocationTargetExceptionTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.InvocationTargetException#getTargetException()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getTargetException",
+          methodArgs = {}
+        )
+    })
     public void test_getTargetException() {
         // Test for method java.lang.Throwable
         // java.lang.reflect.InvocationTargetException.getTargetException()
@@ -175,6 +208,15 @@ public class InvocationTargetExceptionTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.InvocationTargetException#printStackTrace()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "printStackTrace",
+          methodArgs = {}
+        )
+    })
     public void test_printStackTrace() {
         // Test for method void
         // java.lang.reflect.InvocationTargetException.printStackTrace()
@@ -199,6 +241,15 @@ public class InvocationTargetExceptionTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.InvocationTargetException#printStackTrace(java.io.PrintStream)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "printStackTrace",
+          methodArgs = {java.io.PrintStream.class}
+        )
+    })
     public void test_printStackTraceLjava_io_PrintStream() {
         // Test for method void
         // java.lang.reflect.InvocationTargetException.printStackTrace(java.io.PrintStream)
@@ -216,6 +267,15 @@ public class InvocationTargetExceptionTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.InvocationTargetException#printStackTrace(java.io.PrintWriter)
      */
+    @TestInfo(
+            level = TestLevel.COMPLETE,
+            purpose = "",
+            targets = {
+              @TestTarget(
+                methodName = "printStackTrace",
+                methodArgs = {java.io.PrintWriter.class}
+              )
+          })    
     public void test_printStackTraceLjava_io_PrintWriter() {
         // Test for method void
         // java.lang.reflect.InvocationTargetException.printStackTrace(java.io.PrintWriter)

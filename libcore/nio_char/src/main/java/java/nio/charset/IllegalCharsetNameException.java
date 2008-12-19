@@ -20,12 +20,15 @@ package java.nio.charset;
 import org.apache.harmony.niochar.internal.nls.Messages;
 
 /**
- * Thrown when an illegal charset name is encountered.
+ * An {@code IllegalCharsetNameException} is thrown when an illegal charset name
+ * is encountered.
+ * 
+ * @since Android 1.0
  */
 public class IllegalCharsetNameException extends IllegalArgumentException {
 
     /*
-     * This constant is used during deserialization to check the J2SE version
+     * This constant is used during deserialization to check the version
      * which created the serialized object.
      */
     private static final long serialVersionUID = 1457525358470002989L;
@@ -34,10 +37,12 @@ public class IllegalCharsetNameException extends IllegalArgumentException {
     private String charsetName;
 
     /**
-     * Constructs an instance of this exception with the supplied charset name.
+     * Constructs a new {@code IllegalCharsetNameException} with the supplied
+     * charset name.
      * 
      * @param charset
-     *            the encountered illegal charset name
+     *            the encountered illegal charset name.
+     * @since Android 1.0
      */
     public IllegalCharsetNameException(String charset) {
         // niochar.0F=The illegal charset name is "{0}".
@@ -48,7 +53,8 @@ public class IllegalCharsetNameException extends IllegalArgumentException {
     /**
      * Gets the encountered illegal charset name.
      * 
-     * @return the encountered illegal charset name
+     * @return the encountered illegal charset name.
+     * @since Android 1.0
      */
     public String getCharsetName() {
         return this.charsetName;

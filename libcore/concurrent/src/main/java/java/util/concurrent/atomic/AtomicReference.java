@@ -21,7 +21,6 @@ public class AtomicReference<V>  implements java.io.Serializable {
     // BEGIN android-changed
     private static final Unsafe unsafe = UnsafeAccess.THE_ONE;
     // END android-changed
-
     private static final long valueOffset;
 
     static {

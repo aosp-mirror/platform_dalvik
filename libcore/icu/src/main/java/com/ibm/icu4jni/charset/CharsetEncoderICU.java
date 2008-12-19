@@ -22,7 +22,9 @@ import java.nio.charset.CoderResult;
 import java.nio.charset.CodingErrorAction;
 
 import com.ibm.icu4jni.common.ErrorCode;
-import com.ibm.icu4jni.converters.NativeConverter;
+// BEGIN android-removed
+// import com.ibm.icu4jni.converters.NativeConverter;
+// END android-removed
 
 public final class CharsetEncoderICU extends CharsetEncoder {
 

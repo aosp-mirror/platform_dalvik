@@ -18,17 +18,20 @@ package java.nio.channels;
 
 
 /**
- * Thrown when an attempt is made to connect a SocketChannel that has a
- * non-blocking connection already underway.
+ * A {@code ConnectionPendingException} is thrown when an attempt is made to
+ * connect a {@link SocketChannel} that has a non-blocking connection already
+ * underway.
  * 
+ * @since Android 1.0
  */
 public class ConnectionPendingException extends IllegalStateException {
 
     private static final long serialVersionUID = 2008393366501760879L;
 
     /**
-     * Default constructor.
+     * Constructs a {@code ConnectionPendingException}.
      * 
+     * @since Android 1.0
      */
     public ConnectionPendingException() {
         super();

@@ -23,21 +23,28 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 
 /**
- * This class is the superclass of all classes which can be thrown by
- * the virtual machine. The two direct subclasses represent
- * recoverable exceptions (Exception) and unrecoverable errors
- * (Error). This class provides common methods for accessing a string
- * message which provides extra information about the circumstances in
- * which the Throwable was created, and for filling in a stack trace
- * (i.e., a record of the call stack at a particular point in time)
- * which can be printed later.
+ * The superclass of all classes which can be thrown by the virtual machine. The
+ * two direct subclasses are recoverable exceptions ({@code Exception}) and
+ * unrecoverable errors ({@code Error}). This class provides common methods for
+ * accessing a string message which provides extra information about the
+ * circumstances in which the {@code Throwable} was created (basically an error
+ * message in most cases), and for saving a stack trace (that is, a record of
+ * the call stack at a particular point in time) which can be printed later.
+ * <p>
+ * A {@code Throwable} can also include a cause, which is a nested {@code
+ * Throwable} that represents the original problem that led to this {@code
+ * Throwable}. It is often used for wrapping various types of errors into a
+ * common {@code Throwable} without losing the detailed original error
+ * information. When printing the stack trace, the trace of the cause is
+ * included.
  * 
  * @see Error
  * @see Exception
  * @see RuntimeException
+ * 
+ * @since Android 1.0
  */
 public class Throwable implements java.io.Serializable {
-
     private static final long serialVersionUID = -3042686055658047285L;
 
     /**
@@ -49,12 +56,14 @@ public class Throwable implements java.io.Serializable {
      * The cause of this Throwable. Null when there is no cause.
      */
     private Throwable cause = this;
-    
+
+    // BEGIN android-added
     /**
      * An intermediate representation of the stack trace.  This field may
      * be accessed by the VM; do not rename.
      */
     private volatile Object stackState;
+    // END android-added
 
     /**
      * A fully-expanded representation of the stack trace.
@@ -62,7 +71,9 @@ public class Throwable implements java.io.Serializable {
     private StackTraceElement[] stackTrace;
 
     /**
-     * Constructs a new instance of this class with its stack trace filled in.
+     * Constructs a new {@code Throwable} that includes the current stack trace.
+     * 
+     * @since Android 1.0
      */
     public Throwable() {
         super();
@@ -70,10 +81,12 @@ public class Throwable implements java.io.Serializable {
     }
 
     /**
-     * Constructs a new instance of this class with its stack trace and message
-     * filled in.
+     * Constructs a new {@code Throwable} with the current stack trace and the
+     * specified detail message.
      * 
-     * @param detailMessage String The detail message for the exception.
+     * @param detailMessage
+     *            the detail message for this {@code Throwable}.
+     * @since Android 1.0
      */
     public Throwable(String detailMessage) {
         this();
@@ -81,11 +94,14 @@ public class Throwable implements java.io.Serializable {
     }
 
     /**
-     * Constructs a new instance of this class with its stack trace,
-     * message, and cause filled in.
+     * Constructs a new {@code Throwable} with the current stack trace, the
+     * specified detail message and the specified cause.
      * 
-     * @param detailMessage String The detail message for the exception.
-     * @param throwable The cause of this Throwable
+     * @param detailMessage
+     *            the detail message for this {@code Throwable}.
+     * @param throwable
+     *            the cause of this {@code Throwable}.
+     * @since Android 1.0
      */
     public Throwable(String detailMessage, Throwable throwable) {
         this();
@@ -94,10 +110,12 @@ public class Throwable implements java.io.Serializable {
     }
 
     /**
-     * Constructs a new instance of this class with its stack trace and cause
-     * filled in.
+     * Constructs a new {@code Throwable} with the current stack trace and the
+     * specified cause.
      * 
-     * @param throwable The cause of this Throwable
+     * @param throwable
+     *            the cause of this {@code Throwable}.
+     * @since Android 1.0
      */
     public Throwable(Throwable throwable) {
         this();
@@ -105,14 +123,15 @@ public class Throwable implements java.io.Serializable {
         cause = throwable;
     }
 
+    // BEGIN android-changed
     /**
-     * Records in the receiver a stack trace from the point where this
-     * message was sent. The method is public so that code which
-     * catches a throwable and then <em>re-throws</em> it can adjust
-     * the stack trace to represent the location where the exception
-     * was re-thrown.
+     * Records the stack trace from the point where this method has been called
+     * to this {@code Throwable}. The method is public so that code which
+     * catches a {@code Throwable} and then re-throws it can adjust the stack
+     * trace to represent the location where the exception was re-thrown.
      * 
-     * @return the receiver
+     * @return this {@code Throwable} instance.
+     * @since Android 1.0
      */
     public Throwable fillInStackTrace() {
         // Fill in the intermediate representation
@@ -121,46 +140,65 @@ public class Throwable implements java.io.Serializable {
         stackTrace = null;
         return this;
     }
+    // END android-changed
 
     /**
-     * Returns the extra information message which was provided when
-     * the throwable was created. If no message was provided at
-     * creation time, then return null.
+     * Returns the extra information message which was provided when this
+     * {@code Throwable} was created. Returns {@code null} if no message was
+     * provided at creation time.
      * 
-     * @return String The receiver's message.
+     * @return this {@code Throwable}'s detail message.
+     * @since Android 1.0
      */
     public String getMessage() {
         return detailMessage;
     }
 
     /**
-     * Returns the extra information message which was provided when
-     * the throwable was created. If no message was provided at
-     * creation time, then return null. Subclasses may override this
-     * method to return localized text for the message.
+     * Returns the extra information message which was provided when this
+     * {@code Throwable} was created. Returns {@code null} if no message was
+     * provided at creation time. Subclasses may override this method to return
+     * localized text for the message. The Android reference implementation
+     * returns the unlocalized detail message.
      * 
-     * @return String The receiver's message.
+     * @return this {@code Throwable}'s localized detail message.
+     * @since Android 1.0
      */
     public String getLocalizedMessage() {
         return getMessage();
     }
 
     /**
-     * Returns an array of StackTraceElement. Each StackTraceElement
-     * represents a entry on the stack.
+     * Returns the array of stack trace elements of this {@code Throwable}. Each
+     * {@code StackTraceElement} represents an entry in the call stack. The
+     * element at position 0 is the top of the stack, that is, the stack frame
+     * where this {@code Throwable} is thrown.
      * 
-     * @return an array of StackTraceElement representing the stack
+     * @return a copy of the array of {@code StackTraceElement}s representing
+     *         the call stack. Changes in the array obtained from this call will
+     *         not change the call stack stored in this {@code Throwable}.
+     * @see #printStackTrace()
+     * @since Android 1.0
      */
     public StackTraceElement[] getStackTrace() {
         return getInternalStackTrace().clone();
     }
 
     /**
-     * Sets the array of StackTraceElements. Each StackTraceElement
-     * represents a entry on the stack. A copy of this array will be
-     * returned by getStackTrace() and printed by printStackTrace().
+     * Sets the array of stack trace elements. Each {@code StackTraceElement}
+     * represents an entry in the call stack. A copy of the specified array is
+     * stored in this {@code Throwable}. will be returned by {@code
+     * getStackTrace()} and printed by {@code printStackTrace()}.
      * 
-     * @param trace The array of StackTraceElement
+     * @param trace
+     *            the new array of {@code StackTraceElement}s. A copy of the
+     *            array is stored in this {@code Throwable}, so subsequent
+     *            changes to {@code trace} will not change the call stack stored
+     *            in this {@code Throwable}.
+     * @throws NullPointerException
+     *             if any element in {@code trace} is {@code null}.
+     * @see #printStackTrace()
+     * @since Android 1.0
      */
     public void setStackTrace(StackTraceElement[] trace) {
         StackTraceElement[] newTrace = trace.clone();
@@ -173,8 +211,10 @@ public class Throwable implements java.io.Serializable {
     }
 
     /**
-     * Outputs a printable representation of the receiver's stack
-     * trace on the System.err stream.
+     * Writes a printable representation of this {@code Throwable}'s stack trace
+     * to the {@code System.err} stream.
+     * 
+     * @since Android 1.0
      */
     public void printStackTrace() {
         printStackTrace(System.err);
@@ -212,17 +252,23 @@ public class Throwable implements java.io.Serializable {
      */
     private StackTraceElement[] getInternalStackTrace() {
         if (stackTrace == null) {
+            // BEGIN android-changed
             stackTrace = nativeGetStackTrace(stackState);
             stackState = null; // Clean up intermediate representation
+            // END android-changed
         }
         return stackTrace;
     }
 
     /**
-     * Outputs a printable representation of the receiver's stack
-     * trace on the PrintStream specified by the argument.
+     * Writes a printable representation of this {@code Throwable}'s stack trace
+     * to the specified print stream. If the {@code Throwable} contains a
+     * {@link #getCause() cause}, the method will be invoked recursively for
+     * the nested {@code Throwable}.
      * 
-     * @param err PrintStream The stream to write the stack trace on.
+     * @param err
+     *            the stream to write the stack trace on.
+     * @since Android 1.0
      */
     public void printStackTrace(PrintStream err) {
         err.println(toString());
@@ -238,8 +284,7 @@ public class Throwable implements java.io.Serializable {
         while (throwable != null) {
             err.print("Caused by: ");
             err.println(throwable);
-            StackTraceElement[] currentStack =
-                throwable.getInternalStackTrace();
+            StackTraceElement[] currentStack = throwable.getInternalStackTrace();
             int duplicates = countDuplicates(currentStack, parentStack);
             for (int i = 0; i < currentStack.length - duplicates; i++) {
                 err.println("\tat " + currentStack[i]);
@@ -253,10 +298,14 @@ public class Throwable implements java.io.Serializable {
     }
 
     /**
-     * Outputs a printable representation of the receiver's stack
-     * trace on the PrintWriter specified by the argument.
+     * Writes a printable representation of this {@code Throwable}'s stack trace
+     * to the specified print writer. If the {@code Throwable} contains a
+     * {@link #getCause() cause}, the method will be invoked recursively for the
+     * nested {@code Throwable}.
      * 
-     * @param err PrintWriter The writer to write the stack trace on.
+     * @param err
+     *            the writer to write the stack trace on.
+     * @since Android 1.0
      */
     public void printStackTrace(PrintWriter err) {
         err.println(toString());
@@ -272,8 +321,7 @@ public class Throwable implements java.io.Serializable {
         while (throwable != null) {
             err.print("Caused by: ");
             err.println(throwable);
-            StackTraceElement[] currentStack =
-                throwable.getInternalStackTrace();
+            StackTraceElement[] currentStack = throwable.getInternalStackTrace();
             int duplicates = countDuplicates(currentStack, parentStack);
             for (int i = 0; i < currentStack.length - duplicates; i++) {
                 err.println("\tat " + currentStack[i]);
@@ -286,12 +334,6 @@ public class Throwable implements java.io.Serializable {
         }
     }
 
-    /**
-     * Returns a string containing a concise, human-readable description of the
-     * receiver.
-     * 
-     * @return String a printable representation for the receiver.
-     */
     @Override
     public String toString() {
         String msg = getLocalizedMessage();
@@ -299,22 +341,27 @@ public class Throwable implements java.io.Serializable {
         if (msg == null) {
             return name;
         }
-        return new StringBuffer(name.length() + 2 + msg.length()).
-            append(name).append(": ").append(msg).toString();
+        return new StringBuffer(name.length() + 2 + msg.length()).append(name).append(": ")
+                .append(msg).toString();
     }
 
     /**
-     * Initialize the cause of the receiver. The cause cannot be reassigned.
+     * Initializes the cause of this {@code Throwable}. The cause can only be
+     * initialized once.
      * 
-     * @param throwable The cause of this Throwable
-     * 
-     * @exception IllegalArgumentException when the cause is the receiver
-     * @exception IllegalStateException when the cause has already been
-     *            initialized
-     * 
-     * @return the receiver.
+     * @param throwable
+     *            the cause of this {@code Throwable}.
+     * @return this {@code Throwable} instance.
+     * @throws IllegalArgumentException
+     *             if {@code Throwable} is this object.
+     * @throws IllegalStateException
+     *             if the cause has already been initialized.
+     * @since Android 1.0
      */
     public Throwable initCause(Throwable throwable) {
+        // BEGIN android-note
+        // removed synchronized modifier
+        // END android-note
         if (cause == this) {
             if (throwable != this) {
                 cause = throwable;
@@ -326,9 +373,11 @@ public class Throwable implements java.io.Serializable {
     }
 
     /**
-     * Returns the cause of this Throwable, or null if there is no cause.
+     * Returns the cause of this {@code Throwable}, or {@code null} if there is
+     * no cause.
      * 
-     * @return Throwable The receiver's cause.
+     * @return Throwable this {@code Throwable}'s cause.
+     * @since Android 1.0
      */
     public Throwable getCause() {
         if (cause == this) {
@@ -343,6 +392,7 @@ public class Throwable implements java.io.Serializable {
         s.defaultWriteObject();
     }
 
+    // BEGIN android-added
     /*
      * Creates a compact, VM-specific collection of goodies, suitable for
      * storing in the "stackState" field, based on the current thread's
@@ -355,5 +405,6 @@ public class Throwable implements java.io.Serializable {
      * in "stackState".
      */
     native private static StackTraceElement[] nativeGetStackTrace(Object stackState);
+    // END android-added
 }
 

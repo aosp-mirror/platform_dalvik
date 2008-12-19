@@ -20,6 +20,9 @@
  *
  * This version supports the "new" ARM EABI.
  */
+
+#include <machine/cpu-features.h>
+
 #ifdef __ARM_EABI__
 
 #ifdef EXTENDED_EABI_DEBUG
@@ -254,7 +257,12 @@ DBG strcs   ip, [r8]                    @ DEBUG DEBUG
 
     @ Restore the registers we saved and return (restores lr into pc, and
     @ the initial stack pointer into sp).
+#ifdef __ARM_HAVE_PC_INTERWORK
     ldmdb   r4, {r4, r5, r6, r7, r8, r9, sp, pc}
+#else
+    ldmdb   r4, {r4, r5, r6, r7, r8, r9, sp, lr}
+    bx      lr
+#endif
     .fnend
 
 
@@ -384,7 +392,12 @@ common_squeak\num:
     ldr     r0, strSqueak
     mov     r1, #\num
     bl      printf
+#ifdef __ARM_HAVE_PC_INTERWORK
     ldmfd   sp!, {r0, r1, r2, r3, ip, pc}
+#else
+    ldmfd   sp!, {r0, r1, r2, r3, ip, lr}
+    bx      lr
+#endif
     .endm
 
     SQUEAK  0

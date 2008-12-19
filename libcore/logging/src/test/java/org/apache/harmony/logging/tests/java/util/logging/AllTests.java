@@ -32,10 +32,11 @@ public class AllTests {
         suite.addTestSuite(ErrorManagerTest.class);
         suite.addTestSuite(FileHandlerTest.class);
         suite.addTestSuite(FilterTest.class);
-        suite.addTestSuite(FormatterTest.class);
+//        suite.addTestSuite(FormatterTest.class);
         suite.addTestSuite(HandlerTest.class);
         suite.addTestSuite(LevelTest.class);
         suite.addTestSuite(LoggerTest.class);
+        suite.addTestSuite(LoggingMXBeanTest.class);
         suite.addTestSuite(LoggingPermissionTest.class);
         suite.addTestSuite(LogManagerTest.class);
         suite.addTestSuite(LogRecordTest.class);
@@ -44,6 +45,7 @@ public class AllTests {
         suite.addTestSuite(SocketHandlerTest.class);
         suite.addTestSuite(StreamHandlerTest.class);
         suite.addTestSuite(XMLFormatterTest.class);
+        suite.addTestSuite(MessagesTest.class);
         // $JUnit-END$
         return suite;
     }

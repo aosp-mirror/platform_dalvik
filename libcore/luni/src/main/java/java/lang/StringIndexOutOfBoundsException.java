@@ -21,38 +21,45 @@ package java.lang;
 import org.apache.harmony.luni.util.Msg;
 
 /**
- * This runtime exception is thrown when the a String is indexed with a value
- * less than zero, or greater than or equal to the size of the array.
+ * Thrown when the a string is indexed with a value less than zero, or greater
+ * than or equal to the size of the array.
+ * 
+ * @since Android 1.0
  */
 public class StringIndexOutOfBoundsException extends IndexOutOfBoundsException {
 
     private static final long serialVersionUID = -6762910422159637258L;
 
     /**
-     * Constructs a new instance of this class with its walkback filled in.
+     * Constructs a new {@code StringIndexOutOfBoundsException} that includes
+     * the current stack trace.
+     * 
+     * @since Android 1.0
      */
     public StringIndexOutOfBoundsException() {
         super();
     }
 
     /**
-     * Constructs a new instance of this class with its walkback and message
-     * (which is based on the argument which is the index which failed) filled
-     * in.
+     * Constructs a new {@code StringIndexOutOfBoundsException} with the current
+     * stack trace and a detail message that is based on the specified invalid
+     * {@code index}.
      * 
      * @param index
-     *            int the index which is out of bounds
-     */
+     *            the index which is out of bounds.
+     * @since Android 1.0
+     */    
     public StringIndexOutOfBoundsException(int index) {
         super(Msg.getString("K0055", index)); //$NON-NLS-1$
     }
 
     /**
-     * Constructs a new instance of this class with its walkback and message
-     * filled in.
+     * Constructs a new {@code StringIndexOutOfBoundsException} with the current
+     * stack trace and the specified detail message.
      * 
      * @param detailMessage
-     *            String The detail message for the exception.
+     *            the detail message for this exception.
+     * @since Android 1.0
      */
     public StringIndexOutOfBoundsException(String detailMessage) {
         super(detailMessage);

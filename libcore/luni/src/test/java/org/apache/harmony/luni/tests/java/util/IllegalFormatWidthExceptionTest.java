@@ -15,19 +15,34 @@
  */
 package org.apache.harmony.luni.tests.java.util;
 
-import java.io.Serializable;
-import java.util.IllegalFormatWidthException;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
+
+import java.io.Serializable;
+import java.util.IllegalFormatWidthException;
 
 import org.apache.harmony.testframework.serialization.SerializationTest;
 import org.apache.harmony.testframework.serialization.SerializationTest.SerializableAssert;
 
+@TestTargetClass(IllegalFormatWidthException.class) 
 public class IllegalFormatWidthExceptionTest extends TestCase {
 
     /**
      * @tests java.util.IllegalFormatWidthException#IllegalFormatWidthException(int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "IllegalFormatWidthException",
+          methodArgs = {int.class}
+        )
+    })
     public void test_illegalFormatWidthException() {
         int width = Integer.MAX_VALUE;
         IllegalFormatWidthException illegalFormatWidthException = new IllegalFormatWidthException(
@@ -39,6 +54,15 @@ public class IllegalFormatWidthExceptionTest extends TestCase {
     /**
      * @tests java.util.IllegalFormatWidthException#getWidth()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getWidth",
+          methodArgs = {}
+        )
+    })
     public void test_getWidth() {
         int width = 12345;
         IllegalFormatWidthException illegalFormatWidthException = new IllegalFormatWidthException(
@@ -50,6 +74,15 @@ public class IllegalFormatWidthExceptionTest extends TestCase {
     /**
      * @tests java.util.IllegalFormatWidthException#getMessage()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getMessage",
+          methodArgs = {}
+        )
+    })
     public void test_getMessage() {
         int width = 12345;
         IllegalFormatWidthException illegalFormatWidthException = new IllegalFormatWidthException(
@@ -76,6 +109,15 @@ public class IllegalFormatWidthExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization.
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationSelf",
+          methodArgs = {}
+        )
+    })
     public void testSerializationSelf() throws Exception {
 
         SerializationTest.verifySelf(new IllegalFormatWidthException(12345),
@@ -85,6 +127,15 @@ public class IllegalFormatWidthExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationGolden",
+          methodArgs = {}
+        )
+    })
     public void testSerializationCompatibility() throws Exception {
 
         SerializationTest.verifyGolden(this, new IllegalFormatWidthException(

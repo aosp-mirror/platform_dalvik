@@ -17,13 +17,28 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import junit.framework.TestCase;
 
+@TestTargetClass(InstantiationException.class) 
 public class InstantiationExceptionTest extends TestCase {
 
     /**
      * @tests java.lang.InstantiationException#InstantiationException()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "InstantiationException",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         InstantiationException e = new InstantiationException();
         assertNull(e.getMessage());
@@ -34,6 +49,15 @@ public class InstantiationExceptionTest extends TestCase {
     /**
      * @tests java.lang.InstantiationException#InstantiationException(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "InstantiationException",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() {
         InstantiationException e = new InstantiationException("fixture");
         assertEquals("fixture", e.getMessage());

@@ -22,11 +22,15 @@
 
 package org.apache.harmony.security.tests.java.security;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.security.InvalidAlgorithmParameterException;
 
 import junit.framework.TestCase;
-
-
+@TestTargetClass(InvalidAlgorithmParameterException.class)
 /**
  * Tests for <code>InvalidAlgorithmParameterException</code> class
  * constructors and methods.
@@ -58,6 +62,15 @@ public class InvalidAlgorithmParameterExceptionTest extends TestCase {
      * Assertion: constructs InvalidAlgorithmParameterException with no detail
      * message
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "InvalidAlgorithmParameterException",
+          methodArgs = {}
+        )
+    })
     public void testInvalidAlgorithmParameterException01() {
         InvalidAlgorithmParameterException tE = new InvalidAlgorithmParameterException();
         assertNull("getMessage() must return null.", tE.getMessage());
@@ -69,6 +82,15 @@ public class InvalidAlgorithmParameterExceptionTest extends TestCase {
      * constructor Assertion: constructs InvalidAlgorithmParameterException with
      * detail message msg. Parameter <code>msg</code> is not null.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "InvalidAlgorithmParameterException",
+          methodArgs = {String.class}
+        )
+    })
     public void testInvalidAlgorithmParameterException02() {
         InvalidAlgorithmParameterException tE;
         for (int i = 0; i < msgs.length; i++) {
@@ -84,6 +106,15 @@ public class InvalidAlgorithmParameterExceptionTest extends TestCase {
      * constructor Assertion: constructs InvalidAlgorithmParameterException when
      * <code>msg</code> is null
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "InvalidAlgorithmParameterException",
+          methodArgs = {String.class}
+        )
+    })
     public void testInvalidAlgorithmParameterException03() {
         String msg = null;
         InvalidAlgorithmParameterException tE = new InvalidAlgorithmParameterException(
@@ -97,6 +128,15 @@ public class InvalidAlgorithmParameterExceptionTest extends TestCase {
      * constructor Assertion: constructs InvalidAlgorithmParameterException when
      * <code>cause</code> is null
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "InvalidAlgorithmParameterException",
+          methodArgs = {Throwable.class}
+        )
+    })
     public void testInvalidAlgorithmParameterException04() {
         Throwable cause = null;
         InvalidAlgorithmParameterException tE = new InvalidAlgorithmParameterException(
@@ -110,6 +150,15 @@ public class InvalidAlgorithmParameterExceptionTest extends TestCase {
      * constructor Assertion: constructs InvalidAlgorithmParameterException when
      * <code>cause</code> is not null
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "InvalidAlgorithmParameterException",
+          methodArgs = {Throwable.class}
+        )
+    })
     public void testInvalidAlgorithmParameterException05() {
         InvalidAlgorithmParameterException tE = new InvalidAlgorithmParameterException(
                 tCause);
@@ -130,6 +179,15 @@ public class InvalidAlgorithmParameterExceptionTest extends TestCase {
      * constructor Assertion: constructs InvalidAlgorithmParameterException when
      * <code>cause</code> is null <code>msg</code> is null
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "InvalidAlgorithmParameterException",
+          methodArgs = {String.class, Throwable.class}
+        )
+    })
     public void testInvalidAlgorithmParameterException06() {
         InvalidAlgorithmParameterException tE = new InvalidAlgorithmParameterException(
                 null, null);
@@ -143,6 +201,15 @@ public class InvalidAlgorithmParameterExceptionTest extends TestCase {
      * constructor Assertion: constructs InvalidAlgorithmParameterException when
      * <code>cause</code> is null <code>msg</code> is not null
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "InvalidAlgorithmParameterException",
+          methodArgs = {String.class, Throwable.class}
+        )
+    })
     public void testInvalidAlgorithmParameterException07() {
         InvalidAlgorithmParameterException tE;
         for (int i = 0; i < msgs.length; i++) {
@@ -159,6 +226,15 @@ public class InvalidAlgorithmParameterExceptionTest extends TestCase {
      * constructor Assertion: constructs InvalidAlgorithmParameterException when
      * <code>cause</code> is not null <code>msg</code> is null
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "InvalidAlgorithmParameterException",
+          methodArgs = {String.class, Throwable.class}
+        )
+    })
     public void testInvalidAlgorithmParameterException08() {
         InvalidAlgorithmParameterException tE = new InvalidAlgorithmParameterException(
                 null, tCause);
@@ -179,6 +255,15 @@ public class InvalidAlgorithmParameterExceptionTest extends TestCase {
      * constructor Assertion: constructs InvalidAlgorithmParameterException when
      * <code>cause</code> is not null <code>msg</code> is not null
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "InvalidAlgorithmParameterException",
+          methodArgs = {String.class, Throwable.class}
+        )
+    })
     public void testInvalidAlgorithmParameterException09() {
         InvalidAlgorithmParameterException tE;
         for (int i = 0; i < msgs.length; i++) {

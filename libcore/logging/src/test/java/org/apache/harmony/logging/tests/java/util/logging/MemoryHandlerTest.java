@@ -17,12 +17,18 @@
 
 package org.apache.harmony.logging.tests.java.util.logging;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.StringWriter;
 import java.security.Permission;
 import java.util.Properties;
+import java.util.ResourceBundle;
 import java.util.logging.Filter;
 import java.util.logging.Formatter;
 import java.util.logging.Handler;
@@ -41,6 +47,7 @@ import org.apache.harmony.logging.tests.java.util.logging.util.EnvironmentHelper
 /**
  * 
  */
+@TestTargetClass(MemoryHandler.class)
 public class MemoryHandlerTest extends TestCase {
 
     final static LogManager manager = LogManager.getLogManager();
@@ -100,7 +107,41 @@ public class MemoryHandlerTest extends TestCase {
         System.setErr(err);        
     }
 
-    public void testSecurity() {
+    @TestInfo(
+            level = TestLevel.COMPLETE,
+            purpose = "SecurityException",
+            targets = {
+              @TestTarget(
+                methodName = "close",
+                methodArgs = {}
+              ),
+              @TestTarget(
+                      methodName = "setPushLevel",
+                      methodArgs = {Level.class}
+              ),
+              @TestTarget(
+                      methodName = "flush",
+                      methodArgs = {}
+              ),
+              @TestTarget(
+                      methodName = "push",
+                      methodArgs = {}
+              ),
+              @TestTarget(
+                      methodName = "getPushLevel",
+                      methodArgs = {}
+              ),
+              @TestTarget(
+                      methodName = "isLoggable",
+                      methodArgs = {LogRecord.class}
+              ),
+              @TestTarget(
+                methodName = "publish",
+                methodArgs = {LogRecord.class}
+              )
+              
+          })
+    public void testGlobalSecurity() {
         SecurityManager currentManager = System.getSecurityManager();
         System.setSecurityManager(securityManager);
         try {
@@ -125,6 +166,15 @@ public class MemoryHandlerTest extends TestCase {
 
     }
 
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "not a good test, try to improve",
+            targets = {
+              @TestTarget(
+                methodName = "close",
+                methodArgs = {}
+              )
+          })
     public void testClose() {
         Filter filter = handler.getFilter();
         Formatter formatter = handler.getFormatter();
@@ -140,6 +190,15 @@ public class MemoryHandlerTest extends TestCase {
         assertFalse(handler.isLoggable(new LogRecord(Level.SEVERE, "test")));
     }
 
+    @TestInfo(
+            level = TestLevel.COMPLETE,
+            purpose = "not a good test, try to improve",
+            targets = {
+              @TestTarget(
+                methodName = "flush",
+                methodArgs = {}
+              )
+          })
     public void testFlush() {
         Filter filter = handler.getFilter();
         Formatter formatter = handler.getFormatter();
@@ -155,6 +214,15 @@ public class MemoryHandlerTest extends TestCase {
         assertTrue(handler.isLoggable(new LogRecord(Level.SEVERE, "test")));
     }
 
+    @TestInfo(
+            level = TestLevel.COMPLETE,
+            purpose = "",
+            targets = {
+              @TestTarget(
+                methodName = "isLoggable",
+                methodArgs = {LogRecord.class}
+              ) 
+          })
     public void testIsLoggable() {
         try {
             handler.isLoggable(null);
@@ -165,9 +233,13 @@ public class MemoryHandlerTest extends TestCase {
         LogRecord record = new LogRecord(Level.FINER, "MSG1");
         assertFalse(handler.isLoggable(record));
 
+
         record = new LogRecord(Level.FINE, "MSG2");
         assertTrue(handler.isLoggable(record));
-
+        assertTrue(handler.isLoggable(new LogRecord(Level.INFO, "1")));
+        assertTrue(handler.isLoggable(new LogRecord(Level.WARNING, "2")));
+        assertTrue(handler.isLoggable(new LogRecord(Level.SEVERE, "3")));
+        
         record = new LogRecord(Level.CONFIG, "MSG3");
         assertTrue(handler.isLoggable(record));
 
@@ -182,7 +254,15 @@ public class MemoryHandlerTest extends TestCase {
     /*
      * Class under test for void MemoryHandler()
      */
-    public void testMemoryHandler() {
+    @TestInfo
+    (level = TestLevel.PARTIAL, 
+            purpose = "check errors", 
+            targets = 
+            {
+            @TestTarget(methodName = "MemoryHandler", methodArgs = {})
+            }
+     )
+    public void testMemoryHandler() throws IOException {
         assertNotNull("Filter should not be null", handler.getFilter());
         assertNotNull("Formatter should not be null", handler.getFormatter());
         assertNull("character encoding should be null", handler.getEncoding());
@@ -191,8 +271,31 @@ public class MemoryHandlerTest extends TestCase {
         assertEquals("Level should be FINE", Level.FINE, handler.getLevel());
         assertEquals("Level should be WARNING", Level.WARNING, handler
                 .getPushLevel());
+
+        props.clear();
+        props.put("java.util.logging.MemoryHandler.target", baseClassName
+                + "$MockHandler");
+
+        manager.readConfiguration(EnvironmentHelper
+                .PropertiesToInputStream(props));
+        handler = new MemoryHandler();
+        assertNull(handler.getFilter());
+        assertTrue(handler.getFormatter() instanceof SimpleFormatter);
+        assertNull(handler.getEncoding());
+        assertNotNull(handler.getErrorManager());
+        assertEquals(handler.getLevel(), Level.ALL);
+        assertEquals(handler.getPushLevel(), Level.SEVERE);
+ 
     }
 
+    @TestInfo
+    (level = TestLevel.COMPLETE, 
+            purpose = "", 
+            targets = 
+            {
+            @TestTarget(methodName = "MemoryHandler", methodArgs = {})
+            }
+     )
     public void testMemoryHandlerInvalidProps() throws IOException {
         // null target
         try {
@@ -260,6 +363,14 @@ public class MemoryHandlerTest extends TestCase {
 
     }
 
+    @TestInfo
+    (level = TestLevel.COMPLETE, 
+            purpose = "", 
+            targets = 
+            {
+            @TestTarget(methodName = "MemoryHandler", methodArgs = {})
+            }
+     )
     public void testMemoryHandlerDefaultValue() throws SecurityException,
             IOException {
         props.clear();
@@ -280,6 +391,14 @@ public class MemoryHandlerTest extends TestCase {
     /*
      * Class under test for void MemoryHandler(Handler, int, Level)
      */
+    @TestInfo
+    (level = TestLevel.COMPLETE, 
+            purpose = "", 
+            targets = 
+            {
+            @TestTarget(methodName = "MemoryHandler", methodArgs = {Handler.class, int.class, Level.class})
+            }
+     )
     public void testMemoryHandlerHandlerintLevel() {
         handler = new MemoryHandler(target, 2, Level.FINEST);
         assertNotNull("Filter should not be null", handler.getFilter());
@@ -314,6 +433,14 @@ public class MemoryHandlerTest extends TestCase {
 
     }
 
+    @TestInfo
+    (level = TestLevel.COMPLETE, 
+            purpose = "", 
+            targets = 
+            {
+            @TestTarget(methodName = "getPushLevel", methodArgs = {})
+            }
+     )
     public void testGetPushLevel() {
         try {
             handler.setPushLevel(null);
@@ -324,6 +451,14 @@ public class MemoryHandlerTest extends TestCase {
         assertEquals(handler.getPushLevel(), Level.parse("123"));
     }
 
+    @TestInfo
+    (level = TestLevel.COMPLETE, 
+            purpose = "", 
+            targets = 
+            {
+            @TestTarget(methodName = "setPushLevel", methodArgs = {Level.class})
+            }
+     )
     public void testSetPushLevel() {
         // change push level don't trigger push action
         writer.getBuffer().setLength(0);
@@ -331,7 +466,6 @@ public class MemoryHandlerTest extends TestCase {
         assertTrue(handler.isLoggable(lr));
         handler.publish(lr);
         assertEquals(writer.toString(), "");
-        // assertEquals(writer.toString(), "flush");
         writer.getBuffer().setLength(0);
         handler.setPushLevel(Level.FINE);
         assertEquals(writer.toString(), "");
@@ -339,6 +473,14 @@ public class MemoryHandlerTest extends TestCase {
         assertEquals(writer.toString(), lr.getMessage() + lr.getMessage());
     }
 
+    @TestInfo
+    (level = TestLevel.COMPLETE, 
+            purpose = "", 
+            targets = 
+            {
+            @TestTarget(methodName = "push", methodArgs = {})
+            }
+     )
     public void testPushPublic() {
         writer.getBuffer().setLength(0);
         // loggable but don't trig push

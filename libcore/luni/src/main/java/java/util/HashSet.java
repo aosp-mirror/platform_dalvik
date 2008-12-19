@@ -24,8 +24,10 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
 /**
- * HashSet is an implementation of Set. All optional operations are supported,
- * adding and removing. The elements can be any objects.
+ * HashSet is an implementation of a Set. All optional operations (adding and
+ * removing) are supported. The elements can be any objects.
+ * 
+ * @since Android 1.0
  */
 public class HashSet<E> extends AbstractSet<E> implements Set<E>, Cloneable,
         Serializable {
@@ -35,41 +37,46 @@ public class HashSet<E> extends AbstractSet<E> implements Set<E>, Cloneable,
     transient HashMap<E, HashSet<E>> backingMap;
 
     /**
-     * Constructs a new empty instance of HashSet.
+     * Constructs a new empty instance of {@code HashSet}.
+     * 
+     * @since Android 1.0
      */
     public HashSet() {
         this(new HashMap<E, HashSet<E>>());
     }
 
     /**
-     * Constructs a new instance of HashSet with the specified capacity.
+     * Constructs a new instance of {@code HashSet} with the specified capacity.
      * 
      * @param capacity
-     *            the initial capacity of this HashSet
+     *            the initial capacity of this {@code HashSet}.
+     * @since Android 1.0
      */
     public HashSet(int capacity) {
         this(new HashMap<E, HashSet<E>>(capacity));
     }
 
     /**
-     * Constructs a new instance of HashSet with the specified capacity and load
-     * factor.
+     * Constructs a new instance of {@code HashSet} with the specified capacity
+     * and load factor.
      * 
      * @param capacity
-     *            the initial capacity
+     *            the initial capacity.
      * @param loadFactor
-     *            the initial load factor
+     *            the initial load factor.
+     * @since Android 1.0
      */
     public HashSet(int capacity, float loadFactor) {
         this(new HashMap<E, HashSet<E>>(capacity, loadFactor));
     }
 
     /**
-     * Constructs a new instance of HashSet containing the unique elements in
-     * the specified collection.
+     * Constructs a new instance of {@code HashSet} containing the unique
+     * elements in the specified collection.
      * 
      * @param collection
-     *            the collection of elements to add
+     *            the collection of elements to add.
+     * @since Android 1.0
      */
     public HashSet(Collection<? extends E> collection) {
         this(new HashMap<E, HashSet<E>>(collection.size() < 6 ? 11 : collection.size() * 2));
@@ -83,12 +90,13 @@ public class HashSet<E> extends AbstractSet<E> implements Set<E>, Cloneable,
     }
 
     /**
-     * Adds the specified object to this HashSet.
+     * Adds the specified object to this {@code HashSet} if not already present.
      * 
      * @param object
-     *            the object to add
-     * @return true when this HashSet did not already contain the object, false
-     *         otherwise
+     *            the object to add.
+     * @return {@code true} when this {@code HashSet} did not already contain
+     *         the object, {@code false} otherwise
+     * @since Android 1.0
      */
     @Override
     public boolean add(E object) {
@@ -96,10 +104,11 @@ public class HashSet<E> extends AbstractSet<E> implements Set<E>, Cloneable,
     }
 
     /**
-     * Removes all elements from this HashSet, leaving it empty.
+     * Removes all elements from this {@code HashSet}, leaving it empty.
      * 
      * @see #isEmpty
      * @see #size
+     * @since Android 1.0
      */
     @Override
     public void clear() {
@@ -107,11 +116,12 @@ public class HashSet<E> extends AbstractSet<E> implements Set<E>, Cloneable,
     }
 
     /**
-     * Returns a new HashSet with the same elements and size as this HashSet.
+     * Returns a new {@code HashSet} with the same elements and size as this
+     * {@code HashSet}.
      * 
-     * @return a shallow copy of this HashSet
-     * 
+     * @return a shallow copy of this {@code HashSet}.
      * @see java.lang.Cloneable
+     * @since Android 1.0
      */
     @Override
     @SuppressWarnings("unchecked")
@@ -126,12 +136,13 @@ public class HashSet<E> extends AbstractSet<E> implements Set<E>, Cloneable,
     }
 
     /**
-     * Searches this HashSet for the specified object.
+     * Searches this {@code HashSet} for the specified object.
      * 
      * @param object
-     *            the object to search for
-     * @return true if <code>object</code> is an element of this HashSet,
-     *         false otherwise
+     *            the object to search for.
+     * @return {@code true} if {@code object} is an element of this
+     *         {@code HashSet}, {@code false} otherwise.
+     * @since Android 1.0
      */
     @Override
     public boolean contains(Object object) {
@@ -139,11 +150,12 @@ public class HashSet<E> extends AbstractSet<E> implements Set<E>, Cloneable,
     }
 
     /**
-     * Returns if this HashSet has no elements, a size of zero.
+     * Returns true if this {@code HashSet} has no elements, false otherwise.
      * 
-     * @return true if this HashSet has no elements, false otherwise
-     * 
+     * @return {@code true} if this {@code HashSet} has no elements,
+     *         {@code false} otherwise.
      * @see #size
+     * @since Android 1.0
      */
     @Override
     public boolean isEmpty() {
@@ -151,11 +163,11 @@ public class HashSet<E> extends AbstractSet<E> implements Set<E>, Cloneable,
     }
 
     /**
-     * Returns an Iterator on the elements of this HashSet.
+     * Returns an Iterator on the elements of this {@code HashSet}.
      * 
-     * @return an Iterator on the elements of this HashSet
-     * 
+     * @return an Iterator on the elements of this {@code HashSet}.
      * @see Iterator
+     * @since Android 1.0
      */
     @Override
     public Iterator<E> iterator() {
@@ -163,11 +175,12 @@ public class HashSet<E> extends AbstractSet<E> implements Set<E>, Cloneable,
     }
 
     /**
-     * Removes an occurrence of the specified object from this HashSet.
+     * Removes the specified object from this {@code HashSet}.
      * 
      * @param object
-     *            the object to remove
-     * @return true if this HashSet is modified, false otherwise
+     *            the object to remove.
+     * @return {@code true} if the object was removed, {@code false} otherwise.
+     * @since Android 1.0
      */
     @Override
     public boolean remove(Object object) {
@@ -175,9 +188,10 @@ public class HashSet<E> extends AbstractSet<E> implements Set<E>, Cloneable,
     }
 
     /**
-     * Returns the number of elements in this HashSet.
+     * Returns the number of elements in this {@code HashSet}.
      * 
-     * @return the number of elements in this HashSet
+     * @return the number of elements in this {@code HashSet}.
+     * @since Android 1.0
      */
     @Override
     public int size() {

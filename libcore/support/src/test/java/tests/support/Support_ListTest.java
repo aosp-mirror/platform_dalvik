@@ -17,11 +17,14 @@
 
 package tests.support;
 
+import dalvik.annotation.TestTargetClass;
+
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
 
+@TestTargetClass(List.class)
 public class Support_ListTest extends junit.framework.TestCase {
 
     List<Integer> list; // must contain the Integers 0 to 99 in order

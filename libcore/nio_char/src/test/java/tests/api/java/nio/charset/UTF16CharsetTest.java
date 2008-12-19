@@ -16,9 +16,15 @@
 
 package tests.api.java.nio.charset;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestLevel;
+
 /**
  * Test UTF-16.
  */
+@TestTargetClass(java.nio.charset.Charset.class)
 public class UTF16CharsetTest extends AbstractCharsetTestCase {
 
     /**
@@ -33,6 +39,15 @@ public class UTF16CharsetTest extends AbstractCharsetTestCase {
      * 
      * @see tests.api.java.nio.charset.ConcreteCharsetTest#testEncode_Normal()
      */
+    @TestInfo(
+              level = TestLevel.TODO,
+              purpose = "Empty test.",
+              targets = {
+                @TestTarget(
+                  methodName = "",
+                  methodArgs = {}
+                )
+            })
     public void testEncode_Normal() {
         // TODO Auto-generated method stub
 
@@ -43,6 +58,15 @@ public class UTF16CharsetTest extends AbstractCharsetTestCase {
      * 
      * @see tests.api.java.nio.charset.ConcreteCharsetTest#testDecode_Normal()
      */
+    @TestInfo(
+            level = TestLevel.TODO,
+            purpose = "Empty test.",
+            targets = {
+              @TestTarget(
+                methodName = "",
+                methodArgs = {}
+              )
+          })
     public void testDecode_Normal() {
         // TODO Auto-generated method stub
 

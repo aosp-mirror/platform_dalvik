@@ -16,15 +16,21 @@
 
 package tests.security.permissions;
 
-import java.security.Permission;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
+
+import java.security.Permission;
 
 /*
  * This class tests the secrity permissions which are documented in
  * http://java.sun.com/j2se/1.5.0/docs/guide/security/permissions.html#PermsAndMethods
  * for class java.lang.ClassLoader
  */
+@TestTargetClass(SecurityManager.class)
 public class JavaLangClassLoaderTest extends TestCase {
     
     SecurityManager old;
@@ -41,7 +47,16 @@ public class JavaLangClassLoaderTest extends TestCase {
         super.tearDown();
     }
     
-    
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies that ClassLoader constructor calls " +
+            "checkCreateClassLoader of security manager.",
+      targets = {
+        @TestTarget(
+          methodName = "checkCreateClassLoader",
+          methodArgs = {}
+        )
+    })
     public void test_ClassLoaderCtor () {
         class TestSecurityManager extends SecurityManager {
             boolean called;
@@ -72,6 +87,16 @@ public class JavaLangClassLoaderTest extends TestCase {
         assertTrue("ClassLoader ctor must call checkCreateClassLoader on security manager", s.called);
     }
     
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies that ClassLoader.getSystemClassLoader() checks " +
+            "RuntimePermission(getClassLoader) of security manager.",
+      targets = {
+        @TestTarget(
+          methodName = "checkPermission",
+          methodArgs = {java.security.Permission.class}
+        )
+    })
     public void test_getSystemClassLoader () {
         class TestSecurityManager extends SecurityManager {
             boolean called;

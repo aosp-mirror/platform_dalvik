@@ -14,14 +14,14 @@ HANDLE_OPCODE(OP_INSTANCE_OF /*vA, vB, class@CCCC*/)
         } else {
 #if defined(WITH_EXTRA_OBJECT_VALIDATION)
             if (!checkForNullExportPC(obj, fp, pc))
-                GOTO(exceptionThrown);
+                GOTO_exceptionThrown();
 #endif
             clazz = dvmDexGetResolvedClass(methodClassDex, ref);
             if (clazz == NULL) {
                 EXPORT_PC();
-                clazz = dvmResolveClass(method->clazz, ref, true);
+                clazz = dvmResolveClass(curMethod->clazz, ref, true);
                 if (clazz == NULL)
-                    GOTO(exceptionThrown);
+                    GOTO_exceptionThrown();
             }
             SET_REGISTER(vdst, dvmInstanceof(obj->clazz, clazz));
         }

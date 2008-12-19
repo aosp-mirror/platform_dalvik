@@ -18,41 +18,66 @@
 package java.lang.reflect;
 
 /**
- * Represents a parameterized type.
+ * This interface represents a parameterized type such as {@code 
+ * 'Set&lt;String&gt;'}.
  * 
  * @since 1.5
+ * @since Android 1.0
  */
 public interface ParameterizedType extends Type {
 
     /**
-     * Gets the type arguments for this type.
+     * Returns an array of the actual type arguments for this type.
+     * <p>
+     * If this type models a non parameterized type nested within a
+     * parameterized type, this method returns a zero length array. The generic
+     * type of the following {@code field} declaration is an example for a
+     * parameterized type without type arguments.
      * 
-     * @return An array of {@link Type}, which may be empty.
+     * <pre>
+     * A&lt;String&gt;.B field;
+     * 
+     * class A&lt;T&gt; {
+     *     class B {
+     *     }
+     * }</pre>
+     * 
+     * 
+     * @return the actual type arguments
+     * 
      * @throws TypeNotPresentException
-     *             if one of the type arguments can't be found.
+     *             if one of the type arguments cannot be found
      * @throws MalformedParameterizedTypeException
-     *             if one of the type arguments can't be instantiated for some
-     *             reason.
+     *             if one of the type arguments cannot be instantiated for some
+     *             reason
+     * 
+     * @since Android 1.0
      */
     Type[] getActualTypeArguments();
 
     /**
-     * Gets the parent/owner type, if this type is an inner type, otherwise
-     * <code>null</code> is returned if this is a top-level type.
+     * Returns the parent / owner type, if this type is an inner type, otherwise
+     * {@code null} is returned if this is a top-level type.
      * 
-     * @return An instance of {@link Type} or <code>null</code>.
+     * @return the owner type or {@code null} if this is a top-level type
+     * 
      * @throws TypeNotPresentException
-     *             if one of the type arguments can't be found.
+     *             if one of the type arguments cannot be found
      * @throws MalformedParameterizedTypeException
-     *             if one of the type arguments can't be instantiated for some
-     *             reason.
+     *             if the owner type cannot be instantiated for some reason
+     * 
+     * @since Android 1.0
      */
     Type getOwnerType();
 
     /**
-     * Gets the raw type of this type.
+     * Returns the declaring type of this parameterized type.
+     * <p>
+     * The raw type of {@code Set&lt;String&gt; field;} is {@code Set}.
      * 
-     * @return An instance of {@link Type}.
+     * @return the raw type of this parameterized type
+     * 
+     * @since Android 1.0
      */
     Type getRawType();
 }

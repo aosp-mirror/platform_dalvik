@@ -17,13 +17,28 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import junit.framework.TestCase;
 
+@TestTargetClass(ThreadLocal.class) 
 public class ThreadLocalTest extends TestCase {
 
     /**
      * @tests java.lang.ThreadLocal#ThreadLocal()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "ThreadLocal",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         try {
             new ThreadLocal<Object>();
@@ -35,6 +50,15 @@ public class ThreadLocalTest extends TestCase {
     /**
      * @tests java.lang.ThreadLocal#remove()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "remove",
+          methodArgs = {}
+        )
+    })
     public void test_remove() {
         ThreadLocal<String> tl = new ThreadLocal<String>() {
             @Override
@@ -53,6 +77,15 @@ public class ThreadLocalTest extends TestCase {
     /**
      * @tests java.lang.ThreadLocal#get()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "get",
+          methodArgs = {}
+        )
+    })
     public void test_get() {
         // Test for method java.lang.Object java.lang.ThreadLocal.get()
         ThreadLocal<Object> l = new ThreadLocal<Object>();
@@ -113,6 +146,15 @@ public class ThreadLocalTest extends TestCase {
     /**
      * @tests java.lang.ThreadLocal#set(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "set",
+          methodArgs = {Object.class}
+        )
+    })
     public void test_setLjava_lang_Object() {
         // Test for method void java.lang.ThreadLocal.set(java.lang.Object)
 
@@ -155,6 +197,15 @@ public class ThreadLocalTest extends TestCase {
     /**
      * @tests java.lang.InheritableThreadLocal
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "this test is for InheritableThreadLocal class.",
+      targets = {
+        @TestTarget(
+          methodName = "ThreadLocal",
+          methodArgs = {}
+        )
+    })
     public void test_Ljava_lang_InheritableThreadLocal()
             throws InterruptedException {
         final Object value = new Object();

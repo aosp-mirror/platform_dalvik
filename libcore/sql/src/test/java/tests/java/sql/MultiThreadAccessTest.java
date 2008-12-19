@@ -16,6 +16,11 @@
 
 package tests.java.sql;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -32,6 +37,7 @@ import junit.framework.TestSuite;
 
 import tests.support.ThreadPool;
 
+@TestTargetClass(Statement.class)
 public class MultiThreadAccessTest extends TestCase {
 
     private static Connection conn;
@@ -127,6 +133,16 @@ public class MultiThreadAccessTest extends TestCase {
      * 
      * @throws SQLException
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Functionality test: A few threads execute select operation " + 
+                "in the same time for one table in the database.",
+      targets = {
+        @TestTarget(
+          methodName = "executeQuery",
+          methodArgs = {String.class}
+        )
+    })
     public void test_MultipleAccessToOneTable() throws SQLException {
         for (int i = 0; i < numThreads; i++) {
             threadPool.runTask(createTask1(i));
@@ -140,6 +156,16 @@ public class MultiThreadAccessTest extends TestCase {
      * 
      * @throws SQLException
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Functionality test: A few threads execute select operation " +
+                  "in the same time for different tables in the database",
+      targets = {
+        @TestTarget(
+          methodName = "executeQuery",
+          methodArgs = {String.class}
+        )
+    })
     public void test_MultipleAccessToSeveralTables() throws SQLException {
         threadPool.runTask(createTask1(1));
         threadPool.runTask(createTask2(2));
@@ -153,6 +179,16 @@ public class MultiThreadAccessTest extends TestCase {
      * 
      * @throws SQLException
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Functionality test: A few threads execute update, insert " + 
+                "and delete operations in the same time for one table in the database",
+      targets = {
+        @TestTarget(
+          methodName = "executeQuery",
+          methodArgs = {String.class}
+        )
+    })
     public void test_MultipleOperationsInSeveralTables() throws SQLException {
         int id1 = numOfRecords - 1;
         threadPool.runTask(createTask4(id1));
@@ -208,6 +244,16 @@ public class MultiThreadAccessTest extends TestCase {
      * 
      * @throws SQLException
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Functional test: A few threads execute update operation " +
+                "in the same time for one tables in the database",
+      targets = {
+        @TestTarget(
+          methodName = "executeQuery",
+          methodArgs = {String.class}
+        )
+    })
     public void test_MultipleUpdatesInOneTables() throws SQLException {
         int id = 1;
         String field = "field3";

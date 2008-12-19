@@ -25,14 +25,15 @@ void dvmInstanceofShutdown(void);
 
 
 /* used by dvmInstanceof; don't call */
-int dvmInstanceofNonTrivial(ClassObject* instance, ClassObject* clazz);
+int dvmInstanceofNonTrivial(const ClassObject* instance,
+    const ClassObject* clazz);
 
 /*
  * Determine whether "instance" is an instance of "clazz".
  *
  * Returns 0 (false) if not, 1 (true) if so.
  */
-INLINE int dvmInstanceof(ClassObject* instance, ClassObject* clazz)
+INLINE int dvmInstanceof(const ClassObject* instance, const ClassObject* clazz)
 {
     if (instance == clazz) {
         if (CALC_CACHE_STATS)
@@ -47,7 +48,7 @@ INLINE int dvmInstanceof(ClassObject* instance, ClassObject* clazz)
  *
  * Returns 0 (false) if not, 1 (true) if so.
  */
-int dvmImplements(ClassObject* clazz, ClassObject* interface);
+int dvmImplements(const ClassObject* clazz, const ClassObject* interface);
 
 /*
  * Determine whether "sub" is a sub-class of "clazz".
@@ -71,6 +72,7 @@ INLINE int dvmIsSubClass(const ClassObject* sub, const ClassObject* clazz) {
  *
  * Returns 0 (false) if not, 1 (true) if so.
  */
-bool dvmCanPutArrayElement(ClassObject* elemClass, ClassObject* arrayClass);
+bool dvmCanPutArrayElement(const ClassObject* elemClass,
+    const ClassObject* arrayClass);
 
 #endif /*_DALVIK_OO_TYPECHECK*/

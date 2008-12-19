@@ -14,7 +14,12 @@
  * limitations under the License.
  */
 
-package tests.sql;
+package tests.sql; 
+
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
 
 import java.math.BigDecimal;
 import java.sql.ParameterMetaData;
@@ -31,6 +36,7 @@ import java.util.Calendar;
 import java.util.Locale;
 import java.util.TimeZone;
 
+@TestTargetClass(PreparedStatement.class)
 public class PreparedStatementTest extends SQLTest {
 
     String queryAllSelect = "select * from type";
@@ -103,6 +109,15 @@ public class PreparedStatementTest extends SQLTest {
     /**
      * @test java.sql.PreparedStatement#addBatch()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "addBatch",
+          methodArgs = {}
+        )
+    })
     public void testAddBatch() throws SQLException {
         PreparedStatement ps = null;
         try {
@@ -364,7 +379,16 @@ public class PreparedStatementTest extends SQLTest {
      * it is possible to invoke the method getMetaData on a 
      * PreparedStatement object rather than waiting to execute it.
      */
-    public void testGetMetaData() {
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getMetaData",
+          methodArgs = {}
+        )
+    })
+    public void _testGetMetaData() {
         PreparedStatement ps = null;
         try {
             String query = "update zoo set name='Masha', family='cat' where id=?;";
@@ -507,6 +531,15 @@ public class PreparedStatementTest extends SQLTest {
     /**
      * @test java.sql.PreparedStatement#setInt(int parameterIndex, int x)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "ps.execute() should be removed in exception part (for exception testing)",
+      targets = {
+        @TestTarget(
+          methodName = "setInt",
+          methodArgs = {int.class, int.class}
+        )
+    })
     public void testSetInt() throws SQLException {
         createTables();
         PreparedStatement ps = null;
@@ -577,6 +610,15 @@ public class PreparedStatementTest extends SQLTest {
     /**
      * @test java.sql.PreparedStatement#setLong(int parameterIndex, long x)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "ps.execute() should be removed in exception part (for exception testing)",
+      targets = {
+        @TestTarget(
+          methodName = "setLong",
+          methodArgs = {int.class, long.class}
+        )
+    })
     public void testSetLong() {
         createTables();
         PreparedStatement ps = null;
@@ -650,6 +692,15 @@ public class PreparedStatementTest extends SQLTest {
     /**
      * @test java.sql.PreparedStatement#setFloat(int parameterIndex, float x)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "ps.execute() should be removed in exception part (for exception testing)",
+      targets = {
+        @TestTarget(
+          methodName = "setFloat",
+          methodArgs = {int.class, float.class}
+        )
+    })
     public void testSetFloat() {
         float value1 = 12345678.12345689f;
         float value2 = -12345678.12345689f;
@@ -720,6 +771,15 @@ public class PreparedStatementTest extends SQLTest {
     /**
      * @test java.sql.PreparedStatement#setDouble(int parameterIndex, double x)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "ps.execute() should be removed in exception part (for exception testing)",
+      targets = {
+        @TestTarget(
+          methodName = "setDouble",
+          methodArgs = {int.class, double.class}
+        )
+    })
     public void testSetDouble() {
         createTables();
         PreparedStatement ps = null;
@@ -791,6 +851,15 @@ public class PreparedStatementTest extends SQLTest {
     /**
      * @test java.sql.PreparedStatement#setString(int parameterIndex, String x)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "ps.execute() should be removed in exception part (for exception testing)",
+      targets = {
+        @TestTarget(
+          methodName = "setString",
+          methodArgs = {int.class, String.class}
+        )
+    })
     public void testSetString_charField() {
         createTables();
         PreparedStatement ps = null;
@@ -891,6 +960,15 @@ public class PreparedStatementTest extends SQLTest {
     /**
      * @test java.sql.PreparedStatement#setString(int parameterIndex, String x)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "ps.execute() should be removed in exception part (for exception testing)",
+      targets = {
+        @TestTarget(
+          methodName = "setString",
+          methodArgs = {int.class, String.class}
+        )
+    })
     public void testSetString_tinyTextField() {
         createTables();
         PreparedStatement ps = null;
@@ -993,6 +1071,15 @@ public class PreparedStatementTest extends SQLTest {
     /**
      * @test java.sql.PreparedStatement#setString(int parameterIndex, String x)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "ps.execute() should be removed in exception part (for exception testing)",
+      targets = {
+        @TestTarget(
+          methodName = "setString",
+          methodArgs = {int.class, String.class}
+        )
+    })
     public void testSetString_textField() {
         createTables();
         PreparedStatement ps = null;
@@ -1098,6 +1185,15 @@ public class PreparedStatementTest extends SQLTest {
     /**
      * @test java.sql.PreparedStatement#setString(int parameterIndex, String x)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "ps.execute() should be removed in exception part (for exception testing)",
+      targets = {
+        @TestTarget(
+          methodName = "setString",
+          methodArgs = {int.class, String.class}
+        )
+    })
     public void testSetString_mediumTextField() {
         createTables();
         PreparedStatement ps = null;
@@ -1191,6 +1287,15 @@ public class PreparedStatementTest extends SQLTest {
     /**
      * @test java.sql.PreparedStatement#setString(int parameterIndex, String x)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "ps.execute() should be removed in exception part (for exception testing)",
+      targets = {
+        @TestTarget(
+          methodName = "setString",
+          methodArgs = {int.class, String.class}
+        )
+    })
     public void testSetString_longTextField() {
         createTables();
         PreparedStatement ps = null;
@@ -1284,6 +1389,15 @@ public class PreparedStatementTest extends SQLTest {
     /**
      * @test java.sql.PreparedStatement#setShort(int parameterIndex, short x)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "ps.execute() should be removed in exception part (for exception testing)",
+      targets = {
+        @TestTarget(
+          methodName = "setShort",
+          methodArgs = {int.class, short.class}
+        )
+    })
     public void testSetShort() {
         createTables();
         PreparedStatement ps = null;
@@ -1382,6 +1496,15 @@ public class PreparedStatementTest extends SQLTest {
      * @test java.sql.PreparedStatement#setBoolean(int parameterIndex, boolean
      *       x)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "ps.execute() should be removed in exception part (for exception testing)",
+      targets = {
+        @TestTarget(
+          methodName = "setBoolean",
+          methodArgs = {int.class, boolean.class}
+        )
+    })
     public void testSetBoolean() {
         createTables();
         PreparedStatement ps = null;
@@ -1462,6 +1585,15 @@ public class PreparedStatementTest extends SQLTest {
     /**
      * @test java.sql.PreparedStatement#setByte(int parameterIndex, byte x)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "ps.execute() should be removed in exception part (for exception testing)",
+      targets = {
+        @TestTarget(
+          methodName = "setByte",
+          methodArgs = {int.class, byte.class}
+        )
+    })
     public void testSetByte() {
         createTables();
         PreparedStatement ps = null;
@@ -1542,6 +1674,15 @@ public class PreparedStatementTest extends SQLTest {
     /**
      * @test java.sql.PreparedStatement#setBytes(int parameterIndex, byte[] x)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "ps.execute() should be removed in exception part (for exception testing)",
+      targets = {
+        @TestTarget(
+          methodName = "setBytes",
+          methodArgs = {int.class, byte[].class}
+        )
+    })
     public void testSetBytes() {
 
         byte[] bytesArray = {1, 0};
@@ -1609,6 +1750,15 @@ public class PreparedStatementTest extends SQLTest {
      * @test java.sql.PreparedStatement#setBigDecimal(int parameterIndex,
      *       BigDecimal x)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "ps.execute() should be removed in exception part (for exception testing)",
+      targets = {
+        @TestTarget(
+          methodName = "setBigDecimal",
+          methodArgs = {int.class, BigDecimal.class}
+        )
+    })
     public void testSetBigDecimal() {
 
         BigDecimal bd = new BigDecimal("50");
@@ -1674,6 +1824,15 @@ public class PreparedStatementTest extends SQLTest {
     /**
      * @test java.sql.PreparedStatement#setDate(int parameterIndex, Date x)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "ps.execute() should be removed in exception part (for exception testing)",
+      targets = {
+        @TestTarget(
+          methodName = "setDate",
+          methodArgs = {int.class, Date.class}
+        )
+    })
     public void testSetDate_int_Date() {
 
         Date[] dates = { new Date(1799, 05, 26), new Date(Integer.MAX_VALUE),
@@ -1747,6 +1906,15 @@ public class PreparedStatementTest extends SQLTest {
      * @test java.sql.PreparedStatement#setDate(int parameterIndex, Date x,
      *       Calendar cal)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "ps.execute() should be removed in exception part (for exception testing)",
+      targets = {
+        @TestTarget(
+          methodName = "setDate",
+          methodArgs = {int.class, Date.class, Calendar.class}
+        )
+    })
     public void testSetDate_int_Date_Calendar() {
 
         Calendar[] cals = { Calendar.getInstance(),
@@ -1825,6 +1993,15 @@ public class PreparedStatementTest extends SQLTest {
      * 
      * this test doesn't passed on RI
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "ps.execute() should be removed in exception part (for exception testing)",
+      targets = {
+        @TestTarget(
+          methodName = "setNull",
+          methodArgs = {int.class, int.class}
+        )
+    })
     public void testSetNull_int_int() {
         createTables();
         PreparedStatement ps = null;
@@ -1938,6 +2115,15 @@ public class PreparedStatementTest extends SQLTest {
      * 
      * this test doesn't pass on RI
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException case has incorrect structure",
+      targets = {
+        @TestTarget(
+          methodName = "setObject",
+          methodArgs = {int.class, Object.class}
+        )
+    })
     public void testSetObject_int_Object() {
         createTables();
         PreparedStatement ps = null;
@@ -2044,6 +2230,15 @@ public class PreparedStatementTest extends SQLTest {
      * 
      * this test doesn't pass on RI
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "setObject",
+          methodArgs = {int.class, Object.class, int.class}
+        )
+    })
     public void testSetObject_int_Object_int() {
         createTables();
         PreparedStatement ps = null;
@@ -2150,6 +2345,15 @@ public class PreparedStatementTest extends SQLTest {
      * 
      * this test doesn't pass on RI
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "setObject",
+          methodArgs = {int.class, Object.class, int.class, int.class}
+        )
+    })
     public void testSetObject_int_Object_int_int() {
         createTables();
         PreparedStatement ps = null;
@@ -2255,6 +2459,15 @@ public class PreparedStatementTest extends SQLTest {
     /**
      * @test java.sql.PreparedStatement#setTime(int parameterIndex, Time x)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "ps.execute() should be removed from exception part (for exception testing)",
+      targets = {
+        @TestTarget(
+          methodName = "setTime",
+          methodArgs = {int.class, Time.class}
+        )
+    })
     public void testSetTimeint_Time() {
 
         Time[] times = { new Time(24, 25, 26), new Time(Integer.MAX_VALUE),
@@ -2327,6 +2540,15 @@ public class PreparedStatementTest extends SQLTest {
      * @test java.sql.PreparedStatement#setTime(int parameterIndex, Time x,
      *       Calendar cal)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "ps.execute() should be removed from exception part (for exception testing)",
+      targets = {
+        @TestTarget(
+          methodName = "setTime",
+          methodArgs = {int.class, Time.class, Calendar.class}
+        )
+    })
     public void testSetTime_int_Time_Calendar() {
 
         Calendar[] cals = { Calendar.getInstance(),
@@ -2403,6 +2625,15 @@ public class PreparedStatementTest extends SQLTest {
      * @test java.sql.PreparedStatement#setTimestamp(int parameterIndex,
      *       Timestamp x)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "ps.execute() should be removed from exception part (for exception testing)",
+      targets = {
+        @TestTarget(
+          methodName = "setTimestamp",
+          methodArgs = {int.class, Timestamp.class}
+        )
+    })
     public void testSetTimestamp_int_Timestamp() {
 
         Timestamp[] timestamps = { new Timestamp(2007, 10, 17, 19, 06, 50, 23),

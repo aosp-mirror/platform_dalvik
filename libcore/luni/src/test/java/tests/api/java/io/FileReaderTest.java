@@ -17,116 +17,143 @@
 
 package tests.api.java.io;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass; 
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 
+@TestTargetClass(FileReader.class) 
 public class FileReaderTest extends junit.framework.TestCase {
 
-	FileReader br;
+    FileReader br;
 
-	BufferedWriter bw;
+    BufferedWriter bw;
 
-	FileInputStream fis;
+    FileInputStream fis;
 
-	File f;
+    File f;
 
-	/**
-	 * @tests java.io.FileReader#FileReader(java.io.File)
-	 */
-	public void test_ConstructorLjava_io_File() {
-		// Test for method java.io.FileReader(java.io.File)
-		try {
-			bw = new BufferedWriter(new FileWriter(f.getPath()));
-			bw.write(" After test string", 0, 18);
-			bw.close();
-			br = new FileReader(f);
-			char[] buf = new char[100];
-			int r = br.read(buf);
-			br.close();
-			assertEquals("Failed to read correct chars", " After test string", new String(buf, 0, r)
-					);
-		} catch (Exception e) {
-			fail("Exception during Constructor test " + e.toString());
-		}
-	}
+    /**
+     * @tests java.io.FileReader#FileReader(java.io.File)
+     */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "FileNotFoundException checking missed.",
+            targets = { @TestTarget(methodName = "FileReader", 
+                                    methodArgs = {java.io.File.class})                         
+            }
+        )     
+    public void test_ConstructorLjava_io_File() {
+        // Test for method java.io.FileReader(java.io.File)
+        try {
+            bw = new BufferedWriter(new FileWriter(f.getPath()));
+            bw.write(" After test string", 0, 18);
+            bw.close();
+            br = new FileReader(f);
+            char[] buf = new char[100];
+            int r = br.read(buf);
+            br.close();
+            assertEquals("Failed to read correct chars", " After test string", new String(buf, 0, r)
+                    );
+        } catch (Exception e) {
+            fail("Exception during Constructor test " + e.toString());
+        }
+    }
 
-	/**
-	 * @tests java.io.FileReader#FileReader(java.io.FileDescriptor)
-	 */
-	public void test_ConstructorLjava_io_FileDescriptor() {
-		// Test for method java.io.FileReader(java.io.FileDescriptor)
-		try {
-			bw = new BufferedWriter(new FileWriter(f.getPath()));
-			bw.write(" After test string", 0, 18);
-			bw.close();
-			FileInputStream fis = new FileInputStream(f.getPath());
-			br = new FileReader(fis.getFD());
-			char[] buf = new char[100];
-			int r = br.read(buf);
-			br.close();
-			fis.close();
-			assertEquals("Failed to read correct chars", " After test string", new String(buf, 0, r)
-					);
-		} catch (Exception e) {
-			fail("Exception during Constructor test " + e.toString());
-		}
-	}
+    /**
+     * @tests java.io.FileReader#FileReader(java.io.FileDescriptor)
+     */
+    @TestInfo(
+            level = TestLevel.COMPLETE,
+            purpose = "Verifies FileReader(java.io.FileDescriptor) constructor.",
+            targets = { @TestTarget(methodName = "FileReader", 
+                                    methodArgs = {java.io.FileDescriptor.class})                         
+            }
+        )     
+    public void test_ConstructorLjava_io_FileDescriptor() {
+        // Test for method java.io.FileReader(java.io.FileDescriptor)
+        try {
+            bw = new BufferedWriter(new FileWriter(f.getPath()));
+            bw.write(" After test string", 0, 18);
+            bw.close();
+            FileInputStream fis = new FileInputStream(f.getPath());
+            br = new FileReader(fis.getFD());
+            char[] buf = new char[100];
+            int r = br.read(buf);
+            br.close();
+            fis.close();
+            assertEquals("Failed to read correct chars", " After test string", new String(buf, 0, r)
+                    );
+        } catch (Exception e) {
+            fail("Exception during Constructor test " + e.toString());
+        }
+    }
 
-	/**
-	 * @tests java.io.FileReader#FileReader(java.lang.String)
-	 */
-	public void test_ConstructorLjava_lang_String() {
-		// Test for method java.io.FileReader(java.lang.String)
-		try {
-			bw = new BufferedWriter(new FileWriter(f.getPath()));
-			bw.write(" After test string", 0, 18);
-			bw.close();
-			br = new FileReader(f.getPath());
-			char[] buf = new char[100];
-			int r = br.read(buf);
-			br.close();
-			assertEquals("Failed to read correct chars", " After test string", new String(buf, 0, r)
-					);
-		} catch (Exception e) {
-			fail("Exception during Constructor test " + e.toString());
-		}
-	}
+    /**
+     * @tests java.io.FileReader#FileReader(java.lang.String)
+     */
+    @TestInfo(
+            level = TestLevel.PARTIAL,
+            purpose = "FileNotFoundException checking missed.",
+            targets = { @TestTarget(methodName = "FileReader", 
+                                    methodArgs = {java.lang.String.class})                         
+            }
+        )         
+    public void test_ConstructorLjava_lang_String() {
+        // Test for method java.io.FileReader(java.lang.String)
+        try {
+            bw = new BufferedWriter(new FileWriter(f.getPath()));
+            bw.write(" After test string", 0, 18);
+            bw.close();
+            br = new FileReader(f.getPath());
+            char[] buf = new char[100];
+            int r = br.read(buf);
+            br.close();
+            assertEquals("Failed to read correct chars", " After test string", new String(buf, 0, r)
+                    );
+        } catch (Exception e) {
+            fail("Exception during Constructor test " + e.toString());
+        }
+    }
 
-	/**
-	 * Sets up the fixture, for example, open a network connection. This method
-	 * is called before a test is executed.
-	 */
-	protected void setUp() {
+    /**
+     * Sets up the fixture, for example, open a network connection. This method
+     * is called before a test is executed.
+     */
+    protected void setUp() {
 
-		f = new File(System.getProperty("user.home"), "reader.tst");
+        f = new File(System.getProperty("user.home"), "reader.tst");
 
-		if (f.exists()) {
-			if (!f.delete()) {
-				fail("Unable to delete test file");
-			}
-		}
-	}
+        if (f.exists()) {
+            if (!f.delete()) {
+                fail("Unable to delete test file");
+            }
+        }
+    }
 
-	/**
-	 * Tears down the fixture, for example, close a network connection. This
-	 * method is called after a test is executed.
-	 */
-	protected void tearDown() {
+    /**
+     * Tears down the fixture, for example, close a network connection. This
+     * method is called after a test is executed.
+     */
+    protected void tearDown() {
 
-		try {
-			bw.close();
-			br.close();
-		} catch (Exception e) {
-		}
+        try {
+            bw.close();
+            br.close();
+        } catch (Exception e) {
+        }
 
-		try {
-			if (fis != null)
-				fis.close();
-		} catch (Exception e) {
-		}
-		f.delete();
-	}
+        try {
+            if (fis != null)
+                fis.close();
+        } catch (Exception e) {
+        }
+        f.delete();
+    }
 }

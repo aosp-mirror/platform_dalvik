@@ -21,6 +21,9 @@ import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.util.Comparator;
 import java.util.Formatter;
+// BEGIN android-added
+import java.util.IllegalFormatException;
+// END android-added
 import java.util.Locale;
 
 import java.util.regex.Pattern;
@@ -33,27 +36,30 @@ import java.nio.charset.UnsupportedCharsetException;
 import java.security.AccessController;
 import java.util.regex.PatternSyntaxException;
 
+// BEGIN android-removed
+// import org.apache.harmony.kernel.vm.VM;
+// END android-removed
 import org.apache.harmony.luni.util.PriviAction;
 
 /**
- * <p>
- * An immutable sequence of characters/code units (<code>char</code>s). A
- * <code>String</code> is represented by array of UTF-16 values, such that
+ * An immutable sequence of characters/code units ({@code char}s). A
+ * {@code String} is represented by array of UTF-16 values, such that
  * Unicode supplementary characters (code points) are stored/encoded as
- * surrogate pairs via Unicode code units (<code>char</code>)
- * </p>
+ * surrogate pairs via Unicode code units ({@code char}).
  *
  * @see StringBuffer
  * @see StringBuilder
  * @see Charset
- * @since 1.0
+ * @since Android 1.0
  */
 public final class String implements Serializable, Comparable<String>,
         CharSequence {
 
     private static final long serialVersionUID = -6849794470754667710L;
 
+    // BEGIN android-added
     private static final char REPLACEMENT_CHAR = (char) 0xfffd;
+    // END android-added
 
     /**
      * An PrintStream used for System.out which performs the correct character
@@ -74,7 +80,7 @@ public final class String implements Serializable, Comparable<String>,
         /**
          * Create a ConsolePrintStream on the specified OutputStream, usually
          * System.out.
-         *
+         * 
          * @param out
          *            the console OutputStream
          */
@@ -88,7 +94,7 @@ public final class String implements Serializable, Comparable<String>,
          * character conversion using the console character converter.
          *
          * @param str
-         *            the String to convert
+         *            the string to convert
          */
         @Override
         public void print(String str) {
@@ -123,15 +129,17 @@ public final class String implements Serializable, Comparable<String>,
          *         equal, and > 0 if object1 is greater
          *
          * @exception ClassCastException
-         *                when objects are not the correct type
+         *                if objects are not the correct type
          */
         public int compare(String o1, String o2) {
             return o1.compareToIgnoreCase(o2);
         }
     }
 
-    /*
-     * A Comparator which compares Strings ignoring the case of the characters.
+    /**
+     * A comparator ignoring the case of the characters.
+     * 
+     * @since Android 1.0
      */
     public static final Comparator<String> CASE_INSENSITIVE_ORDER = new CaseInsensitiveComparator();
 
@@ -157,7 +165,9 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * Returns an empty string.
+     * Creates an empty string.
+     * 
+     * @since Android 1.0
      */
     public String() {
         value = new char[0];
@@ -175,48 +185,30 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * Converts the byte array to a String using the default encoding as
+     * Converts the byte array to a string using the default encoding as
      * specified by the file.encoding system property. If the system property is
      * not defined, the default encoding is ISO8859_1 (ISO-Latin-1). If 8859-1
      * is not available, an ASCII encoding is used.
-     *
+     * 
      * @param data
-     *            the byte array to convert to a String
-     *
-     * @throws NullPointerException
-     *             when data is null
-     *
-     * @see #getBytes()
-     * @see #getBytes(int, int, byte[], int)
-     * @see #getBytes(String)
-     * @see #valueOf(boolean)
-     * @see #valueOf(char)
-     * @see #valueOf(char[])
-     * @see #valueOf(char[], int, int)
-     * @see #valueOf(double)
-     * @see #valueOf(float)
-     * @see #valueOf(int)
-     * @see #valueOf(long)
-     * @see #valueOf(Object)
-     *
+     *            the byte array to convert to a string.
+     * @since Android 1.0
      */
     public String(byte[] data) {
         this(data, 0, data.length);
     }
 
     /**
-     * Converts the byte array to a String, setting the high byte of every
+     * Converts the byte array to a string, setting the high byte of every
      * character to the specified value.
-     *
+     * 
      * @param data
-     *            the byte array to convert to a String
+     *            the byte array to convert to a string.
      * @param high
-     *            the high byte to use
-     *
-     * @throws NullPointerException
-     *             when data is null
-     *
-     * @deprecated Use {@link #String(byte[])} or {@link #String(byte[], String)} instead
+     *            the high byte to use.
+     * @deprecated Use {@link #String(byte[])} or
+     *             {@link #String(byte[], String)} instead.
+     * @since Android 1.0
      */
     @Deprecated
     public String(byte[] data, int high) {
@@ -224,36 +216,21 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * Converts the byte array to a String using the default encoding as
+     * Converts the byte array to a string using the default encoding as
      * specified by the file.encoding system property. If the system property is
      * not defined, the default encoding is ISO8859_1 (ISO-Latin-1). If 8859-1
      * is not available, an ASCII encoding is used.
-     *
+     * 
      * @param data
-     *            the byte array to convert to a String
+     *            the byte array to convert to a string.
      * @param start
-     *            the starting offset in the byte array
+     *            the starting offset in the byte array.
      * @param length
-     *            the number of bytes to convert
-     *
+     *            the number of bytes to convert.
      * @throws IndexOutOfBoundsException
-     *             when <code>length < 0, start < 0</code> or
-     *             <code>start + length > data.length</code>
-     * @throws NullPointerException
-     *             when data is null
-     *
-     * @see #getBytes()
-     * @see #getBytes(int, int, byte[], int)
-     * @see #getBytes(String)
-     * @see #valueOf(boolean)
-     * @see #valueOf(char)
-     * @see #valueOf(char[])
-     * @see #valueOf(char[], int, int)
-     * @see #valueOf(double)
-     * @see #valueOf(float)
-     * @see #valueOf(int)
-     * @see #valueOf(long)
-     * @see #valueOf(Object)
+     *             if {@code length < 0, start < 0} or {@code start + length >
+     *             data.length}.
+     * @since Android 1.0
      */
     public String(byte[] data, int start, int length) {
         // start + length could overflow, start/length maybe MaxInt
@@ -276,25 +253,24 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * Converts the byte array to a String, setting the high byte of every
+     * Converts the byte array to a string, setting the high byte of every
      * character to the specified value.
      *
      * @param data
-     *            the byte array to convert to a String
+     *            the byte array to convert to a string.
      * @param high
-     *            the high byte to use
+     *            the high byte to use.
      * @param start
-     *            the starting offset in the byte array
+     *            the starting offset in the byte array.
      * @param length
-     *            the number of bytes to convert
+     *            the number of bytes to convert.
      *
      * @throws IndexOutOfBoundsException
-     *             when <code>length < 0, start < 0</code> or
-     *             <code>start + length > data.length</code>
-     * @throws NullPointerException
-     *             when data is null
+     *             if {@code length < 0, start < 0} or
+     *             {@code start + length > data.length}
      *
-     * @deprecated Use {@link #String(byte[], int, int)} instead
+     * @deprecated Use {@link #String(byte[], int, int)} instead.
+     * @since Android 1.0
      */
     @Deprecated
     public String(byte[] data, int high, int start, int length) {
@@ -317,38 +293,22 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * Converts the byte array to a String using the specified encoding.
-     *
+     * Converts the byte array to a string using the specified encoding.
+     * 
      * @param data
-     *            the byte array to convert to a String
+     *            the byte array to convert to a string.
      * @param start
-     *            the starting offset in the byte array
+     *            the starting offset in the byte array.
      * @param length
-     *            the number of bytes to convert
+     *            the number of bytes to convert.
      * @param encoding
-     *            the encoding
-     *
+     *            the encoding.
      * @throws IndexOutOfBoundsException
-     *             when <code>length < 0, start < 0</code> or
-     *             <code>start + length > data.length</code>
+     *             if {@code length < 0, start < 0} or {@code start + length >
+     *             data.length}.
      * @throws UnsupportedEncodingException
-     *             when encoding is not supported
-     * @throws NullPointerException
-     *             when data is null
-     *
-     * @see #getBytes()
-     * @see #getBytes(int, int, byte[], int)
-     * @see #getBytes(String)
-     * @see #valueOf(boolean)
-     * @see #valueOf(char)
-     * @see #valueOf(char[])
-     * @see #valueOf(char[], int, int)
-     * @see #valueOf(double)
-     * @see #valueOf(float)
-     * @see #valueOf(int)
-     * @see #valueOf(long)
-     * @see #valueOf(Object)
-     * @see UnsupportedEncodingException
+     *             if {@code encoding} is not supported.
+     * @since Android 1.0
      */
     public String(byte[] data, int start, int length, final String encoding)
             throws UnsupportedEncodingException {
@@ -358,7 +318,7 @@ public final class String implements Serializable, Comparable<String>,
         // start + length could overflow, start/length maybe MaxInt
         if (start >= 0 && 0 <= length && length <= data.length - start) {
             offset = 0;
-
+            // BEGIN android-added
             // Special-case ISO-88589-1 and UTF 8 decoding
             if (encoding.equalsIgnoreCase("ISO-8859-1") ||
                 encoding.equalsIgnoreCase("ISO8859_1")) {
@@ -476,7 +436,7 @@ public final class String implements Serializable, Comparable<String>,
                 System.arraycopy(v, 0, value, 0, s);
                 return;
             }
-
+            // END android-added
             Charset charset = getCharset(encoding);
 
             int result;
@@ -484,7 +444,7 @@ public final class String implements Serializable, Comparable<String>,
             try {
                 cb = charset.decode(ByteBuffer.wrap(data, start, length));
             } catch (Exception e) {
-                // do nothing. according to spec:
+                // do nothing. according to spec: 
                 // behavior is unspecified for invalid array
                 cb = CharBuffer.wrap("\u003f".toCharArray()); //$NON-NLS-1$
             }
@@ -501,68 +461,48 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * Converts the byte array to a String using the specified encoding.
-     *
+     * Converts the byte array to a string using the specified encoding.
+     * 
      * @param data
-     *            the byte array to convert to a String
+     *            the byte array to convert to a string.
      * @param encoding
-     *            the encoding
-     *
+     *            the encoding.
      * @throws UnsupportedEncodingException
-     *             when encoding is not supported
-     * @throws NullPointerException
-     *             when data is null
-     *
-     * @see #getBytes()
-     * @see #getBytes(int, int, byte[], int)
-     * @see #getBytes(String)
-     * @see #valueOf(boolean)
-     * @see #valueOf(char)
-     * @see #valueOf(char[])
-     * @see #valueOf(char[], int, int)
-     * @see #valueOf(double)
-     * @see #valueOf(float)
-     * @see #valueOf(int)
-     * @see #valueOf(long)
-     * @see #valueOf(Object)
-     * @see UnsupportedEncodingException
+     *             if {@code encoding} is not supported.
+     * @since Android 1.0
      */
     public String(byte[] data, String encoding) throws UnsupportedEncodingException {
         this(data, 0, data.length, encoding);
     }
 
     /**
-     * Initializes this String to contain the characters in the specified
-     * character array. Modifying the character array after creating the String
-     * has no effect on the String.
-     *
+     * Initializes this string to contain the characters in the specified
+     * character array. Modifying the character array after creating the string
+     * has no effect on the string.
+     * 
      * @param data
-     *            the array of characters
-     *
-     * @throws NullPointerException
-     *             when data is null
+     *            the array of characters.
+     * @since Android 1.0
      */
     public String(char[] data) {
         this(data, 0, data.length);
     }
 
     /**
-     * Initializes this String to contain the specified characters in the
-     * character array. Modifying the character array after creating the String
-     * has no effect on the String.
-     *
+     * Initializes this string to contain the specified characters in the
+     * character array. Modifying the character array after creating the string
+     * has no effect on the string.
+     * 
      * @param data
-     *            the array of characters
+     *            the array of characters.
      * @param start
-     *            the starting offset in the character array
+     *            the starting offset in the character array.
      * @param length
-     *            the number of characters to use
-     *
+     *            the number of characters to use.
      * @throws IndexOutOfBoundsException
-     *             when <code>length < 0, start < 0</code> or
-     *             <code>start + length > data.length</code>
-     * @throws NullPointerException
-     *             when data is null
+     *             if {@code length < 0, start < 0} or {@code start + length >
+     *             data.length}
+     * @since Android 1.0
      */
     public String(char[] data, int start, int length) {
         // range check everything so a new char[] is not created
@@ -588,10 +528,11 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * Creates a string that is a copy of another string
-     *
+     * Creates a {@code String} that is a copy of the specified string.
+     * 
      * @param string
-     *            the String to copy
+     *            the string to copy.
+     * @since Android 1.0
      */
     public String(String string) {
         value = string.value;
@@ -600,10 +541,12 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * Creates a string from the contents of a StringBuffer.
-     *
+     * Creates a {@code String} from the contents of the specified
+     * {@code StringBuffer}.
+     * 
      * @param stringbuffer
-     *            the StringBuffer
+     *            the buffer to get the contents from.
+     * @since Android 1.0
      */
     public String(StringBuffer stringbuffer) {
         offset = 0;
@@ -614,27 +557,22 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * <p>
-     * Constructs a <code>String</code> from the sub-array of Unicode code
-     * points.
-     * </p>
-     *
+     * Creates a {@code String} from the sub-array of Unicode code points.
+     * 
      * @param codePoints
-     *            The array of Unicode code points to convert.
+     *            the array of Unicode code points to convert.
      * @param offset
-     *            The inclusive index into <code>codePoints</code> to begin
+     *            the inclusive index into {@code codePoints} to begin
      *            converting from.
      * @param count
-     *            The number of element in <code>codePoints</code> to copy.
-     * @throws NullPointerException
-     *             if <code>codePoints</code> is null.
+     *            the number of elements in {@code codePoints} to copy.
      * @throws IllegalArgumentException
-     *             if any of the elements of <code>codePoints</code> are not
-     *             valid Unicode code points.
+     *             if any of the elements of {@code codePoints} are not valid
+     *             Unicode code points.
      * @throws IndexOutOfBoundsException
-     *             if <code>offset</code> or <code>count</code> are not
-     *             within the bounds of <code>codePoints</code>.
-     * @since 1.5
+     *             if {@code offset} or {@code count} are not within the bounds
+     *             of {@code codePoints}.
+     * @since Android 1.0
      */
     public String(int[] codePoints, int offset, int count) {
         super();
@@ -656,15 +594,12 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * <p>
-     * Constructs a <code>String</code> from a <code>StringBuilder</code>.
-     * </p>
-     *
+     * Creates a {@code String} from the contents of the specified {@code
+     * StringBuilder}.
+     * 
      * @param sb
-     *            The StringBuilder to copy from.
-     * @throws NullPointerException
-     *             if <code>sb</code> is <code>null</code>.
-     * @since 1.5
+     *            the {@code StringBuilder} to copy the contents from.
+     * @since Android 1.0
      */
     public String(StringBuilder sb) {
         if (sb == null) {
@@ -677,7 +612,7 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /*
-     * Creates a string that is s1 + v1. May be used by JIT code.
+     * Creates a {@code String} that is s1 + v1. May be used by JIT code.
      */
     @SuppressWarnings("unused")
     private String(String s1, int v1) {
@@ -694,15 +629,14 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * Returns the character at the specified offset in this String.
-     *
+     * Returns the character at the specified offset in this string.
+     * 
      * @param index
-     *            the zero-based index in this string
-     * @return the character at the index
-     *
+     *            the zero-based index in this string.
+     * @return the character at the index.
      * @throws IndexOutOfBoundsException
-     *             when <code>index < 0</code> or
-     *             <code>index >= length()</code>
+     *             if {@code index < 0} or {@code index >= length()}.
+     * @since Android 1.0
      */
     public char charAt(int index) {
         if (0 <= index && index < count) {
@@ -712,25 +646,23 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * Compares the specified String to this String using the Unicode values of
+     * Compares the specified string to this string using the Unicode values of
      * the characters. Returns 0 if the strings contain the same characters in
      * the same order. Returns a negative integer if the first non-equal
-     * character in this String has a Unicode value which is less than the
+     * character in this string has a Unicode value which is less than the
      * Unicode value of the character at the same position in the specified
-     * string, or if this String is a prefix of the specified string. Returns a
-     * positive integer if the first non-equal character in this String has a
+     * string, or if this string is a prefix of the specified string. Returns a
+     * positive integer if the first non-equal character in this string has a
      * Unicode value which is greater than the Unicode value of the character at
-     * the same position in the specified string, or if the specified String is
-     * a prefix of the this String.
-     *
+     * the same position in the specified string, or if the specified string is
+     * a prefix of this string.
+     * 
      * @param string
-     *            the string to compare
-     * @return 0 if the strings are equal, a negative integer if this String is
-     *         before the specified String, or a positive integer if this String
-     *         is after the specified String
-     *
-     * @throws NullPointerException
-     *             when string is null
+     *            the string to compare.
+     * @return 0 if the strings are equal, a negative integer if this string is
+     *         before the specified string, or a positive integer if this string
+     *         is after the specified string.
+     * @since Android 1.0
      */
     public int compareTo(String string) {
         // Code adapted from K&R, pg 101
@@ -746,13 +678,23 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * Compare the receiver to the specified String to determine the relative
-     * ordering when the case of the characters is ignored.
-     *
+     * Compares the specified string to this string using the Unicode values of
+     * the characters, ignoring case differences. Returns 0 if the strings
+     * contain the same characters in the same order. Returns a negative integer
+     * if the first non-equal character in this string has a Unicode value which
+     * is less than the Unicode value of the character at the same position in
+     * the specified string, or if this string is a prefix of the specified
+     * string. Returns a positive integer if the first non-equal character in
+     * this string has a Unicode value which is greater than the Unicode value
+     * of the character at the same position in the specified string, or if the
+     * specified string is a prefix of this string.
+     * 
      * @param string
-     *            a String
-     * @return an int < 0 if this String is less than the specified String, 0 if
-     *         they are equal, and > 0 if this String is greater
+     *            the string to compare.
+     * @return 0 if the strings are equal, a negative integer if this string is
+     *         before the specified string, or a positive integer if this string
+     *         is after the specified string.
+     * @since Android 1.0
      */
     public int compareToIgnoreCase(String string) {
         int o1 = offset, o2 = string.offset, result;
@@ -773,15 +715,13 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * Concatenates this String and the specified string.
-     *
+     * Concatenates this string and the specified string.
+     * 
      * @param string
      *            the string to concatenate
-     * @return a new String which is the concatenation of this String and the
-     *         specified String
-     *
-     * @throws NullPointerException
-     *             if string is null
+     * @return a new string which is the concatenation of this string and the
+     *         specified string.
+     * @since Android 1.0
      */
     public String concat(String string) {
         if (string.count > 0 && count > 0) {
@@ -795,39 +735,35 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * Creates a new String containing the characters in the specified character
-     * array. Modifying the character array after creating the String has no
-     * effect on the String.
-     *
+     * Creates a new string containing the characters in the specified character
+     * array. Modifying the character array after creating the string has no
+     * effect on the string.
+     * 
      * @param data
-     *            the array of characters
-     * @return the new String
-     *
-     * @throws NullPointerException
-     *             if data is null
+     *            the array of characters.
+     * @return the new string.
+     * @since Android 1.0
      */
     public static String copyValueOf(char[] data) {
         return new String(data, 0, data.length);
     }
 
     /**
-     * Creates a new String containing the specified characters in the character
-     * array. Modifying the character array after creating the String has no
-     * effect on the String.
-     *
+     * Creates a new string containing the specified characters in the character
+     * array. Modifying the character array after creating the string has no
+     * effect on the string.
+     * 
      * @param data
-     *            the array of characters
+     *            the array of characters.
      * @param start
-     *            the starting offset in the character array
+     *            the starting offset in the character array.
      * @param length
-     *            the number of characters to use
-     * @return the new String
-     *
+     *            the number of characters to use.
+     * @return the new string.
      * @throws IndexOutOfBoundsException
-     *             if <code>length < 0, start < 0</code> or
-     *             <code>start + length > data.length</code>
-     * @throws NullPointerException
-     *             if data is null
+     *             if {@code length < 0, start < 0} or {@code start + length >
+     *             data.length}.
+     * @since Android 1.0
      */
     public static String copyValueOf(char[] data, int start, int length) {
         return new String(data, start, length);
@@ -856,32 +792,30 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * Compares the specified string to this String to determine if the
+     * Compares the specified string to this string to determine if the
      * specified string is a suffix.
-     *
+     * 
      * @param suffix
-     *            the string to look for
-     * @return true when the specified string is a suffix of this String, false
-     *         otherwise
-     *
-     * @throws NullPointerException
-     *             if suffix is null
+     *            the suffix to look for.
+     * @return {@code true} if the specified string is a suffix of this string,
+     *         {@code false} otherwise.
+     * @since Android 1.0
      */
     public boolean endsWith(String suffix) {
         return regionMatches(count - suffix.count, suffix, 0, suffix.count);
     }
 
     /**
-     * Compares the specified object to this String and returns true if they are
-     * equal. The object must be an instance of String with the same characters
+     * Compares the specified object to this string and returns true if they are
+     * equal. The object must be an instance of string with the same characters
      * in the same order.
-     *
+     * 
      * @param object
-     *            the object to compare
-     * @return true if the specified object is equal to this String, false
-     *         otherwise
-     *
+     *            the object to compare.
+     * @return {@code true} if the specified object is equal to this string,
+     *         {@code false} otherwise.
      * @see #hashCode
+     * @since Android 1.0
      */
     @Override
     public boolean equals(Object object) {
@@ -914,13 +848,14 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * Compares the specified String to this String ignoring the case of the
+     * Compares the specified string to this string ignoring the case of the
      * characters and returns true if they are equal.
-     *
+     * 
      * @param string
-     *            the string to compare
-     * @return true if the specified string is equal to this String, false
-     *         otherwise
+     *            the string to compare.
+     * @return {@code true} if the specified string is equal to this string,
+     *         {@code false} otherwise.
+     * @since Android 1.0
      */
     public boolean equalsIgnoreCase(String string) {
         if (string == this) {
@@ -946,14 +881,13 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * Converts this String to a byte encoding using the default encoding as
+     * Converts this string to a byte array using the default encoding as
      * specified by the file.encoding system property. If the system property is
      * not defined, the default encoding is ISO8859_1 (ISO-Latin-1). If 8859-1
      * is not available, an ASCII encoding is used.
-     *
-     * @return the byte array encoding of this String
-     *
-     * @see String
+     * 
+     * @return the byte array encoding of this string.
+     * @since Android 1.0
      */
     public byte[] getBytes() {
         ByteBuffer buffer = defaultCharset().encode(
@@ -964,25 +898,22 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * Converts this String to a byte array, ignoring the high order bits of
+     * Converts this string to a byte array, ignoring the high order bits of
      * each character.
-     *
+     * 
      * @param start
-     *            the starting offset of characters to copy
+     *            the starting offset of characters to copy.
      * @param end
-     *            the ending offset of characters to copy
+     *            the ending offset of characters to copy.
      * @param data
-     *            the destination byte array
+     *            the destination byte array.
      * @param index
-     *            the starting offset in the byte array
-     *
-     * @throws NullPointerException
-     *             when data is null
+     *            the starting offset in the destination byte array.
      * @throws IndexOutOfBoundsException
-     *             when
-     *             <code>start < 0, end > length(), index < 0, end - start > data.length - index</code>
-     *
+     *             if {@code start < 0}, {@code end > length()}, {@code index <
+     *             0} or {@code end - start > data.length - index}.
      * @deprecated Use {@link #getBytes()} or {@link #getBytes(String)}
+     * @since Android 1.0
      */
     @Deprecated
     public void getBytes(int start, int end, byte[] data, int index) {
@@ -1001,17 +932,14 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * Converts this String to a byte encoding using the specified encoding.
-     *
+     * Converts this string to a byte array using the specified encoding.
+     * 
      * @param encoding
-     *            the encoding
-     * @return the byte array encoding of this String
-     *
+     *            the encoding to use.
+     * @return the encoded byte array of this string.
      * @throws UnsupportedEncodingException
-     *             when the encoding is not supported
-     *
-     * @see String
-     * @see UnsupportedEncodingException
+     *             if the encoding is not supported.
+     * @since Android 1.0
      */
     public byte[] getBytes(String encoding) throws UnsupportedEncodingException {
         ByteBuffer buffer = getCharset(encoding).encode(
@@ -1040,23 +968,22 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * Copies the specified characters in this String to the character array
+     * Copies the specified characters in this string to the character array
      * starting at the specified offset in the character array.
-     *
+     * 
      * @param start
-     *            the starting offset of characters to copy
+     *            the starting offset of characters to copy.
      * @param end
-     *            the ending offset of characters to copy
+     *            the ending offset of characters to copy.
      * @param buffer
-     *            the destination character array
+     *            the destination character array.
      * @param index
-     *            the starting offset in the character array
-     *
+     *            the starting offset in the character array.
      * @throws IndexOutOfBoundsException
-     *             when <code>start < 0, end > length(),
-     *              start > end, index < 0, end - start > buffer.length - index</code>
-     * @throws NullPointerException
-     *             when buffer is null
+     *             if {@code start < 0}, {@code end > length()}, {@code start >
+     *             end}, {@code index < 0}, {@code end - start > buffer.length -
+     *             index}
+     * @since Android 1.0
      */
     public void getChars(int start, int end, char[] buffer, int index) {
         // NOTE last character not copied!
@@ -1080,14 +1007,6 @@ public final class String implements Serializable, Comparable<String>,
     }
     // END android-added
 
-    /**
-     * Returns an integer hash code for the receiver. Objects which are equal
-     * return the same value for this method.
-     *
-     * @return the receiver's hash
-     *
-     * @see #equals
-     */
     @Override
     public int hashCode() {
         // BEGIN android-changed
@@ -1109,19 +1028,15 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * Searches in this String for the first index of the specified character.
+     * Searches in this string for the first index of the specified character.
      * The search for the character starts at the beginning and moves towards
-     * the end of this String.
-     *
+     * the end of this string.
+     * 
      * @param c
-     *            the character to find
-     * @return the index in this String of the specified character, -1 if the
-     *         character isn't found
-     *
-     * @see #lastIndexOf(int)
-     * @see #lastIndexOf(int, int)
-     * @see #lastIndexOf(String)
-     * @see #lastIndexOf(String, int)
+     *            the character to find.
+     * @return the index in this string of the specified character, -1 if the
+     *         character isn't found.
+     * @since Android 1.0
      */
     public int indexOf(int c) {
         // BEGIN android-changed
@@ -1141,21 +1056,17 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * Searches in this String for the index of the specified character. The
+     * Searches in this string for the index of the specified character. The
      * search for the character starts at the specified offset and moves towards
-     * the end of this String.
-     *
+     * the end of this string.
+     * 
      * @param c
-     *            the character to find
+     *            the character to find.
      * @param start
-     *            the starting offset
-     * @return the index in this String of the specified character, -1 if the
-     *         character isn't found
-     *
-     * @see #lastIndexOf(int)
-     * @see #lastIndexOf(int, int)
-     * @see #lastIndexOf(String)
-     * @see #lastIndexOf(String, int)
+     *            the starting offset.
+     * @return the index in this string of the specified character, -1 if the
+     *         character isn't found.
+     * @since Android 1.0
      */
     public int indexOf(int c, int start) {
         // BEGIN android-changed
@@ -1178,22 +1089,15 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * Searches in this String for the first index of the specified string. The
+     * Searches in this string for the first index of the specified string. The
      * search for the string starts at the beginning and moves towards the end
-     * of this String.
-     *
+     * of this string.
+     * 
      * @param string
-     *            the string to find
-     * @return the index in this String of the specified string, -1 if the
-     *         string isn't found
-     *
-     * @throws NullPointerException
-     *             when string is null
-     *
-     * @see #lastIndexOf(int)
-     * @see #lastIndexOf(int, int)
-     * @see #lastIndexOf(String)
-     * @see #lastIndexOf(String, int)
+     *            the string to find.
+     * @return the index of the first character of the specified string in this
+     *         string, -1 if the specified string is not a substring.
+     * @since Android 1.0
      */
     public int indexOf(String string) {
         // BEGIN android-changed
@@ -1229,24 +1133,17 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * Searches in this String for the index of the specified string. The search
+     * Searches in this string for the index of the specified string. The search
      * for the string starts at the specified offset and moves towards the end
-     * of this String.
-     *
+     * of this string.
+     * 
      * @param subString
-     *            the string to find
+     *            the string to find.
      * @param start
-     *            the starting offset
-     * @return the index in this String of the specified string, -1 if the
-     *         string isn't found
-     *
-     * @throws NullPointerException
-     *             when string is null
-     *
-     * @see #lastIndexOf(int)
-     * @see #lastIndexOf(int, int)
-     * @see #lastIndexOf(String)
-     * @see #lastIndexOf(String, int)
+     *            the starting offset.
+     * @return the index of the first character of the specified string in this
+     *         string, -1 if the specified string is not a substring.
+     * @since Android 1.0
      */
     public int indexOf(String subString, int start) {
         // BEGIN android-changed
@@ -1284,30 +1181,27 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * Searches an internal table of strings for a string equal to this String.
+     * Searches an internal table of strings for a string equal to this string.
      * If the string is not in the table, it is added. Returns the string
-     * contained in the table which is equal to this String. The same string
+     * contained in the table which is equal to this string. The same string
      * object is always returned for strings which are equal.
-     *
-     * @return the interned string equal to this String
+     * 
+     * @return the interned string equal to this string.
+     * @since Android 1.0
      */
     native public String intern();
 
 
     /**
-     * Searches in this String for the last index of the specified character.
+     * Searches in this string for the last index of the specified character.
      * The search for the character starts at the end and moves towards the
-     * beginning of this String.
-     *
+     * beginning of this string.
+     * 
      * @param c
-     *            the character to find
-     * @return the index in this String of the specified character, -1 if the
-     *         character isn't found
-     *
-     * @see #lastIndexOf(int)
-     * @see #lastIndexOf(int, int)
-     * @see #lastIndexOf(String)
-     * @see #lastIndexOf(String, int)
+     *            the character to find.
+     * @return the index in this string of the specified character, -1 if the
+     *         character isn't found.
+     * @since Android 1.0
      */
     public int lastIndexOf(int c) {
         // BEGIN android-changed
@@ -1324,21 +1218,17 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * Searches in this String for the index of the specified character. The
+     * Searches in this string for the index of the specified character. The
      * search for the character starts at the specified offset and moves towards
-     * the beginning of this String.
-     *
+     * the beginning of this string.
+     * 
      * @param c
-     *            the character to find
+     *            the character to find.
      * @param start
-     *            the starting offset
-     * @return the index in this String of the specified character, -1 if the
-     *         character isn't found
-     *
-     * @see #lastIndexOf(int)
-     * @see #lastIndexOf(int, int)
-     * @see #lastIndexOf(String)
-     * @see #lastIndexOf(String, int)
+     *            the starting offset.
+     * @return the index in this string of the specified character, -1 if the
+     *         character isn't found.
+     * @since Android 1.0
      */
     public int lastIndexOf(int c, int start) {
         // BEGIN android-changed
@@ -1360,22 +1250,15 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * Searches in this String for the last index of the specified string. The
+     * Searches in this string for the last index of the specified string. The
      * search for the string starts at the end and moves towards the beginning
-     * of this String.
-     *
+     * of this string.
+     * 
      * @param string
-     *            the string to find
-     * @return the index in this String of the specified string, -1 if the
-     *         string isn't found
-     *
-     * @throws NullPointerException
-     *             when string is null
-     *
-     * @see #lastIndexOf(int)
-     * @see #lastIndexOf(int, int)
-     * @see #lastIndexOf(String)
-     * @see #lastIndexOf(String, int)
+     *            the string to find.
+     * @return the index of the first character of the specified string in this
+     *         string, -1 if the specified string is not a substring.
+     * @since Android 1.0
      */
     public int lastIndexOf(String string) {
         // Use count instead of count - 1 so lastIndexOf("") returns count
@@ -1383,24 +1266,17 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * Searches in this String for the index of the specified string. The search
+     * Searches in this string for the index of the specified string. The search
      * for the string starts at the specified offset and moves towards the
-     * beginning of this String.
-     *
+     * beginning of this string.
+     * 
      * @param subString
-     *            the string to find
+     *            the string to find.
      * @param start
-     *            the starting offset
-     * @return the index in this String of the specified string, -1 if the
-     *         string isn't found
-     *
-     * @throws NullPointerException
-     *             when string is null
-     *
-     * @see #lastIndexOf(int)
-     * @see #lastIndexOf(int, int)
-     * @see #lastIndexOf(String)
-     * @see #lastIndexOf(String, int)
+     *            the starting offset.
+     * @return the index of the first character of the specified string in this
+     *         string , -1 if the specified string is not a substring.
+     * @since Android 1.0
      */
     public int lastIndexOf(String subString, int start) {
         int subCount = subString.count;
@@ -1435,30 +1311,30 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * Returns the size of this String.
-     *
-     * @return the number of characters in this String
+     * Returns the size of this string.
+     * 
+     * @return the number of characters in this string.
+     * @since Android 1.0
      */
     public int length() {
         return count;
     }
 
     /**
-     * Compares the specified string to this String and compares the specified
+     * Compares the specified string to this string and compares the specified
      * range of characters to determine if they are the same.
-     *
+     * 
      * @param thisStart
-     *            the starting offset in this String
+     *            the starting offset in this string.
      * @param string
-     *            the string to compare
+     *            the string to compare.
      * @param start
-     *            the starting offset in string
+     *            the starting offset in the specified string.
      * @param length
-     *            the number of characters to compare
-     * @return true if the ranges of characters is equal, false otherwise
-     *
-     * @throws NullPointerException
-     *             when string is null
+     *            the number of characters to compare.
+     * @return {@code true} if the ranges of characters are equal, {@code false}
+     *         otherwise
+     * @since Android 1.0
      */
     public boolean regionMatches(int thisStart, String string, int start,
             int length) {
@@ -1488,24 +1364,23 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * Compares the specified string to this String and compares the specified
+     * Compares the specified string to this string and compares the specified
      * range of characters to determine if they are the same. When ignoreCase is
      * true, the case of the characters is ignored during the comparison.
-     *
+     * 
      * @param ignoreCase
-     *            specifies if case should be ignored
+     *            specifies if case should be ignored.
      * @param thisStart
-     *            the starting offset in this String
+     *            the starting offset in this string.
      * @param string
-     *            the string to compare
+     *            the string to compare.
      * @param start
-     *            the starting offset in string
+     *            the starting offset in the specified string.
      * @param length
-     *            the number of characters to compare
-     * @return true if the ranges of characters is equal, false otherwise
-     *
-     * @throws NullPointerException
-     *             when string is null
+     *            the number of characters to compare.
+     * @return {@code true} if the ranges of characters are equal, {@code false}
+     *         otherwise.
+     * @since Android 1.0
      */
     public boolean regionMatches(boolean ignoreCase, int thisStart,
             String string, int start, int length) {
@@ -1542,14 +1417,15 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * Copies this String replacing occurrences of the specified character with
+     * Copies this string replacing occurrences of the specified character with
      * another character.
-     *
+     * 
      * @param oldChar
-     *            the character to replace
+     *            the character to replace.
      * @param newChar
-     *            the replacement character
-     * @return a new String with occurrences of oldChar replaced by newChar
+     *            the replacement character.
+     * @return a new string with occurrences of oldChar replaced by newChar.
+     * @since Android 1.0
      */
     public String replace(char oldChar, char newChar) {
         // BEGIN endroid-changed
@@ -1578,20 +1454,18 @@ public final class String implements Serializable, Comparable<String>,
         return copied ? new String(0, count, buffer) : this;
         // END android-changed
     }
-
+    
     /**
-     * Copies this String replacing occurrences of the specified
-     * target sequence with another sequence.
-     * The string is processed from the beginning to the end.
-     *
+     * Copies this string replacing occurrences of the specified target sequence
+     * with another sequence. The string is processed from the beginning to the
+     * end.
+     * 
      * @param target
-     *            the sequence to replace
+     *            the sequence to replace.
      * @param replacement
-     *            the replacement sequence
-     * @return the resulting String
-     *
-     * @throws NullPointerException if either of the arguments
-     * is <code>null</code>
+     *            the replacement sequence.
+     * @return the resulting string.
+     * @since Android 1.0
      */
     public String replace(CharSequence target, CharSequence replacement) {
         if (target == null) {
@@ -1615,57 +1489,52 @@ public final class String implements Serializable, Comparable<String>,
             buffer.append(rs);
             tail = index + tl;
         } while ((index = indexOf(ts, tail)) != -1);
-        //append trailing chars
+        //append trailing chars 
         buffer.append(value, offset + tail, count - tail);
 
         return buffer.toString();
     }
 
     /**
-     * Compares the specified string to this String to determine if the
+     * Compares the specified string to this string to determine if the
      * specified string is a prefix.
-     *
+     * 
      * @param prefix
-     *            the string to look for
-     * @return true when the specified string is a prefix of this String, false
-     *         otherwise
-     *
-     * @throws NullPointerException
-     *             when prefix is null
+     *            the string to look for.
+     * @return {@code true} if the specified string is a prefix of this string,
+     *         {@code false} otherwise
+     * @since Android 1.0
      */
     public boolean startsWith(String prefix) {
         return startsWith(prefix, 0);
     }
 
     /**
-     * Compares the specified string to this String, starting at the specified
+     * Compares the specified string to this string, starting at the specified
      * offset, to determine if the specified string is a prefix.
-     *
+     * 
      * @param prefix
-     *            the string to look for
+     *            the string to look for.
      * @param start
-     *            the starting offset
-     * @return true when the specified string occurs in this String at the
-     *         specified offset, false otherwise
-     *
-     * @throws NullPointerException
-     *             when prefix is null
+     *            the starting offset.
+     * @return {@code true} if the specified string occurs in this string at the
+     *         specified offset, {@code false} otherwise.
+     * @since Android 1.0
      */
     public boolean startsWith(String prefix, int start) {
         return regionMatches(start, prefix, 0, prefix.count);
     }
 
     /**
-     * Copies a range of characters into a new String.
-     *
+     * Copies a range of characters into a new string.
+     * 
      * @param start
-     *            the offset of the first character
-     * @return a new String containing the characters from start to the end of
-     *         the string
-     *
+     *            the offset of the first character.
+     * @return a new string containing the characters from start to the end of
+     *         the string.
      * @throws IndexOutOfBoundsException
-     *             when <code>start < 0</code> or
-     *             <code>start > length()</code>
+     *             if {@code start < 0} or {@code start > length()}.
+     * @since Android 1.0
      */
     public String substring(int start) {
         if (start == 0) {
@@ -1678,17 +1547,17 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * Copies a range of characters into a new String.
-     *
+     * Copies a range of characters into a new string.
+     * 
      * @param start
-     *            the offset of the first character
+     *            the offset of the first character.
      * @param end
-     *            the offset one past the last character
-     * @return a new String containing the characters from start to end - 1
-     *
+     *            the offset one past the last character.
+     * @return a new string containing the characters from start to end - 1
      * @throws IndexOutOfBoundsException
-     *             when <code>start < 0, start > end</code> or
-     *             <code>end > length()</code>
+     *             if {@code start < 0}, {@code start > end} or {@code end >
+     *             length()}.
+     * @since Android 1.0
      */
     public String substring(int start, int end) {
         if (start == 0 && end == count) {
@@ -1703,9 +1572,10 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * Copies the characters in this String to a character array.
-     *
-     * @return a character array containing the characters of this String
+     * Copies the characters in this string to a character array.
+     * 
+     * @return a character array containing the characters of this string.
+     * @since Android 1.0
      */
     public char[] toCharArray() {
         char[] buffer = new char[count];
@@ -1714,24 +1584,26 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * Converts the characters in this String to lowercase, using the default
+     * Converts the characters in this string to lowercase, using the default
      * Locale.
-     *
-     * @return a new String containing the lowercase characters equivalent to
-     *         the characters in this String
+     * 
+     * @return a new string containing the lowercase characters equivalent to
+     *         the characters in this string.
+     * @since Android 1.0
      */
     public String toLowerCase() {
         return toLowerCase(Locale.getDefault());
     }
 
     /**
-     * Converts the characters in this String to lowercase, using the specified
+     * Converts the characters in this string to lowercase, using the specified
      * Locale.
-     *
+     * 
      * @param locale
-     *            the Locale
-     * @return a new String containing the lowercase characters equivalent to
-     *         the characters in this String
+     *            the Locale to use.
+     * @return a new string containing the lowercase characters equivalent to
+     *         the characters in this string.
+     * @since Android 1.0
      */
     public String toLowerCase(Locale locale) {
         for (int o = offset, end = offset + count; o < end; o++) {
@@ -1759,10 +1631,10 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * Returns a string containing a concise, human-readable description of the
-     * receiver.
+     * Returns this string.
      *
-     * @return this String
+     * @return this string.
+     * @since Android 1.0
      */
     @Override
     public String toString() {
@@ -1770,11 +1642,12 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * Converts the characters in this String to uppercase, using the default
+     * Converts the characters in this string to uppercase, using the default
      * Locale.
-     *
-     * @return a new String containing the uppercase characters equivalent to
-     *         the characters in this String
+     * 
+     * @return a new string containing the uppercase characters equivalent to
+     *         the characters in this string.
+     * @since Android 1.0
      */
     public String toUpperCase() {
         return toUpperCase(Locale.getDefault());
@@ -1841,13 +1714,14 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * Converts the characters in this String to uppercase, using the specified
+     * Converts the characters in this string to uppercase, using the specified
      * Locale.
-     *
+     * 
      * @param locale
-     *            the Locale
-     * @return a new String containing the uppercase characters equivalent to
-     *         the characters in this String
+     *            the Locale to use.
+     * @return a new string containing the uppercase characters equivalent to
+     *         the characters in this string.
+     * @since Android 1.0
      */
     public String toUpperCase(Locale locale) {
         boolean turkish = "tr".equals(locale.getLanguage()); //$NON-NLS-1$
@@ -1906,11 +1780,12 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * Copies this String removing white space characters from the beginning and
+     * Copies this string removing white space characters from the beginning and
      * end of the string.
-     *
-     * @return a new String with characters <code><= \\u0020</code> removed
-     *         from the beginning and the end
+     * 
+     * @return a new string with characters <code><= \\u0020</code> removed from
+     *         the beginning and the end.
+     * @since Android 1.0
      */
     public String trim() {
         int start = offset, last = offset + count - 1;
@@ -1928,39 +1803,35 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * Creates a new String containing the characters in the specified character
-     * array. Modifying the character array after creating the String has no
-     * effect on the String.
-     *
+     * Creates a new string containing the characters in the specified character
+     * array. Modifying the character array after creating the string has no
+     * effect on the string.
+     * 
      * @param data
-     *            the array of characters
-     * @return the new String
-     *
-     * @throws NullPointerException
-     *             when data is null
+     *            the array of characters.
+     * @return the new string.
+     * @since Android 1.0
      */
     public static String valueOf(char[] data) {
         return new String(data, 0, data.length);
     }
 
     /**
-     * Creates a new String containing the specified characters in the character
-     * array. Modifying the character array after creating the String has no
-     * effect on the String.
-     *
+     * Creates a new string containing the specified characters in the character
+     * array. Modifying the character array after creating the string has no
+     * effect on the string.
+     * 
      * @param data
-     *            the array of characters
+     *            the array of characters.
      * @param start
-     *            the starting offset in the character array
+     *            the starting offset in the character array.
      * @param length
-     *            the number of characters to use
-     * @return the new String
-     *
+     *            the number of characters to use.
+     * @return the new string.
      * @throws IndexOutOfBoundsException
-     *             when <code>length < 0, start < 0</code> or
-     *             <code>start + length > data.length</code>
-     * @throws NullPointerException
-     *             when data is null
+     *             if {@code length < 0}, {@code start < 0} or {@code start +
+     *             length > data.length}
+     * @since Android 1.0
      */
     public static String valueOf(char[] data, int start, int length) {
         return new String(data, start, length);
@@ -1968,10 +1839,11 @@ public final class String implements Serializable, Comparable<String>,
 
     /**
      * Converts the specified character to its string representation.
-     *
+     * 
      * @param value
-     *            the character
-     * @return the character converted to a string
+     *            the character.
+     * @return the character converted to a string.
+     * @since Android 1.0
      */
     public static String valueOf(char value) {
         String s;
@@ -1986,10 +1858,11 @@ public final class String implements Serializable, Comparable<String>,
 
     /**
      * Converts the specified double to its string representation.
-     *
+     * 
      * @param value
-     *            the double
-     * @return the double converted to a string
+     *            the double.
+     * @return the double converted to a string.
+     * @since Android 1.0
      */
     public static String valueOf(double value) {
         return Double.toString(value);
@@ -1997,10 +1870,11 @@ public final class String implements Serializable, Comparable<String>,
 
     /**
      * Converts the specified float to its string representation.
-     *
+     * 
      * @param value
-     *            the float
-     * @return the float converted to a string
+     *            the float.
+     * @return the float converted to a string.
+     * @since Android 1.0
      */
     public static String valueOf(float value) {
         return Float.toString(value);
@@ -2008,10 +1882,11 @@ public final class String implements Serializable, Comparable<String>,
 
     /**
      * Converts the specified integer to its string representation.
-     *
+     * 
      * @param value
-     *            the integer
-     * @return the integer converted to a string
+     *            the integer.
+     * @return the integer converted to a string.
+     * @since Android 1.0
      */
     public static String valueOf(int value) {
         return Integer.toString(value);
@@ -2019,10 +1894,11 @@ public final class String implements Serializable, Comparable<String>,
 
     /**
      * Converts the specified long to its string representation.
-     *
+     * 
      * @param value
-     *            the long
-     * @return the long converted to a string
+     *            the long.
+     * @return the long converted to a string.
+     * @since Android 1.0
      */
     public static String valueOf(long value) {
         return Long.toString(value);
@@ -2030,12 +1906,13 @@ public final class String implements Serializable, Comparable<String>,
 
     /**
      * Converts the specified object to its string representation. If the object
-     * is null return the string <code>"null"</code>, otherwise use
-     * <code>toString()</code> to get the string representation.
-     *
+     * is null return the string {@code "null"}, otherwise use {@code
+     * toString()} to get the string representation.
+     * 
      * @param value
-     *            the object
-     * @return the object converted to a string
+     *            the object.
+     * @return the object converted to a string, or the string {@code "null"}.
+     * @since Android 1.0
      */
     public static String valueOf(Object value) {
         return value != null ? value.toString() : "null"; //$NON-NLS-1$
@@ -2043,30 +1920,28 @@ public final class String implements Serializable, Comparable<String>,
 
     /**
      * Converts the specified boolean to its string representation. When the
-     * boolean is true return <code>"true"</code>, otherwise return
-     * <code>"false"</code>.
-     *
+     * boolean is {@code true} return {@code "true"}, otherwise return {@code
+     * "false"}.
+     * 
      * @param value
-     *            the boolean
-     * @return the boolean converted to a string
+     *            the boolean.
+     * @return the boolean converted to a string.
+     * @since Android 1.0
      */
     public static String valueOf(boolean value) {
         return value ? "true" : "false"; //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     /**
-     * Returns whether the characters in the StringBuffer strbuf are the same as
-     * those in this String.
-     *
+     * Returns whether the characters in the StringBuffer {@code strbuf} are the
+     * same as those in this string.
+     * 
      * @param strbuf
-     *            the StringBuffer to compare this String to
-     * @return true when the characters in strbuf are identical to those in this
-     *         String. If they are not, false will be returned.
-     *
-     * @throws NullPointerException
-     *             when strbuf is null
-     *
-     * @since 1.4
+     *            the StringBuffer to compare this string to.
+     * @return {@code true} if the characters in {@code strbuf} are identical to
+     *         those in this string. If they are not, {@code false} will be
+     *         returned.
+     * @since Android 1.0
      */
     public boolean contentEquals(StringBuffer strbuf) {
         synchronized (strbuf) {
@@ -2080,15 +1955,13 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * <p>
-     * Compares a <code>CharSequence</code> to this <code>String</code> to
-     * determine if their contents are equal.
-     * </p>
-     *
+     * Compares a {@code CharSequence} to this {@code String} to determine if
+     * their contents are equal.
+     * 
      * @param cs
-     *            The character sequence to compare to.
-     * @return <code>true</code> if equal, otherwise <code>false</code>
-     * @since 1.5
+     *            the character sequence to compare to.
+     * @return {@code true} if equal, otherwise {@code false}
+     * @since Android 1.0
      */
     public boolean contentEquals(CharSequence cs) {
         if (cs == null) {
@@ -2109,93 +1982,91 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * Determines whether a this String matches a given regular expression.
-     *
+     * Determines whether this string matches a given regular expression.
+     * 
      * @param expr
-     *            the regular expression to be matched
-     * @return true if the expression matches, otherwise false
-     *
+     *            the regular expression to be matched.
+     * @return {@code true} if the expression matches, otherwise {@code false}.
      * @throws PatternSyntaxException
-     *             if the syntax of the supplied regular expression is not valid
-     * @throws NullPointerException
-     *             if expr is null
-     *
-     * @since 1.4
+     *             if the syntax of the supplied regular expression is not
+     *             valid.
+     * @since Android 1.0
      */
     public boolean matches(String expr) {
         return Pattern.matches(expr, this);
     }
 
     /**
-     * Replace any substrings within this String that match the supplied regular
-     * expression expr, with the String substitute.
-     *
+     * Replace any substrings within this string that match the supplied regular
+     * expression {@code expr}, with the string {@code substitute}.
+     * 
      * @param expr
-     *            the regular expression to match
+     *            the regular expression to match.
      * @param substitute
-     *            the string to replace the matching substring with
-     * @return the new string
-     *
-     * @throws NullPointerException
-     *             if expr is null
-     *
-     * @since 1.4
+     *            the string to replace the matching substring with.
+     * @return the new string.
+     * @throws PatternSyntaxException
+     *             if the syntax of the supplied regular expression is not
+     *             valid.
+     * @see Pattern
+     * @since Android 1.0
      */
     public String replaceAll(String expr, String substitute) {
         return Pattern.compile(expr).matcher(this).replaceAll(substitute);
     }
 
     /**
-     * Replace the first substring within this String that matches the supplied regular
-     * expression expr, with the String substitute.
-     *
+     * Replace the first substring within this string that matches the supplied
+     * regular expression {@code expr}, with the string {@code substitute}.
+     * 
      * @param expr
-     *            the regular expression to match
+     *            the regular expression to match.
      * @param substitute
-     *            the string to replace the matching substring with
-     * @return the new string
-     *
-     * @throws NullPointerException
-     *             if expr is null
-     *
-     * @since 1.4
+     *            the string to replace the matching substring with.
+     * @return the new string.
+     * @throws PatternSyntaxException
+     *             if the syntax of the supplied regular expression is not
+     *             valid.
+     * @see Pattern
+     * @since Android 1.0
      */
     public String replaceFirst(String expr, String substitute) {
         return Pattern.compile(expr).matcher(this).replaceFirst(substitute);
     }
 
     /**
-     * Splits this String using the supplied regular expression expr.
-     *
+     * Splits this string using the supplied regular expression {@code expr}.
+     * 
      * @param expr
-     *            the regular expression used to divide the string
+     *            the regular expression used to divide the string.
      * @return an array of Strings created by separating the string along
      *         matches of the regular expression.
-     *
-     * @throws NullPointerException
-     *             if expr is null
-     *
-     * @since 1.4
+     * @throws PatternSyntaxException
+     *             if the syntax of the supplied regular expression is not
+     *             valid.
+     * @see Pattern
+     * @since Android 1.0
      */
     public String[] split(String expr) {
         return Pattern.compile(expr).split(this);
     }
 
     /**
-     * Splits this String using the supplied regular expression expr. max
-     * controls the number of times that the pattern is applied to the string.
-     *
+     * Splits this string using the supplied regular expression {@code expr}.
+     * The parameter {@code max} controls the behavior how many times the
+     * pattern is applied to the string.
+     * 
      * @param expr
-     *            the regular expression used to divide the string
+     *            the regular expression used to divide the string.
      * @param max
-     *            the number of times to apply the pattern
+     *            the number of entries in the resulting array.
      * @return an array of Strings created by separating the string along
      *         matches of the regular expression.
-     *
-     * @throws NullPointerException
-     *             if expr is null
-     *
-     * @since 1.4
+     * @throws PatternSyntaxException
+     *             if the syntax of the supplied regular expression is not
+     *             valid.
+     * @see Pattern#split(CharSequence, int)
+     * @since Android 1.0
      */
     public String[] split(String expr, int max) {
         return Pattern.compile(expr).split(this, max);
@@ -2203,42 +2074,35 @@ public final class String implements Serializable, Comparable<String>,
 
     /**
      * Has the same result as the substring function, but is present so that
-     * String may implement the CharSequence interface.
-     *
+     * string may implement the CharSequence interface.
+     * 
      * @param start
-     *            the offset the first character
+     *            the offset the first character.
      * @param end
-     *            the offset of one past the last character to include
-     *
-     * @return the subsequence requested
-     *
+     *            the offset of one past the last character to include.
+     * @return the subsequence requested.
      * @throws IndexOutOfBoundsException
-     *             when start or end is less than zero, start is greater than
-     *             end, or end is greater than the length of the String.
-     *
+     *             if {@code start < 0}, {@code end < 0}, {@code start > end} or
+     *             {@code end > length()}.
      * @see java.lang.CharSequence#subSequence(int, int)
-     *
-     * @since 1.4
+     * @since Android 1.0
      */
     public CharSequence subSequence(int start, int end) {
         return substring(start, end);
     }
 
     /**
-     * <p>
-     * Retrieves the Unicode code point value at the <code>index</code>.
-     * </p>
-     *
+     * Retrieves the Unicode code point (character) value at the specified
+     * {@code index}.
+     * 
      * @param index
-     *            The index to the <code>char</code> code unit within this
-     *            object.
-     * @return The Unicode code point value.
+     *            the index to the {@code char} code unit within this string.
+     * @return the Unicode code point value.
      * @throws IndexOutOfBoundsException
-     *             if <code>index</code> is negative or greater than or equal
-     *             to {@link #length()}.
-     * @see Character
+     *             if {@code index} is negative or greater than or equal to
+     *             {@code length()}.
      * @see Character#codePointAt(char[], int, int)
-     * @since 1.5
+     * @since Android 1.0
      */
     public int codePointAt(int index) {
         if (index < 0 || index >= count) {
@@ -2249,21 +2113,17 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * <p>
-     * Retrieves the Unicode code point value that precedes the
-     * <code>index</code>.
-     * </p>
-     *
+     * Retrieves the Unicode code point value that precedes the specified
+     * {@code index}.
+     * 
      * @param index
-     *            The index to the <code>char</code> code unit within this
-     *            object.
-     * @return The Unicode code point value.
+     *            the index to the {@code char} code unit within this string.
+     * @return the Unicode code point value.
      * @throws IndexOutOfBoundsException
-     *             if <code>index</code> is less than 1 or greater than
-     *             {@link #length()}.
-     * @see Character
+     *             if {@code index} is less than 1 or greater than
+     *             {@code length()}.
      * @see Character#codePointBefore(char[], int, int)
-     * @since 1.5
+     * @since Android 1.0
      */
     public int codePointBefore(int index) {
         if (index < 1 || index > count) {
@@ -2274,21 +2134,20 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * <p>
-     * Calculates the number of Unicode code points between
-     * <code>beginIndex</code> and <code>endIndex</code>.
-     * </p>
-     *
+     * Calculates the number of Unicode code points between {@code beginIndex}
+     * and {@code endIndex}.
+     * 
      * @param beginIndex
-     *            The inclusive beginning index of the subsequence.
+     *            the inclusive beginning index of the subsequence.
      * @param endIndex
-     *            The exclusive end index of the subsequence.
-     * @return The number of Unicode code points in the subsequence.
+     *            the exclusive end index of the subsequence.
+     * @return the number of Unicode code points in the subsequence.
      * @throws IndexOutOfBoundsException
-     *             if <code>beginIndex</code> is negative or greater than
-     *             <code>endIndex</code> or <code>endIndex</code> is greater
-     *             than {@link #length()}.
-     * @since 1.5
+     *             if {@code beginIndex} is negative or greater than {@code
+     *             endIndex} or {@code endIndex} is greater than {@code
+     *             length()}.
+     * @see Character#codePointCount(CharSequence, int, int)
+     * @since Android 1.0
      */
     public int codePointCount(int beginIndex, int endIndex) {
         if (beginIndex < 0 || endIndex > count || beginIndex > endIndex) {
@@ -2299,16 +2158,14 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * <p>
-     * Determines if this <code>String</code> contains the sequence of
-     * characters in the <code>CharSequence</code> passed.
-     * </p>
-     *
+     * Determines if this {@code String} contains the sequence of characters in
+     * the {@code CharSequence} passed.
+     * 
      * @param cs
-     *            The character sequence to search for.
-     * @return <code>true</code> if the sequence of characters are contained
-     *         in this object; otherwise <code>false</code>
-     * @since 1.5
+     *            the character sequence to search for.
+     * @return {@code true} if the sequence of characters are contained in this
+     *         string, otherwise {@code false}.
+     * @since Android 1.0
      */
     public boolean contains(CharSequence cs) {
         if (cs == null) {
@@ -2318,22 +2175,19 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * <p>
-     * Returns the index within this object that is offset from
-     * <code>index</code> by <code>codePointOffset</code> code points.
-     * </p>
-     *
+     * Returns the index within this object that is offset from {@code index} by
+     * {@code codePointOffset} code points.
+     * 
      * @param index
-     *            The index within this object to calculate the offset from.
+     *            the index within this object to calculate the offset from.
      * @param codePointOffset
-     *            The number of code points to count.
-     * @return The index within this object that is the offset.
+     *            the number of code points to count.
+     * @return the index within this object that is the offset.
      * @throws IndexOutOfBoundsException
-     *             if <code>index</code> is negative or greater than
-     *             {@link #length()} or if there aren't enough code points
-     *             before or after <code>index</code> to match
-     *             <code>codePointOffset</code>.
-     * @since 1.5
+     *             if {@code index} is negative or greater than {@code length()}
+     *             or if there aren't enough code points before or after {@code
+     *             index} to match {@code codePointOffset}.
+     * @since Android 1.0
      */
     public int offsetByCodePoints(int index, int codePointOffset) {
         int s = index + offset;
@@ -2343,29 +2197,26 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /**
-     * Returns a printf-style formatted string, using the supplied format and
-     * arguments. This function is a shortcut to
-     * <code>format(Locale.getDefault(), format, args)</code>.
-     *
+     * Returns a formatted string, using the supplied format and arguments,
+     * using the default locale.
+     * 
      * @param format
-     *            a format string
+     *            a format string.
      * @param args
-     *            arguments to replace format specifiers, may be none
-     * @throws NullPointerException
-     *             if the format is null
-     * @throws IllegalArgumentException
-     *             if the format is invalid
-     * @return The formatted string
-     * @since 1.5
+     *            arguments to replace format specifiers (may be none).
+     * @return the formatted string.
+     * @throws IllegalFormatException
+     *             if the format is invalid.
      * @see java.util.Formatter
+     * @since Android 1.0
      */
     public static String format(String format, Object... args) {
         return format(Locale.getDefault(), format, args);
     }
 
     /**
-     * Returns a printf-style formatted string, using the supplied format and
-     * arguments, accordingly to the specified locale.
+     * Returns a formatted string, using the supplied format and arguments,
+     * accordingly to the specified locale.
      * <p>
      * Note that this is a convenience method. Using it involves creating an
      * internal {@link java.util.Formatter} instance on-the-fly, which is
@@ -2373,21 +2224,18 @@ public final class String implements Serializable, Comparable<String>,
      * if you use the method only rarely, but if you rely on it for formatting a
      * large number of strings, consider creating and reusing your own
      * {@link java.util.Formatter} instance instead.
-     *
+     * 
      * @param loc
-     *            the locale to apply; <code>null</code> value means no
-     *            localization
+     *            the locale to apply; {@code null} value means no localization.
      * @param format
-     *            a format string
+     *            a format string.
      * @param args
-     *            arguments to replace format specifiers, may be none
-     * @throws NullPointerException
-     *             if the format is null
-     * @throws IllegalArgumentException
-     *             if the format is invalid
-     * @return The formatted string
-     * @since 1.5
+     *            arguments to replace format specifiers (may be none).
+     * @return the formatted string.
+     * @throws IllegalFormatException
+     *             if the format is invalid.
      * @see java.util.Formatter
+     * @since Android 1.0
      */
     public static String format(Locale loc, String format, Object... args) {
         if (format == null) {
@@ -2444,7 +2292,7 @@ public final class String implements Serializable, Comparable<String>,
     }
 
     /*
-     * Returns the character array for this String.
+     * Returns the character array for this string.
      */
     char[] getValue() {
         return value;

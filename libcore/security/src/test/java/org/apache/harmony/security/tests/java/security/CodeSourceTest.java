@@ -21,6 +21,12 @@
 */
 
 package org.apache.harmony.security.tests.java.security;
+
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.File;
 import java.net.URL;
 import java.net.InetAddress;
@@ -34,8 +40,7 @@ import java.security.cert.Certificate;
 import org.apache.harmony.security.tests.support.TestCertUtils;
 
 import junit.framework.TestCase;
-
-
+@TestTargetClass(CodeSource.class)
 /**
  * Unit test for CodeSource.
  * 
@@ -124,6 +129,15 @@ public class CodeSourceTest extends TestCase {
      * Tests hashCode().<br>
      * javadoc says nothing, so test DRL-specific implementation. 
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "hashCode",
+          methodArgs = {}
+        )
+    })
     public void testHashCode() {
         // when nothing is specified, then hashCode obviously must be 0. 
         assertTrue(new CodeSource(null, (Certificate[]) null).hashCode() == 0);
@@ -138,6 +152,15 @@ public class CodeSourceTest extends TestCase {
     /**
      * Tests CodeSource(URL, Certificate[]).
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "CodeSource",
+          methodArgs = {URL.class, Certificate[].class}
+        )
+    })
     public void testCodeSourceURLCertificateArray() {
         new CodeSource(null, (Certificate[]) null);
         new CodeSource(urlSite, (Certificate[]) null);
@@ -148,6 +171,15 @@ public class CodeSourceTest extends TestCase {
     /**
      * Tests CodeSource(URL, CodeSigner[]).
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies method with null parameters only",
+      targets = {
+        @TestTarget(
+          methodName = "CodeSource",
+          methodArgs = {URL.class, CodeSigner[].class}
+        )
+    })
     public void testCodeSourceURLCodeSignerArray() {
         if (!has_15_features()) {
             return;
@@ -159,6 +191,15 @@ public class CodeSourceTest extends TestCase {
     /**
      * equals(Object) must return <code>false</code> for null
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Null parameter checked",
+      targets = {
+        @TestTarget(
+          methodName = "equals",
+          methodArgs = {Object.class}
+        )
+    })
     public void testEqualsObject_00() {
         CodeSource thiz = new CodeSource(urlSite, (Certificate[]) null);
         assertFalse(thiz.equals(null));
@@ -168,6 +209,15 @@ public class CodeSourceTest extends TestCase {
     /**
      * equals(Object) must return <code>true</code> for the same object
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Same objects checked",
+      targets = {
+        @TestTarget(
+          methodName = "equals",
+          methodArgs = {Object.class}
+        )
+    })
     public void testEqualsObject_01() {
         CodeSource thiz = new CodeSource(urlSite, (Certificate[]) null);
         assertTrue(thiz.equals(thiz));
@@ -178,6 +228,15 @@ public class CodeSourceTest extends TestCase {
      * The signer certificate chain must contain the same set of certificates, but 
      * the order of the certificates is not taken into account.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "equals",
+          methodArgs = {Object.class}
+        )
+    })
     public void testEqualsObject_02() {
         Certificate cert0 = new TestCertUtils.TestCertificate();
         Certificate cert1 = new TestCertUtils.TestCertificate();
@@ -192,6 +251,15 @@ public class CodeSourceTest extends TestCase {
      * Test for equals(Object)<br>
      * Checks that both 'null' and not-null URLs are taken into account - properly. 
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "equals",
+          methodArgs = {Object.class}
+        )
+    })
     public void testEqualsObject_04() {
         CodeSource thiz = new CodeSource(urlSite, (Certificate[]) null);
         CodeSource that = new CodeSource(null, (Certificate[]) null);
@@ -206,6 +274,15 @@ public class CodeSourceTest extends TestCase {
     /**
      * Tests CodeSource.getCertificates().
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getCertificates",
+          methodArgs = {}
+        )
+    })
     public void testGetCertificates_00() {
         assertNull(new CodeSource(null, (Certificate[]) null).getCertificates());
         java.security.cert.Certificate[] got = new CodeSource(null, chain)
@@ -220,6 +297,15 @@ public class CodeSourceTest extends TestCase {
      * Tests whether the getCertificates() returns certificates obtained from 
      * the signers.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getCertificates",
+          methodArgs = {}
+        )
+    })
     public void testGetCertificates_01() {
         if (!has_15_features()) {
             return;
@@ -318,6 +404,15 @@ public class CodeSourceTest extends TestCase {
     /**
      * Tests CodeSource.getCodeSigners().
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getCodeSigners",
+          methodArgs = {}
+        )
+    })
     public void testGetCodeSigners_00() {
         if (!has_15_features()) {
             return;
@@ -342,6 +437,18 @@ public class CodeSourceTest extends TestCase {
         }
     }
     
+    /**
+     * Tests CodeSource.getCodeSigners() for null.
+     */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getCodeSigners",
+          methodArgs = {}
+        )
+    })
     public void testGetCoderSignersNull() throws Exception{
         assertNull(new CodeSource(new URL("http://url"), (Certificate[])null).getCodeSigners()); //$NON-NLS-1$
     }
@@ -349,6 +456,15 @@ public class CodeSourceTest extends TestCase {
     /**
      * Tests CodeSource.getLocation()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getLocation",
+          methodArgs = {}
+        )
+    })
     public void testGetLocation() {
         assertTrue(new CodeSource(urlSite, (Certificate[]) null).getLocation() == urlSite);
         assertTrue(new CodeSource(urlSite, chain).getLocation() == urlSite);
@@ -359,6 +475,15 @@ public class CodeSourceTest extends TestCase {
     /**
      * Tests CodeSource.toString()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public void testToString() {
         // Javadoc keeps silence about String's format, 
         // just make sure it can be invoked.
@@ -389,6 +514,15 @@ public class CodeSourceTest extends TestCase {
     /**
      * must not imply null CodeSource
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "implies",
+          methodArgs = {CodeSource.class}
+        )
+    })
     public void testImplies_00() {
         CodeSource cs0 = new CodeSource(null, (Certificate[]) null);
         assertFalse(cs0.implies(null));
@@ -398,6 +532,15 @@ public class CodeSourceTest extends TestCase {
      * CodeSource with location=null && Certificate[] == null implies any other
      * CodeSource
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "implies",
+          methodArgs = {CodeSource.class}
+        )
+    })
     public void testImplies_01() throws Exception {
         CodeSource thizCS = new CodeSource(urlSite, (Certificate[]) null);
         CodeSource thatCS = new CodeSource(null, (Certificate[]) null);
@@ -410,6 +553,15 @@ public class CodeSourceTest extends TestCase {
     /**
      * If this object's location equals codesource's location, then return true.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "implies",
+          methodArgs = {CodeSource.class}
+        )
+    })
     public void testImplies_02() throws Exception {
         CodeSource thizCS = new CodeSource(urlSite, (Certificate[]) null);
         CodeSource thatCS = new CodeSource(thizCS.getLocation(),
@@ -434,7 +586,15 @@ public class CodeSourceTest extends TestCase {
      assertFalse(thatCS.implies(thizCS));
      }
      */
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "implies",
+          methodArgs = {CodeSource.class}
+        )
+    })
     public void testImplies_03_tmp() throws Exception {
         CodeSource thizCS = new CodeSource(urlDir, (Certificate[]) null);
         CodeSource thatCS = new CodeSource(urlDir_FileProtocol,
@@ -448,6 +608,15 @@ public class CodeSourceTest extends TestCase {
      * SocketPermission constructed with this object's host must imply the
      * SocketPermission constructed with codesource's host.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "implies",
+          methodArgs = {CodeSource.class}
+        )
+    })
     public void testImplies_04() throws Exception {
         CodeSource thizCS = new CodeSource(urlDir, (Certificate[]) null);
         CodeSource thatCS = new CodeSource(urlDirIP, (Certificate[]) null);
@@ -477,6 +646,15 @@ public class CodeSourceTest extends TestCase {
      * If this object's port (getLocation().getPort()) is not equal to -1 (that
      * is, if a port is specified), it must equal codesource's port.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "implies",
+          methodArgs = {CodeSource.class}
+        )
+    })
     public void testImplies_05() throws Exception {
         CodeSource thizCS = new CodeSource(urlDir_port80, (Certificate[]) null);
         CodeSource thatCS = new CodeSource(urlDir, (Certificate[]) null);
@@ -502,6 +680,15 @@ public class CodeSourceTest extends TestCase {
      * If this object's file (getLocation().getFile()) doesn't equal
      * codesource's file, then the following checks are made: ...
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "implies",
+          methodArgs = {CodeSource.class}
+        )
+    })
     public void testImplies_06() throws Exception {
         CodeSource thizCS = new CodeSource(urlFile, (Certificate[]) null);
         CodeSource thatCS = new CodeSource(urlFile, (Certificate[]) null);
@@ -512,6 +699,15 @@ public class CodeSourceTest extends TestCase {
      * ... If this object's file ends with "/-", then codesource's file must
      * start with this object's file (exclusive the trailing "-").
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "implies",
+          methodArgs = {CodeSource.class}
+        )
+    })
     public void testImplies_07() throws Exception {
         CodeSource thiz = new CodeSource(urlFileDirMinus, (Certificate[]) null);
         CodeSource that = new CodeSource(urlFile, (Certificate[]) null);
@@ -529,6 +725,15 @@ public class CodeSourceTest extends TestCase {
      * start with this object's file and must not have any further "/"
      * separators.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "implies",
+          methodArgs = {CodeSource.class}
+        )
+    })
     public void testImplies_08() throws Exception {
         CodeSource thiz = new CodeSource(urlFileDirStar, (Certificate[]) null);
         CodeSource that = new CodeSource(urlFile, (Certificate[]) null);
@@ -548,6 +753,15 @@ public class CodeSourceTest extends TestCase {
      * ... If this object's file doesn't end with a "/", then codesource's file
      * must match this object's file with a '/' appended.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "implies",
+          methodArgs = {CodeSource.class}
+        )
+    })
     public void testImplies_09() throws Exception {
         CodeSource thizCS = new CodeSource(urlDir, (Certificate[]) null);
         CodeSource thatCS = new CodeSource(urlDirWithSlash,
@@ -560,6 +774,15 @@ public class CodeSourceTest extends TestCase {
      * If this object's reference (getLocation().getRef()) is not null, it must
      * equal codesource's reference.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "implies",
+          methodArgs = {CodeSource.class}
+        )
+    })
     public void testImplies_0A() throws Exception {
         CodeSource thizCS = new CodeSource(urlRef1, (Certificate[]) null);
         CodeSource thatCS = new CodeSource(urlRef1, (Certificate[]) null);
@@ -575,6 +798,15 @@ public class CodeSourceTest extends TestCase {
      * If this certificates are not null, then all of this certificates should
      * be presented in certificates of that codesource.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "implies",
+          methodArgs = {CodeSource.class}
+        )
+    })
     public void testImplies_0B() {
 
         Certificate c0 = new TestCertUtils.TestCertificate("00");
@@ -601,6 +833,15 @@ public class CodeSourceTest extends TestCase {
      * These special URLs have a special processing in implies(), 
      * so they need to be covered and performance need to be checked 
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "implies",
+          methodArgs = {CodeSource.class}
+        )
+    })
     public void testImplies_0C() throws Exception {
         URL url0 = new URL("http://localhost/someDir");
         URL url1 = new URL("http://localhost/someOtherDir");
@@ -616,6 +857,15 @@ public class CodeSourceTest extends TestCase {
      * These special URLs have a special processing in implies(), 
      * so they need to be covered and performance need to be checked 
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "implies",
+          methodArgs = {CodeSource.class}
+        )
+    })
     public void testImplies_0D() throws Exception {
         URL url0 = new URL("file:///" + System.getProperty("user.home")
                 + File.separator + "someDir");

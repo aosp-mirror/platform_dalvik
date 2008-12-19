@@ -160,6 +160,16 @@ enum {
     kDexTypeAnnotationsDirectoryItem = 0x2006,
 };
 
+/* auxillary data section chunk codes */
+enum {
+    kDexChunkClassLookup            = 0x434c4b50,   /* CLKP */
+
+    kDexChunkReducingIndexMap       = 0x5249584d,   /* RIXM */
+    kDexChunkExpandingIndexMap      = 0x4549584d,   /* EIXM */
+
+    kDexChunkEnd                    = 0x41454e44,   /* AEND */
+};
+
 /* debug info opcodes and constants */
 enum {
     DBG_END_SEQUENCE         = 0x00,
@@ -421,14 +431,38 @@ typedef struct DexEncodedArray {
  * there's less of a penalty for using a fairly sparse table.
  */
 typedef struct DexClassLookup {
-    int size;                       // total size, including "size"
-    int numEntries;                 // size of table[]; always power of 2
+    int     size;                       // total size, including "size"
+    int     numEntries;                 // size of table[]; always power of 2
     struct {
-        u4      classDescriptorHash;   // class descriptor hash code
-        int     classDescriptorOffset; // in bytes, from start of DEX
-        int     classDefOffset;        // in bytes, from start of DEX
+        u4      classDescriptorHash;    // class descriptor hash code
+        int     classDescriptorOffset;  // in bytes, from start of DEX
+        int     classDefOffset;         // in bytes, from start of DEX
     } table[1];
 } DexClassLookup;
+
+/*
+ * Map constant pool indices from one form to another.  Some or all of these
+ * may be NULL.
+ *
+ * The map values are 16-bit unsigned values.  If the values we map to
+ * require a larger range, we omit the mapping for that category (which
+ * requires that the lookup code recognize that the data will not be
+ * there for all DEX files in all categories.)
+ */
+typedef struct DexIndexMap {
+    const u2* classMap;         /* map, either expanding or reducing */
+    u4  classFullCount;         /* same as typeIdsSize */
+    u4  classReducedCount;      /* post-reduction count */
+    const u2* methodMap;
+    u4  methodFullCount;
+    u4  methodReducedCount;
+    const u2* fieldMap;
+    u4  fieldFullCount;
+    u4  fieldReducedCount;
+    const u2* stringMap;
+    u4  stringFullCount;
+    u4  stringReducedCount;
+} DexIndexMap;
 
 /*
  * Header added by DEX optimization pass.  Values are always written in
@@ -483,6 +517,9 @@ typedef struct DexFile {
     /* mapped in "auxillary" section */
     const DexClassLookup* pClassLookup;
 
+    /* mapped in "auxillary" section */
+    DexIndexMap         indexMap;
+
     /* points to start of DEX file data */
     const u1*           baseAddr;
 
@@ -490,7 +527,7 @@ typedef struct DexFile {
     int                 overhead;
 
     /* additional app-specific data structures associated with the DEX */
-    void*               auxData;
+    //void*               auxData;
 } DexFile;
 
 /*
@@ -499,14 +536,17 @@ typedef struct DexFile {
 u4 dexRoundUpPower2(u4 val);
 
 /*
- * If "full" is full, we check and verify the Opt header, and make use of
- * any pre-calculated data tables.  If it's false, "data" only includes
- * the base DEX file.  Either way, the DEX file must have already been
- * byte-swapped and structure-padded.
+ * Parse an optimized or unoptimized .dex file sitting in memory.
  *
  * On success, return a newly-allocated DexFile.
  */
-DexFile* dexFileParse(const u1* data, size_t length);
+DexFile* dexFileParse(const u1* data, size_t length, int flags);
+
+/* bit values for "flags" argument to dexFileParse */
+enum {
+    kDexParseDefault            = 0,
+    kDexParseVerifyChecksum     = 1,
+};
 
 /*
  * Correct the byte ordering in a memory-mapped DEX file.  This is only

@@ -17,13 +17,28 @@
 
 package org.apache.harmony.security.tests.java.security;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.security.GeneralSecurityException;
 
+@TestTargetClass(GeneralSecurityException.class)
 public class GeneralSecurityException2Test extends junit.framework.TestCase {
 
     /**
      * @tests java.security.GeneralSecurityException#GeneralSecurityException()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "GeneralSecurityException",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         // Test for method java.security.GeneralSecurityException()
         GeneralSecurityException e = new GeneralSecurityException();
@@ -35,6 +50,15 @@ public class GeneralSecurityException2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.GeneralSecurityException#GeneralSecurityException(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies non null parameter only",
+      targets = {
+        @TestTarget(
+          methodName = "GeneralSecurityException",
+          methodArgs = {String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() {
         // Test for method
         // java.security.GeneralSecurityException(java.lang.String)

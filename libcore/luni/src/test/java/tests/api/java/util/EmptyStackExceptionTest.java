@@ -17,9 +17,15 @@
 
 package tests.api.java.util;
 
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass; 
+
 import java.util.EmptyStackException;
 import java.util.Stack;
 
+@TestTargetClass(EmptyStackException.class) 
 public class EmptyStackExceptionTest extends junit.framework.TestCase {
 
     static Object[] objArray = new Object[10];
@@ -33,6 +39,15 @@ public class EmptyStackExceptionTest extends junit.framework.TestCase {
     /**
      * @tests java.util.EmptyStackException#EmptyStackException()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "EmptyStackException",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         // Test for method java.util.EmptyStackException()
         try {

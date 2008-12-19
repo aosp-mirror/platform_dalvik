@@ -19,10 +19,11 @@ package java.util;
 import java.io.Serializable;
 
 /**
+ * An {@code IllegalFormatFlagsException} will be thrown if the combination of
+ * the format flags is illegal.
  * 
- * The unchecked exception will be thrown out if the combination of the format
- * flags is illegal.
- * 
+ * @see java.lang.RuntimeException
+ * @since Android 1.0
  */
 public class IllegalFormatFlagsException extends IllegalFormatException
         implements Serializable {
@@ -31,10 +32,11 @@ public class IllegalFormatFlagsException extends IllegalFormatException
     private String flags;
 
     /**
-     * Constructs an IllegalFormatFlagsException with the specified flags.
+     * Constructs a new {@code IllegalFormatFlagsException} with the specified
+     * flags.
      * 
      * @param f
-     *            The specified flags.
+     *           the specified flags.
      */
     public IllegalFormatFlagsException(String f) {
         if (null == f) {
@@ -44,18 +46,18 @@ public class IllegalFormatFlagsException extends IllegalFormatException
     }
 
     /**
-     * Return the flags that are illegal.
+     * Returns the flags that are illegal.
      * 
-     * @return The flags that are illegal.
+     * @return the flags that are illegal.
      */
     public String getFlags() {
         return flags;
     }
 
     /**
-     * Return the message string of the IllegalFormatFlagsException.
+     * Returns the message string of the IllegalFormatFlagsException.
      * 
-     * @return The message string of the IllegalFormatFlagsException.
+     * @return the message string of the IllegalFormatFlagsException.
      */
     @Override
     public String getMessage() {

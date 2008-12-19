@@ -17,6 +17,11 @@
 
 package tests.api.java.net;
 
+import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -38,10 +43,20 @@ import junit.framework.TestCase;
  * 
  */
 
+@TestTargetClass(Proxy.class) 
 public class ExcludedProxyTest extends TestCase {
     /**
      * @tests java.net.HttpURLConnection#usingProxy()
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Tests Proxy functionality. Indirect test.",
+      targets = {
+        @TestTarget(
+          methodName = "Proxy",
+          methodArgs = {java.net.Proxy.Type.class, java.net.SocketAddress.class}
+        )
+    })
     public void test_usingProxy() throws Exception {
         try {
             System.setProperty("http.proxyHost",
@@ -116,6 +131,15 @@ public class ExcludedProxyTest extends TestCase {
     /**
      * @tests java.net.SocketImpl#SocketImpl()
      */
+@TestInfo(
+        level = TestLevel.PARTIAL,
+        purpose = "Tests Proxy functionality. Indirect test.",
+        targets = {
+          @TestTarget(
+            methodName = "Proxy",
+            methodArgs = {java.net.Proxy.Type.class, java.net.SocketAddress.class}
+          )
+      })
     public void test_Constructor() {
         try {
             try {
@@ -156,6 +180,15 @@ public class ExcludedProxyTest extends TestCase {
     /**
      * @tests java.net.URL#openConnection(Proxy)
      */
+@TestInfo(
+        level = TestLevel.PARTIAL,
+        purpose = "Tests Proxy functionality. Indirect test.",
+        targets = {
+          @TestTarget(
+            methodName = "Proxy",
+            methodArgs = {java.net.Proxy.Type.class, java.net.SocketAddress.class}
+          )
+      })
     public void test_openConnectionLjava_net_Proxy() throws IOException {
         SocketAddress addr1 = new InetSocketAddress(
                 Support_Configuration.ProxyServerTestHost, 808);

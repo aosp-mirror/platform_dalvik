@@ -17,12 +17,31 @@
 
 package org.apache.harmony.sql.tests.javax.sql;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.sql.SQLException;
 import javax.sql.ConnectionEvent;
+import javax.sql.PooledConnection;
+import javax.sql.RowSet;
+
 import junit.framework.TestCase;
 
+@TestTargetClass(ConnectionEvent.class)
 public class ConnectionEventTest extends TestCase {
 
+    /**
+     * @tests {@link javax.sql.RowSetEvent#RowSetEvent(javax.sql.RowSet)}.
+     */
+    @TestInfo(
+            level = TestLevel.TODO,
+            purpose = "Verifies RowSetEvent() constructor.",
+            targets = { @TestTarget(methodName = "RowSetEvent", 
+                                    methodArgs = {RowSet.class})                         
+            }
+    )    
     public void testConstructorConnection() {
         try {
             new ConnectionEvent(null);
@@ -36,6 +55,16 @@ public class ConnectionEventTest extends TestCase {
         assertNull(ce.getSQLException());
     }
     
+    /**
+     * @tests {@link javax.sql.ConnectionEvent#ConnectionEvent(PooledConnection, SQLException)}
+     */
+    @TestInfo(
+            level = TestLevel.TODO,
+            purpose = "Verifies ConnectionEvent() constructor for the abnormal case that an error has occurred on the pooled connection.",
+            targets = { @TestTarget(methodName = "testConnectionEventPooledConnection", 
+                                    methodArgs = {PooledConnection.class,SQLException.class})                         
+            }
+    )  
     public void testConstructorConnectionSQLException() {
         try {
             new ConnectionEvent(null, null);

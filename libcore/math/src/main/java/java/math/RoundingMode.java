@@ -20,61 +20,75 @@ package java.math;
 import org.apache.harmony.math.internal.nls.Messages;
 
 /**
- * An enum to specify the rounding behaviour for operations whose results
- * cannot be represented exactly.
+ * Specifies the rounding behavior for operations whose results cannot be
+ * represented exactly.
  * 
- * @author Intel Middleware Product Division
- * @author Instituto Tecnologico de Cordoba
+ * @since Android 1.0
  */
 public enum RoundingMode {
 
     /**
      * Rounding mode where positive values are rounded towards positive infinity
      * and negative values towards negative infinity.
+     * <br>
+     * Rule: {@code x.round().abs() >= x.abs()}
      * 
-     * Rule: x.round().abs() >= x.abs()
+     * @since Android 1.0
      */
     UP(BigDecimal.ROUND_UP),
 
     /**
      * Rounding mode where the values are rounded towards zero.
+     * <br>
+     * Rule: {@code x.round().abs() <= x.abs()}
      * 
-     * Rule: x.round().abs() <= x.abs()
+     * @since Android 1.0
      */
     DOWN(BigDecimal.ROUND_DOWN),
 
     /**
      * Rounding mode to round towards positive infinity. For positive values
-     * this rounding mode behaves as UP, for negative values as 
-     * DOWN.
+     * this rounding mode behaves as {@link #UP}, for negative values as
+     * {@link #DOWN}.
+     * <br>
+     * Rule: {@code x.round() >= x}
      * 
-     * Rule: x.round() >= x
+     * @since Android 1.0
      */
     CEILING(BigDecimal.ROUND_CEILING),
 
     /**
      * Rounding mode to round towards negative infinity. For positive values
-     * this rounding mode behaves as DOWN, for negative values as UP.
+     * this rounding mode behaves as {@link #DOWN}, for negative values as
+     * {@link #UP}.
+     * <br>
+     * Rule: {@code x.round() <= x}
      * 
-     * Rule: x.round() <= x 
+     * @since Android 1.0
      */
     FLOOR(BigDecimal.ROUND_FLOOR),
 
     /**
-     * Rounding mode where values are rounded towards the nearest neighbour.
-     * Ties are broken by rounding up.
+     * Rounding mode where values are rounded towards the nearest neighbor. Ties
+     * are broken by rounding up.
+     * 
+     * @since Android 1.0
      */
     HALF_UP(BigDecimal.ROUND_HALF_UP),
 
     /**
-     * Rounding mode where values are rounded towards the nearest neighbour.
-     * Ties are broken by rounding down.
+     * Rounding mode where values are rounded towards the nearest neighbor. Ties
+     * are broken by rounding down.
+     * 
+     * @since Android 1.0
      */
     HALF_DOWN(BigDecimal.ROUND_HALF_DOWN),
 
     /**
-     * Rounding mode where values are rounded towards the nearest neighbour.
-     * Ties are broken by rounding to the even neighbour.
+     * Rounding mode where values are rounded towards the nearest neighbor. Ties
+     * are broken by rounding to the even neighbor.
+     * 
+     * @since Android 1.0
      */
     HALF_EVEN(BigDecimal.ROUND_HALF_EVEN),
 
@@ -82,6 +96,8 @@ public enum RoundingMode {
      * Rounding mode where the rounding operations throws an ArithmeticException
      * for the case that rounding is necessary, i.e. for the case that the value
      * cannot be represented exactly.
+     * 
+     * @since Android 1.0
      */
     UNNECESSARY(BigDecimal.ROUND_UNNECESSARY);
 
@@ -94,14 +110,20 @@ public enum RoundingMode {
     }
 
     /**
-     * Converts rounding mode constants from class BigDecimal into
-     * RoundingMode values.
+     * Converts rounding mode constants from class {@code BigDecimal} into
+     * {@code RoundingMode} values.
      * 
-     * @param rM rounding mode constant as defined in class BigDecimal
+     * @param mode
+     *            rounding mode constant as defined in class {@code BigDecimal}
      * @return corresponding rounding mode object
+     * 
+     * @since Android 1.0
      */
-    public static RoundingMode valueOf(int rM) {
-        switch (rM) {
+    public static RoundingMode valueOf(int mode) {
+        // BEGIN android-note
+        // parameter name changed.
+        // END android-note
+        switch (mode) {
             case BigDecimal.ROUND_CEILING:
                 return CEILING;
             case BigDecimal.ROUND_DOWN:

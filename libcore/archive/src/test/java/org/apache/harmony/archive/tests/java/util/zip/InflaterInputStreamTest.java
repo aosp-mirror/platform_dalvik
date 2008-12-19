@@ -16,9 +16,13 @@
  */
 package org.apache.harmony.archive.tests.java.util.zip;
 
+import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.zip.DeflaterOutputStream;
@@ -28,6 +32,7 @@ import java.util.zip.InflaterInputStream;
 import junit.framework.TestCase;
 import tests.support.resource.Support_Resources;
 
+@TestTargetClass(InflaterInputStream.class) 
 public class InflaterInputStreamTest extends TestCase {
 
     // files hyts_constru(O),hyts_constru(OD),hyts_constru(ODI) needs to be
@@ -55,6 +60,15 @@ public class InflaterInputStreamTest extends TestCase {
     /**
      * @tests java.util.zip.InflaterInputStream#InflaterInputStream(java.io.InputStream)
      */
+@TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Test is empty",
+      targets = {
+        @TestTarget(
+          methodName = "InflaterInputStream",
+          methodArgs = {java.io.InputStream.class}
+        )
+    })
     public void test_ConstructorLjava_io_InputStream() throws IOException {
         //FIXME This test doesn't pass in Harmony classlib or Sun 5.0_7 RI
         /*
@@ -78,6 +92,15 @@ public class InflaterInputStreamTest extends TestCase {
      * @tests java.util.zip.InflaterInputStream#InflaterInputStream(java.io.InputStream,
      *        java.util.zip.Inflater)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "InflaterInputStream",
+          methodArgs = {java.io.InputStream.class, java.util.zip.Inflater.class}
+        )
+    })
     public void test_ConstructorLjava_io_InputStreamLjava_util_zip_Inflater() throws IOException {
         byte byteArray[] = new byte[100];
         InputStream infile = Support_Resources.getStream("hyts_constru_OD.txt");
@@ -93,6 +116,15 @@ public class InflaterInputStreamTest extends TestCase {
      * @tests java.util.zip.InflaterInputStream#InflaterInputStream(java.io.InputStream,
      *        java.util.zip.Inflater, int)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IllegalArgumentException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "InflaterInputStream",
+          methodArgs = {java.io.InputStream.class, java.util.zip.Inflater.class, int.class}
+        )
+    })
     public void test_ConstructorLjava_io_InputStreamLjava_util_zip_InflaterI() throws IOException {
         int result = 0;
         int buffer[] = new int[500];
@@ -112,6 +144,15 @@ public class InflaterInputStreamTest extends TestCase {
     /**
      * @tests java.util.zip.InflaterInputStream#mark(int)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "mark",
+          methodArgs = {int.class}
+        )
+    })
     public void test_markI() {
         InputStream is = new ByteArrayInputStream(new byte[10]);
         InflaterInputStream iis = new InflaterInputStream(is);
@@ -124,6 +165,15 @@ public class InflaterInputStreamTest extends TestCase {
     /**
      * @tests java.util.zip.InflaterInputStream#markSupported()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "markSupported",
+          methodArgs = {}
+        )
+    })
     public void test_markSupported() {
         InputStream is = new ByteArrayInputStream(new byte[10]);
         InflaterInputStream iis = new InflaterInputStream(is);
@@ -134,6 +184,15 @@ public class InflaterInputStreamTest extends TestCase {
     /**
      * @tests java.util.zip.InflaterInputStream#read()
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {}
+        )
+    })
     public void test_read() throws IOException {
         int result = 0;
         int buffer[] = new int[500];
@@ -161,6 +220,15 @@ public class InflaterInputStreamTest extends TestCase {
     /**
      * @tests java.util.zip.InflaterInputStream#read(byte[], int, int)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException & ZipException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {byte[].class, int.class, int.class}
+        )
+    })
     public void test_read$BII() throws IOException{
         byte[] test = new byte[507];
         for (int i = 0; i < 256; i++) {
@@ -195,6 +263,15 @@ public class InflaterInputStreamTest extends TestCase {
     /**
      * @tests java.util.zip.InflaterInputStream#reset()
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Checks IOException only",
+      targets = {
+        @TestTarget(
+          methodName = "reset",
+          methodArgs = {}
+        )
+    })
     public void test_reset() {
         InputStream is = new ByteArrayInputStream(new byte[10]);
         InflaterInputStream iis = new InflaterInputStream(is);
@@ -209,6 +286,15 @@ public class InflaterInputStreamTest extends TestCase {
     /**
      * @tests java.util.zip.InflaterInputStream#skip(long)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "skip",
+          methodArgs = {long.class}
+        )
+    })
     public void test_skipJ() throws IOException {
         InputStream is = Support_Resources.getStream("hyts_available.tst");
         InflaterInputStream iis = new InflaterInputStream(is);
@@ -248,6 +334,15 @@ public class InflaterInputStreamTest extends TestCase {
     /**
      * @tests java.util.zip.InflaterInputStream#skip(long)
      */
+@TestInfo(
+          level = TestLevel.PARTIAL,
+          purpose = "IOException checking missed.",
+          targets = {
+            @TestTarget(
+              methodName = "skip",
+              methodArgs = {long.class}
+            )
+        })
     public void test_skipJ2() throws IOException {
         int result = 0;
         int buffer[] = new int[100];
@@ -306,6 +401,15 @@ public class InflaterInputStreamTest extends TestCase {
     /**
      * @tests java.util.zip.InflaterInputStream#available()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "available",
+          methodArgs = {}
+        )
+    })
     public void test_available() throws IOException {
         InputStream is = Support_Resources.getStream("hyts_available.tst");
         InflaterInputStream iis = new InflaterInputStream(is);
@@ -336,6 +440,15 @@ public class InflaterInputStreamTest extends TestCase {
     /**
      * @tests java.util.zip.InflaterInputStream#close()
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "close",
+          methodArgs = {}
+        )
+    })
     public void test_close() throws IOException {
         InflaterInputStream iin = new InflaterInputStream(
                 new ByteArrayInputStream(new byte[0]));

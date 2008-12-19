@@ -23,40 +23,38 @@
 package java.security;
 
 /**
- * This runtime exception is thrown when an access control check indicates that
- * access should not be granted.
+ * {@code AccessControlException} is thrown if the access control infrastructure
+ * denies protected access due to missing permissions.
  * 
+ * @since Android 1.0
  */
 public class AccessControlException extends SecurityException {
 
     private static final long serialVersionUID = 5138225684096988535L;
 
-    /**
-     * @com.intel.drl.spec_ref 
-     */
     private Permission perm; // Named as demanded by Serialized Form.
 
     /**
-     * Constructs a new instance of this class with its walkback and message
-     * filled in.
-     * 
+     * Constructs a new instance of {@code AccessControlException} with the
+     * given message.
      * 
      * @param message
-     *            String The detail message for the exception.
+     *            the detail message for this exception.
+     * @since Android 1.0
      */
     public AccessControlException(String message) {
         super(message);
     }
 
     /**
-     * Constructs a new instance of this class with its walkback, message and
-     * associated permission all filled in.
-     * 
+     * Constructs a new instance of {@code AccessControlException} with the
+     * given message and the requested {@code Permission} which was not granted.
      * 
      * @param message
-     *            String The detail message for the exception.
+     *            the detail message for the exception.
      * @param perm
-     *            Permission The failed permission.
+     *            the requested {@code Permission} which was not granted.
+     * @since Android 1.0
      */
     public AccessControlException(String message, Permission perm) {
         super(message);
@@ -64,10 +62,11 @@ public class AccessControlException extends SecurityException {
     }
 
     /**
-     * Returns the receiver's permission.
+     * Returns the requested permission that caused this Exception or {@code
+     * null} if there is no corresponding {@code Permission}.
      * 
-     * 
-     * @return Permission the receiver's permission
+     * @return the requested permission that caused this Exception, maybe {@code null}.
+     * @since Android 1.0
      */
     public Permission getPermission() {
         return perm;

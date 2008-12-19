@@ -16,6 +16,8 @@
 
 package tests.api.org.apache.harmony.kernel.dalvik;
 
+import dalvik.annotation.TestTargetClass;
+
 import junit.framework.Assert;
 import junit.framework.TestCase;
 
@@ -26,6 +28,7 @@ import java.lang.reflect.Field;
 /**
  * Tests for the <code>park()</code> functionality of {@link Unsafe}.
  */
+@TestTargetClass(Unsafe.class)
 public class ThreadsTest extends TestCase {
     private static Unsafe UNSAFE = null;
     

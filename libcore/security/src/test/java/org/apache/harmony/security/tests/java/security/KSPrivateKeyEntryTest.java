@@ -22,6 +22,11 @@
 
 package org.apache.harmony.security.tests.java.security;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.cert.Certificate;
@@ -33,6 +38,7 @@ import junit.framework.TestCase;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
+@TestTargetClass(KeyStore.PrivateKeyEntry.class)
 /**
  * Tests for <code>KeyStore.PrivateKeyEntry</code>  class constructor and methods 
  * 
@@ -67,6 +73,15 @@ public class KSPrivateKeyEntryTest extends TestCase {
      * constructor
      * Assertion: throws NullPointerException when privateKey is null
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verification of positive case with valid parameters missed",
+      targets = {
+        @TestTarget(
+          methodName = "PrivateKeyEntry",
+          methodArgs = {PrivateKey.class, Certificate[].class}
+        )
+    })
     public void testPrivateKeyEntry01() {
         Certificate[] certs = new MyCertificate[1];//new Certificate[1];
         PrivateKey pk = null;
@@ -83,6 +98,15 @@ public class KSPrivateKeyEntryTest extends TestCase {
      * Assertion: throws NullPointerException when chain is null
      * and throws IllegalArgumentException when chain length is 0
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verification of positive case with valid parameters missed",
+      targets = {
+        @TestTarget(
+          methodName = "PrivateKeyEntry",
+          methodArgs = {PrivateKey.class, Certificate[].class}
+        )
+    })
     public void testPrivateKeyEntry02() {
         Certificate[] chain = null;
         PrivateKey pk = new tmpPrivateKey();
@@ -104,6 +128,15 @@ public class KSPrivateKeyEntryTest extends TestCase {
      * Assertion: throws IllegalArgumentException when chain contains certificates 
      * of different types
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verification of positive case with valid parameters missed",
+      targets = {
+        @TestTarget(
+          methodName = "PrivateKeyEntry",
+          methodArgs = {PrivateKey.class, Certificate[].class}
+        )
+    })
     public void testPrivateKeyEntry03() {
         createParams(true, false);
         try {
@@ -119,6 +152,15 @@ public class KSPrivateKeyEntryTest extends TestCase {
      * Assertion: throws IllegalArgumentException when algorithm of privateKey 
      * does not match the algorithm of PublicKey in the end certificate (with 0 index)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verification of positive case with valid parameters missed",
+      targets = {
+        @TestTarget(
+          methodName = "PrivateKeyEntry",
+          methodArgs = {PrivateKey.class, Certificate[].class}
+        )
+    })
     public void testPrivateKeyEntry04() {
         createParams(false, true);               
         try {
@@ -132,6 +174,15 @@ public class KSPrivateKeyEntryTest extends TestCase {
      * Test for <code>getPrivateKey()</code> method
      * Assertion: returns PrivateKey object
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getPrivateKey",
+          methodArgs = {}
+        )
+    })
     public void testGetPrivateKey() {
         createParams(false, false);
         KeyStore.PrivateKeyEntry ksPKE = new KeyStore.PrivateKeyEntry(
@@ -144,6 +195,15 @@ public class KSPrivateKeyEntryTest extends TestCase {
      * Test for <code>getCertificateChain()</code> method Assertion: returns
      * array of the Certificates corresponding to chain
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getCertificateChain",
+          methodArgs = {}
+        )
+    })
     public void testGetCertificateChain() {
         createParams(false, false);
         KeyStore.PrivateKeyEntry ksPKE = new KeyStore.PrivateKeyEntry(
@@ -160,6 +220,15 @@ public class KSPrivateKeyEntryTest extends TestCase {
      * Test for <code>getCertificate()</code> method
      * Assertion: returns end Certificate (with 0 index in chain)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getCertificate",
+          methodArgs = {}
+        )
+    })
     public void testGetCertificate() {
         createParams(false, false);
         KeyStore.PrivateKeyEntry ksPKE = new KeyStore.PrivateKeyEntry(
@@ -172,6 +241,15 @@ public class KSPrivateKeyEntryTest extends TestCase {
      * Test for <code>toString()</code> method
      * Assertion: returns non null String
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public void testToString() {
         createParams(false, false);
         KeyStore.PrivateKeyEntry ksPKE = new KeyStore.PrivateKeyEntry(

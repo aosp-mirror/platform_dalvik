@@ -1,5 +1,4 @@
-/* 
- * Licensed to the Apache Software Foundation (ASF) under one or more
+/* Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
@@ -18,9 +17,10 @@
 package java.lang.reflect;
 
 /**
- * Common interface for all Java types.
+ * Common interface implemented by all Java types.
  * 
  * @since 1.5
+ * @since Android 1.0
  */
 public interface Type {
     // Empty

@@ -197,7 +197,7 @@ int process(const char* fileName)
     }
     mapped = true;
 
-    pDexFile = dexFileParse(map.addr, map.length);
+    pDexFile = dexFileParse(map.addr, map.length, kDexParseDefault);
     if (pDexFile == NULL) {
         fprintf(stderr, "Warning: DEX parse failed for '%s'\n", fileName);
         goto bail;

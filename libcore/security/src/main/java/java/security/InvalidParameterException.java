@@ -23,31 +23,31 @@
 package java.security;
 
 /**
- * This exception is thrown when an invalid parameter is passed to a method.
+ * {@code InvalidParameterException} indicates exceptional conditions, caused by
+ * invalid parameters.
  * 
+ * @since Android 1.0
  */
 public class InvalidParameterException extends IllegalArgumentException {
 
-    /**
-     * @com.intel.drl.spec_ref
-     */
     private static final long serialVersionUID = -857968536935667808L;
 
     /**
-     * Constructs a new instance of this class with its walkback and message
-     * filled in.
-     * 
+     * Constructs a new instance of {@code InvalidParameterException} with the
+     * given message.
      * 
      * @param msg
-     *            String The detail message for the exception.
+     *            the detail message for this exception.
+     * @since Android 1.0
      */
     public InvalidParameterException(String msg) {
         super(msg);
     }
 
     /**
-     * Constructs a new instance of this class with its walkback filled in.
+     * Constructs a new instance of {@code InvalidParameterException}.
      * 
+     * @since Android 1.0
      */
     public InvalidParameterException() {
     }

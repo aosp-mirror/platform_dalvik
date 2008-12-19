@@ -16,11 +16,27 @@
 
 #include "clz.h"
 
-int clz_impl(unsigned long int x)
+/*
+ * Implementation of CLZ; intended to mimic gcc's __builtin_clz.
+ *
+ * Returns the number of leading zero bits, starting at the most
+ * significant bit position.  If the argument is zero, the result is
+ * undefined.
+ *
+ * (For best results, this file should always be compiled for ARM, not THUMB.)
+ */
+int dvmClzImpl(unsigned int x)
 {
-#if defined(__arm__) && !defined(__thumb__)
+#ifdef HAVE_BUILTIN_CLZ
+    /*
+     * This file was compiled with flags that allow it to use the built-in
+     * CLZ (e.g. ARM mode for ARMv5 or later).
+     */
     return __builtin_clz(x);
 #else
+    /*
+     * Built-in version not available.
+     */
     if (!x) return 32;
     int e = 31;
     if (x&0xFFFF0000)   { e -=16; x >>=16; }
@@ -31,3 +47,4 @@ int clz_impl(unsigned long int x)
     return e;
 #endif
 }
+

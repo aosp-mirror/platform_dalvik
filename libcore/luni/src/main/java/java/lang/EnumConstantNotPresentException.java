@@ -1,18 +1,17 @@
-/*
- *  Licensed to the Apache Software Foundation (ASF) under one or more
- *  contributor license agreements.  See the NOTICE file distributed with
- *  this work for additional information regarding copyright ownership.
- *  The ASF licenses this file to You under the Apache License, Version 2.0
- *  (the "License"); you may not use this file except in compliance with
- *  the License.  You may obtain a copy of the License at
- *
+/* Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ * 
  *     http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package java.lang;
@@ -20,13 +19,9 @@ package java.lang;
 import org.apache.harmony.luni.util.Msg;
 
 /**
- * <p>
- * Indicates that an <code>enum</code> constant does not exist for a
- * particular name.
- * </p>
+ * Thrown if an {@code enum} constant does not exist for a particular name.
  * 
- * @since 1.5
- * @author Nathan Beyer (Harmony)
+ * @since Android 1.0
  */
 public class EnumConstantNotPresentException extends RuntimeException {
 
@@ -38,12 +33,15 @@ public class EnumConstantNotPresentException extends RuntimeException {
     private final String constantName;
 
     /**
-     * <p>
-     * Constructs an instance for the passed enum and constant name.
-     * </p>
+     * Constructs a new {@code EnumConstantNotPresentException} with the current
+     * stack trace and a detail message based on the specified enum type and
+     * missing constant name.
      * 
-     * @param enumType The enum type.
-     * @param constantName The missing constant name.
+     * @param enumType
+     *            the enum type.
+     * @param constantName
+     *            the missing constant name.
+     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     public EnumConstantNotPresentException(Class<? extends Enum> enumType,
@@ -55,11 +53,10 @@ public class EnumConstantNotPresentException extends RuntimeException {
     }
 
     /**
-     * <p>
-     * The enum type from which the constant name is missing.
-     * </p>
+     * Gets the enum type for which the constant name is missing.
      * 
-     * @return A <code>Class</code> instance.
+     * @return the enum type for which a constant name has not been found.
+     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     public Class<? extends Enum> enumType() {
@@ -67,11 +64,11 @@ public class EnumConstantNotPresentException extends RuntimeException {
     }
 
     /**
-     * <p>
-     * The name of the constant missing.
-     * </p>
+     * Gets the name of the missing constant.
      * 
-     * @return A <code>String</code> instance.
+     * @return the name of the constant that has not been found in the enum
+     *         type.
+     * @since Android 1.0
      */
     public String constantName() {
         return constantName;

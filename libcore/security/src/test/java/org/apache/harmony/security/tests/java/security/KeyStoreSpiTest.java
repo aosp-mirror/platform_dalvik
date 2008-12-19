@@ -22,6 +22,11 @@
 
 package org.apache.harmony.security.tests.java.security;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.InvalidKeyException;
@@ -43,7 +48,7 @@ import org.apache.harmony.security.tests.support.MyKeyStoreSpi;
 import org.apache.harmony.security.tests.support.MyLoadStoreParams;
 
 import junit.framework.TestCase;
-
+@TestTargetClass(KeyStoreSpi.class)
 /**
  * Tests for <code>KeyStoreSpi</code> constructor and methods
  * 
@@ -64,7 +69,16 @@ public class KeyStoreSpiTest extends TestCase {
      * @tests java.security.KeyStore.engineEntryInstanceOf(String, Class<?
      * extends Entry>)
      */
-    public void test_engineEntryInstanceOf() throws Exception {
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verification with null parameters missed",
+      targets = {
+        @TestTarget(
+          methodName = "engineEntryInstanceOf",
+          methodArgs = {String.class, Class.class}
+        )
+    })
+    public void _test_engineEntryInstanceOf() throws Exception {
 
         KeyStoreSpi ksSpi = new MyKeyStoreSpi();
 
@@ -89,6 +103,28 @@ public class KeyStoreSpiTest extends TestCase {
      * null entry; engineStore(..) throws UnexpectedOperationException;
      * engineSetEntry(..) throws KeyStoreException or NullPointerException
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "1. Verification of exception cases missed for some methods. " +
+                  "2. Verification for all non null parameters missed for all methods.",
+      targets = {
+        @TestTarget(
+          methodName = "engineLoad",
+          methodArgs = {KeyStore.LoadStoreParameter.class}
+        ),
+        @TestTarget(
+          methodName = "engineStore",
+          methodArgs = {KeyStore.LoadStoreParameter.class}
+        ),
+        @TestTarget(
+          methodName = "engineGetEntry",
+          methodArgs = {String.class, KeyStore.ProtectionParameter.class}
+        ),
+        @TestTarget(
+          methodName = "engineSetEntry",
+          methodArgs = {String.class, KeyStore.Entry.class, KeyStore.ProtectionParameter.class}
+        )
+    })
     public void testKeyStoteSpi01() throws IOException,
             NoSuchAlgorithmException, CertificateException,
             UnrecoverableEntryException, KeyStoreException {
@@ -130,6 +166,31 @@ public class KeyStoreSpiTest extends TestCase {
      * Test for <code>KeyStoreSpi()</code> constructor and abstract engine
      * methods. Assertion: creates new KeyStoreSpi object.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verification of positive case for all methods missed",
+      targets = {
+        @TestTarget(
+          methodName = "engineSetKeyEntry",
+          methodArgs = {String.class, java.security.Key.class, char[].class, Certificate[].class}
+        ),
+        @TestTarget(
+          methodName = "engineSetKeyEntry",
+          methodArgs = {String.class, byte[].class, Certificate[].class}
+        ),
+        @TestTarget(
+          methodName = "engineSetCertificateEntry",
+          methodArgs = {String.class, Certificate.class}
+        ),
+        @TestTarget(
+          methodName = "engineDeleteEntry",
+          methodArgs = {String.class}
+        ),
+        @TestTarget(
+          methodName = "engineStore",
+          methodArgs = {java.io.OutputStream.class, char[].class}
+        )
+    })
     public void testKeyStoteSpi02() throws NoSuchAlgorithmException,
             UnrecoverableKeyException, CertificateException {
         KeyStoreSpi ksSpi = new MyKeyStoreSpi();
@@ -175,6 +236,15 @@ public class KeyStoreSpiTest extends TestCase {
     /**
      * @tests java.security.KeyStoreSpi#engineLoad(KeyStore.LoadStoreParameter)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IllegalArgumentException, NoSuchAlgorithmException, CertificateException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "engineLoad",
+          methodArgs = {KeyStore.LoadStoreParameter.class}
+        )
+    })
     public void test_engineLoadLjava_security_KeyStore_LoadStoreParameter()
             throws Exception {
 

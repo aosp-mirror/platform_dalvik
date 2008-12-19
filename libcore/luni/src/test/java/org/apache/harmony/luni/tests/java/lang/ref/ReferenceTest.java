@@ -16,18 +16,72 @@
  */
 package org.apache.harmony.luni.tests.java.lang.ref;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
+import junit.framework.AssertionFailedError;
+
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
 import java.lang.ref.WeakReference;
-import junit.framework.AssertionFailedError;
 
+@TestTargetClass(Reference.class) 
 public class ReferenceTest extends junit.framework.TestCase {
     Object tmpA, tmpB, obj;
 
     volatile WeakReference wr;
+
+    /* 
+     * For test_subclass().
+     */
+    static TestWeakReference twr;
     static AssertionFailedError error;
     static boolean testObjectFinalized;
+    static class TestWeakReference<T> extends WeakReference<T> {
+        public volatile boolean clearSeen = false;
+        public volatile boolean enqueueSeen = false;
+
+        public TestWeakReference(T referent) {
+            super(referent);
+        }
+
+        public TestWeakReference(T referent, ReferenceQueue<? super T> q) {
+            super(referent, q);
+        }
+
+        public void clear() {
+            super.clear();
+            clearSeen = true;
+            if (testObjectFinalized) {
+                error = new AssertionFailedError("Clear should happen " +
+                        "before finalization.");
+                throw error;
+            }
+            if (enqueueSeen) {
+                error = new AssertionFailedError("Clear should happen " +
+                        "before enqueue.");
+                throw error;
+            }
+        }
+
+        public boolean enqueue() {
+            enqueueSeen = true;
+            if (!clearSeen) {
+                error = new AssertionFailedError("Clear should happen " +
+                        "before enqueue.");
+                throw error;
+            }
+
+            /* Do this last;  it may notify the main test thread,
+             * and anything we'd do after it (e.g., setting clearSeen)
+             * wouldn't be seen.
+             */
+            return super.enqueue();
+        }
+    }
 
     protected void doneSuite() {
         tmpA = tmpB = obj = null;
@@ -36,6 +90,15 @@ public class ReferenceTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.ref.Reference#clear()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "clear",
+          methodArgs = {}
+        )
+    })
     public void test_clear() {
         tmpA = new Object();
         tmpB = new Object();
@@ -54,6 +117,15 @@ public class ReferenceTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.ref.Reference#enqueue()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "enqueue",
+          methodArgs = {}
+        )
+    })
     public void test_enqueue() {
         ReferenceQueue rq = new ReferenceQueue();
         obj = new Object();
@@ -81,6 +153,15 @@ public class ReferenceTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.ref.Reference#enqueue()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies positive functionlity.",
+      targets = {
+        @TestTarget(
+          methodName = "get",
+          methodArgs = {}
+        )
+    })
     public void test_general() {
         // Test the general/overall functionality of Reference.
 
@@ -144,6 +225,15 @@ public class ReferenceTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.ref.Reference#get()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check that this method returns null.",
+      targets = {
+        @TestTarget(
+          methodName = "get",
+          methodArgs = {}
+        )
+    })
     public void test_get() {
         // SM.
         obj = new Object();
@@ -154,6 +244,15 @@ public class ReferenceTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.ref.Reference#isEnqueued()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isEnqueued",
+          methodArgs = {}
+        )
+    })
     public void test_isEnqueued() {
         ReferenceQueue rq = new ReferenceQueue();
         obj = new Object();

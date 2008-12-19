@@ -17,9 +17,13 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
@@ -43,6 +47,7 @@ import java.util.Vector;
 
 import tests.support.resource.Support_Resources;
 
+@TestTargetClass(Class.class) 
 public class ClassTest extends junit.framework.TestCase {
 
     /*
@@ -105,6 +110,15 @@ public class ClassTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Class#forName(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "ExceptionInInitializerError is not tested, if it's possible.",
+      targets = {
+        @TestTarget(
+          methodName = "forName",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_forNameLjava_lang_String() throws Exception {
         assertSame("Class for name failed for java.lang.Object",
                    Object.class, Class.forName("java.lang.Object"));
@@ -183,6 +197,15 @@ public class ClassTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Class#getClasses()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getClasses",
+          methodArgs = {}
+        )
+    })
     public void test_getClasses() {
         assertEquals("Incorrect class array returned",
                      2, ClassTest.class.getClasses().length);
@@ -191,7 +214,16 @@ public class ClassTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Class#getClasses()
      */
-    public void test_getClasses_subtest0() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getClasses",
+          methodArgs = {}
+        )
+    })
+    public void _test_getClasses_subtest0() {
         final Permission privCheckPermission = new BasicPermission("Privilege check") {
             private static final long serialVersionUID = 1L;
         };
@@ -376,6 +408,15 @@ public class ClassTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Class#getComponentType()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getComponentType",
+          methodArgs = {}
+        )
+    })
     public void test_getComponentType() {
         assertSame("int array does not have int component type", int.class, int[].class
                 .getComponentType());
@@ -387,6 +428,15 @@ public class ClassTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Class#getConstructor(java.lang.Class[])
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify positive functionality and SecurityException.",
+      targets = {
+        @TestTarget(
+          methodName = "getConstructor",
+          methodArgs = {java.lang.Class[].class}
+        )
+    })
     public void test_getConstructor$Ljava_lang_Class()
         throws NoSuchMethodException {
         TestClass.class.getConstructor(new Class[0]);
@@ -401,6 +451,15 @@ public class ClassTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Class#getConstructors()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify SecurityException.",
+      targets = {
+        @TestTarget(
+          methodName = "getConstructors",
+          methodArgs = {}
+        )
+    })
     public void test_getConstructors() throws Exception {
         Constructor[] c = TestClass.class.getConstructors();
         assertEquals("Incorrect number of constructors returned", 1, c.length);
@@ -409,6 +468,15 @@ public class ClassTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Class#getDeclaredClasses()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Doesn't verify getDeclaredClasses method.",
+      targets = {
+        @TestTarget(
+          methodName = "getDeclaredClasses",
+          methodArgs = {}
+        )
+    })
     public void test_getDeclaredClasses() {
         assertEquals("Incorrect class array returned", 2, ClassTest.class.getClasses().length);
     }
@@ -416,6 +484,15 @@ public class ClassTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Class#getDeclaredConstructor(java.lang.Class[])
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NoSuchMethodException, SecurityException are not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "getDeclaredConstructor",
+          methodArgs = {java.lang.Class[].class}
+        )
+    })
     public void test_getDeclaredConstructor$Ljava_lang_Class() throws Exception {
         Constructor<TestClass> c = TestClass.class.getDeclaredConstructor(new Class[0]);
         assertNull("Incorrect constructor returned", c.newInstance().cValue());
@@ -425,6 +502,15 @@ public class ClassTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Class#getDeclaredConstructors()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SecurityException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "getDeclaredConstructors",
+          methodArgs = {}
+        )
+    })
     public void test_getDeclaredConstructors() throws Exception {
         Constructor[] c = TestClass.class.getDeclaredConstructors();
         assertEquals("Incorrect number of constructors returned", 2, c.length);
@@ -433,6 +519,15 @@ public class ClassTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Class#getDeclaredField(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions are not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "getDeclaredField",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_getDeclaredFieldLjava_lang_String() throws Exception {
         Field f = TestClass.class.getDeclaredField("pubField");
         assertEquals("Returned incorrect field", 2, f.getInt(new TestClass()));
@@ -441,6 +536,15 @@ public class ClassTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Class#getDeclaredFields()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions are not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "getDeclaredFields",
+          methodArgs = {}
+        )
+    })
     public void test_getDeclaredFields() throws Exception {
         Field[] f = TestClass.class.getDeclaredFields();
         assertEquals("Returned incorrect number of fields", 4, f.length);
@@ -453,6 +557,15 @@ public class ClassTest extends junit.framework.TestCase {
      * @tests java.lang.Class#getDeclaredMethod(java.lang.String,
      *        java.lang.Class[])
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions are not tested.",
+      targets = {
+        @TestTarget(
+          methodName = "getDeclaredMethod",
+          methodArgs = {java.lang.String.class, java.lang.Class[].class}
+        )
+    })
     public void test_getDeclaredMethodLjava_lang_String$Ljava_lang_Class() throws Exception {
         Method m = TestClass.class.getDeclaredMethod("pubMethod", new Class[0]);
         assertEquals("Returned incorrect method", 2, ((Integer) (m.invoke(new TestClass())))
@@ -463,6 +576,15 @@ public class ClassTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Class#getDeclaredMethods()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SecurityException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "getDeclaredMethods",
+          methodArgs = {}
+        )
+    })
     public void test_getDeclaredMethods() throws Exception {
         Method[] m = TestClass.class.getDeclaredMethods();
         assertEquals("Returned incorrect number of methods", 3, m.length);
@@ -473,6 +595,15 @@ public class ClassTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Class#getDeclaringClass()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Simple test.",
+      targets = {
+        @TestTarget(
+          methodName = "getDeclaringClass",
+          methodArgs = {}
+        )
+    })
     public void test_getDeclaringClass() {
         assertEquals(ClassTest.class, TestClass.class.getDeclaringClass());
     }
@@ -480,6 +611,15 @@ public class ClassTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Class#getField(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NullPointerException, SecurityException are not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "getField",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_getFieldLjava_lang_String() throws Exception {
         Field f = TestClass.class.getField("pubField");
         assertEquals("Returned incorrect field", 2, f.getInt(new TestClass()));
@@ -494,6 +634,15 @@ public class ClassTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Class#getFields()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SecurityException is not tested.",
+      targets = {
+        @TestTarget(
+          methodName = "getFields",
+          methodArgs = {}
+        )
+    })
     public void test_getFields() throws Exception {
         Field[] f = TestClass.class.getFields();
         assertEquals("Incorrect number of fields", 2, f.length);
@@ -505,6 +654,15 @@ public class ClassTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Class#getInterfaces()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getInterfaces",
+          methodArgs = {}
+        )
+    })
     public void test_getInterfaces() {
         Class[] interfaces;
         List<?> interfaceList;
@@ -520,6 +678,15 @@ public class ClassTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Class#getMethod(java.lang.String, java.lang.Class[])
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NullPointerException, SecurityException are not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "getMethod",
+          methodArgs = {java.lang.String.class, java.lang.Class[].class}
+        )
+    })
     public void test_getMethodLjava_lang_String$Ljava_lang_Class() throws Exception {
         Method m = TestClass.class.getMethod("pubMethod", new Class[0]);
         assertEquals("Returned incorrect method", 2, ((Integer) (m.invoke(new TestClass())))
@@ -536,6 +703,15 @@ public class ClassTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Class#getMethods()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SecurityException is not tested.",
+      targets = {
+        @TestTarget(
+          methodName = "getMethods",
+          methodArgs = {}
+        )
+    })
     public void test_getMethods() throws Exception {
         Method[] m = TestClass.class.getMethods();
         assertEquals("Returned incorrect number of methods",
@@ -551,6 +727,15 @@ public class ClassTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Class#getModifiers()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getModifiers",
+          methodArgs = {}
+        )
+    })
     public void test_getModifiers() {
         int dcm = PrivateClass.class.getModifiers();
         assertFalse("default class is public", Modifier.isPublic(dcm));
@@ -566,6 +751,15 @@ public class ClassTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Class#getName()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getName",
+          methodArgs = {}
+        )
+    })
     public void test_getName() throws Exception {
         String className = Class.forName("java.lang.Object").getName();
         assertNotNull(className);
@@ -585,6 +779,15 @@ public class ClassTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Class#getResource(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getResource",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_getResourceLjava_lang_String() {
         final String name = "/org/apache/harmony/luni/tests/java/lang/HelloWorld.txt";
         URL res = getClass().getResource(name);
@@ -594,7 +797,16 @@ public class ClassTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Class#getResourceAsStream(java.lang.String)
      */
-    public void test_getResourceAsStreamLjava_lang_String() throws Exception {
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NullPointerException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "getResourceAsStream",
+          methodArgs = {java.lang.String.class}
+        )
+    })
+    public void _test_getResourceAsStreamLjava_lang_String() throws Exception {
         final String name = "/org/apache/harmony/luni/tests/test_resource.txt";
         assertNotNull("the file " + name + " can not be found in this directory", getClass()
                 .getResourceAsStream(name));
@@ -620,6 +832,15 @@ public class ClassTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Class#getSuperclass()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getSuperclass",
+          methodArgs = {}
+        )
+    })
     public void test_getSuperclass() {
         assertNull("Object has a superclass???", Object.class.getSuperclass());
         assertSame("Normal class has bogus superclass", InputStream.class,
@@ -633,6 +854,15 @@ public class ClassTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Class#isArray()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isArray",
+          methodArgs = {}
+        )
+    })
     public void test_isArray() throws ClassNotFoundException {
         assertTrue("Non-array type claims to be.", !int.class.isArray());
         Class<?> clazz = null;
@@ -649,6 +879,15 @@ public class ClassTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Class#isAssignableFrom(java.lang.Class)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NullPointerException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "isAssignableFrom",
+          methodArgs = {java.lang.Class.class}
+        )
+    })
     public void test_isAssignableFromLjava_lang_Class() {
         Class<?> clazz1 = null;
         Class<?> clazz2 = null;
@@ -668,6 +907,15 @@ public class ClassTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Class#isInterface()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isInterface",
+          methodArgs = {}
+        )
+    })
     public void test_isInterface() throws ClassNotFoundException {
         assertTrue("Prim type claims to be interface.", !int.class.isInterface());
         Class<?> clazz = null;
@@ -686,6 +934,15 @@ public class ClassTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Class#isPrimitive()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isPrimitive",
+          methodArgs = {}
+        )
+    })
     public void test_isPrimitive() {
         assertFalse("Interface type claims to be primitive.", Runnable.class.isPrimitive());
         assertFalse("Object type claims to be primitive.", Object.class.isPrimitive());
@@ -698,6 +955,15 @@ public class ClassTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Class#newInstance()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "newInstance",
+          methodArgs = {}
+        )
+    })
     public void test_newInstance() throws Exception {
         Class<?> clazz = null;
         clazz = Class.forName("java.lang.Object");
@@ -719,6 +985,15 @@ public class ClassTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Class#toString()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public void test_toString() throws ClassNotFoundException {
         assertEquals("Class toString printed wrong value",
                      "int", int.class.toString());
@@ -736,9 +1011,17 @@ public class ClassTest extends junit.framework.TestCase {
                      "class [Ljava.lang.Object;", clazz.toString());
     }
     
-    
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NullPointerException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "getResourceAsStream",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     // Regression Test for JIRA-2047
-    public void test_getResourceAsStream_withSharpChar() throws Exception{
+    public void _test_getResourceAsStream_withSharpChar() throws Exception{
         InputStream in = getClass().getResourceAsStream("/"+FILENAME);
         assertNotNull(in);
         in.close();
@@ -756,7 +1039,17 @@ public class ClassTest extends junit.framework.TestCase {
          * Regression test for HARMONY-2644:
          * Load system and non-system array classes via Class.forName()
          */
-        public void test_forName_arrays() throws Exception {
+        @TestInfo(
+                level = TestLevel.PARTIAL,
+                purpose = "LinkageError, ExceptionInInitializerError are " +
+                        "not verified.",
+                targets = {
+                        @TestTarget(
+                                methodName = "forName",
+                                methodArgs = {java.lang.String.class}
+                        )
+        })
+        public void _test_forName_arrays() throws Exception {
             Class c1 = getClass();
             String s = c1.getName();
             Class a1 = Class.forName("[L" + s + ";");

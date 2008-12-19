@@ -16,6 +16,11 @@
 
 package org.apache.harmony.nio.tests.java.nio.channels.spi;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.io.IOException;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.Pipe;
@@ -26,12 +31,21 @@ import java.nio.channels.spi.SelectorProvider;
 import java.security.Permission;
 
 import junit.framework.TestCase;
-
+@TestTargetClass(SelectorProvider.class)
 public class SelectorProviderTest extends TestCase {
 
     /**
      * @tests SelectorProvider#provider() using security manager
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "provider",
+          methodArgs = {}
+        )
+    })
     public void test_provider_security() {        
         SecurityManager originalSecuirtyManager = System.getSecurityManager();
         System.setSecurityManager(new MockSelectorProviderSecurityManager());
@@ -48,6 +62,15 @@ public class SelectorProviderTest extends TestCase {
     /**
      * @tests SelectorProvider#provider() using security manager
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "provider",
+          methodArgs = {}
+        )
+    })
     public void test_provider_security_twice() {
         SelectorProvider.provider();
         SecurityManager originalSecuirtyManager = System.getSecurityManager();

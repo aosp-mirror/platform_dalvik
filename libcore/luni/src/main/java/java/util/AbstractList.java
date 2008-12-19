@@ -18,16 +18,23 @@
 package java.util;
 
 /**
- * AbstractList is an abstract implementation of the List interface, optimized
+ * {@code AbstractList} is an abstract implementation of the {@code List} interface, optimized
  * for a backing store which supports random access. This implementation does
  * not support adding or replacing. A subclass must implement the abstract
- * methods get() and size().
+ * methods {@code get()} and {@code size()}, and to create a
+ * modifiable {@code List} it's necessary to override the {@code add()} method that
+ * currently throws an {@code UnsupportedOperationException}.
  * 
- * @since 1.2
+ * @since Android 1.0
  */
 public abstract class AbstractList<E> extends AbstractCollection<E> implements
         List<E> {
 
+    /**
+     * A counter for changes to the list.
+     * 
+     * @since Android 1.0
+     */
     protected transient int modCount;
 
     private class SimpleListIterator implements Iterator<E> {
@@ -368,6 +375,7 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements
     /**
      * Constructs a new instance of this AbstractList.
      * 
+     * @since Android 1.0
      */
     protected AbstractList() {
         super();
@@ -379,21 +387,24 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements
      * location. If the location is equal to the size of this List, the object
      * is added at the end.
      * 
+     * Concrete implementations that would like to support the add functionality
+     * must override this method.          
      * 
      * @param location
-     *            the index at which to insert
+     *            the index at which to insert.
      * @param object
-     *            the object to add
+     *            the object to add.
      * 
-     * @exception UnsupportedOperationException
-     *                when adding to this List is not supported
-     * @exception ClassCastException
-     *                when the class of the object is inappropriate for this
+     * @throws UnsupportedOperationException
+     *                if adding to this List is not supported.
+     * @throws ClassCastException
+     *                if the class of the object is inappropriate for this
      *                List
-     * @exception IllegalArgumentException
-     *                when the object cannot be added to this List
-     * @exception IndexOutOfBoundsException
-     *                when <code>location < 0 || >= size()</code>
+     * @throws IllegalArgumentException
+     *                if the object cannot be added to this List
+     * @throws IndexOutOfBoundsException
+     *                if {@code location < 0 || >= size()}
+     * @since Android 1.0
      */
     public void add(int location, E object) {
         throw new UnsupportedOperationException();
@@ -407,13 +418,14 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements
      *            the object to add
      * @return true
      * 
-     * @exception UnsupportedOperationException
-     *                when adding to this List is not supported
-     * @exception ClassCastException
-     *                when the class of the object is inappropriate for this
+     * @throws UnsupportedOperationException
+     *                if adding to this List is not supported
+     * @throws ClassCastException
+     *                if the class of the object is inappropriate for this
      *                List
-     * @exception IllegalArgumentException
-     *                when the object cannot be added to this List
+     * @throws IllegalArgumentException
+     *                if the object cannot be added to this List
+     * @since Android 1.0
      */
     @Override
     public boolean add(E object) {
@@ -424,23 +436,22 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements
     /**
      * Inserts the objects in the specified Collection at the specified location
      * in this List. The objects are added in the order they are returned from
-     * the Collection iterator.
-     * 
+     * the collection's iterator.
      * 
      * @param location
-     *            the index at which to insert
+     *            the index at which to insert.
      * @param collection
      *            the Collection of objects
-     * @return true if this List is modified, false otherwise
-     * 
-     * @exception UnsupportedOperationException
-     *                when adding to this List is not supported
-     * @exception ClassCastException
-     *                when the class of an object is inappropriate for this List
-     * @exception IllegalArgumentException
-     *                when an object cannot be added to this List
-     * @exception IndexOutOfBoundsException
-     *                when <code>location < 0 || >= size()</code>
+     * @return {@code true} if this List is modified, {@code false} otherwise.
+     * @throws UnsupportedOperationException
+     *             if adding to this list is not supported.
+     * @throws ClassCastException
+     *             if the class of an object is inappropriate for this list.
+     * @throws IllegalArgumentException
+     *             if an object cannot be added to this list.
+     * @throws IndexOutOfBoundsException
+     *             if {@code location < 0 || > size()}
+     * @since Android 1.0
      */
     public boolean addAll(int location, Collection<? extends E> collection) {
         Iterator<? extends E> it = collection.iterator();
@@ -451,14 +462,13 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements
     }
 
     /**
-     * Removes all elements from this List, leaving it empty.
+     * Removes all elements from this list, leaving it empty.
      * 
-     * 
-     * @exception UnsupportedOperationException
-     *                when removing from this List is not supported
-     * 
+     * @throws UnsupportedOperationException
+     *             if removing from this list is not supported.
      * @see List#isEmpty
      * @see List#size
+     * @since Android 1.0
      */
     @Override
     public void clear() {
@@ -466,17 +476,16 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements
     }
 
     /**
-     * Compares the specified object to this List and answer if they are equal.
-     * The object must be a List which contains the same objects in the same
-     * order.
-     * 
+     * Compares the specified object to this list and return true if they are
+     * equal. Two lists are equal when they both contain the same objects in the
+     * same order.
      * 
      * @param object
-     *            the object to compare with this object
-     * @return true if the specified object is equal to this List, false
-     *         otherwise
-     * 
+     *            the object to compare to this object.
+     * @return {@code true} if the specified object is equal to this list,
+     *         {@code false} otherwise.
      * @see #hashCode
+     * @since Android 1.0
      */
     @Override
     public boolean equals(Object object) {
@@ -502,26 +511,25 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements
     }
 
     /**
-     * Returns the element at the specified location in this List.
-     * 
+     * Returns the element at the specified location in this list.
      * 
      * @param location
-     *            the index of the element to return
-     * @return the element at the specified index
-     * 
-     * @exception IndexOutOfBoundsException
-     *                when <code>location < 0 || >= size()</code>
+     *            the index of the element to return.
+     * @return the element at the specified index.
+     * @throws IndexOutOfBoundsException
+     *             if {@code location < 0 || >= size()}
+     * @since Android 1.0
      */
     public abstract E get(int location);
 
     /**
-     * Returns an integer hash code for the receiver. Objects which are equal
-     * answer the same value for this method.
+     * Returns the hash code of this list. The hash code is calculated by taking
+     * each element's hashcode into account.
      * 
-     * 
-     * @return the receiver's hash
-     * 
+     * @return the hash code.
      * @see #equals
+     * @see List#hashCode()
+     * @since Android 1.0
      */
     @Override
     public int hashCode() {
@@ -535,13 +543,14 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements
     }
 
     /**
-     * Searches this List for the specified object and returns the index of the
+     * Searches this list for the specified object and returns the index of the
      * first occurrence.
      * 
-     * 
      * @param object
-     *            the object to search for
-     * @return the index of the first occurrence of the object
+     *            the object to search for.
+     * @return the index of the first occurrence of the object, or -1 if it was
+     *         not found.
+     * @since Android 1.0
      */
     public int indexOf(Object object) {
         ListIterator<?> it = listIterator();
@@ -562,13 +571,12 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements
     }
 
     /**
-     * Returns an Iterator on the elements of this List. The elements are
-     * iterated in the same order that they occur in the List.
+     * Returns an iterator on the elements of this list. The elements are
+     * iterated in the same order as they occur in the list.
      * 
-     * 
-     * @return an Iterator on the elements of this List
-     * 
+     * @return an iterator on the elements of this list.
      * @see Iterator
+     * @since Android 1.0
      */
     @Override
     public Iterator<E> iterator() {
@@ -576,13 +584,14 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements
     }
 
     /**
-     * Searches this List for the specified object and returns the index of the
+     * Searches this list for the specified object and returns the index of the
      * last occurrence.
      * 
-     * 
      * @param object
-     *            the object to search for
-     * @return the index of the last occurrence of the object
+     *            the object to search for.
+     * @return the index of the last occurrence of the object, or -1 if the
+     *         object was not found.
+     * @since Android 1.0
      */
     public int lastIndexOf(Object object) {
         ListIterator<?> it = listIterator(size());
@@ -603,68 +612,63 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements
     }
 
     /**
-     * Returns a ListIterator on the elements of this List. The elements are
-     * iterated in the same order that they occur in the List.
+     * Returns a ListIterator on the elements of this list. The elements are
+     * iterated in the same order that they occur in the list.
      * 
-     * 
-     * @return a ListIterator on the elements of this List
-     * 
+     * @return a ListIterator on the elements of this list
      * @see ListIterator
+     * @since Android 1.0
      */
     public ListIterator<E> listIterator() {
         return listIterator(0);
     }
 
     /**
-     * Returns a ListIterator on the elements of this List. The elements are
-     * iterated in the same order that they occur in the List. The iteration
+     * Returns a list iterator on the elements of this list. The elements are
+     * iterated in the same order as they occur in the list. The iteration
      * starts at the specified location.
      * 
-     * 
      * @param location
-     *            the index at which to start the iteration
-     * @return a ListIterator on the elements of this List
-     * 
-     * @exception IndexOutOfBoundsException
-     *                when <code>location < 0 || >= size()</code>
-     * 
+     *            the index at which to start the iteration.
+     * @return a ListIterator on the elements of this list.
+     * @throws IndexOutOfBoundsException
+     *             if {@code location < 0 || location > size()}
      * @see ListIterator
+     * @since Android 1.0
      */
     public ListIterator<E> listIterator(int location) {
         return new FullListIterator(location);
     }
 
     /**
-     * Removes the object at the specified location from this List.
-     * 
+     * Removes the object at the specified location from this list.
      * 
      * @param location
-     *            the index of the object to remove
-     * @return the removed object
-     * 
-     * @exception UnsupportedOperationException
-     *                when removing from this List is not supported
-     * @exception IndexOutOfBoundsException
-     *                when <code>location < 0 || >= size()</code>
+     *            the index of the object to remove.
+     * @return the removed object.
+     * @throws UnsupportedOperationException
+     *             if removing from this list is not supported.
+     * @throws IndexOutOfBoundsException
+     *             if {@code location < 0 || >= size()}
+     * @since Android 1.0
      */
     public E remove(int location) {
         throw new UnsupportedOperationException();
     }
 
     /**
-     * Removes the objects in the specified range from the start to the, but not
-     * including, end index.
-     * 
+     * Removes the objects in the specified range from the start to the end
+     * index minus one.
      * 
      * @param start
-     *            the index at which to start removing
+     *            the index at which to start removing.
      * @param end
-     *            the index one past the end of the range to remove
-     * 
-     * @exception UnsupportedOperationException
-     *                when removing from this List is not supported
-     * @exception IndexOutOfBoundsException
-     *                when <code>start < 0
+     *            the index after the last element to remove.
+     * @throws UnsupportedOperationException
+     *             if removing from this list is not supported.
+     * @throws IndexOutOfBoundsException
+     *             if {@code start < 0} or {@code start >= size()}.
+     * @since Android 1.0
      */
     protected void removeRange(int start, int end) {
         Iterator<?> it = listIterator(start);
@@ -675,72 +679,72 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements
     }
 
     /**
-     * Replaces the element at the specified location in this List with the
+     * Replaces the element at the specified location in this list with the
      * specified object.
      * 
-     * 
      * @param location
-     *            the index at which to put the specified object
+     *            the index at which to put the specified object.
      * @param object
-     *            the object to add
-     * @return the previous element at the index
-     * 
-     * @exception UnsupportedOperationException
-     *                when replacing elements in this List is not supported
-     * @exception ClassCastException
-     *                when the class of an object is inappropriate for this List
-     * @exception IllegalArgumentException
-     *                when an object cannot be added to this List
-     * @exception IndexOutOfBoundsException
-     *                when <code>location < 0 || >= size()</code>
+     *            the object to add.
+     * @return the previous element at the index.
+     * @throws UnsupportedOperationException
+     *             if replacing elements in this list is not supported.
+     * @throws ClassCastException
+     *             if the class of an object is inappropriate for this list.
+     * @throws IllegalArgumentException
+     *             if an object cannot be added to this list.
+     * @throws IndexOutOfBoundsException
+     *             if {@code location < 0 || >= size()}
+     * @since Android 1.0
      */
     public E set(int location, E object) {
         throw new UnsupportedOperationException();
     }
 
     /**
-     * Returns a part of consecutive elements of this list as a view. From start
-     * (inclusive), to end(exclusive). The returned view will be of zero length
-     * if start equals end. Any change occurs in the returned subList will be
-     * reflected to the original list, and vice-versa. All the supported
-     * optional operations by the original list will also be supported by this
-     * subList.
-     * 
+     * Returns a part of consecutive elements of this list as a view. The
+     * returned view will be of zero length if start equals end. Any change that
+     * occurs in the returned subList will be reflected to the original list,
+     * and vice-versa. All the supported optional operations by the original
+     * list will also be supported by this subList.
+     * <p>
      * This method can be used as a handy method to do some operations on a sub
-     * range of the original list. For example: list.subList(from, to).clear();
-     * 
-     * If the original list is modified other than through the returned subList,
-     * the behavior of the returned subList becomes undefined.
-     * 
+     * range of the original list, for example
+     * {@code list.subList(from, to).clear();}
+     * <p>
+     * If the original list is modified in other ways than through the returned
+     * subList, the behavior of the returned subList becomes undefined.
+     * <p>
      * The returned subList is a subclass of AbstractList. The subclass stores
      * offset, size of itself, and modCount of the original list. If the
      * original list implements RandomAccess interface, the returned subList
      * also implements RandomAccess interface.
-     * 
+     * <p>
      * The subList's set(int, Object), get(int), add(int, Object), remove(int),
      * addAll(int, Collection) and removeRange(int, int) methods first check the
      * bounds, adjust offsets and then call the corresponding methods of the
      * original AbstractList. addAll(Collection c) method of the returned
      * subList calls the original addAll(offset + size, c).
-     * 
+     * <p>
      * The listIterator(int) method of the subList wraps the original list
      * iterator. The iterator() method of the subList invokes the original
      * listIterator() method, and the size() method merely returns the size of
      * the subList.
-     * 
+     * <p>
      * All methods will throw a ConcurrentModificationException if the modCount
      * of the original list is not equal to the expected value.
      * 
      * @param start
-     *            start index of the subList, include start
+     *            start index of the subList (inclusive).
      * @param end
-     *            end index of the subList, exclude end
-     * @return a subList view of this list start from start (inclusive), end
-     *         with end (exclusive)
-     * @exception IndexOutOfBoundsException
-     *                when (start < 0 || end > size())
-     * @exception IllegalArgumentException
-     *                when (start > end)
+     *            end index of the subList, (exclusive).
+     * @return a subList view of this list starting from {@code start}
+     *         (inclusive), and ending with {@code end} (exclusive)
+     * @throws IndexOutOfBoundsException
+     *             if (start < 0 || end > size())
+     * @throws IllegalArgumentException
+     *             if (start > end)
+     * @since Android 1.0
      */
     public List<E> subList(int start, int end) {
         if (0 <= start && end <= size()) {

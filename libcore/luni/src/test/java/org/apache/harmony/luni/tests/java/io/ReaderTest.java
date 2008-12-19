@@ -16,14 +16,28 @@
 
 package org.apache.harmony.luni.tests.java.io;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.CharBuffer;
 
 import junit.framework.TestCase;
-
+@TestTargetClass(Reader.class)
 public class ReaderTest extends TestCase {
 
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Reader",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_Reader_CharBuffer_null() throws IOException {
         String s = "MY TEST STRING";
         MockReader mockReader = new MockReader(s.toCharArray());
@@ -35,7 +49,15 @@ public class ReaderTest extends TestCase {
             //expected;
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Functional test.",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {java.nio.CharBuffer.class}
+        )
+    })
     public void test_Reader_CharBuffer_ZeroChar() throws IOException {
         //the charBuffer has the capacity of 0, then there the number of char read
         // to the CharBuffer is 0. Furthermore, the MockReader is intact in its content.
@@ -49,7 +71,15 @@ public class ReaderTest extends TestCase {
         mockReader.read(destBuffer);
         assertEquals(s, String.valueOf(destBuffer));
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Functional test.",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {java.nio.CharBuffer.class}
+        )
+    })
     public void test_Reader_CharBufferChar() throws IOException {
         String s = "MY TEST STRING";
         char[] srcBuffer = s.toCharArray();

@@ -11,10 +11,6 @@
 
 #include <stdarg.h>
 
-#ifdef JNI_FORCE_C
-#warning "Use of JNI_FORCE_C is deprecated"
-#endif
-
 /*
  * Primitive types that match up with Java equivalents.
  */
@@ -138,7 +134,7 @@ struct _JNIEnv;
 struct _JavaVM;
 typedef const struct JNINativeInterface* C_JNIEnv;
 
-#if defined(__cplusplus) && !defined(JNI_FORCE_C)
+#if defined(__cplusplus)
 typedef _JNIEnv JNIEnv;
 typedef _JavaVM JavaVM;
 #else
@@ -494,7 +490,7 @@ struct _JNIEnv {
     /* do not rename this; it does not seem to be entirely opaque */
     const struct JNINativeInterface* functions;
 
-#if defined(__cplusplus) && !defined(JNI_FORCE_C)
+#if defined(__cplusplus)
 
     jint GetVersion()
     { return functions->GetVersion(this); }
@@ -1030,7 +1026,7 @@ struct _JNIEnv {
     /* added in JNI 1.6 */
     jobjectRefType GetObjectRefType(jobject obj)
     { return functions->GetObjectRefType(this, obj); }
-#endif /*__cplusplus && !JNI_FORCE_C*/
+#endif /*__cplusplus*/
 };
 
 
@@ -1055,7 +1051,7 @@ struct JNIInvokeInterface {
 struct _JavaVM {
     const struct JNIInvokeInterface* functions;
 
-#if defined(__cplusplus) && !defined(JNI_FORCE_C)
+#if defined(__cplusplus)
     jint DestroyJavaVM()
     { return functions->DestroyJavaVM(this); }
     jint AttachCurrentThread(JNIEnv** p_env, void* thr_args)
@@ -1066,7 +1062,7 @@ struct _JavaVM {
     { return functions->GetEnv(this, env, version); }
     jint AttachCurrentThreadAsDaemon(JNIEnv** p_env, void* thr_args)
     { return functions->AttachCurrentThreadAsDaemon(this, p_env, thr_args); }
-#endif /*__cplusplus && !JNI_FORCE_C*/
+#endif /*__cplusplus*/
 };
 
 struct JavaVMAttachArgs {
@@ -1104,12 +1100,6 @@ extern "C" {
 jint JNI_GetDefaultJavaVMInitArgs(void*);
 jint JNI_CreateJavaVM(JavaVM**, JNIEnv**, void*);
 jint JNI_GetCreatedJavaVMs(JavaVM**, jsize, jsize*);
-
-/* Dalvik entry points */
-jint JNI_GetDefaultJavaVMInitArgs(void*);
-jint JNI_CreateJavaVM(JavaVM**, JNIEnv**, void*);
-jint JNI_GetCreatedJavaVMs(JavaVM**, jsize, jsize*);
-
 
 /*
  * Prototypes for functions exported by loadable shared libs.  These are

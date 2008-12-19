@@ -16,10 +16,16 @@
 
 package tests.api.java.nio.charset;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestLevel;
+
 import java.nio.CharBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
 
+@TestTargetClass(java.nio.charset.CharsetEncoder.class)
 /**
  * test case specific activity of gb18030 charset encoder
  */
@@ -43,6 +49,15 @@ public class GBCharsetEncoderTest extends CharsetEncoderTest {
         super.tearDown();
     }
 
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IllegalStateException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "canEncode",
+          methodArgs = {char.class}
+        )
+    })
     public void testCanEncodechar() throws CharacterCodingException {
         // normal case for utfCS
         assertTrue(encoder.canEncode('\u0077'));
@@ -55,6 +70,15 @@ public class GBCharsetEncoderTest extends CharsetEncoderTest {
     /*
      * Class under test for boolean canEncode(CharSequence)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IllegalStateException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "canEncode",
+          methodArgs = {java.lang.CharSequence.class}
+        )
+    })
     public void testCanEncodeCharSequence() {
         assertTrue(encoder.canEncode(""));
         // surrogate char
@@ -66,6 +90,18 @@ public class GBCharsetEncoderTest extends CharsetEncoderTest {
         assertFalse(encoder.canEncode("\ud800"));
     }
 
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "averageBytesPerChar",
+          methodArgs = {}
+        ), @TestTarget(
+          methodName = "maxBytesPerChar",
+          methodArgs = {}
+        )
+    })
     public void testSpecificDefaultValue() {
         // FIXME: different here!
         assertEquals(4.0, encoder.maxBytesPerChar(), 0.0);

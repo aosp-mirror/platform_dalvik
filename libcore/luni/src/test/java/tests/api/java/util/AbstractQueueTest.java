@@ -15,6 +15,11 @@
  */
 package tests.api.java.util;
 
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass; 
+
 import java.util.AbstractQueue;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,6 +29,7 @@ import java.util.NoSuchElementException;
 
 import junit.framework.TestCase;
 
+@TestTargetClass(AbstractQueue.class) 
 public class AbstractQueueTest extends TestCase {
 
     private MockAbstractQueue<Object> queue;
@@ -106,6 +112,15 @@ public class AbstractQueueTest extends TestCase {
     /**
      * @tests java.util.AbstractQueue.add(E)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "add",
+          methodArgs = {Object.class}
+        )
+    })
     public void test_addLE_null() {
         try {
             queue.add(null);
@@ -118,6 +133,15 @@ public class AbstractQueueTest extends TestCase {
     /**
      * @tests java.util.AbstractQueue.add(E)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies IllegalStateException.",
+      targets = {
+        @TestTarget(
+          methodName = "add",
+          methodArgs = {Object.class}
+        )
+    })
     public void test_addLE_Full() {
         Object o = new Object();
 
@@ -136,6 +160,15 @@ public class AbstractQueueTest extends TestCase {
     /**
      * @tests java.util.AbstractQueue#add(E)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify NullPointerException, IllegalStateException.",
+      targets = {
+        @TestTarget(
+          methodName = "add",
+          methodArgs = {Object.class}
+        )
+    })
     public void test_addLE() {
         Object o = new Object();
         final int LAST_INDEX = 4;
@@ -155,6 +188,15 @@ public class AbstractQueueTest extends TestCase {
     /**
      * @tests java.util.AbstractQueue#addAll(E)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "addAll",
+          methodArgs = {java.util.Collection.class}
+        )
+    })
     public void test_addAllLE_null() {
         try {
             queue.addAll(null);
@@ -167,6 +209,15 @@ public class AbstractQueueTest extends TestCase {
     /**
      * @tests java.util.AbstractQueue#addAll(E)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "addAll",
+          methodArgs = {java.util.Collection.class}
+        )
+    })
     public void test_addAllLE_with_null() {
         List list = Arrays.asList("MYTESTSTRING", null, new Float(123.456));
         try {
@@ -180,6 +231,15 @@ public class AbstractQueueTest extends TestCase {
     /**
      * @tests java.util.AbstractQueue#addAll(E)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies IllegalStateException.",
+      targets = {
+        @TestTarget(
+          methodName = "addAll",
+          methodArgs = {java.util.Collection.class}
+        )
+    })
     public void test_addAllLE_full() {
         List list = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11);
         try {
@@ -193,6 +253,15 @@ public class AbstractQueueTest extends TestCase {
     /**
      * @tests java.util.AbstractQueue#addAll(E)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Regression test. Doesn't verify returned true value.",
+      targets = {
+        @TestTarget(
+          methodName = "addAll",
+          methodArgs = {java.util.Collection.class}
+        )
+    })
     public void test_addAllLE_empty() {
         // Regression test for HARMONY-1178
         List list = new ArrayList<Object>(0);
@@ -202,6 +271,15 @@ public class AbstractQueueTest extends TestCase {
     /**
      * @tests java.util.AbstractQueue#addAll(E)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies IllegalArgumentException.",
+      targets = {
+        @TestTarget(
+          methodName = "addAll",
+          methodArgs = {java.util.Collection.class}
+        )
+    })
     public void test_addAllLE_this() {
         try {
             queue.addAll(queue);
@@ -214,6 +292,15 @@ public class AbstractQueueTest extends TestCase {
     /**
      * @tests java.util.AbstractQueue#clear()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies clear method for empty queue.",
+      targets = {
+        @TestTarget(
+          methodName = "clear",
+          methodArgs = {}
+        )
+    })
     public void test_clear_empty() {
         queue.clear();
         assertTrue(queue.isEmpty());
@@ -223,6 +310,15 @@ public class AbstractQueueTest extends TestCase {
     /**
      * @tests java.util.AbstractQueue#clear()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "clear",
+          methodArgs = {}
+        )
+    })
     public void test_clear() {
         List list = Arrays.asList(123.456, "MYTESTSTRING", new Object(), 'c');
         queue.addAll(list);
@@ -234,6 +330,15 @@ public class AbstractQueueTest extends TestCase {
     /**
      * @tests java.util.AbstractQueue#AbstractQueue()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "AbstractQueue",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         MockAbstractQueue queue = new MockAbstractQueue();
         assertNotNull(queue);
@@ -242,6 +347,15 @@ public class AbstractQueueTest extends TestCase {
     /**
      * @tests java.util.AbstractQueue#remove()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies NoSuchElementException.",
+      targets = {
+        @TestTarget(
+          methodName = "remove",
+          methodArgs = {}
+        )
+    })
     public void test_remove_null() {
         try {
             queue.remove();
@@ -255,6 +369,15 @@ public class AbstractQueueTest extends TestCase {
     /**
      * @tests java.util.AbstractQueue#remove()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Verifies positive functionality, NoSuchElementException.",
+      targets = {
+        @TestTarget(
+          methodName = "remove",
+          methodArgs = {}
+        )
+    })
     public void test_remove() {
         char c = 'a';
         queue.add(c);
@@ -273,6 +396,15 @@ public class AbstractQueueTest extends TestCase {
     /**
      * @tests java.util.AbstractQueue#element()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies NoSuchElementException.",
+      targets = {
+        @TestTarget(
+          methodName = "element",
+          methodArgs = {}
+        )
+    })
     public void test_element_empty() {
         try {
             queue.element();
@@ -285,6 +417,15 @@ public class AbstractQueueTest extends TestCase {
     /**
      * @tests java.util.AbstractQueue#element()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't verify NoSuchElementException.",
+      targets = {
+        @TestTarget(
+          methodName = "element",
+          methodArgs = {}
+        )
+    })
     public void test_element() {
         String s = "MYTESTSTRING_ONE";
         queue.add(s);

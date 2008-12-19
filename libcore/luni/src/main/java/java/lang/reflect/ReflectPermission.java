@@ -20,31 +20,48 @@ package java.lang.reflect;
 import java.security.BasicPermission;
 
 /**
- * ReflectPermission objects represent permission to access dangerous operations
- * in the reflection layer.
+ * A {@code ReflectPermission} object represents a permission to access
+ * operations in the reflection layer.
+ * 
+ * @since Android 1.0
  */
 public final class ReflectPermission extends BasicPermission {
 
     private static final long serialVersionUID = 7412737110241507485L;
 
     /**
-     * Creates an instance of this class with given name.
+     * Constructs a new {@code ReflectPermission} instance with the specified
+     * name.
      * 
      * @param permissionName
-     *            String the name of the new permission.
+     *            the name of the new permission
+     *            
+     * @throws IllegalArgumentException
+     *             if {@code name} is empty
+     * @throws NullPointerException
+     *             if {@code name} is {@code null}
+     * 
+     * @since Android 1.0
      */
     public ReflectPermission(String permissionName) {
         super(permissionName);
     }
 
     /**
-     * Creates an instance of this class with the given name and action list.
-     * The action list is ignored.
+     * Constructs a new {@code ReflectPermission} instance with the specified
+     * name and action list. The action list will be ignored.
      * 
      * @param name
-     *            String the name of the new permission.
+     *            the name of the new permission
      * @param actions
-     *            String ignored.
+     *            this parameter will be ignored
+     * 
+     * @throws IllegalArgumentException
+     *             if {@code name} is empty
+     * @throws NullPointerException
+     *             if {@code name} is {@code null}
+     * 
+     * @since Android 1.0
      */
     public ReflectPermission(String name, String actions) {
         super(name, actions);

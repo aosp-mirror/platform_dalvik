@@ -20,15 +20,32 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * ResponseCache implements URLConnection caches. System default cache can be
- * registered by invoking ResponseCache.<code>setDefault</code>(ResponseCache),
- * and can be retrieved by invoking ResponseCache.<code>getDefault</code>.
- * If URLConnection#useCaches is set, <code>URLConnection</code> class will
- * use <code>ResponseCache</code> to store and get resources. Whether the
- * resource is cached depends on <code>ResponseCache</code> implementation. If
- * a request resource is cached, protocol handler will fecth it from the cache.
- * If the protocol handler fails to get resource from the cache, it turns to get
- * the resource from its original location.
+ * This class is an implementation of {@code URLConnection} caches intended
+ * primarily for the according stream handler implementations.
+ * <p>
+ * The system's default cache can be registered by invoking the method {@code
+ * setDefault(ResponseCache)} and be retrieved by invoking the method {@code
+ * getDefault()}. If {@code URLConnection#useCaches} is set, {@code
+ * URLConnection} class will use {@code ResponseCache} to store and get
+ * resources.
+ * </p>
+ * <p>
+ * Whether the resource is cached depends on the implementation of {@code
+ * ResponseCache}. If so, a {@code CacheResponse} is returned from which the
+ * stream handler reads. If the stream handler fails to get a resource from the
+ * cache, it must get the resource from its original location.
+ * </p>
+ * <p>
+ * To write to the cache, the protocol handlers call {@code put()}, upon which a
+ * {@code CacheRequest} is supplied to which the resources are written.
+ * </p>
+ * 
+ * @see #put(URI, URLConnection)
+ * @see CacheRequest
+ * @see CacheResponse
+ * @see URLConnection
+ * @see URLStreamHandler
+ * @since Android 1.0
  */
 public abstract class ResponseCache {
 
@@ -74,19 +91,22 @@ public abstract class ResponseCache {
     }
 
     /**
-     * Constructor method.
+     * Creates a new instance of this class.
+     * 
+     * @since Android 1.0
      */
     public ResponseCache() {
         super();
     }
 
     /**
-     * Gets system default response cache.
+     * Gets the default response cache of the system.
      * 
-     * @return default <code>ResponseCache</code>.
+     * @return the default {@code ResponseCache}.
      * @throws SecurityException
-     *             If a security manager is installed and it doesn't have
-     *             <code>NetPermission</code>("getResponseCache").
+     *             if a security manager is installed but it doesn't have the
+     *             {@code NetPermission("getResponseCache")}.
+     * @since Android 1.0
      */
     public static ResponseCache getDefault() {
         checkGetResponseCachePermission();
@@ -94,16 +114,19 @@ public abstract class ResponseCache {
     }
 
     /**
-     * Sets the system default response cache when responseCache is not null.
-     * Otherwise, the method unsets the system default response cache. This
-     * setting may be ignored by some non-standard protocols.
+     * Sets the default response cache of the system. Removes the system's
+     * default {@code ResponseCache} if the parameter {@code responseCache} is
+     * set to {@code null}. This setting may be ignored by some non-standard
+     * protocols.
      * 
      * @param responseCache
-     *            Set default <code>ResponseCache</code>. If responseCache is
-     *            null, it unsets the cache.
+     *            the {@code ResponseCache} instance to set as default or
+     *            {@code null} to remove the current default {@code
+     *            ResponseCache}.
      * @throws SecurityException
-     *             If a security manager is installed and it doesn't have
-     *             <code>NetPermission</code>("setResponseCache").
+     *             if a security manager is installed but it doesn't have the
+     *             {@code NetPermission("setResponseCache")}.
+     * @since Android 1.0
      */
     public static void setDefault(ResponseCache responseCache) {
         checkSetResponseCachePermission();
@@ -111,43 +134,44 @@ public abstract class ResponseCache {
     }
 
     /**
-     * Gets the cached response according to requesting uri,method and headers.
+     * Gets the cached response according to the requesting URI, method and
+     * headers.
      * 
      * @param uri
-     *            A <code>URL</code> represents requesting uri.
+     *            the requesting URI.
      * @param rqstMethod
-     *            A <code>String</code> represents requesting method.
+     *            the requesting method.
      * @param rqstHeaders
-     *            A <code>Map</code> from request header field names to lists
-     *            of field values represents requesting headers.
-     * @return A <code>CacheResponse</code> object if the request is available
-     *         in the cache. Otherwise, this method returns null.
+     *            a map of requesting headers.
+     * @return the {@code CacheResponse} object if the request is available in the cache
+     *         or {@code null} otherwise.
      * @throws IOException
-     *             If an I/O error is encountered.
+     *             if an I/O error occurs while getting the cached data.
      * @throws IllegalArgumentException
-     *             If any one of the parameters is null
+     *             if any one of the parameters is set to {@code null}.
+     * @since Android 1.0
      */
     public abstract CacheResponse get(URI uri, String rqstMethod,
             Map<String, List<String>> rqstHeaders) throws IOException;
 
     /**
-     * Protocol handler calls this method after retrieving resources. The
-     * <code>ResponseCache</code> decides whether the resource should be
-     * cached. If the resource needs to be cached, this method will return a
-     * <code>CacheRequest</code> with a <code>WriteableByteChannel</code>,
-     * and then, protocol handler will use this channel to write the resource
-     * data into the cache. Otherwise, if the resource doesn't need to be
-     * cached, it returns null.
+     * Allows the protocol handler to cache data after retrieving resources. The
+     * {@code ResponseCache} decides whether the resource data should be cached
+     * or not. If so, this method returns a {@code CacheRequest} with a {@code
+     * WriteableByteChannel} to put the resource data down. Otherwise, this
+     * method returns {@code null}.
      * 
      * @param uri
+     *            the reference to the requested resource.
      * @param conn
-     * @return a <code>CacheRequest</code> which contains
-     *         <code>WriteableByteChannel</code> if the resource is cached.
-     *         Otherwise, it returns null.
+     *            the connection to fetch the response.
+     * @return a CacheRequest object with a WriteableByteChannel if the resource
+     *         has to be cached, {@code null} otherwise.
      * @throws IOException
-     *             If an I/O error is encountered.
+     *             if an I/O error occurs while adding the resource.
      * @throws IllegalArgumentException
-     *             If any one of the parameters is null.
+     *             if any one of the parameters is set to {@code null}.
+     * @since Android 1.0
      */
     public abstract CacheRequest put(URI uri, URLConnection conn)
             throws IOException;

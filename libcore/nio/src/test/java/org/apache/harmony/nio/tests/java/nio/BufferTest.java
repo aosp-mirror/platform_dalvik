@@ -17,16 +17,33 @@
 
 package org.apache.harmony.nio.tests.java.nio;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.nio.Buffer;
 import java.nio.InvalidMarkException;
 
 import junit.framework.TestCase;
-
 /**
  * Test a java.nio.Buffer instance.
  */
+@TestTargetClass(Buffer.class)
 public class BufferTest extends TestCase {
-
+    @TestInfo(
+          level = TestLevel.PARTIAL,
+          purpose = "Verifies that buffer's state doesn't change after testing.",
+          targets = {
+            @TestTarget(
+              methodName = "position",
+              methodArgs = {}
+            ),
+            @TestTarget(
+              methodName = "limit",
+              methodArgs = {}
+            )
+        })
     public static void testBufferInstance(Buffer buf) {
         // save state
         int oldPosition = buf.position();
@@ -50,12 +67,28 @@ public class BufferTest extends TestCase {
         assertEquals(buf.position(), oldPosition);
         assertEquals(buf.limit(), oldLimit);
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check capacity with which the buffer is created.",
+      targets = {
+        @TestTarget(
+          methodName = "capacity",
+          methodArgs = {}
+        )
+    })
     public static void testCapacity(Buffer buf) {
         assertTrue(0 <= buf.position() && buf.position() <= buf.limit()
                 && buf.limit() <= buf.capacity());
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "clear",
+          methodArgs = {}
+        )
+    })
     public static void testClear(Buffer buf) {
         // save state
         int oldPosition = buf.position();
@@ -76,7 +109,16 @@ public class BufferTest extends TestCase {
         buf.limit(oldLimit);
         buf.position(oldPosition);
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check that mark is discarded after a call of flip " +
+            "method. ",
+      targets = {
+        @TestTarget(
+          methodName = "flip",
+          methodArgs = {}
+        )
+    })
     public static void testFlip(Buffer buf) {
         // save state
         int oldPosition = buf.position();
@@ -97,7 +139,15 @@ public class BufferTest extends TestCase {
         buf.limit(oldLimit);
         buf.position(oldPosition);
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "hasRemaining",
+          methodArgs = {}
+        )
+    })
     public static void testHasRemaining(Buffer buf) {
         // save state
         int oldPosition = buf.position();
@@ -111,7 +161,15 @@ public class BufferTest extends TestCase {
         buf.limit(oldLimit);
         buf.position(oldPosition);
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Abstract method.",
+      targets = {
+        @TestTarget(
+          methodName = "isReadOnly",
+          methodArgs = {}
+        )
+    })
     public static void testIsReadOnly(Buffer buf) {
         buf.isReadOnly();
     }
@@ -119,6 +177,15 @@ public class BufferTest extends TestCase {
     /*
      * Class under test for int limit()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "limit",
+          methodArgs = {}
+        )
+    })
     public static void testLimit(Buffer buf) {
         assertTrue(0 <= buf.position() && buf.position() <= buf.limit()
                 && buf.limit() <= buf.capacity());
@@ -127,6 +194,15 @@ public class BufferTest extends TestCase {
     /*
      * Class under test for Buffer limit(int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "limit",
+          methodArgs = {int.class}
+        )
+    })
     public static void testLimitint(Buffer buf) {
         // save state
         int oldPosition = buf.position();
@@ -176,7 +252,15 @@ public class BufferTest extends TestCase {
         buf.limit(oldLimit);
         buf.position(oldPosition);
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "mark",
+          methodArgs = {}
+        )
+    })
     public static void testMark(Buffer buf) {
         // save state
         int oldPosition = buf.position();
@@ -203,6 +287,15 @@ public class BufferTest extends TestCase {
     /*
      * Class under test for int position()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "position",
+          methodArgs = {}
+        )
+    })
     public static void testPosition(Buffer buf) {
         assertTrue(0 <= buf.position() && buf.position() <= buf.limit()
                 && buf.limit() <= buf.capacity());
@@ -211,6 +304,15 @@ public class BufferTest extends TestCase {
     /*
      * Class under test for Buffer position(int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "position",
+          methodArgs = {int.class}
+        )
+    })
     public static void testPositionint(Buffer buf) {
         // save state
         int oldPosition = buf.position();
@@ -261,11 +363,27 @@ public class BufferTest extends TestCase {
         buf.limit(oldLimit);
         buf.position(oldPosition);
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "remaining",
+          methodArgs = {}
+        )
+    })
     public static void testRemaining(Buffer buf) {
         assertEquals(buf.remaining(), buf.limit() - buf.position());
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "reset",
+          methodArgs = {}
+        )
+    })
     public static void testReset(Buffer buf) {
         // save state
         int oldPosition = buf.position();
@@ -296,7 +414,15 @@ public class BufferTest extends TestCase {
         buf.limit(oldLimit);
         buf.position(oldPosition);
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "rewind",
+          methodArgs = {}
+        )
+    })
     public static void testRewind(Buffer buf) {
         // save state
         int oldPosition = buf.position();
@@ -316,7 +442,15 @@ public class BufferTest extends TestCase {
         buf.limit(oldLimit);
         buf.position(oldPosition);
     }
-    
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Doesn't test anything. Just to remove JUnit warning.",
+      targets = {
+        @TestTarget(
+          methodName = "",
+          methodArgs = {}
+        )
+    })
     public void testNothing() {
         // to remove JUnit warning
     }

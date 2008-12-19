@@ -17,6 +17,11 @@
 
 package tests.api.javax.net.ssl;
 
+import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.net.Socket;
 import java.security.Principal;
 import java.security.PrivateKey;
@@ -26,83 +31,101 @@ import javax.net.ssl.X509ExtendedKeyManager;
 
 import junit.framework.TestCase;
 
-
 /**
  * Tests for <code>X509ExtendedKeyManager</code> class constructors and methods.
  * 
  */
+@TestTargetClass(X509ExtendedKeyManager.class) 
 public class X509ExtendedKeyManagerTest extends TestCase {
-	private class MockX509ExtendedKeyManager extends X509ExtendedKeyManager {
-		public MockX509ExtendedKeyManager() {
-			super();
-		}
+    private class MockX509ExtendedKeyManager extends X509ExtendedKeyManager {
+        public MockX509ExtendedKeyManager() {
+            super();
+        }
 
-		/**
-		 * @see javax.net.ssl.X509KeyManager#chooseClientAlias(java.lang.String[], java.security.Principal[], java.net.Socket)
-		 */
-		public String chooseClientAlias(String[] arg0, Principal[] arg1, Socket arg2) {
-			// it is a fake
-			return null;
-		}
+        /**
+         * @see javax.net.ssl.X509KeyManager#chooseClientAlias(java.lang.String[], java.security.Principal[], java.net.Socket)
+         */
+        public String chooseClientAlias(String[] arg0, Principal[] arg1, Socket arg2) {
+            // it is a fake
+            return null;
+        }
 
-		/**
-		 * @see javax.net.ssl.X509KeyManager#chooseServerAlias(java.lang.String, java.security.Principal[], java.net.Socket)
-		 */
-		public String chooseServerAlias(String arg0, Principal[] arg1, Socket arg2) {
-			// it is a fake
-			return null;
-		}
+        /**
+         * @see javax.net.ssl.X509KeyManager#chooseServerAlias(java.lang.String, java.security.Principal[], java.net.Socket)
+         */
+        public String chooseServerAlias(String arg0, Principal[] arg1, Socket arg2) {
+            // it is a fake
+            return null;
+        }
 
-		/**
-		 * @see javax.net.ssl.X509KeyManager#getCertificateChain(java.lang.String)
-		 */
-		public X509Certificate[] getCertificateChain(String arg0) {
-			// it is a fake
-			return null;
-		}
+        /**
+         * @see javax.net.ssl.X509KeyManager#getCertificateChain(java.lang.String)
+         */
+        public X509Certificate[] getCertificateChain(String arg0) {
+            // it is a fake
+            return null;
+        }
 
-		/**
-		 * @see javax.net.ssl.X509KeyManager#getClientAliases(java.lang.String, java.security.Principal[])
-		 */
-		public String[] getClientAliases(String arg0, Principal[] arg1) {
-			// it is a fake
-			return null;
-		}
+        /**
+         * @see javax.net.ssl.X509KeyManager#getClientAliases(java.lang.String, java.security.Principal[])
+         */
+        public String[] getClientAliases(String arg0, Principal[] arg1) {
+            // it is a fake
+            return null;
+        }
 
-		/**
-		 * @see javax.net.ssl.X509KeyManager#getPrivateKey(java.lang.String)
-		 */
-		public PrivateKey getPrivateKey(String arg0) {
-			// it is a fake
-			return null;
-		}
+        /**
+         * @see javax.net.ssl.X509KeyManager#getPrivateKey(java.lang.String)
+         */
+        public PrivateKey getPrivateKey(String arg0) {
+            // it is a fake
+            return null;
+        }
 
-		/**
-		 * @see javax.net.ssl.X509KeyManager#getServerAliases(java.lang.String, java.security.Principal[])
-		 */
-		public String[] getServerAliases(String arg0, Principal[] arg1) {
-			// it is a fake
-			return null;
-		}
-	}
-	
+        /**
+         * @see javax.net.ssl.X509KeyManager#getServerAliases(java.lang.String, java.security.Principal[])
+         */
+        public String[] getServerAliases(String arg0, Principal[] arg1) {
+            // it is a fake
+            return null;
+        }
+    }
+    
     /**
      * @tests javax.net.ssl.X509ExtendedKeyManager#X509ExtendedKeyManager() 
      */
-	public final void test_Constructor() {
-		try {
-			new MockX509ExtendedKeyManager();
-		} catch (Exception e) {
-			fail("Unexpected exception " + e.toString());
-		}
-	}
-	
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "X509ExtendedKeyManager",
+          methodArgs = {}
+        )
+    })
+    public final void test_Constructor() {
+        try {
+            new MockX509ExtendedKeyManager();
+        } catch (Exception e) {
+            fail("Unexpected exception " + e.toString());
+        }
+    }
+    
     /**
      * @tests javax.net.ssl.X509ExtendedKeyManager
      *     #chooseEngineClientAlias(java.lang.String[],
      *     java.security.Principal[], javax.net.ssl.SSLEngine) 
      */
-	public final void test_chooseEngineClientAlias() {
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verification with not null parameters missed",
+      targets = {
+        @TestTarget(
+          methodName = "chooseEngineClientAlias",
+          methodArgs = {String[].class, Principal[].class, javax.net.ssl.SSLEngine.class}
+        )
+    })
+    public final void test_chooseEngineClientAlias() {
         X509ExtendedKeyManager km = new MyX509ExtendedKeyManager();
         if (km.chooseEngineClientAlias(null, null, null) != null) {
             fail("non null result");
@@ -114,6 +137,15 @@ public class X509ExtendedKeyManagerTest extends TestCase {
      *     #chooseEngineServerAlias(java.lang.String,
      *     java.security.Principal[], javax.net.ssl.SSLEngine) 
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verification with not null parameters missed",
+      targets = {
+        @TestTarget(
+          methodName = "chooseEngineServerAlias",
+          methodArgs = {String.class, Principal[].class, javax.net.ssl.SSLEngine.class}
+        )
+    })
     public final void test_chooseEngineServerAlias() {
         X509ExtendedKeyManager km = new MyX509ExtendedKeyManager();
         if (km.chooseEngineServerAlias(null, null, null) != null) {

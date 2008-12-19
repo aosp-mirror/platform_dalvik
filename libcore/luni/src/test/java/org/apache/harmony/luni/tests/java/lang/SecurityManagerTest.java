@@ -16,6 +16,13 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
+import junit.framework.TestCase;
+
 import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FilePermission;
@@ -30,12 +37,12 @@ import java.security.Security;
 import java.security.SecurityPermission;
 import java.util.PropertyPermission;
 
-import junit.framework.TestCase;
 import tests.support.Support_Exec;
 
 /**
  * Test case for java.lang.SecurityManager
  */
+@TestTargetClass(SecurityManager.class) 
 public class SecurityManagerTest extends TestCase {
     MutableSecurityManager mutableSM = null;
 
@@ -50,6 +57,15 @@ public class SecurityManagerTest extends TestCase {
     /**
      * @tests java.lang.SecurityManager#SecurityManager()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "SecurityManager",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         SecurityManager localManager = null;
         try {
@@ -75,6 +91,15 @@ public class SecurityManagerTest extends TestCase {
     /**
      * @tests java.lang.SecurityManager#checkPackageAccess(String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "checkPackageAccess",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_checkPackageAccessLjava_lang_String() {
         final String old = Security.getProperty("package.access");
         Security.setProperty("package.access", "a.,bbb, c.d.");
@@ -123,6 +148,15 @@ public class SecurityManagerTest extends TestCase {
     /**
      * @tests java.lang.SecurityManager#checkPackageDefinition(String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "checkPackageDefinition",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_checkPackageDefinitionLjava_lang_String() {
         final String old = Security.getProperty("package.definition");
         Security.setProperty("package.definition", "a.,bbb, c.d.");
@@ -171,7 +205,16 @@ public class SecurityManagerTest extends TestCase {
     /**
      * @tests java.lang.SecurityManager#checkMemberAccess(java.lang.Class, int)
      */
-    public void test_checkMemberAccessLjava_lang_ClassI() {
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't call checkMemberAccess.",
+      targets = {
+        @TestTarget(
+          methodName = "checkMemberAccess",
+          methodArgs = {java.lang.Class.class, int.class}
+        )
+    })
+    public void _test_checkMemberAccessLjava_lang_ClassI() {
         // enable all but one check
         mutableSM.addPermission(new AllPermission());
         mutableSM
@@ -194,7 +237,16 @@ public class SecurityManagerTest extends TestCase {
     /**
      * @tests java.lang.SecurityManager#checkPermission(java.security.Permission)
      */
-    public void test_checkPermissionLjava_security_Permission()
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions are not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "checkPermission",
+          methodArgs = {java.security.Permission.class}
+        )
+    })
+    public void _test_checkPermissionLjava_security_Permission()
             throws Exception {
 
         // tmp user home to avoid presence of ${user.home}/.java.policy
@@ -236,6 +288,15 @@ public class SecurityManagerTest extends TestCase {
     /**
      * @tests java.lang.SecurityManager#checkAccess(java.lang.Thread)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions are not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "checkAccess",
+          methodArgs = {java.lang.Thread.class}
+        )
+    })
     public void test_checkAccessLjava_lang_Thread() throws InterruptedException {
         // Regression for HARMONY-66
         Thread t = new Thread() {
@@ -251,6 +312,15 @@ public class SecurityManagerTest extends TestCase {
     /**
      * @tests {@link java.lang.SecurityManager#checkAccept(String, int)}
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NullPointerException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "checkAccept",
+          methodArgs = {java.lang.String.class, int.class}
+        )
+    })
     @SuppressWarnings("nls")
     public void test_checkAcceptLjava_lang_String_int() {
         // enable all but one check
@@ -269,6 +339,15 @@ public class SecurityManagerTest extends TestCase {
     /**
      * @tests {@link java.lang.SecurityManager#checkConnect(String, int)}
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NullPointerException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "checkConnect",
+          methodArgs = {java.lang.String.class, int.class}
+        )
+    })
     public void test_checkConnectLjava_lang_StringI() {
         // enable all but one check
         mutableSM.addPermission(new AllPermission());
@@ -286,8 +365,17 @@ public class SecurityManagerTest extends TestCase {
     /**
      * @tests {@link java.lang.SecurityManager#checkConnect(String, int, Object)}
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NullPointerException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "checkConnect",
+          methodArgs = {java.lang.String.class, int.class, java.lang.Object.class}
+        )
+    })
     @SuppressWarnings("nls")
-    public void test_checkConnectLjava_lang_String_int_Ljava_lang_Object() {
+    public void _test_checkConnectLjava_lang_String_int_Ljava_lang_Object() {
         // enable all but one check
         mutableSM.addPermission(new AllPermission());
         mutableSM.denyPermission(new SocketPermission("localhost:1024-",
@@ -304,6 +392,15 @@ public class SecurityManagerTest extends TestCase {
         }
     }
 
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't check positive functionlity?",
+      targets = {
+        @TestTarget(
+          methodName = "checkCreateClassLoader",
+          methodArgs = {}
+        )
+    })   
     public void test_checkCreateClassLoader() {
         // enable all but one check
         mutableSM.addPermission(new AllPermission());
@@ -327,7 +424,17 @@ public class SecurityManagerTest extends TestCase {
             System.setSecurityManager(null);
         }
     }
-
+    
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "This methd could be verified via the delete method of class File " +
+            "according to the specification.",
+      targets = {
+        @TestTarget(
+          methodName = "checkDelete",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_checkDeleteLjava_lang_String() {
         // enable all but one check
         mutableSM.addPermission(new AllPermission());
@@ -356,6 +463,15 @@ public class SecurityManagerTest extends TestCase {
     /**
      * @tests {@link java.lang.SecurityManager#checkExec(String)}
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "checkExec",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     @SuppressWarnings("nls")
     public void test_checkExecLjava_lang_String() {
         // enable all but one check
@@ -374,6 +490,15 @@ public class SecurityManagerTest extends TestCase {
     /**
      * @tests {@link java.lang.SecurityManager#checkExit(int)}
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "checkExit",
+          methodArgs = {int.class}
+        )
+    })
     @SuppressWarnings("nls")
     public void test_checkExit_int() {
         // enable all but one check
@@ -391,6 +516,15 @@ public class SecurityManagerTest extends TestCase {
     /**
      * @tests {@link java.lang.SecurityManager#checkLink(String)}
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "checkLink",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     @SuppressWarnings("nls")
     public void test_checkLinkLjava_lang_String() {
         // enable all but one check
@@ -408,6 +542,15 @@ public class SecurityManagerTest extends TestCase {
     /**
      * @tests {@link java.lang.SecurityManager#checkListen(int)}
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't check positive functionality.",
+      targets = {
+        @TestTarget(
+          methodName = "checkListen",
+          methodArgs = {int.class}
+        )
+    })
     @SuppressWarnings("nls")
     public void test_checkListen_int() {
         // enable all but one check
@@ -438,6 +581,15 @@ public class SecurityManagerTest extends TestCase {
      * @throws UnknownHostException
      * @tests {@link java.lang.SecurityManager#checkMulticast(java.net.InetAddress)}
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies SecurityException.",
+      targets = {
+        @TestTarget(
+          methodName = "checkMulticast",
+          methodArgs = {java.net.InetAddress.class}
+        )
+    })
     @SuppressWarnings("nls")
     public void test_checkMulticastLjava_net_InetAddress()
             throws UnknownHostException {
@@ -458,6 +610,15 @@ public class SecurityManagerTest extends TestCase {
      * @throws UnknownHostException
      * @tests {@link java.lang.SecurityManager#checkMulticast(java.net.InetAddress,byte)}
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies SecurityException.",
+      targets = {
+        @TestTarget(
+          methodName = "checkMulticast",
+          methodArgs = {java.net.InetAddress.class, byte.class}
+        )
+    })
     @SuppressWarnings( { "nls", "deprecation" })
     public void test_checkMulticastLjava_net_InetAddress_int()
             throws UnknownHostException {
@@ -480,8 +641,17 @@ public class SecurityManagerTest extends TestCase {
      *
      * @tests {@link java.lang.SecurityManager#checkPermission(Permission, Object)}
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies SecurityException.",
+      targets = {
+        @TestTarget(
+          methodName = "checkPermission",
+          methodArgs = {java.security.Permission.class, java.lang.Object.class}
+        )
+    })
     @SuppressWarnings("nls")
-    public void test_checkPermissionLjava_security_PermissionLjava_lang_Object() {
+    public void _test_checkPermissionLjava_security_PermissionLjava_lang_Object() {
         // enable all but one check
         mutableSM.addPermission(new AllPermission());
         Permission denyp = new SocketPermission("localhost:1024-",
@@ -502,6 +672,15 @@ public class SecurityManagerTest extends TestCase {
     /**
      * @tests {@link java.lang.SecurityManager#checkPrintJobAccess()}
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies SecurityException.",
+      targets = {
+        @TestTarget(
+          methodName = "checkPrintJobAccess",
+          methodArgs = {}
+        )
+    })
     @SuppressWarnings("nls")
     public void test_checkPrintJobAccess() {
         // enable all but one check
@@ -515,7 +694,15 @@ public class SecurityManagerTest extends TestCase {
             // expected
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies SecurityException.",
+      targets = {
+        @TestTarget(
+          methodName = "checkPropertiesAccess",
+          methodArgs = {}
+        )
+    })
     public void test_checkPropertiesAccess() {
         // enable all but one check
         mutableSM.addPermission(new AllPermission());
@@ -539,7 +726,15 @@ public class SecurityManagerTest extends TestCase {
             System.setSecurityManager(null);
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies SecurityException.",
+      targets = {
+        @TestTarget(
+          methodName = "checkPropertyAccess",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_checkPropertyAccessLjava_lang_String() {
         // enable all but one check
         mutableSM.addPermission(new AllPermission());
@@ -579,6 +774,15 @@ public class SecurityManagerTest extends TestCase {
     /**
      * @tests {@link java.lang.SecurityManager#checkRead(FileDescriptor)}
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies SecurityException.",
+      targets = {
+        @TestTarget(
+          methodName = "checkRead",
+          methodArgs = {java.io.FileDescriptor.class}
+        )
+    })
     @SuppressWarnings("nls")
     public void test_checkReadLjava_io_FileDescriptor() {
         // enable all but one check
@@ -592,7 +796,15 @@ public class SecurityManagerTest extends TestCase {
             // expected
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies SecurityException.",
+      targets = {
+        @TestTarget(
+          methodName = "checkRead",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_checkReadLjava_lang_String() {
         // enable all but one check
         mutableSM.addPermission(new AllPermission());
@@ -621,8 +833,17 @@ public class SecurityManagerTest extends TestCase {
     /**
      * @tests {@link java.lang.SecurityManager#checkRead(String,Object)}
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies SecurityException.",
+      targets = {
+        @TestTarget(
+          methodName = "checkRead",
+          methodArgs = {java.lang.String.class, java.lang.Object.class}
+        )
+    })
     @SuppressWarnings("nls")
-    public void test_checkReadLjava_lang_StringLjava_lang_Object() {
+    public void _test_checkReadLjava_lang_StringLjava_lang_Object() {
         // enable all but one check
         mutableSM.addPermission(new AllPermission());
         mutableSM.denyPermission(new FilePermission("<<ALL FILES>>", "read"));
@@ -637,7 +858,15 @@ public class SecurityManagerTest extends TestCase {
             // expected
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies SecurityException.",
+      targets = {
+        @TestTarget(
+          methodName = "checkSecurityAccess",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_checkSecurityAccessLjava_lang_String() {
         // enable all but one check
         mutableSM.addPermission(new AllPermission());
@@ -677,6 +906,15 @@ public class SecurityManagerTest extends TestCase {
     /**
      * @tests {@link java.lang.SecurityManager#checkSetFactory()}
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies SecurityException.",
+      targets = {
+        @TestTarget(
+          methodName = "checkSetFactory",
+          methodArgs = {}
+        )
+    })
     @SuppressWarnings("nls")
     public void test_checkSetFactory() {
         // enable all but one check
@@ -690,8 +928,16 @@ public class SecurityManagerTest extends TestCase {
             // expected
         }
     }
-
-    public void test_checkTopLevelWindowLjava_lang_Object() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "checkTopLevelWindow",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
+    public void _test_checkTopLevelWindowLjava_lang_Object() {
         assertFalse("Calling thread isn't trusted to bring up the top-level window",
                 mutableSM.checkTopLevelWindow(this));
 
@@ -710,7 +956,15 @@ public class SecurityManagerTest extends TestCase {
             System.setSecurityManager(null);
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies SecurityException.",
+      targets = {
+        @TestTarget(
+          methodName = "checkWrite",
+          methodArgs = {java.io.FileDescriptor.class}
+        )
+    })
     public void test_checkWriteLjava_io_FileDescriptor() {
         // enable all but one check
         mutableSM.addPermission(new AllPermission());
@@ -723,7 +977,15 @@ public class SecurityManagerTest extends TestCase {
             // expected
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies SecurityException.",
+      targets = {
+        @TestTarget(
+          methodName = "checkWrite",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_checkWriteLjava_lang_String() {
         // enable all but one check
         mutableSM.addPermission(new AllPermission());
@@ -752,6 +1014,15 @@ public class SecurityManagerTest extends TestCase {
     /**
      * @tests {@link java.lang.SecurityManager#getInCheck()}
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getInCheck",
+          methodArgs = {}
+        )
+    })
     public void test_getIncheck() {
         mockSM.setInCheck(false);
         assertFalse(mockSM.getInCheck());
@@ -762,8 +1033,17 @@ public class SecurityManagerTest extends TestCase {
     /**
      * @tests {@link java.lang.SecurityManager#getSecurityContext()}
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies SecurityException.",
+      targets = {
+        @TestTarget(
+          methodName = "getSecurityContext",
+          methodArgs = {}
+        )
+    })
     @SuppressWarnings("nls")
-    public void test_getSecurityContext() {
+    public void _test_getSecurityContext() {
         // enable all but one check
         mutableSM.addPermission(new AllPermission());
         mutableSM.denyPermission(new FilePermission("<<ALL FILES>>", "read"));
@@ -775,7 +1055,15 @@ public class SecurityManagerTest extends TestCase {
             // expected
         }
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getThreadGroup",
+          methodArgs = {}
+        )
+    })
     public void test_getThreadGroup() throws InterruptedException {
         ThreadGroup tgroup = mutableSM.getThreadGroup();
         assertNotNull("Incorrect thread group", tgroup);
@@ -795,6 +1083,16 @@ public class SecurityManagerTest extends TestCase {
     /**
      * @tests {@link java.lang.SecurityManager#classDepth(String)}
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies that classDepth(String) returns -1 for not " +
+            "found frame.",
+      targets = {
+        @TestTarget(
+          methodName = "classDepth",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     @SuppressWarnings("nls")
     public void test_classDepthLjava_lang_String() {
         assertEquals(-1, mockSM.classDepth("nothing"));
@@ -803,6 +1101,15 @@ public class SecurityManagerTest extends TestCase {
     /**
      * @tests {@link java.lang.SecurityManager#classLoaderDepth()}
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check cases according to the specification.",
+      targets = {
+        @TestTarget(
+          methodName = "classLoaderDepth",
+          methodArgs = {}
+        )
+    })
     public void test_classLoaderDepth() {
         assertEquals(-1, mockSM.classLoaderDepth());
     }
@@ -810,6 +1117,15 @@ public class SecurityManagerTest extends TestCase {
     /**
      * @tests {@link java.lang.SecurityManager#currentClassLoader()}
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check all cases according to the specification.",
+      targets = {
+        @TestTarget(
+          methodName = "currentClassLoader",
+          methodArgs = {}
+        )
+    })
     public void test_currentClassLoader() {
         assertNull(mockSM.currentClassLoader());
     }
@@ -817,6 +1133,15 @@ public class SecurityManagerTest extends TestCase {
     /**
      * @tests {@link java.lang.SecurityManager#currentLoadedClass()}
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check all cases according to the specification.",
+      targets = {
+        @TestTarget(
+          methodName = "currentLoadedClass",
+          methodArgs = {}
+        )
+    })
     public void test_currentLoadedClass() {
         assertNull(mockSM.currentLoadedClass());
     }
@@ -824,6 +1149,15 @@ public class SecurityManagerTest extends TestCase {
     /**
      * @tests {@link java.lang.SecurityManager#inClass(String)}
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "inClass",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     @SuppressWarnings("nls")
     public void test_inClassLjava_lang_String() {
         assertFalse(mockSM.inClass("nothing"));
@@ -833,6 +1167,15 @@ public class SecurityManagerTest extends TestCase {
     /**
      * @tests {@link java.lang.SecurityManager#inClassLoader()}
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "inClassLoader",
+          methodArgs = {}
+        )
+    })
     public void test_inClassLoader() {
         assertFalse(mockSM.inClassLoader());
     }
@@ -840,7 +1183,16 @@ public class SecurityManagerTest extends TestCase {
     /**
      * @tests {@link java.lang.SecurityManager#getClassContext()}
      */
-    public void test_getClassContext() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getClassContext",
+          methodArgs = {}
+        )
+    })
+    public void _test_getClassContext() {
         assertEquals("MockSecurityManager should be the first in the classes stack",
                 mockSM.getClassContext()[0], MockSecurityManager.class);
     }

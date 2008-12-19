@@ -18,21 +18,22 @@
 package java.io;
 
 /**
- * Objects that want to be serialized/deserialized using
- * ObjectOutputStream/ObjectInputStream but defining their own byte
- * representation should implement this interface.
+ * Defines an interface for classes that want to be serializable, but have their
+ * own binary representation.
+ * 
+ * @since Android 1.0
  */
 public interface Externalizable extends Serializable {
     /**
-     * Reads the next object from the ObjectInput <code>input</code>
+     * Reads the next object from the ObjectInput <code>input</code>.
      * 
      * @param input
-     *            the ObjectInput from which the next object is read
-     * 
+     *            the ObjectInput from which the next object is read.
      * @throws IOException
-     *             If an error occurs attempting to read from this ObjectInput.
+     *             if an error occurs attempting to read from {@code input}.
      * @throws ClassNotFoundException
-     *             If the class of the instance being loaded cannot be found
+     *             if the class of the instance being loaded cannot be found.
+     * @since Android 1.0
      */
     public void readExternal(ObjectInput input) throws IOException,
             ClassNotFoundException;
@@ -41,10 +42,10 @@ public interface Externalizable extends Serializable {
      * Writes the receiver to the ObjectOutput <code>output</code>.
      * 
      * @param output
-     *            an ObjectOutput where to write the object
-     * 
+     *            the ObjectOutput to write the object to.
      * @throws IOException
-     *             If an error occurs attempting to write to the ObjectOutput.
+     *             if an error occurs attempting to write to {@code output}.
+     * @since Android 1.0
      */
     public void writeExternal(ObjectOutput output) throws IOException;
 }

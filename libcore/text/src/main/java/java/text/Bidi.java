@@ -27,11 +27,11 @@ import org.apache.harmony.text.BidiWrapper;
 import org.apache.harmony.text.internal.nls.Messages;
 
 /**
- * Bidi is the class providing the bidirectional algorithm. The algorithm is
+ * Provides the Unicode Bidirectional Algorithm. The algorithm is
  * defined in the Unicode Standard Annex #9, version 13, also described in The
  * Unicode Standard, Version 4.0 .
  * 
- * Use a Bidi object to get the information on the position reordering of a
+ * Use a {@code Bidi} object to get the information on the position reordering of a
  * bidirectional text, such as Arabic or Hebrew. The natural display ordering of
  * horizontal text in these languages is from right to left, while they order
  * numbers from left to right.
@@ -41,56 +41,64 @@ import org.apache.harmony.text.internal.nls.Messages;
  * direction of the text as well as the nesting level. Left-to-right runs have
  * even levels while right-to-left runs have odd levels.
  * 
+ * @since Android 1.0
  */
 public final class Bidi {
     /**
      * Constant that indicates the default base level. If there is no strong
      * character, then set the paragraph level to 0 (left-to-right).
+     * 
+     * @since Android 1.0
      */
     public static final int DIRECTION_DEFAULT_LEFT_TO_RIGHT = -2;
 
     /**
      * Constant that indicates the default base level. If there is no strong
      * character, then set the paragraph level to 1 (right-to-left).
+     * 
+     * @since Android 1.0
      */
     public static final int DIRECTION_DEFAULT_RIGHT_TO_LEFT = -1;
 
     /**
      * Constant that specifies the default base level as 0 (left-to-right).
+     * 
+     * @since Android 1.0
      */
     public static final int DIRECTION_LEFT_TO_RIGHT = 0;
 
     /**
      * Constant that specifies the default base level as 1 (right-to-left).
+     * 
+     * @since Android 1.0
      */
     public static final int DIRECTION_RIGHT_TO_LEFT = 1;
 
     /**
-     * Create a Bidi object from the AttributedCharacterIterator of a paragraph
-     * text.
-     * 
-     * The RUN_DIRECTION attribute determines the base direction of the
-     * bidirectional text. If it's not specified explicitly, the algorithm uses
-     * DIRECTION_DEFAULT_LEFT_TO_RIGHT by default.
-     * 
-     * The BIDI_EMBEDDING attribute specifies the level of embedding for each
-     * character. Values between -1 and -62 denote overrides at the level's
-     * absolute value, values from 1 to 62 indicate embeddings, and the 0 value
-     * indicates the level is calculated by the algorithm automatically. For the
-     * character with no BIDI_EMBEDDING attribute or with a improper attribute
-     * value, such as a null value, the algorithm treats its embedding level as
-     * 0.
-     * 
-     * The NUMERIC_SHAPING attribute specifies the instance of NumericShaper
-     * used to convert European digits to other decimal digits before performing
-     * the bidi algorithm.
+     * Creates a {@code Bidi} object from the {@code
+     * AttributedCharacterIterator} of a paragraph text. The RUN_DIRECTION
+     * attribute determines the base direction of the bidirectional text. If it
+     * is not specified explicitly, the algorithm uses
+     * DIRECTION_DEFAULT_LEFT_TO_RIGHT by default. The BIDI_EMBEDDING attribute
+     * specifies the level of embedding for each character. Values between -1
+     * and -62 denote overrides at the level's absolute value, values from 1 to
+     * 62 indicate embeddings, and the 0 value indicates the level is calculated
+     * by the algorithm automatically. For the character with no BIDI_EMBEDDING
+     * attribute or with a improper attribute value, such as a {@code null}
+     * value, the algorithm treats its embedding level as 0. The NUMERIC_SHAPING
+     * attribute specifies the instance of NumericShaper used to convert
+     * European digits to other decimal digits before performing the bidi
+     * algorithm.
      * 
      * @param paragraph
-     *
-     * TODO Make these proper links again (problem with core vs. framework).
-     * see TextAttribute.BIDI_EMBEDDING
-     * see TextAttribute.NUMERIC_SHAPING
-     * see TextAttribute.RUN_DIRECTION
+     *            the String containing the paragraph text to perform the
+     *            algorithm.
+     * @throws IllegalArgumentException
+     *             if {@code paragraph} is {@code null}.
+     * @see TextAttribute#BIDI_EMBEDDING
+     * @see TextAttribute#NUMERIC_SHAPING
+     * @see TextAttribute#RUN_DIRECTION
+     * @since Android 1.0
      */
     public Bidi(AttributedCharacterIterator paragraph) {
         if (paragraph == null) {
@@ -112,7 +120,6 @@ public final class Bidi {
 
         // First check the RUN_DIRECTION attribute.
         int flags = DIRECTION_DEFAULT_LEFT_TO_RIGHT;
-        
         Object direction = paragraph.getAttribute(TextAttribute.RUN_DIRECTION);
         if (direction != null && direction instanceof Boolean) {
             if (direction.equals(TextAttribute.RUN_DIRECTION_LTR)) {
@@ -147,12 +154,12 @@ public final class Bidi {
             }
         }
 
-        // Apply NumericShaper to the text  
+        // Apply NumericShaper to the text
         Object numericShaper = paragraph
                 .getAttribute(TextAttribute.NUMERIC_SHAPING);
         if (numericShaper != null && numericShaper instanceof NumericShaper) {
             ((NumericShaper) numericShaper).shape(text, 0, length);
-        }      
+        }
 
         long pBidi = createUBiDi(text, 0, embeddings, 0, length, flags);
         readBidiInfo(pBidi);
@@ -160,36 +167,38 @@ public final class Bidi {
     }
 
     /**
-     * Create a Bidi object.
+     * Creates a {@code Bidi} object.
      * 
      * @param text
-     *            the char array of the paragraph text.
+     *            the char array of the paragraph text that is processed.
      * @param textStart
-     *            the start offset of the text array to perform the algorithm.
+     *            the index in {@code text} of the start of the paragraph.
      * @param embeddings
      *            the embedding level array of the paragraph text, specifying
      *            the embedding level information for each character. Values
-     *            between -1 and -62 denote overrides at the level's absolute
-     *            value, values from 1 to 62 indicate embeddings, and the 0
+     *            between -1 and -61 denote overrides at the level's absolute
+     *            value, values from 1 to 61 indicate embeddings, and the 0
      *            value indicates the level is calculated by the algorithm
      *            automatically.
      * @param embStart
-     *            the start offset of the embeddings array to perform the
-     *            algorithm.
+     *            the index in {@code embeddings} of the start of the paragraph.
      * @param paragraphLength
-     *            the length of the text to perform the algorithm. It must be
-     *            text.length >= textStart + paragraphLength, and
-     *            embeddings.length >= embStart + paragraphLength.
+     *            the length of the text to perform the algorithm.
      * @param flags
      *            indicates the base direction of the bidirectional text. It is
      *            expected that this will be one of the direction constant
      *            values defined in this class. An unknown value is treated as
      *            DIRECTION_DEFAULT_LEFT_TO_RIGHT.
-     * 
+     * @throws IllegalArgumentException
+     *             if {@code textStart}, {@code embStart}, or {@code
+     *             paragraphLength} is negative; if 
+     *             {@code text.length < textStart + paragraphLength} or 
+     *             {@code embeddings.length < embStart + paragraphLength}.
      * @see #DIRECTION_LEFT_TO_RIGHT
      * @see #DIRECTION_RIGHT_TO_LEFT
      * @see #DIRECTION_DEFAULT_RIGHT_TO_LEFT
      * @see #DIRECTION_DEFAULT_LEFT_TO_RIGHT
+     * @since Android 1.0
      */
     public Bidi(char[] text, int textStart, byte[] embeddings, int embStart,
             int paragraphLength, int flags) {
@@ -215,21 +224,21 @@ public final class Bidi {
     }
 
     /**
-     * Create a Bidi object.
+     * Creates a {@code Bidi} object.
      * 
      * @param paragraph
-     *            the String containing the paragraph text to perform the
-     *            algorithm.
+     *            the string containing the paragraph text to perform the
+     *            algorithm on.
      * @param flags
      *            indicates the base direction of the bidirectional text. It is
      *            expected that this will be one of the direction constant
      *            values defined in this class. An unknown value is treated as
      *            DIRECTION_DEFAULT_LEFT_TO_RIGHT.
-     * 
      * @see #DIRECTION_LEFT_TO_RIGHT
      * @see #DIRECTION_RIGHT_TO_LEFT
      * @see #DIRECTION_DEFAULT_RIGHT_TO_LEFT
      * @see #DIRECTION_DEFAULT_LEFT_TO_RIGHT
+     * @since Android 1.0
      */
     public Bidi(String paragraph, int flags) {
         this((paragraph == null ? null : paragraph.toCharArray()), 0, null, 0,
@@ -328,17 +337,18 @@ public final class Bidi {
     private boolean unidirectional;
 
     /**
-     * Return whether the base level is from left to right.
+     * Returns whether the base level is from left to right.
      * 
      * @return true if the base level is from left to right.
+     * @since Android 1.0
      */
     public boolean baseIsLeftToRight() {
         return baseLevel % 2 == 0 ? true : false;
     }
 
     /**
-     * Create a new Bidi object containing the information of one line from this
-     * object.
+     * Creates a new {@code Bidi} object containing the information of one line
+     * from this object.
      * 
      * @param lineStart
      *            the start offset of the line.
@@ -346,6 +356,11 @@ public final class Bidi {
      *            the limit of the line.
      * @return the new line Bidi object. In this new object, the indices will
      *         range from 0 to (limit - start - 1).
+     * @throws IllegalArgumentException
+     *             if {@code lineStart < 0}, {@code lineLimit < 0}, {@code
+     *             lineStart > lineLimit} or if {@code lineStart} is greater
+     *             than the length of this object's paragraph text.
+     * @since Android 1.0
      */
     public Bidi createLineBidi(int lineStart, int lineLimit) {
         if (lineStart < 0 || lineLimit < 0 || lineLimit > length
@@ -374,29 +389,32 @@ public final class Bidi {
     }
 
     /**
-     * Return the base level.
+     * Returns the base level.
      * 
-     * @return the int value of the base level.
+     * @return the base level.
+     * @since Android 1.0
      */
     public int getBaseLevel() {
         return baseLevel;
     }
 
     /**
-     * Return the length of the text in the Bidi object.
+     * Returns the length of the text in the {@code Bidi} object.
      * 
-     * @return the int value of the length.
+     * @return the length.
+     * @since Android 1.0
      */
     public int getLength() {
         return length;
     }
 
     /**
-     * Return the level of a specified character.
+     * Returns the level of a specified character.
      * 
      * @param offset
      *            the offset of the character.
-     * @return the int value of the level.
+     * @return the level.
+     * @since Android 1.0
      */
     public int getLevelAt(int offset) {
         try {
@@ -407,82 +425,92 @@ public final class Bidi {
     }
 
     /**
-     * Return the number of runs in the bidirectional text.
+     * Returns the number of runs in the bidirectional text.
      * 
-     * @return the int value of runs, at least 1.
+     * @return the number of runs, at least 1.
+     * @since Android 1.0
      */
     public int getRunCount() {
         return unidirectional ? 1 : runs.length;
     }
 
     /**
-     * Return the level of a specified run.
+     * Returns the level of the specified run.
      * 
      * @param run
      *            the index of the run.
      * @return the level of the run.
+     * @since Android 1.0
      */
     public int getRunLevel(int run) {
         return unidirectional ? baseLevel : runs[run].getLevel();
     }
 
     /**
-     * Return the limit offset of a specified run.
+     * Returns the limit offset of the specified run.
      * 
      * @param run
      *            the index of the run.
      * @return the limit offset of the run.
+     * @since Android 1.0
      */
     public int getRunLimit(int run) {
         return unidirectional ? length : runs[run].getLimit();
     }
 
     /**
-     * Return the start offset of a specified run.
+     * Returns the start offset of the specified run.
      * 
      * @param run
      *            the index of the run.
      * @return the start offset of the run.
+     * @since Android 1.0
      */
     public int getRunStart(int run) {
         return unidirectional ? 0 : runs[run].getStart();
     }
 
     /**
-     * Return whether the text is from left to right, that is, both the base
+     * Indicates whether the text is from left to right, that is, both the base
      * direction and the text direction is from left to right.
      * 
-     * @return true if the text is from left to right.
+     * @return {@code true} if the text is from left to right; {@code false}
+     *         otherwise.
+     * @since Android 1.0
      */
     public boolean isLeftToRight() {
         return direction == BidiWrapper.UBiDiDirection_UBIDI_LTR;
     }
 
     /**
-     * Return whether the text direction is mixed.
+     * Indicates whether the text direction is mixed.
      * 
-     * @return true if the text direction is mixed.
+     * @return {@code true} if the text direction is mixed; {@code false}
+     *         otherwise.
+     * @since Android 1.0
      */
     public boolean isMixed() {
         return direction == BidiWrapper.UBiDiDirection_UBIDI_MIXED;
     }
 
     /**
-     * Return whether the text is from right to left, that is, both the base
+     * Indicates whether the text is from right to left, that is, both the base
      * direction and the text direction is from right to left.
      * 
-     * @return true if the text is from right to left.
+     * @return {@code true} if the text is from right to left; {@code false}
+     *         otherwise.
+     * @since Android 1.0
      */
     public boolean isRightToLeft() {
         return direction == BidiWrapper.UBiDiDirection_UBIDI_RTL;
     }
 
     /**
-     * Reorder a range of objects according to their specified levels. This is a
-     * convenience function that does not use a Bidi object. The range of
-     * objects at index from objectStart to objectStart + count will be
-     * reordered according to the range of levels at index from levelStart to
-     * levelStart + count.
+     * Reorders a range of objects according to their specified levels. This is
+     * a convenience function that does not use a {@code Bidi} object. The range
+     * of objects at {@code index} from {@code objectStart} to {@code
+     * objectStart + count} will be reordered according to the range of levels
+     * at {@code index} from {@code levelStart} to {@code levelStart + count}.
      * 
      * @param levels
      *            the level array, which is already determined.
@@ -494,6 +522,11 @@ public final class Bidi {
      *            the start offset of the range of objects.
      * @param count
      *            the count of the range of objects to reorder.
+     * @throws IllegalArgumentException
+     *             if {@code count}, {@code levelStart} or {@code objectStart}
+     *             is negative; if {@code count > levels.length - levelStart} or
+     *             if {@code count > objects.length - objectStart}.
+     * @since Android 1.0
      */
     public static void reorderVisually(byte[] levels, int levelStart,
             Object[] objects, int objectStart, int count) {
@@ -520,8 +553,8 @@ public final class Bidi {
     }
 
     /**
-     * Return whether a range of characters of a text requires a Bidi object to
-     * display properly.
+     * Indicates whether a range of characters of a text requires a {@code Bidi}
+     * object to display properly.
      * 
      * @param text
      *            the char array of the text.
@@ -529,7 +562,13 @@ public final class Bidi {
      *            the start offset of the range of characters.
      * @param limit
      *            the limit offset of the range of characters.
-     * @return true if the range of characters requires a Bidi object.
+     * @return {@code true} if the range of characters requires a {@code Bidi}
+     *         object; {@code false} otherwise.
+     * @throws IllegalArgumentException
+     *             if {@code start} or {@code limit} is negative; {@code start >
+     *             limit} or {@code limit} is greater than the length of this
+     *             object's paragraph text.
+     * @since Android 1.0
      */
     public static boolean requiresBidi(char[] text, int start, int limit) {
         int length = text.length;
@@ -541,9 +580,11 @@ public final class Bidi {
     }
 
     /**
-     * Return the internal message of the Bidi object, used in debugging.
+     * Returns the internal message of the {@code Bidi} object, used in
+     * debugging.
      * 
      * @return a string containing the internal message.
+     * @since Android 1.0
      */
     @Override
     public String toString() {

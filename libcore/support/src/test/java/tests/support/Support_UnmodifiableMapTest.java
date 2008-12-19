@@ -17,12 +17,15 @@
 
 package tests.support;
 
+import dalvik.annotation.TestTargetClass;
+
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import junit.framework.TestCase;
 
+@TestTargetClass(Map.class)
 public class Support_UnmodifiableMapTest extends TestCase {
 
     Map<String, Integer> map;

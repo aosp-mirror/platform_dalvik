@@ -20,14 +20,22 @@ package java.sql;
 import java.util.Properties;
 
 /**
- * An Interface to a JDBC Driver.
+ * An interface to a JDBC driver.
  * <p>
- * The JDBC Driver uses URLs to specify the location of specific data. URL
- * format typically takes the form "xxxx:yyyy:SpecificData", where "xxxx:yyyy"
- * is termed the subprotocol and is normally the same for all uses of a
- * particular driver. "SpecificData" is a string which identifies the particular
- * data source that the driver should use.
- * 
+ * The JDBC driver uses URLs to specify the location of specific data. URL
+ * format typically takes the form " {@code xxxx:yyyy:SpecificData}", where "
+ * {@code xxxx:yyyy}" is referred to as the <i>subprotocol</i> and is normally
+ * the same for all of a particular driver. " {@code SpecificData}" is a string
+ * which identifies the particular data source that the driver should use.
+ * </p>
+ * <p>
+ * A driver needs to be registered with a {@link DriverManager}. It is
+ * registered and instantiated by calling {@code Class.forName("DriverURL")}
+ * with the URL string as argument.
+ * </p>
+ * @see DriverManager
+ *  
+ * @since Android 1.0
  */
 public interface Driver {
 
@@ -37,43 +45,48 @@ public interface Driver {
      * 
      * @param url
      *            the URL to connect to.
-     * @return true if the driver thinks that is can open a connection to the
-     *         supplied URL, false otherwise. Typically, the driver will respond
-     *         true if it thinks that it can handle the subprotocol specified by
-     *         the driver.
+     * @return {@code true} if the driver thinks that is can open a connection
+     *         to the supplied URL, {@code false} otherwise. Typically, the
+     *         driver will respond {@code true} if it thinks that it can handle
+     *         the subprotocol specified by the driver.
      * @throws SQLException
+     *          if a database error occurs.
+     * @since Android 1.0
      */
     public boolean acceptsURL(String url) throws SQLException;
 
     /**
-     * Attempts to make a database connection to a datasource specified by a
+     * Attempts to make a database connection to a data source specified by a
      * supplied URL.
      * 
      * @param url
-     *            the url to connect.
+     *            the URL to connect.
      * @param info
      *            some properties that should be used in establishing the
      *            connection. The properties consist of name/value pairs of
-     *            Strings. Normally, a connection to a database requires at
-     *            least two properties - for "user" and "password" in order to
-     *            pass authentication to the database.
-     * @return a Connection object representing the connection to the database.
+     *            strings. Normally, a connection to a database requires at
+     *            least two properties - for {@code "user"} and {@code
+     *            "password"} in order to pass authentication to the database.
+     * @return the connection to the database.
      * @throws SQLException
-     *             if a database error occurs
+     *             if a database error occurs.
+     * @since Android 1.0
      */
     public Connection connect(String url, Properties info) throws SQLException;
 
     /**
      * Gets the driver's major version number.
      * 
-     * @return the major version number of the Driver - typically starts at 1.
+     * @return the major version number of the driver - typically starts at 1.
+     * @since Android 1.0
      */
     public int getMajorVersion();
 
     /**
      * Gets the driver's minor version number.
      * 
-     * @return the minor version number of the Driver - typically starts at 0.
+     * @return the minor version number of the driver - typically starts at 0.
+     * @since Android 1.0
      */
     public int getMinorVersion();
 
@@ -81,32 +94,42 @@ public interface Driver {
      * Gets information about possible properties for this driver.
      * <p>
      * This method is intended to provide a listing of possible properties that
-     * the user of the driver may need to supply in order to correct connect to
-     * a database. Note that the returned array of Properties may change
+     * the client of the driver must supply in order to establish a connection
+     * to a database. Note that the returned array of properties may change
      * depending on the supplied list of property values.
+     * </p>
      * 
      * @param url
-     *            the url of the database. A using program may call this method
+     *            the URL of the database. An application may call this method
      *            iteratively as the property list is built up - for example,
      *            when displaying a dialog to an end-user as part of the
      *            database login process.
      * @param info
-     * @return an array of DriverPropertyInfo records which provide detail on
-     *         each property that the driver will accept.
+     *            a set of tag/value pairs giving data that a user may be 
+     *            prompted to provide in order to connect to the database.
+     * @return an array of {@code DriverPropertyInfo} records which provide
+     *         details on which additional properties are required (in addition
+     *         to those supplied in the {@code info} parameter) in order to 
+     *         connect to the database.
      * @throws SQLException
+     *             if a database error occurs.
+     * @since Android 1.0
      */
     public DriverPropertyInfo[] getPropertyInfo(String url, Properties info)
             throws SQLException;
 
     /**
      * Reports whether this driver is a genuine JDBC CompliantTM driver. The
-     * driver may only return true from this method if it passes all the JDBC
-     * Compliance tests.
+     * driver may only return {@code true} if it passes all the JDBC compliance
+     * tests.
      * <p>
      * A driver may not be fully compliant if the underlying database has
      * limited functionality.
+     * </p>
      * 
-     * @return true if the driver is fully JDBC compliant, false otherwise.
+     * @return {@code true} if the driver is fully JDBC compliant, {@code false}
+     *         otherwise.
+     * @since Android 1.0
      */
     public boolean jdbcCompliant();
 

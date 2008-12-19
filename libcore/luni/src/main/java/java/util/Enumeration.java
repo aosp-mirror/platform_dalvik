@@ -20,31 +20,35 @@ package java.util;
 
 /**
  * An Enumeration is used to sequence over a collection of objects.
+ * <p>
+ * Preferably an Iterator should be used. Iterator replaces the Enumeration
+ * interface and adds a way to remove elements from a collection.
+ * </p>
  * 
  * @see Hashtable
  * @see Properties
  * @see Vector
- * @version 1.0
+ * @since Android 1.0
  */
 public interface Enumeration<E> {
+
     /**
-     * Returns if this Enumeration has more elements.
+     * Returns whether this {@code Enumeration} has more elements.
      * 
-     * @return true if there are more elements, false otherwise
-     * 
+     * @return {@code true} if there are more elements, {@code false} otherwise.
      * @see #nextElement
+     * @since Android 1.0
      */
     public boolean hasMoreElements();
 
     /**
-     * Returns the next element in this Enumeration.
+     * Returns the next element in this {@code Enumeration}.
      * 
-     * @return the next element in this Enumeration
-     * 
-     * @exception NoSuchElementException
-     *                when there are no more elements
-     * 
+     * @return the next element..
+     * @throws NoSuchElementException
+     *             if there are no more elements.
      * @see #hasMoreElements
+     * @since Android 1.0
      */
     public E nextElement();
 }

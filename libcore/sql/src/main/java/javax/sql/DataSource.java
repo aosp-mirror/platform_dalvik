@@ -22,117 +22,137 @@ import java.sql.Connection;
 import java.io.PrintWriter;
 
 /**
- * An interface for the creation of Connection objects which represent a
- * connection to a database. This interface is an alternative to the
- * <code>java.sql.DriverManager</code>.
+ * An interface for the creation of {@code Connection} objects which represent a
+ * connection to a database. This interface is an alternative to the {@code
+ * java.sql.DriverManager}.
  * <p>
- * A class which implements the DataSource interface is typically registered
- * with a JNDI naming service directory and is retrieved from there by name.
+ * A class which implements the {@code DataSource} interface is typically
+ * registered with a JNDI naming service directory and is retrieved from there
+ * by name.
+ * </p>
  * <p>
- * The DataSource interface is typically implemented by the writer of a JDBC
- * driver. There are three variants of the DataSource interface, which produce
- * Connections with differing characteristics:
+ * The {@code DataSource} interface is typically implemented by the writer of a
+ * JDBC driver. There are three variants of the {@code DataSource} interface,
+ * which produce connections with different characteristics:
+ * </p>
  * <ol>
- * <li>Standard DataSource, which produces standard Connection objects with no
- * special features.</li>
- * <li>Connection Pool DataSource, which produces PooledConnection objects
- * which are able to participate in connection pooling, typically involving a
- * connection pooling manager as an intermediary between applications and the
- * database.</li>
- * <li>Distributed transaction DataSource ("XADataSource"), which produces
- * XAConnection objects which can be used to handle distributed transactions and
- * which typically involve a transaction manager component in the system.
- * XAConnection objects also typically provide connection pooling capabilities
- * as well as distributed transaction capabilities. </li>
+ * <li><i>Standard {@code DataSource}</i>: produces standard {@code Connection}
+ * objects with no special features.</li>
+ * <li><i>Connection Pool {@code DataSource}</i>: produces {@code
+ * PooledConnection} objects which require a connection pool manager as an
+ * intermediary component.</li>
+ * <li><i>Distributed transaction {@code DataSource} ("XADataSource")</i>:
+ * produces {@code XAConnection} objects which can be used to handle distributed
+ * transactions which typically require an intermediary transaction manager
+ * component. {@code XAConnection} objects also provide connection pooling
+ * capabilities as well as distributed transaction capabilities.</li>
  * </ol>
  * <p>
- * Note that a JDBC driver which is accessed via the DataSource interface is
- * loaded via a JNDI lookup process. A driver loaded in this way does not
- * register itself with the <code>DriverManager</code>.
+ * Note that a JDBC driver which is accessed via the {@code DataSource}
+ * interface is loaded via a JNDI lookup process. A driver loaded in this way
+ * does not register itself with the {@code DriverManager}.
+ * </p>
+ * 
+ * @since Android 1.0
  */
 public interface DataSource {
 
     /**
-     * Creates a connection to the database represented by this DataSource.
+     * Creates a connection to the database represented by this {@code
+     * DataSource}.
      * 
-     * @return a Connection object which is a connection to the database.
+     * @return a {@code Connection} object which is a connection to the
+     *         database.
      * @throws SQLException
      *             if there is a problem accessing the database.
+     * @since Android 1.0
      */
     public Connection getConnection() throws SQLException;
 
     /**
-     * Creates a connection to the database represented by this DataSource,
-     * using a supplied Username and Password,.
+     * Creates a connection to the database represented by this {@code
+     * DataSource}, using the supplied user name and password.
      * 
      * @param theUsername
-     *            a String containing a User Name for the database
+     *            the a user name for the database login.
      * @param thePassword
-     *            a String containing the Password for the user identified by
-     *            <code>theUsername</code>
-     * @return a Connection object which is a connection to the database.
+     *            the password associated with the user identified by {@code
+     *            theUsername}.
+     * @return the {@code Connection} object which is the connection to the
+     *         database.
      * @throws SQLException
      *             if there is a problem accessing the database.
+     * @since Android 1.0
      */
     public Connection getConnection(String theUsername, String thePassword)
             throws SQLException;
 
     /**
-     * Gets the Login Timeout value for this DataSource. The Login Timeout is
-     * the maximum time in seconds that the DataSource will wait when opening a
-     * connection to a database. A Timeout value of 0 implies either the system
-     * default timeout value (if there is one) or that there is no timeout. The
-     * default value for the Login Timeout is 0.
+     * Gets the login timeout value for this {@code DataSource}. The login
+     * timeout is the maximum time in seconds that the {@code DataSource} will
+     * wait when opening a connection to a database. A timeout value of 0
+     * implies either the system default timeout value (if there is one) or that
+     * there is no timeout. The default value for the login timeout is 0.
      * 
-     * @return the Login Timeout value in seconds.
+     * @return the login timeout value in seconds.
      * @throws SQLException
      *             if there is a problem accessing the database.
+     * @since Android 1.0
      */
     public int getLoginTimeout() throws SQLException;
 
     /**
-     * Gets the Log Writer for this DataSource.
+     * Gets the log writer for this {@code DataSource}.
      * <p>
-     * The Log Writer is a stream to which all log and trace messages are sent
-     * from this DataSource. The Log Writer can be null, in which case, log and
-     * trace capture is disabled. The default value for the Log Writer when an
-     * DataSource is created is null. Note that the Log Writer for an DataSource
-     * is not the same as the Log Writer used by a <code>DriverManager</code>.
+     * The log writer is a stream to which all log and trace messages are sent
+     * from this {@code DataSource}. The log writer can be {@code null}, in
+     * which case, log and trace capture is disabled. The default value for the
+     * log writer when an {@code DataSource} is created is {@code null}. Note
+     * that the log writer for a {@code DataSource} is not the same as the log
+     * writer used by a {@code DriverManager}.
+     * </p>
      * 
-     * @return a PrintWriter which is the Log Writer for this DataSource. Can be
-     *         null, in which case log writing is disabled for this DataSource.
+     * @return a {@code PrintWriter} which is the log writer for this {@code
+     *         DataSource}. Can be {@code null}, in which case log writing is
+     *         disabled for this {@code DataSource}.
      * @throws SQLException
      *             if there is a problem accessing the database.
+     * @since Android 1.0
      */
     public PrintWriter getLogWriter() throws SQLException;
 
     /**
-     * Sets the Login Timeout value for this DataSource. The Login Timeout is
-     * the maximum time in seconds that the DataSource will wait when opening a
-     * connection to a database. A Timeout value of 0 implies either the system
-     * default timeout value (if there is one) or that there is no timeout. The
-     * default value for the Login Timeout is 0.
+     * Sets the login timeout value for this {@code DataSource}. The login
+     * timeout is the maximum time in seconds that the {@code DataSource} will
+     * wait when opening a connection to a database. A timeout value of 0
+     * implies either the system default timeout value (if there is one) or that
+     * there is no timeout. The default value for the login timeout is 0.
      * 
      * @param theTimeout
-     *            the new Login Timeout value in seconds.
+     *            the new login timeout value in seconds.
      * @throws SQLException
      *             if there is a problem accessing the database.
+     * @since Android 1.0
      */
     public void setLoginTimeout(int theTimeout) throws SQLException;
 
     /**
-     * Sets the Log Writer for this DataSource.
+     * Sets the log writer for this {@code DataSource}.
      * <p>
-     * The Log Writer is a stream to which all log and trace messages are sent
-     * from this DataSource. The Log Writer can be null, in which case, log and
-     * trace capture is disabled. The default value for the Log Writer when an
-     * DataSource is created is null. Note that the Log Writer for an DataSource
-     * is not the same as the Log Writer used by a <code>DriverManager</code>.
+     * The log writer is a stream to which all log and trace messages are sent
+     * from this {@code DataSource}. The log writer can be {@code null}, in
+     * which case, log and trace capture is disabled. The default value for the
+     * log writer when a {@code DataSource} is created is {@code null}. Note
+     * that the log writer for a {@code DataSource} is not the same as the log
+     * writer used by a {@code DriverManager}.
+     * </p>
      * 
      * @param theWriter
-     *            a PrintWriter to use as the Log Writer for this DataSource.
+     *            a {@code PrintWriter} to use as the log writer for this
+     *            {@code DataSource}.
      * @throws SQLException
      *             if there is a problem accessing the database.
+     * @since Android 1.0
      */
     public void setLogWriter(PrintWriter theWriter) throws SQLException;
 }

@@ -26,6 +26,11 @@ import java.util.Enumeration;
 import org.apache.harmony.luni.util.Inet6Util;
 import org.apache.harmony.luni.util.Msg;
 
+/**
+ * This class represents a 128 bit long IPv6 address.
+ * 
+ * @since Android 1.0
+ */
 public final class Inet6Address extends InetAddress {
 
     private static final long serialVersionUID = 6880410070516793377L;
@@ -66,15 +71,16 @@ public final class Inet6Address extends InetAddress {
     }
 
     /**
-     * Constructs an InetAddress, representing the <code>address</code> and
-     * <code>hostName</code> and <code>scope_id</code>
+     * Constructs an {@code InetAddress} representing the {@code address} and
+     * {@code name} and {@code scope_id}.
      * 
      * @param address
-     *            network address
+     *            the network address.
      * @param name
-     *            Name associated with the address
+     *            the name associated with the address.
      * @param scope_id
-     *            The scope id for link or site local addresses
+     *            the scope id for link- or site-local addresses.
+     * @since Android 1.0
      */
     Inet6Address(byte address[], String name, int scope_id) {
         hostName = name;
@@ -86,18 +92,19 @@ public final class Inet6Address extends InetAddress {
     }
 
     /**
-     * Constructs an IPv6 address according to the given <code>host</code>,
-     * <code>addr</code> and <code>scope_id</code>.
+     * Constructs an IPv6 address according to the given {@code host}, {@code
+     * addr} and {@code scope_id}.
      * 
      * @param host
-     *            hostname associated with the address
+     *            the host name associated with the address.
      * @param addr
-     *            network address
+     *            the network address.
      * @param scope_id
-     *            the scope id for link or site local addresses
-     * @return an Inet6Address instance
+     *            the scope id for link- or site-local addresses.
+     * @return the Inet6Address instance representing the IP address.
      * @throws UnknownHostException
-     *             if the address is null or of invalid length
+     *             if the address is null or has an invalid length.
+     * @since Android 1.0
      */
     public static Inet6Address getByAddress(String host, byte[] addr,
             int scope_id) throws UnknownHostException {
@@ -112,22 +119,23 @@ public final class Inet6Address extends InetAddress {
     }
 
     /**
-     * Constructs an IPv6 address according to the given <code>host</code>,
-     * <code>addr</code> and <code>nif</code>. <code>scope_id</code> is
-     * set according to the given <code>nif</code> and the
-     * <code>addr<code> type(e.g. site local or link local).
+     * Gets an IPv6 address instance according to the given {@code host},
+     * {@code addr} and {@code nif}. {@code scope_id} is set according to the
+     * given {@code nif} and the {@code addr} type (for example site-local or
+     * link-local).
      * 
      * @param host
-     *            host name associated with the address
+     *            the hostname associated with the address.
      * @param addr
-     *            network address
+     *            the network address.
      * @param nif
-     *            the Network Interface that this address is associated with.
-     * @return an Inet6Address instance
+     *            the network interface that this address is associated with.
+     * @return the Inet6Address instance representing the IP address.
      * @throws UnknownHostException
-     *             if the address is null or of invalid length, or the
-     *             interface doesn't have a numeric scope id for the given
+     *             if the address is {@code null} or has an invalid length or
+     *             the interface doesn't have a numeric scope id for the given
      *             address type.
+     * @since Android 1.0
      */
     public static Inet6Address getByAddress(String host, byte[] addr,
             NetworkInterface nif) throws UnknownHostException {
@@ -167,9 +175,12 @@ public final class Inet6Address extends InetAddress {
     }
 
     /**
-     * Returns true if one of following cases is true: 1. both addresses are
-     * site local; 2. both addresses are link local; 3. ia is neither site local
-     * nor link local;
+     * Returns {@code true} if one of following cases applies:
+     * <p>
+     * <li>1. both addresses are site local</li>
+     * <li>2. both addresses are link local</li>
+     * <li>3. {@code ia} is neither site local nor link local</li>
+     * </p>
      */
     private boolean compareLocalType(Inet6Address ia) {
         if (ia.isSiteLocalAddress() && isSiteLocalAddress()) {
@@ -185,13 +196,14 @@ public final class Inet6Address extends InetAddress {
     }
 
     /**
-     * Constructs an InetAddress, representing the <code>address</code> and
-     * <code>hostName</code> and <code>scope_id</code>
+     * Constructs an {@code InetAddress} representing the {@code address} and
+     * {@code scope_id}.
      * 
      * @param address
-     *            network address
+     *            the network address.
      * @param scope_id
-     *            The scope id for link or site local addresses
+     *            the scope id for link- or site-local addresses.
+     * @since Android 1.0
      */
     Inet6Address(byte address[], int scope_id) {
         ipaddress = address;
@@ -202,13 +214,12 @@ public final class Inet6Address extends InetAddress {
     }
 
     /**
-     * Answer true if the InetAddress is an IP multicast address.
+     * Returns whether this address is an IP multicast address or not. Valid
+     * IPv6 multicast addresses are binary prefixed with 11111111 or FF (hex).
      * 
-     * Valid IPv6 multicast address have the binary prefixed with 11111111 or FF
-     * (hex).
-     * 
-     * @return boolean true, if the address is in the multicast group, false
-     *         otherwise
+     * @return {@code true} if this address is in the multicast group, {@code
+     *         false} otherwise.
+     * @since Android 1.0
      */
     @Override
     public boolean isMulticastAddress() {
@@ -217,10 +228,12 @@ public final class Inet6Address extends InetAddress {
     }
 
     /**
-     * Answer true if the InetAddress is the unspecified address "::".
+     * Returns whether this address is a unspecified wildcard address "::" or
+     * not.
      * 
-     * @return boolean true, if the address is in the multicast group, false
-     *         otherwise
+     * @return {@code true} if this instance represents a wildcard address,
+     *         {@code false} otherwise.
+     * @since Android 1.0
      */
     @Override
     public boolean isAnyLocalAddress() {
@@ -233,11 +246,12 @@ public final class Inet6Address extends InetAddress {
     }
 
     /**
-     * Answer true if the InetAddress is the loopback address
+     * Returns whether this address is the loopback address or not. The only
+     * valid IPv6 loopback address is "::1".
      * 
-     * The valid IPv6 loopback address is ::1
-     * 
-     * @return boolean true if the address is the loopback, false otherwise
+     * @return {@code true} if this instance represents the loopback address,
+     *         {@code false} otherwise.
+     * @since Android 1.0
      */
     @Override
     public boolean isLoopbackAddress() {
@@ -258,11 +272,12 @@ public final class Inet6Address extends InetAddress {
     }
 
     /**
-     * Answer true if the InetAddress is a link-local address.
+     * Returns whether this address is a link-local address or not. A valid IPv6
+     * link-local address is prefixed with 1111111010.
      * 
-     * A valid IPv6 link-local address is prefixed with 1111111010
-     * 
-     * @return boolean true, if it is a link-local address, false otherwise
+     * @return {@code true} if this instance represents a link-local address,
+     *         {@code false} otherwise.
+     * @since Android 1.0
      */
     @Override
     public boolean isLinkLocalAddress() {
@@ -272,11 +287,12 @@ public final class Inet6Address extends InetAddress {
     }
 
     /**
-     * Answer true if the InetAddress is a site-local address.
+     * Returns whether this address is a site-local address or not. A valid IPv6
+     * site-local address is prefixed with 1111111011.
      * 
-     * A valid IPv6 site-local address is prefixed with 1111111011
-     * 
-     * @return boolean true, if it is a site-local address, false otherwise
+     * @return {@code true} if this instance represents a site-local address,
+     *         {@code false} otherwise.
+     * @since Android 1.0
      */
     @Override
     public boolean isSiteLocalAddress() {
@@ -286,12 +302,12 @@ public final class Inet6Address extends InetAddress {
     }
 
     /**
-     * Answer true if the InetAddress is a global multicast address.
+     * Returns whether this address is a global multicast address or not. A
+     * valid IPv6 global multicast address is 11111111xxxx1110 or FF0E hex.
      * 
-     * A valid IPv6 global multicast address is 11111111xxxx1110 (i.e. FF0E)
-     * 
-     * @return boolean true, if it is a global multicast address, false
-     *         otherwise
+     * @return {@code true} if this instance represents a global multicast
+     *         address, {@code false} otherwise.
+     * @since Android 1.0
      */
     @Override
     public boolean isMCGlobal() {
@@ -301,13 +317,13 @@ public final class Inet6Address extends InetAddress {
     }
 
     /**
-     * Answer true if the InetAddress is a node-local multicast address.
+     * Returns whether this address is a node-local multicast address or not. A
+     * valid IPv6 node-local multicast address is prefixed with
+     * 11111111xxxx0001.
      * 
-     * A valid IPv6 node-local multicast address is prefixed with
-     * 11111111xxxx0001
-     * 
-     * @return boolean true, if it is a node-local multicast address, false
-     *         otherwise
+     * @return {@code true} if this instance represents a node-local multicast
+     *         address, {@code false} otherwise.
+     * @since Android 1.0
      */
     @Override
     public boolean isMCNodeLocal() {
@@ -317,13 +333,13 @@ public final class Inet6Address extends InetAddress {
     }
 
     /**
-     * Answer true if the InetAddress is a link-local multicast address.
+     * Returns whether this address is a link-local multicast address or not. A
+     * valid IPv6 link-local multicast address is prefixed with
+     * 11111111xxxx0010.
      * 
-     * A valid IPv6 link-local multicast address is prefixed with
-     * 11111111xxxx0010
-     * 
-     * @return boolean true, if it is a link-local multicast address, false
-     *         otherwise
+     * @return {@code true} if this instance represents a link-local multicast
+     *         address, {@code false} otherwise.
+     * @since Android 1.0
      */
     @Override
     public boolean isMCLinkLocal() {
@@ -333,13 +349,13 @@ public final class Inet6Address extends InetAddress {
     }
 
     /**
-     * Answer true if the InetAddress is a site-local multicast address.
+     * Returns whether this address is a site-local multicast address or not. A
+     * valid IPv6 site-local multicast address is prefixed with
+     * 11111111xxxx0101.
      * 
-     * A valid IPv6 site-local multicast address is prefixed with
-     * 11111111xxxx0101
-     * 
-     * @return boolean true, if it is a site-local multicast address, false
-     *         otherwise
+     * @return {@code true} if this instance represents a site-local multicast
+     *         address, {@code false} otherwise.
+     * @since Android 1.0
      */
     @Override
     public boolean isMCSiteLocal() {
@@ -349,13 +365,13 @@ public final class Inet6Address extends InetAddress {
     }
 
     /**
-     * Answer true if the InetAddress is a org-local multicast address.
+     * Returns whether this address is a organization-local multicast address or
+     * not. A valid IPv6 org-local multicast address is prefixed with
+     * 11111111xxxx1000.
      * 
-     * A valid IPv6 org-local multicast address is prefixed with
-     * 11111111xxxx1000
-     * 
-     * @return boolean true, if it is a org-local multicast address, false
-     *         otherwise
+     * @return {@code true} if this instance represents a org-local multicast
+     *         address, {@code false} otherwise.
+     * @since Android 1.0
      */
     @Override
     public boolean isMCOrgLocal() {
@@ -364,16 +380,24 @@ public final class Inet6Address extends InetAddress {
         return (ipaddress[0] == -1) && (ipaddress[1] & 15) == 8;
     }
 
+    /**
+     * Gets the textual representation of this IP address.
+     * 
+     * @return the as a dotted string formatted IP address.
+     * @since Android 1.0
+     */
     @Override
     public String getHostAddress() {
         return Inet6Util.createIPAddrStringFromByteArray(ipaddress);
     }
 
     /**
-     * Returns the <code>scope id</code> of this address if it is associated
-     * with an interface. Otherwise returns zero.
+     * Gets the scope id as a number if this address is linked to an interface.
+     * Otherwise returns {@code 0}.
      * 
-     * @return the scope_id.
+     * @return the scope_id of this address or 0 when not linked with an
+     *         interface.
+     * @since Android 1.0
      */
     public int getScopeId() {
         if (scope_id_set) {
@@ -383,10 +407,11 @@ public final class Inet6Address extends InetAddress {
     }
 
     /**
-     * Returns the network interface if this address is instanced with a scoped
-     * network interface. Otherwise returns null.
+     * Gets the network interface if this address is instanced with a scoped
+     * network interface. Otherwise returns {@code null}.
      * 
-     * @return the scoped network interface.
+     * @return the scoped network interface of this address.
+     * @since Android 1.0
      */
     public NetworkInterface getScopedInterface() {
         if (scope_ifname_set) {
@@ -396,9 +421,10 @@ public final class Inet6Address extends InetAddress {
     }
 
     /**
-     * Returns the hashcode of the receiver.
+     * Gets the hashcode of the represented IP address.
      * 
-     * @return the hashcode
+     * @return the appropriate hashcode value.
+     * @since Android 1.0
      */
     @Override
     public int hashCode() {
@@ -407,12 +433,15 @@ public final class Inet6Address extends InetAddress {
     }
 
     /**
-     * Returns true if obj is of the same type as the IPv6 address and they have
-     * the same IP address, false otherwise. the scope id does not seem to be
-     * part of the comparison
+     * Compares this instance with the IP address in the object {@code obj} and
+     * returns {@code true} if they are of the same type and represent the same
+     * IP address, {@code false} otherwise. The scope id does not seem to be
+     * part of the comparison.
      * 
-     * @return String
-     * 
+     * @param obj
+     *            the object to be tested for equality.
+     * @return {@code true} if the addresses are equal, {@code false} otherwise.
+     * @since Android 1.0
      */
     @Override
     public boolean equals(Object obj) {
@@ -420,8 +449,13 @@ public final class Inet6Address extends InetAddress {
     }
 
     /**
-     * An IPv4 compatible address is prefixed with 96 bits of 0's. The last
-     * 32-bits are varied corresponding with the 32-bit IPv4 address space.
+     * Returns whether this address is IPv4 compatible or not. An IPv4
+     * compatible address is prefixed with 96 bits of 0's. The last 32-bits are
+     * varied corresponding with the 32-bit IPv4 address space.
+     * 
+     * @return {@code true} if this instance represents an IPv4 compatible
+     *         address, {@code false} otherwise.
+     * @since Android 1.0
      */
     public boolean isIPv4CompatibleAddress() {
         for (int i = 0; i < 12; i++) {
@@ -468,10 +502,11 @@ public final class Inet6Address extends InetAddress {
     }
 
     /**
-     * Returns a string containing a concise, human-readable description of the
-     * address.
+     * Returns a string containing a concise, human-readable description of this
+     * IP address.
      * 
-     * @return String the description, as host/address
+     * @return the description, as host/address.
+     * @since Android 1.0
      */
     @Override
     public String toString() {

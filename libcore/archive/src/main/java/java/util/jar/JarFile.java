@@ -22,6 +22,8 @@ package java.util.jar;
 // END android-removed
 // BEGIN android-added
 import java.io.ByteArrayOutputStream;
+import java.util.List;
+import java.util.ArrayList;
 // END android-added
 import java.io.File;
 import java.io.FilterInputStream;
@@ -31,19 +33,24 @@ import java.security.MessageDigest;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-import java.util.List;
-import java.util.ArrayList;
 
 import org.apache.harmony.archive.util.Util;
 
 /**
- * JarFile is used to read jar entries and their associated data from jar files.
+ * {@code JarFile} is used to read jar entries and their associated data from
+ * jar files.
  * 
  * @see JarInputStream
  * @see JarEntry
+ * @since Android 1.0
  */
 public class JarFile extends ZipFile {
 
+    /**
+     * The MANIFEST file name.
+     * 
+     * @since Android 1.0
+     */
     public static final String MANIFEST_NAME = "META-INF/MANIFEST.MF"; //$NON-NLS-1$
 
     static final String META_DIR = "META-INF/"; //$NON-NLS-1$
@@ -54,9 +61,9 @@ public class JarFile extends ZipFile {
 
     JarVerifier verifier;
 
-// BEGIN android-added
+    // BEGIN android-added
     private boolean closed = false;
-// END android-added
+    // END android-added
 
     static final class JarFileInputStream extends FilterInputStream {
         private long count;
@@ -138,26 +145,28 @@ public class JarFile extends ZipFile {
     }
 
     /**
-     * Create a new JarFile using the contents of file.
+     * Create a new {@code JarFile} using the contents of the specified file.
      * 
      * @param file
-     *            java.io.File
-     * @exception java.io.IOException
-     *                If the file cannot be read.
+     *            the JAR file as {@link File}.
+     * @throws IOException
+     *             If the file cannot be read.
+     * @since Android 1.0
      */
     public JarFile(File file) throws IOException {
         this(file, true);
     }
 
     /**
-     * Create a new JarFile using the contents of file.
+     * Create a new {@code JarFile} using the contents of the specified file.
      * 
      * @param file
-     *            java.io.File
+     *            the JAR file as {@link File}.
      * @param verify
-     *            verify a signed jar file
-     * @exception java.io.IOException
-     *                If the file cannot be read.
+     *            if this JAR file is signed whether it must be verified.
+     * @throws IOException
+     *             If the file cannot be read.
+     * @since Android 1.0
      */
     public JarFile(File file, boolean verify) throws IOException {
         super(file);
@@ -168,16 +177,18 @@ public class JarFile extends ZipFile {
     }
 
     /**
-     * Create a new JarFile using the contents of file.
+     * Create a new {@code JarFile} using the contents of file.
      * 
      * @param file
-     *            java.io.File
+     *            the JAR file as {@link File}.
      * @param verify
-     *            verify a signed jar file
+     *            if this JAR filed is signed whether it must be verified.
      * @param mode
-     *            the mode to use, either OPEN_READ or OPEN_READ | OPEN_DELETE
-     * @exception java.io.IOException
-     *                If the file cannot be read.
+     *            the mode to use, either {@link ZipFile#OPEN_READ OPEN_READ} or
+     *            {@link ZipFile#OPEN_DELETE OPEN_DELETE}.
+     * @throws IOException
+     *             If the file cannot be read.
+     * @since Android 1.0
      */
     public JarFile(File file, boolean verify, int mode) throws IOException {
         super(file, mode);
@@ -188,12 +199,14 @@ public class JarFile extends ZipFile {
     }
 
     /**
-     * Create a new JarFile from the contents of the file specified by filename.
+     * Create a new {@code JarFile} from the contents of the file specified by
+     * filename.
      * 
      * @param filename
-     *            java.lang.String
-     * @exception java.io.IOException
-     *                If fileName cannot be opened for reading.
+     *            the file name referring to the JAR file.
+     * @throws IOException
+     *             if file name cannot be opened for reading.
+     * @since Android 1.0
      */
     public JarFile(String filename) throws IOException {
         this(filename, true);
@@ -201,14 +214,16 @@ public class JarFile extends ZipFile {
     }
 
     /**
-     * Create a new JarFile from the contents of the file specified by filename.
+     * Create a new {@code JarFile} from the contents of the file specified by
+     * {@code filename}.
      * 
      * @param filename
-     *            java.lang.String
+     *            the file name referring to the JAR file.
      * @param verify
-     *            verify a signed jar file
-     * @exception java.io.IOException
-     *                If fileName cannot be opened for reading.
+     *            if this JAR filed is signed whether it must be verified.
+     * @throws IOException
+     *             If file cannot be opened or read.
+     * @since Android 1.0
      */
     public JarFile(String filename, boolean verify) throws IOException {
         super(filename);
@@ -219,11 +234,13 @@ public class JarFile extends ZipFile {
     }
 
     /**
-     * Return an enumeration containing the JarEntrys contained in this JarFile.
+     * Return an enumeration containing the {@code JarEntrys} contained in this
+     * {@code JarFile}.
      * 
-     * @return java.util.Enumeration
-     * @exception java.lang.IllegalStateException
-     *                If this JarFile has been closed.
+     * @return the {@code Enumeration} containing the JAR entries.
+     * @throws IllegalStateException
+     *             if this {@code JarFile} is closed.
+     * @since Android 1.0
      */
     @Override
     public Enumeration<JarEntry> entries() {
@@ -251,18 +268,20 @@ public class JarFile extends ZipFile {
     }
 
     /**
-     * Return the JarEntry specified by name or null if no such entry exists.
+     * Return the {@code JarEntry} specified by its name or {@code null} if no
+     * such entry exists.
      * 
      * @param name
-     *            the name of the entry in the jar file
-     * @return java.util.jar.JarEntry
+     *            the name of the entry in the JAR file.
+     * @return the JAR entry defined by the name.
+     * @since Android 1.0
      */
     public JarEntry getJarEntry(String name) {
         return (JarEntry) getEntry(name);
     }
 
 
-// BEGIN android-added
+    // BEGIN android-added
     private byte[] getAllBytesFromStreamAndClose(InputStream is) throws IOException {
         ByteArrayOutputStream bs = new ByteArrayOutputStream();
         try {
@@ -278,40 +297,46 @@ public class JarFile extends ZipFile {
         }
         return bs.toByteArray();
     }
-// END android-added
+    // END android-added
 
     /**
-     * Returns the Manifest object associated with this JarFile or null if no
-     * manifest entry exists.
+     * Returns the {@code Manifest} object associated with this {@code JarFile}
+     * or {@code null} if no MANIFEST entry exists.
      * 
-     * @return java.util.jar.Manifest
+     * @return the MANIFEST.
+     * @throws IOException
+     *             if an error occurs reading the MANIFEST file.
+     * @throws IllegalStateException
+     *             if the jar file is closed.
+     * @see Manifest
+     * @since Android 1.0
      */
     public Manifest getManifest() throws IOException {
-// BEGIN android-added
+        // BEGIN android-added
         if (closed) {
             throw new IllegalStateException("JarFile has been closed.");
         }
-// END android-added
+        // END android-added
         if (manifest != null) {
             return manifest;
         }
-		try {
-// BEGIN android-modified
+        try {
+            // BEGIN android-modified
             InputStream is = super.getInputStream(manifestEntry);
             if (verifier != null) {
                 verifier.addMetaEntry(manifestEntry.getName(), getAllBytesFromStreamAndClose(is));
                 is = super.getInputStream(manifestEntry);
             }
-// END android-modified
+            // END android-modified
             try {
                 manifest = new Manifest(is, verifier != null);
             } finally {
                 is.close();
             }
-	        manifestEntry = null;
-		} catch(NullPointerException e) {
-			manifestEntry = null;
-		}
+            manifestEntry = null;
+        } catch(NullPointerException e) {
+            manifestEntry = null;
+        }
         return manifest;
     }
 
@@ -339,9 +364,9 @@ public class JarFile extends ZipFile {
                            || Util.ASCIIIgnoreCaseRegionMatches(entryName, entryName.length() - 4, ".RSA", 0 ,4))){ //$NON-NLS-1$
                     signed = true;
                     InputStream is = super.getInputStream(entry);
-// BEGIN android-modified
+                    // BEGIN android-modified
                     byte[] buf = getAllBytesFromStreamAndClose(is);
-// END android-modified
+                    // END android-modified
                     verifier.addMetaEntry(entryName, buf);
                 }
             }
@@ -352,13 +377,15 @@ public class JarFile extends ZipFile {
     }
 
     /**
-     * Return an InputStream for reading the decompressed contents of ze.
+     * Return an {@code InputStream} for reading the decompressed contents of
+     * ZIP entry.
      * 
      * @param ze
-     *            the ZipEntry to read from
-     * @return java.io.InputStream
-     * @exception java.io.IOException
-     *                If an error occured while creating the InputStream.
+     *            the ZIP entry to be read.
+     * @return the input stream to read from.
+     * @throws IOException
+     *             if an error occurred while creating the input stream.
+     * @since Android 1.0
      */
     @Override
     public InputStream getInputStream(ZipEntry ze) throws IOException {
@@ -390,12 +417,14 @@ public class JarFile extends ZipFile {
     }
 
     /**
-     * Return the JarEntry specified by name or null if no such entry exists
+     * Return the {@code JarEntry} specified by name or {@code null} if no such
+     * entry exists.
      * 
      * @param name
-     *            the name of the entry in the jar file
-     * @return java.util.jar.JarEntry
-     */
+     *            the name of the entry in the JAR file.
+     * @return the ZIP entry extracted.
+     * @since Android 1.0
+     */         
     @Override
     public ZipEntry getEntry(String name) {
         ZipEntry ze = super.getEntry(name);
@@ -407,7 +436,7 @@ public class JarFile extends ZipFile {
         return je;
     }
 
-// BEGIN android-modified
+    // BEGIN android-modified
     private ZipEntry[] getMetaEntriesImpl(byte[] buf) {
         int n = 0;
         
@@ -429,14 +458,21 @@ public class JarFile extends ZipFile {
             return null;
         }
     }
-// END android-modified
+    // END android-modified
 
-// BEGIN android-added
+    // BEGIN android-added
+    /**
+     * Closes this {@code JarFile}.
+     * 
+     * @throws IOException
+     *             if an error occurs.
+     * @since Android 1.0
+     */
     @Override
     public void close() throws IOException {
         super.close();
         closed = true;
     }
-// END android-added
+    // END android-added
 
 }

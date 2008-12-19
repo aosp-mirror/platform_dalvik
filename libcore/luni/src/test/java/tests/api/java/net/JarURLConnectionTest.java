@@ -17,6 +17,11 @@
 
 package tests.api.java.net;
 
+import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -34,11 +39,12 @@ import java.util.zip.ZipFile;
 
 import tests.support.resource.Support_Resources;
 
+@TestTargetClass(JarURLConnection.class) 
 public class JarURLConnectionTest extends junit.framework.TestCase {
 
-	JarURLConnection juc;
+    JarURLConnection juc;
 
-	URLConnection uc;
+    URLConnection uc;
     
     private static final URL BASE = getBaseURL();
     
@@ -49,23 +55,41 @@ public class JarURLConnectionTest extends junit.framework.TestCase {
         return JarURLConnectionTest.class.getClassLoader().getResource(pack);
     }
 
-	/**
-	 * @tests java.net.JarURLConnection#getAttributes()
-	 */
-	public void test_getAttributes() throws Exception{
-		URL u = new URL("jar:"
+    /**
+     * @tests java.net.JarURLConnection#getAttributes()
+     */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "getAttributes",
+          methodArgs = {}
+        )
+    })
+    public void _test_getAttributes() throws Exception{
+        URL u = new URL("jar:"
                 + BASE.toString()+"/lf.jar!/swt.dll");
         juc = (JarURLConnection) u.openConnection();
         java.util.jar.Attributes a = juc.getJarEntry().getAttributes();
         assertEquals("Returned incorrect Attributes", "SHA MD5", a
                 .get(new java.util.jar.Attributes.Name("Digest-Algorithms")));
-	}
+    }
 
-	/**
-	 * @throws Exception 
-	 * @tests java.net.JarURLConnection#getEntryName()
-	 */
-	public void test_getEntryName() throws Exception {
+    /**
+     * @throws Exception 
+     * @tests java.net.JarURLConnection#getEntryName()
+     */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getEntryName",
+          methodArgs = {}
+        )
+    })
+    public void _test_getEntryName() throws Exception {
         URL u = new URL("jar:"
                 + BASE.toString()+"/lf.jar!/plus.bmp");
         juc = (JarURLConnection) u.openConnection();
@@ -76,13 +100,22 @@ public class JarURLConnectionTest extends junit.framework.TestCase {
         assertNull("Returned incorrect entryName", juc.getEntryName());
 //      Regression test for harmony-3053
         URL url = new URL("jar:file:///bar.jar!/foo.jar!/Bugs/HelloWorld.class");
-		assertEquals("foo.jar!/Bugs/HelloWorld.class",((JarURLConnection)url.openConnection()).getEntryName());
+        assertEquals("foo.jar!/Bugs/HelloWorld.class",((JarURLConnection)url.openConnection()).getEntryName());
     }
 
-	/**
-	 * @tests java.net.JarURLConnection#getJarEntry()
-	 */
-	public void test_getJarEntry() throws Exception {
+    /**
+     * @tests java.net.JarURLConnection#getJarEntry()
+     */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "getJarEntry",
+          methodArgs = {}
+        )
+    })
+    public void _test_getJarEntry() throws Exception {
         URL u = new URL("jar:"
                 + BASE.toString()+"/lf.jar!/plus.bmp");
         juc = (JarURLConnection) u.openConnection();
@@ -91,12 +124,21 @@ public class JarURLConnectionTest extends junit.framework.TestCase {
         u = new URL("jar:" + BASE.toString()+"/lf.jar!/");
         juc = (JarURLConnection) u.openConnection();
         assertNull("Returned incorrect JarEntry", juc.getJarEntry());
-	}
+    }
 
-	/**
+    /**
      * @tests java.net.JarURLConnection#getJarFile()
      */
-    public void test_getJarFile() throws MalformedURLException, IOException {
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getJarFile",
+          methodArgs = {}
+        )
+    })
+    public void _test_getJarFile() throws MalformedURLException, IOException {
         URL url = null;
         url = new URL("jar:"
                 + BASE.toString()+"/lf.jar!/missing");
@@ -138,12 +180,21 @@ public class JarURLConnectionTest extends junit.framework.TestCase {
         jf1.close();
     }
 
-	/**
+    /**
      * @tests java.net.JarURLConnection.getJarFile()
      * 
      * Regression test for HARMONY-29
      */
-	public void test_getJarFile29() throws Exception {
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Regression test.",
+      targets = {
+        @TestTarget(
+          methodName = "getJarFile",
+          methodArgs = {}
+        )
+    })
+    public void test_getJarFile29() throws Exception {
         File jarFile = File.createTempFile("1+2 3", "test.jar");
         jarFile.deleteOnExit();
         JarOutputStream out = new JarOutputStream(new FileOutputStream(jarFile));
@@ -158,6 +209,15 @@ public class JarURLConnectionTest extends junit.framework.TestCase {
     }
     
     //Regression for HARMONY-3436
+@TestInfo(
+        level = TestLevel.PARTIAL,
+        purpose = "Exceptions checking missed.",
+        targets = {
+          @TestTarget(
+            methodName = "setUseCaches",
+            methodArgs = {boolean.class}
+          )
+      })
     public void test_setUseCaches() throws Exception {
         File resources = Support_Resources.createTempFolder();
         Support_Resources.copyFile(resources, null, "hyts_att.jar");
@@ -186,10 +246,19 @@ public class JarURLConnectionTest extends junit.framework.TestCase {
         }
     }
 
-	/**
+    /**
      * @tests java.net.JarURLConnection#getJarFileURL()
      */
-	public void test_getJarFileURL() throws Exception {
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getJarFileURL",
+          methodArgs = {}
+        )
+    })
+    public void _test_getJarFileURL() throws Exception {
         URL fileURL = new URL(BASE.toString()+"/lf.jar");
         URL u = new URL("jar:"
                 + BASE.toString()+"/lf.jar!/plus.bmp");
@@ -201,10 +270,19 @@ public class JarURLConnectionTest extends junit.framework.TestCase {
         assertEquals("file:/bar.jar",((JarURLConnection)url.openConnection()).getJarFileURL().toString());
     }
 
-	/**
-	 * @tests java.net.JarURLConnection#getMainAttributes()
-	 */
-	public void test_getMainAttributes() throws Exception{
+    /**
+     * @tests java.net.JarURLConnection#getMainAttributes()
+     */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "getMainAttributes",
+          methodArgs = {}
+        )
+    })
+    public void _test_getMainAttributes() throws Exception{
         URL u = new URL("jar:"
                 + BASE.toString()+"/lf.jar!/swt.dll");
         juc = (JarURLConnection) u.openConnection();
@@ -216,6 +294,15 @@ public class JarURLConnectionTest extends junit.framework.TestCase {
     /**
      * @tests java.net.JarURLConnection#getInputStream()
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "getInputStream",
+          methodArgs = {}
+        )
+    })
     public void test_getInputStream_DeleteJarFileUsingURLConnection()
             throws Exception {
         String jarFileName = "file.jar";
@@ -238,9 +325,9 @@ public class JarURLConnectionTest extends junit.framework.TestCase {
     }
 
 
-	protected void setUp() {
-	}
+    protected void setUp() {
+    }
 
-	protected void tearDown() {
-	}
+    protected void tearDown() {
+    }
 }

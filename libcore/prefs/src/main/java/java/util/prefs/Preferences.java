@@ -16,81 +16,76 @@
 
 package java.util.prefs;
 
+// BEGIN android-added
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.util.Enumeration;
+// END android-added
+
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
-import java.util.Enumeration;
 
 import org.apache.harmony.prefs.internal.nls.Messages;
 
 /**
- * <code>Preferences</code> instance represents one node in preferences tree,
- * which provide a mechanisms to store and access configuration data in a
- * hierarchical way. Two hierarchy tree is maintained, one for system
- * preferences shared by all users, and the other for user preferences which is
- * specific for each user. Preferences hierarchy tree and data is stored
- * precisely in implementation-dependent backend, and user doesn't need to care
- * about the details.
+ * An instance of the class {@code Preferences} represents one node in a preference tree,
+ * which provides a mechanism to store and access configuration data in a
+ * hierarchical way. Two hierarchy trees are maintained, one for system
+ * preferences shared by all users and the other for user preferences 
+ * specific to the user. {@code Preferences} hierarchy trees and data are stored
+ * in an implementation-dependent back-end.
  * <p>
- * Every node has one name and one unique absolute path in a similar way with
- * directories in file system. The root node's name is "", and other nodes' name
- * string cannot contains slash and cannot be empty. The root node's absolute
- * path is "/", and other nodes' absolute path equals &lt;parent's absolute
- * path&gt; + "/" + &lt;node's name&gt;. All absolute paths start with slash.
- * Every node has one relative path to one of its ancestor. Relative path
- * doesn't start with slash, and equals to absolute path when following after
- * ancestor's absolute path and a slash.
+ * Every node has one name and one unique absolute path following the same 
+ * notational conventions as directories in a file system. The root node's 
+ * name is "", and other node name strings cannot contain the slash character 
+ * and cannot be empty. The root node's absolute path is "/", and all other 
+ * nodes' absolute paths are constructed in the standard way: &lt;parent's absolute
+ * path&gt; + "/" + &lt;node's name&gt;. Since the set of nodes forms a tree with 
+ * the root node at its base, all absolute paths start with the slash character.
+ * Every node has one relative path to each of its ancestors. The relative path
+ * doesn't start with slash: it equals the node's absolute path with leading 
+ * substring removed corresponding to the ancestor's absolute path and a slash.
  * </p>
  * <p>
- * The modification to preferences data may be asynchronous, which means they
- * may don't block and may returns immediately, implementation can feel free to
- * the modifications to the backend in any time until the flush() or sync()
- * method is invoked, these two methods force synchronized updates to backend.
+ * Modification to preferences data may be asynchronous, which means that 
+ * preference update method calls may return immediately instead of blocking. 
+ * The {@code flush()} and {@code sync()} methods force the back-end to 
+ * synchronously perform all pending updates, but the implementation is 
+ * permitted to perform the modifications on the underlying back-end data 
+ * at any time between the moment the request is made and the moment the 
+ * {@code flush()} or {@code sync()} method returns.
  * Please note that if JVM exit normally, the implementation must assure all
  * modifications are persisted implicitly.
  * </p>
  * <p>
- * User invoking methods that retrieve preferences must provide default value,
- * default value is returned when preferences cannot be found or backend is
- * unavailable. Some other methods will throw <code>BackingStoreException</code>
- * when backend is unavailable.
+ * When invoking a method that retrieves preferences, the user must provide 
+ * a default value. The default value is returned when the preferences cannot 
+ * be found or the back-end is unavailable. Some other methods will throw 
+ * {@code BackingStoreException} when the back-end is unavailable.
  * </p>
  * <p>
- * Preferences can be export to/import from XML files, the XML document must
- * have the following DOCTYPE declaration:
+ * Preferences can be exported to and imported from an XML files.
+ * <p>
+ * There must be a concrete {@code PreferencesFactory} type for every concrete
+ * {@code Preferences} type developed. Every J2SE implementation must provide a default
+ * implementation for every supported platform, and must also provide a means of
+ * replacing the default implementation. This implementation uses the system property
+ * {@code java.util.prefs.PreferencesFactory} to detemine which preferences 
+ * implementation to use.
  * </p>
  * <p>
- * <!DOCTYPE preferences SYSTEM "http://java.sun.com/dtd/preferences.dtd">
- * </p>
- * <p>
- * This system URI is not really accessed by network, it is only a
- * identification string. Visit the DTD location to see the actual format
- * permitted.
- * </p>
- * <p>
- * There has to be a concrete <code>PreferencesFactory</code> type for every
- * concrete <code>Preferences</code> type developed. Every J2SE implementation
- * must provide a default implementation for every supported platform, and the
- * default implementation can be replaced in some way. This implementation uses
- * system property java.util.prefs.PreferencesFactory to dictate the preferences
- * implementation.
- * </p>
- * <p>
- * Methods of this class is thread-safe. If multi JVMs using same backend
- * concurrently, the backend won't be corrupted, but no other guarantees is
- * made.
+ * The methods of this class are thread-safe. If multiple JVMs are using the same
+ * back-end concurrently, the back-end won't be corrupted, but no other
+ * behavior guarantees are made.
  * </p>
  * 
- * @see PreferencesFactory
- * 
- * @since 1.4
+ * @since Android 1.0
  */
 public abstract class Preferences {
     
@@ -101,36 +96,43 @@ public abstract class Preferences {
      */
     
     /**
-     * Maximum size in characters of preferences key  
+     * Maximum size in characters allowed for a preferences key.
+     * 
+     * @since Android 1.0
      */
     public static final int MAX_KEY_LENGTH = 80;
     
     /**
-     * Maximum size in characters of preferences name
+     * Maximum size in characters allowed for a preferences name.
+     * 
+     * @since Android 1.0
      */
     public static final int MAX_NAME_LENGTH = 80;
     
     /**
-     * Maximum size in characters of preferences value
+     * Maximum size in characters allowed for a preferences value.
+     * 
+     * @since Android 1.0
      */
     public static final int MAX_VALUE_LENGTH = 8192;
-    
+
     // BEGIN android-added
     /**
-     * the name of the configuration file where preferences factory class names 
+     * The name of the configuration file where preferences factory class names
      * can be specified.
      */
     private static final String FACTORY_CONFIGURATION_FILE_NAME = "META-INF/services/java.util.prefs.PreferencesFactory"; //$NON-NLS-1$
-   
+
     /**
-     * the encoding of configuration files
+     * The encoding of configuration files
      */
     private static final String CONFIGURATION_FILE_ENCODING = "UTF-8"; //$NON-NLS-1$
 
     /**
-     * the comment string used in configuration files
+     * The comment string used in configuration files
      */
     private static final String CONFIGURATION_FILE_COMMENT = "#"; //$NON-NLS-1$
+
     // END android-added
 
     //permission
@@ -152,70 +154,68 @@ public abstract class Preferences {
         });
         // BEGIN android-removed
         // if(factoryClassName != null) {
-        //     try {
-        //         ClassLoader loader = Thread.currentThread().getContextClassLoader();
-        //         if(loader == null){
-        //             loader = ClassLoader.getSystemClassLoader();
-        //         }
-        //         Class<?> factoryClass = loader.loadClass(factoryClassName);
-        //         factory = (PreferencesFactory) factoryClass.newInstance();
-        //     } catch (Exception e) {
-        //         // prefs.10=Cannot initiate PreferencesFactory: {0}. Caused by {1}
+        // try {
+        // ClassLoader loader = Thread.currentThread().getContextClassLoader();
+        // if(loader == null){
+        // loader = ClassLoader.getSystemClassLoader();
+        // }
+        // Class<?> factoryClass = loader.loadClass(factoryClassName);
+        // factory = (PreferencesFactory) factoryClass.newInstance();
+        // } catch (Exception e) {
+        // // prefs.10=Cannot initiate PreferencesFactory: {0}. Caused by {1}
         //         throw new InternalError(Messages.getString("prefs.10", factoryClassName, e));   //$NON-NLS-1$
-        //     }
+        // }
         // }
         // END android-removed
         // BEGIN android-added
         ClassLoader loader = Thread.currentThread().getContextClassLoader();
-        if(loader == null){
+        if (loader == null) {
             loader = ClassLoader.getSystemClassLoader();
         }
-        if(factoryClassName == null) {
+        if (factoryClassName == null) {
             Enumeration<URL> en = null;
             try {
                 en = loader.getResources(FACTORY_CONFIGURATION_FILE_NAME);
                 BufferedReader reader = null;
                 int commentIndex = 0;
-                while(en.hasMoreElements()) {
-                   try {
-                       InputStream is = en.nextElement().openStream();
-                       // Read each line for charset provider class names
-                       // BEGIN android-modified
-                       reader = new BufferedReader(new InputStreamReader(is, 
-                                       CONFIGURATION_FILE_ENCODING), 8192);
-                       // END android-modified
-                       factoryClassName = reader.readLine();
-                       commentIndex = factoryClassName
-                           .indexOf(CONFIGURATION_FILE_COMMENT);
-                       if(commentIndex > 0) {
-                           factoryClassName = factoryClassName.substring(0,
-                                   commentIndex).trim();
-                       }
-                       if(factoryClassName.length() > 0) {
-                           break;
-                       }
-                   } catch (IOException ex) {
-                       // ignore if a resource couldn't be read
-                   }
+                while (en.hasMoreElements()) {
+                    try {
+                        InputStream is = en.nextElement().openStream();
+                        // Read each line for charset provider class names
+                        // BEGIN android-modified
+                        reader = new BufferedReader(new InputStreamReader(is,
+                                CONFIGURATION_FILE_ENCODING), 8192);
+                        // END android-modified
+                        factoryClassName = reader.readLine();
+                        commentIndex = factoryClassName.indexOf(CONFIGURATION_FILE_COMMENT);
+                        if (commentIndex > 0) {
+                            factoryClassName = factoryClassName.substring(0, commentIndex).trim();
+                        }
+                        if (factoryClassName.length() > 0) {
+                            break;
+                        }
+                    } catch (IOException ex) {
+                        // ignore if a resource couldn't be read
+                    }
                 }
             } catch (Exception e) {
-                // prefs.10=Cannot initiate PreferencesFactory: {0}. Caused by {1}
-                throw new InternalError(Messages.getString("prefs.10", 
-                        FACTORY_CONFIGURATION_FILE_NAME, e));   //$NON-NLS-1$
+                // prefs.10=Cannot initiate PreferencesFactory: {0}. Caused by
+                // {1}
+                throw new InternalError(Messages.getString("prefs.10",
+                        FACTORY_CONFIGURATION_FILE_NAME, e)); //$NON-NLS-1$
             }
         }
 
-        if(factoryClassName == null) {
+        if (factoryClassName == null) {
             factoryClassName = "java.util.prefs.FilePreferencesFactoryImpl";
         }
-        
+
         try {
             Class<?> c = loader.loadClass(factoryClassName);
-            factory = (PreferencesFactory) c.newInstance();
-        } catch(Exception e) {
+            factory = (PreferencesFactory)c.newInstance();
+        } catch (Exception e) {
             // prefs.10=Cannot initiate PreferencesFactory: {0}. Caused by {1}
-            throw new InternalError(Messages.getString("prefs.10", 
-                    factoryClassName, e));   //$NON-NLS-1$  
+            throw new InternalError(Messages.getString("prefs.10", factoryClassName, e)); //$NON-NLS-1$  
         }
         // END android-added
     }
@@ -227,7 +227,9 @@ public abstract class Preferences {
      */
     
     /**
-     *    Default constructor, for use by subclasses only.
+     * Default constructor, for use by subclasses only.
+     * 
+     * @since Android 1.0
      */
     protected Preferences() {
         super();
@@ -240,285 +242,330 @@ public abstract class Preferences {
      */
     
     /**
-     * Get this preference node's absolute path string.
+     * Gets the absolute path string of this preference node.
      * 
-     * @return this preference node's absolute path string.
+     * @return the preference node's absolute path string.
+     * @since Android 1.0
      */
     public abstract String absolutePath();
     
     /**
-     * Return names of all children of this node, or empty string if this node 
-     * has no children. 
+     * Returns the names of all children of this node or an empty string if this
+     * node has no children.
      * 
-     * @return         names of all children of this node
+     * @return the names of all children of this node.
      * @throws BackingStoreException
-     *                 if backing store is unavailable or causes operation failure
+     *             if backing store is unavailable or causes an operation
+     *             failure.
      * @throws IllegalStateException
-     *                 if this node has been removed
+     *             if this node has been removed.
+     * @since Android 1.0
      */
     public abstract String[] childrenNames() throws BackingStoreException;
     
     /**
-     * Remove all preferences of this node. 
+     * Removes all preferences of this node.
      * 
      * @throws BackingStoreException
-     *                 if backing store is unavailable or causes operation failure
+     *             if backing store is unavailable or causes an operation
+     *             failure.
      * @throws IllegalStateException
-     *                 if this node has been removed
+     *             if this node has been removed.
+     * @since Android 1.0
      */
     public abstract void clear() throws BackingStoreException;
     
     /**
-     * Export all preferences of this node to the given output stream in XML 
-     * document. 
+     * Exports all of the preferences of this node to a XML document using the given
+     * output stream.
      * <p>
-     * This XML document has the following DOCTYPE declaration:
+     * This XML document uses the UTF-8 encoding and is written according to the
+     * DTD in its DOCTYPE declaration, which is the following:
+     * 
      * <pre>
-     * &lt;!DOCTYPE preferences SYSTEM "http://java.sun.com/dtd/preferences.dtd"&gt;</pre>
-     * And the UTF-8 encoding will be used. Please note that this node is not 
-     * thread-safe, which is an exception of this class. 
+     * &lt;!DOCTYPE preferences SYSTEM &quot;http://java.sun.com/dtd/preferences.dtd&quot;&gt;
+     * </pre>
+     * 
+     * <i>Please note that (unlike the methods of this class that don't concern serialization), this call is not thread-safe.</i>
      * </p>
-     * @param  ostream
-     *                 the output stream to export the XML
+     * 
+     * @param ostream
+     *            the output stream to write the XML-formatted data to.
      * @throws IOException
-     *                 if export operation caused an <code>IOException</code>
+     *             if an error occurs while exporting.
      * @throws BackingStoreException
-     *                 if backing store is unavailable or causes operation failure
+     *             if the backing store is unavailable or causes an operation
+     *             failure.
      * @throws IllegalStateException
-     *                 if this node has been removed
+     *             if this node has been removed.
+     * @since Android 1.0
      */
     public abstract void exportNode (OutputStream ostream) throws IOException, BackingStoreException;
     
     /**
-     * Export all preferences of this node and its all descendants to the given 
-     * output stream in XML document. 
+     * Exports all of the preferences of this node and all its descendants to a XML
+     * document using the given output stream.
      * <p>
-     * This XML document has the following DOCTYPE declaration:
+     * This XML document uses the UTF-8 encoding and is written according to the
+     * DTD in its DOCTYPE declaration, which is the following:
+     * 
      * <pre>
-     * &lt;!DOCTYPE preferences SYSTEM "http://java.sun.com/dtd/preferences.dtd"&gt;</pre>     * 
-     * And the UTF-8 encoding will be used. Please note that this node is not 
-     * thread-safe, which is an exception of this class. 
+     * &lt;!DOCTYPE preferences SYSTEM &quot;http://java.sun.com/dtd/preferences.dtd&quot;&gt;
+     * </pre>
+     * 
+     * <i>Please note that (unlike the methods of this class that don't concern serialization), this call is not thread-safe.</i>
      * </p>
-     * @param  ostream
-     *                 the output stream to export the XML
+     * 
+     * @param ostream
+     *            the output stream to write the XML-formatted data to.
      * @throws IOException
-     *                 if export operation caused an <code>IOException</code>
+     *             if an error occurs while exporting.
      * @throws BackingStoreException
-     *                 if backing store is unavailable or causes operation failure
+     *             if the backing store is unavailable or causes an operation
+     *             failure.
      * @throws IllegalStateException
-     *                 if this node has been removed
+     *             if this node has been removed.
+     * @since Android 1.0
      */
     public abstract void exportSubtree (OutputStream ostream) throws IOException, BackingStoreException;
     
     /**
-     * Force the updates to this node and its descendants to the backing store. 
+     * Forces all pending updates to this node and its descendants to be 
+     * persisted in the backing store.
      * <p>
-     * If this node has been removed, then the invocation of this method only 
-     * flush this node without descendants.
-     * </p> 
+     * If this node has been removed, the invocation of this method only flushes
+     * this node, not its descendants.
+     * </p>
+     * 
      * @throws BackingStoreException
-     *                 if backing store is unavailable or causes operation failure
+     *             if the backing store is unavailable or causes an operation
+     *             failure.
+     * @since Android 1.0
      */
     public abstract void flush() throws BackingStoreException;
     
     /**
-     * Return the string value mapped to the given key, or default value if no 
-     * value is mapped or backing store is unavailable.
+     * Gets the {@code String} value mapped to the given key or its default value if no
+     * value is mapped or no backing store is available.
      * <p>
-     * Some implementations may store default values in backing stores. In this case, 
-     * if there is no value mapped to the given key, the stored default value is 
-     * returned.
+     * Some implementations may store default values in backing stores. In this
+     * case, if there is no value mapped to the given key, the stored default
+     * value is returned.
      * </p>
      * 
-     * @param key    the preference key
-     * @param deflt    the default value, which will be returned if no value is 
-     *                 mapped to the given key or backing store unavailable 
-     * @return         the preference value mapped to the given key, or default value if 
-     *                 no value is mapped or backing store unavailable 
+     * @param key
+     *            the preference key.
+     * @param deflt
+     *            the default value, which will be returned if no value is
+     *            mapped to the given key or no backing store is available.
+     * @return the preference value mapped to the given key.
      * @throws IllegalStateException
-     *                 if this node has been removed
+     *             if this node has been removed.
      * @throws NullPointerException
-     *                 if parameter key is null 
+     *             if the parameter {@code key} is {@code null}.
+     * @since Android 1.0
      */
     public abstract String get (String key, String deflt);
     
     /**
-     * Return the boolean value mapped to the given key, or default value if no 
-     * value is mapped, backing store is unavailable, or the value is invalid.
+     * Gets the {@code boolean} value mapped to the given key or its default value if no
+     * value is mapped, if the backing store is unavailable, or if the value is invalid.
      * <p>
-     * The valid value is string equals "true", which represents true, or "false", 
-     * which represents false, case is ignored. 
-     * </p>  
+     * The only valid values are the {@code String} "true", which represents {@code true} and
+     * "false", which represents {@code false}, ignoring case.
+     * </p>
      * <p>
-     * Some implementations may store default values in backing stores. In this case, 
-     * if there is no value mapped to the given key, the stored default value is 
-     * returned.
+     * Some implementations may store default values in backing stores. In this
+     * case, if there is no value mapped to the given key, the stored default
+     * value is returned.
      * </p>
      * 
-     * @param key    the preference key
-     * @param deflt    the default value, which will be returned if no value is 
-     *                 mapped to the given key, backing store unavailable or value 
-     *                 is invalid 
-     * @return         the boolean value mapped to the given key, or default value if 
-     *                 no value is mapped, backing store unavailable or value is invalid
+     * @param key
+     *            the preference key.
+     * @param deflt
+     *            the default value, which will be returned if no value is
+     *            mapped to the given key, if the backing store is unavailable, or if the
+     *            value is invalid.
+     * @return the boolean value mapped to the given key.
      * @throws IllegalStateException
-     *                 if this node has been removed
+     *             if this node has been removed.
      * @throws NullPointerException
-     *                 if parameter key is null 
+     *             if the parameter {@code key} is {@code null}.
+     * @since Android 1.0
      */
     public abstract boolean getBoolean (String key, boolean deflt);
     
     /**
-     * Return the byte array value mapped to the given key, or default value if no 
-     * value is mapped, backing store is unavailable, or the value is invalid string.
+     * Gets the {@code byte} array value mapped to the given key or its default value if
+     * no value is mapped, if the backing store is unavailable, or if the value is an
+     * invalid string.
      * <p>
-     * The valid value string is Base64 encoded binary data. The Base64 encoding 
-     * is as defined in <a href="http://www.ietf.org/rfc/rfc2045.txt">RFC 2045</a>, 
-     * section 6.8.
-     * </p>  
+     * To be valid, the value string must be Base64-encoded binary data. The Base64 encoding
+     * is as defined in <a href="http://www.ietf.org/rfc/rfc2045.txt">RFC
+     * 2045</a>, section 6.8.
+     * </p>
      * <p>
-     * Some implementations may store default values in backing stores. In this case, 
-     * if there is no value mapped to the given key, the stored default value is 
-     * returned.
+     * Some implementations may store default values in backing stores. In this
+     * case, if there is no value mapped to the given key, the stored default
+     * value is returned.
      * </p>
      * 
-     * @param key    the preference key
-     * @param deflt    the default value, which will be returned if no value is 
-     *                 mapped to the given key, backing store unavailable or value 
-     *                 is invalid 
-     * @return         the byte array value mapped to the given key, or default value if 
-     *                 no value is mapped, backing store unavailable or value is invalid
+     * @param key
+     *            the preference key.
+     * @param deflt
+     *            the default value, which will be returned if no value is
+     *            mapped to the given key, if the backing store is unavailable, or if the
+     *            value is invalid.
+     * @return the byte array value mapped to the given key.
      * @throws IllegalStateException
-     *                 if this node has been removed
+     *             if this node has been removed.
      * @throws NullPointerException
-     *                 if parameter key is null 
+     *             if the parameter {@code key} is {@code null}.
+     * @since Android 1.0
      */
     public abstract byte[] getByteArray (String key, byte[] deflt);
     
     /**
-     * Return the double value mapped to the given key, or default value if no 
-     * value is mapped, backing store is unavailable, or the value is invalid string.
+     * Gets the {@code double} value mapped to the given key or its default value if no
+     * value is mapped, if the backing store is unavailable, or if the value is an invalid
+     * string.
      * <p>
-     * The valid value string can be converted to double number by 
+     * To be valid, the value string must be a string that can be converted to a {@code double} by
      * {@link Double#parseDouble(String) Double.parseDouble(String)}.
-     * </p>  
+     * </p>
      * <p>
-     * Some implementations may store default values in backing stores. In this case, 
-     * if there is no value mapped to the given key, the stored default value is 
-     * returned.
+     * Some implementations may store default values in backing stores. In this
+     * case, if there is no value mapped to the given key, the stored default
+     * value is returned.
      * </p>
      * 
-     * @param key    the preference key
-     * @param deflt    the default value, which will be returned if no value is 
-     *                 mapped to the given key, backing store unavailable or value 
-     *                 is invalid 
-     * @return         the double value mapped to the given key, or default value if 
-     *                 no value is mapped, backing store unavailable or value is invalid
+     * @param key
+     *            the preference key.
+     * @param deflt
+     *            the default value, which will be returned if no value is
+     *            mapped to the given key, if the backing store is unavailable, or if the
+     *            value is invalid.
+     * @return the double value mapped to the given key.
      * @throws IllegalStateException
-     *                 if this node has been removed
+     *             if this node has been removed.
      * @throws NullPointerException
-     *                 if parameter key is null 
+     *             if the parameter {@code key} is {@code null}.
+     * @since Android 1.0
      */
     public abstract double getDouble (String key, double deflt);
     
     /**
-     * Return the float value mapped to the given key, or default value if no 
-     * value is mapped, backing store is unavailable, or the value is invalid string.
+     * Gets the {@code float} value mapped to the given key or its default value if no
+     * value is mapped, if the backing store is unavailable, or if the value is an invalid
+     * string.
      * <p>
-     * The valid value string can be converted to float number by 
+     * To be valid, the value string must be a string that can be converted to a {@code float} by
      * {@link Float#parseFloat(String) Float.parseFloat(String)}.
-     * </p>  
+     * </p>
      * <p>
-     * Some implementations may store default values in backing stores. In this case, 
-     * if there is no value mapped to the given key, the stored default value is 
-     * returned.
+     * Some implementations may store default values in backing stores. In this
+     * case, if there is no value mapped to the given key, the stored default
+     * value is returned.
      * </p>
      * 
-     * @param key    the preference key
-     * @param deflt    the default value, which will be returned if no value is 
-     *                 mapped to the given key, backing store unavailable or value 
-     *                 is invalid 
-     * @return         the float value mapped to the given key, or default value if 
-     *                 no value is mapped, backing store unavailable or value is invalid
+     * @param key
+     *            the preference key.
+     * @param deflt
+     *            the default value, which will be returned if no value is
+     *            mapped to the given key, if the backing store is unavailable, or if the
+     *            value is invalid.
+     * @return the float value mapped to the given key.
      * @throws IllegalStateException
-     *                 if this node has been removed
+     *             if this node has been removed.
      * @throws NullPointerException
-     *                 if parameter key is null 
+     *             if the parameter {@code key} is {@code null}.
+     * @since Android 1.0
      */
     public abstract float getFloat (String key, float deflt);
     
     /**
-     * Return the float value mapped to the given key, or default value if no 
-     * value is mapped, backing store is unavailable, or the value is invalid string.
+     * Gets the {@code int} value mapped to the given key or its default value if no
+     * value is mapped, if the backing store is unavailable, or if the value is an invalid
+     * string.
      * <p>
-     * The valid value string can be converted to integer by 
+     * To be valid, the value string must be a string that can be converted to an {@code int} by
      * {@link Integer#parseInt(String) Integer.parseInt(String)}.
-     * </p>  
+     * </p>
      * <p>
-     * Some implementations may store default values in backing stores. In this case, 
-     * if there is no value mapped to the given key, the stored default value is 
-     * returned.
+     * Some implementations may store default values in backing stores. In this
+     * case, if there is no value mapped to the given key, the stored default
+     * value is returned.
      * </p>
      * 
-     * @param key    the preference key
-     * @param deflt    the default value, which will be returned if no value is 
-     *                 mapped to the given key, backing store unavailable or value 
-     *                 is invalid 
-     * @return         the integer value mapped to the given key, or default value if 
-     *                 no value is mapped, backing store unavailable or value is invalid
+     * @param key
+     *            the preference key.
+     * @param deflt
+     *            the default value, which will be returned if no value is
+     *            mapped to the given key, if the backing store is unavailable, or if the
+     *            value is invalid.
+     * @return the integer value mapped to the given key.
      * @throws IllegalStateException
-     *                 if this node has been removed
+     *             if this node has been removed.
      * @throws NullPointerException
-     *                 if parameter key is null 
+     *             if the parameter {@code key} is {@code null}.
+     * @since Android 1.0
      */
     public abstract int getInt (String key, int deflt);
     
     /**
-     * Return the long value mapped to the given key, or default value if no 
-     * value is mapped, backing store is unavailable, or the value is invalid string.
+     * Gets the {@code long} value mapped to the given key or its default value if no
+     * value is mapped, if the backing store is unavailable, or if the value is an invalid
+     * string.
      * <p>
-     * The valid value string can be converted to long integer by 
+     * To be valid, the value string must be a string that can be converted to a {@code long} by
      * {@link Long#parseLong(String) Long.parseLong(String)}.
-     * </p>  
+     * </p>
      * <p>
-     * Some implementations may store default values in backing stores. In this case, 
-     * if there is no value mapped to the given key, the stored default value is 
-     * returned.
+     * Some implementations may store default values in backing stores. In this
+     * case, if there is no value mapped to the given key, the stored default
+     * value is returned.
      * </p>
      * 
-     * @param key    the preference key
-     * @param deflt    the default value, which will be returned if no value is 
-     *                 mapped to the given key, backing store unavailable or value 
-     *                 is invalid 
-     * @return         the long value mapped to the given key, or default value if 
-     *                 no value is mapped, backing store unavailable or value is invalid
+     * @param key
+     *            the preference key.
+     * @param deflt
+     *            the default value, which will be returned if no value is
+     *            mapped to the given key, if the backing store is unavailable, or if the
+     *            value is invalid.
+     * @return the long value mapped to the given key.
      * @throws IllegalStateException
-     *                 if this node has been removed
+     *             if this node has been removed.
      * @throws NullPointerException
-     *                 if parameter key is null 
+     *             if the parameter {@code key} is {@code null}.
+     * @since Android 1.0
      */
     public abstract long getLong (String key, long deflt);
     
     /**
-     * Import all preferences from the given input stream in XML document. 
+     * Imports all the preferences from an XML document using the given input
+     * stream.
      * <p>
-     * This XML document has the following DOCTYPE declaration:
+     * This XML document uses the UTF-8 encoding and must be written according to the
+     * DTD in its DOCTYPE declaration, which must be the following:
+     * 
      * <pre>
-     * &lt;!DOCTYPE preferences SYSTEM "http://java.sun.com/dtd/preferences.dtd"&gt;</pre>     * 
-     * Please note that this node is not thread-safe, which is an exception of 
-     * this class. 
+     * &lt;!DOCTYPE preferences SYSTEM &quot;http://java.sun.com/dtd/preferences.dtd&quot;&gt;
+     * </pre>
+     * 
+     * <i>Please note that (unlike the methods of this class that don't concern serialization), this call is not thread-safe.</i>
      * </p>
      * 
      * @param istream
-     *                 the given input stream to read data
+     *            the input stream to read the data from.
      * @throws InvalidPreferencesFormatException
-     *                 if the data read from given input stream is not valid XML 
-     *                 document
+     *             if the data read from the given input stream is not from a
+     *             valid XML document.
      * @throws IOException
-     *                 if import operation caused an <code>IOException</code>
+     *             if an error occurs while importing.
      * @throws SecurityException
-     *                 if <code>RuntimePermission("preferences")</code> is denied 
-     *                 by a <code>SecurityManager</code>
+     *             if {@code RuntimePermission("preferences")} is denied by a
+     *             SecurityManager.
+     * @since Android 1.0
      */
     public static void importPreferences (InputStream istream) throws InvalidPreferencesFormatException, IOException {
         checkSecurity();
@@ -530,318 +577,378 @@ public abstract class Preferences {
     }
     
     /**
-     * Return true if this is a user preferences, false if this is a system 
-     * preferences
+     * Returns whether this is a user preference node.
      * 
-     * @return         true if this is a user preferences, false if this is a 
-     *                 system preferences
+     * @return {@code true}, if this is a user preference node, {@code false} if
+     *         this is a system preference node.
+     * @since Android 1.0
      */
     public abstract boolean isUserNode();
     
     /**
-     * Return all preferences keys stored in this node, or empty array if no 
-     * key is found.
+     * Returns all preference keys stored in this node or an empty array if no
+     * key was found.
      * 
-     * @return         all preferences keys in this node
+     * @return the list of all preference keys of this node.
      * @throws BackingStoreException
-     *                 if backing store is unavailable or causes operation failure
+     *             if the backing store is unavailable or causes an operation
+     *             failure.
      * @throws IllegalStateException
-     *                 if this node has been removed
+     *             if this node has been removed.
+     * @since Android 1.0
      */
     public abstract String[] keys() throws BackingStoreException;
     
     /**
-     * Return name of this node.
+     * Returns the name of this node.
      * 
-     * @return         the name of this node
+     * @return the name of this node.
+     * @since Android 1.0
      */
     public abstract String name();
     
     /**
-     * Return the preferences node with the given path name. The path name can 
-     * be relative or absolute. The dictated preferences and its ancestors will 
+     * Returns the preference node with the given path name. The path name can
+     * be relative or absolute. The requested node and its ancestors will
      * be created if they do not exist.
      * <p>
-     * The path is treated as relative to this node if it doesn't start with 
-     * slash, or as absolute otherwise.</p>  
-     *  
-     * @param path    the path name of dictated preferences
-     * @return         the dictated preferences node
+     * The path is treated as relative to this node if it doesn't start with a
+     * slash, otherwise it will be treated as an absolute path.
+     * </p>
+     * 
+     * @param path
+     *            the path name of the requested preference node.
+     * @return the requested preference node.
      * @throws IllegalStateException
-     *                 if this node has been removed.
+     *             if this node has been removed.
      * @throws IllegalArgumentException
-     *                 if the path name is invalid.
+     *             if the path name is invalid.
      * @throws NullPointerException
-     *                 if given path is null.
+     *             if the given path is {@code null}.
+     * @since Android 1.0
      */
     public abstract Preferences node (String path);
     
     /**
-     * Return the preferences node with the given path name. The path is treated 
-     * as relative to this node if it doesn't start with slash, or as absolute 
-     * otherwise.
+     * Returns whether the preference node with the given path name exists. The
+     * path is treated as relative to this node if it doesn't start with a slash,
+     * otherwise it is treated as an absolute path.
      * <p>
-     * Please note that if this node has been removed, invocation of this node 
-     * will throw <code>IllegalStateException</code> except the given path is 
-     * empty string, which will return false.
+     * Please note that if this node has been removed, an invocation of this
+     * node will throw an {@code IllegalStateException} unless the given path is
+     * an empty string, which will return {@code false}.
      * </p>
      * 
-     * @param path    the path name of dictated preferences
-     * @return         true if the dictated preferences node exists
+     * @param path
+     *            the path name of the preference node to query.
+     * @return {@code true}, if the queried preference node exists, {@code false}
+     *         otherwise.
      * @throws IllegalStateException
-     *                 if this node has been removed and the path is not empty string.
+     *             if this node has been removed and the path is not an empty
+     *             string.
      * @throws IllegalArgumentException
-     *                 if the path name is invalid.
+     *             if the path name is invalid.
      * @throws NullPointerException
-     *                 if given path is null.
+     *             if the given path is {@code null}.
      * @throws BackingStoreException
-     *                 if backing store is unavailable or causes operation failure
+     *             if the backing store is unavailable or causes an operation
+     *             failure.
+     * @since Android 1.0
      */
     public abstract boolean nodeExists (String path) throws BackingStoreException;
     
     /**
-     * Return the parent preferences node of this node, or null if this node is root.
+     * Returns the parent preference node of this node or {@code null} if this
+     * node is the root node.
      * 
-     * @return the parent preferences node of this node.
+     * @return the parent preference node of this node.
      * @throws IllegalStateException
-     *             if this node has been removed    
+     *             if this node has been removed.
+     * @since Android 1.0
      */
     public abstract Preferences parent();
     
     /**
-     * Add new preferences to this node using given key and value, or update 
-     * value if preferences with given key has already existed.
+     * Adds a new preference to this node using the given key and value or
+     * updates the value if a preference with the given key already exists.
      * 
-     * @param key    the preferences key to be added or be updated 
-     * @param value    the preferences value for the given key
+     * @param key
+     *            the preference key to be added or updated.
+     * @param value
+     *            the preference value for the given key.
      * @throws NullPointerException
-     *                 if the given key or value is null
+     *             if the given key or value is {@code null}.
      * @throws IllegalArgumentException
-     *                 if the given key's length is bigger than 
-     *                 <code>MAX_KEY_LENGTH</code>, or the value's length is bigger 
-     *                 than <code>MAX_VALUE_LENGTH</code>
+     *             if the given key's length is bigger than {@code
+     *             MAX_KEY_LENGTH} or the value's length is bigger than {@code
+     *             MAX_VALUE_LENGTH}.
      * @throws IllegalStateException
-     *             if this node has been removed    
+     *             if this node has been removed.
+     * @since Android 1.0
      */
     public abstract void put (String key, String value);
     
     /**
-     * Add new preferences to this node using given key and string form of given 
-     * value, or update value if preferences with given key has already existed. 
+     * Adds a new preference with a {@code boolean} value to this node using the given
+     * key and value or updates the value if a preference with the given key
+     * already exists.
      * 
-     * @param key    the preferences key to be added or be updated 
-     * @param value    the preferences value for the given key
+     * @param key
+     *            the preference key to be added or updated.
+     * @param value
+     *            the preference {@code boolean} value for the given key.
      * @throws NullPointerException
-     *                 if the given key is null
+     *             if the given key is {@code null}.
      * @throws IllegalArgumentException
-     *                 if the given key's length is bigger than 
-     *                 <code>MAX_KEY_LENGTH</code>
+     *             if the given key's length is bigger than {@code
+     *             MAX_KEY_LENGTH}.
      * @throws IllegalStateException
-     *             if this node has been removed    
+     *             if this node has been removed.
+     * @since Android 1.0
      */
     public abstract void putBoolean (String key, boolean value);
     
     /**
-     * Add new preferences to this node using given key and string form of given 
-     * value, or update value if preferences with given key has already existed. 
+     * Adds a new preference to this node using the given key and the string
+     * form of the given value or updates the value if a preference with the
+     * given key already exists.
      * <p>
-     * The string form of value is the Base64 encoded binary data of the given 
-     * byte array. The Base64 encoding is as defined in 
-     * <a href="http://www.ietf.org/rfc/rfc2045.txt">RFC 2045</a>, section 6.8.</p>
+     * The string form of the value is the Base64-encoded binary data of the
+     * given byte array. The Base64 encoding is as defined in <a
+     * href="http://www.ietf.org/rfc/rfc2045.txt">RFC 2045</a>, section 6.8.
+     * </p>
      * 
-     * @param key    the preferences key to be added or be updated 
-     * @param value    the preferences value for the given key
+     * @param key
+     *            the preference key to be added or updated.
+     * @param value
+     *            the preference value for the given key.
      * @throws NullPointerException
-     *                 if the given key or value is null
+     *             if the given key or value is {@code null}.
      * @throws IllegalArgumentException
-     *                 if the given key's length is bigger than 
-     *                 <code>MAX_KEY_LENGTH</code> or value's length is bigger than  
-     *                 three quarters of <code>MAX_KEY_LENGTH</code>
+     *             if the given key's length is bigger than {@code
+     *             MAX_KEY_LENGTH} or value's length is bigger than three
+     *             quarters of {@code MAX_KEY_LENGTH}.
      * @throws IllegalStateException
-     *             if this node has been removed    
+     *             if this node has been removed.
+     * @since Android 1.0
      */
     public abstract void putByteArray (String key, byte[] value);
     
     /**
-     * Add new preferences to this node using given key and string form of given 
-     * value, or update value if preferences with given key has already existed. 
+     * Adds a new preference to this node using the given key and {@code double}
+     * value or updates the value if a preference with the
+     * given key already exists.
      * <p>
-     * The string form of given value is the result of invoking 
-     * {@link Double#toString(double) Double.toString(double)}</p>
+     * The value is stored in its string form, which is the result of invoking
+     * {@link Double#toString(double) Double.toString(double)}.
+     * </p>
      * 
-     * @param key    the preferences key to be added or be updated 
-     * @param value    the preferences value for the given key
+     * @param key
+     *            the preference key to be added or updated.
+     * @param value
+     *            the preference value for the given key.
      * @throws NullPointerException
-     *                 if the given key is null
+     *             if the given key is {@code null}.
      * @throws IllegalArgumentException
-     *                 if the given key's length is bigger than 
-     *                 <code>MAX_KEY_LENGTH</code>
+     *             if the given key's length is bigger than {@code
+     *             MAX_KEY_LENGTH}.
      * @throws IllegalStateException
-     *             if this node has been removed    
+     *             if this node has been removed.
+     * @since Android 1.0
      */
     public abstract void putDouble (String key, double value);
     
     /**
-     * Add new preferences to this node using given key and string form of given 
-     * value, or update value if preferences with given key has already existed. 
+     * Adds a new preference to this node using the given key and {@code float} 
+     * value or updates the value if a preference with the
+     * given key already exists.
      * <p>
-     * The string form of given value is the result of invoking 
-     * {@link Float#toString(float) Float.toString(float)}</p>
+     * The value is stored in its string form, which is the result of invoking
+     * {@link Float#toString(float) Float.toString(float)}.
+     * </p>
      * 
-     * @param key    the preferences key to be added or be updated 
-     * @param value    the preferences value for the given key
+     * @param key
+     *            the preference key to be added or updated.
+     * @param value
+     *            the preference value for the given key.
      * @throws NullPointerException
-     *                 if the given key is null
+     *             if the given key is {@code null}.
      * @throws IllegalArgumentException
-     *                 if the given key's length is bigger than 
-     *                 <code>MAX_KEY_LENGTH</code>
+     *             if the given key's length is bigger than {@code
+     *             MAX_KEY_LENGTH}.
      * @throws IllegalStateException
-     *             if this node has been removed    
+     *             if this node has been removed.
+     * @since Android 1.0
      */
     public abstract void putFloat (String key, float value);
     
     /**
-     * Add new preferences to this node using given key and string form of given 
-     * value, or update value if preferences with given key has already existed. 
+     * Adds a new preference to this node using the given key and {@code int} 
+     * value or updates the value if a preference with the
+     * given key already exists.
      * <p>
-     * The string form of given value is the result of invoking 
-     * {@link Integer#toString(int) Integer.toString(int)}</p>
+     * The value is stored in its string form, which is the result of invoking
+     * {@link Integer#toString(int) Integer.toString(int)}.
+     * </p>
      * 
-     * @param key    the preferences key to be added or be updated 
-     * @param value    the preferences value for the given key
+     * @param key
+     *            the preference key to be added or updated.
+     * @param value
+     *            the preference value for the given key.
      * @throws NullPointerException
-     *                 if the given key is null
+     *             if the given key is {@code null}.
      * @throws IllegalArgumentException
-     *                 if the given key's length is bigger than 
-     *                 <code>MAX_KEY_LENGTH</code>
+     *             if the given key's length is bigger than {@code
+     *             MAX_KEY_LENGTH}.
      * @throws IllegalStateException
-     *             if this node has been removed    
+     *             if this node has been removed.
+     * @since Android 1.0
      */
     public abstract void putInt (String key, int value);
     
     /**
-     * Add new preferences to this node using given key and string form of given 
-     * value, or update value if preferences with given key has already existed. 
+     * Adds a new preference to this node using the given key and {@code long} 
+     * value or updates the value if a preference with the
+     * given key already exists.
      * <p>
-     * The string form of given value is the result of invoking 
-     * {@link Long#toString(long) Long.toString(long)}</p>
+     * The value is stored in its string form, which is the result of invoking
+     * {@link Long#toString(long) Long.toString(long)}.
+     * </p>
      * 
-     * @param key    the preferences key to be added or be updated 
-     * @param value    the preferences value for the given key
+     * @param key
+     *            the preference key to be added or updated.
+     * @param value
+     *            the preference value for the given key.
      * @throws NullPointerException
-     *                 if the given key is null
+     *             if the given key is {@code null}.
      * @throws IllegalArgumentException
-     *                 if the given key's length is bigger than 
-     *                 <code>MAX_KEY_LENGTH</code>
+     *             if the given key's length is bigger than {@code
+     *             MAX_KEY_LENGTH}.
      * @throws IllegalStateException
-     *             if this node has been removed    
+     *             if this node has been removed.
+     * @since Android 1.0
      */
     public abstract void putLong (String key, long value);
 
     /**
-     * Remove the preferences mapped to the given key from this node.
+     * Removes the preference mapped to the given key from this node.
      * 
-     * @param key    the given preferences key to removed 
+     * @param key
+     *            the key of the preference to be removed.
      * @throws NullPointerException
-     *                 if the given key is null
+     *             if the given key is {@code null}.
      * @throws IllegalStateException
-     *             if this node has been removed    
+     *             if this node has been removed.
+     * @since Android 1.0
      */
     public abstract void remove (String key);
     
     /**
-     * Remove this preferences node and its all descendants. The removal maybe
-     * won't be persisted until the <code>flush()</code> method is invoked. 
+     * Removes this preference node with all its descendants. The removal 
+     * won't necessarily be persisted until the method {@code flush()} is invoked.
      * 
      * @throws BackingStoreException
-     *                 if backing store is unavailable or causes operation failure 
+     *             if the backing store is unavailable or causes an operation
+     *             failure.
      * @throws IllegalStateException
-     *                 if this node has been removed
+     *             if this node has been removed.
      * @throws UnsupportedOperationException
-     *                 if this is a root node
+     *             if this is a root node.
+     * @since Android 1.0
      */
     public abstract void removeNode() throws BackingStoreException;
     
     /**
-     * Register an <code>NodeChangeListener</code> instance for this node, which 
-     * will receive <code>NodeChangeEvent</code>. <code>NodeChangeEvent</code> will 
-     * be produced when direct child node is added to or removed from this node. 
+     * Registers a {@code NodeChangeListener} instance for this node, which will handle
+     * {@code NodeChangeEvent}s. {@code NodeChangeEvent}s will be fired when a child node has
+     * been added to or removed from this node.
      * 
-     * @param ncl    the given listener to be registered
+     * @param ncl
+     *            the listener to be registered.
      * @throws NullPointerException
-     *                 if the given listener is null
+     *             if the given listener is {@code null}.
      * @throws IllegalStateException
-     *                 if this node has been removed
+     *             if this node has been removed.
+     * @since Android 1.0
      */
     public abstract void addNodeChangeListener (NodeChangeListener ncl);
     
     /**
-     * Register an <code>PreferenceChangeListener</code> instance for this node, which 
-     * will receive <code>PreferenceChangeEvent</code>. <code>PreferenceChangeEvent</code> will 
-     * be produced when preference is added to, removed from or updated for this node. 
+     * Registers a {@code PreferenceChangeListener} instance for this node, which will
+     * handle {@code PreferenceChangeEvent}s. {@code PreferenceChangeEvent}s will be fired when
+     * a preference has been added to, removed from, or updated for this node.
      * 
-     * @param pcl    the given listener to be registered
+     * @param pcl
+     *            the listener to be registered.
      * @throws NullPointerException
-     *                 if the given listener is null
+     *             if the given listener is {@code null}.
      * @throws IllegalStateException
-     *                 if this node has been removed
+     *             if this node has been removed.
+     * @since Android 1.0
      */
     public abstract void addPreferenceChangeListener (PreferenceChangeListener pcl);
     
     /**
-     * Remove the given <code>NodeChangeListener</code> instance from this node. 
+     * Removes the given {@code NodeChangeListener} instance from this node.
      * 
-     * @param ncl    the given listener to be removed
+     * @param ncl
+     *            the listener to be removed.
      * @throws IllegalArgumentException
-     *                 if the given listener 
+     *             if the given listener is {@code null}.
      * @throws IllegalStateException
-     *                 if this node has been removed
+     *             if this node has been removed.
+     * @since Android 1.0
      */
     public abstract void removeNodeChangeListener (NodeChangeListener ncl);
     
     /**
-     * Remove the given <code>PreferenceChangeListener</code> instance from this node. 
+     * Removes the given {@code PreferenceChangeListener} instance from this node.
      * 
-     * @param pcl    the given listener to be removed
+     * @param pcl
+     *            the listener to be removed.
      * @throws IllegalArgumentException
-     *                 if the given listener 
+     *             if the given listener is {@code null}.
      * @throws IllegalStateException
-     *                 if this node has been removed
+     *             if this node has been removed.
+     * @since Android 1.0
      */
     public abstract void removePreferenceChangeListener (PreferenceChangeListener pcl);
     
     /**
-     * Synchronize this preferences node and its descendants' data with the back 
-     * end preferences store. The changes of back end should be reflect by this 
-     * node and its descendants, meanwhile, the changes of this node and descendants 
-     * should be persisted.
+     * Synchronizes the data of this preference node and its descendants with
+     * the back-end preference store. Any changes found in the back-end data should be reflected
+     * in this node and its descendants, and at the same time any local changes to this node and
+     * descendants should be persisted.
      * 
      * @throws BackingStoreException
-     *                 if backing store is unavailable or causes operation failure
+     *             if the backing store is unavailable or causes an operation
+     *             failure.
      * @throws IllegalStateException
-     *                 if this node has been removed
+     *             if this node has been removed.
+     * @since Android 1.0
      */
     public abstract void sync() throws BackingStoreException;
     
     /**
-     * Return the system preference node for the package of given class. The 
-     * absolute path of the returned node is one slash followed by the given 
-     * class's full package name with replacing each period ('.') with slash.
-     * For example, the preference's associated with class <code>Object<code> 
-     * has absolute path like "/java/lang". As a special case, the unnamed 
-     * package is associated with preference node "/<unnamed>". 
-     *  
-     * This method will create node and its ancestors if needed, and the new 
-     * created nodes maybe won't be persisted until the <code>flush()</code> 
-     * is invoked.
+     * Returns the system preference node for the package of the given class.
+     * The absolute path of the returned node is one slash followed by the given
+     * class's full package name, replacing each period character ('.') with
+     * a slash. For example, the absolute path of the preference associated with 
+     * the class Object would be "/java/lang". As a special case, the unnamed
+     * package is associated with a preference node "/&lt;unnamed&gt;". This
+     * method will create the node and its ancestors as needed. Any nodes created
+     * by this method won't necessarily be persisted until the method {@code flush()} is
+     * invoked.
      * 
-     * @param c        the given class 
-     * @return         the system preference node for the package of given class. 
+     * @param c
+     *            the given class.
+     * @return the system preference node for the package of the given class.
      * @throws NullPointerException
-     *                 if the given class is null
+     *             if the given class is {@code null}.
      * @throws SecurityException
-     *                 if <code>RuntimePermission("preferences")</code> is denied 
-     *                 by a <code>SecurityManager</code>
+     *             if the {@code RuntimePermission("preferences")} is denied by
+     *             a SecurityManager.
+     * @since Android 1.0
      */
     public static Preferences systemNodeForPackage (Class<?> c) {
         checkSecurity();
@@ -849,12 +956,13 @@ public abstract class Preferences {
     }
     
     /**
-     * Return the root node for system preference hierarchy.
+     * Returns the root node of the system preference hierarchy.
      * 
-     * @return         the root node for system preference hierarchy
+     * @return the system preference hierarchy root node.
      * @throws SecurityException
-     *                 if <code>RuntimePermission("preferences")</code> is denied 
-     *                 by a <code>SecurityManager</code>
+     *             if the {@code RuntimePermission("preferences")} is denied by
+     *             a SecurityManager.
+     * @since Android 1.0
      */
     public static Preferences systemRoot() {
         checkSecurity();
@@ -871,24 +979,25 @@ public abstract class Preferences {
     }
 
     /**
-     * Return the user preference node for the package of given class. The 
-     * absolute path of the returned node is one slash followed by the given 
-     * class's full package name with replacing each period ('.') with slash.
-     * For example, the preference's associated with class <code>Object<code> 
-     * has absolute path like "/java/lang". As a special case, the unnamed 
-     * package is associated with preference node "/<unnamed>". 
-     *  
-     * This method will create node and its ancestors if needed, and the new 
-     * created nodes maybe won't be persisted until the <code>flush()</code> 
-     * is invoked.
+     * Returns the user preference node for the package of the given class.
+     * The absolute path of the returned node is one slash followed by the given
+     * class's full package name, replacing each period character ('.') with
+     * a slash. For example, the absolute path of the preference associated with 
+     * the class Object would be "/java/lang". As a special case, the unnamed
+     * package is associated with a preference node "/&lt;unnamed&gt;". This
+     * method will create the node and its ancestors as needed. Any nodes created
+     * by this method won't necessarily be persisted until the method {@code flush()} is
+     * invoked.
      * 
-     * @param c    the given class 
-     * @return         the user preference node for the package of given class. 
+     * @param c
+     *            the given class.
+     * @return the user preference node for the package of the given class.
      * @throws NullPointerException
-     *                      if the given class is null
+     *             if the given class is {@code null}.
      * @throws SecurityException
-     *                 if <code>RuntimePermission("preferences")</code> is denied 
-     *                 by a <code>SecurityManager</code>
+     *             if the {@code RuntimePermission("preferences")} is denied by
+     *             a SecurityManager.
+     * @since Android 1.0
      */
     public static Preferences userNodeForPackage (Class<?> c) {
         checkSecurity();
@@ -897,7 +1006,7 @@ public abstract class Preferences {
     
     //parse node's absolute path from class instance
     private static String getNodeName(Class<?> c){
-        // ??? PREFS TODO change back to harmony code once getPackage 
+        // ??? PREFS TODO change back to harmony code once getPackage
         // delivers the correct results
         // Package p = c.getPackage();
         // if(null == p){
@@ -909,24 +1018,25 @@ public abstract class Preferences {
     }
 
     /**
-     * Return the root node for user preference hierarchy.
+     * Returns the root node of the user preference hierarchy.
      * 
-     * @return         the root node for user preference hierarchy
+     * @return the user preference hierarchy root node.
      * @throws SecurityException
-     *                 if <code>RuntimePermission("preferences")</code> is denied 
-     *                 by a <code>SecurityManager</code>
+     *             if the {@code RuntimePermission("preferences")} is denied by
+     *             a SecurityManager.
+     * @since Android 1.0
      */
     public static Preferences userRoot() {
         checkSecurity();
         return factory.userRoot();
     }
-    
+
     /**
-     * Return a string description of this node. The format is "User/System 
+     * Returns a string representation of this node. The format is "User/System
      * Preference Node: " followed by this node's absolute path.
      * 
-     * @return a string description of this node
-     * 
+     * @return the string representation of this node.
+     * @since Android 1.0
      */
     @Override
     public abstract String toString();

@@ -17,9 +17,15 @@
 
 package tests.api.java.util;
 
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass; 
+
 import java.util.Timer;
 import java.util.TimerTask;
 
+@TestTargetClass(TimerTask.class) 
 public class TimerTaskTest extends junit.framework.TestCase {
     Object sync = new Object(), start = new Object();
 
@@ -65,6 +71,15 @@ public class TimerTaskTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TimerTask#TimerTask()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "TimerTask",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         // Ensure the constructor does not fail
         new TimerTestTask();
@@ -73,6 +88,15 @@ public class TimerTaskTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TimerTask#cancel()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "cancel",
+          methodArgs = {}
+        )
+    })
     public void test_cancel() {
         Timer t = null;
         try {
@@ -168,6 +192,15 @@ public class TimerTaskTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TimerTask#scheduledExecutionTime()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "scheduledExecutionTime",
+          methodArgs = {}
+        )
+    })
     public void test_scheduledExecutionTime() {
         Timer t = null;
         try {
@@ -213,6 +246,15 @@ public class TimerTaskTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TimerTask#run()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "run",
+          methodArgs = {}
+        )
+    })
     public void test_run() {
         Timer t = null;
         try {

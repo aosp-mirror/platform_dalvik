@@ -15,37 +15,55 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vladimir N. Molotkov
-* @version $Revision$
-*/
-
 package java.security.spec;
 
 import org.apache.harmony.security.internal.nls.Messages;
 
 /**
- * @com.intel.drl.spec_ref
+ * The parameter specification for the Mask Generation Function (MGF1) in
+ * the RSA-PSS Signature and OAEP Padding scheme.
+ * <p>
+ * Defined in the <a
+ * href="http://www.rsa.com/rsalabs/pubs/PKCS/html/pkcs-1.html">PKCS #1 v2.1</a>
+ * standard
+ * </p>
  * 
+ * @since Android 1.0
  */
 public class MGF1ParameterSpec implements AlgorithmParameterSpec {
+
     /**
-     * @com.intel.drl.spec_ref
+     * The predefined MGF1 parameter specification with an "SHA-1" message
+     * digest.
+     * 
+     * @since Android 1.0
      */
     public static final MGF1ParameterSpec SHA1 =
         new MGF1ParameterSpec("SHA-1"); //$NON-NLS-1$
+
     /**
-     * @com.intel.drl.spec_ref
+     * The predefined MGF1 parameter specification with an "SHA-256" message
+     * digest.
+     * 
+     * @since Android 1.0
      */
     public static final MGF1ParameterSpec SHA256 =
         new MGF1ParameterSpec("SHA-256"); //$NON-NLS-1$
+
     /**
-     * @com.intel.drl.spec_ref
+     * The predefined MGF1 parameter specification with an "SHA-384" message
+     * digest.
+     * 
+     * @since Android 1.0
      */
     public static final MGF1ParameterSpec SHA384 =
         new MGF1ParameterSpec("SHA-384"); //$NON-NLS-1$
+
     /**
-     * @com.intel.drl.spec_ref
+     * The predefined MGF1 parameter specification with an "SHA-512" message
+     * digest.
+     * 
+     * @since Android 1.0
      */
     public static final MGF1ParameterSpec SHA512 =
         new MGF1ParameterSpec("SHA-512"); //$NON-NLS-1$
@@ -54,7 +72,12 @@ public class MGF1ParameterSpec implements AlgorithmParameterSpec {
     private final String mdName;
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code MGF1ParameterSpec} with the specified message digest
+     * algorithm name.
+     * 
+     * @param mdName
+     *            the name of the message digest algorithm.
+     * @since Android 1.0
      */
     public MGF1ParameterSpec(String mdName) {
         this.mdName = mdName;
@@ -64,7 +87,10 @@ public class MGF1ParameterSpec implements AlgorithmParameterSpec {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the name of the message digest algorithm.
+     * 
+     * @return the name of the message digest algorithm.
+     * @since Android 1.0
      */
     public String getDigestAlgorithm() {
         return mdName;

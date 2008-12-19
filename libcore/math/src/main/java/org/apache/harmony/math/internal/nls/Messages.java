@@ -21,6 +21,10 @@
  * if this tool runs again. Better make changes in the template file.
  */
 
+// BEGIN android-note
+// Redundant code has been removed and is now called from MsgHelp.
+// END android-note
+
 package org.apache.harmony.math.internal.nls;
 
 // BEGIN android-added
@@ -129,4 +133,8 @@ public class Messages {
         return MsgHelp.getString(sResource, msg, args);
         // END android-changed
     }
+
+    // BEGIN android-note
+    // Duplicate code was dropped in favor of using MsgHelp.
+    // END android-note
 }

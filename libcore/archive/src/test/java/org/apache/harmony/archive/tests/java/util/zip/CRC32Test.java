@@ -16,13 +16,28 @@
  */
 package org.apache.harmony.archive.tests.java.util.zip;
 
+import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.util.zip.CRC32;
 
+@TestTargetClass(CRC32.class) 
 public class CRC32Test extends junit.framework.TestCase {
 
     /**
      * @tests java.util.zip.CRC32#CRC32()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "CRC32",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         // test methods of java.util.zip.CRC32()
         CRC32 crc = new CRC32();
@@ -32,6 +47,15 @@ public class CRC32Test extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.CRC32#getValue()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getValue",
+          methodArgs = {}
+        )
+    })
     public void test_getValue() {
         // test methods of java.util.zip.crc32.getValue()
         CRC32 crc = new CRC32();
@@ -70,6 +94,15 @@ public class CRC32Test extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.CRC32#reset()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "reset",
+          methodArgs = {}
+        )
+    })
     public void test_reset() {
         // test methods of java.util.zip.crc32.reset()
         CRC32 crc = new CRC32();
@@ -88,6 +121,15 @@ public class CRC32Test extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.CRC32#update(int)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "update",
+          methodArgs = {int.class}
+        )
+    })
     public void test_updateI() {
         // test methods of java.util.zip.crc32.update(int)
         CRC32 crc = new CRC32();
@@ -118,6 +160,15 @@ public class CRC32Test extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.CRC32#update(byte[])
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "update",
+          methodArgs = {byte[].class}
+        )
+    })
     public void test_update$B() {
         // test methods of java.util.zip.crc32.update(byte[])
         byte byteArray[] = { 1, 2 };
@@ -142,6 +193,15 @@ public class CRC32Test extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.CRC32#update(byte[], int, int)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "update",
+          methodArgs = {byte[].class, int.class, int.class}
+        )
+    })
     public void test_update$BII() {
         // test methods of java.util.zip.update(byte[],int,int)
         byte[] byteArray = { 1, 2, 3 };

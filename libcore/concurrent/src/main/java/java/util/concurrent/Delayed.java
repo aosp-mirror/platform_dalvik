@@ -8,6 +8,10 @@ package java.util.concurrent;
 
 import java.util.*;
 
+// BEGIN android-note
+// Added generic type Delayed to Comparable to be closer to the RI.
+// END android-note
+
 /**
  * A mix-in style interface for marking objects that should be
  * acted upon after a given delay.

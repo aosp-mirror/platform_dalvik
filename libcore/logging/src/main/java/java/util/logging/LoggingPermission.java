@@ -26,7 +26,7 @@ import org.apache.harmony.logging.internal.nls.Messages;
 
 /**
  * The permission required to control the logging when run with a
- * <code>SecurityManager</code>.
+ * {@code SecurityManager}.
  * 
  */
 public final class LoggingPermission extends BasicPermission implements Guard,
@@ -43,14 +43,20 @@ public final class LoggingPermission extends BasicPermission implements Guard,
      */
 
     /**
-     * Constructs a <code>LoggingPermission</code> object required to control
-     * the logging.
+     * Constructs a {@code LoggingPermission} object required to control the
+     * logging. The {@code SecurityManager} checks the permissions.
+     * <p>
+     * {@code LoggingPermission} objects are created by the security policy code
+     * and depends on the security policy file, therefore programmers shouldn't
+     * normally use them directly.
+     * </p>
      * 
      * @param name
-     *            Currently must be "control".
+     *            currently must be "control".
      * @param actions
-     *            Currently must be either <code>null</code> or the empty
-     *            string.
+     *            currently must be either {@code null} or the empty string.
+     * @throws IllegalArgumentException
+     *             if name null or different from {@code string} control.
      */
     public LoggingPermission(String name, String actions) {
         super(name, actions);

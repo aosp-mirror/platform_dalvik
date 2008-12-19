@@ -16,21 +16,31 @@
 
 package tests.api.javax.xml.parsers;
 
-import javax.xml.parsers.SAXParserFactory;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
 
-import org.xml.sax.Attributes;
-import org.xml.sax.SAXNotSupportedException;
-import org.xml.sax.SAXNotRecognizedException;
-import org.xml.sax.helpers.DefaultHandler;
-
-import java.util.Properties;
-import java.io.*;
 import junit.framework.TestCase;
 
-import java.util.Vector;
-import java.util.HashMap;
-import javax.xml.parsers.*;
+import org.xml.sax.Attributes;
+import org.xml.sax.SAXNotRecognizedException;
+import org.xml.sax.SAXNotSupportedException;
+import org.xml.sax.helpers.DefaultHandler;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Properties;
+import java.util.Vector;
+
+import javax.xml.parsers.FactoryConfigurationError;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
+
+@TestTargetClass(SAXParserFactory.class) 
 public class SAXParserFactoryTest extends TestCase {
 
     SAXParserFactory spf;
@@ -61,7 +71,16 @@ public class SAXParserFactoryTest extends TestCase {
      * @test javax.xml.parsers.SAXParserFactory#SAXParserFactory()
      *
      */
-    public void test_Constructor() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "SAXParserFactory",
+          methodArgs = {}
+        )
+    })
+    public void _test_Constructor() {
         MySAXParserFactory mpf = new MySAXParserFactory();
         assertTrue(mpf instanceof SAXParserFactory);
         assertFalse(mpf.isValidating());
@@ -71,6 +90,15 @@ public class SAXParserFactoryTest extends TestCase {
      * @test javax.xml.parsers.SAXParserFactory#getFeature(java.lang.String)
      *
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify ParserConfigurationException, SAXNotSupportedException.",
+      targets = {
+        @TestTarget(
+          methodName = "getFeature",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_getFeatureLjava_lang_String() {
         String[] features = {
                 "http://xml.org/sax/features/namespaces",
@@ -138,6 +166,15 @@ public class SAXParserFactoryTest extends TestCase {
      * @test javax.xml.parsers.SAXParserFactory#isNamespaceAware()
      *
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setNamespaceAware",
+          methodArgs = {boolean.class}
+        )
+    })
     public void test_isNamespaceAware() {
         spf.setNamespaceAware(true);
         assertTrue(spf.isNamespaceAware());
@@ -151,6 +188,15 @@ public class SAXParserFactoryTest extends TestCase {
      * @test javax.xml.parsers.SAXParserFactory#isValidating()
      *
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isValidating",
+          methodArgs = {}
+        )
+    })
     public void test_isValidating() {
         spf.setValidating(true);
         assertTrue(spf.isValidating());
@@ -176,6 +222,15 @@ public class SAXParserFactoryTest extends TestCase {
      * @test javax.xml.parsers.SAXParserFactory#newInstance()
      *
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "newInstance",
+          methodArgs = {}
+        )
+    })
     public void test_newInstance() {
         String className = null;
         try {
@@ -221,6 +276,15 @@ public class SAXParserFactoryTest extends TestCase {
      * @test javax.xml.parsers.SAXParserFactory#newSAXParser()
      *
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "newSAXParser",
+          methodArgs = {}
+        )
+    })
     public void test_newSAXParser() {
         try {
             SAXParser sp = spf.newSAXParser();
@@ -236,6 +300,15 @@ public class SAXParserFactoryTest extends TestCase {
      *       boolean)
      *
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify SAXNotSupportedException, ParserConfigurationException.",
+      targets = {
+        @TestTarget(
+          methodName = "setFeature",
+          methodArgs = {java.lang.String.class, boolean.class}
+        )
+    })
     public void test_setFeatureLjava_lang_StringZ() {
         String[] features = {
                 "http://xml.org/sax/features/namespaces",
@@ -300,7 +373,16 @@ public class SAXParserFactoryTest extends TestCase {
      * @test javax.xml.parsers.SAXParserFactory#setNamespaceAware(boolean)
      *
      */
-    public void test_setNamespaceAwareZ() {
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify positive functionality.",
+      targets = {
+        @TestTarget(
+          methodName = "setNamespaceAware",
+          methodArgs = {boolean.class}
+        )
+    })
+    public void _test_setNamespaceAwareZ() {
 
         spf.setNamespaceAware(true);
         MyHandler mh = new MyHandler();

@@ -22,6 +22,11 @@
 
 package org.apache.harmony.security.tests.java.security;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.IOException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -48,7 +53,7 @@ import org.apache.harmony.security.tests.support.MyLoadStoreParams;
 import org.apache.harmony.security.tests.support.SpiEngUtils;
 
 import junit.framework.TestCase;
-
+@TestTargetClass(KeyStore.class)
 /**
  * Tests for <code>KeyStore</code> constructor and methods
  * 
@@ -106,6 +111,15 @@ public class KeyStoreTest extends TestCase {
      * methods 
      * Assertions: throw IllegalArgumentException if param is null;
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NoSuchAlgorithmException, CertificateException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "load",
+          methodArgs = {java.security.KeyStore.LoadStoreParameter.class}
+        )
+    })
     public void testLoadStore02() throws Exception {
         assertTrue(NotSupportMsg, KSSupported);
 
@@ -142,6 +156,15 @@ public class KeyStoreTest extends TestCase {
      * method 
      * Assertion: stores KeyEntry.
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setKeyEntry",
+          methodArgs = {String.class, byte[].class, Certificate[].class}
+        )
+    })
     public void testSetKeyEntry() throws Exception {
         assertTrue(NotSupportMsg, KSSupported);
         
@@ -182,6 +205,15 @@ public class KeyStoreTest extends TestCase {
      * Test for <code>getDefaultType()</code> method Assertion: returns
      * default security key store type or "jks" string
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getDefaultType",
+          methodArgs = {}
+        )
+    })
     public void testKeyStore01() {
         String propName = "keystore.type";
         String defKSType = Security.getProperty(propName);
@@ -210,6 +242,15 @@ public class KeyStoreTest extends TestCase {
      * throws KeyStoreException when type is not available
      * 
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verification with valid parameter missed",
+      targets = {
+        @TestTarget(
+          methodName = "getInstance",
+          methodArgs = {String.class}
+        )
+    })
     public void testKeyStore02() throws KeyStoreException {
         String[] invalidValues =  SpiEngUtils.invalidValues;
         try {
@@ -230,7 +271,16 @@ public class KeyStoreTest extends TestCase {
     /**
      * @test java.security.KeyStore.PasswordProtection.getPassword()
      */
-    public void testKeyStorePPGetPassword() {
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IllegalStateException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "PasswordProtection.getPassword",
+          methodArgs = {}
+        )
+    })
+    public void _testKeyStorePPGetPassword() {
         // Regression for HARMONY-1539
         // no exception expected
         assertNull(new KeyStore.PasswordProtection(null).getPassword());
@@ -241,12 +291,18 @@ public class KeyStoreTest extends TestCase {
         
     }
 
-
-    
-
     /**
      * @tests java.security.KeyStore.TrustedCertificateEntry.toString()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "IllegalStateException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "TrustedCertificateEntry.toString",
+          methodArgs = {}
+        )
+    })
     public void testKeyStoreTCToString() {
            // Regression for HARMONY-1542
            // no exception expected

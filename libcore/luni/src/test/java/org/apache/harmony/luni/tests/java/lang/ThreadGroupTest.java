@@ -17,9 +17,15 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.util.Vector;
 
 // BEGIN android-changed
+@TestTargetClass(ThreadGroup.class) 
 public class ThreadGroupTest extends junit.framework.TestCase implements Thread.UncaughtExceptionHandler {
 // END android-changed
     
@@ -69,6 +75,15 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
     /**
      * @tests java.lang.ThreadGroup#ThreadGroup(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SecurityException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "ThreadGroup",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() {
         // Test for method java.lang.ThreadGroup(java.lang.String)
 
@@ -93,6 +108,15 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
      * @tests java.lang.ThreadGroup#ThreadGroup(java.lang.ThreadGroup,
      *        java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "ThreadGroup",
+          methodArgs = {java.lang.ThreadGroup.class, java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_ThreadGroupLjava_lang_String() {
         // Test for method java.lang.ThreadGroup(java.lang.ThreadGroup,
         // java.lang.String)
@@ -136,6 +160,15 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
     /**
      * @tests java.lang.ThreadGroup#activeCount()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "activeCount",
+          methodArgs = {}
+        )
+    })
     public void test_activeCount() {
         // Test for method int java.lang.ThreadGroup.activeCount()
         ThreadGroup tg = new ThreadGroup("activeCount");
@@ -165,6 +198,15 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
     /**
      * @tests java.lang.ThreadGroup#activeGroupCount()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "activeGroupCount",
+          methodArgs = {}
+        )
+    })
     public void test_activeGroupCount() {
         ThreadGroup tg = new ThreadGroup("group count");
         assertEquals("Incorrect number of groups",
@@ -190,6 +232,15 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
     /**
      * @tests java.lang.ThreadGroup#allowThreadSuspension(boolean)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "allowThreadSuspension",
+          methodArgs = {boolean.class}
+        )
+    })
     @SuppressWarnings("deprecation")
     public void test_allowThreadSuspensionZ() {
         ThreadGroup tg = new ThreadGroup("thread suspension");
@@ -203,6 +254,15 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
     /**
      * @tests java.lang.ThreadGroup#checkAccess()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SecurityException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "checkAccess",
+          methodArgs = {}
+        )
+    })
     public void test_checkAccess() {
         // Test for method void java.lang.ThreadGroup.checkAccess()
 
@@ -229,6 +289,15 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
     /**
      * @tests java.lang.ThreadGroup#destroy()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "destroy",
+          methodArgs = {}
+        )
+    })
     public void test_destroy() {
         // Test for method void java.lang.ThreadGroup.destroy()
 
@@ -250,7 +319,7 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
             } catch (IllegalThreadStateException e) {
                 passed = true;
             }
-            ;
+            
             assertTrue("Destroyed child can't be destroyed again", passed);
         }
 
@@ -269,7 +338,7 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
         } catch (IllegalThreadStateException e) {
             passed = true;
         }
-        ;
+        
         assertTrue("Daemon should have been destroyed already", passed);
 
         passed = false;
@@ -278,7 +347,7 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
         } catch (IllegalThreadStateException e) {
             passed = true;
         }
-        ;
+        
         assertTrue("Daemon parent should have been destroyed automatically",
                 passed);
 
@@ -303,7 +372,7 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
         } catch (InterruptedException ie) {
             fail("Should not be interrupted");
         }
-        ;
+        
 
         passed = false;
         try {
@@ -311,7 +380,7 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
         } catch (IllegalThreadStateException e) {
             passed = true;
         }
-        ;
+        
         assertTrue(
                 "Daemon group should have been destroyed already when last thread died",
                 passed);
@@ -346,7 +415,7 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
         } catch (InterruptedException ie) {
             fail("Should not be interrupted");
         }
-        ;
+        
         passed = true;
         try {
             testRoot.destroy();
@@ -362,6 +431,15 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
     /**
      * @tests java.lang.ThreadGroup#destroy()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies IllegalThreadStateException.",
+      targets = {
+        @TestTarget(
+          methodName = "destroy",
+          methodArgs = {}
+        )
+    })
     public void test_destroy_subtest0() {
         ThreadGroup group1 = new ThreadGroup("test_destroy_subtest0");
         group1.destroy();
@@ -375,6 +453,15 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
     /**
      * @tests java.lang.ThreadGroup#getMaxPriority()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getMaxPriority",
+          methodArgs = {}
+        )
+    })
     public void test_getMaxPriority() {
         // Test for method int java.lang.ThreadGroup.getMaxPriority()
 
@@ -399,6 +486,15 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
     /**
      * @tests java.lang.ThreadGroup#getName()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getName",
+          methodArgs = {}
+        )
+    })
     public void test_getName() {
         // Test for method java.lang.String java.lang.ThreadGroup.getName()
 
@@ -416,6 +512,15 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
     /**
      * @tests java.lang.ThreadGroup#getParent()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getParent",
+          methodArgs = {}
+        )
+    })
     public void test_getParent() {
         // Test for method java.lang.ThreadGroup
         // java.lang.ThreadGroup.getParent()
@@ -476,6 +581,15 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
      * @tests java.lang.ThreadGroup#interrupt()
      */
     private static boolean interrupted = false;
+    @TestInfo(
+            level = TestLevel.COMPLETE,
+            purpose = "",
+            targets = {
+              @TestTarget(
+                methodName = "interrupt",
+                methodArgs = {}
+              )
+          })    
     public void test_interrupt() {
         Thread.setDefaultUncaughtExceptionHandler(this);
         ThreadGroup tg = new ThreadGroup("interrupt");
@@ -504,6 +618,15 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
     /**
      * @tests java.lang.ThreadGroup#isDaemon()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isDaemon",
+          methodArgs = {}
+        )
+    })
     public void test_isDaemon() {
         // Test for method boolean java.lang.ThreadGroup.isDaemon()
 
@@ -515,6 +638,15 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
     /**
      * @tests java.lang.ThreadGroup#isDestroyed()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isDestroyed",
+          methodArgs = {}
+        )
+    })
     public void test_isDestroyed() {
         final ThreadGroup originalCurrent = getInitialThreadGroup();
         final ThreadGroup testRoot = new ThreadGroup(originalCurrent,
@@ -530,6 +662,15 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
     /**
      * @tests java.lang.ThreadGroup#list()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "list",
+          methodArgs = {}
+        )
+    })
     public void test_list() {
         // Test for method void java.lang.ThreadGroup.list()
 
@@ -584,6 +725,15 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
     /**
      * @tests java.lang.ThreadGroup#parentOf(java.lang.ThreadGroup)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "parentOf",
+          methodArgs = {java.lang.ThreadGroup.class}
+        )
+    })
     public void test_parentOfLjava_lang_ThreadGroup() {
         // Test for method boolean
         // java.lang.ThreadGroup.parentOf(java.lang.ThreadGroup)
@@ -618,6 +768,15 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
     /**
      * @tests java.lang.ThreadGroup#resume()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "resume",
+          methodArgs = {}
+        )
+    })
     @SuppressWarnings("deprecation")
     public void test_resume() throws OutOfMemoryError {
         // Test for method void java.lang.ThreadGroup.resume()
@@ -699,6 +858,17 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
     /**
      * @tests java.lang.ThreadGroup#setDaemon(boolean)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check that daemon thread group is destroyed when " +
+            "last thread from this group is stopped or its last thread group " +
+            "is destroyed.",
+      targets = {
+        @TestTarget(
+          methodName = "setDaemon",
+          methodArgs = {boolean.class}
+        )
+    })
     public void test_setDaemonZ() {
         // Test for method void java.lang.ThreadGroup.setDaemon(boolean)
 
@@ -709,6 +879,15 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
     /**
      * @tests java.lang.ThreadGroup#setMaxPriority(int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setMaxPriority",
+          methodArgs = {int.class}
+        )
+    })
     public void test_setMaxPriorityI() {
         // Test for method void java.lang.ThreadGroup.setMaxPriority(int)
 
@@ -833,6 +1012,15 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
     /**
      * @tests java.lang.ThreadGroup#stop()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "stop",
+          methodArgs = {}
+        )
+    })
     @SuppressWarnings("deprecation")
     public void test_stop() throws OutOfMemoryError {
         // Test for method void java.lang.ThreadGroup.stop()
@@ -898,6 +1086,15 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
     /**
      * @tests java.lang.ThreadGroup#suspend()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "suspend",
+          methodArgs = {}
+        )
+    })
     @SuppressWarnings("deprecation")
     public void test_suspend() throws OutOfMemoryError {
         // Test for method void java.lang.ThreadGroup.suspend()
@@ -967,6 +1164,15 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
     /**
      * @tests java.lang.ThreadGroup#toString()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public void test_toString() {
         // Test for method java.lang.String java.lang.ThreadGroup.toString()
 
@@ -1005,6 +1211,15 @@ public class ThreadGroupTest extends junit.framework.TestCase implements Thread.
      * @tests java.lang.ThreadGroup#uncaughtException(java.lang.Thread,
      *        java.lang.Throwable)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "uncaughtException",
+          methodArgs = {java.lang.Thread.class, java.lang.Throwable.class}
+        )
+    })
     @SuppressWarnings("deprecation")
     public void test_uncaughtExceptionLjava_lang_ThreadLjava_lang_Throwable() {
         // Test for method void

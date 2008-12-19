@@ -16,6 +16,13 @@
  */
 package org.apache.harmony.text.tests.java.text;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
+import junit.framework.TestCase;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -24,12 +31,20 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.text.MessageFormat;
 
-import junit.framework.TestCase;
-
+@TestTargetClass(MessageFormat.Field.class) 
 public class MessageFormatFieldTest extends TestCase {
     /**
      * @tests java.text.MessageFormat$Field#Field(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Field",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() {
         // protected constructor
         String name = "new Message format";
@@ -43,6 +58,15 @@ public class MessageFormatFieldTest extends TestCase {
     /**
      * @tests java.text.MessageFormat$Field#readResolve()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "readResolve",
+          methodArgs = {}
+        )
+    })
     public void test_readResolve() {
         // test for method java.lang.Object readResolve()
 

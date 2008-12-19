@@ -16,19 +16,33 @@
 
 package org.apache.harmony.luni.tests.java.io;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
 import junit.framework.TestCase;
-  
+@TestTargetClass(RandomAccessFile.class)
 public class RandomAccessFileTest extends TestCase {
 
-	/**
-	 * @tests java.io.RandomAccessFile#RandomAccessFile(java.io.File, java.lang.String)
-	 */
-	public void test_ConstructorLjava_io_FileLjava_lang_String() throws IOException {
-		// Regression for HARMONY-50
+    /**
+     * @tests java.io.RandomAccessFile#RandomAccessFile(java.io.File, java.lang.String)
+     */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Checks functionality.",
+      targets = {
+        @TestTarget(
+          methodName = "RandomAccessFile",
+          methodArgs = {java.io.File.class, java.lang.String.class}
+        )
+    })
+    public void test_ConstructorLjava_io_FileLjava_lang_String() throws IOException {
+        // Regression for HARMONY-50
         File f = File.createTempFile("xxx", "yyy");
         f.deleteOnExit();
         RandomAccessFile raf = new RandomAccessFile(f, "rws");

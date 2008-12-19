@@ -18,16 +18,16 @@
 package java.net;
 
 /**
- * This class is able to obtain authentication info for a connection, usually
- * from user. First the application has to set the default authenticator which
- * extends <code>Authenticator</code> by
- * <code>setDefault(Authenticator a)</code>.
- * <p>
- * It should override <code>getPasswordAuthentication()</code> which dictates
- * how the authentication info should be obtained.
+ * An implementation of this class is able to obtain authentication information
+ * for a connection in several ways. For this purpose it has to set the default
+ * authenticator which extends {@code Authenticator} by {@code
+ * setDefault(Authenticator a)}. Then it should override {@code
+ * getPasswordAuthentication()} which dictates how the authentication info is
+ * obtained. Usually, it prompts the user for the required input.
  * 
  * @see #setDefault
  * @see #getPasswordAuthentication
+ * @since Android 1.0
  */
 public abstract class Authenticator {
 
@@ -58,14 +58,15 @@ public abstract class Authenticator {
     private RequestorType rt;
 
     /**
-     * This method is responsible for retrieving the username and password for
-     * the sender. The implementation varies. The subclass has to overwrite
-     * this.
+     * Returns the collected username and password for authorization. The
+     * subclass has to override this method to return a value different to the
+     * default which is {@code null}.
      * <p>
-     * It returns null by default.
+     * Returns {@code null} by default.
+     * </p>
      * 
-     * @return java.net.PasswordAuthentication The password authentication that
-     *         it obtains
+     * @return collected password authentication data.
+     * @since Android 1.0
      */
     protected PasswordAuthentication getPasswordAuthentication() {
         return null;
@@ -74,27 +75,30 @@ public abstract class Authenticator {
     /**
      * Returns the port of the connection that requests authorization.
      * 
-     * @return int the port of the connection
+     * @return port of the connection.
+     * @since Android 1.0
      */
     protected final int getRequestingPort() {
         return this.port;
     }
 
     /**
-     * Returns the address of the connection that requests authorization or null
-     * if unknown.
+     * Returns the address of the connection that requests authorization or
+     * {@code null} if unknown.
      * 
-     * @return InetAddress the address of the connection
+     * @return address of the connection.
+     * @since Android 1.0
      */
     protected final InetAddress getRequestingSite() {
         return this.addr;
     }
 
     /**
-     * Returns the realm (prompt string) of the connection that requires
+     * Returns the realm (prompt string) of the connection that requests
      * authorization.
      * 
-     * @return java.lang.String the prompt string of the connection
+     * @return prompt string of the connection.
+     * @since Android 1.0
      */
     protected final String getRequestingPrompt() {
         return this.prompt;
@@ -103,17 +107,19 @@ public abstract class Authenticator {
     /**
      * Returns the protocol of the connection that requests authorization.
      * 
-     * @return java.lang.String the protocol of connection
+     * @return protocol of the connection.
+     * @since Android 1.0
      */
     protected final String getRequestingProtocol() {
         return this.protocol;
     }
 
     /**
-     * Returns the scheme of the connection that requires authorization. Eg.
-     * Basic
+     * Returns the scheme of the connection that requests authorization, for
+     * example HTTP Basic Authentication.
      * 
-     * @return java.lang.String the scheme of the connection
+     * @return scheme of the connection.
+     * @since Android 1.0
      */
     protected final String getRequestingScheme() {
         return this.scheme;
@@ -124,24 +130,22 @@ public abstract class Authenticator {
      * security exception, this method invokes the methods of the registered
      * authenticator to get the authentication info.
      * 
-     * @return java.net.PasswordAuthentication the authentication info
-     * 
+     * @return password authentication info or {@code null} if no authenticator
+     *         exists.
      * @param rAddr
-     *            java.net.InetAddress the address of the connection that
-     *            requests authentication
+     *            address of the connection that requests authentication.
      * @param rPort
-     *            int the port of the connection that requests authentication
+     *            port of the connection that requests authentication.
      * @param rProtocol
-     *            java.lang.String the protocol of the connection that requests
-     *            authentication
+     *            protocol of the connection that requests authentication.
      * @param rPrompt
-     *            java.lang.String the realm of the connection that requests
-     *            authentication
+     *            realm of the connection that requests authentication.
      * @param rScheme
-     *            java.lang.String the scheme of the connection that requests
-     *            authentication
+     *            scheme of the connection that requests authentication.
      * @throws SecurityException
-     *             if requestPasswordAuthenticationPermission is denied
+     *             if a security manager denies the password authentication
+     *             permission.
+     * @since Android 1.0
      */
     public static synchronized PasswordAuthentication requestPasswordAuthentication(
             InetAddress rAddr, int rPort, String rProtocol, String rPrompt,
@@ -168,15 +172,17 @@ public abstract class Authenticator {
     }
 
     /**
-     * This method sets <code>a</code> to be the default authenticator. It
-     * will be called whenever the realm that the URL is pointing to requires
-     * authorization. If there is a security manager set then the caller must
-     * have the NetPermission "setDefaultAuthenticator".
+     * Sets {@code a} as the default authenticator. It will be called whenever
+     * the realm that the URL is pointing to requires authorization. If there is
+     * a security manager set then the caller must have the appropriate {@code
+     * NetPermission}.
      * 
      * @param a
-     *            java.net.Authenticator The authenticator to be set.
+     *            authenticator which has to be set as default.
      * @throws SecurityException
-     *             if requestPasswordAuthenticationPermission is denied
+     *             if a security manager denies the password authentication
+     *             permission.
+     * @since Android 1.0
      */
     public static void setDefault(Authenticator a) {
         SecurityManager sm = System.getSecurityManager();
@@ -191,27 +197,24 @@ public abstract class Authenticator {
      * security exception, this method invokes the methods of the registered
      * authenticator to get the authentication info.
      * 
-     * @return java.net.PasswordAuthentication the authentication info
-     * 
+     * @return password authentication info or {@code null} if no authenticator
+     *         exists.
      * @param rHost
-     *            java.lang.String the host name of the connection that requests
-     *            authentication
+     *            host name of the connection that requests authentication.
      * @param rAddr
-     *            java.net.InetAddress the address of the connection that
-     *            requests authentication
+     *            address of the connection that requests authentication.
      * @param rPort
-     *            int the port of the connection that requests authentication
+     *            port of the connection that requests authentication.
      * @param rProtocol
-     *            java.lang.String the protocol of the connection that requests
-     *            authentication
+     *            protocol of the connection that requests authentication.
      * @param rPrompt
-     *            java.lang.String the realm of the connection that requests
-     *            authentication
+     *            realm of the connection that requests authentication.
      * @param rScheme
-     *            java.lang.String the scheme of the connection that requests
-     *            authentication
+     *            scheme of the connection that requests authentication.
      * @throws SecurityException
-     *             if requestPasswordAuthenticationPermission is denied
+     *             if a security manager denies the password authentication
+     *             permission.
+     * @since Android 1.0
      */
     public static synchronized PasswordAuthentication requestPasswordAuthentication(
             String rHost, InetAddress rAddr, int rPort, String rProtocol,
@@ -239,8 +242,11 @@ public abstract class Authenticator {
     }
 
     /**
-     * Return the host name of the connection that requests authentication, or
-     * null if unknown.
+     * Returns the host name of the connection that requests authentication or
+     * {@code null} if unknown.
+     * 
+     * @return name of the requesting host or {@code null}.
+     * @since Android 1.0
      */
     protected final String getRequestingHost() {
         return host;
@@ -251,33 +257,28 @@ public abstract class Authenticator {
      * security exception, this method invokes the methods of the registered
      * authenticator to get the authentication info.
      * 
-     * @return java.net.PasswordAuthentication the authentication info
-     * 
+     * @return password authentication info or {@code null} if no authenticator
+     *         exists.
      * @param rHost
-     *            java.lang.String the host name of the connection that requests
-     *            authentication
+     *            host name of the connection that requests authentication.
      * @param rAddr
-     *            java.net.InetAddress the address of the connection that
-     *            requests authentication
+     *            address of the connection that requests authentication.
      * @param rPort
-     *            int the port of the connection that requests authentication
+     *            port of the connection that requests authentication.
      * @param rProtocol
-     *            java.lang.String the protocol of the connection that requests
-     *            authentication
+     *            protocol of the connection that requests authentication.
      * @param rPrompt
-     *            java.lang.String the realm of the connection that requests
-     *            authentication
+     *            realm of the connection that requests authentication.
      * @param rScheme
-     *            java.lang.String the scheme of the connection that requests
-     *            authentication
+     *            scheme of the connection that requests authentication.
      * @param rURL
-     *            java.net.URL the url of the connection that requests
-     *            authentication
+     *            url of the connection that requests authentication.
      * @param reqType
-     *            java.net.Authenticator.RequestorType the RequestorType of the
-     *            connection that requests authentication
+     *            requestor type of the connection that requests authentication.
      * @throws SecurityException
-     *             if requestPasswordAuthenticationPermission is denied
+     *             if a security manager denies the password authentication
+     *             permission.
+     * @since Android 1.0
      */
     public static PasswordAuthentication requestPasswordAuthentication(
             String rHost, InetAddress rAddr, int rPort, String rProtocol,
@@ -308,35 +309,39 @@ public abstract class Authenticator {
     }
 
     /**
-     * returns the URL of the authentication resulted in this request.
+     * Returns the URL of the authentication request.
      * 
-     * @return the url of request
+     * @return authentication request url.
+     * @since Android 1.0
      */
     protected URL getRequestingURL() {
         return url;
     }
 
     /**
-     * returns the type of this request, it can be proxy or server
+     * Returns the type of this request, it can be {@code PROXY} or {@code SERVER}.
      * 
-     * @return RequestorType of request
+     * @return RequestorType of the authentication request.
+     * @since Android 1.0
      */
     protected Authenticator.RequestorType getRequestorType() {
         return rt;
     }
 
     /**
-     * an enum class of requestor type
+     * Enumeration class for the origin of the authentication request.
+     * 
+     * @since Android 1.0
      */
     public enum RequestorType {
 
         /**
-         * type of proxy server
+         * Type of proxy server
          */
         PROXY,
 
         /**
-         * type of origin server
+         * Type of origin server
          */
         SERVER
     }

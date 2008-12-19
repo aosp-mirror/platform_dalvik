@@ -18,7 +18,7 @@
 package java.lang.annotation;
 
 // BEGIN android-note
-// Un-linked RetentionPolicy#RUNTIME due to droiddoc problem (it doesn't
+// Un-linked RetentionPolicy#RUNTIME due to clearjavadoc problem (it doesn't
 // yet deal with links to enums).
 // END android-note
 

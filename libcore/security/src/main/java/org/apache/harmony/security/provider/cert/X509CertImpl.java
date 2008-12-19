@@ -38,7 +38,6 @@ import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.CertificateParsingException;
 import java.security.cert.X509Certificate;
-import java.security.interfaces.RSAPublicKey;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -52,7 +51,11 @@ import org.apache.harmony.security.x509.Certificate;
 import org.apache.harmony.security.x509.Extension;
 import org.apache.harmony.security.x509.Extensions;
 import org.apache.harmony.security.x509.TBSCertificate;
+
+// BEGIN android-added
+import java.security.interfaces.RSAPublicKey;
 import org.apache.harmony.xnet.provider.jsse.OpenSSLSocketImpl;
+// END android-added
 
 /**
  * This class is an implementation of X509Certificate. It wraps
@@ -175,12 +178,16 @@ public class X509CertImpl extends X509Certificate {
         }
         long time = date.getTime();
         if (time < notBefore) {
+            // BEGIN android-changed
             throw new CertificateNotYetValidException("current time: " + date
                 + ", validation time: " + new Date(notBefore));
+            // END android-changed
         }
         if (time > notAfter) {
+            // BEGIN android-changed
             throw new CertificateExpiredException("current time: " + date
                 + ", expiration time: " + new Date(notAfter));
+            // END android-changed
         }
     }
 

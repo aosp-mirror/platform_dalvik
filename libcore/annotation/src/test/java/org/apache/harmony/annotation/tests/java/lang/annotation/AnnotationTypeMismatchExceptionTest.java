@@ -17,14 +17,20 @@
 
 package org.apache.harmony.annotation.tests.java.lang.annotation;
 
-import java.lang.annotation.AnnotationTypeMismatchException;
-import java.lang.reflect.Method;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
+
+import java.lang.annotation.AnnotationTypeMismatchException;
+import java.lang.reflect.Method;
 
 /**
  * Test case of java.lang.annotation.AnnotationTypeMismatchException
  */
+@TestTargetClass(AnnotationTypeMismatchException.class) 
 public class AnnotationTypeMismatchExceptionTest extends TestCase {
 
     /**
@@ -33,6 +39,15 @@ public class AnnotationTypeMismatchExceptionTest extends TestCase {
      * @tests java.lang.annotation.AnnotationTypeMismatchException#AnnotationTypeMismatchException(Method,
      *        String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "AnnotationTypeMismatchException",
+          methodArgs = {java.lang.reflect.Method.class, java.lang.String.class}
+        )
+    })
     @SuppressWarnings("nls")
     public void test_constructorLjava_lang_reflect_MethodLjava_lang_String() throws SecurityException, ClassNotFoundException {
         Method[] methods = Class.forName("java.lang.String").getMethods();

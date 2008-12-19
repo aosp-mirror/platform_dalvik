@@ -139,7 +139,8 @@ INLINE int dvmHashTableMemUsage(HashTable* pHashTable) {
  * Otherwise, a pointer to the found or added item is returned.  (You can
  * tell the difference by seeing if return value == item.)
  *
- * An "add" operation may cause the entire table to be reallocated.
+ * An "add" operation may cause the entire table to be reallocated.  Don't
+ * forget to lock the table before calling this.
  */
 void* dvmHashTableLookup(HashTable* pHashTable, u4 itemHash, void* item,
     HashCompareFunc cmpFunc, bool doAdd);

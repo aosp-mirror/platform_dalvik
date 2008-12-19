@@ -16,6 +16,11 @@
  */
 package org.apache.harmony.archive.tests.java.util.jar;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,6 +34,7 @@ import java.util.jar.Manifest;
 import junit.framework.TestCase;
 import tests.support.resource.Support_Resources;
 
+@TestTargetClass(Manifest.class) 
 public class ManifestTest extends TestCase {
 
     private final String jarName = "hyts_patch.jar";
@@ -61,6 +67,15 @@ public class ManifestTest extends TestCase {
     /**
      * @tests java.util.jar.Manifest#Manifest()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Manifest",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         // Test for method java.util.jar.Manifest()
         Manifest emptyManifest = new Manifest();
@@ -73,6 +88,15 @@ public class ManifestTest extends TestCase {
     /**
      * @tests java.util.jar.Manifest#Manifest(java.io.InputStream)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "Manifest",
+          methodArgs = {java.io.InputStream.class}
+        )
+    })
     public void test_ConstructorLjava_io_InputStream() {
         // Test for method java.util.jar.Manifest(java.io.InputStream)
         /*
@@ -131,6 +155,15 @@ public class ManifestTest extends TestCase {
     /**
      * @tests java.util.jar.Manifest#clear()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "clear",
+          methodArgs = {}
+        )
+    })
     public void test_clear() {
         // Test for method void java.util.jar.Manifest.clear()
         m2.clear();
@@ -142,6 +175,15 @@ public class ManifestTest extends TestCase {
     /**
      * @tests java.util.jar.Manifest#getAttributes(java.lang.String)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getAttributes",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_getAttributesLjava_lang_String() {
         // Test for method java.util.jar.Attributes
         // java.util.jar.Manifest.getAttributes(java.lang.String)
@@ -154,6 +196,15 @@ public class ManifestTest extends TestCase {
     /**
      * @tests java.util.jar.Manifest#getEntries()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getEntries",
+          methodArgs = {}
+        )
+    })
     public void test_getEntries() {
         // Test for method java.util.Map java.util.jar.Manifest.getEntries()
         Map<String, Attributes> myMap = m2.getEntries();
@@ -167,6 +218,15 @@ public class ManifestTest extends TestCase {
     /**
      * @tests java.util.jar.Manifest#getMainAttributes()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getMainAttributes",
+          methodArgs = {}
+        )
+    })
     public void test_getMainAttributes() {
         // Test for method java.util.jar.Attributes
         // java.util.jar.Manifest.getMainAttributes()
@@ -178,6 +238,15 @@ public class ManifestTest extends TestCase {
     /**
      * @tests {@link java.util.jar.Manifest#read(java.io.InputStream)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checked only. Regression test",
+      targets = {
+        @TestTarget(
+          methodName = "read",
+          methodArgs = {java.io.InputStream.class}
+        )
+    })
     public void test_readLjava_io_InputStream() {
         // Regression for HARMONY-89
         InputStream is = new InputStreamImpl();

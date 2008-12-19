@@ -14,13 +14,13 @@ HANDLE_OPCODE(OP_NEW_ARRAY /*vA, vB, class@CCCC*/)
         length = (s4) GET_REGISTER(vsrc1);
         if (length < 0) {
             dvmThrowException("Ljava/lang/NegativeArraySizeException;", NULL);
-            GOTO(exceptionThrown);
+            GOTO_exceptionThrown();
         }
         arrayClass = dvmDexGetResolvedClass(methodClassDex, ref);
         if (arrayClass == NULL) {
-            arrayClass = dvmResolveClass(method->clazz, ref, false);
+            arrayClass = dvmResolveClass(curMethod->clazz, ref, false);
             if (arrayClass == NULL)
-                GOTO(exceptionThrown);
+                GOTO_exceptionThrown();
         }
         /* verifier guarantees this is an array class */
         assert(dvmIsArrayClass(arrayClass));
@@ -28,7 +28,7 @@ HANDLE_OPCODE(OP_NEW_ARRAY /*vA, vB, class@CCCC*/)
 
         newArray = dvmAllocArrayByClass(arrayClass, length, ALLOC_DONT_TRACK);
         if (newArray == NULL)
-            GOTO(exceptionThrown);
+            GOTO_exceptionThrown();
         SET_REGISTER(vdst, (u4) newArray);
     }
     FINISH(2);

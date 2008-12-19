@@ -17,6 +17,11 @@
 
 package tests.api.java.math;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
@@ -26,7 +31,7 @@ import java.math.BigInteger;
 import java.math.MathContext;
 import java.math.RoundingMode;
 
-
+@TestTargetClass(BigDecimal.class)
 public class BigDecimalTest extends junit.framework.TestCase {
     BigInteger value = new BigInteger("12345908");
 
@@ -35,6 +40,15 @@ public class BigDecimalTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigDecimal#BigDecimal(java.math.BigInteger)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "BigDecimal",
+          methodArgs = {java.math.BigInteger.class}
+        )
+    })
     public void test_ConstructorLjava_math_BigInteger() {
         BigDecimal big = new BigDecimal(value);
         assertTrue("the BigDecimal value is not initialized properly", big
@@ -45,6 +59,15 @@ public class BigDecimalTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigDecimal#BigDecimal(java.math.BigInteger, int)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "BigDecimal",
+          methodArgs = {java.math.BigInteger.class, int.class}
+        )
+    })
     public void test_ConstructorLjava_math_BigIntegerI() {
         BigDecimal big = new BigDecimal(value2, 5);
         assertTrue("the BigDecimal value is not initialized properly", big
@@ -57,6 +80,15 @@ public class BigDecimalTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigDecimal#BigDecimal(double)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Unpredictable cases with limitation of double representation are not checked.",
+      targets = {
+        @TestTarget(
+          methodName = "BigDecimal",
+          methodArgs = {double.class}
+        )
+    })
     public void test_ConstructorD() {
         BigDecimal big = new BigDecimal(123E04);
         assertTrue(
@@ -90,6 +122,15 @@ public class BigDecimalTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigDecimal#BigDecimal(java.lang.String)
      */
+  @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "BigDecimal",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() throws NumberFormatException {
         BigDecimal big = new BigDecimal("345.23499600293850");
         assertTrue("the BigDecimal value is not initialized properly", big
@@ -110,6 +151,15 @@ public class BigDecimalTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigDecimal#BigDecimal(java.lang.String)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "BigDecimal",
+          methodArgs = {double.class}
+        )
+    })
     public void test_constructor_String_plus_exp() {
         /*
          * BigDecimal does not support a + sign in the exponent when converting
@@ -122,6 +172,15 @@ public class BigDecimalTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigDecimal#BigDecimal(java.lang.String)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exception checked.",
+      targets = {
+        @TestTarget(
+          methodName = "BigDecimal",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_constructor_String_empty() {
         try {
             new BigDecimal("");            
@@ -133,6 +192,15 @@ public class BigDecimalTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigDecimal#BigDecimal(java.lang.String)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exception checked.",
+      targets = {
+        @TestTarget(
+          methodName = "BigDecimal",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_constructor_String_plus_minus_exp() {
         try {
             new BigDecimal("+35e+-2");            
@@ -150,6 +218,15 @@ public class BigDecimalTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigDecimal#BigDecimal(char[])
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exception checked.",
+      targets = {
+        @TestTarget(
+          methodName = "BigDecimal",
+          methodArgs = {char[].class}
+        )
+    })
     public void test_constructor_CC_plus_minus_exp() {
         try {
             new BigDecimal("+35e+-2".toCharArray());          
@@ -167,6 +244,15 @@ public class BigDecimalTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigDecimal#abs()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "abs",
+          methodArgs = {}
+        )
+    })
     public void test_abs() {
         BigDecimal big = new BigDecimal("-1234");
         BigDecimal bigabs = big.abs();
@@ -181,6 +267,15 @@ public class BigDecimalTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigDecimal#add(java.math.BigDecimal)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "add",
+          methodArgs = {java.math.BigDecimal.class}
+        )
+    })
     public void test_addLjava_math_BigDecimal() {
         BigDecimal add1 = new BigDecimal("23.456");
         BigDecimal add2 = new BigDecimal("3849.235");
@@ -198,6 +293,15 @@ public class BigDecimalTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigDecimal#compareTo(java.math.BigDecimal)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "compareTo",
+          methodArgs = {java.math.BigDecimal.class}
+        )
+    })
     public void test_compareToLjava_math_BigDecimal() {
         BigDecimal comp1 = new BigDecimal("1.00");
         BigDecimal comp2 = new BigDecimal(1.000000D);
@@ -214,6 +318,15 @@ public class BigDecimalTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigDecimal#divide(java.math.BigDecimal, int)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IllegalArgumentException checking missed. Used only ROUND_UP & ROUND_DOWN round modes.",
+      targets = {
+        @TestTarget(
+          methodName = "divide",
+          methodArgs = {java.math.BigDecimal.class, int.class}
+        )
+    })
     public void test_divideLjava_math_BigDecimalI() {
         BigDecimal divd1 = new BigDecimal(value, 2);
         BigDecimal divd2 = new BigDecimal("2.335");
@@ -241,6 +354,15 @@ public class BigDecimalTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigDecimal#divide(java.math.BigDecimal, int, int)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IllegalArgumentException checking missed. Used only ROUND_UP & ROUND_DOWN round modes.",
+      targets = {
+        @TestTarget(
+          methodName = "divide",
+          methodArgs = {java.math.BigDecimal.class, int.class, int.class}
+        )
+    })
     public void test_divideLjava_math_BigDecimalII() {
         BigDecimal divd1 = new BigDecimal(value2, 4);
         BigDecimal divd2 = new BigDecimal("0.0023");
@@ -265,6 +387,15 @@ public class BigDecimalTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigDecimal#doubleValue()
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Narrowing limitations of double representation are not checked.",
+      targets = {
+        @TestTarget(
+          methodName = "doubleValue",
+          methodArgs = {}
+        )
+    })
     public void test_doubleValue() {
         BigDecimal bigDB = new BigDecimal(-1.234E-112);
 //        Commenting out this part because it causes an endless loop (see HARMONY-319 and HARMONY-329)
@@ -296,6 +427,15 @@ public class BigDecimalTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigDecimal#equals(java.lang.Object)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "equals",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_equalsLjava_lang_Object() {
         BigDecimal equal1 = new BigDecimal(1.00D);
         BigDecimal equal2 = new BigDecimal("1.0");
@@ -323,6 +463,15 @@ public class BigDecimalTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigDecimal#floatValue()
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Narrowing limitations of float representation are not checked.",
+      targets = {
+        @TestTarget(
+          methodName = "floatValue",
+          methodArgs = {}
+        )
+    })
     public void test_floatValue() {
         BigDecimal fl1 = new BigDecimal("234563782344567");
         assertTrue("the float representation of bigDecimal 234563782344567",
@@ -350,6 +499,15 @@ public class BigDecimalTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigDecimal#hashCode()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "hashCode",
+          methodArgs = {}
+        )
+    })
     public void test_hashCode() {
         // anything that is equal must have the same hashCode
         BigDecimal hash = new BigDecimal("1.00");
@@ -378,6 +536,15 @@ public class BigDecimalTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigDecimal#intValue()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "intValue",
+          methodArgs = {}
+        )
+    })
     public void test_intValue() {
         BigDecimal int1 = new BigDecimal(value, 3);
         assertTrue("the int value of 12345.908 is not 12345",
@@ -396,6 +563,15 @@ public class BigDecimalTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigDecimal#longValue()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "longValue",
+          methodArgs = {}
+        )
+    })
     public void test_longValue() {
         BigDecimal long1 = new BigDecimal(value2.negate(), 0);
         assertTrue("the long value of 12334560000 is not 12334560000", long1
@@ -414,6 +590,15 @@ public class BigDecimalTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigDecimal#max(java.math.BigDecimal)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "max",
+          methodArgs = {java.math.BigDecimal.class}
+        )
+    })
     public void test_maxLjava_math_BigDecimal() {
         BigDecimal max1 = new BigDecimal(value2, 1);
         BigDecimal max2 = new BigDecimal(value2, 4);
@@ -431,6 +616,15 @@ public class BigDecimalTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigDecimal#min(java.math.BigDecimal)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "min",
+          methodArgs = {java.math.BigDecimal.class}
+        )
+    })
     public void test_minLjava_math_BigDecimal() {
         BigDecimal min1 = new BigDecimal(-12345.4D);
         BigDecimal min2 = new BigDecimal(-12345.39D);
@@ -445,6 +639,15 @@ public class BigDecimalTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigDecimal#movePointLeft(int)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "ArithmeticException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "movePointLeft",
+          methodArgs = {int.class}
+        )
+    })
     public void test_movePointLeftI() {
         BigDecimal movePtLeft = new BigDecimal("123456265.34");
         BigDecimal alreadyMoved = movePtLeft.movePointLeft(5);
@@ -474,6 +677,15 @@ public class BigDecimalTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigDecimal#movePointRight(int)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "ArithmeticException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "movePointRight",
+          methodArgs = {int.class}
+        )
+    })
     public void test_movePointRightI() {
         BigDecimal movePtRight = new BigDecimal("-1.58796521458");
         BigDecimal alreadyMoved = movePtRight.movePointRight(8);
@@ -500,6 +712,15 @@ public class BigDecimalTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigDecimal#multiply(java.math.BigDecimal)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "multiply",
+          methodArgs = {java.math.BigDecimal.class}
+        )
+    })
     public void test_multiplyLjava_math_BigDecimal() {
         BigDecimal multi1 = new BigDecimal(value, 5);
         BigDecimal multi2 = new BigDecimal(2.345D);
@@ -535,6 +756,15 @@ public class BigDecimalTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigDecimal#negate()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "negate",
+          methodArgs = {}
+        )
+    })
     public void test_negate() {
         BigDecimal negate1 = new BigDecimal(value2, 7);
         assertTrue("the negate of 1233.4560000 is not -1233.4560000", negate1
@@ -550,6 +780,15 @@ public class BigDecimalTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigDecimal#scale()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "scale",
+          methodArgs = {}
+        )
+    })
     public void test_scale() {
         BigDecimal scale1 = new BigDecimal(value2, 8);
         assertTrue("the scale of the number 123.34560000 is wrong", scale1
@@ -573,6 +812,15 @@ public class BigDecimalTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigDecimal#setScale(int)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setScale",
+          methodArgs = {int.class}
+        )
+    })
     public void test_setScaleI() {
         // rounding mode defaults to zero
         BigDecimal setScale1 = new BigDecimal(value, 3);
@@ -592,6 +840,15 @@ public class BigDecimalTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigDecimal#setScale(int, int)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setScale",
+          methodArgs = {int.class, int.class}
+        )
+    })
     public void test_setScaleII() {
         BigDecimal setScale1 = new BigDecimal(2.323E102);
         BigDecimal setScale2 = setScale1.setScale(4);
@@ -726,6 +983,15 @@ public class BigDecimalTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigDecimal#signum()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "signum",
+          methodArgs = {}
+        )
+    })
     public void test_signum() {
         BigDecimal sign = new BigDecimal(123E-104);
         assertTrue("123E-104 is not positive in signum()", sign.signum() == 1);
@@ -739,6 +1005,15 @@ public class BigDecimalTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigDecimal#subtract(java.math.BigDecimal)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "subtract",
+          methodArgs = {java.math.BigDecimal.class}
+        )
+    })
     public void test_subtractLjava_math_BigDecimal() {
         BigDecimal sub1 = new BigDecimal("13948");
         BigDecimal sub2 = new BigDecimal("2839.489");
@@ -771,6 +1046,15 @@ public class BigDecimalTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigDecimal#toBigInteger()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toBigInteger",
+          methodArgs = {}
+        )
+    })
     public void test_toBigInteger() {
         BigDecimal sub1 = new BigDecimal("-29830.989");
         BigInteger result = sub1.toBigInteger();
@@ -794,6 +1078,15 @@ public class BigDecimalTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigDecimal#toString()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public void test_toString() {
         BigDecimal toString1 = new BigDecimal("1234.000");
         assertTrue("the toString representation of 1234.000 is wrong",
@@ -812,6 +1105,15 @@ public class BigDecimalTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigDecimal#unscaledValue()
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "unscaledValue",
+          methodArgs = {}
+        )
+    })
     public void test_unscaledValue() {
         BigDecimal unsVal = new BigDecimal("-2839485.000");
         assertTrue("the unscaledValue of -2839485.000 is wrong", unsVal
@@ -832,6 +1134,15 @@ public class BigDecimalTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigDecimal#valueOf(long)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "valueOf",
+          methodArgs = {long.class}
+        )
+    })
     public void test_valueOfJ() {
         BigDecimal valueOfL = BigDecimal.valueOf(9223372036854775806L);
         assertTrue("the bigDecimal equivalent of 9223372036854775806 is wrong",
@@ -850,6 +1161,15 @@ public class BigDecimalTest extends junit.framework.TestCase {
     /**
      * @tests java.math.BigDecimal#valueOf(long, int)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "valueOf",
+          methodArgs = {long.class, int.class}
+        )
+    })
     public void test_valueOfJI() {
         BigDecimal valueOfJI = BigDecimal.valueOf(9223372036854775806L, 5);
         assertTrue(
@@ -879,6 +1199,15 @@ public class BigDecimalTest extends junit.framework.TestCase {
 
     }
 
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Checks serialization",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationSelf",
+          methodArgs = {}
+        )
+    })
     public void test_BigDecimal_serialization() throws Exception {
         // Regression for HARMONY-1896
         char[] in = { '1', '5', '6', '7', '8', '7', '.', '0', '0' };
@@ -896,31 +1225,40 @@ public class BigDecimalTest extends junit.framework.TestCase {
         assertEquals(bd.doubleValue(), nbd.doubleValue(), 0.0);
         assertEquals(bd.toString(), nbd.toString());
     }
-	
-	/**
-	 * @tests java.math.BigDecimal#stripTrailingZero(long)
-	 */
-	public void test_stripTrailingZero() {
-		BigDecimal sixhundredtest = new BigDecimal("600.0");
-		assertTrue("stripTrailingZero failed for 600.0",
-				((sixhundredtest.stripTrailingZeros()).scale() == -2)
-				);
-		
-		/* Single digit, no trailing zero, odd number */
-		BigDecimal notrailingzerotest = new BigDecimal("1");
-		assertTrue("stripTrailingZero failed for 1",
-				((notrailingzerotest.stripTrailingZeros()).scale() == 0)
-				);
-		
-		/* Zero */
+    
+    /**
+     * @tests java.math.BigDecimal#stripTrailingZero(long)
+     */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "stripTrailingZeros",
+          methodArgs = {}
+        )
+    })
+    public void test_stripTrailingZero() {
+        BigDecimal sixhundredtest = new BigDecimal("600.0");
+        assertTrue("stripTrailingZero failed for 600.0",
+                ((sixhundredtest.stripTrailingZeros()).scale() == -2)
+                );
+        
+        /* Single digit, no trailing zero, odd number */
+        BigDecimal notrailingzerotest = new BigDecimal("1");
+        assertTrue("stripTrailingZero failed for 1",
+                ((notrailingzerotest.stripTrailingZeros()).scale() == 0)
+                );
+        
+        /* Zero */
         //regression for HARMONY-4623, NON-BUG DIFF with RI
-		BigDecimal zerotest = new BigDecimal("0.0000");
-		assertTrue("stripTrailingZero failed for 0.0000",
-				((zerotest.stripTrailingZeros()).scale() == 0)
-				);		
-	}	
+        BigDecimal zerotest = new BigDecimal("0.0000");
+        assertTrue("stripTrailingZero failed for 0.0000",
+                ((zerotest.stripTrailingZeros()).scale() == 0)
+                );        
+    }    
 
-	public void testMathContextConstruction() {
+    public void testMathContextConstruction() {
         String a = "-12380945E+61";
         BigDecimal aNumber = new BigDecimal(a);
         int precision = 6;
@@ -938,7 +1276,7 @@ public class BigDecimalTest extends junit.framework.TestCase {
                 mcStr);
         
         assertEquals("Different MathContext are reported as Equal ",
-        		mcInt.equals(mcStr),
+                mcInt.equals(mcStr),
                 false);
         
         assertEquals("Equal MathContexts have different hashcodes ",
@@ -948,6 +1286,6 @@ public class BigDecimalTest extends junit.framework.TestCase {
         assertEquals("MathContext.toString() returning incorrect value",
                 mcIntRm.toString(),
                 "precision=6 roundingMode=HALF_DOWN");
-	}
+    }
 
 }

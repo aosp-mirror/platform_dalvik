@@ -16,14 +16,32 @@
 
 package org.apache.harmony.luni.tests.java.io;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 
 import junit.framework.TestCase;
-
+@TestTargetClass(InputStreamReader.class)
 public class InputStreamReaderTest extends TestCase {
+    
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "InputStreamReader",
+          methodArgs = {java.io.InputStream.class, java.lang.String.class}
+        ), @TestTarget(
+          methodName = "getEncoding",
+          methodArgs = {}
+        ) 
+    })
     public void testGetEncoding_StreamClosed() throws IOException {
         InputStreamReader in = null;
         byte b[] = new byte[5];
@@ -33,11 +51,18 @@ public class InputStreamReaderTest extends TestCase {
         assertNull(result);
     }
 
-    /**
-     * @tests java.io.InputStreamReader#read()
-     */
-
-
+    @TestInfo(
+              level = TestLevel.COMPLETE,
+              purpose = "",
+              targets = {
+                @TestTarget(
+                  methodName = "InputStreamReader",
+                  methodArgs = {java.io.InputStream.class, java.lang.String.class}
+                ), @TestTarget(
+                        methodName = "getEncoding",
+                        methodArgs = {}
+                )
+            })
     public void testGetEncoding_NotHistorical() {
         InputStreamReader in = null;
         try {

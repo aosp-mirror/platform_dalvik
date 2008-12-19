@@ -21,6 +21,12 @@
 */
 
 package org.apache.harmony.security.tests.java.security;
+
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -33,14 +39,22 @@ import java.util.Properties;
 import org.apache.harmony.security.tests.support.TestKeyPair;
 
 import junit.framework.TestCase;
-
-
+@TestTargetClass(SignedObject.class)
 /**
  * Tests for <code>SignedObject</code> constructor and methods
  * 
  */
 public class SignedObjectTest extends TestCase {
 
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException, InvalidKeyException, SignatureException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "SignedObject",
+          methodArgs = {java.io.Serializable.class, java.security.PrivateKey.class, Signature.class}
+        )
+    })
     public void testSignedObject() {
         Signature sig = null;
         TestKeyPair tkp = null;

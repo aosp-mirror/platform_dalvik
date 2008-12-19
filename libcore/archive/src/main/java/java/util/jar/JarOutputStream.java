@@ -23,23 +23,26 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 /**
- * The JarOutputStream is used to output data in JarFile format.
+ * The {@code JarOutputStream} is used to write data in the {@code JarFile}
+ * format to an arbitrary output stream
+ * 
+ * @since Android 1.0
  */
 public class JarOutputStream extends ZipOutputStream {
 
     private Manifest manifest;
 
     /**
-     * Constructs a new JarOutputStream using os as the underlying stream.
-     * Manifest information for the JarFile to be written is obtained from the
-     * parameter Manifest, mf.
+     * Constructs a new {@code JarOutputStream} using an output stream. The
+     * content of the {@code Manifest} must match the JAR entry information
+     * written subsequently to the stream.
      * 
      * @param os
-     *            The OutputStream to write to
+     *            the {@code OutputStream} to write to
      * @param mf
-     *            The Manifest to output for this Jar.
-     * @exception IOException
-     *                If an error occurs creating the JarOutputStream
+     *            the {@code Manifest} to output for this JAR file.
+     * @throws IOException
+     *             if an error occurs creating the {@code JarOutputStream}.
      */
     public JarOutputStream(OutputStream os, Manifest mf) throws IOException {
         super(os);
@@ -54,12 +57,13 @@ public class JarOutputStream extends ZipOutputStream {
     }
 
     /**
-     * Constructs a new JarOutputStream using os as the underlying stream.
+     * Constructs a new {@code JarOutputStream} using an arbitrary output
+     * stream.
      * 
      * @param os
-     *            The OutputStream to write to
-     * @exception IOException
-     *                If an error occurs creating the JarOutputStream
+     *            the {@code OutputStream} to write to.
+     * @throws IOException
+     *             if an error occurs creating the {@code JarOutputStream}.
      */
     @SuppressWarnings("unused")
     public JarOutputStream(OutputStream os) throws IOException {
@@ -67,14 +71,15 @@ public class JarOutputStream extends ZipOutputStream {
     }
 
     /**
-     * Writes the specified entry to the underlying stream. The previous entry
-     * is closed if it is still open.
-     * 
+     * Writes the specified ZIP entry to the underlying stream. The previous
+     * entry is closed if it is still open.
      * 
      * @param ze
-     *            The ZipEntry to write
-     * @exception IOException
-     *                If an error occurs writing the entry
+     *            the {@code ZipEntry} to write to.
+     * @throws IOException
+     *             if an error occurs writing to the entry.
+     * @see ZipEntry
+     * @since Android 1.0
      */
     @Override
     public void putNextEntry(ZipEntry ze) throws IOException {

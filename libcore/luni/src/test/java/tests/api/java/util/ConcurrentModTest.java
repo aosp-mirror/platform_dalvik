@@ -17,6 +17,11 @@
 
 package tests.api.java.util;
 
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass; 
+
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -26,11 +31,21 @@ import java.util.Vector;
 
 import junit.framework.TestCase;
 
+@TestTargetClass(AbstractList.class) 
 public class ConcurrentModTest extends TestCase {
 
     /*
      * Test method for 'java.util.AbstractList.subList(int, int)'
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify IndexOutOfBoundsException.",
+      targets = {
+        @TestTarget(
+          methodName = "get",
+          methodArgs = {int.class}
+        )
+    })
     public void testGet() {
         AbstractList al = new ArrayList();
         Double one = new Double(1.0);
@@ -61,6 +76,17 @@ public class ConcurrentModTest extends TestCase {
     /*
      * Test method for 'java.util.AbstractList.subList(int, int)'
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify UnsupportedOperationException, " + 
+            "ClassCastException, IllegalArgumentException, " + 
+            "IndexOutOfBoundsException.",
+      targets = {
+        @TestTarget(
+          methodName = "set",
+          methodArgs = {int.class, Object.class}
+        )
+    })
     public void testSet() {
         AbstractList al = new ArrayList();
         Double one = new Double(1.0);
@@ -91,6 +117,18 @@ public class ConcurrentModTest extends TestCase {
     /*
      * Test method for 'java.util.AbstractList.subList(int, int)'
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify UnsupportedOperationException, " + 
+            "ClassCastException, " + 
+            "IllegalArgumentException, " + 
+            "IndexOutOfBoundsException.",
+      targets = {
+        @TestTarget(
+          methodName = "add",
+          methodArgs = {int.class, Object.class}
+        )
+    })
     public void testAdd() {
         AbstractList al = new ArrayList();
         Double one = new Double(1.0);
@@ -121,6 +159,16 @@ public class ConcurrentModTest extends TestCase {
     /*
      * Test method for 'java.util.AbstractList.subList(int, int)'
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify UnsupportedOperationException, " + 
+            "IndexOutOfBoundsException.",
+      targets = {
+        @TestTarget(
+          methodName = "remove",
+          methodArgs = {int.class}
+        )
+    })
     public void testRemove() {
         AbstractList al = new ArrayList();
         Double one = new Double(1.0);
@@ -151,6 +199,17 @@ public class ConcurrentModTest extends TestCase {
     /*
      * Test method for 'java.util.AbstractList.subList(int, int)'
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify UnsupportedOperationException, " + 
+            "ClassCastException, IllegalArgumentException, " + 
+            "IndexOutOfBoundsException, NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "addAll",
+          methodArgs = {int.class, java.util.Collection.class}
+        )
+    })
     public void testAddAll() {
         AbstractList al = new ArrayList();
         Double one = new Double(1.0);

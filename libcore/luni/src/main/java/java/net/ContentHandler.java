@@ -20,43 +20,40 @@ package java.net;
 import java.io.IOException;
 
 /**
- * This class converts the content of a certain format into a Java type Object.
- * It is implemented differently for each content type in each platform. It is
- * created by <code>ContentHandlerFactory</code>
+ * This class converts the content of a certain format (i.e. a MIME type) into a
+ * Java type object. It is created by {@code ContentHandlerFactory}. The data
+ * values should be accessed via {@code URL} or {@code URLConnection}.
  * 
  * @see ContentHandlerFactory
- * @see URL
+ * @see URL#getContent()
  * @see URLConnection#getContent()
+ * @since Android 1.0
  */
 public abstract class ContentHandler {
     /**
-     * Returns the object pointed by the specified URL Connection
-     * <code>uConn</code>.
+     * Returns the object pointed by the specified URL connection {@code uConn}.
      * 
-     * @return java.lang.Object the object referred by <code>uConn</code>
      * @param uConn
-     *            URLConnection the URL connection that points to the desired
-     *            object
+     *            URL connection that points to the desired object.
+     * @return object referred by {@code uConn}.
      * @throws IOException
-     *             thrown if an IO error occurs during the retrieval of the
-     *             object
+     *             if an IO error occurs during the retrieval of the object
+     * @since Android 1.0
      */
     public abstract Object getContent(URLConnection uConn) throws IOException;
 
     /**
-     * Returns the object pointed by the specified URL Connection
-     * <code>uConn</code>.
+     * Returns the object pointed by the specified URL connection {@code uConn}.
      * 
      * @param uConn
-     *            java.net.URLConnection the URL connection that points to the
-     *            desired object
+     *            URL connection that points to the desired object.
      * @param types
-     *            The list of acceptable content types
-     * @return Object The object of the resource pointed by this URL, or null if
-     *         the content does not match a specified content type.
-     * 
+     *            list of acceptable content types.
+     * @return resource object pointed by this URL or {@code null} if the
+     *         content doesn't match one of the specified content types.
      * @throws IOException
-     *             If an error occurred obtaining the content.
+     *             if an error occurred while obtaining the content.
+     * @since Android 1.0
      */
     // Class arg not generified in the spec.
     @SuppressWarnings("unchecked")

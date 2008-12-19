@@ -16,9 +16,14 @@
 
 package org.apache.harmony.nio.tests.java.nio;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.nio.CharBuffer;
 
-
+@TestTargetClass(java.nio.CharBuffer.class)
 public class HeapCharBufferTest extends CharBufferTest {
     protected void setUp() throws Exception {
         super.setUp();
@@ -32,7 +37,15 @@ public class HeapCharBufferTest extends CharBufferTest {
         buf = null;
         baseBuf = null;
     }
-    
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies IllegalArgumentException.",
+      targets = {
+        @TestTarget(
+          methodName = "allocate",
+          methodArgs = {int.class}
+        )
+    })
     public void testAllocatedCharBuffer_IllegalArg() {
         try {
             CharBuffer.allocate(-1);

@@ -21,13 +21,15 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 /**
- * A WritableByteChannel is a type of Channel that can write bytes.
+ * A {@code WritableByteChannel} is a type of {@link Channel} that can write
+ * bytes.
  * <p>
- * Writes are synchronous on a WritableByteChannel, that is, if a write is
- * already in progress on the channel then subsequent writes will block until
- * the first write completes. It is undefined whether non-write operations will
- * block.
+ * Write operations are synchronous on a {@code WritableByteChannel}, that is,
+ * if a write is already in progress on the channel then subsequent writes will
+ * block until the first write completes. It is undefined whether non-write
+ * operations will block.
  * 
+ * @since Android 1.0
  */
 public interface WritableByteChannel extends Channel {
 
@@ -63,6 +65,7 @@ public interface WritableByteChannel extends Channel {
      *             write.
      * @throws IOException
      *             another IO exception occurs, details are in the message.
+     * @since Android 1.0
      */
     public int write(ByteBuffer buffer) throws IOException;
 }

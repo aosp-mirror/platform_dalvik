@@ -15,53 +15,76 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package javax.net.ssl;
 
 import java.util.Enumeration;
 
 /**
- * @com.intel.drl.spec_ref
+ * A collection of {@code SSLSession}s. 
  * 
+ * @since Android 1.0
  */
 public interface SSLSessionContext {
+
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Returns an iterable of all session identifiers in this session context.
+     * 
+     * @return an iterable of all session identifiers in this session context.
+     * @since Android 1.0
      */
     public Enumeration getIds();
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Returns the session for the specified session identifier.
+     * 
+     * @param sessionId
+     *            the session identifier of the session to look up.
+     * @return the session for the specified session identifier, or {@code null}
+     *         if the specified session identifier does not refer to a session
+     *         in this context.
+     * @since Android 1.0
      */
     public SSLSession getSession(byte[] sessionId);
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Returns the size of the session cache for this session context.
+     * 
+     * @return the size of the session cache for this session context, or
+     *         {@code zero} if unlimited.
+     * @since Android 1.0
      */
     public int getSessionCacheSize();
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Returns the timeout for sessions in this session context. Sessions
+     * exceeding the timeout are invalidated.
+     * 
+     * @return the timeout in seconds, or {@code zero} if unlimited.
+     * @since Android 1.0
      */
     public int getSessionTimeout();
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Sets the size of the session cache for this session context.
+     * 
+     * @param size
+     *            the size of the session cache, or {@code zero} for unlimited
+     *            cache size.
+     * @throws IllegalArgumentException
+     *             if {@code size} is negative.
+     * @since Android 1.0
      */
     public void setSessionCacheSize(int size) throws IllegalArgumentException;
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Sets the timeout for sessions in this context. Sessions exceeding the
+     * timeout are invalidated.
+     * 
+     * @param seconds
+     *            the timeout in seconds, or {@code zero} if unlimited.
+     * @throws IllegalArgumentException
+     *             if {@code seconds} is negative.
+     * @since Android 1.0
      */
     public void setSessionTimeout(int seconds) throws IllegalArgumentException;
 

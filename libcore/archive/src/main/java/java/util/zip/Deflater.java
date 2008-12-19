@@ -18,33 +18,84 @@
 package java.util.zip;
 
 /**
- * The Deflater class is used to compress bytes using the DEFLATE compression
- * algorithm. Deflation is performed by the ZLIB compression library.
+ * This class compresses data using the <i>DEFLATE</i> algorithm (see <a
+ * href="http://www.gzip.org/algorithm.txt">specification</a>).
+ * <p>
+ * Basically this class is part of the API to the stream based ZLIB compression
+ * library and is used as such by {@code DeflaterOutputStream} and its
+ * descendants.
+ * </p>
+ * <p>
+ * The typical usage of a {@code Deflater} instance outside this package
+ * consists of a specific call to one of its constructors before being passed to
+ * an instance of {@code DeflaterOutputStream}.
+ * </p>
  * 
  * @see DeflaterOutputStream
  * @see Inflater
+ * @since Android 1.0
  */
 public class Deflater {
 
-	public static final int BEST_COMPRESSION = 9;
+    /**
+     * Upper bound for the compression level range.
+     * 
+     * @since Android 1.0
+     */
+    public static final int BEST_COMPRESSION = 9;
 
-	public static final int BEST_SPEED = 1;
+    /**
+     * Lower bound for compression level range.
+     * 
+     * @since Android 1.0
+     */
+    public static final int BEST_SPEED = 1;
+    
+    /**
+     * Usage of the default compression level.
+     * 
+     * @since Android 1.0
+     */
+    public static final int DEFAULT_COMPRESSION = -1;
+    
+    /**
+     * Default value for compression strategy.
+     * 
+     * @since Android 1.0
+     */
+    public static final int DEFAULT_STRATEGY = 0;
+    
+    /**
+     * Default value for compression method.
+     * 
+     * @since Android 1.0
+     */
+    public static final int DEFLATED = 8;
+    
+    /**
+     * Possible value for compression strategy.
+     * 
+     * @since Android 1.0
+     */
+    public static final int FILTERED = 1;
+    
+    /**
+     * Possible value for compression strategy.
+     * 
+     * @since Android 1.0
+     */
+    public static final int HUFFMAN_ONLY = 2;
+    
+    /**
+     * Possible value for compression level.
+     * 
+     * @since Android 1.0
+     */
+    public static final int NO_COMPRESSION = 0;
 
-	public static final int DEFAULT_COMPRESSION = -1;
+    private static final int Z_NO_FLUSH = 0;
 
-	public static final int DEFAULT_STRATEGY = 0;
-
-	public static final int DEFLATED = 8;
-
-	public static final int FILTERED = 1;
-
-	public static final int HUFFMAN_ONLY = 2;
-
-	public static final int NO_COMPRESSION = 0;
-
-	private static final int Z_NO_FLUSH = 0;
-
-	private static final int Z_FINISH = 4;
+    private static final int Z_FINISH = 4;
     
     // Fill in the JNI id caches
     private static native void oneTimeInitialization();
@@ -56,52 +107,59 @@ public class Deflater {
         oneTimeInitialization();
     }
 
-	private int flushParm = Z_NO_FLUSH;
+    private int flushParm = Z_NO_FLUSH;
 
-	private boolean finished;
+    private boolean finished;
 
-	private int compressLevel = DEFAULT_COMPRESSION;
+    private int compressLevel = DEFAULT_COMPRESSION;
 
-	private int strategy = DEFAULT_STRATEGY;
+    private int strategy = DEFAULT_STRATEGY;
 
-	private long streamHandle = -1;
+    private long streamHandle = -1;
 
-	private byte[] inputBuffer;
+    private byte[] inputBuffer;
 
-	private int inRead;
+    private int inRead;
     
     private int inLength;
     
     /**
-     * Constructs a new Deflater instance with default compression level and
-     * strategy.
+     * Constructs a new {@code Deflater} instance with default compression
+     * level. The strategy can be specified with {@link #setStrategy}, only. A
+     * header is added to the output by default; use constructor {@code
+     * Deflater(level, boolean)} if you need to omit the header.
+     * 
+     * @since Android 1.0
      */
     public Deflater() {
         this(DEFAULT_COMPRESSION, false);
     }
     
     /**
-     * Constructs a new Deflater instance with compression level level and
-     * default compression strategy. THe compression level provided must be
-     * between 0 and 9.
+     * Constructs a new {@code Deflater} instance with a specific compression
+     * level. The strategy can be specified with {@code setStrategy}, only. A
+     * header is added to the output by default; use
+     * {@code Deflater(level, boolean)} if you need to omit the header.
      * 
      * @param level
-     *            the compression level to use
+     *            the compression level in the range between 0 and 9.
+     * @since Android 1.0
      */
     public Deflater(int level) {
         this(level, false);
     }
 
     /**
-     * Constructs a new Deflater instance with compression level level and
-     * default compression strategy. If the noHeader parameter is specified then
-     * no ZLIB header will be written as part of the compressed output. The
-     * compression level specified must be between 0 and 9.
+     * Constructs a new {@code Deflater} instance with a specific compression
+     * level. If noHeader is passed as true no ZLib header is added to the
+     * output. In a ZIP archive every entry (compressed file) comes with such a
+     * header. The strategy can be specified with the setStrategy method, only.
      * 
      * @param level
-     *            the compression level to use
+     *            the compression level in the range between 0 and 9.
      * @param noHeader
-     *            if true do not write the ZLIB header
+     *            {@code true} indicates that no ZLIB header should be written.
+     * @since Android 1.0
      */
     public Deflater(int level, boolean noHeader) {
         super();
@@ -112,35 +170,35 @@ public class Deflater {
         streamHandle = createStream(compressLevel, strategy, noHeader);
     }
 
-	/**
-	 * Deflates data into the supplied buffer
-	 * 
-	 * @param buf
-	 *            buffer to store compressed data
-	 * 
-	 * @return number of bytes of compressed data stored
-	 * 
-	 */
-	public int deflate(byte[] buf) {
-		return deflate(buf, 0, buf.length);
-	}
+    /**
+     * Deflates the data (previously passed to {@code setInput}) into the
+     * supplied buffer.
+     * 
+     * @param buf
+     *            buffer to write compressed data to.
+     * @return number of bytes of compressed data written to {@code buf}.
+     * @see #deflate(byte[], int, int)
+     * @since Android 1.0
+     */
+    public int deflate(byte[] buf) {
+        return deflate(buf, 0, buf.length);
+    }
 
-	/**
-	 * Deflates data into the supplied buffer using the region from off to
-	 * nbytes - 1.
-	 * 
-	 * @param buf
-	 *            buffer to store compressed data
-	 * @param off
-	 *            offset inf buf to start storing data
-	 * @param nbytes
-	 *            number of bytes of compressed data to store in buf
-	 * 
-	 * @return number of bytes of compressed data stored
-	 * 
-	 */
-	public synchronized int deflate(byte[] buf, int off, int nbytes) {
-		if (streamHandle == -1) {
+    /**
+     * Deflates data (previously passed to {@code setInput}) into a specific
+     * region within the supplied buffer.
+     * 
+     * @param buf
+     *            the buffer to write compressed data to.
+     * @param off
+     *            the offset within {@code buf} at which to start writing to.
+     * @param nbytes
+     *            maximum number of bytes of compressed data to be written.
+     * @return the number of bytes of compressed data written to {@code buf}.
+     * @since Android 1.0
+     */
+    public synchronized int deflate(byte[] buf, int off, int nbytes) {
+        if (streamHandle == -1) {
             throw new IllegalStateException();
         }
         // avoid int overflow, check null buf
@@ -152,274 +210,317 @@ public class Deflater {
             }
             return deflateImpl(buf, off, nbytes, streamHandle, flushParm);
         }
-		throw new ArrayIndexOutOfBoundsException();
-	}
+        throw new ArrayIndexOutOfBoundsException();
+    }
 
-	private synchronized native int deflateImpl(byte[] buf, int off,
-			int nbytes, long handle, int flushParm1);
+    private synchronized native int deflateImpl(byte[] buf, int off,
+            int nbytes, long handle, int flushParm1);
 
-	private synchronized native void endImpl(long handle);
+    private synchronized native void endImpl(long handle);
 
-	/**
-	 * Frees all resources held onto by this Deflater. Any unused input or output
-	 * is discarded. This is also called from the finalize method.
-	 * 
-	 * @see #finalize
-	 */
-	public synchronized void end() {
-		if (streamHandle != -1) {
-			endImpl(streamHandle);
-			inputBuffer = null;
-			streamHandle = -1;
-		}
-	}
+    /**
+     * Frees all resources held onto by this deflating algorithm. Any unused
+     * input or output is discarded. While this method is used by {@code
+     * finalize()}, it can be called explicitly in order to free native
+     * resources before the next GC cycle. After {@code end()} was called other
+     * methods will typically throw an {@code IllegalStateException}.
+     * 
+     * @since Android 1.0
+     */
+    public synchronized void end() {
+        if (streamHandle != -1) {
+            endImpl(streamHandle);
+            inputBuffer = null;
+            streamHandle = -1;
+        }
+    }
 
-	@Override
+    @Override
     protected void finalize() {
-		end();
-	}
+        end();
+    }
 
-	/**
-	 * Indicates to the Deflater that all uncompressed input has been provided
-	 * to it.
-	 * 
-	 * @see #finished
-	 */
-	public synchronized void finish() {
-		flushParm = Z_FINISH;
-	}
+    /**
+     * Indicates to the {@code Deflater} that all uncompressed input has been provided
+     * to it.
+     * 
+     * @see #finished
+     * @since Android 1.0
+     */
+    public synchronized void finish() {
+        flushParm = Z_FINISH;
+    }
 
-	/**
-	 * Returns whether or not all provided data has been successfully
-	 * compressed.
-	 * 
-	 * @return true if all data has been compressed, false otherwise
-	 */
-	public synchronized boolean finished() {
-		return finished;
-	}
+    /**
+     * Returns whether or not all provided data has been successfully
+     * compressed.
+     * 
+     * @return true if all data has been compressed, false otherwise.
+     * @since Android 1.0
+     */
+    public synchronized boolean finished() {
+        return finished;
+    }
 
-	/**
-	 * Returns the Adler32 checksum of uncompressed data currently read. If a
-	 * preset dictionary is used getAdler() will return the Adler32 checksum of
-	 * the dictionary used.
-	 * 
-	 * @return The Adler32 checksum of uncompressed data or preset dictionary if
-	 *         used
-	 * 
-	 * @see #setDictionary(byte[])
-	 * @see #setDictionary(byte[], int, int)
-	 */
-	public synchronized int getAdler() {
-		if (streamHandle == -1) {
+    /**
+     * Returns the Adler32 checksum of uncompressed data currently read. If a
+     * preset dictionary is used getAdler() will return the Adler32 checksum of
+     * the dictionary used.
+     * 
+     * @return the Adler32 checksum of uncompressed data or preset dictionary if
+     *         used.
+     * @see #setDictionary(byte[])
+     * @see #setDictionary(byte[], int, int)
+     * @since Android 1.0
+     */
+    public synchronized int getAdler() {
+        if (streamHandle == -1) {
             throw new IllegalStateException();
         }
 
-		return getAdlerImpl(streamHandle);
-	}
+        return getAdlerImpl(streamHandle);
+    }
 
-	private synchronized native int getAdlerImpl(long handle);
+    private synchronized native int getAdlerImpl(long handle);
 
-	/**
-	 * Returns the total number of bytes of input consumed by the deflater.
-	 * 
-	 * @return number of bytes of input read.
-	 */
-	public synchronized int getTotalIn() {
-		if (streamHandle == -1) {
+    /**
+     * Returns the total number of bytes of input consumed by the {@code Deflater}.
+     * 
+     * @return number of bytes of input read.
+     * @since Android 1.0
+     */
+    public synchronized int getTotalIn() {
+        if (streamHandle == -1) {
             throw new IllegalStateException();
         }
 
-		return (int)getTotalInImpl(streamHandle);
-	}
+        return (int)getTotalInImpl(streamHandle);
+    }
 
-	private synchronized native long getTotalInImpl(long handle);
+    private synchronized native long getTotalInImpl(long handle);
 
-	/**
-	 * Returns the total number of compressed bytes output by this Deflater.
-	 * 
-	 * @return number of compressed bytes output.
-	 */
-	public synchronized int getTotalOut() {
-		if (streamHandle == -1) {
+    /**
+     * Returns the total number of compressed bytes output by this {@code Deflater}.
+     * 
+     * @return number of compressed bytes output.
+     * @since Android 1.0
+     */
+    public synchronized int getTotalOut() {
+        if (streamHandle == -1) {
             throw new IllegalStateException();
         }
 
-		return (int)getTotalOutImpl(streamHandle);
-	}
+        return (int)getTotalOutImpl(streamHandle);
+    }
 
-	private synchronized native long getTotalOutImpl(long handle);
+    private synchronized native long getTotalOutImpl(long handle);
 
-	/**
-	 * Indicates whether or not all bytes of uncompressed input have been
-	 * consumed by the Deflater. If needsInput() returns true setInput() must be
-	 * called before deflation can continue. If all bytes of uncompressed data
-	 * have been provided to the Deflater finish() must be called to ensure the
-	 * compressed data is output.
-	 * 
-	 * @return True if input is required for deflation to continue, false
-	 *         otherwise
-	 * @see #finished()
-	 * @see #setInput(byte[])
-	 * @see #setInput(byte[], int, int)
-	 */
-	public synchronized boolean needsInput() {
-		if (inputBuffer == null) {
+    /**
+     * Counterpart to setInput(). Indicates whether or not all bytes of
+     * uncompressed input have been consumed by the {@code Deflater}. If needsInput()
+     * returns true setInput() must be called before deflation can continue. If
+     * all bytes of uncompressed data have been provided to the {@code Deflater}
+     * finish() must be called to ensure the compressed data is output.
+     * 
+     * @return {@code true} if input is required for deflation to continue,
+     *         {@code false} otherwise.
+     * @see #finished()
+     * @see #setInput(byte[])
+     * @see #setInput(byte[], int, int)
+     * @since Android 1.0
+     */
+    public synchronized boolean needsInput() {
+        if (inputBuffer == null) {
             return true;
         }
-		return inRead == inLength;
-	}
+        return inRead == inLength;
+    }
 
-	/**
-	 * Resets the <code>Deflater</code> to accept new input without affecting
-	 * any previously made settings for the compression strategy or level. This
-	 * operation <i>must</i> be called after <code>finished()</code> returns
-	 * <code>true</code> if the <code>Deflater</code> is to be reused.
-	 * 
-	 * @see #finished
-	 */
-	public synchronized void reset() {
-		if (streamHandle == -1) {
+    /**
+     * Resets the {@code Deflater} to accept new input without affecting any
+     * previously made settings for the compression strategy or level. This
+     * operation <i>must</i> be called after {@code finished()} returns
+     * {@code true} if the {@code Deflater} is to be reused.
+     * 
+     * @see #finished
+     * @since Android 1.0
+     */
+    public synchronized void reset() {
+        if (streamHandle == -1) {
             throw new NullPointerException();
         }
 
-		flushParm = Z_NO_FLUSH;
-		finished = false;
-		resetImpl(streamHandle);
-		inputBuffer = null;
-	}
+        flushParm = Z_NO_FLUSH;
+        finished = false;
+        resetImpl(streamHandle);
+        inputBuffer = null;
+    }
 
-	private synchronized native void resetImpl(long handle);
+    private synchronized native void resetImpl(long handle);
 
-	public void setDictionary(byte[] buf) {
-		setDictionary(buf, 0, buf.length);
-	}
+    /**
+     * Sets the dictionary to be used for compression by this {@code Deflater}.
+     * setDictionary() can only be called if this {@code Deflater} supports the writing
+     * of ZLIB headers. This is the default behaviour but can be overridden
+     * using {@code Deflater(int, boolean)}.
+     * 
+     * @param buf
+     *            the buffer containing the dictionary data bytes.
+     * @see Deflater#Deflater(int, boolean)
+     * @since Android 1.0
+     */
+    public void setDictionary(byte[] buf) {
+        setDictionary(buf, 0, buf.length);
+    }
 
-	/**
-	 * Sets the dictionary to be used for compression by this Deflater.
-	 * setDictionary() can only be called if this Deflater supports the writing
-	 * of ZLIB headers. This is the default behaviour but can be overridden
-	 * using Deflater(int, boolean).
-	 * 
-	 * @see Deflater#Deflater(int, boolean)
-	 */
-	public synchronized void setDictionary(byte[] buf, int off, int nbytes) {
-		if (streamHandle == -1) {
+    /**
+     * Sets the dictionary to be used for compression by this {@code Deflater}.
+     * setDictionary() can only be called if this {@code Deflater} supports the writing
+     * of ZLIB headers. This is the default behaviour but can be overridden
+     * using {@code Deflater(int, boolean)}.
+     * 
+     * @param buf
+     *            the buffer containing the dictionary data bytes.
+     * @param off
+     *            the offset of the data.
+     * @param nbytes
+     *            the length of the data.
+     * @see Deflater#Deflater(int, boolean)
+     * @since Android 1.0
+     */
+    public synchronized void setDictionary(byte[] buf, int off, int nbytes) {
+        if (streamHandle == -1) {
             throw new IllegalStateException();
         }
-		// avoid int overflow, check null buf
-		if (off <= buf.length && nbytes >= 0 && off >= 0
-				&& buf.length - off >= nbytes) {
+        // avoid int overflow, check null buf
+        if (off <= buf.length && nbytes >= 0 && off >= 0
+                && buf.length - off >= nbytes) {
             setDictionaryImpl(buf, off, nbytes, streamHandle);
         } else {
             throw new ArrayIndexOutOfBoundsException();
         }
-	}
+    }
 
-	private synchronized native void setDictionaryImpl(byte[] buf, int off,
-			int nbytes, long handle);
+    private synchronized native void setDictionaryImpl(byte[] buf, int off,
+            int nbytes, long handle);
 
-	/**
-	 * Sets the input buffer the Deflater will use to extract uncompressed bytes
-	 * for later compression.
-	 */
-	public void setInput(byte[] buf) {
-		setInput(buf, 0, buf.length);
-	}
+    /**
+     * Sets the input buffer the {@code Deflater} will use to extract uncompressed bytes
+     * for later compression.
+     * 
+     * @param buf
+     *            the buffer.
+     * @since Android 1.0
+     */
+    public void setInput(byte[] buf) {
+        setInput(buf, 0, buf.length);
+    }
 
-	/**
-	 * Sets the input buffer the Deflater will use to extract uncompressed bytes
-	 * for later compression. Input will be taken from the buffer region
-	 * starting at off and ending at nbytes - 1.
-	 */
-	public synchronized void setInput(byte[] buf, int off, int nbytes) {
-		if (streamHandle == -1) {
+    /**
+     * Sets the input buffer the {@code Deflater} will use to extract uncompressed bytes
+     * for later compression. Input will be taken from the buffer region
+     * starting at off and ending at nbytes - 1.
+     * 
+     * @param buf
+     *            the buffer containing the input data bytes.
+     * @param off
+     *            the offset of the data.
+     * @param nbytes
+     *            the length of the data.
+     * @since Android 1.0
+     */
+    public synchronized void setInput(byte[] buf, int off, int nbytes) {
+        if (streamHandle == -1) {
             throw new IllegalStateException();
         }
-		// avoid int overflow, check null buf
-		if (off <= buf.length && nbytes >= 0 && off >= 0
-				&& buf.length - off >= nbytes) {
-			inLength = nbytes;
-			inRead = 0;
-			if (inputBuffer == null) {
+        // avoid int overflow, check null buf
+        if (off <= buf.length && nbytes >= 0 && off >= 0
+                && buf.length - off >= nbytes) {
+            inLength = nbytes;
+            inRead = 0;
+            if (inputBuffer == null) {
                 setLevelsImpl(compressLevel, strategy, streamHandle);
             }
-			inputBuffer = buf;
-			setInputImpl(buf, off, nbytes, streamHandle);
-		} else {
+            inputBuffer = buf;
+            setInputImpl(buf, off, nbytes, streamHandle);
+        } else {
             throw new ArrayIndexOutOfBoundsException();
         }
-	}
+    }
 
-	private synchronized native void setLevelsImpl(int level, int strategy,
-			long handle);
+    private synchronized native void setLevelsImpl(int level, int strategy,
+            long handle);
 
-	private synchronized native void setInputImpl(byte[] buf, int off,
-			int nbytes, long handle);
+    private synchronized native void setInputImpl(byte[] buf, int off,
+            int nbytes, long handle);
 
-	/**
-	 * Sets the compression level to be used when compressing data. The
-	 * compression level must be a value between 0 and 9. This value must be set
-	 * prior to calling setInput().
-	 * 
-	 * @param level
-	 *            compression level to use
-	 * @exception IllegalArgumentException
-	 *                If the compression level is invalid.
-	 */
-	public synchronized void setLevel(int level) {
-		if (level < DEFAULT_COMPRESSION || level > BEST_COMPRESSION) {
-            throw new IllegalArgumentException();
-        }
-		if (inputBuffer != null) {
-            throw new IllegalStateException();
-        }
-		compressLevel = level;
-	}
-
-	/**
-	 * Sets the compression strategy to be used. The strategy must be one of
-	 * FILTERED, HUFFMAN_ONLY or DEFAULT_STRATEGY.This value must be set prior
-	 * to calling setInput().
-	 * 
-	 * @param strategy
-	 *            compression strategy to use
-	 * @exception IllegalArgumentException
-	 *                If the strategy specified is not one of FILTERED,
-	 *                HUFFMAN_ONLY or DEFAULT_STRATEGY.
-	 */
-	public synchronized void setStrategy(int strategy) {
-		if (strategy < DEFAULT_STRATEGY || strategy > HUFFMAN_ONLY) {
-            throw new IllegalArgumentException();
-        }
-		if (inputBuffer != null) {
-            throw new IllegalStateException();
-        }
-		this.strategy = strategy;
-	}
-	
     /**
-	 * Returns a long int of total number of bytes read by the Deflater. This
-	 * method performs the same as getTotalIn except it returns a long value
-	 * instead of an integer
-	 * 
-	 * @return bytes exactly read by deflater
-	 */
-	public synchronized long getBytesRead() {
-		// Throw NPE here
-		if (streamHandle == -1) {
+     * Sets the compression level to be used when compressing data. The
+     * compression level must be a value between 0 and 9. This value must be set
+     * prior to calling setInput().
+     * 
+     * @param level
+     *            compression level to use
+     * @exception IllegalArgumentException
+     *                If the compression level is invalid.
+     * @since Android 1.0
+     */
+    public synchronized void setLevel(int level) {
+        if (level < DEFAULT_COMPRESSION || level > BEST_COMPRESSION) {
+            throw new IllegalArgumentException();
+        }
+        if (inputBuffer != null) {
+            throw new IllegalStateException();
+        }
+        compressLevel = level;
+    }
+
+    /**
+     * Sets the compression strategy to be used. The strategy must be one of
+     * FILTERED, HUFFMAN_ONLY or DEFAULT_STRATEGY.This value must be set prior
+     * to calling setInput().
+     * 
+     * @param strategy
+     *            compression strategy to use
+     * @exception IllegalArgumentException
+     *                If the strategy specified is not one of FILTERED,
+     *                HUFFMAN_ONLY or DEFAULT_STRATEGY.
+     * @since Android 1.0
+     */
+    public synchronized void setStrategy(int strategy) {
+        if (strategy < DEFAULT_STRATEGY || strategy > HUFFMAN_ONLY) {
+            throw new IllegalArgumentException();
+        }
+        if (inputBuffer != null) {
+            throw new IllegalStateException();
+        }
+        this.strategy = strategy;
+    }
+    
+    /**
+     * Returns a long int of total number of bytes read by the {@code Deflater}. This
+     * method performs the same as {@code getTotalIn} except it returns a long value
+     * instead of an integer
+     * 
+     * @return total number of bytes read by {@code Deflater}.
+     * @since Android 1.0
+     */
+    public synchronized long getBytesRead() {
+        // Throw NPE here
+        if (streamHandle == -1) {
             throw new NullPointerException();
         }
-		return getTotalInImpl(streamHandle);
-	}
+        return getTotalInImpl(streamHandle);
+    }
 
-	/**
-	 * Returns a long int of total number of bytes of read by the Deflater. This
-	 * method performs the same as getTotalOut except it returns a long value
-	 * instead of an integer
-	 * 
-	 * @return bytes exactly write by deflater
-	 */
+    /**
+     * Returns a long int of total number of bytes of read by the {@code Deflater}. This
+     * method performs the same as {@code getTotalOut} except it returns a long
+     * value instead of an integer
+     * 
+     * @return bytes exactly write by {@code Deflater}
+     * @since Android 1.0
+     */
     public synchronized long getBytesWritten() {
         // Throw NPE here
         if (streamHandle == -1) {
@@ -428,5 +529,5 @@ public class Deflater {
         return getTotalOutImpl(streamHandle);
     }
 
-	private native long createStream(int level, int strategy1, boolean noHeader1);
+    private native long createStream(int level, int strategy1, boolean noHeader1);
 }

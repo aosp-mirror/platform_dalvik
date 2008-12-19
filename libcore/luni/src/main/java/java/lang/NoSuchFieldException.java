@@ -17,28 +17,33 @@
 
 package java.lang;
 
-
 /**
- * This exception is thrown when a program attempts to access a field which does
- * not exist in a class
+ * Thrown when the virtual machine notices that a program tries to reference,
+ * on a class or object, a field that does not exist.
+ * 
+ * @since Android 1.0
  */
 public class NoSuchFieldException extends java.lang.Exception {
 
     private static final long serialVersionUID = -6143714805279938260L;
 
     /**
-     * Constructs a new instance of this class with its walkback filled in.
+     * Constructs a new {@code NoSuchFieldException} that includes the current
+     * stack trace.
+     * 
+     * @since Android 1.0
      */
     public NoSuchFieldException() {
         super();
     }
 
     /**
-     * Constructs a new instance of this class with its walkback and message
-     * filled in.
+     * Constructs a new {@code NoSuchFieldException} with the current stack
+     * trace and the specified detail message.
      * 
      * @param detailMessage
-     *            String The detail message for the exception.
+     *            the detail message for this exception.
+     * @since Android 1.0
      */
     public NoSuchFieldException(String detailMessage) {
         super(detailMessage);

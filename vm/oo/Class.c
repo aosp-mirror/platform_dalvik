@@ -159,7 +159,7 @@ static ClassObject* findClassNoInit(const char* descriptor, Object* loader,\
     DvmDex* pDvmDex);
 static ClassObject* loadClassFromDex(DvmDex* pDvmDex,
     const DexClassDef* pClassDef, Object* loader);
-static void loadMethodFromDex(ClassObject* clazz, const DexMethod* pDexMethod,
+static void loadMethodFromDex(ClassObject* clazz, const DexMethod* pDexMethod,\
     Method* meth);
 static int computeJniArgInfo(const DexProto* proto);
 static void loadSFieldFromDex(ClassObject* clazz,
@@ -462,14 +462,15 @@ static bool prepareCpe(ClassPathEntry* cpe, bool isBootstrap)
         return true;
     }
 
-    if (dvmJarFileOpen(cpe->fileName, &pJarFile, isBootstrap) == 0) {
+    if (dvmJarFileOpen(cpe->fileName, NULL, &pJarFile, isBootstrap) == 0) {
         cpe->kind = kCpeJar;
         cpe->ptr = pJarFile;
         return true;
     }
 
     // TODO: do we still want to support "raw" DEX files in the classpath?
-    if (dvmRawDexFileOpen(cpe->fileName, &pRawDexFile, isBootstrap) == 0) {
+    if (dvmRawDexFileOpen(cpe->fileName, NULL, &pRawDexFile, isBootstrap) == 0)
+    {
         cpe->kind = kCpeDex;
         cpe->ptr = pRawDexFile;
         return true;
@@ -789,6 +790,10 @@ typedef struct ClassMatchCriteria {
  *
  * The class hash table lock must be held when calling here, since
  * it's also used when updating a class' initiating loader list.
+ *
+ * TODO: switch to some sort of lock-free data structure so we don't have
+ * to grab the lock to do a lookup.  Among other things, this would improve
+ * the speed of compareDescriptorClasses().
  */
 bool dvmLoaderInInitiatingList(const ClassObject* clazz, const Object* loader)
 {
@@ -841,7 +846,7 @@ void dvmAddInitiatingLoader(ClassObject* clazz, Object* loader)
             LOGW("WOW: simultaneous add of initiating class loader\n");
             goto bail_unlock;
         }
-        
+
         /*
          * The list never shrinks, so we just keep a count of the
          * number of elements in it, and reallocate the buffer when
@@ -970,7 +975,7 @@ ClassObject* dvmLookupClass(const char* descriptor, Object* loader,
      * the wait-for-class code centralized.
      */
     if (found != NULL && !unprepOkay && !dvmIsClassLinked(found)) {
-        LOGD("Ignoring not-yet-ready %s, using slow path\n",
+        LOGV("Ignoring not-yet-ready %s, using slow path\n",
             ((ClassObject*)found)->descriptor);
         found = NULL;
     }
@@ -1512,7 +1517,11 @@ got_class:
     assert(gDvm.classJavaLangClass != NULL);
     assert(clazz->obj.clazz == gDvm.classJavaLangClass);
     if (clazz != gDvm.classJavaLangObject) {
-        assert(clazz->super != NULL);
+        if (clazz->super == NULL) {
+            LOGE("Non-Object has no superclass (gDvm.classJavaLangObject=%p)\n",
+                gDvm.classJavaLangObject);
+            dvmAbort();
+        }
     }
     if (!dvmIsInterfaceClass(clazz)) {
         //LOGI("class=%s vtableCount=%d, virtualMeth=%d\n",
@@ -1654,7 +1663,7 @@ static ClassObject* loadClassFromDex0(DvmDex* pDvmDex,
             loadSFieldFromDex(newClass, &field, &newClass->sfields[i]);
         }
     }
-    
+
     if (pHeader->instanceFieldsSize != 0) {
         int count = (int) pHeader->instanceFieldsSize;
         u4 lastIndex = 0;
@@ -1676,7 +1685,7 @@ static ClassObject* loadClassFromDex0(DvmDex* pDvmDex,
         int count = (int) pHeader->directMethodsSize;
         u4 lastIndex = 0;
         DexMethod method;
-        
+
         newClass->directMethodCount = count;
         newClass->directMethods = (Method*) dvmLinearAlloc(classLoader,
                 count * sizeof(Method));
@@ -1686,7 +1695,7 @@ static ClassObject* loadClassFromDex0(DvmDex* pDvmDex,
         }
         dvmLinearReadOnly(classLoader, newClass->directMethods);
     }
-    
+
     if (pHeader->virtualMethodsSize != 0) {
         int count = (int) pHeader->virtualMethodsSize;
         u4 lastIndex = 0;
@@ -1742,7 +1751,7 @@ static ClassObject* loadClassFromDex(DvmDex* pDvmDex,
         // Provide an all-zeroes header for the rest of the loading.
         memset(&header, 0, sizeof(header));
     }
-    
+
     result = loadClassFromDex0(pDvmDex, pClassDef, &header, pEncodedData,
             classLoader);
 
@@ -1750,9 +1759,9 @@ static ClassObject* loadClassFromDex(DvmDex* pDvmDex,
         LOGI("[Loaded %s from DEX %p (cl=%p)]\n",
             result->descriptor, pDvmDex, classLoader);
     }
-    
+
     return result;
-}    
+}
 
 /*
  * Free anything in a ClassObject that was allocated on the system heap.
@@ -1950,22 +1959,18 @@ static void loadMethodFromDex(ClassObject* clazz, const DexMethod* pDexMethod,
 
 /*
  * jniArgInfo (32-bit int) layout:
- *   SRRRLLLL FFFFFFFF FFFFFFFF FFFFFFFF
+ *   SRRRHHHH HHHHHHHH HHHHHHHH HHHHHHHH
  *   
  *   S - if set, do things the hard way (scan the signature)
  *   R - return-type enumeration
- *   L - number of double-words of storage required on stack (0-30 words)
- *   F - pad flag -- if set, write a pad word to the stack before copying
- *       the next 32 bits
+ *   H - target-specific hints
  *   
- * With this arrangement we can push up to 24 words of arguments without
- * having to scan the signature.  Only works for ABIs that don't require
- * special handling of floating-point args (e.g. ARM can make use of it,
- * PPC can't).
+ * This info is used at invocation time by dvmPlatformInvoke.  In most
+ * cases, the target-specific hints allow dvmPlatformInvoke to avoid
+ * having to fully parse the signature.
  *
- * The return-type bits are always set, even if we have too many args to
- * set the L/F bits.  This allows us to avoid scanning through the signature
- * for the return type on all platforms.
+ * The return-type bits are always set, even if target-specific hint bits
+ * are unavailable.
  */
 static int computeJniArgInfo(const DexProto* proto)
 {
@@ -1973,9 +1978,7 @@ static int computeJniArgInfo(const DexProto* proto)
     int returnType, padFlags, jniArgInfo;
     char sigByte;
     int stackOffset, padMask;
-
-    stackOffset = padFlags = 0;
-    padMask = 0x00000001;
+    u4 hints;
 
     /* The first shorty character is the return type. */
     switch (*(sig++)) {
@@ -1995,39 +1998,16 @@ static int computeJniArgInfo(const DexProto* proto)
         returnType = DALVIK_JNI_RETURN_S4;
         break;
     }
-    
-    while (true) {
-        sigByte = *(sig++);
-
-        if (sigByte == '\0')
-            break;
-
-        if (sigByte == 'D' || sigByte == 'J') {
-            if ((stackOffset & 1) != 0) {
-                padFlags |= padMask;
-                stackOffset++;
-                padMask <<= 1;
-            }
-            stackOffset += 2;
-            padMask <<= 2;
-        } else {
-            stackOffset++;
-            padMask <<= 1;
-        }
-    }
 
     jniArgInfo = returnType << DALVIK_JNI_RETURN_SHIFT;
 
-    if (stackOffset > DALVIK_JNI_COUNT_SHIFT) {
-        /* too big for "fast" version */
+    hints = dvmPlatformInvokeHints(proto);
+
+    if (hints & DALVIK_JNI_NO_ARG_INFO) {
         jniArgInfo |= DALVIK_JNI_NO_ARG_INFO;
     } else {
-        assert((padFlags & (0xffffffff << DALVIK_JNI_COUNT_SHIFT)) == 0);
-        stackOffset -= 2;           // r2/r3 holds first two items
-        if (stackOffset < 0)
-            stackOffset = 0;
-        jniArgInfo |= ((stackOffset+1) / 2) << DALVIK_JNI_COUNT_SHIFT;
-        jniArgInfo |= padFlags;
+        assert((hints & DALVIK_JNI_RETURN_MASK) == 0);
+        jniArgInfo |= hints;
     }
 
     return jniArgInfo;
@@ -2685,7 +2665,7 @@ static bool createVtable(ClassObject* clazz)
                  clazz->descriptor);
             goto bail;
         }
-        
+
         assert(actualCount <= maxCount);
 
         if (actualCount < maxCount) {
@@ -3574,8 +3554,8 @@ static void initSFields(ClassObject* clazz)
         return;
     }
     if (clazz->pDvmDex == NULL) {
-        /* generated class; shouldn't have static fields */
-        LOGW("Not initializing static fields in %s\n", clazz->descriptor);
+        /* generated class; any static fields should already be set up */
+        LOGV("Not initializing static fields in %s\n", clazz->descriptor);
         return;
     }
     pDexFile = clazz->pDvmDex->pDexFile;
@@ -3589,7 +3569,7 @@ static void initSFields(ClassObject* clazz)
     }
 
     dvmEncodedArrayIteratorInitialize(&iterator, pValueList, clazz);
-    
+
     /*
      * Iterate over the initial values array, setting the corresponding
      * static field for each array element.
@@ -3672,11 +3652,225 @@ static void initSFields(ClassObject* clazz)
              * above the switch about verfication.
              */
             LOGE("Bogus static initialization: value type %d in field type "
-                    "%s for %s at index %d", value.type, descriptor,
-                    clazz->descriptor, i);
+                    "%s for %s at index %d",
+                value.type, descriptor, clazz->descriptor, i);
             dvmAbort();
         }
     }
+}
+
+
+/*
+ * Determine whether "descriptor" yields the same class object in the
+ * context of clazz1 and clazz2.
+ *
+ * The caller must hold gDvm.loadedClasses.
+ *
+ * Returns "true" if they match.
+ */
+static bool compareDescriptorClasses(const char* descriptor,
+    const ClassObject* clazz1, const ClassObject* clazz2)
+{
+    ClassObject* result1;
+    ClassObject* result2;
+
+    /*
+     * Do the first lookup by name.
+     */
+    result1 = dvmFindClassNoInit(descriptor, clazz1->classLoader);
+
+    /*
+     * We can skip a second lookup by name if the second class loader is
+     * in the initiating loader list of the class object we retrieved.
+     * (This means that somebody already did a lookup of this class through
+     * the second loader, and it resolved to the same class.)  If it's not
+     * there, we may simply not have had an opportunity to add it yet, so
+     * we do the full lookup.
+     *
+     * The initiating loader test should catch the majority of cases
+     * (in particular, the zillions of references to String/Object).
+     *
+     * Unfortunately we're still stuck grabbing a mutex to do the lookup.
+     *
+     * For this to work, the superclass/interface should be the first
+     * argument, so that way if it's from the bootstrap loader this test
+     * will work.  (The bootstrap loader, by definition, never shows up
+     * as the initiating loader of a class defined by some other loader.)
+     */
+    dvmHashTableLock(gDvm.loadedClasses);
+    bool isInit = dvmLoaderInInitiatingList(result1, clazz2->classLoader);
+    dvmHashTableUnlock(gDvm.loadedClasses);
+
+    if (isInit) {
+        //printf("%s(obj=%p) / %s(cl=%p): initiating\n",
+        //    result1->descriptor, result1,
+        //    clazz2->descriptor, clazz2->classLoader);
+        return true;
+    } else {
+        //printf("%s(obj=%p) / %s(cl=%p): RAW\n",
+        //    result1->descriptor, result1,
+        //    clazz2->descriptor, clazz2->classLoader);
+        result2 = dvmFindClassNoInit(descriptor, clazz2->classLoader);
+    }
+
+    if (result1 == NULL || result2 == NULL) {
+        dvmClearException(dvmThreadSelf());
+        if (result1 == result2) {
+            /*
+             * Neither class loader could find this class.  Apparently it
+             * doesn't exist.
+             *
+             * We can either throw some sort of exception now, or just
+             * assume that it'll fail later when something actually tries
+             * to use the class.  For strict handling we should throw now,
+             * because a "tricky" class loader could start returning
+             * something later, and a pair of "tricky" loaders could set
+             * us up for confusion.
+             *
+             * I'm not sure if we're allowed to complain about nonexistent
+             * classes in method signatures during class init, so for now
+             * this will just return "true" and let nature take its course.
+             */
+            return true;
+        } else {
+            /* only one was found, so clearly they're not the same */
+            return false;
+        }
+    }
+
+    return result1 == result2;
+}
+
+/*
+ * For every component in the method descriptor, resolve the class in the
+ * context of the two classes and compare the results.
+ *
+ * For best results, the "superclass" class should be first.
+ *
+ * Returns "true" if the classes match, "false" otherwise.
+ */
+static bool checkMethodDescriptorClasses(const Method* meth,
+    const ClassObject* clazz1, const ClassObject* clazz2)
+{
+    DexParameterIterator iterator;
+    const char* descriptor;
+
+    /* walk through the list of parameters */
+    dexParameterIteratorInit(&iterator, &meth->prototype);
+    while (true) {
+        descriptor = dexParameterIteratorNextDescriptor(&iterator);
+
+        if (descriptor == NULL)
+            break;
+
+        if (descriptor[0] == 'L' || descriptor[0] == '[') {
+            /* non-primitive type */
+            if (!compareDescriptorClasses(descriptor, clazz1, clazz2))
+                return false;
+        }
+    }
+
+    /* check the return type */
+    descriptor = dexProtoGetReturnType(&meth->prototype);
+    if (descriptor[0] == 'L' || descriptor[0] == '[') {
+        if (!compareDescriptorClasses(descriptor, clazz1, clazz2))
+            return false;
+    }
+    return true;
+}
+
+/*
+ * Validate the descriptors in the superclass and interfaces.
+ *
+ * What we need to do is ensure that the classes named in the method
+ * descriptors in our ancestors and ourselves resolve to the same class
+ * objects.  The only time this matters is when the classes come from
+ * different class loaders, and the resolver might come up with a
+ * different answer for the same class name depending on context.
+ *
+ * We don't need to check to see if an interface's methods match with
+ * its superinterface's methods, because you can't instantiate an
+ * interface and do something inappropriate with it.  If interface I1
+ * extends I2 and is implemented by C, and I1 and I2 are in separate
+ * class loaders and have conflicting views of other classes, we will
+ * catch the conflict when we process C.  Anything that implements I1 is
+ * doomed to failure, but we don't need to catch that while processing I1.
+ *
+ * On failure, throws an exception and returns "false".
+ */
+static bool validateSuperDescriptors(const ClassObject* clazz)
+{
+    int i;
+
+    if (dvmIsInterfaceClass(clazz))
+        return true;
+
+    /*
+     * Start with the superclass-declared methods.
+     */
+    if (clazz->super != NULL &&
+        clazz->classLoader != clazz->super->classLoader)
+    {
+        /*
+         * Walk through every method declared in the superclass, and
+         * compare resolved descriptor components.  We pull the Method
+         * structs out of the vtable.  It doesn't matter whether we get
+         * the struct from the parent or child, since we just need the
+         * UTF-8 descriptor, which must match.
+         *
+         * We need to do this even for the stuff inherited from Object,
+         * because it's possible that the new class loader has redefined
+         * a basic class like String.
+         */
+        const Method* meth;
+
+        //printf("Checking %s %p vs %s %p\n",
+        //    clazz->descriptor, clazz->classLoader,
+        //    clazz->super->descriptor, clazz->super->classLoader);
+        for (i = clazz->super->vtableCount - 1; i >= 0; i--) {
+            meth = clazz->vtable[i];
+            if (!checkMethodDescriptorClasses(meth, clazz->super, clazz)) {
+                LOGW("Method mismatch: %s in %s (cl=%p) and super %s (cl=%p)\n",
+                    meth->name, clazz->descriptor, clazz->classLoader,
+                    clazz->super->descriptor, clazz->super->classLoader);
+                dvmThrowException("Ljava/lang/LinkageError;",
+                    "Classes resolve differently in superclass");
+                return false;
+            }
+        }
+    }
+
+    /*
+     * Check all interfaces we implement.
+     */
+    for (i = 0; i < clazz->iftableCount; i++) {
+        const InterfaceEntry* iftable = &clazz->iftable[i];
+
+        if (clazz->classLoader != iftable->clazz->classLoader) {
+            const ClassObject* iface = iftable->clazz;
+            int j;
+
+            for (j = 0; j < iface->virtualMethodCount; j++) {
+                const Method* meth;
+                int vtableIndex;
+
+                vtableIndex = iftable->methodIndexArray[j];
+                meth = clazz->vtable[vtableIndex];
+
+                if (!checkMethodDescriptorClasses(meth, iface, clazz)) {
+                    LOGW("Method mismatch: %s in %s (cl=%p) and "
+                            "iface %s (cl=%p)\n",
+                        meth->name, clazz->descriptor, clazz->classLoader,
+                        iface->descriptor, iface->classLoader);
+                    dvmThrowException("Ljava/lang/LinkageError;",
+                        "Classes resolve differently in interface");
+                    return false;
+                }
+            }
+        }
+    }
+
+    return true;
 }
 
 /*
@@ -3891,6 +4085,27 @@ noverify:
     }
 
     /*
+     * We're ready to go, and have exclusive access to the class.
+     *
+     * Before we start initialization, we need to do one extra bit of
+     * validation: make sure that the methods declared here match up
+     * with our superclass and interfaces.  We know that the UTF-8
+     * descriptors match, but classes from different class loaders can
+     * have the same name.
+     *
+     * We do this now, rather than at load/link time, for the same reason
+     * that we defer verification.
+     *
+     * It's unfortunate that we need to do this at all, but we risk
+     * mixing reference types with identical names (see Dalvik test 068).
+     */
+    if (!validateSuperDescriptors(clazz)) {
+        assert(dvmCheckException(self));
+        clazz->status = CLASS_ERROR;
+        goto bail_unlock;
+    }
+
+    /*
      * Let's initialize this thing.
      *
      * We unlock the object so that other threads can politely sleep on
@@ -3915,7 +4130,7 @@ noverify:
         if (!dvmInitClass(clazz->super)) {
             assert(dvmCheckException(self));
             clazz->status = CLASS_ERROR;
-            /* wake up anybody waiting */
+            /* wake up anybody who started waiting while we were unlocked */
             dvmLockObject(self, (Object*) clazz);
             goto bail_notify;
         }
@@ -4314,6 +4529,24 @@ int dvmCompareMethodNamesAndProtos(const Method* method1,
     }
 
     return dvmCompareMethodProtos(method1, method2);
+}
+
+/*
+ * Compare the two method names and prototypes, a la strcmp(), ignoring
+ * the return value. The name is considered the "major" order and the
+ * prototype the "minor" order. The prototypes are compared as if by
+ * dvmCompareMethodArgProtos().
+ */
+int dvmCompareMethodNamesAndParameterProtos(const Method* method1,
+        const Method* method2)
+{
+    int result = strcmp(method1->name, method2->name);
+
+    if (result != 0) {
+        return result;
+    }
+
+    return dvmCompareMethodParameterProtos(method1, method2);
 }
 
 /*

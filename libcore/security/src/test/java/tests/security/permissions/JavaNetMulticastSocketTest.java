@@ -16,16 +16,22 @@
 
 package tests.security.permissions;
 
-import java.io.IOException;
-import java.net.MulticastSocket;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
+
+import java.io.IOException;
+import java.net.MulticastSocket;
 
 /*
  * This class tests the secrity permissions which are documented in
  * http://java.sun.com/j2se/1.5.0/docs/guide/security/permissions.html#PermsAndMethods
  * for class java.net.MulticastSocket
  */
+@TestTargetClass(SecurityManager.class)
 public class JavaNetMulticastSocketTest extends TestCase {
     
     SecurityManager old;
@@ -41,7 +47,16 @@ public class JavaNetMulticastSocketTest extends TestCase {
         System.setSecurityManager(old);
         super.tearDown();
     }
-    
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies that java.net.MulticastSocket(int) consructor calls " +
+            "checkListen of security permissions.",
+      targets = {
+        @TestTarget(
+          methodName = "checkListen",
+          methodArgs = {int.class}
+        )
+    })
     public void test_ctor() throws IOException {
         class TestSecurityManager extends SecurityManager {
             boolean called = false;

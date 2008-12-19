@@ -17,64 +17,88 @@
 
 package tests.api.java.io;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass; 
+
 import java.io.IOException;
 import java.io.PipedReader;
 import java.io.PipedWriter;
 
+@TestTargetClass(PipedWriter.class) 
 public class PipedWriterTest extends junit.framework.TestCase {
 
-	static class PReader implements Runnable {
-		public PipedReader pr;
+    static class PReader implements Runnable {
+        public PipedReader pr;
 
-		public char[] buf = new char[10];
+        public char[] buf = new char[10];
 
-		public PReader(PipedWriter pw) {
-			try {
-				pr = new PipedReader(pw);
-			} catch (IOException e) {
-				System.out.println("Exception setting up reader: "
-						+ e.toString());
-			}
-		}
+        public PReader(PipedWriter pw) {
+            try {
+                pr = new PipedReader(pw);
+            } catch (IOException e) {
+                System.out.println("Exception setting up reader: "
+                        + e.toString());
+            }
+        }
 
-		public PReader(PipedReader pr) {
-			this.pr = pr;
-		}
+        public PReader(PipedReader pr) {
+            this.pr = pr;
+        }
 
-		public void run() {
-			try {
-				int r = 0;
-				for (int i = 0; i < buf.length; i++) {
-					r = pr.read();
-					if (r == -1)
-						break;
-					buf[i] = (char) r;
-				}
-			} catch (Exception e) {
-				System.out.println("Exception reading ("
-						+ Thread.currentThread().getName() + "): "
-						+ e.toString());
-			}
-		}
-	}
+        public void run() {
+            try {
+                int r = 0;
+                for (int i = 0; i < buf.length; i++) {
+                    r = pr.read();
+                    if (r == -1)
+                        break;
+                    buf[i] = (char) r;
+                }
+            } catch (Exception e) {
+                System.out.println("Exception reading ("
+                        + Thread.currentThread().getName() + "): "
+                        + e.toString());
+            }
+        }
+    }
 
-	Thread rdrThread;
+    Thread rdrThread;
 
-	PReader reader;
+    PReader reader;
 
-	PipedWriter pw;
+    PipedWriter pw;
 
-	/**
-	 * @tests java.io.PipedWriter#PipedWriter()
-	 */
-	public void test_Constructor() {
-		// Test for method java.io.PipedWriter()
-		// Used in tests
-	}
+    /**
+     * @tests java.io.PipedWriter#PipedWriter()
+     */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Test is empty",
+      targets = {
+        @TestTarget(
+          methodName = "PipedWriter",
+          methodArgs = {}
+        )
+    })
+    public void test_Constructor() {
+        // Test for method java.io.PipedWriter()
+        // Used in tests
+    }
 
-	/**
+    /**
      * @tests java.io.PipedWriter#PipedWriter(java.io.PipedReader)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "PipedWriter",
+          methodArgs = {java.io.PipedReader.class}
+        )
+    })
     public void test_ConstructorLjava_io_PipedReader() throws Exception {
         // Test for method java.io.PipedWriter(java.io.PipedReader)
         char[] buf = new char[10];
@@ -93,6 +117,15 @@ public class PipedWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PipedWriter#close()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "close",
+          methodArgs = {}
+        )
+    })
     public void test_close() throws Exception {
         // Test for method void java.io.PipedWriter.close()
         char[] buf = new char[10];
@@ -112,6 +145,15 @@ public class PipedWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PipedWriter#connect(java.io.PipedReader)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "connect",
+          methodArgs = {java.io.PipedReader.class}
+        )
+    })
     public void test_connectLjava_io_PipedReader() throws Exception {
         // Test for method void java.io.PipedWriter.connect(java.io.PipedReader)
         char[] buf = new char[10];
@@ -131,6 +173,15 @@ public class PipedWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PipedWriter#flush()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "flush",
+          methodArgs = {}
+        )
+    })
     public void test_flush() throws Exception {
         // Test for method void java.io.PipedWriter.flush()
         char[] buf = new char[10];
@@ -148,6 +199,15 @@ public class PipedWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PipedWriter#write(char[], int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "write",
+          methodArgs = {char[].class, int.class, int.class}
+        )
+    })
     public void test_write$CII() throws Exception {
         // Test for method void java.io.PipedWriter.write(char [], int, int)
         char[] buf = new char[10];
@@ -166,6 +226,15 @@ public class PipedWriterTest extends junit.framework.TestCase {
      * @tests java.io.PipedWriter#write(char[], int, int) Regression for
      *        HARMONY-387
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "write",
+          methodArgs = {char[].class, int.class, int.class}
+        )
+    })
     public void test_write$CII_2() throws IOException {
         PipedReader pr = new PipedReader();
         PipedWriter obj = null;
@@ -183,6 +252,15 @@ public class PipedWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PipedWriter#write(char[], int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "write",
+          methodArgs = {char[].class, int.class, int.class}
+        )
+    })
     public void test_write$CII_3() throws IOException {
         PipedReader pr = new PipedReader();
         PipedWriter obj = null;
@@ -198,6 +276,15 @@ public class PipedWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PipedWriter#write(char[], int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "write",
+          methodArgs = {char[].class, int.class, int.class}
+        )
+    })
     public void test_write$CII_4() throws IOException {
         PipedReader pr = new PipedReader();
         PipedWriter obj = null;
@@ -213,6 +300,15 @@ public class PipedWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PipedWriter#write(char[], int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "write",
+          methodArgs = {char[].class, int.class, int.class}
+        )
+    })
     public void test_write$CII_5() throws IOException {
         PipedReader pr = new PipedReader();
         PipedWriter obj = null;
@@ -228,6 +324,15 @@ public class PipedWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PipedWriter#write(char[], int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "write",
+          methodArgs = {char[].class, int.class, int.class}
+        )
+    })
     public void test_write$CII_6() throws IOException {
         PipedReader pr = new PipedReader();
         PipedWriter obj = null;
@@ -243,6 +348,15 @@ public class PipedWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PipedWriter#write(char[], int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "write",
+          methodArgs = {char[].class, int.class, int.class}
+        )
+    })
     public void test_write$CII_notConnected() throws IOException {
         // Regression test for Harmony-2404
         // create not connected pipe
@@ -292,6 +406,15 @@ public class PipedWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PipedWriter#write(int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "write",
+          methodArgs = {int.class}
+        )
+    })
     public void test_write_I_MultiThread() throws IOException {
         final PipedReader pr = new PipedReader();
         final PipedWriter pw = new PipedWriter();
@@ -351,6 +474,15 @@ public class PipedWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PipedWriter#write(char[],int,int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "write",
+          methodArgs = {char[].class, int.class, int.class}
+        )
+    })
     public void test_write_$CII_MultiThread() throws Exception {
         final PipedReader pr = new PipedReader();
         final PipedWriter pw = new PipedWriter();
@@ -415,6 +547,15 @@ public class PipedWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PipedWriter#write(int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IOException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "write",
+          methodArgs = {int.class}
+        )
+    })
     public void test_writeI() throws Exception {
         // Test for method void java.io.PipedWriter.write(int)
 

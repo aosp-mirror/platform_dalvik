@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vladimir N. Molotkov
-* @version $Revision$
-*/
-
 package java.security.spec;
 
 import java.math.BigInteger;
@@ -28,8 +23,9 @@ import java.util.Arrays;
 import org.apache.harmony.security.internal.nls.Messages;
 
 /**
- * @com.intel.drl.spec_ref
+ * An Elliptic Curve with its necessary values.
  * 
+ * @since Android 1.0
  */
 public class EllipticCurve {
 
@@ -50,7 +46,20 @@ public class EllipticCurve {
     private volatile int hash;
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code EllipticCurve} with the specified field,
+     * coefficients and seed.
+     * 
+     * @param field
+     *            the finite field of this elliptic curve.
+     * @param a
+     *            the coefficient {@code a}.
+     * @param b
+     *            the coefficient {@code b}.
+     * @param seed
+     *            the seed used for the generation of the curve.
+     * @throws IllegalArgumentException
+     *             if the specified coefficients are not in the specified field.
+     * @since Android 1.0
      */
     public EllipticCurve(ECField field, BigInteger a, BigInteger b, byte[] seed) {
         this.field = field;
@@ -95,35 +104,59 @@ public class EllipticCurve {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code EllipticCurve} with the specified field and
+     * coefficients.
+     * 
+     * @param field
+     *            the finite field of this elliptic curve.
+     * @param a
+     *            the coefficient {@code a}.
+     * @param b
+     *            the coefficient {@code b}.
+     * @throws IllegalArgumentException
+     *             if the specified coefficients are not in the specified field.
+     * @since Android 1.0
      */
     public EllipticCurve(ECField field, BigInteger a, BigInteger b) {
         this(field, a, b, null);
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the coefficient {@code a} of this elliptic curve.
+     * 
+     * @return the coefficient {@code a} of this elliptic curve.
+     * @since Android 1.0
      */
     public BigInteger getA() {
         return a;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the coefficient {@code b} of this elliptic curve.
+     * 
+     * @return the coefficient {@code b} of this elliptic curve.
+     * @since Android 1.0
      */
     public BigInteger getB() {
         return b;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the finite field of this elliptic curve.
+     * 
+     * @return the finite field of this elliptic curve.
+     * @since Android 1.0
      */
     public ECField getField() {
         return field;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns a copy of the seed that was used to generate this elliptic curve.
+     * 
+     * @return a copy of the seed that was used to generate this elliptic curve,
+     *         or {@code null} if none specified.
+     * @since Android 1.0
      */
     public byte[] getSeed() {
         if (seed == null) {
@@ -137,7 +170,13 @@ public class EllipticCurve {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns whether the specified object equals to this elliptic curve.
+     * 
+     * @param other
+     *            the object to compare.
+     * @return {@code true} if the specified object is equal to this elliptic
+     *         curve, otherwise {@code false}.
+     * @since Android 1.0
      */
     public boolean equals(Object other) {
         if (this == other) {
@@ -153,7 +192,10 @@ public class EllipticCurve {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the hashcode of this elliptic curve.
+     * 
+     * @return the hashcode of this elliptic curve.
+     * @since Android 1.0
      */
     public int hashCode() {
         // hash init is delayed

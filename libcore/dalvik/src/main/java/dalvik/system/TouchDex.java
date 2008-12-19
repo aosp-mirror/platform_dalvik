@@ -23,24 +23,30 @@ import java.io.File;
 import java.io.FilenameFilter;
 
 /**
- * Induce optimization/verification of a set of DEX files.
+ * Induces optimization/verification of a set of DEX files.
  *
  * TODO: This class is public, so SystemServer can access it.  This is NOT
  * the correct long-term solution; once we have a real installer and/or
  * dalvik-cache manager, this class should be removed.
+ * 
+ * @cts See to-do about removing this class...
+ * 
+ * @since Android 1.0
  */
 public class TouchDex {
 
     /**
-     * Fork a process, make sure the DEX files are prepped, and return
+     * Forks a process, makes sure the DEX files are prepared, and returns
      * when everything is finished.
-     *
+     * <p>
      * The filenames must be the same as will be used when the files are
      * actually opened, because the dalvik-cache filename is based upon
-     * this filename.  (The absolute path to the jar/apk should work.)
+     * this filename.  (The absolute path to the JAR/ZIP/APK should work.)
      *
-     * @param dexFiles Colon-separated list of DEX files.
+     * @param dexFiles a colon-separated list of DEX files.
      * @return zero on success
+     * 
+     * @cts What about error cases?
      */
     public static int start(String dexFiles) {
         return trampoline(dexFiles, System.getProperty("java.boot.class.path"));
@@ -55,9 +61,9 @@ public class TouchDex {
     native private static int trampoline(String dexFiles, String bcp);
 
     /**
-     * We continue here in the child process. args[0] can be a colon-separated
+     * The entry point for the child process. args[0] can be a colon-separated
      * path list, or "-" to read from stdin.
-     *
+     * <p>
      * Alternatively, if we're invoked directly from the command line we
      * just start here (skipping the fork/exec stuff).
      *

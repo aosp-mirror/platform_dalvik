@@ -18,11 +18,23 @@
 package java.io;
 
 /**
- * Writer is an Abstract class for writing Character Streams. Subclasses of
- * writer must implement the methods <code>write(char[], int, int)</code>,
- * <code>close()</code> and <code>flush()</code>.
+ * The base class for all writers. A writer is a means of writing data to a
+ * target in a character-wise manner. Most output streams expect the
+ * {@link #flush()} method to be called before closing the stream, to ensure all
+ * data is actually written out.
+ * <p>
+ * This abstract class does not provide a fully working implementation, so it
+ * needs to be subclassed, and at least the {@link #write(char[], int, int)},
+ * {@link #close()} and {@link #flush()} methods needs to be overridden.
+ * Overriding some of the non-abstract methods is also often advised, since it
+ * might result in higher efficiency.
+ * <p>
+ * Many specialized readers for purposes like reading from a file already exist
+ * in this package.
  * 
  * @see Reader
+ * 
+ * @since Android 1.0
  */
 public abstract class Writer implements Appendable, Closeable, Flushable {
 
@@ -30,12 +42,16 @@ public abstract class Writer implements Appendable, Closeable, Flushable {
 
     /**
      * The object used to synchronize access to the writer.
+     * 
+     * @since Android 1.0
      */
     protected Object lock;
 
     /**
-     * Constructs a new character stream Writer using <code>this</code> as the
-     * Object to synchronize critical regions around.
+     * Constructs a new {@code Writer} with {@code this} as the object used to
+     * synchronize critical sections.
+     * 
+     * @since Android 1.0
      */
     protected Writer() {
         super();
@@ -43,11 +59,14 @@ public abstract class Writer implements Appendable, Closeable, Flushable {
     }
 
     /**
-     * Constructs a new character stream Writer using <code>lock</code> as the
-     * Object to synchronize critical regions around.
+     * Constructs a new {@code Writer} with {@code lock} used to synchronize
+     * critical sections.
      * 
      * @param lock
-     *            the Object to synchronize critical regions around.
+     *            the {@code Object} used to synchronize critical sections.
+     * @throws NullPointerException
+     *             if {@code lock} is {@code null}.
+     * @since Android 1.0
      */
     protected Writer(Object lock) {
         if (lock == null) {
@@ -57,63 +76,73 @@ public abstract class Writer implements Appendable, Closeable, Flushable {
     }
 
     /**
-     * Close this Writer. This must be implemented by any concrete subclasses.
-     * The implementation should free any resources associated with the Writer.
+     * Closes this writer. Implementations of this method should free any
+     * resources associated with the writer.
      * 
      * @throws IOException
-     *             If an error occurs attempting to close this Writer.
+     *             if an error occurs while closing this writer.
+     * @since Android 1.0
      */
     public abstract void close() throws IOException;
 
     /**
-     * Flush this Writer. This must be implemented by any concrete subclasses.
-     * The implementation should ensure all buffered characters are written out.
+     * Flushes this writer. Implementations of this method should ensure that
+     * all buffered characters are written to the target.
      * 
      * @throws IOException
-     *             If an error occurs attempting to flush this Writer.
+     *             if an error occurs while flushing this writer.
+     * @since Android 1.0
      */
     public abstract void flush() throws IOException;
 
     /**
-     * Writes the entire character buffer <code>buf</code> to this Writer.
+     * Writes the entire character buffer {@code buf} to the target.
      * 
      * @param buf
      *            the non-null array containing characters to write.
-     * 
      * @throws IOException
-     *             If this Writer has already been closed or some other
-     *             IOException occurs.
+     *             if this writer is closed or another I/O error occurs.
+     * @since Android 1.0
      */
-    public void write(char buf[]) throws IOException {
+    public void write(char[] buf) throws IOException {
+        // BEGIN android-note
+        // changed array notation to be consistent with the rest of harmony
+        // END android-note
         write(buf, 0, buf.length);
     }
 
     /**
-     * Writes <code>count</code> characters starting at <code>offset<code> in
-     * <code>buf</code> to this Writer.  This abstract method must be implemented
-     * by concrete subclasses.
-     *
-     * @param buf the non-null array containing characters to write.
-     * @param offset offset in buf to retrieve characters
-     * @param count maximum number of characters to write
-     *
-     * @throws IOException If this Writer has already been closed or some other IOException occurs.
-     * @throws ArrayIndexOutOfBoundsException If offset or count are outside of bounds.
+     * Writes {@code count} characters starting at {@code offset} in {@code buf}
+     * to the target.
+     * 
+     * @param buf
+     *            the non-null character array to write.
+     * @param offset
+     *            the index of the first character in {@code buf} to write.
+     * @param count
+     *            the maximum number of characters to write.
+     * @throws IndexOutOfBoundsException
+     *             if {@code offset < 0} or {@code count < 0}, or if {@code
+     *             offset + count} is greater than the size of {@code buf}.
+     * @throws IOException
+     *             if this writer is closed or another I/O error occurs.
+     * @since Android 1.0
      */
-    public abstract void write(char buf[], int offset, int count)
+    public abstract void write(char[] buf, int offset, int count)
             throws IOException;
+    // BEGIN android-note
+    // changed array notation to be consistent with the rest of harmony
+    // END android-note
 
     /**
-     * Writes the specified character <code>oneChar</code> to this Writer.
-     * This implementation writes the low order two bytes of
-     * <code>oneChar</code> to the Stream.
+     * Writes one character to the target. Only the two least significant bytes
+     * of the integer {@code oneChar} are written.
      * 
      * @param oneChar
-     *            The character to write
-     * 
+     *            the character to write to the target.
      * @throws IOException
-     *             If this Writer has already been closed or some other
-     *             IOException occurs.
+     *             if this writer is closed or another I/O error occurs.
+     * @since Android 1.0
      */
     public void write(int oneChar) throws IOException {
         synchronized (lock) {
@@ -124,14 +153,13 @@ public abstract class Writer implements Appendable, Closeable, Flushable {
     }
 
     /**
-     * Writes the characters from the String <code>str</code> to this Writer.
+     * Writes the characters from the specified string to the target.
      * 
      * @param str
-     *            the non-null String containing the characters to write.
-     * 
+     *            the non-null string containing the characters to write.
      * @throws IOException
-     *             If this Writer has already been closed or some other
-     *             IOException occurs.
+     *             if this writer is closed or another I/O error occurs.
+     * @since Android 1.0
      */
     public void write(String str) throws IOException {
         char buf[] = new char[str.length()];
@@ -142,21 +170,21 @@ public abstract class Writer implements Appendable, Closeable, Flushable {
     }
 
     /**
-     * Writes <code>count</code> number of characters starting at
-     * <code>offset</code> from the String <code>str</code> to this Writer.
+     * Writes {@code count} characters from {@code str} starting at {@code
+     * offset} to the target.
      * 
      * @param str
-     *            the non-null String containing the characters to write.
+     *            the non-null string containing the characters to write.
      * @param offset
-     *            the starting point to retrieve characters.
+     *            the index of the first character in {@code str} to write.
      * @param count
-     *            the number of characters to retrieve and write.
-     * 
+     *            the number of characters from {@code str} to write.
      * @throws IOException
-     *             If this Writer has already been closed or some other
-     *             IOException occurs.
-     * @throws ArrayIndexOutOfBoundsException
-     *             If offset or count are outside of bounds.
+     *             if this writer is closed or another I/O error occurs.
+     * @throws StringIndexOutOfBoundsException
+     *             if {@code offset < 0} or {@code count < 0}, or if {@code
+     *             offset + count} is greater than the length of {@code str}.
+     * @since Android 1.0
      */
     public void write(String str, int offset, int count) throws IOException {
         if (count < 0) { // other cases tested by getChars()
@@ -171,14 +199,15 @@ public abstract class Writer implements Appendable, Closeable, Flushable {
     }
 
     /**
-     * Append a char <code>c</code>to the Writer. The Writer.append(<code>c</code>)
-     * works the same as Writer.write(<code>c</code>).
+     * Appends the character {@code c} to the target. This method works the same
+     * way as {@link #write(int)}.
      * 
      * @param c
-     *            The character appended to the Writer.
-     * @return The Writer.
+     *            the character to append to the target stream.
+     * @return this writer.
      * @throws IOException
-     *             If any IOException raises during the procedure.
+     *             if this writer is closed or another I/O error occurs.
+     * @since Android 1.0
      */
     public Writer append(char c) throws IOException {
         write(c);
@@ -186,16 +215,17 @@ public abstract class Writer implements Appendable, Closeable, Flushable {
     }
 
     /**
-     * Append a CharSequence <code>csq</code> to the Writer. The
-     * Writer.append(<code>csq</code>) works the same way as Writer.write(<code>csq</code>.toString()).
-     * If <code>csq</code> is null, then "null" will be substituted for
-     * <code>csq</code>.
+     * Appends the character sequence {@code csq} to the target. This method
+     * works the same way as {@code Writer.write(csq.toString())}. If {@code
+     * csq} is {@code null}, then the string "null" is written to the target
+     * stream.
      * 
      * @param csq
-     *            The CharSequence appended to the Writer.
-     * @return The Writer.
+     *            the character sequence appended to the target.
+     * @return this writer.
      * @throws IOException
-     *             If any IOException raises during the procedure.
+     *             if this writer is closed or another I/O error occurs.
+     * @since Android 1.0
      */
     public Writer append(CharSequence csq) throws IOException {
         if (null == csq) {
@@ -207,27 +237,28 @@ public abstract class Writer implements Appendable, Closeable, Flushable {
     }
 
     /**
-     * Append a subsequence of a CharSequence <code>csq</code> to the Writer.
-     * The first char and the last char of the subsequnce is specified by the
-     * parameter <code>start</code> and <code>end</code>. The
-     * Writer.append(<code>csq</code>) works the same way as Writer.write (<code>csq</code>csq.subSequence(<code>start</code>,<code>end</code>).toString).
-     * If <code>csq</code> is null, then "null" will be substituted for
-     * <code>csq</code>.
+     * Appends a subsequence of the character sequence {@code csq} to the
+     * target. This method works the same way as {@code
+     * Writer.writer(csq.subsequence(start, end).toString())}. If {@code
+     * csq} is {@code null}, then the specified subsequence of the string "null"
+     * will be written to the target.
      * 
      * @param csq
-     *            The CharSequence appended to the Writaer.
+     *            the character sequence appended to the target.
      * @param start
-     *            The index of the first char in the CharSequence appended to
-     *            the Writer.
+     *            the index of the first char in the character sequence appended
+     *            to the target.
      * @param end
-     *            The index of the char after the last one in the CharSequence
-     *            appended to the Writer.
-     * @return The Writer.
-     * @throws IndexOutOfBoundsException
-     *             If start is less than end, end is greater than the length of
-     *             the CharSequence, or start or end is negative.
+     *            the index of the character following the last character of the
+     *            subsequence appended to the target.
+     * @return this writer.
      * @throws IOException
-     *             If any IOException raises during the procedure.
+     *             if this writer is closed or another I/O error occurs.
+     * @throws StringIndexOutOfBoundsException
+     *             if {@code start > end}, {@code start < 0}, {@code end < 0} or
+     *             either {@code start} or {@code end} are greater or equal than
+     *             the length of {@code csq}.
+     * @since Android 1.0
      */
     public Writer append(CharSequence csq, int start, int end)
             throws IOException {

@@ -17,15 +17,29 @@
 
 package org.apache.harmony.archive.tests.java.util.jar;
 
-import java.util.jar.Attributes;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
 
+import java.util.jar.Attributes;
 import junit.framework.TestCase;
 
+@TestTargetClass(Attributes.Name.class) 
 public class AttributesNameTest extends TestCase {
 
     /**
      * @tests java.util.jar.Attributes.Name#Name(java.lang.String)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Regression test. Checks IllegalArgumentException.",
+      targets = {
+        @TestTarget(
+          methodName = "Name",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_AttributesName_Constructor() {
         // Regression for HARMONY-85
         try {

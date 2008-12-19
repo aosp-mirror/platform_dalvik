@@ -17,9 +17,15 @@
 
 package tests.api.java.util;
 
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass; 
+
 import java.util.Currency;
 import java.util.Locale;
 
+@TestTargetClass(Currency.class) 
 public class CurrencyTest extends junit.framework.TestCase {
 
     private static Locale defaultLocale = Locale.getDefault();
@@ -27,6 +33,16 @@ public class CurrencyTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Currency#getInstance(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "getInstance(String) method is tested in " +
+            "test_getInstanceLjava_util_Locale() test.",
+      targets = {
+        @TestTarget(
+          methodName = "getInstance",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_getInstanceLjava_lang_String() {
         // see test_getInstanceLjava_util_Locale() tests
     }
@@ -34,7 +50,16 @@ public class CurrencyTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Currency#getInstance(java.util.Locale)
      */
-    public void test_getInstanceLjava_util_Locale() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getInstance",
+          methodArgs = {java.util.Locale.class}
+        )
+    })
+    public void _test_getInstanceLjava_util_Locale() {
         /*
          * the behaviour in all these three cases should be the same since this
          * method ignores language and variant component of the locale.
@@ -119,7 +144,16 @@ public class CurrencyTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Currency#getSymbol()
      */
-    public void test_getSymbol() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getSymbol",
+          methodArgs = {}
+        )
+    })
+    public void _test_getSymbol() {
 
         Currency currK = Currency.getInstance("KRW");
         Currency currI = Currency.getInstance("INR");
@@ -147,7 +181,16 @@ public class CurrencyTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Currency#getSymbol(java.util.Locale)
      */
-    public void test_getSymbolLjava_util_Locale() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getSymbol",
+          methodArgs = {java.util.Locale.class}
+        )
+    })
+    public void _test_getSymbolLjava_util_Locale() {
         Locale.setDefault(Locale.US);
         Currency currE = Currency.getInstance("EUR");
         assertEquals("EUR", currE.getSymbol(Locale.JAPAN));
@@ -301,7 +344,16 @@ public class CurrencyTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Currency#getDefaultFractionDigits()
      */
-    public void test_getDefaultFractionDigits() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getDefaultFractionDigits",
+          methodArgs = {}
+        )
+    })
+    public void _test_getDefaultFractionDigits() {
         Currency c1 = Currency.getInstance("EUR");
         c1.getDefaultFractionDigits();
         assertEquals(" Currency.getInstance(\"" + c1

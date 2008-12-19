@@ -16,6 +16,11 @@
 
 package org.apache.harmony.prefs.tests.java.util.prefs;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.util.prefs.InvalidPreferencesFormatException;
 
 import junit.framework.TestCase;
@@ -25,11 +30,21 @@ import org.apache.harmony.testframework.serialization.SerializationTest;
 /**
  * 
  */
+@TestTargetClass(InvalidPreferencesFormatException.class)
 public class InvalidPreferencesFormatExceptionTest extends TestCase {
 
     /*
      * Class under test for void InvalidPreferencesFormatException(String)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "InvalidPreferencesFormatException",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void testInvalidPreferencesFormatExceptionString() {
         InvalidPreferencesFormatException e = new InvalidPreferencesFormatException(
                 "msg");
@@ -41,6 +56,15 @@ public class InvalidPreferencesFormatExceptionTest extends TestCase {
      * Class under test for void InvalidPreferencesFormatException(String,
      * Throwable)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "InvalidPreferencesFormatException",
+          methodArgs = {java.lang.String.class, java.lang.Throwable.class}
+        )
+    })
     public void testInvalidPreferencesFormatExceptionStringThrowable() {
         Throwable t = new Throwable("root");
         InvalidPreferencesFormatException e = new InvalidPreferencesFormatException(
@@ -54,6 +78,15 @@ public class InvalidPreferencesFormatExceptionTest extends TestCase {
     /*
      * Class under test for void InvalidPreferencesFormatException(Throwable)
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "InvalidPreferencesFormatException",
+          methodArgs = {java.lang.Throwable.class}
+        )
+    })
     public void testInvalidPreferencesFormatExceptionThrowable() {
         Throwable t = new Throwable("root");
         InvalidPreferencesFormatException e = new InvalidPreferencesFormatException(
@@ -66,6 +99,15 @@ public class InvalidPreferencesFormatExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization.
      */
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Verifies serialization",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationSelf",
+          methodArgs = {}
+        )
+    })
     public void testSerializationSelf() throws Exception {
 
         SerializationTest.verifySelf(new InvalidPreferencesFormatException(
@@ -75,6 +117,15 @@ public class InvalidPreferencesFormatExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
+@TestInfo(
+          level = TestLevel.COMPLETE,
+          purpose = "Verifies serialization",
+          targets = {
+            @TestTarget(
+              methodName = "!SerializationGolden",
+              methodArgs = {}
+            )
+        })
     public void testSerializationCompatibility() throws Exception {
 
         SerializationTest.verifyGolden(this,

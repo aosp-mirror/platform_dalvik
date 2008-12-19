@@ -21,7 +21,6 @@
 #include "JNIHelp.h"
 #include "commonDblParce.h"
 #include "cbigint.h"
-#include "exceptions.h"
 
 #if defined(LINUX)
 #define USE_LL
@@ -118,9 +117,6 @@ static const U_32 tens[] = {
     }
 #define ERROR_OCCURED(x) (HIGH_I32_FROM_VAR(x) < 0)
 
-//??? Util - do not want portability layer.
-//#define allocateU64(ptr, n) if (!((ptr) = (U_64*) hymem_allocate_memory((n) * sizeof(U_64)))) goto OutOfMemory;
-//#define release(r) if ((r)) hymem_free_memory((r));
 #define allocateU64(x, n) if (!((x) = (U_64*) malloc((n) * sizeof(U_64)))) goto OutOfMemory;
 #define release(r) if ((r)) free((r));
 
@@ -363,7 +359,6 @@ floatAlgorithm (JNIEnv * env, U_64 * f, IDATA length, jint e, jfloat z)
   U_64 *x, *y, *D, *D2;
   IDATA xLength, yLength, DLength, D2Length;
   IDATA decApproxCount, incApproxCount;
-  //PORT_ACCESS_FROM_ENV (env);
 
   x = y = D = D2 = 0;
   xLength = yLength = DLength = D2Length = 0;
@@ -375,8 +370,6 @@ floatAlgorithm (JNIEnv * env, U_64 * f, IDATA length, jint e, jfloat z)
       k = floatExponent (z);
 
       if (x && x != f)
-      //??? Util - don't want portability layer.
-      //jclmem_free_memory (env, x);
           free(x);
 
       release (y);
@@ -523,8 +516,6 @@ floatAlgorithm (JNIEnv * env, U_64 * f, IDATA length, jint e, jfloat z)
   while (1);
 
   if (x && x != f)
-    //??? Util - don't want portability layer.
-    //jclmem_free_memory (env, x);
       free(x);
   release (y);
   release (D);
@@ -533,8 +524,6 @@ floatAlgorithm (JNIEnv * env, U_64 * f, IDATA length, jint e, jfloat z)
 
 OutOfMemory:
   if (x && x != f)
-  //??? Util - don't want portability layer.
-  //jclmem_free_memory (env, x);
       free(x);
   release (y);
   release (D);
@@ -564,12 +553,12 @@ Java_org_apache_harmony_luni_util_FloatingPointParser_parseFltImpl (JNIEnv * env
       return flt;
     }
   else if (((I_32) FLOAT_TO_INTBITS (flt)) == (I_32) - 1)
-    {
-      throwNewExceptionByName(env, "java/lang/NumberFormatException", "");
+    {                           /* NumberFormatException */
+      jniThrowException(env, "java/lang/NumberFormatException", "");
     }
   else
     {                           /* OutOfMemoryError */
-      throwNewOutOfMemoryError(env, "");
+      jniThrowException(env, "java/lang/OutOfMemoryError", "");
     }
 
   return 0.0;
@@ -591,11 +580,11 @@ Java_org_apache_harmony_luni_util_FloatingPointParser_parseDblImpl (JNIEnv * env
     }
   else if (LOW_I32_FROM_VAR (dbl) == (I_32) - 1)
     {                           /* NumberFormatException */
-      throwNewExceptionByName(env, "java/lang/NumberFormatException", "");
+      jniThrowException(env, "java/lang/NumberFormatException", "");
     }
   else
     {                           /* OutOfMemoryError */
-      throwNewOutOfMemoryError(env, "");
+      jniThrowException(env, "java/lang/OutOfMemoryError", "");
     }
 
   return 0.0;

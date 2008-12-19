@@ -1,4 +1,4 @@
-// Copyright 2008 Google Inc. All Rights Reserved.
+// Copyright 2008 The Android Open Source Project
 
 /**
  * Doubled sub-class, form #2.

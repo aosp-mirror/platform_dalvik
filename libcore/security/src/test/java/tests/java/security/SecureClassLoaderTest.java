@@ -22,6 +22,11 @@
 
 package tests.java.security;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.ByteBuffer;
@@ -32,7 +37,7 @@ import java.security.SecureClassLoader;
 import java.security.cert.Certificate;
 
 import junit.framework.TestCase;
-
+@TestTargetClass(SecureClassLoader.class)
 /**
  * Unit test for SecureClassLoader.
  * 
@@ -175,6 +180,15 @@ public class SecureClassLoaderTest extends TestCase {
     /**
      * Tests default ctor
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SecurityException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "SecureClassLoader",
+          methodArgs = {}
+        )
+    })
     public void testSecureClassLoader() {
         new MyClassLoader();
     }
@@ -182,6 +196,15 @@ public class SecureClassLoaderTest extends TestCase {
     /**
      * Tests SecureClassLoader(ClassLoader)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verification with null parameter missed",
+      targets = {
+        @TestTarget(
+          methodName = "SecureClassLoader",
+          methodArgs = {ClassLoader.class}
+        )
+    })
     public void testSecureClassLoaderClassLoader() throws Exception {
         URL[] urls = new URL[] { new URL("http://localhost") };
         URLClassLoader ucl = URLClassLoader.newInstance(urls);
@@ -191,6 +214,15 @@ public class SecureClassLoaderTest extends TestCase {
     /**
      * Tests getPermission
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verification of returned value missed",
+      targets = {
+        @TestTarget(
+          methodName = "getPermissions",
+          methodArgs = {CodeSource.class}
+        )
+    })
     public void testGetPermissions() throws Exception {
         URL url = new URL("http://localhost");
         CodeSource cs = new CodeSource(url, (Certificate[]) null);
@@ -202,7 +234,16 @@ public class SecureClassLoaderTest extends TestCase {
     /**
      * Tests defineClass(String, byte[], int, int, CodeSource)
      */
-    public void testDefineClassStringbyteArrayintintCodeSource() {
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "ClassFormatError, IndexOutOfBoundsException, SecurityException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "defineClass",
+          methodArgs = {String.class, byte[].class, int.class, int.class, CodeSource.class}
+        )
+    })
+    public void _testDefineClassStringbyteArrayintintCodeSource() {
         MyClassLoader ldr = new MyClassLoader();
         Class klass = ldr.define(null, klassData, 0, klassData.length, null);
         assertEquals(klass.getName(), klassName);
@@ -211,7 +252,16 @@ public class SecureClassLoaderTest extends TestCase {
     /**
      * Tests defineClass(String, ByteBuffer, CodeSource)
      */
-    public void testDefineClassStringByteBufferCodeSource() {
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "ClassFormatError, SecurityException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "defineClass",
+          methodArgs = {String.class, ByteBuffer.class, CodeSource.class}
+        )
+    })
+    public void _testDefineClassStringByteBufferCodeSource() {
         MyClassLoader ldr = new MyClassLoader();
         ByteBuffer bbuf = ByteBuffer.wrap(klassData);
         Class klass = ldr.define(null, bbuf, null);

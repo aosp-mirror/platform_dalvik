@@ -18,26 +18,33 @@
 package java.io;
 
 /**
- * This IO exception is thrown when a program asks for a particular character
- * converter and it is not available.
+ * Signals that a requested character encoding is not available, either because
+ * it is not included a specific Android system, or because the encoding name
+ * is simply incorrect.
+ * 
+ * @since Android 1.0
  */
 public class UnsupportedEncodingException extends IOException {
 
     private static final long serialVersionUID = -4274276298326136670L;
 
     /**
-     * Constructs a new instance of this class with its walkback filled in.
+     * Constructs a new {@code UnsupportedEncodingException} with its stack
+     * trace filled in.
+     * 
+     * @since Android 1.0
      */
     public UnsupportedEncodingException() {
         super();
     }
 
     /**
-     * Constructs a new instance of this class with its walkback and message
-     * filled in.
+     * Constructs a new {@code UnsupportedEncodingException} with its stack
+     * trace and detail message filled in.
      * 
      * @param detailMessage
-     *            the detail message for the exception.
+     *            the detail message for this exception.
+     * @since Android 1.0
      */
     public UnsupportedEncodingException(String detailMessage) {
         super(detailMessage);

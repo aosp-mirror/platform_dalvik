@@ -28,31 +28,32 @@ import java.security.cert.CertPath;
 import org.apache.harmony.security.internal.nls.Messages;
 
 /**
- * @com.intel.drl.spec_ref 
+ * {@code CodeSigner} represents a signer of code. Instances are immutable.
+ * 
+ * @since Android 1.0
  */
-
 public final class CodeSigner implements Serializable {
 
-    /**
-     * @com.intel.drl.spec_ref 
-     */
     private static final long serialVersionUID = 6819288105193937581L;
 
-    /**
-     * @com.intel.drl.spec_ref 
-     */
     private CertPath signerCertPath;
 
-    /**
-     * @com.intel.drl.spec_ref 
-     */
     private Timestamp timestamp;
 
     // Cached hash code value
     private transient int hash;
 
     /**
-     * @com.intel.drl.spec_ref 
+     * Constructs a new instance of {@code CodeSigner}.
+     * 
+     * @param signerCertPath
+     *            the certificate path associated with this code signer.
+     * @param timestamp
+     *            the time stamp associated with this code signer, maybe {@code
+     *            null}.
+     * @throws NullPointerException
+     *             if {@code signerCertPath} is {@code null}.
+     * @since Android 1.0
      */
     public CodeSigner(CertPath signerCertPath, Timestamp timestamp) {
         if (signerCertPath == null) {
@@ -63,7 +64,17 @@ public final class CodeSigner implements Serializable {
     }
 
     /**
-     * @com.intel.drl.spec_ref 
+     * Compares the specified object with this {@code CodeSigner} for equality.
+     * Returns {@code true} if the specified object is also an instance of
+     * {@code CodeSigner}, the two {@code CodeSigner} encapsulate the same
+     * certificate path and the same time stamp, if present in both.
+     * 
+     * @param obj
+     *            object to be compared for equality with this {@code
+     *            CodeSigner}.
+     * @return {@code true} if the specified object is equal to this {@code
+     *         CodeSigner}, otherwise {@code false}.
+     * @since Android 1.0
      */
     public boolean equals(Object obj) {
         if (obj == this) {
@@ -81,21 +92,35 @@ public final class CodeSigner implements Serializable {
     }
 
     /**
-     * @com.intel.drl.spec_ref 
+     * Returns the certificate path associated with this {@code CodeSigner}.
+     * 
+     * @return the certificate path associated with this {@code CodeSigner}.
+     * @since Android 1.0
      */
     public CertPath getSignerCertPath() {
         return signerCertPath;
     }
 
     /**
-     * @com.intel.drl.spec_ref 
+     * Returns the time stamp associated with this {@code CodeSigner}.
+     * 
+     * @return the time stamp associated with this {@code CodeSigner}, maybe
+     *         {@code null}.
+     * @since Android 1.0
      */
     public Timestamp getTimestamp() {
         return timestamp;
     }
 
     /**
-     * @com.intel.drl.spec_ref 
+     * Returns the hash code value for this {@code CodeSigner}. Returns the same
+     * hash code for {@code CodeSigner}s that are equal to each other as
+     * required by the general contract of {@link Object#hashCode}.
+     * 
+     * @return the hash code value for this {@code CodeSigner}.
+     * @see Object#equals(Object)
+     * @see CodeSigner#equals(Object)
+     * @since Android 1.0
      */
     public int hashCode() {
         if (hash == 0) {
@@ -106,7 +131,12 @@ public final class CodeSigner implements Serializable {
     }
 
     /**
-     * @com.intel.drl.spec_ref 
+     * Returns a string containing a concise, human-readable description of the
+     * this {@code CodeSigner} including its first certificate and its time
+     * stamp, if present.
+     * 
+     * @return a printable representation for this {@code CodeSigner}.
+     * @since Android 1.0
      */
     public String toString() {
         // There is no any special reason for '256' here, it's taken abruptly

@@ -413,7 +413,14 @@ DexClassLookup* dexCreateClassLookup(DexFile* pDexFile)
 
     assert(pDexFile != NULL);
 
-    numEntries = dexRoundUpPower2(pDexFile->pHeader->classDefsSize * 3);
+    /*
+     * Using a factor of 3 results in far less probing than a factor of 2,
+     * but almost doubles the flash storage requirements for the bootstrap
+     * DEX files.  The overall impact on class loading performance seems
+     * to be minor.  We could probably get some performance improvement by
+     * using a secondary hash.
+     */
+    numEntries = dexRoundUpPower2(pDexFile->pHeader->classDefsSize * 2);
     allocSize = offsetof(DexClassLookup, table)
                     + numEntries * sizeof(pLookup->table[0]);
 
@@ -439,8 +446,11 @@ DexClassLookup* dexCreateClassLookup(DexFile* pDexFile)
         totalProbes += numProbes;
     }
 
-    LOGV("Class probe stats: classes=%d slots=%d total=%d max=%d\n",
-        pDexFile->pHeader->classDefsSize, numEntries, totalProbes, maxProbes);
+    LOGV("Class lookup: classes=%d slots=%d (%d%% occ) alloc=%d"
+         " total=%d max=%d\n",
+        pDexFile->pHeader->classDefsSize, numEntries,
+        (100 * pDexFile->pHeader->classDefsSize) / numEntries,
+        allocSize, totalProbes, maxProbes);
 
     return pLookup;
 }
@@ -464,16 +474,215 @@ void dexFileSetupBasicPointers(DexFile* pDexFile, const u1* data) {
     pDexFile->pLinkData = (const DexLink*) (data + pHeader->linkOff);
 }
 
+
 /*
- * Parse an optimized .dex file sitting in memory.
+ * Parse out an index map entry, advancing "*pData" and reducing "*pSize".
+ */
+static bool parseIndexMapEntry(const u1** pData, u4* pSize, bool expanding,
+    u4* pFullCount, u4* pReducedCount, const u2** pMap)
+{
+    const u4* wordPtr = (const u4*) *pData;
+    u4 size = *pSize;
+    u4 mapCount;
+
+    if (expanding) {
+        if (size < 4)
+            return false;
+        mapCount = *pReducedCount = *wordPtr++;
+        *pFullCount = (u4) -1;
+        size -= sizeof(u4);
+    } else {
+        if (size < 8)
+            return false;
+        mapCount = *pFullCount = *wordPtr++;
+        *pReducedCount = *wordPtr++;
+        size -= sizeof(u4) * 2;
+    }
+
+    u4 mapSize = mapCount * sizeof(u2);
+
+    if (size < mapSize)
+        return false;
+    *pMap = (const u2*) wordPtr;
+    size -= mapSize;
+
+    /* advance the pointer */
+    const u1* ptr = (const u1*) wordPtr;
+    ptr += (mapSize + 3) & ~0x3;
+
+    /* update pass-by-reference values */
+    *pData = (const u1*) ptr;
+    *pSize = size;
+
+    return true;
+}
+
+/*
+ * Set up some pointers into the mapped data.
  *
- * If "full" is full, we check and verify the Opt header, and make use of
- * any pre-calculated data tables.  If it's false, "data" only includes
- * the base DEX file.
+ * See analysis/ReduceConstants.c for the data layout description.
+ */
+static bool parseIndexMap(DexFile* pDexFile, const u1* data, u4 size,
+    bool expanding)
+{
+    if (!parseIndexMapEntry(&data, &size, expanding,
+            &pDexFile->indexMap.classFullCount,
+            &pDexFile->indexMap.classReducedCount,
+            &pDexFile->indexMap.classMap))
+    {
+        return false;
+    }
+
+    if (!parseIndexMapEntry(&data, &size, expanding,
+            &pDexFile->indexMap.methodFullCount,
+            &pDexFile->indexMap.methodReducedCount,
+            &pDexFile->indexMap.methodMap))
+    {
+        return false;
+    }
+
+    if (!parseIndexMapEntry(&data, &size, expanding,
+            &pDexFile->indexMap.fieldFullCount,
+            &pDexFile->indexMap.fieldReducedCount,
+            &pDexFile->indexMap.fieldMap))
+    {
+        return false;
+    }
+
+    if (!parseIndexMapEntry(&data, &size, expanding,
+            &pDexFile->indexMap.stringFullCount,
+            &pDexFile->indexMap.stringReducedCount,
+            &pDexFile->indexMap.stringMap))
+    {
+        return false;
+    }
+
+    if (expanding) {
+        /*
+         * The map includes the "reduced" counts; pull the original counts
+         * out of the DexFile so that code has a consistent source.
+         */
+        assert(pDexFile->indexMap.classFullCount == (u4) -1);
+        assert(pDexFile->indexMap.methodFullCount == (u4) -1);
+        assert(pDexFile->indexMap.fieldFullCount == (u4) -1);
+        assert(pDexFile->indexMap.stringFullCount == (u4) -1);
+
+#if 0   // TODO: not available yet -- do later or just skip this
+        pDexFile->indexMap.classFullCount =
+            pDexFile->pHeader->typeIdsSize;
+        pDexFile->indexMap.methodFullCount =
+            pDexFile->pHeader->methodIdsSize;
+        pDexFile->indexMap.fieldFullCount =
+            pDexFile->pHeader->fieldIdsSize;
+        pDexFile->indexMap.stringFullCount =
+            pDexFile->pHeader->stringIdsSize;
+#endif
+    }
+
+    LOGI("Class : %u %u %u\n",
+        pDexFile->indexMap.classFullCount,
+        pDexFile->indexMap.classReducedCount,
+        pDexFile->indexMap.classMap[0]);
+    LOGI("Method: %u %u %u\n",
+        pDexFile->indexMap.methodFullCount,
+        pDexFile->indexMap.methodReducedCount,
+        pDexFile->indexMap.methodMap[0]);
+    LOGI("Field : %u %u %u\n",
+        pDexFile->indexMap.fieldFullCount,
+        pDexFile->indexMap.fieldReducedCount,
+        pDexFile->indexMap.fieldMap[0]);
+    LOGI("String: %u %u %u\n",
+        pDexFile->indexMap.stringFullCount,
+        pDexFile->indexMap.stringReducedCount,
+        pDexFile->indexMap.stringMap[0]);
+
+    return true;
+}
+
+/*
+ * Parse some auxillary data tables.
+ *
+ * v1.0 wrote a zero in the first 32 bits, followed by the DexClassLookup
+ * table.  Subsequent versions switched to the "chunk" format.
+ */
+static bool parseAuxData(const u1* data, DexFile* pDexFile)
+{
+    const u4* pAux = (const u4*) (data + pDexFile->pOptHeader->auxOffset);
+    u4 indexMapType = 0;
+
+    /* v1.0 format? */
+    if (*pAux == 0) {
+        LOGV("+++ found OLD dex format\n");
+        pDexFile->pClassLookup = (const DexClassLookup*) (pAux+1);
+        return true;
+    }
+    LOGV("+++ found NEW dex format\n");
+
+    /* process chunks until we see the end marker */
+    while (*pAux != kDexChunkEnd) {
+        u4 size = *(pAux+1);
+        u1* data = (u1*) (pAux + 2);
+
+        switch (*pAux) {
+        case kDexChunkClassLookup:
+            pDexFile->pClassLookup = (const DexClassLookup*) data;
+            break;
+        case kDexChunkReducingIndexMap:
+            LOGI("+++ found reducing index map, size=%u\n", size);
+            if (!parseIndexMap(pDexFile, data, size, false)) {
+                LOGE("Failed parsing reducing index map\n");
+                return false;
+            }
+            indexMapType = *pAux;
+            break;
+        case kDexChunkExpandingIndexMap:
+            LOGI("+++ found expanding index map, size=%u\n", size);
+            if (!parseIndexMap(pDexFile, data, size, true)) {
+                LOGE("Failed parsing expanding index map\n");
+                return false;
+            }
+            indexMapType = *pAux;
+            break;
+        default:
+            LOGI("Unknown chunk 0x%08x (%c%c%c%c), size=%d in aux data area\n",
+                *pAux,
+                (char) ((*pAux) >> 24), (char) ((*pAux) >> 16),
+                (char) ((*pAux) >> 8),  (char)  (*pAux),
+                size);
+            break;
+        }
+
+        /*
+         * Advance pointer, padding to 64-bit boundary.  The extra "+8" is
+         * for the type/size header.
+         */
+        size = (size + 8 + 7) & ~7;
+        pAux += size / sizeof(u4);
+    }
+
+#if 0   // TODO: propagate expected map type from the VM through the API
+    /*
+     * If we're configured to expect an index map, and we don't find one,
+     * reject this DEX so we'll regenerate it.  Also, if we found an
+     * "expanding" map but we're not configured to use it, we have to fail
+     * because the constants aren't usable without translation.
+     */
+    if (indexMapType != expectedIndexMapType) {
+        LOGW("Incompatible index map configuration: found 0x%04x, need %d\n",
+            indexMapType, DVM_REDUCE_CONSTANTS);
+        return false;
+    }
+#endif
+
+    return true;
+}
+
+/*
+ * Parse an optimized or unoptimized .dex file sitting in memory.
  *
  * On success, return a newly-allocated DexFile.
  */
-DexFile* dexFileParse(const u1* data, size_t length)
+DexFile* dexFileParse(const u1* data, size_t length, int flags)
 {
     DexFile* pDexFile = NULL;
     const DexHeader* pHeader;
@@ -505,15 +714,11 @@ DexFile* dexFileParse(const u1* data, size_t length)
         LOGV("Good opt header, DEX offset is %d, flags=0x%02x\n",
             pDexFile->pOptHeader->dexOffset, pDexFile->pOptHeader->flags);
 
-        /* locate aux structures */
-        const u4* pAux = (const u4*) (data + pDexFile->pOptHeader->auxOffset);
-        if (*pAux != 0) {
-            LOGE("bad aux\n");
+        /* locate some auxillary data tables */
+        if (!parseAuxData(data, pDexFile))
             goto bail;
-        }
-        pDexFile->pClassLookup = (const DexClassLookup*) (pAux+1);
 
-        /* ignore the opt header from here on out */
+        /* ignore the opt header and appended data from here on out */
         data += pDexFile->pOptHeader->dexOffset;
         length -= pDexFile->pOptHeader->dexOffset;
         if (pDexFile->pOptHeader->dexLength > length) {
@@ -543,19 +748,18 @@ DexFile* dexFileParse(const u1* data, size_t length)
     /*
      * Verify the checksum.  This is reasonably quick, but does require
      * touching every byte in the DEX file.  The checksum changes after
-     * byte-swapping and DEX optimization.  [It's currently not updated after
-     * DEX optimization.]
+     * byte-swapping and DEX optimization.
      */
-    if (kVerifyChecksum) {
+    if (flags & kDexParseVerifyChecksum) {
         uLong adler = adler32(0L, Z_NULL, 0);
         const int nonSum = sizeof(pHeader->magic) + sizeof(pHeader->checksum);
 
         adler = adler32(adler, data + nonSum, length - nonSum);
 
         if (adler != pHeader->checksum) {
-            LOGE("Error: bad checksum (%08lx vs %08x)\n",
+            LOGW("WARNING: bad checksum (%08lx vs %08x)\n",
                 adler, pHeader->checksum);
-            /* for now, keep going */
+            /* keep going */
         } else {
             LOGV("+++ adler32 checksum verified\n");
         }

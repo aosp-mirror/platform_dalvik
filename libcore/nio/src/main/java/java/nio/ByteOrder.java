@@ -20,18 +20,23 @@ package java.nio;
 import org.apache.harmony.luni.platform.Platform;
 
 /**
- * Holds byte order constants.
+ * Defines byte order constants.
  * 
+ * @since Android 1.0
  */
 public final class ByteOrder {
 
     /**
      * This constant represents big endian.
+     * 
+     * @since Android 1.0
      */
     public static final ByteOrder BIG_ENDIAN = new ByteOrder("BIG_ENDIAN"); //$NON-NLS-1$
 
     /**
      * This constant represents little endian.
+     * 
+     * @since Android 1.0
      */
     public static final ByteOrder LITTLE_ENDIAN = new ByteOrder("LITTLE_ENDIAN"); //$NON-NLS-1$
 
@@ -48,8 +53,9 @@ public final class ByteOrder {
     /**
      * Returns the current platform byte order.
      * 
-     * @return the byte order object, which is either identical to LITTLE_ENDIAN
-     *         or BIG_ENDIAN.
+     * @return the byte order object, which is either LITTLE_ENDIAN or
+     *         BIG_ENDIAN.
+     * @since Android 1.0
      */
     public static ByteOrder nativeOrder() {
         return NATIVE_ORDER;
@@ -62,10 +68,13 @@ public final class ByteOrder {
         this.name = name;
     }
 
-    /*
-     * (non-Javadoc)
+    /**
+     * Returns a string that describes this object.
      * 
-     * @see java.lang.Object#toString()
+     * @return "BIG_ENDIAN" for {@link #BIG_ENDIAN ByteOrder.BIG_ENDIAN}
+     *         objects, "LITTLE_ENDIAN" for
+     *         {@link #LITTLE_ENDIAN ByteOrder.LITTLE_ENDIAN} objects.
+     * @since Android 1.0
      */
     public String toString() {
         return name;

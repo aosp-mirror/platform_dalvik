@@ -14,6 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/**
+*******************************************************************************
+* Copyright (C) 1996-2007, International Business Machines Corporation and    *
+* others. All Rights Reserved.                                                *
+*******************************************************************************
+*/
+
+// BEGIN android-note
+// The class javadoc and some of the method descriptions are copied from ICU4J
+// source files. Changes have been made to the copied descriptions.
+// The icu license header was added to this file. 
+// END android-note
 
 package java.text;
 
@@ -31,9 +43,317 @@ import java.util.Vector;
 import org.apache.harmony.text.internal.nls.Messages;
 
 /**
- * MessageFormat is used to format and parse arguments based on a pattern. The
- * pattern specifies how each argument will be formatted and concatenated with
- * other text to produce the formatted output.
+ * Produces concatenated
+ * messages in language-neutral way. Use this class to construct messages 
+ * displayed for end users.
+ * <p>
+ * {@code MessageFormat} takes a set of objects, formats them and then
+ * inserts the formatted strings into the pattern at the appropriate places.
+ * </p>
+ * <p>
+ * <strong>Note:</strong> {@code MessageFormat} differs from the other
+ * {@code Format} classes in that you create a {@code MessageFormat}
+ * object with one of its constructors (not with a {@code getInstance}
+ * style factory method). The factory methods aren't necessary because
+ * {@code MessageFormat} itself doesn't implement locale specific
+ * behavior. Any locale specific behavior is defined by the pattern that you
+ * provide as well as the subformats used for inserted arguments.
+ * 
+ * <h4><a name="patterns">Patterns and their interpretation</a></h4>
+ * 
+ * {@code MessageFormat} uses patterns of the following form:
+ * <blockquote>
+ * 
+ * <pre>
+ * <i>MessageFormatPattern:</i>
+ *         <i>String</i>
+ *         <i>MessageFormatPattern</i> <i>FormatElement</i> <i>String</i>
+ * <i>FormatElement:</i>
+ *         { <i>ArgumentIndex</i> }
+ *         { <i>ArgumentIndex</i> , <i>FormatType</i> }
+ *         { <i>ArgumentIndex</i> , <i>FormatType</i> , <i>FormatStyle</i> }
+ * <i>FormatType: one of </i>
+ *         number date time choice
+ * <i>FormatStyle:</i>
+ *         short
+ *         medium
+ *         long
+ *         full
+ *         integer
+ *         currency
+ *         percent
+ *         <i>SubformatPattern</i>
+ * <i>String:</i>
+ *         <i>StringPart&lt;sub&gt;opt&lt;/sub&gt;</i>
+ *         <i>String</i> <i>StringPart</i>
+ * <i>StringPart:</i>
+ *         ''
+ *         ' <i>QuotedString</i> '
+ *         <i>UnquotedString</i>
+ * <i>SubformatPattern:</i>
+ *         <i>SubformatPatternPart&lt;sub&gt;opt&lt;/sub&gt;</i>
+ *         <i>SubformatPattern</i> <i>SubformatPatternPart</i>
+ * <i>SubFormatPatternPart:</i>
+ *         ' <i>QuotedPattern</i> '
+ *         <i>UnquotedPattern</i>
+ * </pre>
+ * 
+ * </blockquote>
+ * 
+ * <p>
+ * Within a <i>String</i>, {@code "''"} represents a single quote. A
+ * <i>QuotedString</i> can contain arbitrary characters except single quotes;
+ * the surrounding single quotes are removed. An <i>UnquotedString</i> can
+ * contain arbitrary characters except single quotes and left curly brackets.
+ * Thus, a string that should result in the formatted message "'{0}'" can be
+ * written as {@code "'''{'0}''"} or {@code "'''{0}'''"}.
+ * <p>
+ * Within a <i>SubformatPattern</i>, different rules apply. A <i>QuotedPattern</i>
+ * can contain arbitrary characters except single quotes, but the surrounding
+ * single quotes are <strong>not</strong> removed, so they may be interpreted
+ * by the subformat. For example, {@code "{1,number,$'#',##}"} will
+ * produce a number format with the hash-sign quoted, with a result such as:
+ * "$#31,45". An <i>UnquotedPattern</i> can contain arbitrary characters except
+ * single quotes, but curly braces within it must be balanced. For example,
+ * {@code "ab {0} de"} and {@code "ab '}' de"} are valid subformat
+ * patterns, but {@code "ab {0'}' de"} and {@code "ab } de"} are
+ * not.
+ * </p>
+ * <dl>
+ * <dt><b>Warning:</b></dt>
+ * <dd>The rules for using quotes within message format patterns unfortunately
+ * have shown to be somewhat confusing. In particular, it isn't always obvious
+ * to localizers whether single quotes need to be doubled or not. Make sure to
+ * inform localizers about the rules, and tell them (for example, by using
+ * comments in resource bundle source files) which strings will be processed by
+ * {@code MessageFormat}. Note that localizers may need to use single quotes in
+ * translated strings where the original version doesn't have them. <br>
+ * Note also that the simplest way to avoid the problem is to use the real
+ * apostrophe (single quote) character \u2019 (') for human-readable text, and
+ * to use the ASCII apostrophe (\u0027 ' ) only in program syntax, like quoting
+ * in {@code MessageFormat}. See the annotations for U+0027 Apostrophe in The Unicode
+ * Standard.
+ * </dl>
+ * <p>
+ * The <i>ArgumentIndex</i> value is a non-negative integer written using the
+ * digits '0' through '9', and represents an index into the
+ * {@code arguments} array passed to the {@code format} methods or
+ * the result array returned by the {@code parse} methods.
+ * <p>
+ * The <i>FormatType</i> and <i>FormatStyle</i> values are used to create a
+ * {@code Format} instance for the format element. The following table
+ * shows how the values map to {@code Format} instances. Combinations not shown in the
+ * table are illegal. A <i>SubformatPattern</i> must be a valid pattern string
+ * for the {@code Format} subclass used.
+ * <p>
+ * <table border=1>
+ * <tr>
+ * <th>Format Type</th>
+ * <th>Format Style</th>
+ * <th>Subformat Created</th>
+ * </tr>
+ * <tr>
+ * <td colspan="2"><i>(none)</i></td>
+ * <td>{@code null}</td>
+ * </tr>
+ * <tr>
+ * <td rowspan="5">{@code number}</td>
+ * <td><i>(none)</i></td>
+ * <td>{@code NumberFormat.getInstance(getLocale())}</td>
+ * </tr>
+ * <tr>
+ * <td>{@code integer}</td>
+ * <td>{@code NumberFormat.getIntegerInstance(getLocale())}</td>
+ * </tr>
+ * <tr>
+ * <td>{@code currency}</td>
+ * <td>{@code NumberFormat.getCurrencyInstance(getLocale())}</td>
+ * </tr>
+ * <tr>
+ * <td>{@code percent}</td>
+ * <td>{@code NumberFormat.getPercentInstance(getLocale())}</td>
+ * </tr>
+ * <tr>
+ * <td><i>SubformatPattern</i></td>
+ * <td>{@code new DecimalFormat(subformatPattern, new DecimalFormatSymbols(getLocale()))}</td>
+ * </tr>
+ * <tr>
+ * <td rowspan="6">{@code date}</td>
+ * <td><i>(none)</i></td>
+ * <td>{@code DateFormat.getDateInstance(DateFormat.DEFAULT, getLocale())}</td>
+ * </tr>
+ * <tr>
+ * <td>{@code short}</td>
+ * <td>{@code DateFormat.getDateInstance(DateFormat.SHORT, getLocale())}</td>
+ * </tr>
+ * <tr>
+ * <td>{@code medium}</td>
+ * <td>{@code DateFormat.getDateInstance(DateFormat.DEFAULT, getLocale())}</td>
+ * </tr>
+ * <tr>
+ * <td>{@code long}</td>
+ * <td>{@code DateFormat.getDateInstance(DateFormat.LONG, getLocale())}</td>
+ * </tr>
+ * <tr>
+ * <td>{@code full}</td>
+ * <td>{@code DateFormat.getDateInstance(DateFormat.FULL, getLocale())}</td>
+ * </tr>
+ * <tr>
+ * <td><i>SubformatPattern</i></td>
+ * <td>{@code new SimpleDateFormat(subformatPattern, getLocale())}</td>
+ * </tr>
+ * <tr>
+ * <td rowspan="6">{@code time}</td>
+ * <td><i>(none)</i></td>
+ * <td>{@code DateFormat.getTimeInstance(DateFormat.DEFAULT, getLocale())}</td>
+ * </tr>
+ * <tr>
+ * <td>{@code short}</td>
+ * <td>{@code DateFormat.getTimeInstance(DateFormat.SHORT, getLocale())}</td>
+ * </tr>
+ * <tr>
+ * <td>{@code medium}</td>
+ * <td>{@code DateFormat.getTimeInstance(DateFormat.DEFAULT, getLocale())}</td>
+ * </tr>
+ * <tr>
+ * <td>{@code long}</td>
+ * <td>{@code DateFormat.getTimeInstance(DateFormat.LONG, getLocale())}</td>
+ * </tr>
+ * <tr>
+ * <td>{@code full}</td>
+ * <td>{@code DateFormat.getTimeInstance(DateFormat.FULL, getLocale())}</td>
+ * </tr>
+ * <tr>
+ * <td><i>SubformatPattern</i></td>
+ * <td>{@code new SimpleDateFormat(subformatPattern, getLocale())}</td>
+ * </tr>
+ * <tr>
+ * <td>{@code choice}</td>
+ * <td><i>SubformatPattern</i></td>
+ * <td>{@code new ChoiceFormat(subformatPattern)}</td>
+ * </tr>
+ * </table>
+ * 
+ * <h4>Usage Information</h4>
+ * <p>
+ * Here are some examples of usage: <blockquote>
+ * 
+ * <pre>
+ * Object[] arguments = {
+ *         new Integer(7), new Date(System.currentTimeMillis()),
+ *         "a disturbance in the Force"};
+ * String result = MessageFormat.format(
+ *         "At {1,time} on {1,date}, there was {2} on planet {0,number,integer}.",
+ *         arguments);
+ * <em>
+ * Output:
+ * </em>
+ * At 12:30 PM on Jul 3, 2053, there was a disturbance in the Force on planet 7.
+ * </pre>
+ * 
+ * </blockquote> 
+ * <p>
+ * Typically, the message format will come from resources, and the
+ * arguments will be dynamically set at runtime.
+ * </p>
+ * <p>
+ * Example 2: <blockquote>
+ * 
+ * <pre>
+ * Object[] testArgs = {new Long(3), "MyDisk"};
+ * MessageFormat form = new MessageFormat("The disk \"{1}\" contains {0} file(s).");
+ * System.out.println(form.format(testArgs));
+ * <em>
+ * Output with different testArgs:
+ * </em>
+ * The disk "MyDisk" contains 0 file(s).
+ * The disk "MyDisk" contains 1 file(s).
+ * The disk "MyDisk" contains 1,273 file(s).
+ * </pre>
+ * 
+ * </blockquote>
+ * 
+ * <p>
+ * For more sophisticated patterns, you can use a {@code ChoiceFormat} to
+ * get output such as: 
+ * </p>
+ * <blockquote>
+ * 
+ * <pre>
+ * MessageFormat form = new MessageFormat("The disk \"{1}\" contains {0}.");
+ * double[] filelimits = {0,1,2};
+ * String[] filepart = {"no files","one file","{0,number} files"};
+ * ChoiceFormat fileform = new ChoiceFormat(filelimits, filepart);
+ * form.setFormatByArgumentIndex(0, fileform);
+ * Object[] testArgs = {new Long(12373), "MyDisk"};
+ * System.out.println(form.format(testArgs));
+ * <em>
+ * Output (with different testArgs):
+ * </em>
+ * The disk "MyDisk" contains no files.
+ * The disk "MyDisk" contains one file.
+ * The disk "MyDisk" contains 1,273 files.
+ * </pre>
+ * 
+ * </blockquote> You can either do this programmatically, as in the above
+ * example, or by using a pattern (see {@link ChoiceFormat} for more
+ * information) as in: <blockquote>
+ * 
+ * <pre>
+ * form.applyPattern("There {0,choice,0#are no files|1#is one file|1&lt;are {0,number,integer} files}.");
+ * </pre>
+ * 
+ * </blockquote>
+ * <p>
+ * <strong>Note:</strong> As we see above, the string produced by a
+ * {@code ChoiceFormat} in {@code MessageFormat} is treated
+ * specially; occurances of '{' are used to indicated subformats, and cause
+ * recursion. If you create both a {@code MessageFormat} and
+ * {@code ChoiceFormat} programmatically (instead of using the string
+ * patterns), then be careful not to produce a format that recurses on itself,
+ * which will cause an infinite loop.
+ * </p>
+ * <p>
+ * When a single argument is parsed more than once in the string, the last match
+ * will be the final result of the parsing. For example:
+ * </p>
+ * <blockquote>
+ * <pre>
+ * MessageFormat mf = new MessageFormat("{0,number,#.##}, {0,number,#.#}");
+ * Object[] objs = {new Double(3.1415)};
+ * String result = mf.format(objs);
+ * // result now equals "3.14, 3.1"
+ * objs = null;
+ * objs = mf.parse(result, new ParsePosition(0));
+ * // objs now equals {new Double(3.1)}
+ * </pre>
+ * </blockquote>
+ * <p>
+ * Likewise, parsing with a {@code MessageFormat} object using patterns 
+ * containing multiple occurrences of the same argument would return the last 
+ * match. For example:
+ * </p>
+ * <blockquote>
+ * <pre>
+ * MessageFormat mf = new MessageFormat("{0}, {0}, {0}");
+ * String forParsing = "x, y, z";
+ * Object[] objs = mf.parse(forParsing, new ParsePosition(0));
+ * // result now equals {new String("z")}
+ * </pre>
+ * </blockquote>
+ * <h4><a name="synchronization">Synchronization</a></h4>
+ * <p>
+ * Message formats are not synchronized. It is recommended to create separate
+ * format instances for each thread. If multiple threads access a format
+ * concurrently, it must be synchronized externally.
+ * </p>
+ * 
+ * @see java.util.Locale
+ * @see Format
+ * @see NumberFormat
+ * @see DecimalFormat
+ * @see ChoiceFormat
+ * @since Android 1.0
  */
 public class MessageFormat extends Format {
 
@@ -52,16 +372,16 @@ public class MessageFormat extends Format {
     transient private int maxArgumentIndex;
 
     /**
-     * Constructs a new MessageFormat using the specified pattern and the
-     * specified Locale for Formats.
+     * Constructs a new {@code MessageFormat} using the specified pattern and
+     * the specified locale for formats.
      * 
      * @param template
-     *            the pattern
+     *            the pattern.
      * @param locale
-     *            the locale
-     * 
+     *            the locale.
      * @exception IllegalArgumentException
-     *                when the pattern cannot be parsed
+     *                if the pattern cannot be parsed.
+     * @since Android 1.0
      */
     public MessageFormat(String template, Locale locale) {
         this.locale = locale;
@@ -69,27 +389,27 @@ public class MessageFormat extends Format {
     }
 
     /**
-     * Constructs a new MessageFormat using the specified pattern and the
-     * default Locale for Formats.
+     * Constructs a new {@code MessageFormat} using the specified pattern and
+     * the default locale for formats.
      * 
      * @param template
-     *            the pattern
-     * 
+     *            the pattern.
      * @exception IllegalArgumentException
-     *                when the pattern cannot be parsed
+     *                if the pattern cannot be parsed.
+     * @since Android 1.0
      */
     public MessageFormat(String template) {
         applyPattern(template);
     }
 
     /**
-     * Changes this MessageFormat to use the specified pattern.
+     * Changes this {@code MessageFormat} to use the specified pattern.
      * 
      * @param template
-     *            the pattern
-     * 
+     *            the new pattern.
      * @exception IllegalArgumentException
-     *                when the pattern cannot be parsed
+     *                if the pattern cannot be parsed.
+     * @since Android 1.0
      */
     public void applyPattern(String template) {
         int length = template.length();
@@ -140,12 +460,12 @@ public class MessageFormat extends Format {
     }
 
     /**
-     * Returns a new instance of MessageFormat with the same pattern and Formats
-     * as this MessageFormat.
+     * Returns a new instance of {@code MessageFormat} with the same pattern and
+     * formats as this {@code MessageFormat}.
      * 
-     * @return a shallow copy of this MessageFormat
-     * 
+     * @return a shallow copy of this {@code MessageFormat}.
      * @see java.lang.Cloneable
+     * @since Android 1.0
      */
     @Override
     public Object clone() {
@@ -161,16 +481,16 @@ public class MessageFormat extends Format {
     }
 
     /**
-     * Compares the specified object to this MessageFormat and answer if they
-     * are equal. The object must be an instance of MessageFormat and have the
-     * same pattern.
+     * Compares the specified object to this {@code MessageFormat} and indicates
+     * if they are equal. In order to be equal, {@code object} must be an
+     * instance of {@code MessageFormat} and have the same pattern.
      * 
      * @param object
-     *            the object to compare with this object
-     * @return true if the specified object is equal to this MessageFormat,
-     *         false otherwise
-     * 
+     *            the object to compare with this object.
+     * @return {@code true} if the specified object is equal to this
+     *         {@code MessageFormat}; {@code false} otherwise.
      * @see #hashCode
+     * @since Android 1.0
      */
     @Override
     public boolean equals(Object object) {
@@ -197,19 +517,19 @@ public class MessageFormat extends Format {
     }
 
     /**
-     * Formats the specified object using the rules of this MessageFormat and
-     * returns an AttributedCharacterIterator with the formatted message and
-     * attributes. The AttributedCharacterIterator returned also includes the
-     * attributes from the formats of this MessageFormat.
+     * Formats the specified object using the rules of this message format and
+     * returns an {@code AttributedCharacterIterator} with the formatted message and
+     * attributes. The {@code AttributedCharacterIterator} returned also includes the
+     * attributes from the formats of this message format.
      * 
      * @param object
-     *            the object to format
-     * @return an AttributedCharacterIterator with the formatted message and
-     *         attributes
-     * 
+     *            the object to format.
+     * @return an {@code AttributedCharacterIterator} with the formatted message and
+     *         attributes.
      * @exception IllegalArgumentException
-     *                when the arguments in the object array cannot be formatted
-     *                by this Format
+     *                if the arguments in the object array cannot be formatted
+     *                by this message format.
+     * @since Android 1.0
      */
     @Override
     public AttributedCharacterIterator formatToCharacterIterator(Object object) {
@@ -237,23 +557,24 @@ public class MessageFormat extends Format {
     }
 
     /**
-     * Formats the Object arguments into the specified StringBuffer using the
-     * pattern of this MessageFormat.
+     * Converts the specified objects into a string which it appends to the
+     * specified string buffer using the pattern of this message format.
      * <p>
-     * If Field Attribute of the FieldPosition supplied is
-     * MessageFormat.Field.ARGUMENT, then begin and end index of this field
-     * position is set to the location of the first occurrence of a message
-     * format argument. Otherwise the FieldPosition is ignored
-     * <p>
+     * If the {@code field} member of the specified {@code FieldPosition} is
+     * {@code MessageFormat.Field.ARGUMENT}, then the begin and end index of
+     * this field position is set to the location of the first occurrence of a
+     * message format argument. Otherwise, the {@code FieldPosition} is ignored.
+     * </p>
      * 
      * @param objects
-     *            the array of Objects to format
+     *            the array of objects to format.
      * @param buffer
-     *            the StringBuffer
+     *            the target string buffer to append the formatted message to.
      * @param field
-     *            a FieldPosition.
-     * 
-     * @return the StringBuffer parameter <code>buffer</code>
+     *            on input: an optional alignment field; on output: the offsets
+     *            of the alignment field in the formatted text.
+     * @return the string buffer.
+     * @since Android 1.0
      */
     public final StringBuffer format(Object[] objects, StringBuffer buffer,
             FieldPosition field) {
@@ -395,19 +716,36 @@ public class MessageFormat extends Format {
     }
 
     /**
-     * Formats the specified object into the specified StringBuffer using the
-     * pattern of this MessageFormat.
+     * Converts the specified objects into a string which it appends to the
+     * specified string buffer using the pattern of this message format.
+     * <p>
+     * If the {@code field} member of the specified {@code FieldPosition} is
+     * {@code MessageFormat.Field.ARGUMENT}, then the begin and end index of
+     * this field position is set to the location of the first occurrence of a
+     * message format argument. Otherwise, the {@code FieldPosition} is ignored.
+     * </p>
+     * <p>
+     * Calling this method is equivalent to calling
+     * </p>
+     * <blockquote>
+     * 
+     * <pre>
+     * format((Object[])object, buffer, field)
+     * </pre>
+     * 
+     * </blockquote>
      * 
      * @param object
-     *            the object to format, must be an array of Object
+     *            the object to format, must be an array of {@code Object}.
      * @param buffer
-     *            the StringBuffer
+     *            the target string buffer to append the formatted message to.
      * @param field
-     *            a FieldPosition which is ignored
-     * @return the StringBuffer parameter <code>buffer</code>
-     * 
-     * @exception ClassCastException
-     *                when <code>object</code> is not an array of Object
+     *            on input: an optional alignment field; on output: the offsets
+     *            of the alignment field in the formatted text.
+     * @return the string buffer.
+     * @throws ClassCastException
+     *             if {@code object} is not an array of {@code Object}.
+     * @since Android 1.0
      */
     @Override
     public final StringBuffer format(Object object, StringBuffer buffer,
@@ -416,25 +754,29 @@ public class MessageFormat extends Format {
     }
 
     /**
-     * Formats the Object arguments using the specified MessageFormat pattern.
+     * Formats the supplied objects using the specified message format pattern.
      * 
      * @param template
-     *            the pattern
+     *            the pattern to use for formatting.
      * @param objects
-     *            the array of Objects to format
-     * @return the formatted result
-     * 
+     *            the array of objects to format.
+     * @return the formatted result.
      * @exception IllegalArgumentException
-     *                when the pattern cannot be parsed
+     *                if the pattern cannot be parsed.
+     * @since Android 1.0
      */
     public static String format(String template, Object... objects) {
+        // BEGIN android-note
+        // changed parameter type from array to varargs.
+        // END android-note
         return new MessageFormat(template).format(objects);
     }
 
     /**
-     * Returns the Formats of this MessageFormat.
+     * Returns the {@code Format} instances used by this message format.
      * 
-     * @return an array of Format
+     * @return an array of {@code Format} instances.
+     * @since Android 1.0
      */
     public Format[] getFormats() {
         return formats.clone();
@@ -442,10 +784,11 @@ public class MessageFormat extends Format {
 
     /**
      * Returns the formats used for each argument index. If an argument is
-     * placed more than once in the pattern string, than returns the format of
-     * the last one.
+     * placed more than once in the pattern string, then this returns the format
+     * of the last one.
      * 
-     * @return an array of formats, ordered by argument index
+     * @return an array of formats, ordered by argument index.
+     * @since Android 1.0
      */
     public Format[] getFormatsByArgumentIndex() {
         Format[] answer = new Format[maxArgumentIndex + 1];
@@ -456,11 +799,14 @@ public class MessageFormat extends Format {
     }
 
     /**
-     * Sets the format used for argument at index <code>argIndex</code>to
-     * <code>format</code>
+     * Sets the format used for the argument at index {@code argIndex} to
+     * {@code format}.
      * 
      * @param argIndex
+     *            the index of the format to set.
      * @param format
+     *            the format that will be set at index {@code argIndex}.
+     * @since Android 1.0
      */
     public void setFormatByArgumentIndex(int argIndex, Format format) {
         for (int i = 0; i < maxOffset + 1; i++) {
@@ -471,10 +817,12 @@ public class MessageFormat extends Format {
     }
 
     /**
-     * Sets the formats used for each argument <code>The formats</code> array
+     * Sets the formats used for each argument. The {@code formats} array
      * elements should be in the order of the argument indices.
      * 
      * @param formats
+     *            the formats in an array.
+     * @since Android 1.0
      */
     public void setFormatsByArgumentIndex(Format[] formats) {
         for (int j = 0; j < formats.length; j++) {
@@ -487,22 +835,15 @@ public class MessageFormat extends Format {
     }
 
     /**
-     * Returns the Locale used when creating Formats.
+     * Returns the locale used when creating formats.
      * 
-     * @return the Locale used to create Formats
+     * @return the locale used to create formats.
+     * @since Android 1.0
      */
     public Locale getLocale() {
         return locale;
     }
 
-    /**
-     * Returns an integer hash code for the receiver. Objects which are equal
-     * answer the same value for this method.
-     * 
-     * @return the receiver's hash
-     * 
-     * @see #equals
-     */
     @Override
     public int hashCode() {
         int hashCode = 0;
@@ -522,15 +863,15 @@ public class MessageFormat extends Format {
     }
 
     /**
-     * Parse the message arguments from the specified String using the rules of
-     * this MessageFormat.
+     * Parses the message arguments from the specified string using the rules of
+     * this message format.
      * 
      * @param string
-     *            the String to parse
-     * @return the array of Object arguments resulting from the parse
-     * 
+     *            the string to parse.
+     * @return the array of {@code Object} arguments resulting from the parse.
      * @exception ParseException
-     *                when an error occurs during parsing
+     *                if an error occurs during parsing.
+     * @since Android 1.0
      */
     public Object[] parse(String string) throws ParseException {
         ParsePosition position = new ParsePosition(0);
@@ -542,19 +883,24 @@ public class MessageFormat extends Format {
     }
 
     /**
-     * Parse the message argument from the specified String starting at the
-     * index specified by the ParsePosition. If the string is successfully
-     * parsed, the index of the ParsePosition is updated to the index following
-     * the parsed text.
+     * Parses the message argument from the specified string starting at the
+     * index specified by {@code position}. If the string is successfully
+     * parsed then the index of the {@code ParsePosition} is updated to the
+     * index following the parsed text. On error, the index is unchanged and the
+     * error index of {@code ParsePosition} is set to the index where the error
+     * occurred.
      * 
      * @param string
-     *            the String to parse
+     *            the string to parse.
      * @param position
-     *            the ParsePosition, updated on return with the index following
-     *            the parsed text, or on error the index is unchanged and the
-     *            error index is set to the index where the error occurred
-     * @return the array of Object arguments resulting from the parse, or null
-     *         if there is an error
+     *            input/output parameter, specifies the start index in
+     *            {@code string} from where to start parsing. If parsing is
+     *            successful, it is updated with the index following the parsed
+     *            text; on error, the index is unchanged and the error index is
+     *            set to the index where the error occurred.
+     * @return the array of objects resulting from the parse, or {@code null} if
+     *         there is an error.
+     * @since Android 1.0
      */
     public Object[] parse(String string, ParsePosition position) {
         if (string == null) {
@@ -609,19 +955,24 @@ public class MessageFormat extends Format {
     }
 
     /**
-     * Parse the message argument from the specified String starting at the
-     * index specified by the ParsePosition. If the string is successfully
-     * parsed, the index of the ParsePosition is updated to the index following
-     * the parsed text.
+     * Parses the message argument from the specified string starting at the
+     * index specified by {@code position}. If the string is successfully
+     * parsed then the index of the {@code ParsePosition} is updated to the
+     * index following the parsed text. On error, the index is unchanged and the
+     * error index of {@code ParsePosition} is set to the index where the error
+     * occurred.
      * 
      * @param string
-     *            the String to parse
+     *            the string to parse.
      * @param position
-     *            the ParsePosition, updated on return with the index following
-     *            the parsed text, or on error the index is unchanged and the
-     *            error index is set to the index where the error occurred
-     * @return the array of Object arguments resulting from the parse, or null
-     *         if there is an error
+     *            input/output parameter, specifies the start index in
+     *            {@code string} from where to start parsing. If parsing is
+     *            successful, it is updated with the index following the parsed
+     *            text; on error, the index is unchanged and the error index is
+     *            set to the index where the error occurred.
+     * @return the array of objects resulting from the parse, or {@code null} if
+     *         there is an error.
+     * @since Android 1.0
      */
     @Override
     public Object parseObject(String string, ParsePosition position) {
@@ -710,7 +1061,9 @@ public class MessageFormat extends Format {
                         .getTimeInstance(dateStyle, locale);
             case 2: // number
                 if (ch == '}') {
-                    return NumberFormat.getInstance();
+                    // BEGIN android-changed
+                    return NumberFormat.getInstance(locale);
+                    // END android-changed
                 }
                 int numberStyle = match(string, position, true, new String[] {
                         "currency", "percent", "integer" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -737,22 +1090,24 @@ public class MessageFormat extends Format {
     }
 
     /**
-     * Sets the specified Format used by this MessageFormat.
+     * Sets the specified format used by this message format.
      * 
      * @param offset
-     *            the format to change
+     *            the index of the format to change.
      * @param format
-     *            the Format
+     *            the {@code Format} that replaces the old format.
+     * @since Android 1.0
      */
     public void setFormat(int offset, Format format) {
         formats[offset] = format;
     }
 
     /**
-     * Sets the Formats used by this MessageFormat.
+     * Sets the formats used by this message format.
      * 
      * @param formats
-     *            an array of Format
+     *            an array of {@code Format}.
+     * @since Android 1.0
      */
     public void setFormats(Format[] formats) {
         int min = this.formats.length;
@@ -765,10 +1120,13 @@ public class MessageFormat extends Format {
     }
 
     /**
-     * Sets the Locale to use when creating Formats.
+     * Sets the locale to use when creating {@code Format} instances. Changing
+     * the locale may change the behavior of {@code applyPattern},
+     * {@code toPattern}, {@code format} and {@code formatToCharacterIterator}.
      * 
      * @param locale
-     *            the Locale
+     *            the new locale.
+     * @since Android 1.0
      */
     public void setLocale(Locale locale) {
         this.locale = locale;
@@ -855,9 +1213,10 @@ public class MessageFormat extends Format {
     }
 
     /**
-     * Returns the pattern of this MessageFormat.
+     * Returns the pattern of this message format.
      * 
-     * @return the pattern
+     * @return the pattern.
+     * @since Android 1.0
      */
     public String toPattern() {
         StringBuffer buffer = new StringBuffer();
@@ -987,33 +1346,49 @@ public class MessageFormat extends Format {
 
     /**
      * The instances of this inner class are used as attribute keys in
-     * AttributedCharacterIterator that
-     * MessageFormat.formatToCharacterIterator() method returns.
+     * {@code AttributedCharacterIterator} that the
+     * {@link MessageFormat#formatToCharacterIterator(Object)} method returns.
      * <p>
-     * There is no public constructor to this class, the only instances are the
+     * There is no public constructor in this class, the only instances are the
      * constants defined here.
+     * </p>
+     * 
+     * @since Android 1.0
      */
     public static class Field extends Format.Field {
 
         private static final long serialVersionUID = 7899943957617360810L;
 
+        // BEGIN android-removed
+        // public static final Field ARGUMENT = new Field("message argument field"); //$NON-NLS-1$
+        // END android-removed
+
         /**
          * This constant stands for the message argument.
+         * 
+         * @since Android 1.0
          */
         public static final Field ARGUMENT = new Field("message argument field"); //$NON-NLS-1$
 
         /**
-         * Constructs a new instance of MessageFormat.Field with the given field
-         * name.
-         * @param fieldName The field name.
+         * Constructs a new instance of {@code MessageFormat.Field} with the
+         * given field name.
+         * 
+         * @param fieldName
+         *            the field name.
+         * @since Android 1.0
          */
         protected Field(String fieldName) {
             super(fieldName);
         }
 
         /**
-         * serialization method resolve instances to the constant
-         * MessageFormat.Field values
+         * Resolves instances that are deserialized to the constant
+         * {@code MessageFormat.Field} values.
+         * 
+         * @return the resolved field object.
+         * @throws InvalidObjectException
+         *             if an error occurs while resolving the field object.
          */
         @Override
         protected Object readResolve() throws InvalidObjectException {

@@ -1,18 +1,17 @@
-/* 
- *  Licensed to the Apache Software Foundation (ASF) under one or more
- *  contributor license agreements.  See the NOTICE file distributed with
- *  this work for additional information regarding copyright ownership.
- *  The ASF licenses this file to You under the Apache License, Version 2.0
- *  (the "License"); you may not use this file except in compliance with
- *  the License.  You may obtain a copy of the License at
+/* Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
  * 
  *     http://www.apache.org/licenses/LICENSE-2.0
  * 
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package java.lang;
@@ -25,7 +24,11 @@ import java.security.PrivilegedExceptionAction;
 import org.apache.harmony.luni.util.Msg;
 
 /**
- * The superclass of all enumerated types.
+ * The superclass of all enumerated types. Actual enumeration types inherit from
+ * this class, but extending this class does not make a class an enumration
+ * type, since the compiler needs to generate special information for it.
+ * 
+ * @since Android 1.0
  */
 public abstract class Enum<E extends Enum<E>> implements Serializable,
         Comparable<E> {
@@ -37,12 +40,14 @@ public abstract class Enum<E extends Enum<E>> implements Serializable,
     private final int ordinal;
 
     /**
-     * Constructor for enum subtypes.
+     * Constructor for constants of enum subtypes.
      * 
      * @param name
-     *            the enum constant declared name.
+     *            the enum constant's declared name.
      * @param ordinal
-     *            the enum constant position ordinal.
+     *            the enum constant's ordinal, which corresponds to its position
+     *            in the enum declaration, starting at zero.
+     * @since Android 1.0
      */
     protected Enum(String name, int ordinal) {
         this.name = name;
@@ -50,11 +55,12 @@ public abstract class Enum<E extends Enum<E>> implements Serializable,
     }
 
     /**
-     * Returns the name of the enum constant. The name is the field as it
-     * appears in the <code>Enum</code> declaration.
+     * Returns the name of this enum constant. The name is the field as it
+     * appears in the {@code enum} declaration.
      * 
-     * @return the precise enum constant name.
+     * @return the name of this enum constant.
      * @see #toString()
+     * @since Android 1.0
      */
     public final String name() {
         return name;
@@ -62,19 +68,21 @@ public abstract class Enum<E extends Enum<E>> implements Serializable,
 
     /**
      * Returns the position of the enum constant in the declaration. The first
-     * constant has and ordinal value of zero.
+     * constant has an ordinal value of zero.
      * 
-     * @return the constant's ordinal value.
+     * @return the ordinal value of this enum constant.
+     * @since Android 1.0
      */
     public final int ordinal() {
         return ordinal;
     }
 
     /**
-     * Answer a string representation of the receiver suitable for display to a
-     * programmer.
+     * Returns a string containing a concise, human-readable description of this
+     * object. In this case, the enum constant's name is returned.
      * 
-     * @return the displayable string name.
+     * @return a printable representation of this object.
+     * @since Android 1.0
      */
     @Override
     public String toString() {
@@ -82,32 +90,34 @@ public abstract class Enum<E extends Enum<E>> implements Serializable,
     }
 
     /**
-     * Returns true only if the receiver is equal to the argument. Since enums
-     * are unique this is equivalent to an identity test.
+     * Compares this object with the specified object and indicates if they are
+     * equal. In order to be equal, {@code object} must be identical to this
+     * enum constant.
      * 
-     * @return true if the receiver and argument are equal, otherwise return
-     *         false.
+     * @param other
+     *            the object to compare this enum constant with.
+     * @return {@code true} if the specified object is equal to this
+     *         {@code Enum}; {@code false} otherwise.
+     * @since Android 1.0
      */
     @Override
     public final boolean equals(Object other) {
         return this == other;
     }
 
-    /**
-     * Returns the hash of the receiver.
-     * 
-     * @return the hash code.
-     */
     @Override
     public final int hashCode() {
         return ordinal + (name == null ? 0 : name.hashCode());
     }
 
     /**
-     * Enums are singletons, they may not be cloned. This method always throws a
-     * {@link CloneNotSupportedException}.
+     * {@code Enum} objects are singletons, they may not be cloned. This method
+     * always throws a {@code CloneNotSupportedException}.
      * 
      * @return does not return.
+     * @throws CloneNotSupportedException
+     *             is always thrown.
+     * @since Android 1.0
      */
     @Override
     protected final Object clone() throws CloneNotSupportedException {
@@ -116,16 +126,19 @@ public abstract class Enum<E extends Enum<E>> implements Serializable,
     }
 
     /**
-     * Returns the comparative ordering of the receiver and the given argument.
-     * If the receiver is naturally ordered before the actual argument then the
-     * result is negative, if the receiver is naturally ordered in equal
-     * position to the actual argument then the result is zero, and if the
-     * receiver is naturally ordered after the actual argument then the result
-     * is positive.
+     * Compares this object to the specified enum object to determine their
+     * relative order. This method compares the object's ordinal values, that
+     * is, their position in the enum declaration.
      * 
-     * @return negative, zero, or positive value depending upon before, equal,
-     *         or after natural order respectively.
-     * @see Comparable#compareTo
+     * @param o
+     *            the enum object to compare this object to.
+     * @return a negative value if the ordinal value of this enum constant is
+     *         less than the ordinal value of {@code o}; 0 if the ordinal
+     *         values of this enum constant and {@code o} are equal; a positive
+     *         value if the ordinal value of this enum constant is greater than
+     *         the ordinal value of {@code o}.
+     * @see java.lang.Comparable
+     * @since Android 1.0
      */
     public final int compareTo(E o) {
         return ordinal - o.ordinal;
@@ -135,6 +148,7 @@ public abstract class Enum<E extends Enum<E>> implements Serializable,
      * Returns the enum constant's declaring class.
      * 
      * @return the class object representing the constant's enum type.
+     * @since Android 1.0
      */
     @SuppressWarnings("unchecked")
     public final Class<E> getDeclaringClass() {
@@ -147,20 +161,20 @@ public abstract class Enum<E extends Enum<E>> implements Serializable,
     }
 
     /**
-     * Returns the named constant of the given enum type.
+     * Returns the constant with the specified name of the specified enum type.
      * 
      * @param enumType
      *            the class of the enumerated type to search for the constant
      *            value.
      * @param name
      *            the name of the constant value to find.
-     * @return the enum constant
+     * @return the enum constant.
      * @throws NullPointerException
-     *             if either the <code>enumType</code> or <code>name</code>
-     *             are <code>null</code>.
+     *             if either {@code enumType} or {@code name} are {@code null}.
      * @throws IllegalArgumentException
-     *             if <code>enumType</code> is not an enumerated type or does
-     *             not have a constant value called <code>name</code>.
+     *             if {@code enumType} is not an enumerated type or does not
+     *             have a constant value called {@code name}.
+     * @since Android 1.0
      */
     public static <T extends Enum<T>> T valueOf(Class<T> enumType, String name) {
         if ((enumType == null) || (name == null)) {

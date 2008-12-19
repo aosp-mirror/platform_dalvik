@@ -102,7 +102,7 @@ public final class AnnotationFactory implements InvocationHandler, Serializable 
                 new Class[]{annotationType}, antn);
     }
 
-	private final Class<? extends Annotation> klazz;
+    private final Class<? extends Annotation> klazz;
     private AnnotationMember[] elements;
 
     /**
@@ -114,7 +114,7 @@ public final class AnnotationFactory implements InvocationHandler, Serializable 
      * @param values actual element values 
      */
     private AnnotationFactory(Class<? extends Annotation> klzz, AnnotationMember[] values) {
-		klazz = klzz;
+        klazz = klzz;
         AnnotationMember[] defs = getElementsDescription(klazz);
         if (values == null) {
             elements = defs;
@@ -131,7 +131,7 @@ public final class AnnotationFactory implements InvocationHandler, Serializable 
                 elements[i] = defs[i];
             }
         }
-	}
+    }
     
     /**
      * Reads the object, obtains actual member definitions for the annotation type, 
@@ -171,7 +171,7 @@ public final class AnnotationFactory implements InvocationHandler, Serializable 
         }  
         elements = merged.toArray(new AnnotationMember[merged.size()]);
     }
-	
+    
     /**
      * Returns true if the specified object represents the same annotation instance.
      * That is, if it implements the same annotation type and 
@@ -182,19 +182,19 @@ public final class AnnotationFactory implements InvocationHandler, Serializable 
      * false otherwise. 
      * @see android.lang.annotation.AnnotationMember#equals(Object)
      */
-	public boolean equals(Object obj) {
-		if (obj == this) {
-		    return true;
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
         }
         if (!klazz.isInstance(obj)) {
             return false;
         }
         Object handler = null;
-		if (Proxy.isProxyClass(obj.getClass()) 
+        if (Proxy.isProxyClass(obj.getClass()) 
                 && (handler = Proxy.getInvocationHandler(obj)) instanceof AnnotationFactory ) {
             AnnotationFactory other = (AnnotationFactory) handler;
-        	if (elements.length != other.elements.length) {
-        	    return false;
+            if (elements.length != other.elements.length) {
+                return false;
             }
             next: for (AnnotationMember el1 : elements){
                 for (AnnotationMember el2 : other.elements) {
@@ -245,36 +245,36 @@ public final class AnnotationFactory implements InvocationHandler, Serializable 
             }
             return true;
         }
-	}
+    }
 
     /**
      * Returns a hash code composed as a sum of hash codes of member elements, 
      * including elements with default values. 
      * @see android.lang.annotation.AnnotationMember#hashCode()
      */
-	public int hashCode() {
-		int hash = 0;
+    public int hashCode() {
+        int hash = 0;
         for (AnnotationMember element : elements) {
             hash += element.hashCode();
         }
         return hash;
-	}
+    }
 
     /**
      * Provides detailed description of this annotation instance,
      * including all member name-values pairs.
      * @return string representation of this annotation
      */
-	public String toString() {
-		String res = "@" + klazz.getName() + "(";
-		for(int i = 0; i < elements.length; i++) {
+    public String toString() {
+        String res = "@" + klazz.getName() + "(";
+        for(int i = 0; i < elements.length; i++) {
             if ( i != 0 ) {
                 res += ", ";    
             }
             res += elements[i].toString();;
         }
         return res + ")";
-	}
+    }
     
     /**
      * Processes a method invocation request to this annotation instance.
@@ -314,8 +314,8 @@ public final class AnnotationFactory implements InvocationHandler, Serializable 
                 }
                 return value;
             }
-		} else if (params.length == 1 && params[0] == Object.class && "equals".equals(name)){
-		    return Boolean.valueOf(equals(args[0]));
+        } else if (params.length == 1 && params[0] == Object.class && "equals".equals(name)){
+            return Boolean.valueOf(equals(args[0]));
         }
         throw new IllegalArgumentException(
                 "Invalid method for annotation type: " + method);

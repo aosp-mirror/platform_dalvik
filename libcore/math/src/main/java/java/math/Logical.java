@@ -224,6 +224,8 @@ class Logical {
     
     /** @see BigInteger#andNot(BigInteger) */
     static BigInteger andNot(BigInteger val, BigInteger that) {
+        // BEGIN android-changed
+        // copied from newer version of harmony
         if (that.sign == 0 ) {
             return val;
         }
@@ -252,6 +254,7 @@ class Logical {
                 return andNotNegative(val, that);
             }
         }
+        // END android-changed
     }
     
     /** @return sign = 1, magnitude = val.magnitude & ~that.magnitude*/

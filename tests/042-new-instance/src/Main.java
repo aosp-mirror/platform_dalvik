@@ -11,6 +11,7 @@ public class Main {
             Object obj = c.newInstance();
             System.out.println("LocalClass succeeded");
         } catch (Exception ex) {
+            System.err.println("LocalClass failed");
             ex.printStackTrace();
         }
 
@@ -22,6 +23,7 @@ public class Main {
         } catch (IllegalAccessException iae) {
             System.out.println("Got expected PackageAccess complaint");
         } catch (Exception ex) {
+            System.err.println("Got unexpected PackageAccess failure");
             ex.printStackTrace();
         }
 
@@ -40,6 +42,7 @@ class LocalClass2 {
             CC.newInstance();
             System.out.println("LocalClass2 succeeded");
         } catch (Exception ex) {
+            System.err.println("Got unexpected LocalClass2 failure");
             ex.printStackTrace();
         }
     }

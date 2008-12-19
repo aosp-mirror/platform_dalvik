@@ -17,11 +17,17 @@
 
 package tests.api.java.util;
 
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass; 
+
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 
+@TestTargetClass(Calendar.class) 
 public class CalendarTest extends junit.framework.TestCase {
     
     Locale defaultLocale;
@@ -29,6 +35,15 @@ public class CalendarTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Calendar#set(int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify ArrayIndexOutOfBoundsException.",
+      targets = {
+        @TestTarget(
+          methodName = "set",
+          methodArgs = {int.class, int.class}
+        )
+    })
     public void test_setII() {
         // Test for correct result defined by the last set field
         Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("EST"));
@@ -380,6 +395,15 @@ public class CalendarTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Calendar#setTime(java.util.Date)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setTime",
+          methodArgs = {java.util.Date.class}
+        )
+    })
     public void test_setTimeLjava_util_Date() {
         Calendar cal = Calendar.getInstance();
         // Use millisecond time for testing in Core
@@ -395,6 +419,15 @@ public class CalendarTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Calendar#compareTo(Calendar)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "compareTo",
+          methodArgs = {java.util.Calendar.class}
+        )
+    })
     public void test_compareToLjava_util_Calendar_null() {
         Calendar cal = Calendar.getInstance();
         try {
@@ -408,6 +441,16 @@ public class CalendarTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Calendar#compareTo(Calendar)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify NullPointerException, " + 
+            "IllegalArgumentException.",
+      targets = {
+        @TestTarget(
+          methodName = "compareTo",
+          methodArgs = {java.util.Calendar.class}
+        )
+    })
     public void test_compareToLjava_util_Calendar() {
         Calendar cal = Calendar.getInstance();
         cal.clear();
@@ -432,6 +475,15 @@ public class CalendarTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Calendar#clone()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "clone",
+          methodArgs = {}
+        )
+    })
     public void test_clone() {
         // Regression for HARMONY-475
         Calendar cal = Calendar.getInstance();
@@ -445,6 +497,15 @@ public class CalendarTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Calendar#getTimeInMillis()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getTimeInMillis",
+          methodArgs = {}
+        )
+    })
     public void test_getTimeInMillis() {
         Calendar cal = Calendar.getInstance();
 
@@ -464,6 +525,15 @@ public class CalendarTest extends junit.framework.TestCase {
     /**
      * @tests {@link java.util.Calendar#getActualMaximum(int)}
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getActualMaximum",
+          methodArgs = {int.class}
+        )
+    })
     public void test_getActualMaximum_I() {
         Calendar c = new MockCalendar();
         assertEquals("should be equal to 0", 0, c.getActualMaximum(0));
@@ -472,6 +542,15 @@ public class CalendarTest extends junit.framework.TestCase {
     /**
      * @tests {@link java.util.Calendar#getActualMinimum(int)}
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getActualMinimum",
+          methodArgs = {int.class}
+        )
+    })
     public void test_getActualMinimum_I() {
         Calendar c = new MockCalendar();
         assertEquals("should be equal to 0", 0, c.getActualMinimum(0));

@@ -18,7 +18,9 @@
 package java.lang;
 
 /**
- * This error is thrown when an exception occurs during class initialization.
+ * Thrown when an exception occurs during class initialization.
+ * 
+ * @since Android 1.0
  */
 public class ExceptionInInitializerError extends LinkageError {
 
@@ -27,7 +29,10 @@ public class ExceptionInInitializerError extends LinkageError {
     private Throwable exception;
 
     /**
-     * Constructs a new instance of this class with its walkback filled in.
+     * Constructs a new {@code ExceptionInInitializerError} that includes the
+     * current stack trace.
+     * 
+     * @since Android 1.0
      */
     public ExceptionInInitializerError() {
         super();
@@ -35,11 +40,12 @@ public class ExceptionInInitializerError extends LinkageError {
     }
 
     /**
-     * Constructs a new instance of this class with its walkback and message
-     * filled in.
+     * Constructs a new {@code ExceptionInInitializerError} with the current
+     * stack trace and the specified detail message.
      * 
      * @param detailMessage
-     *            String The detail message for the exception.
+     *            the detail message for this error.
+     * @since Android 1.0
      */
     public ExceptionInInitializerError(String detailMessage) {
         super(detailMessage);
@@ -47,12 +53,12 @@ public class ExceptionInInitializerError extends LinkageError {
     }
 
     /**
-     * Constructs a new instance of this class with its walkback and exception
-     * filled in. The exception should be the one which originally occurred in
-     * the class initialization code.
+     * Constructs a new {@code ExceptionInInitializerError} with the current
+     * stack trace and the specified cause. The exception should be the one
+     * which originally occurred in the class initialization code.
      * 
      * @param exception
-     *            Throwable The exception which caused the problem.
+     *            the exception that caused this error.
      */
     public ExceptionInInitializerError(Throwable exception) {
         super();
@@ -61,16 +67,20 @@ public class ExceptionInInitializerError extends LinkageError {
     }
 
     /**
-     * Returns the exception which was passed in when the instance was created.
+     * Returns the exception that is the cause of this error.
+     * 
+     * @return the exception that caused this error.
+     * @since Android 1.0
      */
     public Throwable getException() {
         return exception;
     }
 
     /**
-     * Returns the cause of this Throwable, or null if there is no cause.
+     * Returns the cause of this error, or {@code null} if there is no cause.
      * 
-     * @return Throwable The receiver's cause.
+     * @return the exception that caused this error.
+     * @since Android 1.0
      */
     @Override
     public Throwable getCause() {

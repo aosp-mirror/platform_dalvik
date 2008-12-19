@@ -1,8 +1,5 @@
 #!/bin/bash
 # This script was tested to work with bouncycastle 1.32.
-#
-# (NOTE: keytool does not pick up bouncycastle's jce provider jar
-#  unless it is installed under the system jar directory)
 
 set -x
 set -e
@@ -29,6 +26,7 @@ for cert in `ls -1 cacerts`
       -keystore $CERTSTORE \
       -storetype BKS \
       -provider org.bouncycastle.jce.provider.BouncyCastleProvider \
+      -providerpath /usr/share/java/bcprov.jar \
       -storepass $STOREPASS
   let "COUNTER=$COUNTER + 1"
 done

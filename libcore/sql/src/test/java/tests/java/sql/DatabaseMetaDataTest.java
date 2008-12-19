@@ -16,6 +16,11 @@
 
 package tests.java.sql;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -24,7 +29,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
 import java.util.Arrays;
-import java.util.HashSet;
 
 import tests.support.DatabaseCreator;
 import tests.support.Support_SQL;
@@ -34,6 +38,7 @@ import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
+@TestTargetClass(DatabaseMetaData.class)
 public class DatabaseMetaDataTest extends TestCase {
     private static String VIEW_NAME = "myView";
 
@@ -116,6 +121,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#allProceduresAreCallable()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "allProceduresAreCallable",
+          methodArgs = {}
+        )
+    })
     public void test_allProceduresAreCallable() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -168,6 +182,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#dataDefinitionCausesTransactionCommit()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "dataDefinitionCausesTransactionCommit",
+          methodArgs = {}
+        )
+    })
     public void test_dataDefinitionCausesTransactionCommit()
             throws SQLException {
         // TODO: JDBC does not implement this functionality
@@ -176,6 +199,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#dataDefinitionIgnoredInTransactions()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "dataDefinitionIgnoredInTransactions",
+          methodArgs = {}
+        )
+    })
     public void test_dataDefinitionIgnoredInTransactions() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -183,6 +215,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#deletesAreDetected(int)
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "deletesAreDetected",
+          methodArgs = {int.class}
+        )
+    })
     public void test_deletesAreDetectedI() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -190,6 +231,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#doesMaxRowSizeIncludeBlobs()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "doesMaxRowSizeIncludeBlobs",
+          methodArgs = {}
+        )
+    })
     public void test_doesMaxRowSizeIncludeBlobs() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -198,6 +248,15 @@ public class DatabaseMetaDataTest extends TestCase {
      * @tests java.sql.DatabaseMetaData #getAttributes(java.lang.String,
      *        java.lang.String, java.lang.String, java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "getAttributes",
+          methodArgs = {String.class, String.class, String.class, String.class}
+        )
+    })
     public void test_getAttributesLjava_lang_StringLjava_lang_StringLjava_lang_StringLjava_lang_String()
             throws SQLException {
         // TODO: JDBC does not implement this functionality
@@ -207,6 +266,16 @@ public class DatabaseMetaDataTest extends TestCase {
      * @tests java.sql.DatabaseMetaData #getBestRowIdentifier(java.lang.String,
      *        java.lang.String, java.lang.String, int, boolean)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "All variants of parameters were not tested. " +
+                  "SQLException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "getBestRowIdentifier",
+          methodArgs = {String.class, String.class, String.class, int.class, boolean.class}
+        )
+    })
     public void test_getBestRowIdentifierLjava_lang_StringLjava_lang_StringLjava_lang_StringIZ()
             throws SQLException {
         ResultSet result = statementForward.executeQuery("SELECT * FROM "
@@ -250,6 +319,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getCatalogSeparator()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getCatalogSeparator",
+          methodArgs = {}
+        )
+    })
     public void test_getCatalogSeparator() throws SQLException {
         assertTrue("Incorrect catalog separator", "".equals(meta
                 .getCatalogSeparator().trim()));
@@ -258,6 +336,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getCatalogTerm()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getCatalogTerm",
+          methodArgs = {}
+        )
+    })
     public void test_getCatalogTerm() throws SQLException {
         assertTrue("Incorrect catalog term", "".equals(meta
                 .getCatalogSeparator().trim()));
@@ -266,6 +353,16 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getCatalogs()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed. " +
+                  "Received result wasn't checked.",
+      targets = {
+        @TestTarget(
+          methodName = "getCatalogs",
+          methodArgs = {}
+        )
+    })
     public void test_getCatalogs() throws SQLException {
         ResultSet rs = meta.getCatalogs();
         // TODO getCatalog is not supported
@@ -334,6 +431,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getConnection()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getConnection",
+          methodArgs = {}
+        )
+    })
     public void test_getConnection() throws SQLException {
         assertEquals("Incorrect connection value", conn, meta.getConnection());
     }
@@ -343,6 +449,16 @@ public class DatabaseMetaDataTest extends TestCase {
      *        java.lang.String, java.lang.String, java.lang.String,
      *        java.lang.String, java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed. " +
+                  "All variants of parameters were not tested.",
+      targets = {
+        @TestTarget(
+          methodName = "getCrossReference",
+          methodArgs = {String.class, String.class, String.class, String.class, String.class, String.class}
+        )
+    })
     public void test_getCrossReferenceLjava_lang_StringLjava_lang_StringLjava_lang_StringLjava_lang_StringLjava_lang_StringLjava_lang_String()
             throws SQLException {
         ResultSet rs = meta.getCrossReference(conn.getCatalog(), null,
@@ -398,6 +514,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getDatabaseMajorVersion()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getDatabaseMajorVersion",
+          methodArgs = {}
+        )
+    })
     public void test_getDatabaseMajorVersion() throws SQLException {
         assertTrue("Incorrdct database major version", meta
                 .getDatabaseMajorVersion() >= 0);
@@ -406,6 +531,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getDatabaseMinorVersion()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getDatabaseMinorVersion",
+          methodArgs = {}
+        )
+    })
     public void test_getDatabaseMinorVersion() throws SQLException {
         assertTrue("Incorrect database minor version", meta
                 .getDatabaseMinorVersion() >= 0);
@@ -414,6 +548,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getDatabaseProductName()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getDatabaseProductName",
+          methodArgs = {}
+        )
+    })
     public void test_getDatabaseProductName() throws SQLException {
         assertTrue("Incorrect database product name", !"".equals(meta
                 .getDatabaseProductName().trim()));
@@ -422,6 +565,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getDatabaseProductVersion()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getDatabaseProductVersion",
+          methodArgs = {}
+        )
+    })
     public void test_getDatabaseProductVersion() throws SQLException {
         assertTrue("Incorrect database product version", !"".equals(meta
                 .getDatabaseProductVersion().trim()));
@@ -430,6 +582,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getDefaultTransactionIsolation()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getDefaultTransactionIsolation",
+          methodArgs = {}
+        )
+    })
     public void test_getDefaultTransactionIsolation() throws SQLException {
         int defaultLevel = meta.getDefaultTransactionIsolation();
         switch (defaultLevel) {
@@ -448,6 +609,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getDriverMajorVersion()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getDriverMajorVersion",
+          methodArgs = {}
+        )
+    })
     public void test_getDriverMajorVersion() {
         assertTrue("Incorrect driver major version", meta
                 .getDriverMajorVersion() >= 0);
@@ -456,6 +626,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getDriverMinorVersion()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getDriverMinorVersion",
+          methodArgs = {}
+        )
+    })
     public void test_getDriverMinorVersion() {
         assertTrue("Incorrect driver minor version", meta
                 .getDriverMinorVersion() >= 0);
@@ -464,6 +643,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getDriverName()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getDriverName",
+          methodArgs = {}
+        )
+    })
     public void test_getDriverName() throws SQLException {
         assertTrue("Incorrect driver name", !"".equals(meta.getDriverName()
                 .trim()));
@@ -472,6 +660,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getDriverVersion()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getDriverVersion",
+          methodArgs = {}
+        )
+    })
     public void test_getDriverVersion() throws SQLException {
         assertTrue("Incorrect driver version", !"".equals(meta
                 .getDriverVersion().trim()));
@@ -537,6 +734,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getExtraNameCharacters()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getExtraNameCharacters",
+          methodArgs = {}
+        )
+    })
     public void test_getExtraNameCharacters() throws SQLException {
         assertNotNull("Incorrect extra name characters", meta
                 .getExtraNameCharacters());
@@ -545,6 +751,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getIdentifierQuoteString()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getIdentifierQuoteString",
+          methodArgs = {}
+        )
+    })
     public void test_getIdentifierQuoteString() throws SQLException {
         assertTrue("Incorrect identifier of quoted string", !"".equals(meta
                 .getIdentifierQuoteString().trim()));
@@ -554,6 +769,15 @@ public class DatabaseMetaDataTest extends TestCase {
      * @tests java.sql.DatabaseMetaData #getImportedKeys(java.lang.String,
      *        java.lang.String, java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getImportedKeys",
+          methodArgs = {String.class, String.class, String.class}
+        )
+    })
     public void test_getImportedKeysLjava_lang_StringLjava_lang_StringLjava_lang_String()
             throws SQLException {
         ResultSet rs = meta.getImportedKeys(conn.getCatalog(), null,
@@ -658,6 +882,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getJDBCMajorVersion()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getJDBCMajorVersion",
+          methodArgs = {}
+        )
+    })
     public void test_getJDBCMajorVersion() throws SQLException {
         assertTrue("Incorrect JDBC major version",
                 meta.getJDBCMajorVersion() >= 0);
@@ -666,6 +899,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getJDBCMinorVersion()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getJDBCMinorVersion",
+          methodArgs = {}
+        )
+    })
     public void test_getJDBCMinorVersion() throws SQLException {
         assertTrue("Incorrect JDBC minor version",
                 meta.getJDBCMinorVersion() >= 0);
@@ -674,6 +916,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getMaxBinaryLiteralLength()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getMaxBinaryLiteralLength",
+          methodArgs = {}
+        )
+    })
     public void test_getMaxBinaryLiteralLength() throws SQLException {
         assertTrue("Incorrect binary literal length", meta
                 .getMaxBinaryLiteralLength() >= 0);
@@ -682,6 +933,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getMaxCatalogNameLength()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getMaxCatalogNameLength",
+          methodArgs = {}
+        )
+    })
     public void test_getMaxCatalogNameLength() throws SQLException {
         assertTrue("Incorrect name length", meta.getMaxCatalogNameLength() >= 0);
     }
@@ -689,6 +949,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getMaxCharLiteralLength()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getMaxCharLiteralLength",
+          methodArgs = {}
+        )
+    })
     public void test_getMaxCharLiteralLength() throws SQLException {
         assertTrue("Incorrect char literal length", meta
                 .getMaxCharLiteralLength() >= 0);
@@ -697,6 +966,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getMaxColumnNameLength()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getMaxColumnNameLength",
+          methodArgs = {}
+        )
+    })
     public void test_getMaxColumnNameLength() throws SQLException {
         assertTrue("Incorrect column name length", meta
                 .getMaxColumnNameLength() >= 0);
@@ -705,6 +983,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getMaxColumnsInGroupBy()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getMaxColumnsInGroupBy",
+          methodArgs = {}
+        )
+    })
     public void test_getMaxColumnsInGroupBy() throws SQLException {
         assertTrue("Incorrect number of columns",
                 meta.getMaxColumnsInGroupBy() >= 0);
@@ -713,6 +1000,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getMaxColumnsInIndex()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getMaxColumnsInIndex",
+          methodArgs = {}
+        )
+    })
     public void test_getMaxColumnsInIndex() throws SQLException {
         assertTrue("Incorrect number of columns",
                 meta.getMaxColumnsInIndex() >= 0);
@@ -721,6 +1017,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getMaxColumnsInOrderBy()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getMaxColumnsInOrderBy",
+          methodArgs = {}
+        )
+    })
     public void test_getMaxColumnsInOrderBy() throws SQLException {
         assertTrue("Incorrect number of columns",
                 meta.getMaxColumnsInOrderBy() >= 0);
@@ -729,6 +1034,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getMaxColumnsInSelect()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getMaxColumnsInSelect",
+          methodArgs = {}
+        )
+    })
     public void test_getMaxColumnsInSelect() throws SQLException {
         assertTrue("Incorrect number of columns",
                 meta.getMaxColumnsInSelect() >= 0);
@@ -737,6 +1051,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getMaxColumnsInTable()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getMaxColumnsInTable",
+          methodArgs = {}
+        )
+    })
     public void test_getMaxColumnsInTable() throws SQLException {
         assertTrue("Incorrect number of columns",
                 meta.getMaxColumnsInTable() >= 0);
@@ -745,6 +1068,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getMaxConnections()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getMaxConnections",
+          methodArgs = {}
+        )
+    })
     public void test_getMaxConnections() throws SQLException {
         assertTrue("Incorrect number of connections",
                 meta.getMaxConnections() >= 0);
@@ -753,6 +1085,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getMaxCursorNameLength()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getMaxCursorNameLength",
+          methodArgs = {}
+        )
+    })
     public void test_getMaxCursorNameLength() throws SQLException {
         int nameLength = meta.getMaxCursorNameLength();
         if (nameLength > 0) {
@@ -770,6 +1111,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getMaxIndexLength()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getMaxIndexLength",
+          methodArgs = {}
+        )
+    })
     public void test_getMaxIndexLength() throws SQLException {
         assertTrue("Incorrect length of index", meta.getMaxIndexLength() >= 0);
     }
@@ -777,6 +1127,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getMaxProcedureNameLength()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getMaxProcedureNameLength",
+          methodArgs = {}
+        )
+    })
     public void test_getMaxProcedureNameLength() throws SQLException {
         assertTrue("Incorrect length of procedure name", meta
                 .getMaxProcedureNameLength() >= 0);
@@ -785,6 +1144,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getMaxRowSize()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getMaxRowSize",
+          methodArgs = {}
+        )
+    })
     public void test_getMaxRowSize() throws SQLException {
         assertTrue("Incorrect size of row", meta.getMaxRowSize() >= 0);
     }
@@ -792,6 +1160,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getMaxSchemaNameLength()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getMaxSchemaNameLength",
+          methodArgs = {}
+        )
+    })
     public void test_getMaxSchemaNameLength() throws SQLException {
         assertTrue("Incorrect length of schema name", meta
                 .getMaxSchemaNameLength() >= 0);
@@ -800,6 +1177,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getMaxStatementLength()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getMaxStatementLength",
+          methodArgs = {}
+        )
+    })
     public void test_getMaxStatementLength() throws SQLException {
         assertTrue("Incorrect length of statement", meta
                 .getMaxStatementLength() >= 0);
@@ -808,6 +1194,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getMaxStatements()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getMaxStatements",
+          methodArgs = {}
+        )
+    })
     public void test_getMaxStatements() throws SQLException {
         assertTrue("Incorrect number of statements",
                 meta.getMaxStatements() >= 0);
@@ -816,6 +1211,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getMaxTableNameLength()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getMaxTableNameLength",
+          methodArgs = {}
+        )
+    })
     public void test_getMaxTableNameLength() throws SQLException {
         assertTrue("Incorrect length of table name", meta
                 .getMaxTableNameLength() >= 0);
@@ -824,6 +1228,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getMaxTablesInSelect()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getMaxTablesInSelect",
+          methodArgs = {}
+        )
+    })
     public void test_getMaxTablesInSelect() throws SQLException {
         assertTrue("Incorrect number of tables",
                 meta.getMaxTablesInSelect() >= 0);
@@ -832,6 +1245,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getMaxUserNameLength()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getMaxUserNameLength",
+          methodArgs = {}
+        )
+    })
     public void test_getMaxUserNameLength() throws SQLException {
         assertTrue("Incorrect length of user name",
                 meta.getMaxUserNameLength() >= 0);
@@ -840,6 +1262,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getNumericFunctions()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getNumericFunctions",
+          methodArgs = {}
+        )
+    })
     public void test_getNumericFunctions() throws SQLException {
         assertTrue("Incorrect list of math functions", "".equals(meta
                 .getNumericFunctions().trim()));
@@ -849,6 +1280,15 @@ public class DatabaseMetaDataTest extends TestCase {
      * @tests java.sql.DatabaseMetaData #getPrimaryKeys(java.lang.String,
      *        java.lang.String, java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getPrimaryKeys",
+          methodArgs = {String.class, String.class, String.class}
+        )
+    })
     public void test_getPrimaryKeysLjava_lang_StringLjava_lang_StringLjava_lang_String()
             throws SQLException {
         ResultSet rs = meta.getPrimaryKeys(conn.getCatalog(), null,
@@ -881,6 +1321,15 @@ public class DatabaseMetaDataTest extends TestCase {
      * @tests java.sql.DatabaseMetaData #getProcedureColumns(java.lang.String,
      *        java.lang.String, java.lang.String, java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "getProcedureColumns",
+          methodArgs = {String.class, String.class, String.class, String.class}
+        )
+    })
     public void test_getProcedureColumnsLjava_lang_StringLjava_lang_StringLjava_lang_StringLjava_lang_String()
             throws SQLException {
         // TODO: JDBC does not implement this functionality
@@ -889,6 +1338,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getProcedureTerm()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getProcedureTerm",
+          methodArgs = {}
+        )
+    })
     public void test_getProcedureTerm() throws SQLException {
         assertTrue("Incorrect procedure term", "".equals(meta
                 .getProcedureTerm().trim()));
@@ -898,6 +1356,15 @@ public class DatabaseMetaDataTest extends TestCase {
      * @tests java.sql.DatabaseMetaData #getProcedures(java.lang.String,
      *        java.lang.String, java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "getProcedures",
+          methodArgs = {String.class, String.class, String.class}
+        )
+    })
     public void test_getProceduresLjava_lang_StringLjava_lang_StringLjava_lang_String()
             throws SQLException {
         // TODO: JDBC does not implement this functionality
@@ -906,6 +1373,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getResultSetHoldability()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getResultSetHoldability",
+          methodArgs = {}
+        )
+    })
     public void test_getResultSetHoldability() throws SQLException {
         int hdb = meta.getResultSetHoldability();
         switch (hdb) {
@@ -923,6 +1399,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getSQLKeywords()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getSQLKeywords",
+          methodArgs = {}
+        )
+    })
     public void test_getSQLKeywords() throws SQLException {
         assertTrue("Incorrect SQL keywords", !"".equals(meta.getSQLKeywords()
                 .trim()));
@@ -931,6 +1416,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getSQLStateType()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getSQLStateType",
+          methodArgs = {}
+        )
+    })
     public void test_getSQLStateType() throws SQLException {
         int type = meta.getSQLStateType();
         switch (type) {
@@ -946,6 +1440,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getSchemaTerm()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getSchemaTerm",
+          methodArgs = {}
+        )
+    })
     public void test_getSchemaTerm() throws SQLException {
         assertNotNull("Incorrect schema term", meta.getSchemaTerm());
     }
@@ -953,6 +1456,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getSchemas()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getSchemas",
+          methodArgs = {}
+        )
+    })
     public void test_getSchemas() throws SQLException {
         ResultSet rs = meta.getSchemas();
         ResultSetMetaData rsmd = rs.getMetaData();
@@ -970,6 +1482,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getSearchStringEscape()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getSearchStringEscape",
+          methodArgs = {}
+        )
+    })
     public void test_getSearchStringEscape() throws SQLException {
         assertTrue("Incorrect search string escape", !"".equals(meta
                 .getSearchStringEscape().trim()));
@@ -978,6 +1499,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getStringFunctions()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getStringFunctions",
+          methodArgs = {}
+        )
+    })
     public void test_getStringFunctions() throws SQLException {
         assertTrue("Incorrect string functions", "".equals(meta
                 .getStringFunctions().trim()));
@@ -987,6 +1517,15 @@ public class DatabaseMetaDataTest extends TestCase {
      * @tests java.sql.DatabaseMetaData #getSuperTables(java.lang.String,
      *        java.lang.String, java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "getSuperTables",
+          methodArgs = {String.class, String.class, String.class}
+        )
+    })
     public void test_getSuperTablesLjava_lang_StringLjava_lang_StringLjava_lang_String()
             throws SQLException {
         // TODO: JDBC does not implement this functionality
@@ -996,6 +1535,15 @@ public class DatabaseMetaDataTest extends TestCase {
      * @tests java.sql.DatabaseMetaData #getSuperTypes(java.lang.String,
      *        java.lang.String, java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "getSuperTypes",
+          methodArgs = {String.class, String.class, String.class}
+        )
+    })
     public void test_getSuperTypesLjava_lang_StringLjava_lang_StringLjava_lang_String()
             throws SQLException {
         // TODO: JDBC does not implement this functionality
@@ -1004,6 +1552,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getSystemFunctions()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getSystemFunctions",
+          methodArgs = {}
+        )
+    })
     public void test_getSystemFunctions() throws SQLException {
         assertTrue("No system function exist", meta.getSystemFunctions()
                 .trim().equals(""));
@@ -1113,6 +1670,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getTableTypes()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getTableTypes",
+          methodArgs = {}
+        )
+    })
     public void test_getTableTypes() throws SQLException {
         String[] tableTypes = { "LOCAL TEMPORARY", "TABLE", "VIEW" };
         ResultSet rs = meta.getTableTypes();
@@ -1128,6 +1694,15 @@ public class DatabaseMetaDataTest extends TestCase {
      * @tests java.sql.DatabaseMetaData #getTables(java.lang.String,
      *        java.lang.String, java.lang.String, java.lang.String[])
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getTables",
+          methodArgs = {String.class, String.class, String.class, String[].class}
+        )
+    })
     public void test_getTablesLjava_lang_StringLjava_lang_StringLjava_lang_String$Ljava_lang_String()
             throws SQLException {
         String[] tablesName = { VIEW_NAME, DatabaseCreator.TEST_TABLE1,
@@ -1187,6 +1762,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getTimeDateFunctions()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getTimeDateFunctions",
+          methodArgs = {}
+        )
+    })
     public void test_getTimeDateFunctions() throws SQLException {
         assertFalse("No time and data functions exist", !meta
                 .getTimeDateFunctions().trim().equals(""));
@@ -1195,6 +1779,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getTypeInfo()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getTypeInfo",
+          methodArgs = {}
+        )
+    })
     public void test_getTypeInfo() throws SQLException {
         insertNewRecord();
 
@@ -1234,6 +1827,15 @@ public class DatabaseMetaDataTest extends TestCase {
      * @tests java.sql.DatabaseMetaData #getUDTs(java.lang.String,
      *        java.lang.String, java.lang.String, int[])
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "getUDTs",
+          methodArgs = {String.class, String.class, String.class, int[].class}
+        )
+    })
     public void test_getUDTsLjava_lang_StringLjava_lang_StringLjava_lang_String$I()
             throws SQLException {
         // TODO: JDBC does not implement this functionality
@@ -1242,6 +1844,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#getURL()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "getURL",
+          methodArgs = {}
+        )
+    })
     public void test_getURL() throws SQLException {
         assertEquals("Wrong url", Support_SQL.sqlUrl, meta.getURL());
     }
@@ -1286,6 +1897,16 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#insertsAreDetected(int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed. " +
+                  "Verification with invalid parameters missed.",
+      targets = {
+        @TestTarget(
+          methodName = "insertsAreDetected",
+          methodArgs = {int.class}
+        )
+    })
     public void test_insertsAreDetectedI() throws SQLException {
         assertFalse(
                 "visible row insert can be detected for TYPE_FORWARD_ONLY type",
@@ -1301,6 +1922,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#isCatalogAtStart()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "isCatalogAtStart",
+          methodArgs = {}
+        )
+    })
     public void test_isCatalogAtStart() throws SQLException {
         assertFalse(
                 "catalog doesn't appear at the start of a fully qualified table name",
@@ -1310,6 +1940,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#isReadOnly()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "isReadOnly",
+          methodArgs = {}
+        )
+    })
     public void test_isReadOnly() throws SQLException {
         assertFalse("database is not read-only", meta.isReadOnly());
     }
@@ -1317,6 +1956,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#locatorsUpdateCopy()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "locatorsUpdateCopy",
+          methodArgs = {}
+        )
+    })
     public void test_locatorsUpdateCopy() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1324,6 +1972,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#nullPlusNonNullIsNull()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "nullPlusNonNullIsNull",
+          methodArgs = {}
+        )
+    })
     public void test_nullPlusNonNullIsNull() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1331,6 +1988,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#nullsAreSortedAtEnd()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "nullsAreSortedAtEnd",
+          methodArgs = {}
+        )
+    })
     public void test_nullsAreSortedAtEnd() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1338,6 +2004,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#nullsAreSortedAtStart()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "nullsAreSortedAtStart",
+          methodArgs = {}
+        )
+    })
     public void test_nullsAreSortedAtStart() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1345,6 +2020,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#nullsAreSortedHigh()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "nullsAreSortedHigh",
+          methodArgs = {}
+        )
+    })
     public void test_nullsAreSortedHigh() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1352,6 +2036,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#nullsAreSortedLow()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "nullsAreSortedLow",
+          methodArgs = {}
+        )
+    })
     public void test_nullsAreSortedLow() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1359,6 +2052,16 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#othersDeletesAreVisible(int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed. " +
+                  "Verification with invalid parameters missed.",
+      targets = {
+        @TestTarget(
+          methodName = "othersDeletesAreVisible",
+          methodArgs = {int.class}
+        )
+    })
     public void test_othersDeletesAreVisibleI() throws SQLException {
         assertFalse(
                 "deletes made by others are visible for TYPE_FORWARD_ONLY type",
@@ -1376,6 +2079,16 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#othersInsertsAreVisible(int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed. " +
+                  "Verification with invalid parameters missed.",
+      targets = {
+        @TestTarget(
+          methodName = "othersInsertsAreVisible",
+          methodArgs = {int.class}
+        )
+    })
     public void test_othersInsertsAreVisibleI() throws SQLException {
         assertFalse(
                 "inserts made by others are visible for TYPE_FORWARD_ONLY type",
@@ -1393,6 +2106,16 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#othersUpdatesAreVisible(int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed. " +
+                  "Verification with invalid parameters missed.",
+      targets = {
+        @TestTarget(
+          methodName = "othersUpdatesAreVisible",
+          methodArgs = {int.class}
+        )
+    })
     public void test_othersUpdatesAreVisibleI() throws SQLException {
         assertFalse(
                 "updates made by others are visible for TYPE_FORWARD_ONLY type",
@@ -1410,6 +2133,16 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#ownDeletesAreVisible(int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed. " +
+                "Verification with invalid parameters missed.",
+      targets = {
+        @TestTarget(
+          methodName = "ownDeletesAreVisible",
+          methodArgs = {int.class}
+        )
+    })
     public void test_ownDeletesAreVisibleI() throws SQLException {
         // TODO not supported
 //        assertFalse(
@@ -1428,6 +2161,16 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#ownInsertsAreVisible(int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed. " +
+                "Verification with invalid parameters missed.",
+      targets = {
+        @TestTarget(
+          methodName = "ownInsertsAreVisible",
+          methodArgs = {int.class}
+        )
+    })
     public void test_ownInsertsAreVisibleI() throws SQLException {
 //        assertFalse(
 //                "result set's own inserts are visible for TYPE_FORWARD_ONLY type",
@@ -1445,6 +2188,16 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#ownUpdatesAreVisible(int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed. " +
+                "Verification with invalid parameters missed.",
+      targets = {
+        @TestTarget(
+          methodName = "ownUpdatesAreVisible",
+          methodArgs = {int.class}
+        )
+    })
     public void test_ownUpdatesAreVisibleI() throws SQLException {
         // TODO not supported
 //        assertFalse(
@@ -1463,6 +2216,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#storesLowerCaseIdentifiers()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "storesLowerCaseIdentifiers",
+          methodArgs = {}
+        )
+    })
     public void test_storesLowerCaseIdentifiers() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1470,6 +2232,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#storesLowerCaseQuotedIdentifiers()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "storesLowerCaseQuotedIdentifiers",
+          methodArgs = {}
+        )
+    })
     public void test_storesLowerCaseQuotedIdentifiers() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1477,6 +2248,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#storesMixedCaseIdentifiers()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Method storesMixedCaseQuotedIdentifiers was invoked instead of storesMixedCaseIdentifiers",
+      targets = {
+        @TestTarget(
+          methodName = "storesMixedCaseIdentifiers",
+          methodArgs = {}
+        )
+    })
     public void test_storesMixedCaseIdentifiers() throws SQLException {
         insertNewRecord();
 
@@ -1498,6 +2278,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#storesMixedCaseQuotedIdentifiers()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "storesMixedCaseQuotedIdentifiers",
+          methodArgs = {}
+        )
+    })
     public void test_storesMixedCaseQuotedIdentifiers() throws SQLException {
         String quote = meta.getIdentifierQuoteString();
 
@@ -1521,6 +2310,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#storesUpperCaseIdentifiers()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "storesUpperCaseIdentifiers",
+          methodArgs = {}
+        )
+    })
     public void test_storesUpperCaseIdentifiers() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1528,6 +2326,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#storesUpperCaseQuotedIdentifiers()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "storesUpperCaseQuotedIdentifiers",
+          methodArgs = {}
+        )
+    })
     public void test_storesUpperCaseQuotedIdentifiers() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1535,6 +2342,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsANSI92EntryLevelSQL()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsANSI92EntryLevelSQL",
+          methodArgs = {}
+        )
+    })
     public void test_supportsANSI92EntryLevelSQL() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1542,6 +2358,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsANSI92FullSQL()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsANSI92FullSQL",
+          methodArgs = {}
+        )
+    })
     public void test_supportsANSI92FullSQL() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1549,6 +2374,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsANSI92IntermediateSQL()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsANSI92IntermediateSQL",
+          methodArgs = {}
+        )
+    })
     public void test_supportsANSI92IntermediateSQL() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1556,6 +2390,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsAlterTableWithAddColumn()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsAlterTableWithAddColumn",
+          methodArgs = {}
+        )
+    })
     public void test_supportsAlterTableWithAddColumn() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1563,6 +2406,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsAlterTableWithDropColumn()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsAlterTableWithDropColumn",
+          methodArgs = {}
+        )
+    })
     public void test_supportsAlterTableWithDropColumn() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1570,6 +2422,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsBatchUpdates()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsBatchUpdates",
+          methodArgs = {}
+        )
+    })
     public void test_supportsBatchUpdates() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1577,6 +2438,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsCatalogsInDataManipulation()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsCatalogsInDataManipulation",
+          methodArgs = {}
+        )
+    })
     public void test_supportsCatalogsInDataManipulation() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1584,6 +2454,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsCatalogsInIndexDefinitions()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsCatalogsInIndexDefinitions",
+          methodArgs = {}
+        )
+    })
     public void test_supportsCatalogsInIndexDefinitions() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1591,6 +2470,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsCatalogsInPrivilegeDefinitions()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsCatalogsInPrivilegeDefinitions",
+          methodArgs = {}
+        )
+    })
     public void test_supportsCatalogsInPrivilegeDefinitions()
             throws SQLException {
         // TODO: JDBC does not implement this functionality
@@ -1599,6 +2487,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsCatalogsInProcedureCalls()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsCatalogsInProcedureCalls",
+          methodArgs = {}
+        )
+    })
     public void test_supportsCatalogsInProcedureCalls() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1606,6 +2503,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsCatalogsInTableDefinitions()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsCatalogsInTableDefinitions",
+          methodArgs = {}
+        )
+    })
     public void test_supportsCatalogsInTableDefinitions() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1613,6 +2519,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsColumnAliasing()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "supportsColumnAliasing",
+          methodArgs = {}
+        )
+    })
     public void test_supportsColumnAliasing() throws SQLException {
         insertNewRecord();
 
@@ -1637,6 +2552,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsConvert()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsConvert",
+          methodArgs = {}
+        )
+    })
     public void test_supportsConvert() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1644,6 +2568,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsConvert(int, int)
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsConvert",
+          methodArgs = {int.class, int.class}
+        )
+    })
     public void test_supportsConvertII() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1651,6 +2584,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsCoreSQLGrammar()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsCoreSQLGrammar",
+          methodArgs = {}
+        )
+    })
     public void test_supportsCoreSQLGrammar() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1658,6 +2600,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsCorrelatedSubqueries()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsCorrelatedSubqueries",
+          methodArgs = {}
+        )
+    })
     public void test_supportsCorrelatedSubqueries() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1665,6 +2616,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsDataDefinitionAndDataManipulationTransactions()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsDataDefinitionAndDataManipulationTransactions",
+          methodArgs = {}
+        )
+    })
     public void test_supportsDataDefinitionAndDataManipulationTransactions()
             throws SQLException {
         // TODO: JDBC does not implement this functionality
@@ -1673,6 +2633,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsDataManipulationTransactionsOnly()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsDataManipulationTransactionsOnly",
+          methodArgs = {}
+        )
+    })
     public void test_supportsDataManipulationTransactionsOnly()
             throws SQLException {
         // TODO: JDBC does not implement this functionality
@@ -1681,6 +2650,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsDifferentTableCorrelationNames()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsDifferentTableCorrelationNames",
+          methodArgs = {}
+        )
+    })
     public void test_supportsDifferentTableCorrelationNames()
             throws SQLException {
         // TODO: JDBC does not implement this functionality
@@ -1689,6 +2667,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsExpressionsInOrderBy()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "supportsExpressionsInOrderBy",
+          methodArgs = {}
+        )
+    })
     public void test_supportsExpressionsInOrderBy() throws SQLException {
         insertNewRecord();
 
@@ -1710,6 +2697,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsExtendedSQLGrammar()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsExtendedSQLGrammar",
+          methodArgs = {}
+        )
+    })
     public void test_supportsExtendedSQLGrammar() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1717,6 +2713,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsFullOuterJoins()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsFullOuterJoins",
+          methodArgs = {}
+        )
+    })
     public void test_supportsFullOuterJoins() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1724,6 +2729,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsGetGeneratedKeys()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsGetGeneratedKeys",
+          methodArgs = {}
+        )
+    })
     public void test_supportsGetGeneratedKeys() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1731,6 +2745,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsGroupBy()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "supportsGroupBy",
+          methodArgs = {}
+        )
+    })
     public void test_supportsGroupBy() throws SQLException {
         insertNewRecord();
 
@@ -1752,6 +2775,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsGroupByBeyondSelect()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsGroupByBeyondSelect",
+          methodArgs = {}
+        )
+    })
     public void test_supportsGroupByBeyondSelect() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1759,6 +2791,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsGroupByUnrelated()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "supportsGroupByUnrelated",
+          methodArgs = {}
+        )
+    })
     public void test_supportsGroupByUnrelated() throws SQLException {
         insertNewRecord();
 
@@ -1780,6 +2821,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsIntegrityEnhancementFacility()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsIntegrityEnhancementFacility",
+          methodArgs = {}
+        )
+    })
     public void test_supportsIntegrityEnhancementFacility() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1787,6 +2837,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsLikeEscapeClause()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsLikeEscapeClause",
+          methodArgs = {}
+        )
+    })
     public void test_supportsLikeEscapeClause() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1794,6 +2853,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsLimitedOuterJoins()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsLimitedOuterJoins",
+          methodArgs = {}
+        )
+    })
     public void test_supportsLimitedOuterJoins() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1801,6 +2869,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsMinimumSQLGrammar()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsMinimumSQLGrammar",
+          methodArgs = {}
+        )
+    })
     public void test_supportsMinimumSQLGrammar() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1808,6 +2885,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsMixedCaseIdentifiers()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsMixedCaseIdentifiers",
+          methodArgs = {}
+        )
+    })
     public void test_supportsMixedCaseIdentifiers() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1815,6 +2901,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsMixedCaseQuotedIdentifiers()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsMixedCaseQuotedIdentifiers",
+          methodArgs = {}
+        )
+    })
     public void test_supportsMixedCaseQuotedIdentifiers() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1822,6 +2917,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsMultipleOpenResults()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsMultipleOpenResults",
+          methodArgs = {}
+        )
+    })
     public void test_supportsMultipleOpenResults() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1829,6 +2933,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsMultipleResultSets()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsMultipleResultSets",
+          methodArgs = {}
+        )
+    })
     public void test_supportsMultipleResultSets() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1836,6 +2949,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsMultipleTransactions()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsMultipleTransactions",
+          methodArgs = {}
+        )
+    })
     public void test_supportsMultipleTransactions() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1843,6 +2965,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsNamedParameters()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsNamedParameters",
+          methodArgs = {}
+        )
+    })
     public void test_supportsNamedParameters() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1850,6 +2981,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsNonNullableColumns()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "supportsNonNullableColumns",
+          methodArgs = {}
+        )
+    })
     public void test_supportsNonNullableColumns() throws SQLException {
         assertTrue(
                 "columns in this database may not be defined as non-nullable",
@@ -1859,6 +2999,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsOpenCursorsAcrossCommit()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsOpenCursorsAcrossCommit",
+          methodArgs = {}
+        )
+    })
     public void test_supportsOpenCursorsAcrossCommit() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1866,6 +3015,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsOpenCursorsAcrossRollback()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsOpenCursorsAcrossRollback",
+          methodArgs = {}
+        )
+    })
     public void test_supportsOpenCursorsAcrossRollback() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1873,6 +3031,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsOpenStatementsAcrossCommit()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsOpenStatementsAcrossCommit",
+          methodArgs = {}
+        )
+    })
     public void test_supportsOpenStatementsAcrossCommit() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1880,6 +3047,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsOpenStatementsAcrossRollback()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsOpenStatementsAcrossRollback",
+          methodArgs = {}
+        )
+    })
     public void test_supportsOpenStatementsAcrossRollback() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1887,6 +3063,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsOrderByUnrelated()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "supportsOrderByUnrelated",
+          methodArgs = {}
+        )
+    })
     public void test_supportsOrderByUnrelated() throws SQLException {
         insertNewRecord();
 
@@ -1908,6 +3093,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsOuterJoins()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsOuterJoins",
+          methodArgs = {}
+        )
+    })
     public void test_supportsOuterJoins() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1915,6 +3109,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsPositionedDelete()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsPositionedDelete",
+          methodArgs = {}
+        )
+    })
     public void test_supportsPositionedDelete() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1922,6 +3125,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsPositionedUpdate()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsPositionedUpdate",
+          methodArgs = {}
+        )
+    })
     public void test_supportsPositionedUpdate() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1929,6 +3141,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsResultSetConcurrency(int, int)
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsResultSetConcurrency",
+          methodArgs = {int.class, int.class}
+        )
+    })
     public void test_supportsResultSetConcurrencyII() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1936,6 +3157,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsResultSetHoldability(int)
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsResultSetHoldability",
+          methodArgs = {int.class}
+        )
+    })
     public void test_supportsResultSetHoldabilityI() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1943,6 +3173,16 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsResultSetType(int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed. " +
+                  "Verification with invalid parameters missed.",
+      targets = {
+        @TestTarget(
+          methodName = "supportsResultSetType",
+          methodArgs = {int.class}
+        )
+    })
     public void test_supportsResultSetTypeI() throws SQLException {
         // TODO not supported
 //        assertFalse("database supports TYPE_FORWARD_ONLY type", meta
@@ -1958,6 +3198,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsSavepoints()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsSavepoints",
+          methodArgs = {}
+        )
+    })
     public void test_supportsSavepoints() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1965,6 +3214,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsSchemasInDataManipulation()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsSchemasInDataManipulation",
+          methodArgs = {}
+        )
+    })
     public void test_supportsSchemasInDataManipulation() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1972,6 +3230,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsSchemasInIndexDefinitions()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsSchemasInIndexDefinitions",
+          methodArgs = {}
+        )
+    })
     public void test_supportsSchemasInIndexDefinitions() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1979,6 +3246,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsSchemasInPrivilegeDefinitions()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsSchemasInPrivilegeDefinitions",
+          methodArgs = {}
+        )
+    })
     public void test_supportsSchemasInPrivilegeDefinitions()
             throws SQLException {
         // TODO: JDBC does not implement this functionality
@@ -1987,6 +3263,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsSchemasInProcedureCalls()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsSchemasInProcedureCalls",
+          methodArgs = {}
+        )
+    })
     public void test_supportsSchemasInProcedureCalls() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -1994,6 +3279,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsSchemasInTableDefinitions()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsSchemasInTableDefinitions",
+          methodArgs = {}
+        )
+    })
     public void test_supportsSchemasInTableDefinitions() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -2001,6 +3295,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsSelectForUpdate()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "supportsSelectForUpdate",
+          methodArgs = {}
+        )
+    })
     public void test_supportsSelectForUpdate() throws SQLException {
         insertNewRecord();
 
@@ -2022,6 +3325,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsStatementPooling()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsStatementPooling",
+          methodArgs = {}
+        )
+    })
     public void test_supportsStatementPooling() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -2029,6 +3341,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsStoredProcedures()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsStoredProcedures",
+          methodArgs = {}
+        )
+    })
     public void test_supportsStoredProcedures() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -2036,6 +3357,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsSubqueriesInComparisons()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsSubqueriesInComparisons",
+          methodArgs = {}
+        )
+    })
     public void test_supportsSubqueriesInComparisons() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -2043,6 +3373,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsSubqueriesInExists()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "supportsSubqueriesInExists",
+          methodArgs = {}
+        )
+    })
     public void test_supportsSubqueriesInExists() throws SQLException {
         insertNewRecord();
 
@@ -2066,6 +3405,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsSubqueriesInIns()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsSubqueriesInIns",
+          methodArgs = {}
+        )
+    })
     public void test_supportsSubqueriesInIns() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -2073,6 +3421,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsSubqueriesInQuantifieds()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsSubqueriesInQuantifieds",
+          methodArgs = {}
+        )
+    })
     public void test_supportsSubqueriesInQuantifieds() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -2080,6 +3437,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsTableCorrelationNames()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "supportsTableCorrelationNames",
+          methodArgs = {}
+        )
+    })
     public void test_supportsTableCorrelationNames() throws SQLException {
         insertNewRecord();
 
@@ -2105,6 +3471,16 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsTransactionIsolationLevel(int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed. " +
+                  "Verification with invalid parameters missed.",
+      targets = {
+        @TestTarget(
+          methodName = "supportsTransactionIsolationLevel",
+          methodArgs = {int.class}
+        )
+    })
     public void test_supportsTransactionIsolationLevelI() throws SQLException {
         assertFalse("database supports TRANSACTION_NONE isolation level", meta
                 .supportsTransactionIsolationLevel(Connection.TRANSACTION_NONE));
@@ -2132,6 +3508,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsTransactions()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsTransactions",
+          methodArgs = {}
+        )
+    })
     public void test_supportsTransactions() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -2139,6 +3524,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsUnion()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsUnion",
+          methodArgs = {}
+        )
+    })
     public void test_supportsUnion() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -2146,6 +3540,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#supportsUnionAll()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "supportsUnionAll",
+          methodArgs = {}
+        )
+    })
     public void test_supportsUnionAll() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -2153,6 +3556,16 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#updatesAreDetected(int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SQLException checking missed. " +
+                  "Verification with invalid parameters missed.",
+      targets = {
+        @TestTarget(
+          methodName = "updatesAreDetected",
+          methodArgs = {int.class}
+        )
+    })
     public void test_updatesAreDetectedI() throws SQLException {
         assertFalse(
                 "visible row update can be detected for TYPE_FORWARD_ONLY type",
@@ -2170,6 +3583,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#usesLocalFilePerTable()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "usesLocalFilePerTable",
+          methodArgs = {}
+        )
+    })
     public void test_usesLocalFilePerTable() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }
@@ -2177,6 +3599,15 @@ public class DatabaseMetaDataTest extends TestCase {
     /**
      * @tests java.sql.DatabaseMetaData#usesLocalFiles()
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test",
+      targets = {
+        @TestTarget(
+          methodName = "usesLocalFiles",
+          methodArgs = {}
+        )
+    })
     public void test_usesLocalFiles() throws SQLException {
         // TODO: JDBC does not implement this functionality
     }

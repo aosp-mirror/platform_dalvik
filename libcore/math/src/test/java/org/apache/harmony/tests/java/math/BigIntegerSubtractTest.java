@@ -21,9 +21,15 @@
 
 package org.apache.harmony.tests.java.math;
 
-import junit.framework.TestCase;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.math.BigInteger;
 
+import junit.framework.TestCase;
+@TestTargetClass(BigInteger.class)
 /**
  * Class:  java.math.BigInteger
  * Method: subtract 
@@ -33,6 +39,15 @@ public class BigIntegerSubtractTest extends TestCase {
      * Subtract two positive numbers of the same length.
      * The first is greater.
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "This is a complete subset of tests for subtract method",
+      targets = {
+        @TestTarget(
+          methodName = "subtract",
+          methodArgs = {java.math.BigInteger.class}
+        )
+    })
     public void testCase1() {
         byte aBytes[] = {10, 20, 30, 40, 50, 60, 70, 10, 20, 30};
         byte bBytes[] = {1, 2, 3, 4, 5, 6, 7, 1, 2, 3};
@@ -54,6 +69,15 @@ public class BigIntegerSubtractTest extends TestCase {
      * Subtract two positive numbers of the same length.
      * The second is greater.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for subtract method",
+          targets = {
+            @TestTarget(
+              methodName = "subtract",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testCase2() {
         byte aBytes[] = {1, 2, 3, 4, 5, 6, 7, 1, 2, 3};
         byte bBytes[] = {10, 20, 30, 40, 50, 60, 70, 10, 20, 30};
@@ -76,6 +100,15 @@ public class BigIntegerSubtractTest extends TestCase {
      * The first is positive.
      * The first is greater in absolute value.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for subtract method",
+          targets = {
+            @TestTarget(
+              methodName = "subtract",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testCase3() {
         byte aBytes[] = {10, 20, 30, 40, 50, 60, 70, 10, 20, 30};
         byte bBytes[] = {1, 2, 3, 4, 5, 6, 7, 1, 2, 3};
@@ -98,6 +131,15 @@ public class BigIntegerSubtractTest extends TestCase {
      * The first is positive.
      * The second is greater in absolute value.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for subtract method",
+          targets = {
+            @TestTarget(
+              methodName = "subtract",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testCase4() {
         byte aBytes[] = {1, 2, 3, 4, 5, 6, 7, 1, 2, 3};
         byte bBytes[] = {10, 20, 30, 40, 50, 60, 70, 10, 20, 30};
@@ -119,6 +161,15 @@ public class BigIntegerSubtractTest extends TestCase {
      * Subtract two negative numbers of the same length.
      * The first is greater in absolute value.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for subtract method",
+          targets = {
+            @TestTarget(
+              methodName = "subtract",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testCase5() {
         byte aBytes[] = {10, 20, 30, 40, 50, 60, 70, 10, 20, 30};
         byte bBytes[] = {1, 2, 3, 4, 5, 6, 7, 1, 2, 3};
@@ -140,6 +191,15 @@ public class BigIntegerSubtractTest extends TestCase {
      * Subtract two negative numbers of the same length.
      * The second is greater in absolute value.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for subtract method",
+          targets = {
+            @TestTarget(
+              methodName = "subtract",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testCase6() {
         byte aBytes[] = {1, 2, 3, 4, 5, 6, 7, 1, 2, 3};
         byte bBytes[] = {10, 20, 30, 40, 50, 60, 70, 10, 20, 30};
@@ -162,6 +222,15 @@ public class BigIntegerSubtractTest extends TestCase {
      * The first is negative.
      * The first is greater in absolute value.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for subtract method",
+          targets = {
+            @TestTarget(
+              methodName = "subtract",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testCase7() {
         byte aBytes[] = {10, 20, 30, 40, 50, 60, 70, 10, 20, 30};
         byte bBytes[] = {1, 2, 3, 4, 5, 6, 7, 1, 2, 3};
@@ -184,6 +253,15 @@ public class BigIntegerSubtractTest extends TestCase {
      * The first is negative.
      * The second is greater in absolute value.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for subtract method",
+          targets = {
+            @TestTarget(
+              methodName = "subtract",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testCase8() {
         byte aBytes[] = {1, 2, 3, 4, 5, 6, 7, 1, 2, 3};
         byte bBytes[] = {10, 20, 30, 40, 50, 60, 70, 10, 20, 30};
@@ -205,6 +283,15 @@ public class BigIntegerSubtractTest extends TestCase {
      * Subtract two positive numbers of different length.
      * The first is longer.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for subtract method",
+          targets = {
+            @TestTarget(
+              methodName = "subtract",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testCase9() {
         byte aBytes[] = {1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7};
         byte bBytes[] = {10, 20, 30, 40, 50, 60, 70, 10, 20, 30};
@@ -226,6 +313,15 @@ public class BigIntegerSubtractTest extends TestCase {
      * Subtract two positive numbers of different length.
      * The second is longer.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for subtract method",
+          targets = {
+            @TestTarget(
+              methodName = "subtract",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testCase10() {
         byte aBytes[] = {10, 20, 30, 40, 50, 60, 70, 10, 20, 30};
         byte bBytes[] = {1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7};
@@ -248,6 +344,15 @@ public class BigIntegerSubtractTest extends TestCase {
      * The first is positive.
      * The first is greater in absolute value.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for subtract method",
+          targets = {
+            @TestTarget(
+              methodName = "subtract",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testCase11() {
         byte aBytes[] = {1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7};
         byte bBytes[] = {10, 20, 30, 40, 50, 60, 70, 10, 20, 30};
@@ -270,6 +375,15 @@ public class BigIntegerSubtractTest extends TestCase {
      * The first is positive.
      * The second is greater in absolute value.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for subtract method",
+          targets = {
+            @TestTarget(
+              methodName = "subtract",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testCase12() {
         byte aBytes[] = {10, 20, 30, 40, 50, 60, 70, 10, 20, 30};
         byte bBytes[] = {1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7};
@@ -292,6 +406,15 @@ public class BigIntegerSubtractTest extends TestCase {
      * The first is negative.
      * The first is longer.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for subtract method",
+          targets = {
+            @TestTarget(
+              methodName = "subtract",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testCase13() {
         byte aBytes[] = {1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7};
         byte bBytes[] = {10, 20, 30, 40, 50, 60, 70, 10, 20, 30};
@@ -314,6 +437,15 @@ public class BigIntegerSubtractTest extends TestCase {
      * The first is negative.
      * The second is longer.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for subtract method",
+          targets = {
+            @TestTarget(
+              methodName = "subtract",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testCase14() {
         byte aBytes[] = {1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7};
         byte bBytes[] = {10, 20, 30, 40, 50, 60, 70, 10, 20, 30};
@@ -335,6 +467,15 @@ public class BigIntegerSubtractTest extends TestCase {
      * Subtract two negative numbers of different length.
      * The first is longer.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for subtract method",
+          targets = {
+            @TestTarget(
+              methodName = "subtract",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testCase15() {
         byte aBytes[] = {1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7};
         byte bBytes[] = {10, 20, 30, 40, 50, 60, 70, 10, 20, 30};
@@ -356,6 +497,15 @@ public class BigIntegerSubtractTest extends TestCase {
      * Subtract two negative numbers of different length.
      * The second is longer.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for subtract method",
+          targets = {
+            @TestTarget(
+              methodName = "subtract",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testCase16() {
         byte aBytes[] = {10, 20, 30, 40, 50, 60, 70, 10, 20, 30};
         byte bBytes[] = {1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7};
@@ -376,6 +526,15 @@ public class BigIntegerSubtractTest extends TestCase {
     /**
      * Subtract two positive equal in absolute value numbers.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for subtract method",
+          targets = {
+            @TestTarget(
+              methodName = "subtract",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testCase17() {
         byte aBytes[] = {-120, 34, 78, -23, -111, 45, 127, 23, 45, -3};
         byte bBytes[] = {-120, 34, 78, -23, -111, 45, 127, 23, 45, -3};
@@ -397,6 +556,15 @@ public class BigIntegerSubtractTest extends TestCase {
      * Subtract zero from a number.
      * The number is positive.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for subtract method",
+          targets = {
+            @TestTarget(
+              methodName = "subtract",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testCase18() {
         byte aBytes[] = {120, 34, 78, -23, -111, 45, 127, 23, 45, -3};
         byte bBytes[] = {0};
@@ -418,6 +586,15 @@ public class BigIntegerSubtractTest extends TestCase {
      * Subtract a number from zero.
      * The number is negative.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for subtract method",
+          targets = {
+            @TestTarget(
+              methodName = "subtract",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testCase19() {
         byte aBytes[] = {0};
         byte bBytes[] = {120, 34, 78, -23, -111, 45, 127, 23, 45, -3};
@@ -438,6 +615,15 @@ public class BigIntegerSubtractTest extends TestCase {
     /**
      * Subtract zero from zero.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for subtract method",
+          targets = {
+            @TestTarget(
+              methodName = "subtract",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testCase20() {
         byte aBytes[] = {0};
         byte bBytes[] = {0};
@@ -459,6 +645,15 @@ public class BigIntegerSubtractTest extends TestCase {
      * Subtract ZERO from a number.
      * The number is positive.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for subtract method",
+          targets = {
+            @TestTarget(
+              methodName = "subtract",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testCase21() {
         byte aBytes[] = {120, 34, 78, -23, -111, 45, 127, 23, 45, -3};
         byte rBytes[] = {120, 34, 78, -23, -111, 45, 127, 23, 45, -3};
@@ -478,6 +673,15 @@ public class BigIntegerSubtractTest extends TestCase {
      * Subtract a number from ZERO.
      * The number is negative.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for subtract method",
+          targets = {
+            @TestTarget(
+              methodName = "subtract",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testCase22() {
         byte bBytes[] = {120, 34, 78, -23, -111, 45, 127, 23, 45, -3};
         byte rBytes[] = {120, 34, 78, -23, -111, 45, 127, 23, 45, -3};
@@ -496,6 +700,15 @@ public class BigIntegerSubtractTest extends TestCase {
     /**
      * Subtract ZERO from ZERO.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for subtract method",
+          targets = {
+            @TestTarget(
+              methodName = "subtract",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testCase23() {
         byte rBytes[] = {0};
         BigInteger aNumber = BigInteger.ZERO;
@@ -512,6 +725,15 @@ public class BigIntegerSubtractTest extends TestCase {
     /**
      * Subtract ONE from ONE.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for subtract method",
+          targets = {
+            @TestTarget(
+              methodName = "subtract",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testCase24() {
         byte rBytes[] = {0};
         BigInteger aNumber = BigInteger.ONE;
@@ -528,6 +750,15 @@ public class BigIntegerSubtractTest extends TestCase {
     /**
      * Subtract two numbers so that borrow is 1.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for subtract method",
+          targets = {
+            @TestTarget(
+              methodName = "subtract",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testCase25() {
         byte aBytes[] = {-1, -1, -1, -1, -1, -1, -1, -1};
         byte bBytes[] = {-128, -128, -128, -128, -128, -128, -128, -128, -128};

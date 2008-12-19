@@ -15,9 +15,15 @@
  */
 package org.apache.harmony.nio.tests.java.nio;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.nio.DoubleBuffer;
 import java.nio.ReadOnlyBufferException;
 
+@TestTargetClass(java.nio.DoubleBuffer.class)
 public class ReadOnlyDoubleBufferTest extends DoubleBufferTest {
 
     protected void setUp() throws Exception {
@@ -29,15 +35,39 @@ public class ReadOnlyDoubleBufferTest extends DoubleBufferTest {
     protected void tearDown() throws Exception {
         super.tearDown();
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies isReadOnly method for read only DoubleBuffer.",
+      targets = {
+        @TestTarget(
+          methodName = "isReadOnly",
+          methodArgs = {}
+        )
+    })
     public void testIsReadOnly() {
         assertTrue(buf.isReadOnly());
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies that hasArray returns false value.",
+      targets = {
+        @TestTarget(
+          methodName = "hasArray",
+          methodArgs = {}
+        )
+    })
     public void testHasArray() {
         assertFalse(buf.hasArray());
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies ReadOnlyBufferException.",
+      targets = {
+        @TestTarget(
+          methodName = "array",
+          methodArgs = {}
+        )
+    })
     public void testArray() {
         try {
             buf.array();
@@ -45,12 +75,28 @@ public class ReadOnlyDoubleBufferTest extends DoubleBufferTest {
         } catch (ReadOnlyBufferException e) {
         }
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "hashCode",
+          methodArgs = {}
+        )
+    })
     public void testHashCode() {
         DoubleBuffer duplicate = buf.duplicate();
         assertEquals(buf.hashCode(), duplicate.hashCode());
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies UnsupportedOperationException.",
+      targets = {
+        @TestTarget(
+          methodName = "arrayOffset",
+          methodArgs = {}
+        )
+    })
     public void testArrayOffset() {
         try {
             buf.arrayOffset();
@@ -58,7 +104,15 @@ public class ReadOnlyDoubleBufferTest extends DoubleBufferTest {
         } catch (UnsupportedOperationException e) {
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies ReadOnlyBufferException.",
+      targets = {
+        @TestTarget(
+          methodName = "compact",
+          methodArgs = {}
+        )
+    })
     public void testCompact() {
         try {
             buf.compact();
@@ -67,7 +121,15 @@ public class ReadOnlyDoubleBufferTest extends DoubleBufferTest {
             // expected
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies ReadOnlyBufferException.",
+      targets = {
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {double.class}
+        )
+    })
     public void testPutdouble() {
         try {
             buf.put(0);
@@ -76,7 +138,15 @@ public class ReadOnlyDoubleBufferTest extends DoubleBufferTest {
             // expected
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies ReadOnlyBufferException.",
+      targets = {
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {double[].class}
+        )
+    })
     public void testPutdoubleArray() {
         double array[] = new double[1];
         try {
@@ -92,7 +162,15 @@ public class ReadOnlyDoubleBufferTest extends DoubleBufferTest {
             // expected
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies ReadOnlyBufferException.",
+      targets = {
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {double[].class, int.class, int.class}
+        )
+    })
     public void testPutdoubleArrayintint() {
         double array[] = new double[1];
         try {
@@ -120,7 +198,15 @@ public class ReadOnlyDoubleBufferTest extends DoubleBufferTest {
             // expected
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies ReadOnlyBufferException.",
+      targets = {
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {java.nio.DoubleBuffer.class}
+        )
+    })
     public void testPutDoubleBuffer() {
         DoubleBuffer other = DoubleBuffer.allocate(1);
         try {
@@ -142,7 +228,15 @@ public class ReadOnlyDoubleBufferTest extends DoubleBufferTest {
             // expected
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Verifies ReadOnlyBufferException.",
+      targets = {
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {int.class, double.class}
+        )
+    })
     public void testPutintdouble() {
         try {
             buf.put(0, (double) 0);

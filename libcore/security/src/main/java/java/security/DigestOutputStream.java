@@ -27,13 +27,15 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 /**
- * @com.intel.drl.spec_ref
- * 
+ * {@code DigestOutputStream} is a {@code FilterOutputStream} which maintains an
+ * associated message digest.
  */
 public class DigestOutputStream extends FilterOutputStream {
 
     /**
-     * @com.intel.drl.spec_ref
+     * The message digest for this stream.
+     * 
+     * @since Android 1.0
      */
     protected MessageDigest digest;
 
@@ -41,7 +43,14 @@ public class DigestOutputStream extends FilterOutputStream {
     private boolean isOn = true;
 
     /**
-     * @com.intel.drl.spec_ref
+     * Constructs a new instance of this {@code DigestOutputStream}, using the
+     * given {@code stream} and the {@code digest}.
+     * 
+     * @param stream
+     *            the output stream.
+     * @param digest
+     *            the message digest.
+     * @since Android 1.0
      */
     public DigestOutputStream(OutputStream stream, MessageDigest digest) {
         super(stream);
@@ -49,35 +58,35 @@ public class DigestOutputStream extends FilterOutputStream {
     }
 
     /**
-     * Returns the MessageDigest which the receiver uses when computing the
-     * hash.
+     * Returns the message digest for this stream.
      * 
-     * 
-     * @return MessageDigest the digest the receiver uses when computing the
-     *         hash.
+     * @return the message digest for this stream.
+     * @since Android 1.0
      */
-
     public MessageDigest getMessageDigest() {
         return digest;
     }
 
     /**
-     * Sets the MessageDigest which the receiver will use when computing the
-     * hash.
-     * 
+     * Sets the message digest which this stream will use.
      * 
      * @param digest
-     *            MessageDigest the digest to use when computing the hash.
-     * 
-     * @see MessageDigest
-     * @see #on
+     *            the message digest which this stream will use.
+     * @since Android 1.0
      */
     public void setMessageDigest(MessageDigest digest) {
         this.digest = digest;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Writes the specified {@code int} to the stream. Updates the digest if
+     * this function is {@link #on(boolean)}.
+     * 
+     * @param b
+     *            the byte to be written.
+     * @throws IOException
+     *             if writing to the stream causes a {@code IOException}
+     * @since Android 1.0
      */
     public void write(int b) throws IOException {
         // update digest only if digest functionality is on
@@ -89,7 +98,18 @@ public class DigestOutputStream extends FilterOutputStream {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Writes {@code len} bytes into the stream, starting from the specified
+     * offset. Updates the digest if this function is {@link #on(boolean)}.
+     * 
+     * @param b
+     *            the buffer to write to.
+     * @param off
+     *            the index of the first byte in {@code b} to write.
+     * @param len
+     *            the number of bytes in {@code b} to write.
+     * @throws IOException
+     *             if writing to the stream causes an {@code IOException}.
+     * @since Android 1.0
      */
     public void write(byte[] b, int off, int len) throws IOException {
         // update digest only if digest functionality is on
@@ -103,23 +123,21 @@ public class DigestOutputStream extends FilterOutputStream {
     /**
      * Enables or disables the digest function (default is on).
      * 
-     * 
      * @param on
-     *            boolean true if the digest should be computed, and false
+     *            {@code true} if the digest should be computed, {@code false}
      *            otherwise.
-     * 
-     * @see MessageDigest
+     * @since Android 1.0
      */
     public void on(boolean on) {
         isOn = on;
     }
 
     /**
-     * Returns a string containing a concise, human-readable description of the
-     * receiver.
+     * Returns a string containing a concise, human-readable description of this
+     * {@code DigestOutputStream} including the digest.
      * 
-     * 
-     * @return String a printable representation for the receiver.
+     * @return a printable representation for this {@code DigestOutputStream}.
+     * @since Android 1.0
      */
     public String toString() {
         return super.toString() + ", " + digest.toString() + //$NON-NLS-1$

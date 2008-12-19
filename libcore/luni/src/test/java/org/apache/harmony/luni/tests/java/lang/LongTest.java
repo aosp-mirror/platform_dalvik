@@ -16,10 +16,16 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import java.util.Properties;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
 
+import java.util.Properties;
+
+@TestTargetClass(Long.class) 
 public class LongTest extends TestCase {
     private Properties orgProps;
     
@@ -36,6 +42,15 @@ public class LongTest extends TestCase {
     /**
      * @tests java.lang.Long#byteValue()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Checks bounary values.",
+      targets = {
+        @TestTarget(
+          methodName = "byteValue",
+          methodArgs = {}
+        )
+    })
     public void test_byteValue() {
         // Test for method byte java.lang.Long.byteValue()
         Long l = new Long(127);
@@ -47,6 +62,15 @@ public class LongTest extends TestCase {
     /**
      * @tests java.lang.Long#compareTo(java.lang.Long)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "compareTo",
+          methodArgs = {java.lang.Long.class}
+        )
+    })
     public void test_compareToLjava_lang_Long() {
         // Test for method int java.lang.Long.compareTo(java.lang.Long)
         assertTrue("-2 compared to 1 gave non-negative answer", new Long(-2L)
@@ -66,6 +90,15 @@ public class LongTest extends TestCase {
     /**
      * @tests java.lang.Long#decode(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "decode",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_decodeLjava_lang_String2() {
         // Test for method java.lang.Long
         // java.lang.Long.decode(java.lang.String)
@@ -152,6 +185,16 @@ public class LongTest extends TestCase {
      /**
      * @tests java.lang.Long#getLong(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check case when property contains illegal value and " +
+            "null is returned.",
+      targets = {
+        @TestTarget(
+          methodName = "getLong",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_getLongLjava_lang_String() {
         // Test for method java.lang.Long
         // java.lang.Long.getLong(java.lang.String)
@@ -167,6 +210,15 @@ public class LongTest extends TestCase {
     /**
      * @tests java.lang.Long#getLong(java.lang.String, long)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check case when property contains illegal value",
+      targets = {
+        @TestTarget(
+          methodName = "getLong",
+          methodArgs = {java.lang.String.class, long.class}
+        )
+    })
     public void test_getLongLjava_lang_StringJ() {
         // Test for method java.lang.Long
         // java.lang.Long.getLong(java.lang.String, long)
@@ -182,6 +234,15 @@ public class LongTest extends TestCase {
     /**
      * @tests java.lang.Long#getLong(java.lang.String, java.lang.Long)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check case when property contains illegal value",
+      targets = {
+        @TestTarget(
+          methodName = "getLong",
+          methodArgs = {java.lang.String.class, java.lang.Long.class}
+        )
+    })
     public void test_getLongLjava_lang_StringLjava_lang_Long() {
         // Test for method java.lang.Long
         // java.lang.Long.getLong(java.lang.String, java.lang.Long)
@@ -197,6 +258,15 @@ public class LongTest extends TestCase {
     /**
      * @tests java.lang.Long#parseLong(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Checks boundary values and exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "parseLong",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_parseLongLjava_lang_String2() {
         // Test for method long java.lang.Long.parseLong(java.lang.String)
 
@@ -230,6 +300,15 @@ public class LongTest extends TestCase {
     /**
      * @tests java.lang.Long#parseLong(java.lang.String, int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "parseLong",
+          methodArgs = {java.lang.String.class, int.class}
+        )
+    })
     public void test_parseLongLjava_lang_StringI() {
         // Test for method long java.lang.Long.parseLong(java.lang.String, int)
         assertEquals("Returned incorrect value",
@@ -314,6 +393,15 @@ public class LongTest extends TestCase {
     /**
      * @tests java.lang.Long#toBinaryString(long)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toBinaryString",
+          methodArgs = {long.class}
+        )
+    })
     public void test_toBinaryStringJ() {
         // Test for method java.lang.String java.lang.Long.toBinaryString(long)
         assertEquals("Incorrect binary string returned", "11011001010010010000", Long.toBinaryString(
@@ -333,6 +421,15 @@ public class LongTest extends TestCase {
     /**
      * @tests java.lang.Long#toHexString(long)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toHexString",
+          methodArgs = {long.class}
+        )
+    })
     public void test_toHexStringJ() {
         // Test for method java.lang.String java.lang.Long.toHexString(long)
         assertEquals("Incorrect hex string returned", "54e0845", Long.toHexString(89000005L)
@@ -346,6 +443,15 @@ public class LongTest extends TestCase {
     /**
      * @tests java.lang.Long#toOctalString(long)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toOctalString",
+          methodArgs = {long.class}
+        )
+    })
     public void test_toOctalStringJ() {
         // Test for method java.lang.String java.lang.Long.toOctalString(long)
         assertEquals("Returned incorrect oct string", "77777777777", Long.toOctalString(
@@ -359,6 +465,15 @@ public class LongTest extends TestCase {
     /**
      * @tests java.lang.Long#toString()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public void test_toString2() {
         // Test for method java.lang.String java.lang.Long.toString()
         Long l = new Long(89000000005L);
@@ -373,6 +488,15 @@ public class LongTest extends TestCase {
     /**
      * @tests java.lang.Long#toString(long)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {long.class}
+        )
+    })
     public void test_toStringJ2() {
         // Test for method java.lang.String java.lang.Long.toString(long)
 
@@ -387,6 +511,15 @@ public class LongTest extends TestCase {
     /**
      * @tests java.lang.Long#toString(long, int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {long.class, int.class}
+        )
+    })
     public void test_toStringJI() {
         // Test for method java.lang.String java.lang.Long.toString(long, int)
         assertEquals("Returned incorrect dec string", "100000000", Long.toString(100000000L,
@@ -411,6 +544,15 @@ public class LongTest extends TestCase {
     /**
      * @tests java.lang.Long#valueOf(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "valueOf",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_valueOfLjava_lang_String2() {
         // Test for method java.lang.Long
         // java.lang.Long.valueOf(java.lang.String)
@@ -456,6 +598,15 @@ public class LongTest extends TestCase {
     /**
      * @tests java.lang.Long#valueOf(java.lang.String, int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "valueOf",
+          methodArgs = {java.lang.String.class, int.class}
+        )
+    })
     public void test_valueOfLjava_lang_StringI() {
         // Test for method java.lang.Long
         // java.lang.Long.valueOf(java.lang.String, int)
@@ -508,6 +659,15 @@ public class LongTest extends TestCase {
     /**
      * @tests java.lang.Long#valueOf(long)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "valueOf",
+          methodArgs = {long.class}
+        )
+    })
     public void test_valueOfJ() {
         assertEquals(new Long(Long.MIN_VALUE), Long.valueOf(Long.MIN_VALUE));
         assertEquals(new Long(Long.MAX_VALUE), Long.valueOf(Long.MAX_VALUE));
@@ -524,6 +684,15 @@ public class LongTest extends TestCase {
     /**
      * @tests java.lang.Long#hashCode()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "hashCode",
+          methodArgs = {}
+        )
+    })
     public void test_hashCode() {
         assertEquals((int)(1L ^ (1L >>> 32)), new Long(1).hashCode());
         assertEquals((int)(2L ^ (2L >>> 32)), new Long(2).hashCode());
@@ -534,6 +703,15 @@ public class LongTest extends TestCase {
     /**
      * @tests java.lang.Long#Long(String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Long",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() {
         assertEquals(new Long(0), new Long("0"));
         assertEquals(new Long(1), new Long("1"));
@@ -563,6 +741,15 @@ public class LongTest extends TestCase {
     /**
      * @tests java.lang.Long#Long
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Long",
+          methodArgs = {long.class}
+        )
+    })
     public void test_ConstructorJ() {
         assertEquals(1, new Long(1).intValue());
         assertEquals(2, new Long(2).intValue());
@@ -573,7 +760,16 @@ public class LongTest extends TestCase {
     /**
      * @tests java.lang.Long#byteValue()
      */
-    public void test_booleanValue() {
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "byteValue",
+          methodArgs = {}
+        )
+    })
+    public void test_byteValue2() {
         assertEquals(1, new Long(1).byteValue());    
         assertEquals(2, new Long(2).byteValue());
         assertEquals(0, new Long(0).byteValue());
@@ -583,6 +779,15 @@ public class LongTest extends TestCase {
     /**
      * @tests java.lang.Long#equals(Object)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "equals",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_equalsLjava_lang_Object() {
         assertEquals(new Long(0), Long.valueOf(0));
         assertEquals(new Long(1), Long.valueOf(1));
@@ -597,6 +802,15 @@ public class LongTest extends TestCase {
     /**
      * @tests java.lang.Long#toString()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public void test_toString() {
         assertEquals("-1", new Long(-1).toString());
         assertEquals("0", new Long(0).toString());
@@ -607,6 +821,15 @@ public class LongTest extends TestCase {
     /**
      * @tests java.lang.Long#toString
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {long.class}
+        )
+    })
     public void test_toStringJ() {
         assertEquals("-1", Long.toString(-1));
         assertEquals("0", Long.toString(0));
@@ -617,6 +840,15 @@ public class LongTest extends TestCase {
     /**
      * @tests java.lang.Long#valueOf(String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "valueOf",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_valueOfLjava_lang_String() {
         assertEquals(new Long(0), Long.valueOf("0"));
         assertEquals(new Long(1), Long.valueOf("1"));
@@ -646,6 +878,15 @@ public class LongTest extends TestCase {
     /**
      * @tests java.lang.Long#valueOf(String,long)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "valueOf",
+          methodArgs = {java.lang.String.class, int.class}
+        )
+    })
     public void test_valueOfLjava_lang_StringJ() {
         assertEquals(new Long(0), Long.valueOf("0", 10));
         assertEquals(new Long(1), Long.valueOf("1", 10));
@@ -679,6 +920,15 @@ public class LongTest extends TestCase {
     /**
      * @tests java.lang.Long#parseLong(String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "parseLong",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_parseLongLjava_lang_String() {
         assertEquals(0, Long.parseLong("0"));
         assertEquals(1, Long.parseLong("1"));
@@ -708,6 +958,15 @@ public class LongTest extends TestCase {
     /**
      * @tests java.lang.Long#parseLong(String,long)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "parseLong",
+          methodArgs = {java.lang.String.class, int.class}
+        )
+    })
     public void test_parseLongLjava_lang_StringJ() {
         assertEquals(0, Long.parseLong("0", 10));
         assertEquals(1, Long.parseLong("1", 10));
@@ -741,6 +1000,15 @@ public class LongTest extends TestCase {
     /**
      * @tests java.lang.Long#decode(String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "decode",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_decodeLjava_lang_String() {
         assertEquals(new Long(0), Long.decode("0"));
         assertEquals(new Long(1), Long.decode("1"));
@@ -770,6 +1038,15 @@ public class LongTest extends TestCase {
     /**
      * @tests java.lang.Long#doubleValue()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "doubleValue",
+          methodArgs = {}
+        )
+    })
     public void test_doubleValue() {
         assertEquals(-1D, new Long(-1).doubleValue(), 0D);
         assertEquals(0D, new Long(0).doubleValue(), 0D);
@@ -779,6 +1056,15 @@ public class LongTest extends TestCase {
     /**
      * @tests java.lang.Long#floatValue()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "floatValue",
+          methodArgs = {}
+        )
+    })
     public void test_floatValue() {
         assertEquals(-1F, new Long(-1).floatValue(), 0F);
         assertEquals(0F, new Long(0).floatValue(), 0F);
@@ -788,6 +1074,15 @@ public class LongTest extends TestCase {
     /**
      * @tests java.lang.Long#intValue()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "intValue",
+          methodArgs = {}
+        )
+    })
     public void test_intValue() {
         assertEquals(-1, new Long(-1).intValue());
         assertEquals(0, new Long(0).intValue());
@@ -797,6 +1092,15 @@ public class LongTest extends TestCase {
     /**
      * @tests java.lang.Long#longValue()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn'tcheck boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "longValue",
+          methodArgs = {}
+        )
+    })
     public void test_longValue() {
         assertEquals(-1L, new Long(-1).longValue());
         assertEquals(0L, new Long(0).longValue());
@@ -806,6 +1110,15 @@ public class LongTest extends TestCase {
     /**
      * @tests java.lang.Long#shortValue()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "shortValue",
+          methodArgs = {}
+        )
+    })
     public void test_shortValue() {
         assertEquals(-1, new Long(-1).shortValue());
         assertEquals(0, new Long(0).shortValue());
@@ -814,6 +1127,15 @@ public class LongTest extends TestCase {
     /**
      * @tests java.lang.Long#highestOneBit(long)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "highestOneBit",
+          methodArgs = {long.class}
+        )
+    })
     public void test_highestOneBitJ() {
         assertEquals(0x08, Long.highestOneBit(0x0A));
         assertEquals(0x08, Long.highestOneBit(0x0B));
@@ -834,6 +1156,15 @@ public class LongTest extends TestCase {
     /**
      * @tests java.lang.Long#lowestOneBit(long)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "lowestOneBit",
+          methodArgs = {long.class}
+        )
+    })
     public void test_lowestOneBitJ() {
         assertEquals(0x10, Long.lowestOneBit(0xF0));
         
@@ -862,6 +1193,15 @@ public class LongTest extends TestCase {
     /**
      * @tests java.lang.Long#numberOfLeadingZeros(long)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "numberOfLeadingZeros",
+          methodArgs = {long.class}
+        )
+    })
     public void test_numberOfLeadingZerosJ() {
         assertEquals(64, Long.numberOfLeadingZeros(0x0L));
         assertEquals(63, Long.numberOfLeadingZeros(0x1));
@@ -908,6 +1248,15 @@ public class LongTest extends TestCase {
     /**
      * @tests java.lang.Long#numberOfTrailingZeros(long)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "numberOfTrailingZeros",
+          methodArgs = {long.class}
+        )
+    })
     public void test_numberOfTrailingZerosJ() {
         assertEquals(64, Long.numberOfTrailingZeros(0x0));
         assertEquals(63, Long.numberOfTrailingZeros(Long.MIN_VALUE));
@@ -949,6 +1298,15 @@ public class LongTest extends TestCase {
     /**
      * @tests java.lang.Long#bitCount(long)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "bitCount",
+          methodArgs = {long.class}
+        )
+    })
     public void test_bitCountJ() {
         assertEquals(0, Long.bitCount(0x0));
         assertEquals(1, Long.bitCount(0x1));
@@ -979,6 +1337,15 @@ public class LongTest extends TestCase {
     /**
      * @tests java.lang.Long#rotateLeft(long,long)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "rotateLeft",
+          methodArgs = {long.class, int.class}
+        )
+    })
     public void test_rotateLeftJI() {
         assertEquals(0xF, Long.rotateLeft(0xF, 0));
         assertEquals(0xF0, Long.rotateLeft(0xF, 4));
@@ -994,6 +1361,15 @@ public class LongTest extends TestCase {
     /**
      * @tests java.lang.Long#rotateRight(long,long)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "rotateRight",
+          methodArgs = {long.class, int.class}
+        )
+    })
     public void test_rotateRightJI() {
         assertEquals(0xF, Long.rotateRight(0xF0, 4));
         assertEquals(0xF, Long.rotateRight(0xF00, 8));
@@ -1010,6 +1386,15 @@ public class LongTest extends TestCase {
     /**
      * @tests java.lang.Long#reverseBytes(long)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "reverseBytes",
+          methodArgs = {long.class}
+        )
+    })
     public void test_reverseBytesJ() {
         assertEquals(0xAABBCCDD00112233L, Long.reverseBytes(0x33221100DDCCBBAAL));
         assertEquals(0x1122334455667788L, Long.reverseBytes(0x8877665544332211L));
@@ -1020,6 +1405,15 @@ public class LongTest extends TestCase {
     /**
      * @tests java.lang.Long#reverse(long)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "reverse",
+          methodArgs = {long.class}
+        )
+    })
     public void test_reverseJ() {
         assertEquals(0, Long.reverse(0));
         assertEquals(-1, Long.reverse(-1));
@@ -1029,6 +1423,15 @@ public class LongTest extends TestCase {
     /**
      * @tests java.lang.Long#signum(long)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "signum",
+          methodArgs = {long.class}
+        )
+    })
     public void test_signumJ() {
         for (int i = -128; i<0; i++) {
             assertEquals(-1, Long.signum(i));

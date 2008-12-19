@@ -30,6 +30,12 @@ import java.util.zip.ZipEntry;
 
 import javax.security.auth.x500.X500Principal;
 
+/**
+ * Represents a single file in a JAR archive together with the manifest
+ * attributes and digital signatures associated with it.
+ * 
+ * @since Android 1.0
+ */
 public class JarEntry extends ZipEntry {
     private Attributes attributes;
 
@@ -43,32 +49,36 @@ public class JarEntry extends ZipEntry {
     private boolean isFactoryChecked = false;     
 
     /**
-     * Create a new JarEntry named name
+     * Creates a new {@code JarEntry} named name.
      * 
      * @param name
-     *            The name of the new JarEntry
+     *            The name of the new {@code JarEntry}.
+     * @since Android 1.0
      */
     public JarEntry(String name) {
         super(name);
     }
 
     /**
-     * Create a new JarEntry using the values obtained from entry.
+     * Creates a new {@code JarEntry} using the values obtained from entry.
      * 
      * @param entry
      *            The ZipEntry to obtain values from.
+     * @since Android 1.0
      */
     public JarEntry(ZipEntry entry) {
         super(entry);
     }
 
     /**
-     * Returns the Attributes object associated with this entry or null if none
-     * exists.
+     * Returns the {@code Attributes} object associated with this entry or
+     * {@code null} if none exists.
      * 
-     * @return java.util.jar.Attributes Attributes for this entry
-     * @exception java.io.IOException
-     *                If an error occurs obtaining the Attributes
+     * @return the {@code Attributes} for this entry.
+     * @exception IOException
+     *                If an error occurs obtaining the {@code Attributes}.
+     * @see Attributes
+     * @since Android 1.0
      */
     public Attributes getAttributes() throws IOException {
         if (attributes != null || parentJar == null) {
@@ -82,10 +92,14 @@ public class JarEntry extends ZipEntry {
     }
 
     /**
-     * Returns an array of Certificate Objects associated with this entry or
-     * null if none exist.
+     * Returns an array of {@code Certificate} Objects associated with this
+     * entry or {@code null} if none exists. Make sure that the everything is
+     * read from the input stream before calling this method, or else the method
+     * returns {@code null}.
      * 
-     * @return java.security.cert.Certificate[] Certificates for this entry
+     * @return the certificate for this entry.
+     * @see java.security.cert.Certificate
+     * @since Android 1.0
      */
     public Certificate[] getCertificates() {
         if (null == parentJar) {
@@ -103,10 +117,12 @@ public class JarEntry extends ZipEntry {
     }
 
     /**
-     * Create a new JarEntry using the values obtained from je.
+     * Create a new {@code JarEntry} using the values obtained from the
+     * argument.
      * 
      * @param je
-     *            The JarEntry to obtain values from
+     *            The {@code JarEntry} to obtain values from.
+     * @since Android 1.0
      */
     public JarEntry(JarEntry je) {
         super(je);
@@ -116,12 +132,14 @@ public class JarEntry extends ZipEntry {
     }
 
     /**
-     * Returns the code signers for the jar entry. If there is no such code
-     * signers, returns null. Only when the jar entry has been completely
-     * verified by reading till the end of the jar entry, can the method be
-     * called. Or else the method will return null.
+     * Returns the code signers for the digital signatures associated with the
+     * JAR file. If there is no such code signer, it returns {@code null}. Make
+     * sure that the everything is read from the input stream before calling
+     * this method, or else the method returns {@code null}.
      * 
-     * @return the code signers for the jar entry.
+     * @return the code signers for the JAR entry.
+     * @see CodeSigner
+     * @since Android 1.0
      */
     public CodeSigner[] getCodeSigners() {
         if (null == signers) {

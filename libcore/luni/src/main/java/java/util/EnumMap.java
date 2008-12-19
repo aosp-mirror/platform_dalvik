@@ -22,6 +22,11 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.reflect.Array;
 
+/**
+ * An {@code Map} specialized for use with {@code Enum} types as keys.
+ *  
+ * @since Android 1.0
+ */
 public class EnumMap<K extends Enum<K>, V> extends AbstractMap<K, V> implements
         Map<K, V>, Serializable, Cloneable {
     private static final long serialVersionUID = 458661240069192865L;
@@ -372,43 +377,40 @@ public class EnumMap<K extends Enum<K>, V> extends AbstractMap<K, V> implements
     }
 
     /**
-     * Constructs an empty enum map using the given key type.
+     * Constructs an empty {@code EnumMap} using the given key type.
      * 
      * @param keyType
-     *            the class object of the key type used by this enum map
-     * @throws NullPointerException
-     *             if the keyType is null
+     *            the class object giving the type of the keys used by this {@code EnumMap}.
+     * @since Android 1.0
      */
     public EnumMap(Class<K> keyType) {
         initialization(keyType);
     }
 
     /**
-     * Constructs an enum map using the same key type as the given enum map and
+     * Constructs an {@code EnumMap} using the same key type as the given {@code EnumMap} and
      * initially containing the same mappings.
      * 
      * @param map
-     *            the enum map from which this enum map is initialized
-     * @throws NullPointerException
-     *             if the map is null
+     *            the {@code EnumMap} from which this {@code EnumMap} is initialized.
+     * @since Android 1.0
      */
     public EnumMap(EnumMap<K, ? extends V> map) {
         initialization(map);
     }
 
     /**
-     * Constructs an enum map initialized from the given map. If the given map
-     * is an EnumMap instance, this constructor behaves in the exactly the same
-     * way as {@link EnumMap#EnumMap(EnumMap)}}. Otherwise, the given map at
-     * least should contain one mapping.
+     * Constructs an {@code EnumMap} initialized from the given map. If the given map
+     * is an {@code EnumMap} instance, this constructor behaves in the exactly the same
+     * way as {@link EnumMap#EnumMap(EnumMap)}}. Otherwise, the given map 
+     * should contain at least one mapping.
      * 
      * @param map
-     *            the map from which this enum map is initialized
+     *            the map from which this {@code EnumMap} is initialized.
      * @throws IllegalArgumentException
-     *             if the map is not an enum map instance and does not contain
-     *             any mappings
-     * @throws NullPointerException
-     *             if the map is null
+     *             if {@code map} is not an {@code EnumMap} instance and does not contain
+     *             any mappings.
+     * @since Android 1.0
      */
     public EnumMap(Map<K, ? extends V> map) {
         if (map instanceof EnumMap) {
@@ -430,7 +432,11 @@ public class EnumMap<K extends Enum<K>, V> extends AbstractMap<K, V> implements
     }
 
     /**
-     * Removes all mappings in this map.
+     * Removes all elements from this {@code EnumMap}, leaving it empty.
+     * 
+     * @see #isEmpty()
+     * @see #size()
+     * @since Android 1.0
      */
     @Override
     public void clear() {
@@ -440,9 +446,10 @@ public class EnumMap<K extends Enum<K>, V> extends AbstractMap<K, V> implements
     }
 
     /**
-     * Returns a shallow copy of this map.
+     * Returns a shallow copy of this {@code EnumMap}.
      * 
-     * @return a shallow copy of this map
+     * @return a shallow copy of this {@code EnumMap}.
+     * @since Android 1.0
      */
     @Override
     public EnumMap<K, V> clone() {
@@ -456,11 +463,13 @@ public class EnumMap<K extends Enum<K>, V> extends AbstractMap<K, V> implements
     }
 
     /**
-     * Returns true if this map has a mapping for the given key.
+     * Returns whether this {@code EnumMap} contains the specified key.
      * 
      * @param key
-     *            the key whose presence in this map is to be tested
-     * @return true if this map has a mapping for the given key.
+     *            the key to search for.
+     * @return {@code true} if this {@code EnumMap} contains the specified key,
+     *         {@code false} otherwise.
+     * @since Android 1.0
      */
     @Override
     public boolean containsKey(Object key) {
@@ -472,11 +481,13 @@ public class EnumMap<K extends Enum<K>, V> extends AbstractMap<K, V> implements
     }
 
     /**
-     * Returns true if this map has one or more keys mapped to the given value.
+     * Returns whether this {@code EnumMap} contains the specified value.
      * 
      * @param value
-     *            the value whose presence in this map is to be tested
-     * @return true if this map has one or more keys mapped to the given value.
+     *            the value to search for.
+     * @return {@code true} if this {@code EnumMap} contains the specified value,
+     *         {@code false} otherwise.
+     * @since Android 1.0
      */
     @Override
     public boolean containsValue(Object value) {
@@ -497,13 +508,12 @@ public class EnumMap<K extends Enum<K>, V> extends AbstractMap<K, V> implements
     }
 
     /**
-     * Returns a {@link Set}} view of the mappings contained in this map. The
-     * returned set complies with the general rule specified in
-     * {@link Map#entrySet()}}. The set's iterator will return the mappings in
-     * the their keys' natural order(the enum constants are declared in this
-     * order)
+     * Returns a {@code Set} containing all of the mappings in this {@code EnumMap}. Each mapping is
+     * an instance of {@link Map.Entry}. As the {@code Set} is backed by this {@code EnumMap},
+     * changes in one will be reflected in the other.
      * 
-     * @return a set view of the mappings contained in this map.
+     * @return a {@code Set} of the mappings.
+     * @since Android 1.0
      */
     @Override
     public Set<Map.Entry<K, V>> entrySet() {
@@ -514,12 +524,16 @@ public class EnumMap<K extends Enum<K>, V> extends AbstractMap<K, V> implements
     }
 
     /**
-     * Compares the given object with this map. Returns true if the given object
-     * is equal to this map.
+     * Compares the argument to the receiver, and returns {@code true} if the
+     * specified {@code Object} is an {@code EnumMap} and both {@code EnumMap}s contain the same mappings.
      * 
      * @param object
-     *            the object to be compared with this map
-     * @return true if the given object is equal to this map.
+     *            the {@code Object} to compare with this {@code EnumMap}.
+     * @return boolean {@code true} if {@code object} is the same as this {@code EnumMap},
+     *         {@code false} otherwise.
+     * @see #hashCode()
+     * @see #entrySet()
+     * @since Android 1.0
      */
     @Override
     public boolean equals(Object object) {
@@ -538,13 +552,13 @@ public class EnumMap<K extends Enum<K>, V> extends AbstractMap<K, V> implements
     }
 
     /**
-     * Returns the value which is mapped to the given key in this map, or null
-     * if this map has no mapping for the given key.
+     * Returns the value of the mapping with the specified key.
      * 
      * @param key
-     *            the key whose associated value is to be returned
-     * @return the value to which this map maps the given key, or null if this
-     *         map has no mapping for the given key.
+     *            the key.
+     * @return the value of the mapping with the specified key, or {@code null}
+     *         if no mapping for the specified key is found.
+     * @since Android 1.0
      */
     @Override
     @SuppressWarnings("unchecked")
@@ -557,12 +571,12 @@ public class EnumMap<K extends Enum<K>, V> extends AbstractMap<K, V> implements
     }
 
     /**
-     * Returns a {@link Set}} view of the keys contained in this map. The
-     * returned set complies with the general rule specified in
-     * {@link Map#keySet()}}. The set's iterator will return the keys in the
-     * their natural order(the enum constants are declared in this order)
+     * Returns a set of the keys contained in this {@code EnumMap}. The {@code Set} is backed by
+     * this {@code EnumMap} so changes to one are reflected in the other. The {@code Set} does not
+     * support adding.
      * 
-     * @return a set view of the keys contained in this map.
+     * @return a {@code Set} of the keys.
+     * @since Android 1.0
      */
     @Override
     public Set<K> keySet() {
@@ -573,17 +587,25 @@ public class EnumMap<K extends Enum<K>, V> extends AbstractMap<K, V> implements
     }
 
     /**
-     * Associates the given value with the given key in this map. If the map
-     * previously had a mapping for this key, the old value is replaced.
+     * Maps the specified key to the specified value.
      * 
      * @param key
-     *            the key with which the given value is to be associated value
+     *            the key.
      * @param value
-     *            the value to be associated with the given key
-     * @return the value to which this map maps the given key, or null if this
-     *         map has no mapping for the given key.
+     *            the value.
+     * @return the value of any previous mapping with the specified key or
+     *         {@code null} if there was no mapping.
+     * @throws UnsupportedOperationException
+     *                if adding to this map is not supported.
+     * @throws ClassCastException
+     *                if the class of the key or value is inappropriate for this
+     *                map.
+     * @throws IllegalArgumentException
+     *                if the key or value cannot be added to this map.
      * @throws NullPointerException
-     *             if the given key is null
+     *                if the key or value is {@code null} and this {@code EnumMap} does not
+     *                support {@code null} keys or values.
+     * @since Android 1.0
      */
     @Override
     @SuppressWarnings("unchecked")
@@ -592,15 +614,21 @@ public class EnumMap<K extends Enum<K>, V> extends AbstractMap<K, V> implements
     }
 
     /**
-     * Copies all the mappings in the given map to this map. These mappings will
-     * replace all mappings that this map had for all of the keys currently in
-     * the given map.
+     * Copies every mapping in the specified {@code Map} to this {@code EnumMap}.
      * 
      * @param map
-     *            the key whose presence in this map is to be tested
+     *            the {@code Map} to copy mappings from.
+     * @throws UnsupportedOperationException
+     *                if adding to this {@code EnumMap} is not supported.
+     * @throws ClassCastException
+     *                if the class of a key or value is inappropriate for this
+     *                {@code EnumMap}.
+     * @throws IllegalArgumentException
+     *                if a key or value cannot be added to this map.
      * @throws NullPointerException
-     *             if the given map is null, or if one or more keys in the given
-     *             map are null
+     *                if a key or value is {@code null} and this {@code EnumMap} does not
+     *                support {@code null} keys or values.
+     * @since Android 1.0
      */
     @Override
     @SuppressWarnings("unchecked")
@@ -609,12 +637,15 @@ public class EnumMap<K extends Enum<K>, V> extends AbstractMap<K, V> implements
     }
 
     /**
-     * Removes the mapping for this key from this map if it is present.
+     * Removes a mapping with the specified key from this {@code EnumMap}.
      * 
      * @param key
-     *            the key whose mapping is to be removed from this map
-     * @return the previous value associated with the given key, or null if this
-     *         map has no mapping for this key.
+     *            the key of the mapping to remove.
+     * @return the value of the removed mapping or {@code null} if no mapping
+     *         for the specified key was found.
+     * @throws UnsupportedOperationException
+     *                if removing from this {@code EnumMap} is not supported.
+     * @since Android 1.0
      */
     @Override
     @SuppressWarnings("unchecked")
@@ -633,9 +664,10 @@ public class EnumMap<K extends Enum<K>, V> extends AbstractMap<K, V> implements
     }
 
     /**
-     * Returns the number of the mappings in this map.
+     * Returns the number of elements in this {@code EnumMap}.
      * 
-     * @return the number of the mappings in this map
+     * @return the number of elements in this {@code EnumMap}.
+     * @since Android 1.0
      */
     @Override
     public int size() {
@@ -643,13 +675,14 @@ public class EnumMap<K extends Enum<K>, V> extends AbstractMap<K, V> implements
     }
 
     /**
-     * Returns a {@link Collection}} view of the values contained in this map.
-     * The returned collection complys with the general rule specified in
-     * {@link Map#values()}}. The collection's iterator will return the values
-     * in the their corresponding keys' natural order(the enum constants are
-     * declared in this order)
+     * Returns a {@code Collection} of the values contained in this {@code EnumMap}. The returned
+     * {@code Collection} complies with the general rule specified in
+     * {@link Map#values()}. The {@code Collection}'s {@code Iterator} will return the values
+     * in the their corresponding keys' natural order (the {@code Enum} constants are
+     * declared in this order).
      * 
-     * @return a collection view of the mappings contained in this map.
+     * @return a collection of the values contained in this {@code EnumMap}.
+     * @since Android 1.0
      */
     @Override
     public Collection<V> values() {

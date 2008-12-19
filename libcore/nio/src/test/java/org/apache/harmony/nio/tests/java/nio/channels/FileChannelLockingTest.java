@@ -16,6 +16,11 @@
 
 package org.apache.harmony.nio.tests.java.nio.channels;
 
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -33,6 +38,7 @@ import junit.framework.TestCase;
 /**
  * API tests for the NIO FileChannel locking APIs
  */
+@TestTargetClass(java.nio.channels.FileChannel.class)
 public class FileChannelLockingTest extends TestCase {
 
     private FileChannel readOnlyChannel;
@@ -70,7 +76,19 @@ public class FileChannelLockingTest extends TestCase {
                 "rw");
         readWriteChannel = randomAccessFile.getChannel();
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify all exceptions according to specification.",
+      targets = {
+        @TestTarget(
+          methodName = "lock",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "lock",
+          methodArgs = {long.class, long.class, boolean.class}
+        )
+    })
     public void test_illegalLocks() throws IOException {
         // Cannot acquire an exclusive lock on a read-only file channel
         try {
@@ -88,7 +106,15 @@ public class FileChannelLockingTest extends TestCase {
             // expected
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "lock",
+          methodArgs = {}
+        )
+    })
     public void test_lockReadWrite() throws IOException {
         // Acquire an exclusive lock across the entire file.
         FileLock flock = readWriteChannel.lock();
@@ -96,7 +122,15 @@ public class FileChannelLockingTest extends TestCase {
             flock.release();
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify all exceptions according to specification.",
+      targets = {
+        @TestTarget(
+          methodName = "lock",
+          methodArgs = {long.class, long.class, boolean.class}
+        )
+    })
     public void test_illegalLockParameters() throws IOException {
         // Cannot lock negative positions
         try {
@@ -129,7 +163,15 @@ public class FileChannelLockingTest extends TestCase {
             flock1.release();
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't call isShared, isValid methods after lock.",
+      targets = {
+        @TestTarget(
+          methodName = "lock",
+          methodArgs = {long.class, long.class, boolean.class}
+        )
+    })
     public void test_lockLLZ() throws IOException {
         // Lock a range at the front, non-shared.
         FileLock flock1 = readWriteChannel.lock(0, 10, false);
@@ -141,7 +183,15 @@ public class FileChannelLockingTest extends TestCase {
         flock1.release();
         flock2.release();
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify all exceptions according to specification.",
+      targets = {
+        @TestTarget(
+          methodName = "tryLock",
+          methodArgs = {}
+        )
+    })
     public void test_tryLock() throws IOException {
         try {
             readOnlyChannel.tryLock();
@@ -150,7 +200,15 @@ public class FileChannelLockingTest extends TestCase {
             // Expected.
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify all exceptions according to specification.",
+      targets = {
+        @TestTarget(
+          methodName = "tryLock",
+          methodArgs = {long.class, long.class, boolean.class}
+        )
+    })
     public void test_tryLockLLZ() throws IOException {
         // It is illegal to request an exclusive lock on a read-only channel
         try {

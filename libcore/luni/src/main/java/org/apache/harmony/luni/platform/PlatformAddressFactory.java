@@ -13,6 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+// BEGIN android-note
+// address length was changed from long to int for performance reasons.
+// END android-note
+
 package org.apache.harmony.luni.platform;
 
 import java.io.IOException;

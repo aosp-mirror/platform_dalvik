@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package java.security.cert;
 
 import java.io.InputStream;
@@ -30,88 +25,90 @@ import java.util.List;
 import org.apache.harmony.security.internal.nls.Messages;
 
 /**
- * This class is a Service Provider Interface (therefore the Spi suffix) for
- * certificate factories to be supplied by providers.
+ * This class defines the <i>Service Provider Interface</i> (<b>SPI</b>) for the
+ * {@code CertificateFactory} class. This SPI must be implemented for each
+ * certificate type a security provider wishes to support.
+ * 
+ * @since Android 1.0
  */
 
 public abstract class CertificateFactorySpi {
 
     /**
      * Constructs a new instance of this class.
+     * 
+     * @since Android 1.0
      */
     public CertificateFactorySpi() {
     }
 
     /**
-     * Generates and initializes a Certificate from data from the
-     * provided input stream.
+     * Generates and initializes a {@code Certificate} from the provided input
+     * stream.
      * 
      * @param inStream
-     *            InputStream Stream from where data is read to create the
-     *            Certificate
-     * 
-     * @return Certificate an initialized Certificate
+     *            the stream from which the data is read to create the
+     *            certificate.
+     * @return an initialized certificate.
      * @exception CertificateException
-     *                if parsing problems are detected
+     *                if parsing problems are detected.
+     * @since Android 1.0
      */
     public abstract Certificate engineGenerateCertificate(InputStream inStream)
             throws CertificateException;
 
     /**
-     * Generates and initializes a collection of Certificates from
-     * data from the provided input stream.
+     * Generates and initializes a collection of certificates from the provided
+     * input stream.
      * 
      * @param inStream
-     *            InputStream Stream from where data is read to create the
-     *            Certificates
-     * 
-     * @return Collection an initialized collection of Certificates
+     *            the stream from where data is read to create the certificates.
+     * @return a collection of certificates.
      * @exception CertificateException
-     *                if parsing problems are detected
+     *                if parsing problems are detected.
+     * @since Android 1.0
      */
     public abstract Collection<? extends Certificate> 
         engineGenerateCertificates(InputStream inStream) throws CertificateException;
 
     /**
-     * Generates and initializes a Certificate Revocation List from data from
+     * Generates and initializes a <i>Certificate Revocation List</i> (CRL) from
      * the provided input stream.
      * 
      * @param inStream
-     *            InputStream Stream from where data is read to create the CRL
-     * 
-     * @return CRL an initialized Certificate Revocation List
+     *            the stream from where data is read to create the CRL.
+     * @return an CRL instance.
      * @exception CRLException
-     *                if parsing problems are detected
+     *                if parsing problems are detected.
+     * @since Android 1.0
      */
     public abstract CRL engineGenerateCRL(InputStream inStream)
             throws CRLException;
 
     /**
-     * Generates and initializes a collection of Certificate Revocation List
-     * from data from the provided input stream.
+     * Generates and initializes a collection of <i>Certificate Revocation
+     * List</i> (CRL) from the provided input stream.
      * 
      * @param inStream
-     *            InputStream Stream from where data is read to create the CRLs
-     * 
-     * @return Collection an initialized collection of Certificate Revocation
-     *         List
+     *            the stream from which the data is read to create the CRLs.
+     * @return a collection of CRLs.
      * @exception CRLException
-     *                if parsing problems are detected
+     *                if parsing problems are detected.
+     * @since Android 1.0
      */
     public abstract Collection<? extends CRL> 
         engineGenerateCRLs(InputStream inStream) throws CRLException;
 
     /**
-     * Generates a <code>CertPath</code> from data from the provided
-     * <code>InputStream</code>. The default encoding is assumed.
+     * Generates a {@code CertPath} from the provided {@code InputStream}. The
+     * default encoding scheme is applied.
      * 
      * @param inStream
-     *            InputStream with PKCS7 or PkiPath encoded data
-     * 
-     * @return CertPath a CertPath initialized from the provided data
-     * 
+     *            an input stream with encoded data.
+     * @return a {@code CertPath} initialized from the provided data.
      * @throws CertificateException
-     *             if parsing problems are detected
+     *             if parsing problems are detected.
+     * @since Android 1.0
      */
     public CertPath engineGenerateCertPath(InputStream inStream)
             throws CertificateException {
@@ -120,22 +117,20 @@ public abstract class CertificateFactorySpi {
     }
 
     /**
-     * Generates a <code>CertPath</code> from data from the provided
-     * <code>InputStream</code>. The encoding is that specified by the
-     * encoding parameter.
+     * Generates a {@code CertPath} from the provided {@code
+     * InputStream} in the specified encoding.
      * 
      * @param inStream
-     *            InputStream containing certificate path data in specified
-     *            encoding
+     *            an input stream containing certificate path data in specified
+     *            encoding.
      * @param encoding
-     *            encoding of the data in the input stream
-     * 
-     * @return CertPath a CertPath initialized from the provided data
-     * 
+     *            the encoding of the data in the input stream.
+     * @return a {@code CertPath} initialized from the provided data
      * @throws CertificateException
-     *             if parsing problems are detected
+     *             if parsing problems are detected.
      * @throws UnsupportedOperationException
-     *             if the provider does not implement this method
+     *             if the provider does not implement this method.
+     * @since Android 1.0
      */
     public CertPath engineGenerateCertPath(InputStream inStream, String encoding)
             throws CertificateException {
@@ -144,19 +139,18 @@ public abstract class CertificateFactorySpi {
     }
 
     /**
-     * Generates a <code>CertPath</code> from the provided List of
-     * Certificates. The encoding is the default encoding.
+     * Generates a {@code CertPath} from the provided list of certificates. The
+     * encoding is the default encoding.
      * 
      * @param certificates
-     *            List containing certificates in a format supported by the
-     *            CertificateFactory
-     * 
-     * @return CertPath a CertPath initialized from the provided data
-     * 
+     *            the list containing certificates in a format supported by the
+     *            {@code CertificateFactory}.
+     * @return a {@code CertPath} initialized from the provided data.
      * @throws CertificateException
-     *             if parsing problems are detected
+     *             if parsing problems are detected.
      * @throws UnsupportedOperationException
-     *             if the provider does not implement this method
+     *             if the provider does not implement this method.
+     * @since Android 1.0
      */
     public CertPath engineGenerateCertPath(List<? extends Certificate>  certificates) 
             throws CertificateException {
@@ -165,10 +159,12 @@ public abstract class CertificateFactorySpi {
     }
 
     /**
-     * Returns an Iterator over the supported CertPath encodings (as Strings).
-     * The first element is the default encoding.
+     * Returns an {@code Iterator} over the supported {@code CertPath} encodings
+     * (as Strings). The first element is the default encoding.
      * 
-     * @return Iterator Iterator over supported CertPath encodings (as Strings)
+     * @return an iterator over supported {@code CertPath} encodings (as
+     *         Strings).
+     * @since Android 1.0
      */
     public Iterator<String> engineGetCertPathEncodings() {
         throw new UnsupportedOperationException(

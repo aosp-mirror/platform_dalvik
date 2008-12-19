@@ -21,9 +21,15 @@
 
 package org.apache.harmony.tests.java.math;
 
-import junit.framework.TestCase;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.math.BigInteger;
 
+import junit.framework.TestCase;
+@TestTargetClass(BigInteger.class)
 /**
  * Class:   java.math.BigInteger
  * Methods: divide, remainder, mod, and divideAndRemainder 
@@ -32,6 +38,15 @@ public class BigIntegerDivideTest extends TestCase {
     /**
      * Divide by zero
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL_OK,
+              purpose = "This is a complete subset of tests for divide method.",
+              targets = {
+                @TestTarget(
+                  methodName = "divide",
+                  methodArgs = {java.math.BigInteger.class}
+                )
+            })
     public void testCase1() {
         byte aBytes[] = {1, 2, 3, 4, 5, 6, 7};
         byte bBytes[] = {0};
@@ -50,6 +65,15 @@ public class BigIntegerDivideTest extends TestCase {
     /**
      * Divide by ZERO
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL_OK,
+              purpose = "This is a complete subset of tests for divide method.",
+              targets = {
+                @TestTarget(
+                  methodName = "divide",
+                  methodArgs = {java.math.BigInteger.class}
+                )
+            })
     public void testCase2() {
         byte aBytes[] = {1, 2, 3, 4, 5, 6, 7};
         int aSign = 1;
@@ -66,6 +90,15 @@ public class BigIntegerDivideTest extends TestCase {
     /**
      * Divide two equal positive numbers
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL_OK,
+              purpose = "This is a complete subset of tests for divide method.",
+              targets = {
+                @TestTarget(
+                  methodName = "divide",
+                  methodArgs = {java.math.BigInteger.class}
+                )
+            })
     public void testCase3() {
         byte aBytes[] = {-127, 100, 56, 7, 98, -1, 39, -128, 127};
         byte bBytes[] = {-127, 100, 56, 7, 98, -1, 39, -128, 127};
@@ -86,6 +119,15 @@ public class BigIntegerDivideTest extends TestCase {
     /**
      * Divide two equal in absolute value numbers of different signs.
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL_OK,
+              purpose = "This is a complete subset of tests for divide method.",
+              targets = {
+                @TestTarget(
+                  methodName = "divide",
+                  methodArgs = {java.math.BigInteger.class}
+                )
+            })
     public void testCase4() {
         byte aBytes[] = {-127, 100, 56, 7, 98, -1, 39, -128, 127};
         byte bBytes[] = {-127, 100, 56, 7, 98, -1, 39, -128, 127};
@@ -107,6 +149,15 @@ public class BigIntegerDivideTest extends TestCase {
      * Divide two numbers of different length and different signs.
      * The second is longer.
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL_OK,
+              purpose = "This is a complete subset of tests for divide method.",
+              targets = {
+                @TestTarget(
+                  methodName = "divide",
+                  methodArgs = {java.math.BigInteger.class}
+                )
+            })
     public void testCase5() {
         byte aBytes[] = {-127, 100, 56, 7, 98, -1, 39, -128, 127};
         byte bBytes[] = {-127, 100, 56, 7, 98, -1, 39, -128, 127, 1, 2, 3, 4, 5};
@@ -128,6 +179,15 @@ public class BigIntegerDivideTest extends TestCase {
      * Divide two positive numbers of the same length.
      * The second is greater.
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL_OK,
+              purpose = "This is a complete subset of tests for divide method.",
+              targets = {
+                @TestTarget(
+                  methodName = "divide",
+                  methodArgs = {java.math.BigInteger.class}
+                )
+            })
     public void testCase6() {
         byte aBytes[] = {1, 100, 56, 7, 98, -1, 39, -128, 127};
         byte bBytes[] = {15, 100, 56, 7, 98, -1, 39, -128, 127};
@@ -148,6 +208,15 @@ public class BigIntegerDivideTest extends TestCase {
     /**
      * Divide two positive numbers.
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL_OK,
+              purpose = "This is a complete subset of tests for divide method.",
+              targets = {
+                @TestTarget(
+                  methodName = "divide",
+                  methodArgs = {java.math.BigInteger.class}
+                )
+            })
     public void testCase7() {
         byte aBytes[] = {1, 100, 56, 7, 98, -1, 39, -128, 127, 5, 6, 7, 8, 9};
         byte bBytes[] = {15, 48, -29, 7, 98, -1, 39, -128};
@@ -168,6 +237,15 @@ public class BigIntegerDivideTest extends TestCase {
     /**
      * Divide a positive number by a negative one.
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL_OK,
+              purpose = "This is a complete subset of tests for divide method.",
+              targets = {
+                @TestTarget(
+                  methodName = "divide",
+                  methodArgs = {java.math.BigInteger.class}
+                )
+            })
     public void testCase8() {
         byte aBytes[] = {1, 100, 56, 7, 98, -1, 39, -128, 127, 5, 6, 7, 8, 9};
         byte bBytes[] = {15, 48, -29, 7, 98, -1, 39, -128};
@@ -188,6 +266,15 @@ public class BigIntegerDivideTest extends TestCase {
     /**
      * Divide a negative number by a positive one.
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL_OK,
+              purpose = "This is a complete subset of tests for divide method.",
+              targets = {
+                @TestTarget(
+                  methodName = "divide",
+                  methodArgs = {java.math.BigInteger.class}
+                )
+            })
     public void testCase9() {
         byte aBytes[] = {1, 100, 56, 7, 98, -1, 39, -128, 127, 5, 6, 7, 8, 9};
         byte bBytes[] = {15, 48, -29, 7, 98, -1, 39, -128};
@@ -208,6 +295,15 @@ public class BigIntegerDivideTest extends TestCase {
     /**
      * Divide two negative numbers.
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL_OK,
+              purpose = "This is a complete subset of tests for divide method.",
+              targets = {
+                @TestTarget(
+                  methodName = "divide",
+                  methodArgs = {java.math.BigInteger.class}
+                )
+            })
     public void testCase10() {
         byte aBytes[] = {1, 100, 56, 7, 98, -1, 39, -128, 127, 5, 6, 7, 8, 9};
         byte bBytes[] = {15, 48, -29, 7, 98, -1, 39, -128};
@@ -228,6 +324,15 @@ public class BigIntegerDivideTest extends TestCase {
     /**
      * Divide zero by a negative number.
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL_OK,
+              purpose = "This is a complete subset of tests for divide method.",
+              targets = {
+                @TestTarget(
+                  methodName = "divide",
+                  methodArgs = {java.math.BigInteger.class}
+                )
+            })
     public void testCase11() {
         byte aBytes[] = {0};
         byte bBytes[] = {15, 48, -29, 7, 98, -1, 39, -128};
@@ -248,6 +353,15 @@ public class BigIntegerDivideTest extends TestCase {
     /**
      * Divide ZERO by a negative number.
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL_OK,
+              purpose = "This is a complete subset of tests for divide method.",
+              targets = {
+                @TestTarget(
+                  methodName = "divide",
+                  methodArgs = {java.math.BigInteger.class}
+                )
+            })
     public void testCase12() {
         byte bBytes[] = {15, 48, -29, 7, 98, -1, 39, -128};
         int bSign = -1;        
@@ -266,6 +380,15 @@ public class BigIntegerDivideTest extends TestCase {
     /**
      * Divide a positive number by ONE.
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL_OK,
+              purpose = "This is a complete subset of tests for divide method.",
+              targets = {
+                @TestTarget(
+                  methodName = "divide",
+                  methodArgs = {java.math.BigInteger.class}
+                )
+            })
     public void testCase13() {
         byte aBytes[] = {15, 48, -29, 7, 98, -1, 39, -128};
         int aSign = 1;        
@@ -284,6 +407,15 @@ public class BigIntegerDivideTest extends TestCase {
     /**
      * Divide ONE by ONE.
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL_OK,
+              purpose = "This is a complete subset of tests for divide method.",
+              targets = {
+                @TestTarget(
+                  methodName = "divide",
+                  methodArgs = {java.math.BigInteger.class}
+                )
+            })
     public void testCase14() {
         byte rBytes[] = {1};
         BigInteger aNumber = BigInteger.ONE;
@@ -300,6 +432,15 @@ public class BigIntegerDivideTest extends TestCase {
     /**
      * Verifies the case when borrow != 0 in the private divide method.
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL_OK,
+              purpose = "This is a complete subset of tests for divide method.",
+              targets = {
+                @TestTarget(
+                  methodName = "divide",
+                  methodArgs = {java.math.BigInteger.class}
+                )
+            })
     public void testDivisionKnuth1() {
         byte aBytes[] = {-7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7};
         byte bBytes[] = {-3, -3, -3, -3};
@@ -320,6 +461,15 @@ public class BigIntegerDivideTest extends TestCase {
     /**
      * Verifies the case when the divisor is already normalized.
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL_OK,
+              purpose = "This is a complete subset of tests for divide method.",
+              targets = {
+                @TestTarget(
+                  methodName = "divide",
+                  methodArgs = {java.math.BigInteger.class}
+                )
+            })
     public void testDivisionKnuthIsNormalized() {
         byte aBytes[] = {-9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5};
         byte bBytes[] = {-1, -1, -1, -1, -1, -1, -1, -1};
@@ -341,6 +491,15 @@ public class BigIntegerDivideTest extends TestCase {
      * Verifies the case when the first digits of the dividend
      * and divisor equal.
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL_OK,
+              purpose = "This is a complete subset of tests for divide method.",
+              targets = {
+                @TestTarget(
+                  methodName = "divide",
+                  methodArgs = {java.math.BigInteger.class}
+                )
+            })
     public void testDivisionKnuthFirstDigitsEqual() {
         byte aBytes[] = {2, -3, -4, -5, -1, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5};
         byte bBytes[] = {2, -3, -4, -5, -1, -1, -1, -1};
@@ -361,6 +520,15 @@ public class BigIntegerDivideTest extends TestCase {
     /**
      * Divide the number of one digit by the number of one digit 
      */
+    @TestInfo(
+              level = TestLevel.PARTIAL_OK,
+              purpose = "This is a complete subset of tests for divide method.",
+              targets = {
+                @TestTarget(
+                  methodName = "divide",
+                  methodArgs = {java.math.BigInteger.class}
+                )
+            })
     public void testDivisionKnuthOneDigitByOneDigit() {
         byte aBytes[] = {113, -83, 123, -5};
         byte bBytes[] = {2, -3, -4, -5};
@@ -381,6 +549,15 @@ public class BigIntegerDivideTest extends TestCase {
     /**
      * Divide the number of multi digits by the number of one digit 
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "This is a complete subset of tests for divide method.",
+      targets = {
+        @TestTarget(
+          methodName = "divide",
+          methodArgs = {java.math.BigInteger.class}
+        )
+    })
     public void testDivisionKnuthMultiDigitsByOneDigit() {
         byte aBytes[] = {113, -83, 123, -5, 18, -34, 67, 39, -29};
         byte bBytes[] = {2, -3, -4, -5};
@@ -401,6 +578,15 @@ public class BigIntegerDivideTest extends TestCase {
     /**
      * Remainder of division by zero
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "This is a complete subset of tests for remainder method.",
+      targets = {
+        @TestTarget(
+          methodName = "remainder",
+          methodArgs = {java.math.BigInteger.class}
+        )
+    })
     public void testCase15() {
         byte aBytes[] = {1, 2, 3, 4, 5, 6, 7};
         byte bBytes[] = {0};
@@ -419,6 +605,15 @@ public class BigIntegerDivideTest extends TestCase {
     /**
      * Remainder of division of equal numbers
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for remainder method.",
+          targets = {
+            @TestTarget(
+              methodName = "remainder",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testCase16() {
         byte aBytes[] = {-127, 100, 56, 7, 98, -1, 39, -128, 127};
         byte bBytes[] = {-127, 100, 56, 7, 98, -1, 39, -128, 127};
@@ -439,6 +634,15 @@ public class BigIntegerDivideTest extends TestCase {
     /**
      * Remainder of division of two positive numbers
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for remainder method.",
+          targets = {
+            @TestTarget(
+              methodName = "remainder",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testCase17() {
         byte aBytes[] = {-127, 100, 56, 7, 98, -1, 39, -128, 127, 75};
         byte bBytes[] = {27, -15, 65, 39, 100};
@@ -459,6 +663,15 @@ public class BigIntegerDivideTest extends TestCase {
     /**
      * Remainder of division of two negative numbers
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for remainder method.",
+          targets = {
+            @TestTarget(
+              methodName = "remainder",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testCase18() {
         byte aBytes[] = {-127, 100, 56, 7, 98, -1, 39, -128, 127, 75};
         byte bBytes[] = {27, -15, 65, 39, 100};
@@ -480,6 +693,15 @@ public class BigIntegerDivideTest extends TestCase {
      * Remainder of division of two numbers of different signs.
      * The first is positive.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for remainder method.",
+          targets = {
+            @TestTarget(
+              methodName = "remainder",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testCase19() {
         byte aBytes[] = {-127, 100, 56, 7, 98, -1, 39, -128, 127, 75};
         byte bBytes[] = {27, -15, 65, 39, 100};
@@ -501,6 +723,15 @@ public class BigIntegerDivideTest extends TestCase {
      * Remainder of division of two numbers of different signs.
      * The first is negative.
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for remainder method.",
+          targets = {
+            @TestTarget(
+              methodName = "remainder",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testCase20() {
         byte aBytes[] = {-127, 100, 56, 7, 98, -1, 39, -128, 127, 75};
         byte bBytes[] = {27, -15, 65, 39, 100};
@@ -521,6 +752,15 @@ public class BigIntegerDivideTest extends TestCase {
     /**
      * Tests the step D6 from the Knuth algorithm
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for remainder method.",
+          targets = {
+            @TestTarget(
+              methodName = "remainder",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testRemainderKnuth1() {
         byte aBytes[] = {-9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1};
         byte bBytes[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
@@ -541,6 +781,15 @@ public class BigIntegerDivideTest extends TestCase {
     /**
      * Divide the number of one digit by the number of one digit 
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for remainder method.",
+          targets = {
+            @TestTarget(
+              methodName = "remainder",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testRemainderKnuthOneDigitByOneDigit() {
         byte aBytes[] = {113, -83, 123, -5};
         byte bBytes[] = {2, -3, -4, -50};
@@ -561,6 +810,15 @@ public class BigIntegerDivideTest extends TestCase {
     /**
      * Divide the number of multi digits by the number of one digit 
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for remainder method.",
+          targets = {
+            @TestTarget(
+              methodName = "remainder",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testRemainderKnuthMultiDigitsByOneDigit() {
         byte aBytes[] = {113, -83, 123, -5, 18, -34, 67, 39, -29};
         byte bBytes[] = {2, -3, -4, -50};
@@ -582,6 +840,15 @@ public class BigIntegerDivideTest extends TestCase {
      * divideAndRemainder of two numbers of different signs.
      * The first is negative.
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "ArithmeticException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "divideAndRemainder",
+          methodArgs = {java.math.BigInteger.class}
+        )
+    })
     public void testCase21() {
         byte aBytes[] = {-127, 100, 56, 7, 98, -1, 39, -128, 127, 75};
         byte bBytes[] = {27, -15, 65, 39, 100};
@@ -614,6 +881,15 @@ public class BigIntegerDivideTest extends TestCase {
     /**
      * mod when modulus is negative
      */
+@TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "This is a complete subset of tests for mod method.",
+      targets = {
+        @TestTarget(
+          methodName = "mod",
+          methodArgs = {java.math.BigInteger.class}
+        )
+    })
     public void testCase22() {
         byte aBytes[] = {1, 2, 3, 4, 5, 6, 7};
         byte bBytes[] = {1, 30, 40, 56, -1, 45};
@@ -632,6 +908,15 @@ public class BigIntegerDivideTest extends TestCase {
     /**
      * mod when a divisor is positive
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for mod method.",
+          targets = {
+            @TestTarget(
+              methodName = "mod",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testCase23() {
         byte aBytes[] = {-127, 100, 56, 7, 98, -1, 39, -128, 127, 75};
         byte bBytes[] = {27, -15, 65, 39, 100};
@@ -652,6 +937,15 @@ public class BigIntegerDivideTest extends TestCase {
     /**
      * mod when a divisor is negative
      */
+@TestInfo(
+          level = TestLevel.PARTIAL_OK,
+          purpose = "This is a complete subset of tests for mod method.",
+          targets = {
+            @TestTarget(
+              methodName = "mod",
+              methodArgs = {java.math.BigInteger.class}
+            )
+        })
     public void testCase24() {
         byte aBytes[] = {-127, 100, 56, 7, 98, -1, 39, -128, 127, 75};
         byte bBytes[] = {27, -15, 65, 39, 100};

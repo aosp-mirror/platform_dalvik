@@ -24,222 +24,222 @@ import java.util.prefs.AbstractPreferences;
 import java.util.prefs.BackingStoreException;
 
 public class MockAbstractPreferences extends AbstractPreferences {
-	static final int NORMAL = 0;
+    static final int NORMAL = 0;
 
-	static final int backingException = 1;
+    static final int backingException = 1;
 
-	static final int runtimeException = 2;
+    static final int runtimeException = 2;
 
-	static final int returnNull = 3;
+    static final int returnNull = 3;
 
-	int result = NORMAL;
+    int result = NORMAL;
 
-	Properties attr = new Properties();
+    Properties attr = new Properties();
 
-	Map<String, MockAbstractPreferences> childs = new HashMap<String, MockAbstractPreferences>();
+    Map<String, MockAbstractPreferences> childs = new HashMap<String, MockAbstractPreferences>();
 
-	private int flushedTimes;
+    private int flushedTimes;
 
-	private int syncTimes;
+    private int syncTimes;
 
-	protected MockAbstractPreferences(AbstractPreferences parent, String name) {
-		this(parent, name, false);
+    protected MockAbstractPreferences(AbstractPreferences parent, String name) {
+        this(parent, name, false);
 
-	}
+    }
 
-	protected MockAbstractPreferences(AbstractPreferences parent, String name,
-			boolean newNode) {
-		super(parent, name);
-		super.newNode = newNode;
-		if (parent instanceof MockAbstractPreferences) {
-			((MockAbstractPreferences) parent).addChild(this);
-		}
-	}
+    protected MockAbstractPreferences(AbstractPreferences parent, String name,
+            boolean newNode) {
+        super(parent, name);
+        super.newNode = newNode;
+        if (parent instanceof MockAbstractPreferences) {
+            ((MockAbstractPreferences) parent).addChild(this);
+        }
+    }
 
-	public int getFlushedTimes() {
-		return flushedTimes;
-	}
+    public int getFlushedTimes() {
+        return flushedTimes;
+    }
 
-	public void resetFlushedTimes() {
-		flushedTimes = 0;
-	}
+    public void resetFlushedTimes() {
+        flushedTimes = 0;
+    }
 
-	public int getSyncTimes() {
-		return syncTimes;
-	}
+    public int getSyncTimes() {
+        return syncTimes;
+    }
 
-	public void resetSyncTimes() {
-		syncTimes = 0;
-	}
+    public void resetSyncTimes() {
+        syncTimes = 0;
+    }
 
-	private void addChild(MockAbstractPreferences c) {
-		childs.put(c.name(), c);
-	}
+    private void addChild(MockAbstractPreferences c) {
+        childs.put(c.name(), c);
+    }
 
-	public void setResult(int r) {
-		result = r;
-	}
+    public void setResult(int r) {
+        result = r;
+    }
 
-	public Object lock() {
-		return lock;
-	}
+    public Object lock() {
+        return lock;
+    }
 
-	public String[] childrenNamesSpi() throws BackingStoreException {
-		checkException();
-		if (result == returnNull)
-			return null;
-		String[] r = new String[childs.size()];
-		childs.keySet().toArray(r);
-		return r;
-	}
+    public String[] childrenNamesSpi() throws BackingStoreException {
+        checkException();
+        if (result == returnNull)
+            return null;
+        String[] r = new String[childs.size()];
+        childs.keySet().toArray(r);
+        return r;
+    }
 
-	private void checkException() throws BackingStoreException {
-		switch (result) {
-		case NORMAL:
-			return;
-		case backingException:
-			throw new BackingStoreException("test");
-		case runtimeException:
-			throw new MockRuntimeException("test");
-		}
-	}
+    private void checkException() throws BackingStoreException {
+        switch (result) {
+        case NORMAL:
+            return;
+        case backingException:
+            throw new BackingStoreException("test");
+        case runtimeException:
+            throw new MockRuntimeException("test");
+        }
+    }
 
-	public AbstractPreferences publicChildSpi(String name) {
-		return childSpi(name);
-	}
+    public AbstractPreferences publicChildSpi(String name) {
+        return childSpi(name);
+    }
 
-	public AbstractPreferences childSpi(String name) {
-		try {
-			checkException();
-		} catch (BackingStoreException e) {
-		}
-		if (result == returnNull)
-			return null;
-		AbstractPreferences r = childs.get(name);
-		if (r == null) {
-			r = new MockAbstractPreferences(this, name, true);
+    public AbstractPreferences childSpi(String name) {
+        try {
+            checkException();
+        } catch (BackingStoreException e) {
+        }
+        if (result == returnNull)
+            return null;
+        AbstractPreferences r = childs.get(name);
+        if (r == null) {
+            r = new MockAbstractPreferences(this, name, true);
 
-		}
-		return r;
-	}
+        }
+        return r;
+    }
 
-	public void flushSpi() throws BackingStoreException {
-		checkException();
-		flushedTimes++;
-	}
+    public void flushSpi() throws BackingStoreException {
+        checkException();
+        flushedTimes++;
+    }
 
-	public String getSpi(String key) {
-		try {
-			checkException();
-		} catch (BackingStoreException e) {
-		}
-		if (null == key) {
-			return null;
-		}
-		return result == returnNull ? null : attr.getProperty(key);
-	}
+    public String getSpi(String key) {
+        try {
+            checkException();
+        } catch (BackingStoreException e) {
+        }
+        if (null == key) {
+            return null;
+        }
+        return result == returnNull ? null : attr.getProperty(key);
+    }
 
-	public String[] keysSpi() throws BackingStoreException {
-		checkException();
-		Set<Object> keys = attr.keySet();
-		String[] results = new String[keys.size()];
-		keys.toArray(results);
-		return result == returnNull ? null : results;
-	}
+    public String[] keysSpi() throws BackingStoreException {
+        checkException();
+        Set<Object> keys = attr.keySet();
+        String[] results = new String[keys.size()];
+        keys.toArray(results);
+        return result == returnNull ? null : results;
+    }
 
-	public void putSpi(String name, String value) {
-		try {
-			checkException();
-		} catch (BackingStoreException e) {
-		}
-		if (name == null || value == null) {
-			return;
-		}
-		attr.put(name, value);
-	}
+    public void putSpi(String name, String value) {
+        try {
+            checkException();
+        } catch (BackingStoreException e) {
+        }
+        if (name == null || value == null) {
+            return;
+        }
+        attr.put(name, value);
+    }
 
-	protected void removeNodeSpi() throws BackingStoreException {
-		checkException();
-		((MockAbstractPreferences) parent()).childs.remove(name());
-	}
+    protected void removeNodeSpi() throws BackingStoreException {
+        checkException();
+        ((MockAbstractPreferences) parent()).childs.remove(name());
+    }
 
-	public void removeSpi(String key) {
-		try {
-			checkException();
-		} catch (BackingStoreException e) {
-		}
-		if (null == key) {
-			return;
-		}
-		attr.remove(key);
-	}
+    public void removeSpi(String key) {
+        try {
+            checkException();
+        } catch (BackingStoreException e) {
+        }
+        if (null == key) {
+            return;
+        }
+        attr.remove(key);
+    }
 
-	public void syncSpi() throws BackingStoreException {
-		checkException();
-		syncTimes++;
-	}
+    public void syncSpi() throws BackingStoreException {
+        checkException();
+        syncTimes++;
+    }
 
-	public boolean getNewNode() {
-		return newNode;
-	}
+    public boolean getNewNode() {
+        return newNode;
+    }
 
-	public Object getLock() {
-		return lock;
-	}
+    public Object getLock() {
+        return lock;
+    }
 
-	public void protectedAbstractMethod() {
-		try {
-			childrenNamesSpi();
-		} catch (BackingStoreException e) {
-		}
-		childSpi("mock");
-		try {
-			flushSpi();
-		} catch (BackingStoreException e1) {
-		}
-		getSpi(null);
-		isRemoved();
-		try {
-			keysSpi();
-		} catch (BackingStoreException e2) {
-		}
-		putSpi(null, null);
-		try {
-			removeNodeSpi();
-		} catch (BackingStoreException e3) {
-		}
-		removeSpi(null);
-		try {
-			syncSpi();
-		} catch (BackingStoreException e4) {
-		}
-	}
+    public void protectedAbstractMethod() {
+        try {
+            childrenNamesSpi();
+        } catch (BackingStoreException e) {
+        }
+        childSpi("mock");
+        try {
+            flushSpi();
+        } catch (BackingStoreException e1) {
+        }
+        getSpi(null);
+        isRemoved();
+        try {
+            keysSpi();
+        } catch (BackingStoreException e2) {
+        }
+        putSpi(null, null);
+        try {
+            removeNodeSpi();
+        } catch (BackingStoreException e3) {
+        }
+        removeSpi(null);
+        try {
+            syncSpi();
+        } catch (BackingStoreException e4) {
+        }
+    }
 
-	public boolean isRemovedImpl() {
-		return super.isRemoved();
-	}
+    public boolean isRemovedImpl() {
+        return super.isRemoved();
+    }
 
-	public AbstractPreferences getChildImpl(String name)
-			throws BackingStoreException {
-		return super.getChild(name);
-	}
+    public AbstractPreferences getChildImpl(String name)
+            throws BackingStoreException {
+        return super.getChild(name);
+    }
 
-	public AbstractPreferences[] cachedChildrenImpl() {
-		return super.cachedChildren();
-	}
+    public AbstractPreferences[] cachedChildrenImpl() {
+        return super.cachedChildren();
+    }
 
 }
 
 class MockRuntimeException extends RuntimeException {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	public MockRuntimeException(String s) {
-		super(s);
-	}
+    public MockRuntimeException(String s) {
+        super(s);
+    }
 
-	public MockRuntimeException() {
-		super();
-	}
+    public MockRuntimeException() {
+        super();
+    }
 }
 

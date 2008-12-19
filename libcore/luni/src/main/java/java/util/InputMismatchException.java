@@ -18,10 +18,13 @@ package java.util;
 import java.io.Serializable;
 
 /**
- * An InputMismatchException is thrown by a scanner to indicate that the next
- * token does not match the pattern the specified type.
+ * An {@code InputMismatchException} is thrown by a scanner to indicate that the
+ * next token does not match or is out of range for the type specified in the
+ * pattern.
  * 
  * @see Scanner
+ * @see java.lang.RuntimeException
+ * @since Android 1.0
  */
 public class InputMismatchException extends NoSuchElementException implements
         Serializable {
@@ -29,18 +32,19 @@ public class InputMismatchException extends NoSuchElementException implements
     static final long serialVersionUID = 8811230760997066428L;
     
     /**
-     * Constructs a InputMismatchException with no error message
-     * 
+     * Constructs a new {@code InputMismatchException} with the current stack
+     * trace filled in.
      */
     public InputMismatchException() {
         super();
     }
 
     /**
-     * Constructs a InputMismatchException with msg as its error message
+     * Constructs a new {@code InputMismatchException} with the stack trace
+     * filled in and {@code msg} as its error message.
      * 
      * @param msg
-     *            The specified error message
+     *           the specified error message.
      */
     public InputMismatchException(String msg) {
         super(msg);

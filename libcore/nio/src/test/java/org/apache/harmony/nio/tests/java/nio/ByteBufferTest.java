@@ -17,6 +17,11 @@
 
 package org.apache.harmony.nio.tests.java.nio;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.nio.BufferOverflowException;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
@@ -35,6 +40,7 @@ import java.util.Arrays;
  * Tests java.nio.ByteBuffer
  * 
  */
+@TestTargetClass(ByteBuffer.class)
 public class ByteBufferTest extends AbstractBufferTest {
     protected static final int SMALL_TEST_LENGTH = 5;
     protected static final int BUFFER_LENGTH = 250;
@@ -56,7 +62,16 @@ public class ByteBufferTest extends AbstractBufferTest {
      * 1. case for check ByteBuffer testBuf properties
      * 2. case expected IllegalArgumentException
      */
-    
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check backing array. Doesn't check boundary value " +
+            "of capacity.",
+      targets = {
+        @TestTarget(
+          methodName = "allocate",
+          methodArgs = {int.class}
+        )
+    })
     public void test_AllocateI() {
         //    case: ByteBuffer testBuf properties is satisfy the conditions specification
         ByteBuffer testBuf = ByteBuffer.allocate(20);
@@ -76,7 +91,16 @@ public class ByteBufferTest extends AbstractBufferTest {
     /*
      * test for method static ByteBuffer allocateDirect(int capacity)
      */
-    
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check check backing array. Doesn't check boundary " +
+            "value of capacity.",
+      targets = {
+        @TestTarget(
+          methodName = "allocateDirect",
+          methodArgs = {int.class}
+        )
+    })
     public void test_AllocateDirectI() {
         //        case: ByteBuffer testBuf properties is satisfy the conditions specification
         ByteBuffer testBuf = ByteBuffer.allocateDirect(20);
@@ -91,7 +115,15 @@ public class ByteBufferTest extends AbstractBufferTest {
             //expected
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "The second if/else verifies the same case.",
+      targets = {
+        @TestTarget(
+          methodName = "array",
+          methodArgs = {}
+        )
+    })
     public void testArray() {
         if (buf.hasArray()) {
             byte array[] = buf.array();
@@ -129,7 +161,15 @@ public class ByteBufferTest extends AbstractBufferTest {
             }
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "The second if/else verifies the same case.",
+      targets = {
+        @TestTarget(
+          methodName = "arrayOffset",
+          methodArgs = {}
+        )
+    })
     public void testArrayOffset() {
         if (buf.hasArray()) {
             byte array[] = buf.array();
@@ -167,7 +207,15 @@ public class ByteBufferTest extends AbstractBufferTest {
             }
         }
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "asReadOnlyBuffer",
+          methodArgs = {}
+        )
+    })
     public void testAsReadOnlyBuffer() {
         buf.clear();
         buf.mark();
@@ -191,7 +239,15 @@ public class ByteBufferTest extends AbstractBufferTest {
         buf.reset();
         assertEquals(buf.position(), 0);
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "compact",
+          methodArgs = {}
+        )
+    })
     public void testCompact() {
         if (buf.isReadOnly()) {
             try {
@@ -252,7 +308,15 @@ public class ByteBufferTest extends AbstractBufferTest {
             // expected
         }
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "compareTo",
+          methodArgs = {java.nio.ByteBuffer.class}
+        )
+    })
     public void testCompareTo() {
         // compare to self
         assertEquals(0, buf.compareTo(buf));
@@ -280,7 +344,15 @@ public class ByteBufferTest extends AbstractBufferTest {
         
         assertTrue(ByteBuffer.wrap(new byte[21]).compareTo(ByteBuffer.allocateDirect(21)) == 0);
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "duplicate",
+          methodArgs = {}
+        )
+    })
     public void testDuplicate() {
         buf.clear();
         buf.mark();
@@ -312,7 +384,15 @@ public class ByteBufferTest extends AbstractBufferTest {
             assertContentEquals(buf, duplicate);
         }
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "equals",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void testEquals() {
         // equal to self
         assertTrue(buf.equals(buf));
@@ -338,6 +418,15 @@ public class ByteBufferTest extends AbstractBufferTest {
     /*
      * Class under test for byte get()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "get",
+          methodArgs = {}
+        )
+    })
     public void testGet() {
         buf.clear();
         for (int i = 0; i < buf.capacity(); i++) {
@@ -355,6 +444,15 @@ public class ByteBufferTest extends AbstractBufferTest {
     /*
      * Class under test for java.nio.ByteBuffer get(byte[])
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "get",
+          methodArgs = {byte[].class}
+        )
+    })
     public void testGetbyteArray() {
         byte array[] = new byte[1];
         buf.clear();
@@ -381,6 +479,15 @@ public class ByteBufferTest extends AbstractBufferTest {
     /*
      * Class under test for java.nio.ByteBuffer get(byte[], int, int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "get",
+          methodArgs = {byte[].class, int.class, int.class}
+        )
+    })
     public void testGetbyteArrayintint() {
         buf.clear();
         byte array[] = new byte[buf.capacity()];
@@ -448,6 +555,15 @@ public class ByteBufferTest extends AbstractBufferTest {
     /*
      * Class under test for byte get(int)
      */
+    @TestInfo(
+          level = TestLevel.COMPLETE,
+          purpose = "",
+          targets = {
+            @TestTarget(
+              methodName = "get",
+              methodArgs = {int.class}
+            )
+        })
     public void testGetint() {
         buf.clear();
         for (int i = 0; i < buf.capacity(); i++) {
@@ -467,7 +583,15 @@ public class ByteBufferTest extends AbstractBufferTest {
             // expected
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "The same verification in if/else block.",
+      targets = {
+        @TestTarget(
+          methodName = "hasArray",
+          methodArgs = {}
+        )
+    })
     public void testHasArray() {
         if (buf.hasArray()) {
             assertNotNull(buf.array());
@@ -492,7 +616,15 @@ public class ByteBufferTest extends AbstractBufferTest {
             }
         }
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "hashCode",
+          methodArgs = {}
+        )
+    })
     public void testHashCode() {
         buf.clear();
         loadTestData1(buf);
@@ -517,11 +649,27 @@ public class ByteBufferTest extends AbstractBufferTest {
         duplicate.position(buf.capacity()/2);
         assertTrue(buf.hashCode()!= duplicate.hashCode());
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Abstract method.",
+      targets = {
+        @TestTarget(
+          methodName = "isDirect",
+          methodArgs = {}
+        )
+    })
     public void testIsDirect() {
         buf.isDirect();
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "order",
+          methodArgs = {}
+        )
+    })
     public void testOrder() {
         // BIG_ENDIAN is the default byte order
         assertEquals(ByteOrder.BIG_ENDIAN, buf.order());
@@ -544,7 +692,15 @@ public class ByteBufferTest extends AbstractBufferTest {
      * test covers following usecases:
      * 1. case for check
      */
-    
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "order",
+          methodArgs = {java.nio.ByteOrder.class}
+        )
+    })
     public void test_OrderLjava_lang_ByteOrder() {
         //         BIG_ENDIAN is the default byte order
         assertEquals(ByteOrder.BIG_ENDIAN, buf.order());
@@ -565,6 +721,15 @@ public class ByteBufferTest extends AbstractBufferTest {
     /*
      * Class under test for java.nio.ByteBuffer put(byte)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {byte.class}
+        )
+    })
     public void testPutbyte() {
         if (buf.isReadOnly()) {
             try {
@@ -595,6 +760,15 @@ public class ByteBufferTest extends AbstractBufferTest {
     /*
      * Class under test for java.nio.ByteBuffer put(byte[])
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {byte[].class}
+        )
+    })
     public void testPutbyteArray() {
         byte array[] = new byte[1];
         if (buf.isReadOnly()) {
@@ -632,6 +806,15 @@ public class ByteBufferTest extends AbstractBufferTest {
     /*
      * Class under test for java.nio.ByteBuffer put(byte[], int, int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {byte[].class, int.class, int.class}
+        )
+    })
     public void testPutbyteArrayintint() {
         buf.clear();
         byte array[] = new byte[buf.capacity()];
@@ -710,6 +893,15 @@ public class ByteBufferTest extends AbstractBufferTest {
     /*
      * Class under test for java.nio.ByteBuffer put(java.nio.ByteBuffer)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {java.nio.ByteBuffer.class}
+        )
+    })
     public void testPutByteBuffer() {
         ByteBuffer other = ByteBuffer.allocate(buf.capacity());
         if (buf.isReadOnly()) {
@@ -762,6 +954,15 @@ public class ByteBufferTest extends AbstractBufferTest {
     /*
      * Class under test for java.nio.ByteBuffer put(int, byte)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "put",
+          methodArgs = {int.class, byte.class}
+        )
+    })
     public void testPutintbyte() {
         if (buf.isReadOnly()) {
             try {
@@ -793,7 +994,15 @@ public class ByteBufferTest extends AbstractBufferTest {
             // expected
         }
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "slice",
+          methodArgs = {}
+        )
+    })
     public void testSlice() {
         assertTrue(buf.capacity() > SMALL_TEST_LENGTH);
         buf.position(1);
@@ -821,7 +1030,15 @@ public class ByteBufferTest extends AbstractBufferTest {
             assertEquals(slice.get(1), 100);
         }
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public void testToString() {
         String str = buf.toString();
         assertTrue(str.indexOf("Byte") >= 0 || str.indexOf("byte") >= 0);
@@ -829,7 +1046,15 @@ public class ByteBufferTest extends AbstractBufferTest {
         assertTrue(str.indexOf("" + buf.limit()) >= 0);
         assertTrue(str.indexOf("" + buf.capacity()) >= 0);
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "asCharBuffer",
+          methodArgs = {}
+        )
+    })
     public void testAsCharBuffer() {
         CharBuffer charBuffer;
         byte bytes[] = new byte[2];
@@ -885,7 +1110,15 @@ public class ByteBufferTest extends AbstractBufferTest {
         buf.clear();
         buf.order(ByteOrder.BIG_ENDIAN);
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "asDoubleBuffer",
+          methodArgs = {}
+        )
+    })
     public void testAsDoubleBuffer() {
         DoubleBuffer doubleBuffer;
         byte bytes[] = new byte[8];
@@ -948,7 +1181,15 @@ public class ByteBufferTest extends AbstractBufferTest {
         buf.clear();
         buf.order(ByteOrder.BIG_ENDIAN);
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "asFloatBuffer",
+          methodArgs = {}
+        )
+    })
     public void testAsFloatBuffer() {
         FloatBuffer floatBuffer;
         byte bytes[] = new byte[4];
@@ -1011,7 +1252,15 @@ public class ByteBufferTest extends AbstractBufferTest {
         buf.clear();
         buf.order(ByteOrder.BIG_ENDIAN);
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "asIntBuffer",
+          methodArgs = {}
+        )
+    })
     public void testAsIntBuffer() {
         IntBuffer intBuffer;
         byte bytes[] = new byte[4];
@@ -1068,7 +1317,15 @@ public class ByteBufferTest extends AbstractBufferTest {
         buf.clear();
         buf.order(ByteOrder.BIG_ENDIAN);
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "asLongBuffer",
+          methodArgs = {}
+        )
+    })
     public void testAsLongBuffer() {
         LongBuffer longBuffer;
         byte bytes[] = new byte[8];
@@ -1125,7 +1382,15 @@ public class ByteBufferTest extends AbstractBufferTest {
         buf.clear();
         buf.order(ByteOrder.BIG_ENDIAN);
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "asShortBuffer",
+          methodArgs = {}
+        )
+    })
     public void testAsShortBuffer() {
         ShortBuffer shortBuffer;
         byte bytes[] = new byte[2];
@@ -1182,7 +1447,15 @@ public class ByteBufferTest extends AbstractBufferTest {
         buf.clear();
         buf.order(ByteOrder.BIG_ENDIAN);
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getChar",
+          methodArgs = {}
+        )
+    })
     public void testGetChar() {
         int nbytes = 2;
         byte bytes[] = new byte[nbytes];
@@ -1208,7 +1481,15 @@ public class ByteBufferTest extends AbstractBufferTest {
 
         buf.order(ByteOrder.BIG_ENDIAN);
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getChar",
+          methodArgs = {int.class}
+        )
+    })
     public void testGetCharint() {
         int nbytes = 2;
         byte bytes[] = new byte[nbytes];
@@ -1239,7 +1520,15 @@ public class ByteBufferTest extends AbstractBufferTest {
 
         buf.order(ByteOrder.BIG_ENDIAN);
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "putChar",
+          methodArgs = {char.class}
+        )
+    })
     public void testPutChar() {
         if (buf.isReadOnly()) {
             try {
@@ -1277,7 +1566,15 @@ public class ByteBufferTest extends AbstractBufferTest {
 
         buf.order(ByteOrder.BIG_ENDIAN);
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "putChar",
+          methodArgs = {int.class, char.class}
+        )
+    })
     public void testPutCharint() {
         if (buf.isReadOnly()) {
             try {
@@ -1325,7 +1622,15 @@ public class ByteBufferTest extends AbstractBufferTest {
             //expected 
         }
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getDouble",
+          methodArgs = {}
+        )
+    })
     public void testGetDouble() {
         int nbytes = 8;
         byte bytes[] = new byte[nbytes];
@@ -1354,7 +1659,15 @@ public class ByteBufferTest extends AbstractBufferTest {
 
         buf.order(ByteOrder.BIG_ENDIAN);
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getDouble",
+          methodArgs = {int.class}
+        )
+    })
     public void testGetDoubleint() {
         int nbytes = 8;
         byte bytes[] = new byte[nbytes];
@@ -1394,7 +1707,15 @@ public class ByteBufferTest extends AbstractBufferTest {
             //expected 
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "putDouble",
+          methodArgs = {double.class}
+        )
+    })
     public void testPutDouble() {
         if (buf.isReadOnly()) {
             try {
@@ -1432,7 +1753,15 @@ public class ByteBufferTest extends AbstractBufferTest {
 
         buf.order(ByteOrder.BIG_ENDIAN);
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "putDouble",
+          methodArgs = {int.class, double.class}
+        )
+    })
     public void testPutDoubleint() {
         if (buf.isReadOnly()) {
             try {
@@ -1474,7 +1803,15 @@ public class ByteBufferTest extends AbstractBufferTest {
 
         buf.order(ByteOrder.BIG_ENDIAN);
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getFloat",
+          methodArgs = {}
+        )
+    })
     public void testGetFloat() {
         int nbytes = 4;
         byte bytes[] = new byte[nbytes];
@@ -1503,7 +1840,15 @@ public class ByteBufferTest extends AbstractBufferTest {
 
         buf.order(ByteOrder.BIG_ENDIAN);
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getFloat",
+          methodArgs = {int.class}
+        )
+    })
     public void testGetFloatint() {
         int nbytes = 4;
         byte bytes[] = new byte[nbytes];
@@ -1537,7 +1882,15 @@ public class ByteBufferTest extends AbstractBufferTest {
 
         buf.order(ByteOrder.BIG_ENDIAN);
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "putFloat",
+          methodArgs = {float.class}
+        )
+    })
     public void testPutFloat() {
         if (buf.isReadOnly()) {
             try {
@@ -1575,7 +1928,15 @@ public class ByteBufferTest extends AbstractBufferTest {
 
         buf.order(ByteOrder.BIG_ENDIAN);
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "putFloat",
+          methodArgs = {int.class, float.class}
+        )
+    })
     public void testPutFloatint() {
         if (buf.isReadOnly()) {
             try {
@@ -1617,7 +1978,15 @@ public class ByteBufferTest extends AbstractBufferTest {
 
         buf.order(ByteOrder.BIG_ENDIAN);
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getInt",
+          methodArgs = {}
+        )
+    })
     public void testGetInt() {
         int nbytes = 4;
         byte bytes[] = new byte[nbytes];
@@ -1643,7 +2012,15 @@ public class ByteBufferTest extends AbstractBufferTest {
 
         buf.order(ByteOrder.BIG_ENDIAN);
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getInt",
+          methodArgs = {int.class}
+        )
+    })
     public void testGetIntint() {
         int nbytes = 4;
         byte bytes[] = new byte[nbytes];
@@ -1679,7 +2056,15 @@ public class ByteBufferTest extends AbstractBufferTest {
             //expected 
         }
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "putInt",
+          methodArgs = {int.class}
+        )
+    })
     public void testPutInt() {
         if (buf.isReadOnly()) {
             try {
@@ -1717,7 +2102,15 @@ public class ByteBufferTest extends AbstractBufferTest {
 
         buf.order(ByteOrder.BIG_ENDIAN);
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "putInt",
+          methodArgs = {int.class, int.class}
+        )
+    })
     public void testPutIntint() {
         if (buf.isReadOnly()) {
             try {
@@ -1759,7 +2152,15 @@ public class ByteBufferTest extends AbstractBufferTest {
 
         buf.order(ByteOrder.BIG_ENDIAN);
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getLong",
+          methodArgs = {}
+        )
+    })
     public void testGetLong() {
         int nbytes = 8;
         byte bytes[] = new byte[nbytes];
@@ -1785,7 +2186,15 @@ public class ByteBufferTest extends AbstractBufferTest {
 
         buf.order(ByteOrder.BIG_ENDIAN);
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getLong",
+          methodArgs = {int.class}
+        )
+    })
     public void testGetLongint() {
         int nbytes = 8;
         byte bytes[] = new byte[nbytes];
@@ -1816,7 +2225,15 @@ public class ByteBufferTest extends AbstractBufferTest {
 
         buf.order(ByteOrder.BIG_ENDIAN);
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "putLong",
+          methodArgs = {long.class}
+        )
+    })
     public void testPutLong() {
         if (buf.isReadOnly()) {
             try {
@@ -1854,7 +2271,15 @@ public class ByteBufferTest extends AbstractBufferTest {
 
         buf.order(ByteOrder.BIG_ENDIAN);
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "putLong",
+          methodArgs = {int.class, long.class}
+        )
+    })
     public void testPutLongint() {
         if (buf.isReadOnly()) {
             try {
@@ -1896,7 +2321,15 @@ public class ByteBufferTest extends AbstractBufferTest {
 
         buf.order(ByteOrder.BIG_ENDIAN);
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getShort",
+          methodArgs = {}
+        )
+    })
     public void testGetShort() {
         int nbytes = 2;
         byte bytes[] = new byte[nbytes];
@@ -1922,7 +2355,15 @@ public class ByteBufferTest extends AbstractBufferTest {
 
         buf.order(ByteOrder.BIG_ENDIAN);
     }
-
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getShort",
+          methodArgs = {int.class}
+        )
+    })
     public void testGetShortint() {
         int nbytes = 2;
         byte bytes[] = new byte[nbytes];
@@ -1953,7 +2394,15 @@ public class ByteBufferTest extends AbstractBufferTest {
 
         buf.order(ByteOrder.BIG_ENDIAN);
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "putShort",
+          methodArgs = {short.class}
+        )
+    })
     public void testPutShort() {
         if (buf.isReadOnly()) {
             try {
@@ -1991,7 +2440,15 @@ public class ByteBufferTest extends AbstractBufferTest {
 
         buf.order(ByteOrder.BIG_ENDIAN);
     }
-
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check boundary values.",
+      targets = {
+        @TestTarget(
+          methodName = "putShort",
+          methodArgs = {int.class, short.class}
+        )
+    })
     public void testPutShortint() {
         if (buf.isReadOnly()) {
             try {
@@ -2037,6 +2494,16 @@ public class ByteBufferTest extends AbstractBufferTest {
     /**
      * @tests java.nio.ByteBuffer.wrap(byte[],int,int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Regression test. Verifies NullPointerException, " +
+            "IndexOutOfBoundsException.",
+      targets = {
+        @TestTarget(
+          methodName = "wrap",
+          methodArgs = {byte[].class, int.class, int.class}
+        )
+    })
     public void testWrappedByteBuffer_null_array() {
         // Regression for HARMONY-264
         byte array[] = null;
@@ -2059,7 +2526,15 @@ public class ByteBufferTest extends AbstractBufferTest {
      * 2. case for check equal between buf2 and byte array[]
      * 3. case for check a buf2 dependens to array[]
      */
-    
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "wrap",
+          methodArgs = {byte[].class}
+        )
+    })
     public void test_Wrap$B() {
         byte array[] = new byte[BUFFER_LENGTH];
         loadTestData1(array, 0, BUFFER_LENGTH);
@@ -2086,7 +2561,15 @@ public class ByteBufferTest extends AbstractBufferTest {
      * 3. case for check a buf2 dependens to array[]
      * 4. case expected IndexOutOfBoundsException  
      */
-    
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "wrap",
+          methodArgs = {byte[].class, int.class, int.class}
+        )
+    })
     public void test_Wrap$BII() {
         byte array[] = new byte[BUFFER_LENGTH];
         int offset = 5;

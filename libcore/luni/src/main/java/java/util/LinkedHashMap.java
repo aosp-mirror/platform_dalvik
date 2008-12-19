@@ -19,16 +19,19 @@ package java.util;
 
 
 /**
- * LinkedHashMap is a variant on HashMap. Its entries are kept in a doubly-linked list.
- * The iteration order is, by default, the order in which keys were inserted.
- * <p> 
- * If the three argument constructor is used, and <code>order</code> is specified as <code>true</code>, 
- * the iteration would be in the order that entries were accessed. The access order gets 
- * affected by put(), get(), putAll() operations, but not by operations on the collection views.
+ * LinkedHashMap is a variant on HashMap. Its entries are kept in a
+ * doubly-linked list. The iteration order is, by default, the order in which
+ * keys were inserted.
  * <p>
- * Null elements are allowed, and all the optional Map operations are supported.
+ * If the three argument constructor is used, and {@code order} is specified as
+ * {@code true}, the iteration will be in the order that entries were accessed.
+ * The access order gets affected by put(), get(), putAll() operations, but not
+ * by operations on the collection views.
  * <p>
- * @since 1.4
+ * Null elements are allowed, and all the optional map operations are supported.
+ * <p>
+ * 
+ * @since Android 1.0
  */
 public class LinkedHashMap<K, V> extends HashMap<K, V> {
 
@@ -39,7 +42,9 @@ public class LinkedHashMap<K, V> extends HashMap<K, V> {
     transient private LinkedHashMapEntry<K, V> head, tail;
 
     /**
-     * Constructs a new empty instance of LinkedHashMap.
+     * Constructs a new empty {@code LinkedHashMap} instance.
+     * 
+     * @since Android 1.0
      */
     public LinkedHashMap() {
         super();
@@ -48,10 +53,14 @@ public class LinkedHashMap<K, V> extends HashMap<K, V> {
     }
 
     /**
-     * Constructor with specified size.
+     * Constructs a new {@code LinkedHashMap} instance with the specified
+     * capacity.
      * 
      * @param s
-     *            Size of LinkedHashMap required
+     *            the initial capacity of this map.
+     * @exception IllegalArgumentException
+     *                when the capacity is less than zero.
+     * @since Android 1.0
      */
     public LinkedHashMap(int s) {
         super(s);
@@ -60,12 +69,17 @@ public class LinkedHashMap<K, V> extends HashMap<K, V> {
     }
 
     /**
-     * Constructor with specified size and load factor.
+     * Constructs a new {@code LinkedHashMap} instance with the specified
+     * capacity and load factor.
      * 
      * @param s
-     *            Size of LinkedHashMap required
+     *            the initial capacity of this map.
      * @param lf
-     *            Load factor
+     *            the initial load factor.
+     * @throws IllegalArgumentException
+     *             when the capacity is less than zero or the load factor is
+     *             less or equal to zero.
+     * @since Android 1.0
      */
     public LinkedHashMap(int s, float lf) {
         super(s, lf);
@@ -75,15 +89,22 @@ public class LinkedHashMap<K, V> extends HashMap<K, V> {
     }
 
     /**
-     * Constructor with specified size, load factor and access order
+     * Constructs a new {@code LinkedHashMap} instance with the specified
+     * capacity, load factor and a flag specifying the ordering behavior.
      * 
      * @param s
-     *            Size of LinkedHashmap required
+     *            the initial capacity of this hash map.
      * @param lf
-     *            Load factor
+     *            the initial load factor.
      * @param order
-     *            If true indicates that traversal order should begin with most
-     *            recently accessed
+     *            {@code true} if the ordering should be done based on the last
+     *            access (from least-recently accessed to most-recently
+     *            accessed), and {@code false} if the ordering should be the
+     *            order in which the entries were inserted.
+     * @throws IllegalArgumentException
+     *             when the capacity is less than zero or the load factor is
+     *             less or equal to zero.
+     * @since Android 1.0
      */
     public LinkedHashMap(int s, float lf, boolean order) {
         super(s, lf);
@@ -93,10 +114,12 @@ public class LinkedHashMap<K, V> extends HashMap<K, V> {
     }
 
     /**
-     * Constructor with input map
+     * Constructs a new {@code LinkedHashMap} instance containing the mappings
+     * from the specified map.
      * 
      * @param m
-     *            Input map
+     *            the mappings to add.
+     * @since Android 1.0
      */
     public LinkedHashMap(Map<? extends K, ? extends V> m) {
         accessOrder = false;
@@ -222,12 +245,6 @@ public class LinkedHashMap<K, V> extends HashMap<K, V> {
         }
     }
 
-    /**
-     * Create a new element array
-     * 
-     * @param s
-     * @return Reference to the element array
-     */
     @Override
     @SuppressWarnings("unchecked")
     Entry<K, V>[] newElementArray(int s) {
@@ -235,11 +252,13 @@ public class LinkedHashMap<K, V> extends HashMap<K, V> {
     }
 
     /**
-     * Retrieve the map value corresponding to the given key.
+     * Returns the value of the mapping with the specified key.
      * 
      * @param key
-     *            Key value
-     * @return mapped value or null if the key is not in the map
+     *            the key.
+     * @return the value of the mapping with the specified key, or {@code null}
+     *         if no mapping for the specified key is found.
+     * @since Android 1.0
      */
     @Override
     public V get(Object key) {
@@ -294,15 +313,17 @@ public class LinkedHashMap<K, V> extends HashMap<K, V> {
         return m;
     }
 
+    // BEGIN android-changed
     /**
-     * Set the mapped value for the given key to the given value.
+     * Maps the specified key to the specified value.
      * 
      * @param key
-     *            Key value
+     *            the key.
      * @param value
-     *            New mapped value
-     * @return The old value if the key was already in the map or null
-     *         otherwise.
+     *            the value.
+     * @return the value of any previous mapping with the specified key or
+     *         {@code null} if there was no such mapping.
+     * @since Android 1.0
      */
     @Override
     public V put(K key, V value) {
@@ -339,7 +360,7 @@ public class LinkedHashMap<K, V> extends HashMap<K, V> {
             int hash = key.hashCode();
             int index = (hash & 0x7FFFFFFF) % elementData.length;
             m = (LinkedHashMapEntry<K, V>)findNonNullKeyEntry(key, index, hash);
-            if (m == null) {                
+            if (m == null) {
                 modCount++;
                 if (++elementCount > threshold) {
                     rehash();
@@ -355,6 +376,7 @@ public class LinkedHashMap<K, V> extends HashMap<K, V> {
         m.value = value;
         return result;
     }
+    // END android-changed
 
     /*
      * @param m
@@ -413,11 +435,12 @@ public class LinkedHashMap<K, V> extends HashMap<K, V> {
     }
 
     /**
-     * Returns a Set of the mappings contained in this HashMap. Each element in
-     * the set is a Map.Entry. The set is backed by this HashMap so changes to
-     * one are reflected by the other. The set does not support adding.
+     * Returns a set containing all of the mappings in this map. Each mapping is
+     * an instance of {@link Map.Entry}. As the set is backed by this map,
+     * changes in one will be reflected in the other.
      * 
-     * @return a Set of the mappings
+     * @return a set of the mappings.
+     * @since Android 1.0
      */
     @Override
     public Set<Map.Entry<K, V>> entrySet() {
@@ -425,11 +448,12 @@ public class LinkedHashMap<K, V> extends HashMap<K, V> {
     }
 
     /**
-     * Returns a Set of the keys contained in this HashMap. The set is backed by
-     * this HashMap so changes to one are reflected by the other. The set does
-     * not support adding.
+     * Returns a set of the keys contained in this map. The set is backed by
+     * this map so changes to one are reflected by the other. The set does not
+     * support adding.
      * 
-     * @return a Set of the keys
+     * @return a set of the keys.
+     * @since Android 1.0
      */
     @Override
     public Set<K> keySet() {
@@ -473,11 +497,26 @@ public class LinkedHashMap<K, V> extends HashMap<K, V> {
     }
 
     /**
-     * Returns a Collection of the values contained in this HashMap. The
-     * collection is backed by this HashMap so changes to one are reflected by
-     * the other. The collection does not support adding.
+     * Returns a collection of the values contained in this map. The collection
+     * is backed by this map so changes to one are reflected by the other. The
+     * collection supports remove, removeAll, retainAll and clear operations,
+     * and it does not support add or addAll operations.
+     * <p>
+     * This method returns a collection which is the subclass of
+     * AbstractCollection. The iterator method of this subclass returns a
+     * "wrapper object" over the iterator of map's entrySet(). The size method
+     * wraps the map's size method and the contains method wraps the map's
+     * containsValue method.
+     * </p>
+     * <p>
+     * The collection is created when this method is called for the first time
+     * and returned in response to all subsequent calls. This method may return
+     * different collections when multiple concurrent calls occur, since no
+     * synchronization is performed.
+     * </p>
      * 
-     * @return a Collection of the values
+     * @return a collection of the values contained in this map.
+     * @since Android 1.0
      */
     @Override
     public Collection<V> values() {
@@ -512,12 +551,13 @@ public class LinkedHashMap<K, V> extends HashMap<K, V> {
     }
 
     /**
-     * Remove the entry corresponding to the given key.
+     * Removes the mapping with the specified key from this map.
      * 
      * @param key
-     *            the key
-     * @return the value associated with the key or null if the key was no in
-     *         the map
+     *            the key of the mapping to remove.
+     * @return the value of the removed mapping or {@code null} if no mapping
+     *         for the specified key was found.
+     * @since Android 1.0
      */
     @Override
     public V remove(Object key) {
@@ -544,24 +584,47 @@ public class LinkedHashMap<K, V> extends HashMap<K, V> {
      * This method is queried from the put and putAll methods to check if the
      * eldest member of the map should be deleted before adding the new member.
      * If this map was created with accessOrder = true, then the result of
-     * removeEldesrEntry is assumed to be false.
+     * removeEldestEntry is assumed to be false.
      * 
      * @param eldest
-     * @return true if the eldest member should be removed
+     *            the entry to check if it should be removed.
+     * @return {@code true} if the eldest member should be removed.
+     * @since Android 1.0
      */
     protected boolean removeEldestEntry(Map.Entry<K,V> eldest) {
         return false;
     }
 
     /**
-     * Removes all mappings from this HashMap, leaving it empty.
+     * Removes all elements from this map, leaving it empty.
      * 
      * @see #isEmpty()
      * @see #size()
+     * @since Android 1.0
      */
     @Override
     public void clear() {
         super.clear();
         head = tail = null;
     }
+
+    // BEGIN android-removed
+    // /**
+    //  * Answers a new HashMap with the same mappings and size as this HashMap.
+    //  * 
+    //  * @return a shallow copy of this HashMap
+    //  * 
+    //  * @see java.lang.Cloneable
+    //  */
+    // @Override
+    // @SuppressWarnings("unchecked")
+    // public Object clone() {
+    //     LinkedHashMap<K, V> map = (LinkedHashMap<K, V>) super.clone();
+    //     map.clear();
+    //     for (Map.Entry<K, V> entry : entrySet()) {
+    //         map.put(entry.getKey(), entry.getValue());
+    //     }
+    //     return map;
+    // }
+    // END android-removed
 }

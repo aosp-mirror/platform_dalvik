@@ -20,38 +20,49 @@ package java.io;
 import org.apache.harmony.luni.util.Msg;
 
 /**
- * CharArrayReader is used as a buffered character input stream on a character
- * array.
+ * A specialized {@link Reader} for reading the contents of a char array.
+ * 
+ * @see CharArrayWriter
+ * 
+ * @since Android 1.0
  */
 public class CharArrayReader extends Reader {
     /**
-     * Buffer for characters
+     * The buffer for characters.
+     * 
+     * @since Android 1.0 
      */
     protected char buf[];
 
     /**
-     * Current buffer position.
+     * The current buffer position.
+     * 
+     * @since Android 1.0 
      */
     protected int pos;
 
     /**
-     * Current mark position.
+     * The current mark position.
+     * 
+     * @since Android 1.0
      */
     protected int markedPos = -1;
 
     /**
      * The ending index of the buffer.
+     *
+     * @since Android 1.0 
      */
     protected int count;
 
     /**
-     * Construct a CharArrayReader on the char array <code>buffer</code>. The
-     * size of the reader is set to the <code>length()</code> of the buffer
-     * and the Object to synchronize access through is set to
-     * <code>buffer</code>.
+     * Constructs a CharArrayReader on the char array {@code buf}. The size of
+     * the reader is set to the length of the buffer and the object to to read
+     * from is set to {@code buf}.
      * 
      * @param buf
-     *            the char array to filter reads on.
+     *            the char array from which to read.
+     * @since Android 1.0
      */
     public CharArrayReader(char[] buf) {
         super(buf);
@@ -60,23 +71,36 @@ public class CharArrayReader extends Reader {
     }
 
     /**
-     * Construct a CharArrayReader on the char array <code>buffer</code>. The
-     * size of the reader is set to the parameter <code>length()</code> and
-     * the original offset is set to <code>offset</code>.
+     * Constructs a CharArrayReader on the char array {@code buf}. The size of
+     * the reader is set to {@code length} and the start position from which to
+     * read the buffer is set to {@code offset}.
      * 
      * @param buf
-     *            the char array to filter reads on.
+     *            the char array from which to read.
      * @param offset
-     *            the offset in <code>buf</code> to start streaming at.
+     *            the index of the first character in {@code buf} to read.
      * @param length
-     *            the number of characters available to stream over.
+     *            the number of characters that can be read from {@code buf}.
+     * @throws IllegalArgumentException
+     *             if {@code offset < 0} or {@code length < 0}, or if
+     *             {@code offset} is greater than the size of {@code buf} .
+     * @since Android 1.0
      */
-
     public CharArrayReader(char[] buf, int offset, int length) {
         super(buf);
-        if (offset < 0 || offset > buf.length || length < 0) {
-            throw new IllegalArgumentException();
+        // BEGIN android-changed
+        // Exception priorities (in case of multiple errors) differ from
+        // RI, but are spec-compliant.
+        // made implicit null check explicit,
+        // removed redundant check, used (offset | length) < 0 instead of 
+        // (offset < 0) || (length < 0) to safe one operation
+        if (buf == null) {
+            throw new NullPointerException(Msg.getString("K0047")); //$NON-NLS-1$
         }
+        if ((offset | length) < 0 || offset > buf.length) {
+            throw new IllegalArgumentException(Msg.getString("K002f")); //$NON-NLS-1$
+        }
+        // END android-changed
         this.buf = buf;
         this.pos = offset;
 
@@ -88,6 +112,8 @@ public class CharArrayReader extends Reader {
      * This method closes this CharArrayReader. Once it is closed, you can no
      * longer read from it. Only the first invocation of this method has any
      * effect.
+     * 
+     * @since Android 1.0
      */
     @Override
     public void close() {
@@ -99,37 +125,34 @@ public class CharArrayReader extends Reader {
     }
 
     /**
-     * Answer a boolean indicating whether or not this CharArrayReader is open.
+     * Indicates whether this reader is open.
      * 
-     * @return <code>true</code> if the reader is open, <code>false</code>
-     *         otherwise.
+     * @return {@code true} if the reader is open, {@code false} otherwise.
      */
     private boolean isOpen() {
         return buf != null;
     }
 
     /**
-     * Answer a boolean indicating whether or not this CharArrayReader is
-     * closed.
+     * Indicates whether this reader is closed.
      * 
-     * @return <code>true</code> if the reader is closed, <code>false</code>
-     *         otherwise.
+     * @return {@code true} if the reader is closed, {@code false} otherwise.
      */
     private boolean isClosed() {
         return buf == null;
     }
 
     /**
-     * Set a Mark position in this Reader. The parameter <code>readLimit</code>
-     * is ignored for CharArrayReaders. Sending reset() will reposition the
+     * Sets a mark position in this reader. The parameter {@code readLimit} is
+     * ignored for CharArrayReaders. Calling {@code reset()} will reposition the
      * reader back to the marked position provided the mark has not been
      * invalidated.
      * 
      * @param readLimit
      *            ignored for CharArrayReaders.
-     * 
      * @throws IOException
-     *             If an error occurs attempting to mark this CharArrayReader.
+     *             if this reader is closed.
+     * @since Android 1.0
      */
     @Override
     public void mark(int readLimit) throws IOException {
@@ -142,10 +165,13 @@ public class CharArrayReader extends Reader {
     }
 
     /**
-     * Returns a boolean indicating whether or not this CharArrayReader supports
-     * mark() and reset(). This method always returns true.
+     * Indicates whether this reader supports the {@code mark()} and
+     * {@code reset()} methods.
      * 
-     * @return indicates whether or not mark() and reset() are supported.
+     * @return {@code true} for CharArrayReader.
+     * @see #mark(int)
+     * @see #reset()
+     * @since Android 1.0
      */
     @Override
     public boolean markSupported() {
@@ -153,14 +179,15 @@ public class CharArrayReader extends Reader {
     }
 
     /**
-     * Reads a single character from this CharArrayReader and returns the result
-     * as an int. The 2 higher-order bytes are set to 0. If the end of reader
-     * was encountered then return -1.
+     * Reads a single character from this reader and returns it as an integer
+     * with the two higher-order bytes set to 0. Returns -1 if no more
+     * characters are available from this reader.
      * 
-     * @return int the character read or -1 if end of reader.
-     * 
+     * @return the character read as an int or -1 if the end of the reader has
+     *         been reached.
      * @throws IOException
-     *             If the CharArrayReader is already closed.
+     *             if this reader is closed.
+     * @since Android 1.0
      */
     @Override
     public int read() throws IOException {
@@ -176,30 +203,47 @@ public class CharArrayReader extends Reader {
     }
 
     /**
-     * Reads at most <code>count</code> characters from this CharArrayReader
-     * and stores them at <code>offset</code> in the character array
-     * <code>buf</code>. Returns the number of characters actually read or -1
-     * if the end of reader was encountered.
-     * 
+     * Reads at most {@code count} characters from this CharArrayReader and
+     * stores them at {@code offset} in the character array {@code buf}.
+     * Returns the number of characters actually read or -1 if the end of reader
+     * was encountered.
      * 
      * @param buffer
-     *            character array to store the read characters
+     *            the character array to store the characters read.
      * @param offset
-     *            offset in buf to store the read characters
+     *            the initial position in {@code buffer} to store the characters
+     *            read from this reader.
      * @param len
-     *            maximum number of characters to read
-     * @return number of characters read or -1 if end of reader.
-     * 
+     *            the maximum number of characters to read.
+     * @return number of characters read or -1 if the end of the reader has been
+     *         reached.
+     * @throws ArrayIndexOutOfBoundsException
+     *             if {@code offset < 0} or {@code len < 0}, or if
+     *             {@code offset + len} is bigger than the size of
+     *             {@code buffer}.
      * @throws IOException
-     *             If the CharArrayReader is closed.
+     *             if this reader is closed.
+     * @since Android 1.0
      */
     @Override
-    public int read(char buffer[], int offset, int len) throws IOException {
+    public int read(char[] buffer, int offset, int len) throws IOException {
+        // BEGIN android-note
+        // changed array notation to be consistent with the rest of harmony
+        // END android-note
         // avoid int overflow
-        if (offset < 0 || offset > buffer.length || len < 0
-                || len > buffer.length - offset) {
-            throw new ArrayIndexOutOfBoundsException();
+        // BEGIN android-changed
+        // Exception priorities (in case of multiple errors) differ from
+        // RI, but are spec-compliant.
+        // made implicit null check explicit,
+        // removed redundant check, used (offset | len) < 0 instead of
+        // (offset < 0) || (len < 0) to safe one operation
+        if (buffer == null) {
+            throw new NullPointerException(Msg.getString("K0047")); //$NON-NLS-1$
         }
+        if ((offset | len) < 0 || len > buffer.length - offset) {
+            throw new ArrayIndexOutOfBoundsException(Msg.getString("K002f")); //$NON-NLS-1$
+        }
+        // END android-changed
         synchronized (lock) {
             if (isClosed()) {
                 throw new IOException(Msg.getString("K0060")); //$NON-NLS-1$
@@ -215,19 +259,17 @@ public class CharArrayReader extends Reader {
     }
 
     /**
-     * Returns a <code>boolean</code> indicating whether or not this
-     * CharArrayReader is ready to be read without blocking. If the result is
-     * <code>true</code>, the next <code>read()</code> will not block. If
-     * the result is <code>false</code> this Reader may or may not block when
-     * <code>read()</code> is sent. The implementation in CharArrayReader
-     * always returns <code>true</code> even when it has been closed.
+     * Indicates whether this reader is ready to be read without blocking.
+     * Returns {@code true} if the next {@code read} will not block. Returns
+     * {@code false} if this reader may or may not block when {@code read} is
+     * called. The implementation in CharArrayReader always returns {@code true}
+     * even when it has been closed.
      * 
-     * @return <code>true</code> if the receiver will not block when
-     *         <code>read()</code> is called, <code>false</code> if unknown
-     *         or blocking will occur.
-     * 
+     * @return {@code true} if this reader will not block when {@code read} is
+     *         called, {@code false} if unknown or blocking will occur.
      * @throws IOException
-     *             If the CharArrayReader is closed.
+     *             if this reader is closed.
+     * @since Android 1.0
      */
     @Override
     public boolean ready() throws IOException {
@@ -240,13 +282,14 @@ public class CharArrayReader extends Reader {
     }
 
     /**
-     * Reset this CharArrayReader's position to the last <code>mark()</code>
-     * location. Invocations of <code>read()/skip()</code> will occur from
-     * this new location. If this Reader was not marked, the CharArrayReader is
-     * reset to the beginning of the String.
+     * Resets this reader's position to the last {@code mark()} location.
+     * Invocations of {@code read()} and {@code skip()} will occur from this new
+     * location. If this reader has not been marked, it is reset to the
+     * beginning of the string.
      * 
      * @throws IOException
-     *             If this CharArrayReader has already been closed.
+     *             if this reader is closed.
+     * @since Android 1.0
      */
     @Override
     public void reset() throws IOException {
@@ -259,16 +302,16 @@ public class CharArrayReader extends Reader {
     }
 
     /**
-     * Skips <code>count</code> number of characters in this CharArrayReader.
-     * Subsequent <code>read()</code>'s will not return these characters
-     * unless <code>reset()</code> is used.
+     * Skips {@code count} number of characters in this reader. Subsequent
+     * {@code read()}s will not return these characters unless {@code reset()}
+     * is used. This method does nothing and returns 0 if {@code n} is negative.
      * 
      * @param n
-     *            The number of characters to skip.
-     * @return long The number of characters actually skipped.
-     * 
+     *            the number of characters to skip.
+     * @return the number of characters actually skipped.
      * @throws IOException
-     *             If this CharArrayReader has already been closed.
+     *             if this reader is closed.
+     * @since Android 1.0
      */
     @Override
     public long skip(long n) throws IOException {

@@ -23,46 +23,56 @@
 package java.security;
 
 /**
- * Instances of this class are thrown when an attempt is made to access an
- * algorithm which is not provided by the library.
+ * {@code NoSuchAlgorithmException} indicates that a requested algorithm could
+ * not be found.
  * 
- * @see Throwable
+ * @since Android 1.0
  */
 public class NoSuchAlgorithmException extends GeneralSecurityException {
 
-    /**
-     * @com.intel.drl.spec_ref
-     */
     private static final long serialVersionUID = -7443947487218346562L;
 
     /**
-     * Constructs a new instance of this class with its walkback and message
-     * filled in.
-     * 
+     * Constructs a new instance of {@code NoSuchAlgorithmException} with the
+     * given message.
      * 
      * @param msg
-     *            String The detail message for the exception.
+     *            the detail message for this exception.
+     * @since Android 1.0
      */
     public NoSuchAlgorithmException(String msg) {
         super(msg);
     }
 
     /**
-     * Constructs a new instance of this class with its walkback filled in.
+     * Constructs a new instance of {@code NoSuchAlgorithmException}.
      * 
+     * @since Android 1.0
      */
     public NoSuchAlgorithmException() {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Constructs a new instance of {@code NoSuchAlgorithmException} with the
+     * given message and the cause.
+     * 
+     * @param message
+     *            the detail message for this exception.
+     * @param cause
+     *            the exception which is the cause for this exception.
+     * @since Android 1.0
      */
     public NoSuchAlgorithmException(String message, Throwable cause) {
         super(message, cause);
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Constructs a new instance of {@code NoSuchAlgorithmException} with the
+     * cause.
+     * 
+     * @param cause
+     *            the exception which is the cause for this exception.
+     * @since Android 1.0
      */
     public NoSuchAlgorithmException(Throwable cause) {
         super(cause);

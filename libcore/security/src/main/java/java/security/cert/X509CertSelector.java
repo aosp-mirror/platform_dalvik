@@ -15,11 +15,6 @@
  *  limitations under the License.
  */
 
-/**
- * @author Alexander Y. Kleymenov
- * @version $Revision$
- */
-
 package java.security.cert;
 
 import java.io.IOException;
@@ -52,7 +47,10 @@ import org.apache.harmony.security.x509.SubjectPublicKeyInfo;
 
 
 /**
- * @com.intel.drl.spec_ref
+ * A certificate selector ({@code CertSelector} for selecting {@code
+ * X509Certificate}s that match the specified criteria.
+ * 
+ * @since Android 1.0
  */
 public class X509CertSelector implements CertSelector {
 
@@ -82,40 +80,64 @@ public class X509CertSelector implements CertSelector {
     private byte[] issuerBytes;
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code X509CertSelector}.
+     * 
+     * @since Android 1.0
      */
     public X509CertSelector() {}
 
     /**
-     * @com.intel.drl.spec_ref
+     * Sets the certificate that a matching certificate must be equal to.
+     * 
+     * @param certificate
+     *            the certificate to match, or null to not check this criteria.
+     * @since Android 1.0
      */
     public void setCertificate(X509Certificate certificate) {
         certificateEquals = certificate;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the certificate that a matching certificate must be equal to.
+     * 
+     * @return the certificate to match, or null if this criteria is not
+     *         checked.
+     * @since Android 1.0
      */
     public X509Certificate getCertificate() {
         return certificateEquals;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Sets the serial number that a certificate must match.
+     * 
+     * @param serialNumber
+     *            the serial number to match, or {@code null} to not check the
+     *            serial number.
+     * @since Android 1.0
      */
     public void setSerialNumber(BigInteger serialNumber) {
         this.serialNumber = serialNumber;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the serial number that a certificate must match.
+     * 
+     * @return the serial number to match, or {@code null} if the serial number
+     *         is not to be checked.
+     * @since Android 1.0
      */
     public BigInteger getSerialNumber() {
         return serialNumber;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Sets the issuer that a certificate must match.
+     * 
+     * @param issuer
+     *            the issuer to match, or {@code null} if the issuer is not to
+     *            be checked.
+     * @since Android 1.0
      */
     public void setIssuer(X500Principal issuer) {
         this.issuer = issuer;
@@ -124,14 +146,27 @@ public class X509CertSelector implements CertSelector {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the issuer that a certificate must match.
+     * 
+     * @return the issuer that a certificate must match, or {@code null} if the
+     *         issuer is not to be checked.
+     * @since Android 1.0
      */
     public X500Principal getIssuer() {
         return issuer;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * <b>Do not use</b>, use {@link #getIssuer()} or
+     * {@link #getIssuerAsBytes()} instead. Sets the issuer that a certificate
+     * must match.
+     * 
+     * @param issuerName
+     *            the issuer in a RFC 2253 format string, or {@code null} to not
+     *            check the issuer.
+     * @throws IOException
+     *             if parsing the issuer fails.
+     * @since Android 1.0
      */
     public void setIssuer(String issuerName) throws IOException {
         if (issuerName == null) {
@@ -150,7 +185,13 @@ public class X509CertSelector implements CertSelector {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * <b>Do not use</b>, use {@link #getIssuer()} or
+     * {@link #getIssuerAsBytes()} instead. Returns the issuer that a
+     * certificate must match in a RFC 2253 format string.
+     * 
+     * @return the issuer in a RFC 2253 format string, or {@code null} if the
+     *         issuer is not to be checked.
+     * @since Android 1.0
      */
     public String getIssuerAsString() {
         if (issuer == null) {
@@ -163,7 +204,14 @@ public class X509CertSelector implements CertSelector {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Sets the issuer that a certificate must match.
+     * 
+     * @param issuerDN
+     *            the distinguished issuer name in ASN.1 DER encoded format, or
+     *            {@code null} to not check the issuer.
+     * @throws IOException
+     *             if decoding the issuer fail.
+     * @since Android 1.0
      */
     public void setIssuer(byte[] issuerDN) throws IOException {
         if (issuerDN == null) {
@@ -181,7 +229,13 @@ public class X509CertSelector implements CertSelector {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the issuer that a certificate must match.
+     * 
+     * @return the distinguished issuer name in ASN.1 DER encoded format, or
+     *         {@code null} if the issuer is not to be checked.
+     * @throws IOException
+     *             if encoding the issuer fails.
+     * @since Android 1.0
      */
     public byte[] getIssuerAsBytes() throws IOException {
         if (issuer == null) {
@@ -196,21 +250,39 @@ public class X509CertSelector implements CertSelector {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Set the subject that a certificate must match.
+     * 
+     * @param subject
+     *            the subject distinguished name or {@code null} to not check
+     *            the subject.
+     * @since Android 1.0
      */
     public void setSubject(X500Principal subject) {
         this.subject = subject;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the subject that a certificate must match.
+     * 
+     * @return the subject distinguished name, or null if the subject is not to
+     *         be checked.
+     * @since Android 1.0
      */
     public X500Principal getSubject() {
         return subject;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * <b>Do not use</b>, use {@link #setSubject(byte[])} or
+     * {@link #setSubject(X500Principal)} instead. Returns the subject that a
+     * certificate must match.
+     * 
+     * @param subjectDN
+     *            the subject distinguished name in RFC 2253 format or {@code
+     *            null} to not check the subject.
+     * @throws IOException
+     *             if decoding the subject fails.
+     * @since Android 1.0
      */
     public void setSubject(String subjectDN) throws IOException {
         if (subjectDN == null) {
@@ -225,7 +297,13 @@ public class X509CertSelector implements CertSelector {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * <b>Do not use</b>, use {@link #getSubject()} or
+     * {@link #getSubjectAsBytes()} instead. Returns the subject that a
+     * certificate must match.
+     * 
+     * @return the subject distinguished name in RFC 2253 format, or {@code
+     *         null} if the subject is not to be checked.
+     * @since Android 1.0
      */
     public String getSubjectAsString() {
         if (subject == null) {
@@ -235,7 +313,14 @@ public class X509CertSelector implements CertSelector {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Sets the subject that a certificate must match.
+     * 
+     * @param subjectDN
+     *            the subject distinguished name in ASN.1 DER format, or {@code
+     *            null} to not check the subject.
+     * @throws IOException
+     *             if decoding the subject fails.
+     * @since Android 1.0
      */
     public void setSubject(byte[] subjectDN) throws IOException {
         if (subjectDN == null) {
@@ -250,7 +335,13 @@ public class X509CertSelector implements CertSelector {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the subject that a certificate must match.
+     * 
+     * @return the subject distinguished name in ASN.1 DER format, or {@code
+     *         null} if the subject is not to be checked.
+     * @throws IOException
+     *             if encoding the subject fails.
+     * @since Android 1.0
      */
     public byte[] getSubjectAsBytes() throws IOException {
         if (subject == null) {
@@ -260,7 +351,15 @@ public class X509CertSelector implements CertSelector {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Sets the criterion for the {@literal SubjectKeyIdentifier} extension.
+     * <p>
+     * The {@code subjectKeyIdentifier} should be a single DER encoded value.
+     * </p>
+     * 
+     * @param subjectKeyIdentifier
+     *            the subject key identifier or {@code null} to disable this
+     *            check.
+     * @since Android 1.0
      */
     public void setSubjectKeyIdentifier(byte[] subjectKeyIdentifier) {
         if (subjectKeyIdentifier == null) {
@@ -273,7 +372,11 @@ public class X509CertSelector implements CertSelector {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the criterion for the {@literal SubjectKeyIdentifier} extension.
+     * 
+     * @return the subject key identifier or {@code null} if it is not to be
+     *         checked.
+     * @since Android 1.0
      */
     public byte[] getSubjectKeyIdentifier() {
         if (subjectKeyIdentifier == null) {
@@ -285,7 +388,12 @@ public class X509CertSelector implements CertSelector {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Sets the criterion for the {@literal AuthorityKeyIdentifier} extension.
+     * 
+     * @param authorityKeyIdentifier
+     *            the authority key identifier, or {@code null} to disable this
+     *            check.
+     * @since Android 1.0
      */
     public void setAuthorityKeyIdentifier(byte[] authorityKeyIdentifier) {
         if (authorityKeyIdentifier == null) {
@@ -299,7 +407,12 @@ public class X509CertSelector implements CertSelector {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the criterion for the {@literal AuthorityKeyIdentifier}
+     * extension.
+     * 
+     * @return the authority key identifier, or {@code null} if it is not to be
+     *         checked.
+     * @since Android 1.0
      */
     public byte[] getAuthorityKeyIdentifier() {
         if (authorityKeyIdentifier == null) {
@@ -311,7 +424,13 @@ public class X509CertSelector implements CertSelector {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Sets the criterion for the validity date of the certificate.
+     * <p>
+     * The certificate must be valid at the specified date.
+     * </p>
+     * @param certificateValid
+     *            the validity date or {@code null} to not check the date.
+     * @since Android 1.0
      */
     public void setCertificateValid(Date certificateValid) {
         this.certificateValid = (certificateValid == null)
@@ -320,7 +439,11 @@ public class X509CertSelector implements CertSelector {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the criterion for the validity date of the certificate.
+     * 
+     * @return the validity date or {@code null} if the date is not to be
+     *         checked.
+     * @since Android 1.0
      */
     public Date getCertificateValid() {
         return (certificateValid == null)
@@ -329,7 +452,14 @@ public class X509CertSelector implements CertSelector {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Sets the criterion for the validity date of the private key.
+     * <p>
+     * The private key must be valid at the specified date.
+     * </p>
+     * 
+     * @param privateKeyValid
+     *            the validity date or {@code null} to not check the date.
+     * @since Android 1.0
      */
     public void setPrivateKeyValid(Date privateKeyValid) {
         if (privateKeyValid == null) {
@@ -340,7 +470,14 @@ public class X509CertSelector implements CertSelector {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the criterion for the validity date of the private key.
+     * <p>
+     * The private key must be valid at the specified date.
+     * </p>
+     * 
+     * @return the validity date or {@code null} if the date is not to be
+     *         checked.
+     * @since Android 1.0
      */
     public Date getPrivateKeyValid() {
         if (privateKeyValid != null) {
@@ -371,7 +508,18 @@ public class X509CertSelector implements CertSelector {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Sets the criterion for the subject public key signature algorithm.
+     * <p>
+     * The certificate must contain a subject public key with the algorithm
+     * specified.
+     * </p>
+     * 
+     * @param oid
+     *            the OID (object identifier) of the signature algorithm or
+     *            {@code null} to not check the OID.
+     * @throws IOException
+     *             if the specified object identifier is invalid.
+     * @since Android 1.0
      */
     public void setSubjectPublicKeyAlgID(String oid) throws IOException {
         if (oid == null) {
@@ -383,14 +531,22 @@ public class X509CertSelector implements CertSelector {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the criterion for the subject public key signature algorithm.
+     * 
+     * @return the OID (object identifier) or the signature algorithm or {@code
+     *         null} if it's not to be checked.
+     * @since Android 1.0
      */
     public String getSubjectPublicKeyAlgID() {
         return subjectPublicKeyAlgID;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Sets the criterion for the subject public key.
+     * 
+     * @param key
+     *            the subject public key or {@code null} to not check the key.
+     * @since Android 1.0
      */
     public void setSubjectPublicKey(PublicKey key) {
         subjectPublicKey = (key == null) ? null : key.getEncoded();
@@ -398,7 +554,14 @@ public class X509CertSelector implements CertSelector {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Sets the criterion for the subject public key.
+     * 
+     * @param key
+     *            the subject public key in ASN.1 DER encoded format or {@code null} to
+     *            not check the key.
+     * @throws IOException
+     *             if decoding the the public key fails.
+     * @since Android 1.0
      */
     public void setSubjectPublicKey(byte[] key) throws IOException {
         if (key == null) {
@@ -414,14 +577,24 @@ public class X509CertSelector implements CertSelector {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the criterion for the subject public key.
+     * 
+     * @return the subject public key or {@code null} if the key is not to be
+     *         checked.
+     * @since Android 1.0
      */
     public PublicKey getSubjectPublicKey() {
         return subjectPublicKeyImpl;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Sets the criterion for the {@literal KeyUsage} extension.
+     * 
+     * @param keyUsage
+     *            the boolean array in the format as returned by
+     *            {@link X509Certificate#getKeyUsage()}, or {@code null} to not
+     *            check the key usage.
+     * @since Android 1.0
      */
     public void setKeyUsage(boolean[] keyUsage) {
         if (keyUsage == null) {
@@ -433,7 +606,12 @@ public class X509CertSelector implements CertSelector {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the criterion for the {@literal KeyUsage} extension.
+     * 
+     * @return the boolean array in the format as returned by
+     *         {@link X509Certificate#getKeyUsage()}, or {@code null} if the key
+     *         usage is not to be checked.
+     * @since Android 1.0
      */
     public boolean[] getKeyUsage() {
         if (keyUsage == null) {
@@ -445,7 +623,13 @@ public class X509CertSelector implements CertSelector {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Sets the criterion for the {@literal ExtendedKeyUsage} extension.
+     * 
+     * @param keyUsage
+     *            the set of key usage OIDs, or {@code null} to not check it.
+     * @throws IOException
+     *             if one of the OIDs is invalid.
+     * @since Android 1.0
      */
     public void setExtendedKeyUsage(Set<String> keyUsage)
                              throws IOException {
@@ -464,28 +648,71 @@ public class X509CertSelector implements CertSelector {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the criterion for the {@literal ExtendedKeyUsage} extension.
+     * 
+     * @return the set of key usage OIDs, or {@code null} if it's not to be
+     *         checked.
+     * @since Android 1.0
      */
     public Set<String> getExtendedKeyUsage() {
         return extendedKeyUsage;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Sets the flag for the matching behavior for subject alternative names.
+     * <p>
+     * The flag indicates whether a certificate must contain all or at least one
+     * of the subject alternative names specified by
+     * {@link #setSubjectAlternativeNames} or {@link #addSubjectAlternativeName}
+     * .
+     * </p>
+     * 
+     * @param matchAllNames
+     *            {@code true} if a certificate must contain all of the
+     *            specified subject alternative names, otherwise {@code false}.
+     * @since Android 1.0
      */
     public void setMatchAllSubjectAltNames(boolean matchAllNames) {
         this.matchAllNames = matchAllNames;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the flag for the matching behavior for subject alternative names.
+     * <p>
+     * The flag indicates whether a certificate must contain all or at least one
+     * of the subject alternative names specified by
+     * {@link #setSubjectAlternativeNames} or {@link #addSubjectAlternativeName}
+     * .
+     * </p>
+     * 
+     * @return {@code true} if a certificate must contain all of the specified
+     *         subject alternative names, otherwise {@code false}.
+     * @since Android 1.0
      */
     public boolean getMatchAllSubjectAltNames() {
         return matchAllNames;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Sets the criterion for subject alternative names.
+     * <p>
+     * the certificate must contain all or at least one of the specified subject
+     * alternative names. The behavior is specified by
+     * {@link #getMatchAllSubjectAltNames}.
+     * </p>
+     * <p>
+     * The specified parameter {@code names} is a collection with an entry for
+     * each name to be included in the criterion. The name is specified as a
+     * {@code List}, the first entry must be an {@code Integer} specifying the
+     * name type (0-8), the second entry must be a {@code String} or a byte
+     * array specifying the name (in string or ASN.1 DER encoded form)
+     * </p>
+     * 
+     * @param names
+     *            the names collection or {@code null} to not perform this check.
+     * @throws IOException
+     *             if the decoding of a name fails.
+     * @since Android 1.0
      */
     public void setSubjectAlternativeNames(Collection<List<?>> names)
                                     throws IOException {
@@ -509,7 +736,15 @@ public class X509CertSelector implements CertSelector {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Adds a subject alternative name to the respective criterion.
+     * 
+     * @param tag
+     *            the type of the name
+     * @param name
+     *            the name in string format.
+     * @throws IOException
+     *             if parsing the name fails.
+     * @since Android 1.0
      */
     public void addSubjectAlternativeName(int tag, String name)
                                                        throws IOException {
@@ -525,7 +760,15 @@ public class X509CertSelector implements CertSelector {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Adds a subject alternative name to the respective criterion.
+     * 
+     * @param tag
+     *            the type of the name.
+     * @param name
+     *            the name in ASN.1 DER encoded form.
+     * @throws IOException
+     *             if the decoding of the name fails.
+     * @since Android 1.0
      */
     public void addSubjectAlternativeName(int tag, byte[] name)
                                             throws IOException {
@@ -541,7 +784,21 @@ public class X509CertSelector implements CertSelector {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the criterion for subject alternative names.
+     * <p>
+     * the certificate must contain all or at least one of the specified subject
+     * alternative names. The behavior is specified by
+     * {@link #getMatchAllSubjectAltNames}.
+     * </p>
+     * <p>
+     * The subject alternative names is a collection with an entry for each name
+     * included in the criterion. The name is specified as a {@code List}, the
+     * first entry is an {@code Integer} specifying the name type (0-8), the
+     * second entry is byte array specifying the name in ASN.1 DER encoded form)
+     * </p>
+     * 
+     * @return the names collection or {@code null} if none specified.
+     * @since Android 1.0
      */
     public Collection<List<?>> getSubjectAlternativeNames() {
         if (subjectAltNames == null) {
@@ -569,7 +826,49 @@ public class X509CertSelector implements CertSelector {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Sets the criterion for the name constraints.
+     * <p>
+     * The certificate must constraint subject and subject alternative names
+     * that match the specified name constraints.
+     * </p>
+     * <p>
+     * The name constraints in ASN.1:
+     * 
+     * <pre>
+     * NameConstraints ::= SEQUENCE {
+     *        permittedSubtrees       [0]     GeneralSubtrees OPTIONAL,
+     *        excludedSubtrees        [1]     GeneralSubtrees OPTIONAL }
+     * 
+     * GeneralSubtrees ::= SEQUENCE SIZE (1..MAX) OF GeneralSubtree
+     * 
+     * GeneralSubtree ::= SEQUENCE {
+     *        base                    GeneralName,
+     *        minimum         [0]     BaseDistance DEFAULT 0,
+     *        maximum         [1]     BaseDistance OPTIONAL }
+     * 
+     * BaseDistance ::= INTEGER (0..MAX)
+     * 
+     * GeneralName ::= CHOICE {
+     *        otherName                       [0]     OtherName,
+     *        rfc822Name                      [1]     IA5String,
+     *        dNSName                         [2]     IA5String,
+     *        x400Address                     [3]     ORAddress,
+     *        directoryName                   [4]     Name,
+     *        ediPartyName                    [5]     EDIPartyName,
+     *        uniformResourceIdentifier       [6]     IA5String,
+     *        iPAddress                       [7]     OCTET STRING,
+     *        registeredID                    [8]     OBJECT IDENTIFIER}
+     * 
+     * </pre>
+     * 
+     * </p>
+     * 
+     * @param bytes
+     *            the name constraints in ASN.1 DER encoded format, or null to
+     *            not check any constraints.
+     * @throws IOException
+     *             if decoding the name constraints fail.
+     * @since Android 1.0
      */
     public void setNameConstraints(byte[] bytes) throws IOException {
         this.nameConstraints = (bytes == null)
@@ -578,7 +877,11 @@ public class X509CertSelector implements CertSelector {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the criterion for the name constraints.
+     * 
+     * @return the name constraints or {@code null} if none specified.
+     * @see #setNameConstraints
+     * @since Android 1.0
      */
     public byte[] getNameConstraints() {
         return (nameConstraints == null)
@@ -587,7 +890,19 @@ public class X509CertSelector implements CertSelector {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Sets the criterion for the basic constraints extension.
+     * <p>
+     * A value greater than or equal to zero indicates that a certificate must
+     * include a basic constraints extension with a path length of a least that
+     * value. A value of {@code -2} indicates that only end-entity certificates
+     * are accepted. A value of {@code -1} indicates that no check is done.
+     * </p>
+     * 
+     * @param pathLen
+     *            the value specifying the criterion.
+     * @since Android 1.0
+     * @throws IllegalArgumentException
+     *             if {@code pathLen} is less than {@code -2}.
      */
     public void setBasicConstraints(int pathLen) {
         if (pathLen < -2) {
@@ -597,14 +912,35 @@ public class X509CertSelector implements CertSelector {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the criterion for the basic constraints extension.
+     * <p>
+     * A value greater than or equal to zero indicates that a certificate must
+     * include a basic constraints extension with a path length of a least that
+     * value. A value of {@code -2} indicates that only end-entity certificates
+     * are accepted. A value of {@code -1} indicates that no check is done.
+     * </p>
+     * 
+     * @return the value of the criterion.
+     * @since Android 1.0
      */
     public int getBasicConstraints() {
         return pathLen;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Sets the criterion for the policy constraint.
+     * <p>
+     * The certificate must have at least one of the specified certificate
+     * policy extensions. For an empty set the certificate must have at least
+     * some policies in its policy extension.
+     * </p>
+     * 
+     * @param policies
+     *            the certificate policy OIDs, an empty set, or {@code null} to
+     *            not perform this check.
+     * @throws IOException
+     *             if parsing the specified OIDs fails.
+     * @since Android 1.0
      */
     public void setPolicy(Set<String> policies) throws IOException {
         if (policies == null) {
@@ -622,14 +958,41 @@ public class X509CertSelector implements CertSelector {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the criterion for the policy constraint.
+     * <p>
+     * The certificate must have at least one of the certificate policy
+     * extensions. For an empty set the certificate must have at least some
+     * policies in its policy extension.
+     * </p>
+     * 
+     * @return the certificate policy OIDs, an empty set, or {@code null} if not
+     *         to be checked.
+     * @since Android 1.0
      */
     public Set<String> getPolicy() {
         return policies;
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Sets the criterion for the pathToNames constraint.
+     * <p>
+     * This allows to specify the complete set of names, a certificate's name
+     * constraints must permit.
+     * </p>
+     * <p>
+     * The specified parameter {@code names} is a collection with an entry for
+     * each name to be included in the criterion. The name is specified as a
+     * {@code List}, the first entry must be an {@code Integer} specifying the
+     * name type (0-8), the second entry must be a {@code String} or a byte
+     * array specifying the name (in string or ASN.1 DER encoded form)
+     * </p>
+     * 
+     * @param names
+     *            the names collection or {@code null} to not perform this
+     *            check.
+     * @throws IOException
+     *             if decoding fails.
+     * @since Android 1.0
      */
     public void setPathToNames(Collection<List<?>> names)
                                                         throws IOException {
@@ -653,7 +1016,16 @@ public class X509CertSelector implements CertSelector {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Adds a {@literal "pathToName"} to the respective criterion.
+     * 
+     * @param type
+     *            the type of the name.
+     * @param name
+     *            the name in string format.
+     * @throws IOException
+     *             if parsing fails.
+     * @see #setPathToNames
+     * @since Android 1.0
      */
     public void addPathToName(int type, String name) throws IOException {
         GeneralName path_name = new GeneralName(type, name);
@@ -665,7 +1037,16 @@ public class X509CertSelector implements CertSelector {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Adds a {@literal "pathToName"} to the respective criterion.
+     * 
+     * @param type
+     *            the type of the name
+     * @param name
+     *            the name in ASN.1 DER encoded form.
+     * @throws IOException
+     *             if decoding fails.
+     * @see #setPathToNames
+     * @since Android 1.0
      */
     public void addPathToName(int type, byte[] name) throws IOException {
         GeneralName path_name= new GeneralName(type, name);
@@ -677,7 +1058,16 @@ public class X509CertSelector implements CertSelector {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the criterion for the pathToNames constraint.
+     * <p>
+     * The constraint is a collection with an entry for each name to be included
+     * in the criterion. The name is specified as a {@code List}, the first
+     * entry is an {@code Integer} specifying the name type (0-8), the second
+     * entry is a byte array specifying the name in ASN.1 DER encoded form.
+     * </p>
+     * 
+     * @return the pathToNames constraint or {@code null} if none specified.
+     * @since Android 1.0
      */
     public Collection<List<?>> getPathToNames() {
         if (pathToNames == null) {
@@ -693,7 +1083,12 @@ public class X509CertSelector implements CertSelector {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns a string representation of this {@code X509CertSelector}
+     * instance.
+     * 
+     * @return a string representation of this {@code X509CertSelector}
+     *         instance.
+     * @since Android 1.0
      */
     public String toString() {
         // For convenient reading of the string representation
@@ -813,7 +1208,14 @@ public class X509CertSelector implements CertSelector {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns whether the specified certificate matches all the criteria
+     * collected in this instance.
+     * 
+     * @param certificate
+     *            the certificate to check.
+     * @return {@code true} if the certificate matches all the criteria,
+     *         otherwise {@code false}.
+     * @since Android 1.0
      */
     public boolean match(Certificate certificate) {
         if (! (certificate instanceof X509Certificate)) {
@@ -1049,7 +1451,10 @@ public class X509CertSelector implements CertSelector {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Clones this {@code X509CertSelector} instance.
+     * 
+     * @return the cloned instance.
+     * @since Android 1.0
      */
     public Object clone() {
         X509CertSelector result = new X509CertSelector();

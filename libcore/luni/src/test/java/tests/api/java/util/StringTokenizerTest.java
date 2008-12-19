@@ -17,14 +17,29 @@
 
 package tests.api.java.util;
 
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass; 
+
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 
+@TestTargetClass(StringTokenizer.class) 
 public class StringTokenizerTest extends junit.framework.TestCase {
 
     /**
      * @tests java.util.StringTokenizer#StringTokenizer(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test. Other tests don't verify NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "StringTokenizer",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() {
         // Test for method java.util.StringTokenizer(java.lang.String)
         assertTrue("Used in tests", true);
@@ -34,6 +49,15 @@ public class StringTokenizerTest extends junit.framework.TestCase {
      * @tests java.util.StringTokenizer#StringTokenizer(java.lang.String,
      *        java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NullPointerException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "StringTokenizer",
+          methodArgs = {java.lang.String.class, java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_StringLjava_lang_String() {
         // Test for method java.util.StringTokenizer(java.lang.String,
         // java.lang.String)
@@ -46,6 +70,15 @@ public class StringTokenizerTest extends junit.framework.TestCase {
      * @tests java.util.StringTokenizer#StringTokenizer(java.lang.String,
      *        java.lang.String, boolean)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NullPointerException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "StringTokenizer",
+          methodArgs = {java.lang.String.class, java.lang.String.class, boolean.class}
+        )
+    })
     public void test_ConstructorLjava_lang_StringLjava_lang_StringZ() {
         // Test for method java.util.StringTokenizer(java.lang.String,
         // java.lang.String, boolean)
@@ -59,6 +92,15 @@ public class StringTokenizerTest extends junit.framework.TestCase {
     /**
      * @tests java.util.StringTokenizer#countTokens()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "countTokens",
+          methodArgs = {}
+        )
+    })
     public void test_countTokens() {
         // Test for method int java.util.StringTokenizer.countTokens()
         StringTokenizer st = new StringTokenizer("This is a test String");
@@ -69,6 +111,15 @@ public class StringTokenizerTest extends junit.framework.TestCase {
     /**
      * @tests java.util.StringTokenizer#hasMoreElements()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "hasMoreElements",
+          methodArgs = {}
+        )
+    })
     public void test_hasMoreElements() {
         // Test for method boolean java.util.StringTokenizer.hasMoreElements()
 
@@ -87,6 +138,15 @@ public class StringTokenizerTest extends junit.framework.TestCase {
     /**
      * @tests java.util.StringTokenizer#hasMoreTokens()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "hasMoreTokens",
+          methodArgs = {}
+        )
+    })
     public void test_hasMoreTokens() {
         // Test for method boolean java.util.StringTokenizer.hasMoreTokens()
         StringTokenizer st = new StringTokenizer("This is a test String");
@@ -103,6 +163,15 @@ public class StringTokenizerTest extends junit.framework.TestCase {
     /**
      * @tests java.util.StringTokenizer#nextElement()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "nextElement",
+          methodArgs = {}
+        )
+    })
     public void test_nextElement() {
         // Test for method java.lang.Object
         // java.util.StringTokenizer.nextElement()
@@ -129,6 +198,15 @@ public class StringTokenizerTest extends junit.framework.TestCase {
     /**
      * @tests java.util.StringTokenizer#nextToken()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "nextToken",
+          methodArgs = {}
+        )
+    })
     public void test_nextToken() {
         // Test for method java.lang.String
         // java.util.StringTokenizer.nextToken()
@@ -155,6 +233,15 @@ public class StringTokenizerTest extends junit.framework.TestCase {
     /**
      * @tests java.util.StringTokenizer#nextToken(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NoSuchElementException & NullPointerException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "nextToken",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_nextTokenLjava_lang_String() {
         // Test for method java.lang.String
         // java.util.StringTokenizer.nextToken(java.lang.String)

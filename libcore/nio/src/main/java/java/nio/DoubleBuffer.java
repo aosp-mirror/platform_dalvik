@@ -18,9 +18,10 @@
 package java.nio;
 
 /**
- * A buffer of <code>double</code>s.
+ * A buffer of doubles.
  * <p>
- * A double buffer can be created in either of the following ways:
+ * A double buffer can be created in either one of the following ways:
+ * </p>
  * <ul>
  * <li>{@link #allocate(int) Allocate} a new double array and create a buffer
  * based on it;</li>
@@ -30,16 +31,20 @@ package java.nio;
  * {@link java.nio.ByteBuffer#asDoubleBuffer() ByteBuffer.asDoubleBuffer} to
  * create a double buffer based on a byte buffer.</li>
  * </ul>
- * </p>
+ * 
+ * @since Android 1.0
  */
 public abstract class DoubleBuffer extends Buffer implements Comparable<DoubleBuffer> {
 
     /**
-     * Creates a double buffer based on a new allocated double array.
-     *
-     * @param capacity  The capacity of the new buffer
-     * @return The created double buffer
-     * @throws IllegalArgumentException If <code>capacity</code> is less than zero
+     * Creates a double buffer based on a newly allocated double array.
+     * 
+     * @param capacity
+     *            the capacity of the new buffer.
+     * @return the created double buffer.
+     * @throws IllegalArgumentException
+     *             if {@code capacity} is less than zero.
+     * @since Android 1.0
      */
     public static DoubleBuffer allocate(int capacity) {
         if (capacity < 0) {
@@ -52,34 +57,37 @@ public abstract class DoubleBuffer extends Buffer implements Comparable<DoubleBu
      * Creates a new double buffer by wrapping the given double array.
      * <p>
      * Calling this method has the same effect as
-     * <code>wrap(array, 0, array.length)</code>.</p>
-     *
-     * @param array     The double array which the new buffer will be based on
-     * @return The created double buffer
+     * {@code wrap(array, 0, array.length)}.
+     * </p>
+     * 
+     * @param array
+     *            the double array which the new buffer will be based on.
+     * @return the created double buffer.
+     * @since Android 1.0
      */
     public static DoubleBuffer wrap(double[] array) {
         return wrap(array, 0, array.length);
     }
 
     /**
-     * Creates new a double buffer by wrapping the given double array.
+     * Creates a new double buffer by wrapping the given double array.
      * <p>
-     * The new buffer's position will be <code>start</code>, limit will be
-     * <code>start + len</code>, capacity will be the length of the array.
+     * The new buffer's position will be {@code start}, limit will be
+     * {@code start + len}, capacity will be the length of the array.
      * </p>
-     *
+     * 
      * @param array
-     *            The double array which the new buffer will be based on
+     *            the double array which the new buffer will be based on.
      * @param start
-     *            The start index, must be no less than zero and no greater than
-     *            <code>array.length</code>
+     *            the start index, must not be negative and not greater than
+     *            {@code array.length}.
      * @param len
-     *            The length, must be no less than zero and no greater than
-     *            <code>array.length - start</code>
-     * @return The created double buffer
+     *            the length, must not be negative and not greater than
+     *            {@code array.length - start}.
+     * @return the created double buffer.
      * @exception IndexOutOfBoundsException
-     *                If either <code>start</code> or <code>len</code> is
-     *                invalid
+     *                if either {@code start} or {@code len} is invalid.
+     * @since Android 1.0
      */
     public static DoubleBuffer wrap(double[] array, int start, int len) {
         int length = array.length;
@@ -95,9 +103,10 @@ public abstract class DoubleBuffer extends Buffer implements Comparable<DoubleBu
     }
 
     /**
-     * Constructs a <code>DoubleBuffer</code> with given capacity.
-     *
-     * @param capacity  The capacity of the buffer
+     * Constructs a {@code DoubleBuffer} with given capacity.
+     * 
+     * @param capacity
+     *            the capacity of the buffer.
      */
     DoubleBuffer(int capacity) {
         super(capacity);
@@ -107,13 +116,14 @@ public abstract class DoubleBuffer extends Buffer implements Comparable<DoubleBu
     }
 
     /**
-     * Returns the double array which this buffer is based on, if there's one.
-     *
-     * @return The double array which this buffer is based on
+     * Returns the double array which this buffer is based on, if there is one.
+     * 
+     * @return the double array which this buffer is based on.
      * @exception ReadOnlyBufferException
-     *                If this buffer is based on an array, but it is readonly
+     *                if this buffer is based on an array but it is read-only.
      * @exception UnsupportedOperationException
-     *                If this buffer is not based on an array
+     *                if this buffer is not based on an array.
+     * @since Android 1.0
      */
     public final double[] array() {
         return protectedArray();
@@ -121,31 +131,34 @@ public abstract class DoubleBuffer extends Buffer implements Comparable<DoubleBu
 
     /**
      * Returns the offset of the double array which this buffer is based on, if
-     * there's one.
+     * there is one.
      * <p>
-     * The offset is the index of the array corresponds to the zero position of
-     * the buffer.
+     * The offset is the index of the array corresponding to the zero position
+     * of the buffer.
      * </p>
-     *
-     * @return The offset of the double array which this buffer is based on
+     * 
+     * @return the offset of the double array which this buffer is based on.
      * @exception ReadOnlyBufferException
-     *                If this buffer is based on an array, but it is readonly
+     *                if this buffer is based on an array, but it is read-only.
      * @exception UnsupportedOperationException
-     *                If this buffer is not based on an array
+     *                if this buffer is not based on an array.
+     * @since Android 1.0
      */
     public final int arrayOffset() {
         return protectedArrayOffset();
     }
 
     // BEGIN android-added
-    @Override Object _array() {
+    @Override 
+    Object _array() {
         if (hasArray()) {
             return array();
         }
         return null;
     }
 
-    @Override int _arrayOffset() {
+    @Override 
+    int _arrayOffset() {
         if (hasArray()) {
             return arrayOffset();
         }
@@ -154,92 +167,105 @@ public abstract class DoubleBuffer extends Buffer implements Comparable<DoubleBu
     // END android-added
 
     /**
-     * Returns a readonly buffer that shares content with this buffer.
+     * Returns a read-only buffer that shares its content with this buffer.
      * <p>
-     * The returned buffer is guaranteed to be a new instance, even this
-     * buffer is readonly itself. The new buffer's position, limit, capacity
-     * and mark are the same as this buffer.</p>
+     * The returned buffer is guaranteed to be a new instance, even if this
+     * buffer is read-only itself. The new buffer's position, limit, capacity
+     * and mark are the same as this buffer's.
+     * </p>
      * <p>
-     * The new buffer shares content with this buffer, which means
-     * this buffer's change of content will be visible to the new buffer.
-     * The two buffer's position, limit and mark are independent.</p>
-     *
-     * @return A readonly version of this buffer.
+     * The new buffer shares its content with this buffer, which means that this
+     * buffer's change of content will be visible to the new buffer. The two
+     * buffer's position, limit and mark are independent.
+     * </p>
+     * 
+     * @return a read-only version of this buffer.
+     * @since Android 1.0
      */
     public abstract DoubleBuffer asReadOnlyBuffer();
 
     /**
      * Compacts this double buffer.
      * <p>
-     * The remaining <code>double</code>s will be moved to the head of the
-     * buffer, staring from position zero. Then the position is set to
-     * <code>remaining()</code>; the limit is set to capacity; the mark is
-     * cleared.
+     * The remaining doubles will be moved to the head of the buffer, staring
+     * from position zero. Then the position is set to {@code remaining()}; the
+     * limit is set to capacity; the mark is cleared.
      * </p>
-     *
-     * @return This buffer
+     * 
+     * @return this buffer.
      * @exception ReadOnlyBufferException
-     *                If no changes may be made to the contents of this buffer
+     *                if no changes may be made to the contents of this buffer.
+     * @since Android 1.0
      */
     public abstract DoubleBuffer compact();
 
     /**
-     * Compare the remaining <code>double</code>s of this buffer to another
-     * double buffer's remaining <code>double</code>s.
-     *
+     * Compare the remaining doubles of this buffer to another double buffer's
+     * remaining doubles.
+     * 
      * @param otherBuffer
-     *            Another double buffer
-     * @return a negative value if this is less than <code>other</code>; 0 if
-     *         this equals to <code>other</code>; a positive value if this is
-     *         greater than <code>other</code>
+     *            another double buffer.
+     * @return a negative value if this is less than {@code other}; 0 if this
+     *         equals to {@code other}; a positive value if this is greater
+     *         than {@code other}.
      * @exception ClassCastException
-     *                If <code>other</code> is not a double buffer
+     *                if {@code other} is not a double buffer.
+     * @since Android 1.0
      */
     public int compareTo(DoubleBuffer otherBuffer) {
         int compareRemaining = (remaining() < otherBuffer.remaining()) ? remaining()
                 : otherBuffer.remaining();
         int thisPos = position;
         int otherPos = otherBuffer.position;
-        double thisByte, otherByte;
+        // BEGIN android-changed
+        double thisDouble, otherDouble;
         while (compareRemaining > 0) {
-            thisByte = get(thisPos);
-            otherByte = otherBuffer.get(otherPos);
-            if (thisByte != otherByte) {
-                return thisByte < otherByte ? -1 : 1;
+            thisDouble = get(thisPos);
+            otherDouble = otherBuffer.get(otherPos);
+            // checks for double and NaN inequality
+            if ((thisDouble != otherDouble)
+                    && ((thisDouble == thisDouble) || (otherDouble == otherDouble))) {
+                return thisDouble < otherDouble ? -1 : 1;
             }
             thisPos++;
             otherPos++;
             compareRemaining--;
         }
+        // END android-changed
         return remaining() - otherBuffer.remaining();
     }
 
     /**
-     * Returns a duplicated buffer that shares content with this buffer.
+     * Returns a duplicated buffer that shares its content with this buffer.
      * <p>
-     * The duplicated buffer's position, limit, capacity and mark are the
-     * same as this buffer. The duplicated buffer's readonly property and
-     * byte order are same as this buffer too.</p>
+     * The duplicated buffer's position, limit, capacity and mark are the same
+     * as this buffer's. The duplicated buffer's read-only property and byte
+     * order are the same as this buffer's, too.
+     * </p>
      * <p>
-     * The new buffer shares content with this buffer, which means
-     * either buffer's change of content will be visible to the other.
-     * The two buffer's position, limit and mark are independent.</p>
-     *
-     * @return A duplicated buffer that shares content with this buffer.
+     * The new buffer shares its content with this buffer, which means either
+     * buffer's change of content will be visible to the other. The two buffer's
+     * position, limit and mark are independent.
+     * </p>
+     * 
+     * @return a duplicated buffer that shares its content with this buffer.
+     * @since Android 1.0
      */
     public abstract DoubleBuffer duplicate();
 
     /**
-     * Tests whether this double buffer equals to another object.
+     * Checks whether this double buffer is equal to another object.
      * <p>
-     * If <code>other</code> is not a double buffer, then false is returned.</p>
-     * <p>
-     * Two double buffers are equals if, and only if, their remaining
-     * <code>double</code>s are exactly the same. Position, limit, capacity and
-     * mark are not considered.</p>
-     *
-     * @param other the object to be compared against
-     * @return Whether this double buffer equals to another object.
+     * If {@code other} is not a double buffer then {@code false} is returned.
+     * Two double buffers are equal if and only if their remaining doubles are
+     * exactly the same. Position, limit, capacity and mark are not considered.
+     * </p>
+     * 
+     * @param other
+     *            the object to compare with this double buffer.
+     * @return {@code true} if this double buffer is equal to {@code other},
+     *         {@code false} otherwise.
+     * @since Android 1.0
      */
     public boolean equals(Object other) {
         if (!(other instanceof DoubleBuffer)) {
@@ -262,60 +288,61 @@ public abstract class DoubleBuffer extends Buffer implements Comparable<DoubleBu
     }
 
     /**
-     * Returns the double at the current position and increase the position by 1.
-     *
-     * @return The double at the current position.
-     * @exception BufferUnderflowException If the position is equal or greater than limit
+     * Returns the double at the current position and increases the position by
+     * 1.
+     * 
+     * @return the double at the current position.
+     * @exception BufferUnderflowException
+     *                if the position is equal or greater than limit.
+     * @since Android 1.0
      */
     public abstract double get();
 
     /**
-     * Reads <code>double</code>s from the current position into the
-     * specified double array and increase the position by the number of
-     * <code>double</code>s read.
+     * Reads doubles from the current position into the specified double array
+     * and increases the position by the number of doubles read.
      * <p>
      * Calling this method has the same effect as
-     * <code>get(dest, 0, dest.length)</code>.
+     * {@code get(dest, 0, dest.length)}.
      * </p>
-     *
+     * 
      * @param dest
-     *            The destination double array
-     * @return This buffer
+     *            the destination double array.
+     * @return this buffer.
      * @exception BufferUnderflowException
-     *                if <code>dest.length</code> is greater than
-     *                <code>remaining()</code>
+     *                if {@code dest.length} is greater than {@code remaining()}.
+     * @since Android 1.0
      */
     public DoubleBuffer get(double[] dest) {
         return get(dest, 0, dest.length);
     }
 
     /**
-     * Reads <code>double</code>s from the current position into the
-     * specified double array, starting from the specified offset, and increase
-     * the position by the number of <code>double</code>s read.
-     *
+     * Reads doubles from the current position into the specified double array,
+     * starting from the specified offset, and increases the position by the
+     * number of doubles read.
+     * 
      * @param dest
-     *            The target double array
+     *            the target double array.
      * @param off
-     *            The offset of the double array, must be no less than zero and
-     *            no greater than <code>dest.length</code>
+     *            the offset of the double array, must not be negative and not
+     *            greater than {@code dest.length}.
      * @param len
-     *            The number of <code>double</code>s to read, must be no less
-     *            than zero and no greater than <code>dest.length - off</code>
-     * @return This buffer
+     *            the number of doubles to read, must be no less than zero and
+     *            not greater than {@code dest.length - off}.
+     * @return this buffer.
      * @exception IndexOutOfBoundsException
-     *                If either <code>off</code> or <code>len</code> is
-     *                invalid
+     *                if either {@code off} or {@code len} is invalid.
      * @exception BufferUnderflowException
-     *                If <code>len</code> is greater than
-     *                <code>remaining()</code>
+     *                if {@code len} is greater than {@code remaining()}.
+     * @since Android 1.0
      */
     public DoubleBuffer get(double[] dest, int off, int len) {
         int length = dest.length;
         if (off < 0 || len < 0 || (long)off + (long)len > length) {
             throw new IndexOutOfBoundsException();
         }
-
+        
         if (len > remaining()) {
             throw new BufferUnderflowException();
         }
@@ -326,31 +353,35 @@ public abstract class DoubleBuffer extends Buffer implements Comparable<DoubleBu
     }
 
     /**
-     * Returns a double at the specified index, and the position is not changed.
-     *
-     * @param index     The index, must be no less than zero and less than limit
-     * @return A double at the specified index.
-     * @exception IndexOutOfBoundsException If index is invalid
+     * Returns a double at the specified index; the position is not changed.
+     * 
+     * @param index
+     *            the index, must not be negative and less than limit.
+     * @return a double at the specified index.
+     * @exception IndexOutOfBoundsException
+     *                if index is invalid.
+     * @since Android 1.0
      */
     public abstract double get(int index);
 
     /**
-     * Returns whether this buffer is based on a double array and is read/write.
-     * <p>
-     * If this buffer is readonly, then false is returned.</p>
-     *
-     * @return Whether this buffer is based on a double array and is read/write.
+     * Indicates whether this buffer is based on a double array and is
+     * read/write.
+     * 
+     * @return {@code true} if this buffer is based on a double array and
+     *         provides read/write access, {@code false} otherwise.
+     * @since Android 1.0
      */
     public final boolean hasArray() {
         return protectedHasArray();
     }
 
     /**
-     * Hash code is calculated from the remaining <code>double</code>s.
-     * <p>
-     * Position, limit, capacity and mark don't affect the hash code.</p>
-     *
-     * @return The hash code calculated from the remaining <code>double</code>s.
+     * Calculates this buffer's hash code from the remaining chars. The
+     * position, limit, capacity and mark don't affect the hash code.
+     * 
+     * @return the hash code calculated from the remaining chars.
+     * @since Android 1.0
      */
     public int hashCode() {
         int myPosition = position;
@@ -364,117 +395,118 @@ public abstract class DoubleBuffer extends Buffer implements Comparable<DoubleBu
     }
 
     /**
-     * Returns true if this buffer is direct.
+     * Indicates whether this buffer is direct. A direct buffer will try its
+     * best to take advantage of native memory APIs and it may not stay in the
+     * Java heap, so it is not affected by garbage collection.
      * <p>
-     * A direct buffer will try its best to take advantage of native memory
-     * APIs and it may not stay in java heap, thus not affected by GC.</p>
-     * <p>
-     * A double buffer is direct, if it is based on a byte buffer and the byte
-     * buffer is direct.</p>
-     *
-     * @return True if this buffer is direct.
+     * A double buffer is direct if it is based on a byte buffer and the byte
+     * buffer is direct.
+     * </p>
+     * 
+     * @return {@code true} if this buffer is direct, {@code false} otherwise.
+     * @since Android 1.0
      */
     public abstract boolean isDirect();
 
     /**
-     * Returns the byte order used by this buffer when converting
-     * <code>double</code>s from/to <code>byte</code>s.
+     * Returns the byte order used by this buffer when converting doubles
+     * from/to bytes.
      * <p>
-     * If this buffer is not based on a byte buffer, then always return the
-     * platform's native byte order.</p>
-     *
-     * @return The byte order used by this buffer when converting
-     * <code>double</code>s from/to <code>byte</code>s.
+     * If this buffer is not based on a byte buffer, then this always returns
+     * the platform's native byte order.
+     * </p>
+     * 
+     * @return the byte order used by this buffer when converting doubles
+     *         from/to bytes.
+     * @since Android 1.0
      */
     public abstract ByteOrder order();
 
     /**
-     * Child class implements this method to realize <code>array()</code>.
+     * Child class implements this method to realize {@code array()}.
      *
-     * @return see <code>array()</code>
+     * @see #array()
      */
     abstract double[] protectedArray();
 
     /**
-     * Child class implements this method to realize <code>arrayOffset()</code>.
+     * Child class implements this method to realize {@code arrayOffset()}.
      *
-     * @return see <code>arrayOffset()</code>
+     * @see #arrayOffset()
      */
     abstract int protectedArrayOffset();
 
     /**
-     * Child class implements this method to realize <code>hasArray()</code>.
+     * Child class implements this method to realize {@code hasArray()}.
      *
-     * @return see <code>hasArray()</code>
+     * @see #hasArray()
      */
     abstract boolean protectedHasArray();
 
     /**
-     * Writes the given double to the current position and increase the position
-     * by 1.
-     *
+     * Writes the given double to the current position and increases the
+     * position by 1.
+     * 
      * @param d
-     *            The double to write
-     * @return This buffer
+     *            the double to write.
+     * @return this buffer.
      * @exception BufferOverflowException
-     *                If position is equal or greater than limit
+     *                if position is equal or greater than limit.
      * @exception ReadOnlyBufferException
-     *                If no changes may be made to the contents of this buffer
+     *                if no changes may be made to the contents of this buffer.
+     * @since Android 1.0
      */
     public abstract DoubleBuffer put(double d);
 
     /**
-     * Writes <code>double</code>s in the given double array to the current
-     * position and increase the position by the number of <code>double</code>s
-     * written.
+     * Writes doubles from the given double array to the current position and
+     * increases the position by the number of doubles written.
      * <p>
      * Calling this method has the same effect as
-     * <code>put(src, 0, src.length)</code>.
+     * {@code put(src, 0, src.length)}.
      * </p>
-     *
+     * 
      * @param src
-     *            The source double array
-     * @return This buffer
+     *            the source double array.
+     * @return this buffer.
      * @exception BufferOverflowException
-     *                If <code>remaining()</code> is less than
-     *                <code>src.length</code>
+     *                if {@code remaining()} is less than {@code src.length}.
      * @exception ReadOnlyBufferException
-     *                If no changes may be made to the contents of this buffer
+     *                if no changes may be made to the contents of this buffer.
+     * @since Android 1.0
      */
     public final DoubleBuffer put(double[] src) {
         return put(src, 0, src.length);
     }
 
     /**
-     * Writes <code>double</code>s in the given double array, starting from
-     * the specified offset, to the current position and increase the position
-     * by the number of <code>double</code>s written.
-     *
+     * Writes doubles from the given double array, starting from the specified
+     * offset, to the current position and increases the position by the number
+     * of doubles written.
+     * 
      * @param src
-     *            The source double array
+     *            the source double array.
      * @param off
-     *            The offset of double array, must be no less than zero and no
-     *            greater than <code>src.length</code>
+     *            the offset of double array, must not be negative and not
+     *            greater than {@code src.length}.
      * @param len
-     *            The number of <code>double</code>s to write, must be no
-     *            less than zero and no greater than
-     *            <code>src.length - off</code>
-     * @return This buffer
+     *            the number of doubles to write, must be no less than zero and
+     *            not greater than {@code src.length - off}.
+     * @return this buffer.
      * @exception BufferOverflowException
-     *                If <code>remaining()</code> is less than
-     *                <code>len</code>
+     *                if {@code remaining()} is less than {@code len}.
      * @exception IndexOutOfBoundsException
-     *                If either <code>off</code> or <code>len</code> is
-     *                invalid
+     *                if either {@code off} or {@code len} is invalid.
      * @exception ReadOnlyBufferException
-     *                If no changes may be made to the contents of this buffer
+     *                if no changes may be made to the contents of this buffer.
+     * @since Android 1.0
      */
     public DoubleBuffer put(double[] src, int off, int len) {
         int length = src.length;
         if (off < 0 || len < 0 || (long)off + (long)len > length) {
             throw new IndexOutOfBoundsException();
         }
-
+        
         if (len > remaining()) {
             throw new BufferOverflowException();
         }
@@ -485,20 +517,21 @@ public abstract class DoubleBuffer extends Buffer implements Comparable<DoubleBu
     }
 
     /**
-     * Writes all the remaining <code>double</code>s of the <code>src</code>
-     * double buffer to this buffer's current position, and increase both
-     * buffers' position by the number of <code>double</code>s copied.
-     *
+     * Writes all the remaining doubles of the {@code src} double buffer to this
+     * buffer's current position, and increases both buffers' position by the
+     * number of doubles copied.
+     * 
      * @param src
-     *            The source double buffer
-     * @return This buffer
+     *            the source double buffer.
+     * @return this buffer.
      * @exception BufferOverflowException
-     *                If <code>src.remaining()</code> is greater than this
-     *                buffer's <code>remaining()</code>
+     *                if {@code src.remaining()} is greater than this buffer's
+     *                {@code remaining()}.
      * @exception IllegalArgumentException
-     *                If <code>src</code> is this buffer
+     *                if {@code src} is this buffer.
      * @exception ReadOnlyBufferException
-     *                If no changes may be made to the contents of this buffer
+     *                if no changes may be made to the contents of this buffer.
+     * @since Android 1.0
      */
     public DoubleBuffer put(DoubleBuffer src) {
         if (src == this) {
@@ -516,40 +549,45 @@ public abstract class DoubleBuffer extends Buffer implements Comparable<DoubleBu
     /**
      * Write a double to the specified index of this buffer and the position is
      * not changed.
-     *
+     * 
      * @param index
-     *            The index, must be no less than zero and less than the limit
+     *            the index, must not be negative and less than the limit.
      * @param d
-     *            The double to write
-     * @return This buffer
+     *            the double to write.
+     * @return this buffer.
      * @exception IndexOutOfBoundsException
-     *                If index is invalid
+     *                if index is invalid.
      * @exception ReadOnlyBufferException
-     *                If no changes may be made to the contents of this buffer
+     *                if no changes may be made to the contents of this buffer.
+     * @since Android 1.0
      */
     public abstract DoubleBuffer put(int index, double d);
 
     /**
-     * Returns a sliced buffer that shares content with this buffer.
+     * Returns a sliced buffer that shares its content with this buffer.
      * <p>
-     * The sliced buffer's capacity will be this buffer's
-     * <code>remaining()</code>, and its zero position will correspond to
-     * this buffer's current position. The new buffer's position will be
-     * 0, limit will be its capacity, and its mark is unset. The new buffer's
-     * readonly property and byte order are same as this buffer.</p>
+     * The sliced buffer's capacity will be this buffer's {@code remaining()},
+     * and its zero position will correspond to this buffer's current position.
+     * The new buffer's position will be 0, limit will be its capacity, and its
+     * mark is cleared. The new buffer's read-only property and byte order are
+     * the same as this buffer's.
+     * </p>
      * <p>
-     * The new buffer shares content with this buffer, which means
-     * either buffer's change of content will be visible to the other.
-     * The two buffer's position, limit and mark are independent.</p>
-     *
-     * @return A sliced buffer that shares content with this buffer.
+     * The new buffer shares its content with this buffer, which means either
+     * buffer's change of content will be visible to the other. The two buffer's
+     * position, limit and mark are independent.
+     * </p>
+     * 
+     * @return a sliced buffer that shares its content with this buffer.
+     * @since Android 1.0
      */
     public abstract DoubleBuffer slice();
 
     /**
-     * Returns a string represents the state of this double buffer.
-     *
-     * @return A string represents the state of this double buffer.
+     * Returns a string representing the state of this double buffer.
+     * 
+     * @return A string representing the state of this double buffer.
+     * @since Android 1.0
      */
     public String toString() {
         StringBuffer buf = new StringBuffer();
@@ -558,7 +596,7 @@ public abstract class DoubleBuffer extends Buffer implements Comparable<DoubleBu
         buf.append(capacity());
         buf.append(" position="); //$NON-NLS-1$
         buf.append(position());
-        buf.append(" limit="); //$NON-NLS-1$
+        buf.append(" limit="); //$NON-NLS-1$    
         buf.append(limit());
         return buf.toString();
     }

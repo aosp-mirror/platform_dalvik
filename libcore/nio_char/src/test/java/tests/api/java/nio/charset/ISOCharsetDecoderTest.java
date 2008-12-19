@@ -16,6 +16,8 @@
 
 package tests.api.java.nio.charset;
 
+import dalvik.annotation.TestTargetClass;
+
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
@@ -23,6 +25,7 @@ import java.nio.charset.Charset;
 /**
  * test ISO-8859-1 decoder
  */
+@TestTargetClass(java.nio.charset.CharsetDecoder.class)
 public class ISOCharsetDecoderTest extends CharsetDecoderTest {
 
     protected void setUp() throws Exception {

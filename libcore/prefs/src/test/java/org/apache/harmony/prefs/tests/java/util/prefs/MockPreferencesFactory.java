@@ -23,20 +23,20 @@ import java.util.prefs.PreferencesFactory;
  * 
  */
 public class MockPreferencesFactory implements PreferencesFactory {
-	static MockAbstractPreferences userRoot = new MockAbstractPreferences(null,
-			"");
+    static MockAbstractPreferences userRoot = new MockAbstractPreferences(null,
+            "");
 
-	static MockAbstractPreferences systemRoot = new MockAbstractPreferences(
-			null, "");
+    static MockAbstractPreferences systemRoot = new MockAbstractPreferences(
+            null, "");
 
-	public MockPreferencesFactory() {
-	}
+    public MockPreferencesFactory() {
+    }
 
-	public Preferences userRoot() {
-		return userRoot;
-	}
+    public Preferences userRoot() {
+        return userRoot;
+    }
 
-	public Preferences systemRoot() {
-		return systemRoot;
-	}
+    public Preferences systemRoot() {
+        return systemRoot;
+    }
 }

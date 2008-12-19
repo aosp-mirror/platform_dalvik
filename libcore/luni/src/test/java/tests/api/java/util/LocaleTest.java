@@ -17,12 +17,18 @@
 
 package tests.api.java.util;
 
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass; 
+
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
+@TestTargetClass(Locale.class) 
 public class LocaleTest extends junit.framework.TestCase {
 
     Locale testLocale;
@@ -34,6 +40,15 @@ public class LocaleTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Locale#Locale(java.lang.String, java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "Locale",
+          methodArgs = {java.lang.String.class, java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_StringLjava_lang_String() {
         // Test for method java.util.Locale(java.lang.String, java.lang.String)
         Locale x = new Locale("xx", "CV");
@@ -45,6 +60,16 @@ public class LocaleTest extends junit.framework.TestCase {
      * @tests java.util.Locale#Locale(java.lang.String, java.lang.String,
      *        java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "Locale",
+          methodArgs = {java.lang.String.class, java.lang.String.class, 
+                  java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_StringLjava_lang_StringLjava_lang_String() {
         // Test for method java.util.Locale(java.lang.String, java.lang.String,
         // java.lang.String)
@@ -73,6 +98,15 @@ public class LocaleTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Locale#clone()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "clone",
+          methodArgs = {}
+        )
+    })
     public void test_clone() {
         // Test for method java.lang.Object java.util.Locale.clone()
         assertTrue("Clone failed", l.clone().equals(l));
@@ -81,6 +115,15 @@ public class LocaleTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Locale#equals(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "equals",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_equalsLjava_lang_Object() {
         // Test for method boolean java.util.Locale.equals(java.lang.Object)
         Locale l2 = new Locale("en", "CA", "WIN32");
@@ -93,6 +136,15 @@ public class LocaleTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Locale#getAvailableLocales()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getAvailableLocales",
+          methodArgs = {}
+        )
+    })
     public void test_getAvailableLocales() {
 // BEGIN android-changed
         // Test for method java.util.Locale []
@@ -115,6 +167,15 @@ public class LocaleTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Locale#getCountry()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getCountry",
+          methodArgs = {}
+        )
+    })
     public void test_getCountry() {
         // Test for method java.lang.String java.util.Locale.getCountry()
         assertTrue("Returned incorrect country: " + testLocale.getCountry(),
@@ -124,6 +185,15 @@ public class LocaleTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Locale#getDefault()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getDefault",
+          methodArgs = {}
+        )
+    })
     public void test_getDefault() {
         // Test for method java.util.Locale java.util.Locale.getDefault()
         assertTrue("returns copy", Locale.getDefault() == Locale.getDefault());
@@ -137,6 +207,15 @@ public class LocaleTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Locale#getDisplayCountry()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getDisplayCountry",
+          methodArgs = {}
+        )
+    })
     public void test_getDisplayCountry() {
         // Test for method java.lang.String java.util.Locale.getDisplayCountry()
         assertTrue("Returned incorrect country: "
@@ -157,6 +236,15 @@ public class LocaleTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Locale#getDisplayCountry(java.util.Locale)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getDisplayCountry",
+          methodArgs = {java.util.Locale.class}
+        )
+    })
     public void test_getDisplayCountryLjava_util_Locale() {
         // Test for method java.lang.String
         // java.util.Locale.getDisplayCountry(java.util.Locale)
@@ -167,6 +255,15 @@ public class LocaleTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Locale#getDisplayLanguage()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getDisplayLanguage",
+          methodArgs = {}
+        )
+    })
     public void test_getDisplayLanguage() {
         // Test for method java.lang.String
         // java.util.Locale.getDisplayLanguage()
@@ -182,6 +279,15 @@ public class LocaleTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Locale#getDisplayLanguage(java.util.Locale)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getDisplayLanguage",
+          methodArgs = {java.util.Locale.class}
+        )
+    })
     public void test_getDisplayLanguageLjava_util_Locale() {
         // Test for method java.lang.String
         // java.util.Locale.getDisplayLanguage(java.util.Locale)
@@ -193,6 +299,15 @@ public class LocaleTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Locale#getDisplayName()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getDisplayName",
+          methodArgs = {}
+        )
+    })
     public void test_getDisplayName() {
         // Test for method java.lang.String java.util.Locale.getDisplayName()
         assertTrue("Returned incorrect name: " + testLocale.getDisplayName(),
@@ -202,6 +317,15 @@ public class LocaleTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Locale#getDisplayName(java.util.Locale)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getDisplayName",
+          methodArgs = {java.util.Locale.class}
+        )
+    })
     public void test_getDisplayNameLjava_util_Locale() {
         // Test for method java.lang.String
         // java.util.Locale.getDisplayName(java.util.Locale)
@@ -212,6 +336,15 @@ public class LocaleTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Locale#getDisplayVariant()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getDisplayVariant",
+          methodArgs = {}
+        )
+    })
     public void test_getDisplayVariant() {
         // Test for method java.lang.String java.util.Locale.getDisplayVariant()
         assertTrue("Returned incorrect variant: "
@@ -222,6 +355,15 @@ public class LocaleTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Locale#getDisplayVariant(java.util.Locale)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getDisplayVariant",
+          methodArgs = {java.util.Locale.class}
+        )
+    })
     public void test_getDisplayVariantLjava_util_Locale() {
         // Test for method java.lang.String
         // java.util.Locale.getDisplayVariant(java.util.Locale)
@@ -233,6 +375,15 @@ public class LocaleTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Locale#getISO3Country()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify MissingResourceException.",
+      targets = {
+        @TestTarget(
+          methodName = "getISO3Country",
+          methodArgs = {}
+        )
+    })
     public void test_getISO3Country() {
         // Test for method java.lang.String java.util.Locale.getISO3Country()
         assertTrue("Returned incorrect ISO3 country: "
@@ -246,6 +397,15 @@ public class LocaleTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Locale#getISO3Language()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify MissingResourceException.",
+      targets = {
+        @TestTarget(
+          methodName = "getISO3Language",
+          methodArgs = {}
+        )
+    })
     public void test_getISO3Language() {
         // Test for method java.lang.String java.util.Locale.getISO3Language()
         assertTrue("Returned incorrect ISO3 language: "
@@ -267,6 +427,15 @@ public class LocaleTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Locale#getISOCountries()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getISOCountries",
+          methodArgs = {}
+        )
+    })
     public void test_getISOCountries() {
         // Test for method java.lang.String []
         // java.util.Locale.getISOCountries()
@@ -290,6 +459,15 @@ public class LocaleTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Locale#getISOLanguages()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getISOLanguages",
+          methodArgs = {}
+        )
+    })
     public void test_getISOLanguages() {
         // Test for method java.lang.String []
         // java.util.Locale.getISOLanguages()
@@ -306,6 +484,15 @@ public class LocaleTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Locale#getLanguage()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getLanguage",
+          methodArgs = {}
+        )
+    })
     public void test_getLanguage() {
         // Test for method java.lang.String java.util.Locale.getLanguage()
         assertTrue("Returned incorrect language: " + testLocale.getLanguage(),
@@ -315,6 +502,15 @@ public class LocaleTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Locale#getVariant()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getVariant",
+          methodArgs = {}
+        )
+    })
     public void test_getVariant() {
         // Test for method java.lang.String java.util.Locale.getVariant()
         assertTrue("Returned incorrect variant: " + testLocale.getVariant(),
@@ -324,6 +520,15 @@ public class LocaleTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Locale#setDefault(java.util.Locale)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify SecurityException, NullPointerException.",
+      targets = {
+        @TestTarget(
+          methodName = "setDefault",
+          methodArgs = {java.util.Locale.class}
+        )
+    })
     public void test_setDefaultLjava_util_Locale() {
         // Test for method void java.util.Locale.setDefault(java.util.Locale)
 
@@ -344,6 +549,15 @@ public class LocaleTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Locale#toString()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public void test_toString() {
         // Test for method java.lang.String java.util.Locale.toString()
         assertEquals("Returned incorrect string representation", "en_CA_WIN32", testLocale

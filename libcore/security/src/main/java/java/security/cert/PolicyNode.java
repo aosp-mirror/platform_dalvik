@@ -15,54 +15,81 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package java.security.cert;
 
 import java.util.Iterator;
 import java.util.Set;
 
 /**
- * @com.intel.drl.spec_ref
+ * The interface to a valid policy tree node for the PKIX certification path
+ * validation algorithm.
+ * <p>
+ * Instances of this class are one of the outputs of the PKIX certification path
+ * validation algorithm.
+ * </p>
  * 
+ * @since Android 1.0
  */
 public interface PolicyNode {
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the list of children of this node as an {@code Iterator}.
+     * 
+     * @return the list of children of this node as an {@code Iterator}.
+     * @since Android 1.0
      */
     public Iterator<? extends PolicyNode> getChildren();
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the depth of this node in the policy tree.
+     * <p>
+     * the depth is zero based.
+     * </p>
+     * 
+     * @return the depth of this node in the policy tree.
+     * @since Android 1.0
      */
     public int getDepth();
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the expected policies for the next certificate to be valid.
+     * 
+     * @return the expected policies.
+     * @since Android 1.0
      */
     public Set<String> getExpectedPolicies();
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the parent policy node.
+     * 
+     * @return the parent policy node.
+     * @since Android 1.0
      */
     public PolicyNode getParent();
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the policy qualifiers associated with the policy of this node.
+     * 
+     * @return the policy qualifiers associated with the policy of this node.
+     * @since Android 1.0
      */
     public Set<? extends PolicyQualifierInfo> getPolicyQualifiers();
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the valid policy of this node.
+     * 
+     * @return the valid policy of this node.
+     * @since Android 1.0
      */
     public String getValidPolicy();
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns whether the certificate policy extension of the most recently
+     * processed certificate is marked as critical.
+     * 
+     * @return {@code true} if the extension is marked as critical, otherwise
+     *         {@code false}.
+     * @since Android 1.0
      */
     public boolean isCritical();
 }

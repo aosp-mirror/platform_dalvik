@@ -20,20 +20,23 @@ package java.nio.charset;
 import java.io.IOException;
 
 /**
+ * A {@code CharacterCodingException} is thrown when an encoding or decoding
+ * error occurs.
  * 
- * Type of exception thrown when an encoding or decoding error occurs.
- * 
+ * @since Android 1.0
  */
 public class CharacterCodingException extends IOException {
 
     /*
-     * This constant is used during deserialization to check the J2SE version
+     * This constant is used during deserialization to check the version
      * which created the serialized object.
      */
     private static final long serialVersionUID = 8421532232154627783L;
 
     /**
-     * Default constructor.
+     * Constructs a new {@code CharacterCodingException}.
+     *
+     * @since Android 1.0
      */
     public CharacterCodingException() {
         super();

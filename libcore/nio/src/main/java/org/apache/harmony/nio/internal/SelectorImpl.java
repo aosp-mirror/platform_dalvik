@@ -182,9 +182,12 @@ final class SelectorImpl extends AbstractSelector {
                     doCancel();
                     int[] readyChannels = null;
                     boolean isBlock = (SELECT_NOW != timeout);
-                    if (keys.size() == 0) {
-                        return 0;
-                    }
+                    // BEGIN android-removed
+                    // copied from newer version of harmony
+                    // if (keys.size() == 0) {
+                    //     return 0;
+                    // }
+                    // END android-removed
                     prepareChannels();
                     try {
                         if (isBlock) {

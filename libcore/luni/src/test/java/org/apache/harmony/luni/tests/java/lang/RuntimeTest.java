@@ -17,10 +17,16 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Vector;
 
+@TestTargetClass(Runtime.class) 
 public class RuntimeTest extends junit.framework.TestCase {
 
     Runtime r = Runtime.getRuntime();
@@ -59,6 +65,15 @@ public class RuntimeTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Runtime#exit(int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "This method never returns normally, and can't be tested.",
+      targets = {
+        @TestTarget(
+          methodName = "exit",
+          methodArgs = {int.class}
+        )
+    })
     public void test_exitI() {
         // Test for method void java.lang.Runtime.exit(int)
         assertTrue("Can't really test this", true);
@@ -67,7 +82,16 @@ public class RuntimeTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Runtime#exec(java.lang.String)
      */
-    public void test_exec() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "exec",
+          methodArgs = {java.lang.String.class}
+        )
+    })
+    public void _test_exec() {
         boolean success = false;
 
         /* successful exec's are tested by java.lang.Process */
@@ -84,6 +108,15 @@ public class RuntimeTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Runtime#freeMemory()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "freeMemory",
+          methodArgs = {}
+        )
+    })
     public void test_freeMemory() {
         // Test for method long java.lang.Runtime.freeMemory()
         assertTrue("freeMemory returned nonsense value", r.freeMemory() > 0);
@@ -92,6 +125,15 @@ public class RuntimeTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Runtime#gc()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "gc",
+          methodArgs = {}
+        )
+    })
     public void test_gc() {
         // Test for method void java.lang.Runtime.gc()
         try {
@@ -118,6 +160,16 @@ public class RuntimeTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Runtime#getRuntime()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "getRuntime method is verified in initial setup for " +
+            "other tests.",
+      targets = {
+        @TestTarget(
+          methodName = "getRuntime",
+          methodArgs = {}
+        )
+    })
     public void test_getRuntime() {
         // Test for method java.lang.Runtime java.lang.Runtime.getRuntime()
         assertTrue("Used to test", true);
@@ -126,6 +178,15 @@ public class RuntimeTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Runtime#runFinalization()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "runFinalization",
+          methodArgs = {}
+        )
+    })
     public void test_runFinalization() {
         // Test for method void java.lang.Runtime.runFinalization()
 
@@ -144,6 +205,15 @@ public class RuntimeTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.Runtime#totalMemory()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "totalMemory",
+          methodArgs = {}
+        )
+    })
     public void test_totalMemory() {
         // Test for method long java.lang.Runtime.totalMemory()
         assertTrue("totalMemory returned nonsense value", r.totalMemory() >= r

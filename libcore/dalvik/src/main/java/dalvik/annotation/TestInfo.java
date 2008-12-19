@@ -43,6 +43,19 @@ public @interface TestInfo {
     String notes() default "";
     
     /**
+     * Specifies the current level of coverage the test has.
+     */
+    TestLevel level() default TestLevel.PARTIAL;
+
+    /**
+     * Specifies the purpose (either if it is noteworth to mention such as if 
+     * it is testing a specific parameter combination) or the covered test
+     * aspects (exceptions, normal cases, border edge cases, etc.) in 
+     * case the level is Level.PARTIAL
+     */
+    String purpose() default "";
+
+    /**
      * Specifies an array of target methods.
      */
     TestTarget[] targets();

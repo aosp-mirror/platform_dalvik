@@ -15,8 +15,14 @@
  */
 package org.apache.harmony.nio.tests.java.nio;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.nio.FloatBuffer;
 
+@TestTargetClass(java.nio.FloatBuffer.class)
 public class WrappedFloatBufferTest extends FloatBufferTest {
     protected void setUp() throws Exception {
         super.setUp();
@@ -35,6 +41,15 @@ public class WrappedFloatBufferTest extends FloatBufferTest {
      * @tests java.nio.CharBuffer#allocate(char[],int,int)
      * 
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "wrap",
+          methodArgs = {float[].class, int.class, int.class}
+        )
+    })
     public void testWrappedFloatBuffer_IllegalArg() {
         float array[] = new float[20];
         try {

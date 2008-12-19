@@ -20,23 +20,26 @@ package java.sql;
 import java.io.Serializable;
 
 /**
- * An exception thrown if a problem occurs during a batch update operation.
+ * This exception is thrown if a problem occurs during a batch update operation.
  * <p>
- * A BatchUpdateException provides additional information about the problem that
- * occurred, compared with a standard SQLException. It supplies update counts
- * for successful commands that executed within the batch update, but before the
+ * A {@code BatchUpdateException} provides additional information about the
+ * problem that occurred, compared with a standard {@code SQLException}. It
+ * supplies update counts for successful commands which were executed before the
  * exception was encountered.
- * <p>
+ * </p>
  * The element order in the array of update counts matches the order that the
  * commands were added to the batch operation.
  * <p>
- * Once a batch update command fails and a BatchUpdateException is thrown, the
- * JDBC driver may continue processing the remaining commands in the batch. If
- * the driver does process more commands after the problem occurs, the array
- * returned by BatchUpdateException.getUpdateCounts has an element for every
- * command in the batch, not only those that executed successfully. In this
- * case, the array element for any command which encountered a problem is set to
- * Statement.EXECUTE_FAILED.
+ * Once a batch update command fails and a {@code BatchUpdateException} is
+ * thrown, the JDBC driver may continue processing the remaining commands in the
+ * batch. If the driver does process more commands after the problem occurs, the
+ * array returned by {@code BatchUpdateException.getUpdateCounts} has an element
+ * for every command in the batch, not only those that executed successfully. In
+ * this case, the array element for any command which encountered a problem is
+ * set to {@code Statement.EXECUTE_FAILED}.
+ * </p>
+ * 
+ * @since Android 1.0
  */
 public class BatchUpdateException extends SQLException implements Serializable {
 
@@ -45,19 +48,26 @@ public class BatchUpdateException extends SQLException implements Serializable {
     private int[] updateCounts = null;
 
     /**
-     * Creates a BatchUpdateException with the Reason, SQLState, and Update
-     * Counts set to null and a Vendor Code of 0.
+     * Creates a default {@code BatchUpdateException} with the parameters
+     * <i>reason</i>, <i>SQLState</i>, and <i>update counts</i> set to {@code
+     * null} and the <i>vendor code</i> set to 0.
+     * 
+     * @since Android 1.0
      */
     public BatchUpdateException() {
         super();
     }
 
     /**
-     * Creates a BatchUpdateException with the Update Counts set to the supplied
-     * value and the Reason, SQLState set to null and a Vendor Code of 0.
+     * Creates a {@code BatchUpdateException} with the {@code updateCounts} set
+     * to the supplied value. All other fields are set to their
+     * default values.
      * 
      * @param updateCounts
-     *            the array of Update Counts to use in initialization
+     *            the array of {@code updateCounts} giving the number of
+     *            successful updates (or another status code) for each command
+     *            in the batch that was attempted.
+     * @since Android 1.0
      */
     public BatchUpdateException(int[] updateCounts) {
         super();
@@ -65,14 +75,18 @@ public class BatchUpdateException extends SQLException implements Serializable {
     }
 
     /**
-     * Creates a BatchUpdateException with the Update Counts set to the supplied
-     * value, the Reason set to the supplied value and SQLState set to null and
-     * a Vendor Code of 0.
+     * Creates a {@code BatchUpdateException} with the {@code updateCounts} and
+     * {@code reason} set to the supplied values. All other fields are set to their
+     * default values.
      * 
      * @param reason
-     *            the initialization value for Reason
+     *            the message providing information about the source of this
+     *            exception.
      * @param updateCounts
-     *            the array of Update Counts to set
+     *            the array of {@code updateCounts} giving the number of
+     *            successful updates (or another status code) for each command
+     *            in the batch that was attempted.
+     * @since Android 1.0
      */
     public BatchUpdateException(String reason, int[] updateCounts) {
         super(reason);
@@ -80,16 +94,20 @@ public class BatchUpdateException extends SQLException implements Serializable {
     }
 
     /**
-     * Creates a BatchUpdateException with the Update Counts set to the supplied
-     * value, the Reason set to the supplied value, the SQLState initialized to
-     * the supplied value and the Vendor Code initialized to 0.
+     * Creates a {@code BatchUpdateException} with the {@code reason}, {@code
+     * SQLState} and {@code updateCounts} set to the supplied values. All other
+     * fields are set to their default values.
      * 
      * @param reason
-     *            the value to use for the Reason
+     *            the message providing information about the source of this
+     *            exception.
      * @param SQLState
-     *            the X/OPEN value to use for the SQLState
+     *            the X/OPEN value to use for the {@code SQLState}
      * @param updateCounts
-     *            the array of Update Counts to set
+     *            the array of {@code updateCounts} giving the number of
+     *            successful updates (or another status code) for each command
+     *            in the batch that was attempted.
+     * @since Android 1.0
      */
     public BatchUpdateException(String reason, String SQLState,
             int[] updateCounts) {
@@ -98,18 +116,21 @@ public class BatchUpdateException extends SQLException implements Serializable {
     }
 
     /**
-     * Creates a BatchUpdateException with the Update Counts set to the supplied
-     * value, the Reason set to the supplied value, the SQLState initialized to
-     * the supplied value and the Vendor Code set to the supplied value.
+     * Creates a {@code BatchUpdateException} for the case where all relevant
+     * information is provided.
      * 
      * @param reason
-     *            the value to use for the Reason
+     *            the message providing information about the source of this
+     *            exception.
      * @param SQLState
-     *            the X/OPEN value to use for the SQLState
+     *            the X/OPEN value to use for the {@code SQLState}.
      * @param vendorCode
-     *            the value to use for the vendor error code
+     *            the value to use for the vendor error code.
      * @param updateCounts
-     *            the array of Update Counts to set
+     *            the array of {@code updateCounts} giving the number of
+     *            successful updates (or another status code) for each command
+     *            in the batch that was attempted.
+     * @since Android 1.0
      */
     public BatchUpdateException(String reason, String SQLState, int vendorCode,
             int[] updateCounts) {
@@ -118,28 +139,30 @@ public class BatchUpdateException extends SQLException implements Serializable {
     }
 
     /**
-     * Gets the Update Counts array.
+     * Gets the <i>update count</i> array giving status information for every 
+     * command that was attempted in the batch.
      * <p>
-     * If a batch update command fails and a BatchUpdateException is thrown, the
-     * JDBC driver may continue processing the remaining commands in the batch.
-     * If the driver does process more commands after the problem occurs, the
-     * array returned by <code>BatchUpdateException.getUpdateCounts</code> has
-     * an element for every command in the batch, not only those that executed
-     * successfully. In this case, the array element for any command which
-     * encountered a problem is set to Statement.EXECUTE_FAILED.
+     * If a batch update command fails and a {@code BatchUpdateException} is
+     * thrown, the JDBC driver may continue processing the remaining commands in
+     * the batch. If the driver does so, the array returned by {@code
+     * BatchUpdateException.getUpdateCounts} has an element for every command in
+     * the batch, not only those that executed successfully. In this case, the
+     * array element for any command which encountered a problem is set to
+     * {@code Statement.EXECUTE_FAILED}.
      * 
      * @return an array that contains the successful update counts, before this
-     *         exception. Alternatively, if the driver continues to process
-     *         commands following an error, one of these listed items for every
-     *         command the batch contains:
+     *         exception was thrown. Alternatively, if the driver continues to
+     *         process commands following an error, for each successive command
+     *         there is a corresponding element in the array giving one of the 
+     *         following status values:
      *         <ol>
-     *         <li>an count of the updates</li>
-     *         <li><code>Statement.SUCCESS_NO_INFO</code> indicating that the
-     *         command completed successfully, but the amount of altered rows is
-     *         not known.</li>
-     *         <li><code>Statement.EXECUTE_FAILED</code> indicating that the
-     *         command was unsuccessful.
+     *         <li>the number of successful updates</li> <li>{@code
+     *         Statement.SUCCESS_NO_INFO} indicating that the command completed
+     *         successfully, but the amount of altered rows is unknown.</li> 
+     *         <li>{@code Statement.EXECUTE_FAILED} indicating that the command
+     *         was unsuccessful.</li>
      *         </ol>
+     * @since Android 1.0
      */
     public int[] getUpdateCounts() {
         return updateCounts;

@@ -17,6 +17,11 @@
 
 package tests.api.java.lang.reflect;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -27,6 +32,7 @@ import tests.support.Support_Proxy_I2;
 import tests.support.Support_Proxy_ParentException;
 import tests.support.Support_Proxy_SubException;
 
+@TestTargetClass(Proxy.class) 
 public class ProxyTest extends junit.framework.TestCase {
 
     /*
@@ -59,7 +65,16 @@ public class ProxyTest extends junit.framework.TestCase {
      * @tests java.lang.reflect.Proxy#getProxyClass(java.lang.ClassLoader,
      *        java.lang.Class[])
      */
-    public void test_getProxyClassLjava_lang_ClassLoader$Ljava_lang_Class() {
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NullPointerException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "getProxyClass",
+          methodArgs = {java.lang.ClassLoader.class, java.lang.Class[].class}
+        )
+    })
+    public void _test_getProxyClassLjava_lang_ClassLoader$Ljava_lang_Class() {
         Class proxy = Proxy.getProxyClass(Support_Proxy_I1.class
                 .getClassLoader(), new Class[] { Support_Proxy_I1.class });
 
@@ -86,7 +101,16 @@ public class ProxyTest extends junit.framework.TestCase {
      * @tests java.lang.reflect.Proxy#newProxyInstance(java.lang.ClassLoader,
      *        java.lang.Class[], java.lang.reflect.InvocationHandler)
      */
-    public void test_newProxyInstanceLjava_lang_ClassLoader$Ljava_lang_ClassLjava_lang_reflect_InvocationHandler() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "newProxyInstance",
+          methodArgs = {java.lang.ClassLoader.class, java.lang.Class[].class, java.lang.reflect.InvocationHandler.class}
+        )
+    })
+    public void _test_newProxyInstanceLjava_lang_ClassLoader$Ljava_lang_ClassLjava_lang_reflect_InvocationHandler() {
         Object p = Proxy.newProxyInstance(Support_Proxy_I1.class
                 .getClassLoader(), new Class[] { Support_Proxy_I1.class,
                 Support_Proxy_I2.class }, new InvocationHandler() {
@@ -114,7 +138,7 @@ public class ProxyTest extends junit.framework.TestCase {
         assertTrue("Failed identity test ", proxy.equals(proxy));
         assertTrue("Failed not equals test ", !proxy.equals(""));
         int[] result = (int[]) proxy.array(new long[] { 100L, -200L });
-        assertEquals("Failed base type conversion test ", -200, result[0]);
+        assertEquals("Failed primitive type conversion test ", -200, result[0]);
 
         boolean worked = false;
         try {
@@ -169,6 +193,15 @@ public class ProxyTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Proxy#isProxyClass(java.lang.Class)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NullPointerException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "isProxyClass",
+          methodArgs = {java.lang.Class.class}
+        )
+    })
     public void test_isProxyClassLjava_lang_Class() {
         Class proxy = Proxy.getProxyClass(Support_Proxy_I1.class
                 .getClassLoader(), new Class[] { Support_Proxy_I1.class });
@@ -198,7 +231,16 @@ public class ProxyTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Proxy#getInvocationHandler(java.lang.Object)
      */
-    public void test_getInvocationHandlerLjava_lang_Object() {
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NullPointerException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "getInvocationHandler",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
+    public void _test_getInvocationHandlerLjava_lang_Object() {
         InvocationHandler handler = new InvocationHandler() {
             public Object invoke(Object proxy, Method method, Object[] args)
                     throws Throwable {
@@ -222,7 +264,16 @@ public class ProxyTest extends junit.framework.TestCase {
     }
         
     //Regression Test for HARMONY-2355
-    public void test_newProxyInstance_withCompatibleReturnTypes() {
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Regression test. Exceptions are not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "newProxyInstance",
+          methodArgs = {java.lang.ClassLoader.class, java.lang.Class[].class, java.lang.reflect.InvocationHandler.class}
+        )
+    })
+    public void _test_newProxyInstance_withCompatibleReturnTypes() {
         Object o = Proxy
                 .newProxyInstance(this.getClass().getClassLoader(),
                         new Class[] { ITestReturnObject.class,
@@ -230,8 +281,16 @@ public class ProxyTest extends junit.framework.TestCase {
                         new TestProxyHandler(new TestProxyImpl()));
         assertNotNull(o);
     }
-
-    public void test_newProxyInstance_withNonCompatibleReturnTypes() {
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IllegalArgumentException is verified.",
+      targets = {
+        @TestTarget(
+          methodName = "newProxyInstance",
+          methodArgs = {java.lang.ClassLoader.class, java.lang.Class[].class, java.lang.reflect.InvocationHandler.class}
+        )
+    })
+    public void _test_newProxyInstance_withNonCompatibleReturnTypes() {
         try {
             Proxy.newProxyInstance(this.getClass().getClassLoader(),
                     new Class[] { ITestReturnInteger.class,

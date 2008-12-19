@@ -15,14 +15,20 @@
  */
 package org.apache.harmony.luni.tests.java.util;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
+import junit.framework.TestCase;
+
 import java.io.Serializable;
 import java.util.InputMismatchException;
 import java.util.NoSuchElementException;
 
-import junit.framework.TestCase;
-
 import org.apache.harmony.testframework.serialization.SerializationTest;
 
+@TestTargetClass(InputMismatchException.class) 
 public class InputMismatchExceptionTest extends TestCase {
 
     private static final String ERROR_MESSAGE = "for serialization test"; //$NON-NLS-1$
@@ -30,6 +36,15 @@ public class InputMismatchExceptionTest extends TestCase {
     /**
      * @tests java.util.InputMismatchException#InputMismatchException()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "InputMismatchException",
+          methodArgs = {}
+        )
+    })
     @SuppressWarnings("cast")
     public void test_Constructor() {
         InputMismatchException exception = new InputMismatchException();
@@ -41,6 +56,15 @@ public class InputMismatchExceptionTest extends TestCase {
     /**
      * @tests java.util.InputMismatchException#InputMismatchException(String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "InputMismatchException",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() {
         InputMismatchException exception = new InputMismatchException(
                 ERROR_MESSAGE);
@@ -51,6 +75,15 @@ public class InputMismatchExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization.
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationSelf",
+          methodArgs = {}
+        )
+    })
     public void testSerializationSelf() throws Exception {
 
         SerializationTest.verifySelf(new InputMismatchException(ERROR_MESSAGE));
@@ -59,6 +92,15 @@ public class InputMismatchExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationGolden",
+          methodArgs = {}
+        )
+    })
     public void testSerializationCompatibility() throws Exception {
 
         SerializationTest.verifyGolden(this, new InputMismatchException(

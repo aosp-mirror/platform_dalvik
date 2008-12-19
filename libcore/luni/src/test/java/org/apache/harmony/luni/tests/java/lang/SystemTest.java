@@ -17,6 +17,11 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -25,10 +30,10 @@ import java.io.PrintStream;
 import java.nio.channels.Channel;
 import java.nio.channels.spi.SelectorProvider;
 import java.security.Permission;
-import java.security.SecurityPermission;
 import java.util.Map;
 import java.util.Properties;
 
+@TestTargetClass(System.class) 
 public class SystemTest extends junit.framework.TestCase {
 
     static boolean flag = false;
@@ -38,6 +43,15 @@ public class SystemTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.System#setIn(java.io.InputStream)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SecurityException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "setIn",
+          methodArgs = {java.io.InputStream.class}
+        )
+    })
     public void test_setInLjava_io_InputStream() {
         InputStream orgIn = System.in;
         InputStream in = new ByteArrayInputStream(new byte[0]);
@@ -49,6 +63,15 @@ public class SystemTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.System#setOut(java.io.PrintStream)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SecurityException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "setOut",
+          methodArgs = {java.io.PrintStream.class}
+        )
+    })
     public void test_setOutLjava_io_PrintStream() {
         PrintStream orgOut = System.out;
         PrintStream out = new PrintStream(new ByteArrayOutputStream());
@@ -60,6 +83,15 @@ public class SystemTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.System#setErr(java.io.PrintStream)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SecurityException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "setErr",
+          methodArgs = {java.io.PrintStream.class}
+        )
+    })
     public void test_setErrLjava_io_PrintStream() {
         PrintStream orgErr = System.err;
         PrintStream err = new PrintStream(new ByteArrayOutputStream());
@@ -72,6 +104,16 @@ public class SystemTest extends junit.framework.TestCase {
      * @tests java.lang.System#arraycopy(java.lang.Object, int,
      *        java.lang.Object, int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check all exceptions, and boundary cases which described " +
+            "in the specification.",
+      targets = {
+        @TestTarget(
+          methodName = "arraycopy",
+          methodArgs = {java.lang.Object.class, int.class, java.lang.Object.class, int.class, int.class}
+        )
+    })
     public void test_arraycopyLjava_lang_ObjectILjava_lang_ObjectII() {
         // Test for method void java.lang.System.arraycopy(java.lang.Object,
         // int, java.lang.Object, int, int)
@@ -103,6 +145,15 @@ public class SystemTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.System#currentTimeMillis()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "currentTimeMillis",
+          methodArgs = {}
+        )
+    })
     public void test_currentTimeMillis() {
         // Test for method long java.lang.System.currentTimeMillis()
         try {
@@ -122,6 +173,15 @@ public class SystemTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.System#exit(int)
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test.",
+      targets = {
+        @TestTarget(
+          methodName = "exit",
+          methodArgs = {int.class}
+        )
+    })
     public void test_exitI() {
         // Test for method void java.lang.System.exit(int)
         // Tested in destructive test: Test_System_Exit ???
@@ -130,7 +190,16 @@ public class SystemTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.System#getProperties()
      */
-    public void test_getProperties() {
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SecurityException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "getProperties",
+          methodArgs = {}
+        )
+    })
+    public void _test_getProperties() {
         // Test for method java.util.Properties java.lang.System.getProperties()
         Properties p = System.getProperties();
         assertTrue("Incorrect properties returned", p.getProperty(
@@ -155,7 +224,16 @@ public class SystemTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.System#getProperty(java.lang.String)
      */
-    public void test_getPropertyLjava_lang_String() {
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "getProperty",
+          methodArgs = {java.lang.String.class}
+        )
+    })
+    public void _test_getPropertyLjava_lang_String() {
         // Test for method java.lang.String
         // java.lang.System.getProperty(java.lang.String)
         assertTrue("Failed to return correct property value", System
@@ -195,7 +273,16 @@ public class SystemTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.System#getProperty(java.lang.String, java.lang.String)
      */
-    public void test_getPropertyLjava_lang_StringLjava_lang_String() {
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't veriffy exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "getProperty",
+          methodArgs = {java.lang.String.class, java.lang.String.class}
+        )
+    })
+    public void _test_getPropertyLjava_lang_StringLjava_lang_String() {
         // Test for method java.lang.String
         // java.lang.System.getProperty(java.lang.String, java.lang.String)
         assertTrue("Failed to return correct property value: "
@@ -208,6 +295,15 @@ public class SystemTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.System#setProperty(java.lang.String, java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setProperty",
+          methodArgs = {java.lang.String.class, java.lang.String.class}
+        )
+    })
     public void test_setPropertyLjava_lang_StringLjava_lang_String() {
         // Test for method java.lang.String
         // java.lang.System.setProperty(java.lang.String, java.lang.String)
@@ -231,6 +327,15 @@ public class SystemTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.System#getSecurityManager()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check positive functionality.",
+      targets = {
+        @TestTarget(
+          methodName = "getSecurityManager",
+          methodArgs = {}
+        )
+    })
     public void test_getSecurityManager() {
         // Test for method java.lang.SecurityManager
         // java.lang.System.getSecurityManager()
@@ -241,6 +346,15 @@ public class SystemTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.System#identityHashCode(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "identityHashCode",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_identityHashCodeLjava_lang_Object() {
         // Test for method int
         // java.lang.System.identityHashCode(java.lang.Object)
@@ -258,7 +372,16 @@ public class SystemTest extends junit.framework.TestCase {
      * @throws IOException
      * @tests java.lang.System#inheritedChannel()
      */
-    public void test_inheritedChannel() throws IOException {
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check exceptions.",
+      targets = {
+        @TestTarget(
+          methodName = "inheritedChannel",
+          methodArgs = {}
+        )
+    })
+    public void _test_inheritedChannel() throws IOException {
         Channel iChannel = System.inheritedChannel();
         assertNull("Incorrect value of channel", iChannel);
         SelectorProvider sp = SelectorProvider.provider();
@@ -281,6 +404,15 @@ public class SystemTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.System#runFinalization()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "runFinalization",
+          methodArgs = {}
+        )
+    })
     public void test_runFinalization() {
         // Test for method void java.lang.System.runFinalization()
 
@@ -299,6 +431,15 @@ public class SystemTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.System#runFinalizersOnExit(boolean)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check with true parameter.",
+      targets = {
+        @TestTarget(
+          methodName = "runFinalizersOnExit",
+          methodArgs = {boolean.class}
+        )
+    })
     @SuppressWarnings("deprecation")
     public void test_runFinalizersOnExitZ() {
         // Can we call the method at least?
@@ -312,6 +453,15 @@ public class SystemTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.System#setProperties(java.util.Properties)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setProperties",
+          methodArgs = {java.util.Properties.class}
+        )
+    })
     public void test_setPropertiesLjava_util_Properties() {
         // Test for method void
         // java.lang.System.setProperties(java.util.Properties)
@@ -331,6 +481,15 @@ public class SystemTest extends junit.framework.TestCase {
     }
 
     //Regression Test for Harmony-2356
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getenv",
+          methodArgs = {}
+        )
+    })
     public void testEnvUnmodifiable() {
         Map map = System.getenv();
         try {
@@ -411,7 +570,20 @@ public class SystemTest extends junit.framework.TestCase {
         }
 
     }
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "setSecurityManager",
+          methodArgs = {java.lang.SecurityManager.class}
+        ),
+        @TestTarget(
+          methodName = "getSecurityManager",
+          methodArgs = {}
+        )
 
+    })
     public void test_setSecurityManagerLjava_lang_SecurityManager() {
         assertEquals("Incorrect SecurityManager",
                 null, System.getSecurityManager());

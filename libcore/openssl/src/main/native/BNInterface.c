@@ -146,7 +146,7 @@ static jboolean NativeBN_putULongInt(JNIEnv* env, jclass cls, BIGNUM* a, unsigne
     unsigned int hi = dw >> 32; // This shifts without sign extension.
     int lo = (int)dw; // This truncates implicitely.
 
-    // mc: cf. litEndInts2bn:
+    // cf. litEndInts2bn:
     bn_check_top(a);
         if (bn_wexpand(a, 2) != NULL) {
             a->d[0] = lo;
@@ -216,16 +216,17 @@ static jboolean NativeBN_BN_bin2bn(JNIEnv* env, jclass cls, jbyteArray arr, int 
 
 /**
  * public static native boolean litEndInts2bn(int[], int, int, int)
- * mc: This procedure directly writes the internal representation of BIGNUMs.
- * mc: We do so as there is no direct interface based on Little Endian Integer Arrays.
- * mc: Also note that the same representation is used in the Cordoba Java Implementation of BigIntegers,
+ * Note: 
+ * This procedure directly writes the internal representation of BIGNUMs.
+ * We do so as there is no direct interface based on Little Endian Integer Arrays.
+ * Also note that the same representation is used in the Cordoba Java Implementation of BigIntegers,
  *        whereof certain functionality is still being used.
  */
 static jboolean NativeBN_litEndInts2bn(JNIEnv* env, jclass cls, jintArray arr, int len, jboolean neg, BIGNUM* ret) {
     if (!oneValidHandle(env, ret)) return FALSE;
     bn_check_top(ret);
 	if (len > 0) {
-        BN_ULONG* tmpInts; // mc: BN_ULONG is 4 Bytes on this system for sure, i.e. same as jint!
+        BN_ULONG* tmpInts; // BN_ULONG is 4 Bytes on this system for sure, i.e. same as jint!
         tmpInts = (BN_ULONG*)((*env)->GetPrimitiveArrayCritical(env, arr, 0));
         if ((tmpInts != NULL) && (bn_wexpand(ret, len) != NULL)) {
             int i = len; do { i--; ret->d[i] = tmpInts[i]; } while (i > 0);
@@ -234,7 +235,7 @@ static jboolean NativeBN_litEndInts2bn(JNIEnv* env, jclass cls, jintArray arr, i
             ret->neg = neg;
             // need to call this due to clear byte at top if avoiding
             // having the top bit set (-ve number)
-            // mc: Basically get rid of top zero ints:
+            // Basically get rid of top zero ints:
             bn_correct_top(ret);
             return TRUE;
         }
@@ -244,7 +245,7 @@ static jboolean NativeBN_litEndInts2bn(JNIEnv* env, jclass cls, jintArray arr, i
             return FALSE;
         }
 	}
-	else { // mc: (len = 0) means value = 0 and sign will be 0, too.
+	else { // (len = 0) means value = 0 and sign will be 0, too.
 		ret->top = 0;
     	return TRUE;
 	}
@@ -261,7 +262,7 @@ static jboolean negBigEndianBytes2bn(JNIEnv* env, jclass cls, unsigned char* byt
 // We rely on: (BN_BITS2 == 32), i.e. BN_ULONG is unsigned int and has 4 bytes:
 //
     bn_check_top(ret);
-// mc: FIXME: ASSERT (bytesLen > 0);
+// FIXME: ASSERT (bytesLen > 0);
 	int intLen = (bytesLen + 3) / 4;
 	int firstNonzeroDigit = -2;
     if (bn_wexpand(ret, intLen) != NULL) {
@@ -417,9 +418,9 @@ static jbyteArray NativeBN_BN_bn2bin(JNIEnv* env, jclass cls, BIGNUM* a, jbyteAr
     unsigned char * tmpBytes;
     int len, byteCnt;
     byteCnt = BN_num_bytes(a);
-// mc: FIXME: Currently ignoring array passed in to:
+// FIXME: Currently ignoring array passed in to:
     returnJBytes = (*env)->NewByteArray(env, byteCnt);
-// mc: FIXME: is it neccessary to check for returnJBytes != NULL?
+// FIXME: is it neccessary to check for returnJBytes != NULL?
     tmpBytes = (unsigned char *)((*env)->GetPrimitiveArrayCritical(env, returnJBytes, 0));
     if (tmpBytes != NULL) {
         len = BN_bn2bin(a, tmpBytes);
@@ -431,7 +432,7 @@ static jbyteArray NativeBN_BN_bn2bin(JNIEnv* env, jclass cls, BIGNUM* a, jbyteAr
 
 /**
  * public static native int[] bn2litEndInts(int, int[])
- * mc: cf. litEndInts2bn
+ * cf. litEndInts2bn
  */
 static jintArray NativeBN_bn2litEndInts(JNIEnv* env, jclass cls, BIGNUM* a, jintArray to) {
     if (!oneValidHandle(env, a)) return NULL;
@@ -439,9 +440,9 @@ static jintArray NativeBN_bn2litEndInts(JNIEnv* env, jclass cls, BIGNUM* a, jint
     bn_check_top(a);
     int len = a->top;
     if (len > 0) {
-// mc: FIXME: Currently ignoring array passed in to:
+// FIXME: Currently ignoring array passed in to:
         returnJInts = (*env)->NewIntArray(env, len);
-// mc: FIXME: is it neccessary to check for returnJBytes != NULL?
+// FIXME: is it neccessary to check for returnJBytes != NULL?
         BN_ULONG* tmpInts = (BN_ULONG*)((*env)->GetPrimitiveArrayCritical(env, returnJInts, 0));
         if (tmpInts != NULL) {
             int i = len; do { i--; tmpInts[i] = a->d[i]; } while (i > 0);
@@ -464,9 +465,9 @@ static jbyteArray NativeBN_bn2twosComp(JNIEnv* env, jclass cls, BIGNUM* a, jbyte
     unsigned char * tmpBytes;
     int len, byteCnt;
     byteCnt = BN_num_bytes(a);
-// mc: FIXME: Currently ignoring array passed in to:
+// FIXME: Currently ignoring array passed in to:
     returnJBytes = (*env)->NewByteArray(env, byteCnt);
-// mc: FIXME: is it neccessary to check for returnJBytes != NULL?
+// FIXME: is it neccessary to check for returnJBytes != NULL?
     tmpBytes = (unsigned char *)((*env)->GetPrimitiveArrayCritical(env, returnJBytes, 0));
     if (tmpBytes != NULL) {
         len = BN_bn2bin(a, tmpBytes);
@@ -615,8 +616,8 @@ static jboolean NativeBN_BN_lshift(JNIEnv* env, jclass cls, BIGNUM* r, BIGNUM* a
 
     n = -n;
 //    return BN_rshift(r, a, n);
-// mc: Following code insourced from bn_shift.c in order to have bug fixed:
-// mc: FIXME: Should report to openssl team!!!
+// Following code insourced from bn_shift.c in order to have bug fixed:
+// FIXME: Should report to openssl team!!!
 
 	int i,j,nw,lb,rb;
 	BN_ULONG *t,*f;
@@ -628,7 +629,7 @@ static jboolean NativeBN_BN_lshift(JNIEnv* env, jclass cls, BIGNUM* r, BIGNUM* a
 	nw=n/BN_BITS2;
 	rb=n%BN_BITS2;
 	lb=BN_BITS2-rb;
-// mc: Changed "nw > a->top || a->top == 0" to nw >= a->top" as considering this a bug:
+// Changed "nw > a->top || a->top == 0" to nw >= a->top" as considering this a bug:
 	if (nw >= a->top)
 		{
 		BN_zero(r);

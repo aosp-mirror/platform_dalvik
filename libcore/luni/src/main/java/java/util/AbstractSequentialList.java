@@ -22,66 +22,25 @@ package java.util;
  * AbstractSequentialList is an abstract implementation of the List interface.
  * This implementation does not support adding. A subclass must implement the
  * abstract method listIterator().
- * @since 1.2
+ * 
+ * @since Android 1.0
  */
 public abstract class AbstractSequentialList<E> extends AbstractList<E> {
 
     /**
      * Constructs a new instance of this AbstractSequentialList.
+     * 
+     * @since Android 1.0
      */
     protected AbstractSequentialList() {
         super();
     }
 
-    /**
-     * Inserts the specified object into this List at the specified location.
-     * The object is inserted before any previous element at the specified
-     * location. If the location is equal to the size of this List, the object
-     * is added at the end.
-     * 
-     * @param location
-     *            the index at which to insert
-     * @param object
-     *            the object to add
-     * 
-     * @exception UnsupportedOperationException
-     *                when adding to this List is not supported
-     * @exception ClassCastException
-     *                when the class of the object is inappropriate for this
-     *                List
-     * @exception IllegalArgumentException
-     *                when the object cannot be added to this List
-     * @exception IndexOutOfBoundsException
-     *                when <code>location < 0 || >= size()</code>
-     * @exception NullPointerException
-     *                when the object is null and this List does not support
-     *                null elements
-     */
     @Override
     public void add(int location, E object) {
         listIterator(location).add(object);
     }
 
-    /**
-     * Inserts the objects in the specified Collection at the specified location
-     * in this List. The objects are added in the order they are returned from
-     * the Collection iterator.
-     * 
-     * @param location
-     *            the index at which to insert
-     * @param collection
-     *            the Collection of objects
-     * @return true if this List is modified, false otherwise
-     * 
-     * @exception UnsupportedOperationException
-     *                when adding to this List is not supported
-     * @exception ClassCastException
-     *                when the class of an object is inappropriate for this List
-     * @exception IllegalArgumentException
-     *                when an object cannot be added to this List
-     * @exception IndexOutOfBoundsException
-     *                when <code>location < 0 || >= size()</code>
-     */
     @Override
     public boolean addAll(int location, Collection<? extends E> collection) {
         ListIterator<E> it = listIterator(location);
@@ -106,16 +65,6 @@ public abstract class AbstractSequentialList<E> extends AbstractList<E> {
         // END android-added
     }
 
-    /**
-     * Returns the element at the specified location in this List.
-     * 
-     * @param location
-     *            the index of the element to return
-     * @return the element at the specified location
-     * 
-     * @exception IndexOutOfBoundsException
-     *                when <code>location < 0 || >= size()</code>
-     */
     @Override
     public E get(int location) {
         try {
@@ -125,48 +74,14 @@ public abstract class AbstractSequentialList<E> extends AbstractList<E> {
         }
     }
 
-    /**
-     * Returns an Iterator on the elements of this List. The elements are
-     * iterated in the same order that they occur in the List.
-     * 
-     * @return an Iterator on the elements of this List
-     * 
-     * @see Iterator
-     */
     @Override
     public Iterator<E> iterator() {
         return listIterator(0);
     }
 
-    /**
-     * Returns a ListIterator on the elements of this List. The elements are
-     * iterated in the same order that they occur in the List. The iteration
-     * starts at the specified location.
-     * 
-     * @param location
-     *            the index at which to start the iteration
-     * @return a ListIterator on the elements of this List
-     * 
-     * @exception IndexOutOfBoundsException
-     *                when <code>location < 0 || >= size()</code>
-     * 
-     * @see ListIterator
-     */
     @Override
     public abstract ListIterator<E> listIterator(int location);
 
-    /**
-     * Removes the object at the specified location from this List.
-     * 
-     * @param location
-     *            the index of the object to remove
-     * @return the removed object
-     * 
-     * @exception UnsupportedOperationException
-     *                when removing from this List is not supported
-     * @exception IndexOutOfBoundsException
-     *                when <code>location < 0 || >= size()</code>
-     */
     @Override
     public E remove(int location) {
         try {
@@ -179,25 +94,6 @@ public abstract class AbstractSequentialList<E> extends AbstractList<E> {
         }
     }
 
-    /**
-     * Replaces the element at the specified location in this List with the
-     * specified object.
-     * 
-     * @param location
-     *            the index at which to put the specified object
-     * @param object
-     *            the object to add
-     * @return the previous element at the index
-     * 
-     * @exception UnsupportedOperationException
-     *                when replacing elements in this List is not supported
-     * @exception ClassCastException
-     *                when the class of an object is inappropriate for this List
-     * @exception IllegalArgumentException
-     *                when an object cannot be added to this List
-     * @exception IndexOutOfBoundsException
-     *                when <code>location < 0 || >= size()</code>
-     */
     @Override
     public E set(int location, E object) {
         ListIterator<E> it = listIterator(location);

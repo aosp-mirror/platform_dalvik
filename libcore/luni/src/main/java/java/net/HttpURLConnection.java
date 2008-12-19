@@ -22,34 +22,76 @@ import java.io.IOException;
 import org.apache.harmony.luni.util.Msg;
 
 /**
- * This abstract subclass of <code>URLConnection</code> defines method for
- * managing HTTP connection according to the description given by RFC 2068
+ * This abstract subclass of {@code URLConnection} defines methods for managing
+ * HTTP connection according to the description given by RFC 2068.
  * 
  * @see ContentHandler
  * @see URL
  * @see URLConnection
  * @see URLStreamHandler
+ * @since Android 1.0
  */
 public abstract class HttpURLConnection extends URLConnection {
     @SuppressWarnings("nls")
     private String methodTokens[] = { "GET", "DELETE", "HEAD", "OPTIONS",
             "POST", "PUT", "TRACE" };
 
-    // Request method, DEFAULT: "GET"
+   /**
+     * The HTTP request method of this {@code HttpURLConnection}. The default
+     * value is {@code "GET"}.
+     * 
+     * @since Android 1.0
+     */
     protected String method = "GET"; //$NON-NLS-1$
 
-    // Response code obtained from the request
+    /**
+     * The status code of the response obtained from the HTTP request. The
+     * default value is {@code -1}.
+     * <p>
+     * <li>1xx: Informational</li>
+     * <li>2xx: Success</li>
+     * <li>3xx: Relocation/Redirection</li>
+     * <li>4xx: Client Error</li>
+     * <li>5xx: Server Error</li>
+     * </p>
+     * 
+     * @since Android 1.0
+     */
     protected int responseCode = -1;
 
-    // Response message, corresponds to the response code
+    /**
+     * The HTTP response message which corresponds to the response code.
+     * 
+     * @since Android 1.0
+     */
     protected String responseMessage;
 
+    /**
+     * Flag to define whether the protocol will automatically follow redirects
+     * or not. The default value is {@code true}.
+     * 
+     * @since Android 1.0
+     */
     protected boolean instanceFollowRedirects = followRedirects;
 
     private static boolean followRedirects = true;
 
+    /**
+     * If the HTTP chunked encoding is enabled this parameter defines the
+     * chunk-length. Default value is {@code -1} that means the chunked encoding
+     * mode is disabled.
+     * 
+     * @since Android 1.0
+     */
     protected int chunkLength = -1;
 
+    /**
+     * If using HTTP fixed-length streaming mode this parameter defines the
+     * fixed length of content. Default value is {@code -1} that means the
+     * fixed-length streaming mode is disabled.
+     * 
+     * @since Android 1.0
+     */
     protected int fixedContentLength = -1;
 
     private final static int DEFAULT_CHUNK_LENGTH = 1024;
@@ -60,243 +102,317 @@ public abstract class HttpURLConnection extends URLConnection {
     // 5XX: server error
     /**
      * Numeric status code, 202: Accepted
+     * 
+     * @since Android 1.0
      */
     public final static int HTTP_ACCEPTED = 202;
 
     /**
      * Numeric status code, 502: Bad Gateway
+     * 
+     * @since Android 1.0
      */
     public final static int HTTP_BAD_GATEWAY = 502;
 
     /**
      * Numeric status code, 405: Bad Method
+     * 
+     * @since Android 1.0
      */
     public final static int HTTP_BAD_METHOD = 405;
 
     /**
      * Numeric status code, 400: Bad Request
+     * 
+     * @since Android 1.0
      */
     public final static int HTTP_BAD_REQUEST = 400;
 
     /**
      * Numeric status code, 408: Client Timeout
+     * 
+     * @since Android 1.0
      */
     public final static int HTTP_CLIENT_TIMEOUT = 408;
 
     /**
      * Numeric status code, 409: Conflict
+     * 
+     * @since Android 1.0
      */
     public final static int HTTP_CONFLICT = 409;
 
     /**
      * Numeric status code, 201: Created
+     * 
+     * @since Android 1.0
      */
     public final static int HTTP_CREATED = 201;
 
     /**
      * Numeric status code, 413: Entity too large
+     * 
+     * @since Android 1.0
      */
     public final static int HTTP_ENTITY_TOO_LARGE = 413;
 
     /**
      * Numeric status code, 403: Forbidden
+     * 
+     * @since Android 1.0
      */
     public final static int HTTP_FORBIDDEN = 403;
 
     /**
      * Numeric status code, 504: Gateway timeout
+     * 
+     * @since Android 1.0
      */
     public final static int HTTP_GATEWAY_TIMEOUT = 504;
 
     /**
      * Numeric status code, 410: Gone
+     * 
+     * @since Android 1.0
      */
     public final static int HTTP_GONE = 410;
 
     /**
      * Numeric status code, 500: Internal error
+     * 
+     * @since Android 1.0
      */
     public final static int HTTP_INTERNAL_ERROR = 500;
 
     /**
      * Numeric status code, 411: Length required
+     * 
+     * @since Android 1.0
      */
     public final static int HTTP_LENGTH_REQUIRED = 411;
 
     /**
      * Numeric status code, 301 Moved permanently
+     * 
+     * @since Android 1.0
      */
     public final static int HTTP_MOVED_PERM = 301;
 
     /**
      * Numeric status code, 302: Moved temporarily
+     * 
+     * @since Android 1.0
      */
     public final static int HTTP_MOVED_TEMP = 302;
 
     /**
      * Numeric status code, 300: Multiple choices
+     * 
+     * @since Android 1.0
      */
     public final static int HTTP_MULT_CHOICE = 300;
 
     /**
      * Numeric status code, 204: No content
+     * 
+     * @since Android 1.0
      */
     public final static int HTTP_NO_CONTENT = 204;
 
     /**
      * Numeric status code, 406: Not acceptable
+     * 
+     * @since Android 1.0
      */
     public final static int HTTP_NOT_ACCEPTABLE = 406;
 
     /**
      * Numeric status code, 203: Not authoritative
+     * 
+     * @since Android 1.0
      */
     public final static int HTTP_NOT_AUTHORITATIVE = 203;
 
     /**
      * Numeric status code, 404: Not found
+     * 
+     * @since Android 1.0
      */
     public final static int HTTP_NOT_FOUND = 404;
 
     /**
      * Numeric status code, 501: Not implemented
+     * 
+     * @since Android 1.0
      */
     public final static int HTTP_NOT_IMPLEMENTED = 501;
 
     /**
      * Numeric status code, 304: Not modified
+     * 
+     * @since Android 1.0
      */
     public final static int HTTP_NOT_MODIFIED = 304;
 
     /**
      * Numeric status code, 200: OK
+     * 
+     * @since Android 1.0
      */
     public final static int HTTP_OK = 200;
 
     /**
      * Numeric status code, 206: Partial
+     * 
+     * @since Android 1.0
      */
     public final static int HTTP_PARTIAL = 206;
 
     /**
      * Numeric status code, 402: Payment required
+     * 
+     * @since Android 1.0
      */
     public final static int HTTP_PAYMENT_REQUIRED = 402;
 
     /**
      * Numeric status code, 412: Precondition failed
+     * 
+     * @since Android 1.0
      */
     public final static int HTTP_PRECON_FAILED = 412;
 
     /**
      * Numeric status code, 407: Proxy authentication required
+     * 
+     * @since Android 1.0
      */
     public final static int HTTP_PROXY_AUTH = 407;
 
     /**
      * Numeric status code, 414: Request too long
+     * 
+     * @since Android 1.0
      */
     public final static int HTTP_REQ_TOO_LONG = 414;
 
     /**
      * Numeric status code, 205: Reset
+     * 
+     * @since Android 1.0
      */
     public final static int HTTP_RESET = 205;
 
     /**
      * Numeric status code, 303: See other
+     * 
+     * @since Android 1.0
      */
     public final static int HTTP_SEE_OTHER = 303;
 
     /**
+     * Numeric status code, 500: Internal error
+     * 
      * @deprecated Use {@link #HTTP_INTERNAL_ERROR}
+     * @since Android 1.0
      */
     @Deprecated
     public final static int HTTP_SERVER_ERROR = 500;
 
     /**
      * Numeric status code, 305: Use proxy
+     * 
+     * @since Android 1.0
      */
     public final static int HTTP_USE_PROXY = 305;
 
     /**
      * Numeric status code, 401: Unauthorized
+     * 
+     * @since Android 1.0
      */
     public final static int HTTP_UNAUTHORIZED = 401;
 
     /**
      * Numeric status code, 415: Unsupported type
+     * 
+     * @since Android 1.0
      */
     public final static int HTTP_UNSUPPORTED_TYPE = 415;
 
     /**
      * Numeric status code, 503: Unavailable
+     * 
+     * @since Android 1.0
      */
     public final static int HTTP_UNAVAILABLE = 503;
 
     /**
      * Numeric status code, 505: Version not supported
+     * 
+     * @since Android 1.0
      */
     public final static int HTTP_VERSION = 505;
 
     /**
-     * Constructs a <code>HttpURLConnection</code> pointing to the resource
-     * specified by the <code>URL</code>.
+     * Constructs a new {@code HttpURLConnection} instance pointing to the
+     * resource specified by the {@code url}.
      * 
      * @param url
-     *            the URL of this connection
-     * 
+     *            the URL of this connection.
      * @see URL
      * @see URLConnection
+     * @since Android 1.0
      */
     protected HttpURLConnection(URL url) {
         super(url);
     }
 
     /**
-     * Closes the connection with the HTTP server
+     * Closes the connection to the HTTP server.
      * 
      * @see URLConnection#connect()
      * @see URLConnection#connected
+     * @since Android 1.0
      */
     public abstract void disconnect();
 
     /**
-     * Returns a input stream from the server in the case of error such as the
-     * requested file (txt, htm, html) is not found on the remote server.
-     * <p>
-     * If the content type is not what stated above,
-     * <code>FileNotFoundException</code> is thrown.
+     * Returns an input stream from the server in the case of an error such as
+     * the requested file has not been found on the remote server. This stream
+     * can be used to read the data the server will send back.
      * 
      * @return the error input stream returned by the server.
+     * @since Android 1.0
      */
     public java.io.InputStream getErrorStream() {
         return null;
     }
 
     /**
-     * Returns the value of <code>followRedirects</code> which indicates if
-     * this connection will follows a different URL redirected by the server. It
-     * is enabled by default.
+     * Returns the value of {@code followRedirects} which indicates if this
+     * connection follows a different URL redirected by the server. It is
+     * enabled by default.
      * 
-     * @return The value of the flag
-     * 
+     * @return the value of the flag.
      * @see #setFollowRedirects
+     * @since Android 1.0
      */
     public static boolean getFollowRedirects() {
         return followRedirects;
     }
 
     /**
-     * Returns the permission object (in this case, SocketPermission) with the
-     * host and the port number as the target name and "resolve, connect" as the
-     * action list.
+     * Returns the permission object (in this case {@code SocketPermission})
+     * with the host and the port number as the target name and {@code
+     * "resolve, connect"} as the action list. If the port number of this URL
+     * instance is lower than {@code 0} the port will be set to {@code 80}.
      * 
-     * @return the permission object required for this connection
-     * 
+     * @return the permission object required for this connection.
      * @throws IOException
      *             if an IO exception occurs during the creation of the
      *             permission object.
+     * @since Android 1.0
      */
     @Override
     public java.security.Permission getPermission() throws IOException {
@@ -313,24 +429,23 @@ public abstract class HttpURLConnection extends URLConnection {
      * remote HTTP server. All possible methods of this HTTP implementation is
      * listed in the class definition.
      * 
-     * @return the request method string
-     * 
+     * @return the request method string.
      * @see #method
      * @see #setRequestMethod
+     * @since Android 1.0
      */
     public String getRequestMethod() {
         return method;
     }
 
     /**
-     * Returns the response code returned by the remote HTTP server
+     * Returns the response code returned by the remote HTTP server.
      * 
-     * @return the response code, -1 if no valid response code
-     * 
+     * @return the response code, -1 if no valid response code.
      * @throws IOException
      *             if there is an IO error during the retrieval.
-     * 
      * @see #getResponseMessage
+     * @since Android 1.0
      */
     public int getResponseCode() throws IOException {
         // Call getInputStream() first since getHeaderField() doesn't return
@@ -357,15 +472,13 @@ public abstract class HttpURLConnection extends URLConnection {
     }
 
     /**
-     * Returns the response message returned the remote HTTP server
+     * Returns the response message returned by the remote HTTP server.
      * 
-     * @return the response message. <code>null</code> if such response exists
-     * 
+     * @return the response message. {@code null} if no such response exists.
      * @throws IOException
-     *             if there is an IO error during the retrieval.
-     * 
+     *             if there is an error during the retrieval.
      * @see #getResponseCode()
-     * @see IOException
+     * @since Android 1.0
      */
     public String getResponseMessage() throws IOException {
         if (responseMessage != null) {
@@ -378,12 +491,12 @@ public abstract class HttpURLConnection extends URLConnection {
     /**
      * Sets the flag of whether this connection will follow redirects returned
      * by the remote server. This method can only be called with the permission
-     * from the security manager
+     * from the security manager.
      * 
      * @param auto
-     *            The value to set
-     * 
-     * @see java.lang.SecurityManager#checkSetFactory()
+     *            the value to enable or disable this option.
+     * @see SecurityManager#checkSetFactory()
+     * @since Android 1.0
      */
     public static void setFollowRedirects(boolean auto) {
         SecurityManager security = System.getSecurityManager();
@@ -398,14 +511,13 @@ public abstract class HttpURLConnection extends URLConnection {
      * This method can only be called before the connection is made.
      * 
      * @param method
-     *            The <code>non-null</code> string representing the method
-     * 
+     *            the string representing the method to be used.
      * @throws ProtocolException
-     *             Thrown when this is called after connected, or the method is
-     *             not supported by this HTTP implementation.
-     * 
+     *             if this is called after connected, or the method is not
+     *             supported by this HTTP implementation.
      * @see #getRequestMethod()
      * @see #method
+     * @since Android 1.0
      */
     public void setRequestMethod(String method) throws ProtocolException {
         if (connected) {
@@ -424,43 +536,50 @@ public abstract class HttpURLConnection extends URLConnection {
     }
 
     /**
-     * Returns if this connection uses proxy.
+     * Returns whether this connection uses a proxy server or not.
      * 
-     * @return true if this connection supports proxy, false otherwise.
+     * @return {@code true} if this connection passes a proxy server, false
+     *         otherwise.
+     * @since Android 1.0
      */
     public abstract boolean usingProxy();
 
     /**
-     * Returns if this connection follows redirects.
+     * Returns whether this connection follows redirects.
      * 
-     * @return true if this connection follows redirects, false otherwise.
+     * @return {@code true} if this connection follows redirects, false
+     *         otherwise.
+     * @since Android 1.0
      */
     public boolean getInstanceFollowRedirects() {
         return instanceFollowRedirects;
     }
 
     /**
-     * Sets if this connection follows redirects.
+     * Sets whether this connection follows redirects.
      * 
      * @param followRedirects
-     *            true if this connection should follows redirects, false
+     *            {@code true} if this connection will follows redirects, false
      *            otherwise.
+     * @since Android 1.0
      */
     public void setInstanceFollowRedirects(boolean followRedirects) {
         instanceFollowRedirects = followRedirects;
     }
 
     /**
-     * Returns the date value in the form of milliseconds since epoch
-     * corresponding to the field <code>field</code>. Returns
-     * <code>defaultValue</code> if no such field can be found in the response
-     * header.
+     * Returns the date value in milliseconds since {@code 01.01.1970, 00:00h}
+     * corresponding to the header field {@code field}. The {@code defaultValue}
+     * will be returned if no such field can be found in the response header.
      * 
      * @param field
-     *            the field in question
+     *            the header field name.
      * @param defaultValue
-     *            the default value if no field is found
-     * @return milliseconds since epoch
+     *            the default value to use if the specified header field wont be
+     *            found.
+     * @return the header field represented in milliseconds since January 1,
+     *         1970 GMT.
+     * @since Android 1.0
      */
     @Override
     public long getHeaderFieldDate(String field, long defaultValue) {
@@ -468,17 +587,18 @@ public abstract class HttpURLConnection extends URLConnection {
     }
 
     /**
-     * If length of a HTTP request body is known ahead, sets fixed length to
+     * If the length of a HTTP request body is known ahead, sets fixed length to
      * enable streaming without buffering. Sets after connection will cause an
      * exception.
      * 
      * @see #setChunkedStreamingMode
      * @param contentLength
-     *            the fixed length of the HTTP request body
+     *            the fixed length of the HTTP request body.
      * @throws IllegalStateException
-     *             if already connected or other mode already set
+     *             if already connected or an other mode already set.
      * @throws IllegalArgumentException
-     *             if contentLength is less than zero
+     *             if {@code contentLength} is less than zero.
+     * @since Android 1.0
      */
     public void setFixedLengthStreamingMode(int contentLength) {
         if (super.connected) {
@@ -494,16 +614,17 @@ public abstract class HttpURLConnection extends URLConnection {
     }
 
     /**
-     * If length of a HTTP request body is NOT known ahead, enable chunked
-     * transfer encoding to enable streaming without buffering. Notice that not
-     * all http servers support this mode. Sets after connection will cause an
+     * If the length of a HTTP request body is NOT known ahead, enable chunked
+     * transfer encoding to enable streaming with buffering. Notice that not all
+     * http servers support this mode. Sets after connection will cause an
      * exception.
      * 
      * @see #setFixedLengthStreamingMode
      * @param chunklen
-     *            the length of a chunk
+     *            the length of a chunk.
      * @throws IllegalStateException
-     *             if already connected or other mode already set
+     *             if already connected or an other mode already set.
+     * @since Android 1.0
      */
     public void setChunkedStreamingMode(int chunklen) {
         if (super.connected) {

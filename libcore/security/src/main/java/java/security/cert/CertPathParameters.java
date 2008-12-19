@@ -15,21 +15,23 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package java.security.cert;
 
 /**
- * @com.intel.drl.spec_ref
- * 
+ * The interface specification for certification path algorithm parameters.
+ * <p>
+ * This interface is for grouping purposes of {@code CertPath} parameter
+ * implementations.
+ * </p>
+ * @since Android 1.0
  */
 public interface CertPathParameters extends Cloneable {
 
     /**
-     * @com.intel.drl.spec_ref
+     * Clones this {@code CertPathParameters} instance.
+     * 
+     * @return the cloned instance.
+     * @since Android 1.0
      */
     public Object clone();
 }

@@ -16,15 +16,30 @@
 
 package org.apache.harmony.luni.tests.java.net;
 
+import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 
 import junit.framework.TestCase;
 
+@TestTargetClass(URI.class) 
 public class URITest extends TestCase {
     /**
      * @tests java.net.URI(java.lang.String)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NullPointerException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "URI",
+          methodArgs = {String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() throws URISyntaxException {
         // Regression test for HARMONY-23
         try {
@@ -61,6 +76,15 @@ public class URITest extends TestCase {
     /**
      * @tests java.net.URI(java.lang.String, java.lang.String, java.lang.String)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions checked only.",
+      targets = {
+        @TestTarget(
+          methodName = "URI",
+          methodArgs = {String.class, String.class, String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_StringLjava_lang_StringLjava_lang_String() {
         // scheme can not be empty string    
         try {
@@ -75,6 +99,15 @@ public class URITest extends TestCase {
     /**
      * @tests java.net.URI#relativize(java.net.URI)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NullPointerException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "relativize",
+          methodArgs = {URI.class}
+        )
+    })
     public void test_relativizeLjava_net_URI() throws URISyntaxException{
         URI a = new URI("http://host/dir");
         URI b = new URI("http://host/dir/file?query");        
@@ -97,6 +130,15 @@ public class URITest extends TestCase {
                 new URI("file:///~/first"), b.relativize(a));
     }
     
+@TestInfo(
+          level = TestLevel.PARTIAL,
+          purpose = "NullPointerException checking missed.",
+          targets = {
+            @TestTarget(
+              methodName = "relativize",
+              methodArgs = {URI.class}
+            )
+        })
     public void test_relativizeBasedOneEclipseCoreResources() throws URISyntaxException {
         URI one = new URI("file:/C:/test/ws");
         URI two = new URI("file:/C:/test/ws");
@@ -116,6 +158,15 @@ public class URITest extends TestCase {
     /**
      * @tests java.net.URI#compareTo(java.net.URI)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "ClassCastException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "compareTo",
+          methodArgs = {URI.class}
+        )
+    })
     public void test_compareToLjava_net_URI() throws URISyntaxException{
         URI uri1, uri2;
 

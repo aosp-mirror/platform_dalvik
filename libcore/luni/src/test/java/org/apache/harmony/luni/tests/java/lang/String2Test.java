@@ -17,9 +17,15 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.io.UnsupportedEncodingException;
 import java.util.Locale;
 
+@TestTargetClass(String.class) 
 public class String2Test extends junit.framework.TestCase {
 
     String hw1 = "HelloWorld";
@@ -45,6 +51,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#String()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "String",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_Constructor() {
         // Test for method java.lang.String()
         assertTrue("Created incorrect string", new String().equals(""));
@@ -53,6 +68,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#String(byte[])
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "String",
+          methodArgs = {byte[].class}
+        )
+    })
     public void test_Constructor$B() {
         // Test for method java.lang.String(byte [])
         assertTrue("Failed to create string", new String(hw1.getBytes())
@@ -62,6 +86,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#String(byte[], int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "String",
+          methodArgs = {byte[].class, int.class}
+        )
+    })
     @SuppressWarnings("deprecation")
     public void test_Constructor$BI() {
         // Test for method java.lang.String(byte [], int)
@@ -74,6 +107,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#String(byte[], int, int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "String",
+          methodArgs = {byte[].class, int.class, int.class}
+        )
+    })
     public void test_Constructor$BII() {
         // Test for method java.lang.String(byte [], int, int)
         assertTrue("Failed to create string", new String(hw1.getBytes(), 0, hw1
@@ -91,6 +133,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#String(byte[], int, int, int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "String",
+          methodArgs = {byte[].class, int.class, int.class, int.class}
+        )
+    })
     @SuppressWarnings("deprecation")
     public void test_Constructor$BIII() {
         // Test for method java.lang.String(byte [], int, int, int)
@@ -103,6 +154,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#String(byte[], int, int, java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "String",
+          methodArgs = {byte[].class, int.class, int.class, java.lang.String.class}
+        )
+    })
     public void test_Constructor$BIILjava_lang_String() throws Exception {
         // Test for method java.lang.String(byte [], int, int, java.lang.String)
         String s = null;
@@ -119,6 +179,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#String(byte[], java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "String",
+          methodArgs = {byte[].class, java.lang.String.class}
+        )
+    })
     public void test_Constructor$BLjava_lang_String() {
         // Test for method java.lang.String(byte [], java.lang.String)
         String s = null;
@@ -133,6 +202,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#String(char[])
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "String",
+          methodArgs = {char[].class}
+        )
+    })
     public void test_Constructor$C() {
         // Test for method java.lang.String(char [])
         assertEquals("Failed Constructor test", "World", new String(buf));
@@ -141,6 +219,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#String(char[], int, int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "String",
+          methodArgs = {char[].class, int.class, int.class}
+        )
+    })
     public void test_Constructor$CII() {
         // Test for method java.lang.String(char [], int, int)
         char[] buf = { 'H', 'e', 'l', 'l', 'o', 'W', 'o', 'r', 'l', 'd' };
@@ -159,6 +246,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#String(int[], int, int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "String",
+          methodArgs = {int[].class, int.class, int.class}
+        )
+    })
     public void test_Constructor$III() {
         // Test for method java.lang.String(int [], int, int)
         try {
@@ -172,6 +268,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#String(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "String",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() {
         // Test for method java.lang.String(java.lang.String)
         String s = new String("Hello World");
@@ -182,6 +287,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#String(java.lang.StringBuffer)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "String",
+          methodArgs = {java.lang.StringBuffer.class}
+        )
+    })
     public void test_ConstructorLjava_lang_StringBuffer() {
         // Test for method java.lang.String(java.lang.StringBuffer)
         StringBuffer sb = new StringBuffer();
@@ -193,6 +307,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#charAt(int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IndexOutOfBoundsException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "charAt",
+          methodArgs = {int.class}
+        )
+    })
     public void test_charAtI() {
         // Test for method char java.lang.String.charAt(int)
         assertTrue("Incorrect character returned", hw1.charAt(5) == 'W'
@@ -202,6 +325,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#compareTo(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "compareTo",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_compareToLjava_lang_String() {
         // Test for method int java.lang.String.compareTo(java.lang.String)
         assertTrue("Returned incorrect value for first < second", "aaaaab"
@@ -223,6 +355,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#compareToIgnoreCase(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IndexOutOfBoundsException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "compareToIgnoreCase",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_compareToIgnoreCaseLjava_lang_String() {
         // Test for method int
         // java.lang.String.compareToIgnoreCase(java.lang.String)
@@ -263,6 +404,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#concat(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "concat",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_concatLjava_lang_String() {
         // Test for method java.lang.String
         // java.lang.String.concat(java.lang.String)
@@ -299,6 +449,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#copyValueOf(char[])
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "copyValueOf",
+          methodArgs = {char[].class}
+        )
+    })
     public void test_copyValueOf$C() {
         // Test for method java.lang.String java.lang.String.copyValueOf(char
         // [])
@@ -310,6 +469,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#copyValueOf(char[], int, int)
      */
+     @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "copyValueOf",
+          methodArgs = {char[].class, int.class, int.class}
+        )
+    })
     public void test_copyValueOf$CII() {
         // Test for method java.lang.String java.lang.String.copyValueOf(char
         // [], int, int)
@@ -321,6 +489,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#endsWith(java.lang.String)
      */
+     @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check false.",
+      targets = {
+        @TestTarget(
+          methodName = "endsWith",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_endsWithLjava_lang_String() {
         // Test for method boolean java.lang.String.endsWith(java.lang.String)
         assertTrue("Failed to fine ending string", hw1.endsWith("ld"));
@@ -329,6 +506,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#equals(java.lang.Object)
      */
+     @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check false.",
+      targets = {
+        @TestTarget(
+          methodName = "equals",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_equalsLjava_lang_Object() {
         // Test for method boolean java.lang.String.equals(java.lang.Object)
         assertTrue("String not equal", hw1.equals(hw2) && !(hw1.equals(comp11)));
@@ -337,6 +523,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#equalsIgnoreCase(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check false.",
+      targets = {
+        @TestTarget(
+          methodName = "equalsIgnoreCase",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_equalsIgnoreCaseLjava_lang_String() {
         // Test for method boolean
         // java.lang.String.equalsIgnoreCase(java.lang.String)
@@ -347,6 +542,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#getBytes()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getBytes",
+          methodArgs = {}
+        )
+    })
     public void test_getBytes() {
         // Test for method byte [] java.lang.String.getBytes()
         byte[] sbytes = hw1.getBytes();
@@ -422,6 +626,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#getBytes(int, int, byte[], int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IndexOutOfBoundsException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "getBytes",
+          methodArgs = {int.class, int.class, byte[].class, int.class}
+        )
+    })
     @SuppressWarnings("deprecation")
     public void test_getBytesII$BI() {
         // Test for method void java.lang.String.getBytes(int, int, byte [],
@@ -442,6 +655,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#getBytes(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getBytes",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_getBytesLjava_lang_String() throws Exception {
         // Test for method byte [] java.lang.String.getBytes(java.lang.String)
         byte[] buf = "Hello World".getBytes();
@@ -475,6 +697,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#getChars(int, int, char[], int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IndexOutOfBoundsException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "getChars",
+          methodArgs = {int.class, int.class, char[].class, int.class}
+        )
+    })
     public void test_getCharsII$CI() {
         // Test for method void java.lang.String.getChars(int, int, char [],
         // int)
@@ -487,6 +718,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#hashCode()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "hashCode",
+          methodArgs = {}
+        )
+    })
     public void test_hashCode() {
         // Test for method int java.lang.String.hashCode()
         int hwHashCode = 0;
@@ -506,6 +746,16 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#indexOf(int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check that -1 is returned if there is no such " +
+            "character.",
+      targets = {
+        @TestTarget(
+          methodName = "indexOf",
+          methodArgs = {int.class}
+        )
+    })
     public void test_indexOfI() {
         // Test for method int java.lang.String.indexOf(int)
         assertEquals("Invalid index returned", 1, hw1.indexOf('e'));
@@ -515,6 +765,16 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#indexOf(int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check that -1 is returned if there is no such " +
+            "character.",
+      targets = {
+        @TestTarget(
+          methodName = "indexOf",
+          methodArgs = {int.class, int.class}
+        )
+    })
     public void test_indexOfII() {
         // Test for method int java.lang.String.indexOf(int, int)
         assertEquals("Invalid character index returned", 5, hw1.indexOf('W', 2));
@@ -524,6 +784,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#indexOf(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check that -1 is returned if there is no such character.",
+      targets = {
+        @TestTarget(
+          methodName = "indexOf",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_indexOfLjava_lang_String() {
         // Test for method int java.lang.String.indexOf(java.lang.String)
         assertTrue("Failed to find string", hw1.indexOf("World") > 0);
@@ -533,6 +802,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#indexOf(java.lang.String, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check that -1 is returned if there is no such character.",
+      targets = {
+        @TestTarget(
+          methodName = "indexOf",
+          methodArgs = {java.lang.String.class, int.class}
+        )
+    })
     public void test_indexOfLjava_lang_StringI() {
         // Test for method int java.lang.String.indexOf(java.lang.String, int)
         assertTrue("Failed to find string", hw1.indexOf("World", 0) > 0);
@@ -546,6 +824,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#intern()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "intern",
+          methodArgs = {}
+        )
+    })
     public void test_intern() {
         // Test for method java.lang.String java.lang.String.intern()
         assertTrue("Intern returned incorrect result", hw1.intern() == hw2
@@ -555,6 +842,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#lastIndexOf(int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "lastIndexOf",
+          methodArgs = {int.class}
+        )
+    })
     public void test_lastIndexOfI() {
         // Test for method int java.lang.String.lastIndexOf(int)
         assertEquals("Failed to return correct index", 5, hw1.lastIndexOf('W'));
@@ -566,6 +862,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#lastIndexOf(int, int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "lastIndexOf",
+          methodArgs = {int.class, int.class}
+        )
+    })
     public void test_lastIndexOfII() {
         // Test for method int java.lang.String.lastIndexOf(int, int)
         assertEquals("Failed to return correct index",
@@ -580,6 +885,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#lastIndexOf(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "lastIndexOf",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_lastIndexOfLjava_lang_String() {
         // Test for method int java.lang.String.lastIndexOf(java.lang.String)
         assertEquals("Returned incorrect index", 5, hw1.lastIndexOf("World"));
@@ -590,6 +904,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#lastIndexOf(java.lang.String, int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "lastIndexOf",
+          methodArgs = {java.lang.String.class, int.class}
+        )
+    })
     public void test_lastIndexOfLjava_lang_StringI() {
         // Test for method int java.lang.String.lastIndexOf(java.lang.String,
         // int)
@@ -605,6 +928,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#length()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "length",
+          methodArgs = {}
+        )
+    })
     public void test_length() {
         // Test for method int java.lang.String.length()
         assertEquals("Invalid length returned", 11, comp11.length());
@@ -613,6 +945,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#regionMatches(int, java.lang.String, int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check all cases according to the specification.",
+      targets = {
+        @TestTarget(
+          methodName = "regionMatches",
+          methodArgs = {int.class, java.lang.String.class, int.class, int.class}
+        )
+    })
     public void test_regionMatchesILjava_lang_StringII() {
         // Test for method boolean java.lang.String.regionMatches(int,
         // java.lang.String, int, int)
@@ -628,6 +969,15 @@ public class String2Test extends junit.framework.TestCase {
      * @tests java.lang.String#regionMatches(boolean, int, java.lang.String,
      *        int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check all cases according to the specification.",
+      targets = {
+        @TestTarget(
+          methodName = "regionMatches",
+          methodArgs = {boolean.class, int.class, java.lang.String.class, int.class, int.class}
+        )
+    })
     public void test_regionMatchesZILjava_lang_StringII() {
         // Test for method boolean java.lang.String.regionMatches(boolean, int,
         // java.lang.String, int, int)
@@ -647,6 +997,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#replace(char, char)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check negative case.",
+      targets = {
+        @TestTarget(
+          methodName = "replace",
+          methodArgs = {char.class, char.class}
+        )
+    })
     public void test_replaceCC() {
         // Test for method java.lang.String java.lang.String.replace(char, char)
         assertEquals("Failed replace", "HezzoWorzd", hw1.replace('l', 'z'));
@@ -655,6 +1014,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#replace(CharSequence, CharSequence)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check negative case according to specification.",
+      targets = {
+        @TestTarget(
+          methodName = "replace",
+          methodArgs = {java.lang.CharSequence.class, java.lang.CharSequence.class}
+        )
+    })
     public void test_replaceLjava_langCharSequenceLjava_langCharSequence() {            
         assertEquals("Failed replace", "aaccdd", "aabbdd".replace(
             new StringBuffer("bb"), "cc"));
@@ -667,6 +1035,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#startsWith(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "startsWith",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_startsWithLjava_lang_String() {
         // Test for method boolean java.lang.String.startsWith(java.lang.String)
         assertTrue("Failed to find string", hw1.startsWith("Hello"));
@@ -676,6 +1053,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#startsWith(java.lang.String, int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "startsWith",
+          methodArgs = {java.lang.String.class, int.class}
+        )
+    })
     public void test_startsWithLjava_lang_StringI() {
         // Test for method boolean java.lang.String.startsWith(java.lang.String,
         // int)
@@ -686,6 +1072,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#substring(int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IndexOutOfBoundsException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "substring",
+          methodArgs = {int.class}
+        )
+    })
     public void test_substringI() {
         // Test for method java.lang.String java.lang.String.substring(int)
         assertEquals("Incorrect substring returned", 
@@ -696,6 +1091,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#substring(int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IndexOutOfBoundsException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "substring",
+          methodArgs = {int.class, int.class}
+        )
+    })
     public void test_substringII() {
         // Test for method java.lang.String java.lang.String.substring(int, int)
         assertTrue("Incorrect substring returned", hw1.substring(0, 5).equals(
@@ -707,6 +1111,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#toCharArray()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toCharArray",
+          methodArgs = {}
+        )
+    })
     public void test_toCharArray() {
         // Test for method char [] java.lang.String.toCharArray()
 
@@ -719,6 +1132,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#toLowerCase()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toLowerCase",
+          methodArgs = {}
+        )
+    })
     public void test_toLowerCase() {
         // Test for method java.lang.String java.lang.String.toLowerCase()
         assertTrue("toLowerCase case conversion did not succeed", hwuc
@@ -733,6 +1155,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#toLowerCase(java.util.Locale)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toLowerCase",
+          methodArgs = {java.util.Locale.class}
+        )
+    })
     public void test_toLowerCaseLjava_util_Locale() {
         // Test for method java.lang.String
         // java.lang.String.toLowerCase(java.util.Locale)
@@ -747,6 +1178,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#toString()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toString",
+          methodArgs = {}
+        )
+    })
     public void test_toString() {
         // Test for method java.lang.String java.lang.String.toString()
         assertTrue("Incorrect string returned", hw1.toString().equals(hw1));
@@ -755,6 +1195,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#toUpperCase()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toUpperCase",
+          methodArgs = {}
+        )
+    })
     public void test_toUpperCase() {
         // Test for method java.lang.String java.lang.String.toUpperCase()
         assertTrue("Returned string is not UpperCase", hwlc.toUpperCase()
@@ -770,6 +1219,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#toUpperCase(java.util.Locale)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "toUpperCase",
+          methodArgs = {java.util.Locale.class}
+        )
+    })
     public void test_toUpperCaseLjava_util_Locale() {
         // Test for method java.lang.String
         // java.lang.String.toUpperCase(java.util.Locale)
@@ -784,6 +1242,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#toUpperCase(java.util.Locale)
      */
+    @TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty test.",
+      targets = {
+        @TestTarget(
+          methodName = "toUpperCase",
+          methodArgs = {java.util.Locale.class}
+        )
+    })
     public void test_toUpperCaseLjava_util_Locale_subtest0() {
         // Test for method java.lang.String
         // java.lang.String.toUpperCase(java.util.Locale)
@@ -792,6 +1259,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#trim()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check for string with many spaces, empty string.",
+      targets = {
+        @TestTarget(
+          methodName = "trim",
+          methodArgs = {}
+        )
+    })
     public void test_trim() {
         // Test for method java.lang.String java.lang.String.trim()
         assertTrue("Incorrect string returned", " HelloWorld ".trim().equals(
@@ -801,6 +1277,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#valueOf(char[])
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "valueOf",
+          methodArgs = {char[].class}
+        )
+    })
     public void test_valueOf$C() {
         // Test for method java.lang.String java.lang.String.valueOf(char [])
         assertEquals("Returned incorrect String", 
@@ -810,6 +1295,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#valueOf(char[], int, int)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IndexOutOfBoundsException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "valueOf",
+          methodArgs = {char[].class, int.class, int.class}
+        )
+    })
     public void test_valueOf$CII() {
         // Test for method java.lang.String java.lang.String.valueOf(char [],
         // int, int)
@@ -821,6 +1315,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#valueOf(char)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "valueOf",
+          methodArgs = {char.class}
+        )
+    })
     public void test_valueOfC() {
         // Test for method java.lang.String java.lang.String.valueOf(char)
         for (int i = 0; i < 65536; i++)
@@ -831,6 +1334,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#valueOf(double)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "valueOf",
+          methodArgs = {double.class}
+        )
+    })
     public void test_valueOfD() {
         // Test for method java.lang.String java.lang.String.valueOf(double)
         assertEquals("Incorrect double string returned", "1.7976931348623157E308", String.valueOf(
@@ -840,6 +1352,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#valueOf(float)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "valueOf",
+          methodArgs = {float.class}
+        )
+    })
     public void test_valueOfF() {
         // Test for method java.lang.String java.lang.String.valueOf(float)
         assertTrue("incorrect float string returned--got: "
@@ -856,6 +1377,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#valueOf(int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "valueOf",
+          methodArgs = {int.class}
+        )
+    })
     public void test_valueOfI() {
         // Test for method java.lang.String java.lang.String.valueOf(int)
         assertEquals("returned invalid int string", "1", String.valueOf(1));
@@ -864,6 +1394,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#valueOf(long)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "valueOf",
+          methodArgs = {long.class}
+        )
+    })
     public void test_valueOfJ() {
         // Test for method java.lang.String java.lang.String.valueOf(long)
         assertEquals("returned incorrect long string", "927654321098", String.valueOf(
@@ -873,6 +1412,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#valueOf(java.lang.Object)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check null according to the specification.",
+      targets = {
+        @TestTarget(
+          methodName = "valueOf",
+          methodArgs = {java.lang.Object.class}
+        )
+    })
     public void test_valueOfLjava_lang_Object() {
         // Test for method java.lang.String
         // java.lang.String.valueOf(java.lang.Object)
@@ -883,6 +1431,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#valueOf(boolean)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "valueOf",
+          methodArgs = {boolean.class}
+        )
+    })
     public void test_valueOfZ() {
         // Test for method java.lang.String java.lang.String.valueOf(boolean)
         assertTrue("Incorrect boolean string returned", String.valueOf(false)
@@ -893,6 +1450,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#contentEquals(CharSequence cs)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "NullPointerException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "contentEquals",
+          methodArgs = {java.lang.CharSequence.class}
+        )
+    })
     public void test_contentEqualsLjava_lang_CharSequence() {
         // Test for method java.lang.String java.lang.String.contentEquals(CharSequence cs)
         assertFalse("Incorrect result of compare", "qwerty".contentEquals(""));
@@ -901,6 +1467,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#format(Locale, String, Object[])
      */    
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IllegalFormatException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "format",
+          methodArgs = {java.util.Locale.class, java.lang.String.class, java.lang.Object[].class}
+        )
+    })
     @SuppressWarnings("boxing")
     public void test_format() {
         assertEquals("13% of sum is 0x11", 
@@ -915,6 +1490,15 @@ public class String2Test extends junit.framework.TestCase {
     /**
      * @tests java.lang.String#format(Locale, String, Object...)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IllegalFormatException is not verified.",
+      targets = {
+        @TestTarget(
+          methodName = "format",
+          methodArgs = {java.util.Locale.class, java.lang.String.class, java.lang.Object[].class}
+        )
+    })
     @SuppressWarnings("boxing")
     public void test_format_Locale() {
         Locale l = new Locale("UK");

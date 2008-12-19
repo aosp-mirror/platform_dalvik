@@ -62,11 +62,7 @@ import java.util.*;
  * @param <E> the type of elements held in this collection
  */
 public class CopyOnWriteArraySet<E> extends AbstractSet<E>
-        // BEGIN android-changed
-        // removed Cloneable from list of implemented interfaces
-        // implements Cloneable, java.io.Serializable {
         implements java.io.Serializable {
-        // END android-changed
     private static final long serialVersionUID = 5457747651344034263L;
 
     private final CopyOnWriteArrayList<E> al;
@@ -87,6 +83,7 @@ public class CopyOnWriteArraySet<E> extends AbstractSet<E>
         al = new CopyOnWriteArrayList<E>();
         al.addAllAbsent(c);
     }
+
 
     public int      size()                    { return al.size(); }
     public boolean  isEmpty()                 { return al.isEmpty(); }

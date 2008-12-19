@@ -34,8 +34,10 @@ public class AllTests {
         // $JUnit-BEGIN$
 
         suite.addTestSuite(CertPathTrustManagerParametersTest.class);
-        suite.addTestSuite(HandshakeCompletedEventTest.class);
+//        suite.addTestSuite(HandshakeCompletedEventTest.class);
         suite.addTestSuite(HttpsURLConnectionTest.class);
+//	  suite.addTestSuite(HttpsURLConnectionTest1.class);
+//	  suite.addTestSuite(HttpURLConnectionTest.class);
         suite.addTestSuite(KeyManagerFactory1Test.class);
         suite.addTestSuite(KeyManagerFactory2Test.class);
         suite.addTestSuite(KeyManagerFactorySpiTest.class);

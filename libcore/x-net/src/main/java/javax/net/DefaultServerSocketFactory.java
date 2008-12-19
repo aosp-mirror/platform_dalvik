@@ -27,7 +27,9 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 
 /**
- * Default implementation of javax.net.ServerSocketFactory
+ * Default implementation of javax.net.ServerSocketFactory.
+ * 
+ * @since Android 1.0
  * 
  */
 class DefaultServerSocketFactory extends ServerSocketFactory {

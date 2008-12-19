@@ -17,21 +17,35 @@
 
 package org.apache.harmony.text.tests.java.text;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
+import junit.framework.TestCase;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.InvalidObjectException;
 import java.io.IOException;
+import java.io.InvalidObjectException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-
 import java.text.DateFormat;
 import java.text.DateFormat.Field;
 import java.util.Calendar;
 
-import junit.framework.TestCase;
-
+@TestTargetClass(DateFormat.Field.class) 
 public class DataFormatFieldTest extends TestCase {
 
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Field",
+          methodArgs = {java.lang.String.class, int.class}
+        )
+    })
     public void test_ConstructorLjava_lang_StringLjava_lang_String() {
         // Regression for HARMONY-178
         MyField field = new MyField("day of month", Calendar.ERA);
@@ -66,6 +80,15 @@ public class DataFormatFieldTest extends TestCase {
     /**
      * @tests java.text.DateFormat$Field#Field(java.lang.String, int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Field",
+          methodArgs = {java.lang.String.class, int.class}
+        )
+    })
     public void test_ConstructorLjava_lang_StringI() {
         MyField field = new MyField("a field", Calendar.DAY_OF_WEEK);
 
@@ -82,6 +105,15 @@ public class DataFormatFieldTest extends TestCase {
     /**
      * @tests java.text.DateFormat$Field#Field(java.lang.String, int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Field",
+          methodArgs = {java.lang.String.class, int.class}
+        )
+    })
     public void test_Constructor2() {
         MyField field = new MyField("day of month", Calendar.ERA);
 
@@ -103,6 +135,15 @@ public class DataFormatFieldTest extends TestCase {
     /**
      * @tests java.text.DateFormat$Field#getCalendarField()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getCalendarField",
+          methodArgs = {}
+        )
+    })
     public void test_getCalendarField() {
         // Test for method int getCalendarField()
         assertEquals("Field.AM_PM.getCalendarField() returned the wrong value",
@@ -127,6 +168,15 @@ public class DataFormatFieldTest extends TestCase {
     /**
      * @tests java.text.DateFormat$Field#ofCalendarField(int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "ofCalendarField",
+          methodArgs = {int.class}
+        )
+    })
     public void test_ofCalendarFieldI() {
         // Test for method static java.text.DateFormat.Field
         // ofCalendarField(int)
@@ -165,6 +215,15 @@ public class DataFormatFieldTest extends TestCase {
     /**
      * @tests java.text.DateFormat$Field#readResolve()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "readResolve",
+          methodArgs = {}
+        )
+    })
     public void test_readResolve() {
         // test for method java.lang.Object readResolve()
 

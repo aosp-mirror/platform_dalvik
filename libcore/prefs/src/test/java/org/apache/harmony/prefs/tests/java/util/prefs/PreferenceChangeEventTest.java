@@ -16,6 +16,11 @@
 
 package org.apache.harmony.prefs.tests.java.util.prefs;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.NotSerializableException;
 import java.util.prefs.AbstractPreferences;
 import java.util.prefs.PreferenceChangeEvent;
@@ -28,10 +33,20 @@ import org.apache.harmony.testframework.serialization.SerializationTest;
 /**
  * 
  */
+@TestTargetClass(PreferenceChangeEvent.class)
 public class PreferenceChangeEventTest extends TestCase {
 
     PreferenceChangeEvent event;
 
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Checks exception.",
+      targets = {
+        @TestTarget(
+          methodName = "PreferenceChangeEvent",
+          methodArgs = {java.util.prefs.Preferences.class, java.lang.String.class, java.lang.String.class}
+        )
+    })
     public void testPreferenceChangeEventException() {
         try {
             event = new PreferenceChangeEvent(null, "key", "value");
@@ -40,6 +55,15 @@ public class PreferenceChangeEventTest extends TestCase {
         }
     }
 
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "PreferenceChangeEvent",
+          methodArgs = {java.util.prefs.Preferences.class, java.lang.String.class, java.lang.String.class}
+        )
+    })
     public void testConstructorNullValue() {
         event = new PreferenceChangeEvent(Preferences.userRoot(), "key", null);
         assertEquals("key", event.getKey());
@@ -66,6 +90,15 @@ public class PreferenceChangeEventTest extends TestCase {
         assertSame(Preferences.userRoot(), event.getSource());
     }
 
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "PreferenceChangeEvent",
+          methodArgs = {java.util.prefs.Preferences.class, java.lang.String.class, java.lang.String.class}
+        )
+    })
     public void testConstructor() {
         event = new PreferenceChangeEvent(Preferences.userRoot(), "key",
                 "value");
@@ -75,6 +108,15 @@ public class PreferenceChangeEventTest extends TestCase {
         assertSame(Preferences.userRoot(), event.getSource());
     }
 
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Verifies serialization",
+      targets = {
+        @TestTarget(
+          methodName = "!Serialization",
+          methodArgs = {}
+        )
+    })
     public void testSerialization() throws Exception {
         event = new PreferenceChangeEvent(Preferences.userRoot(), "key",
                 "value");
@@ -85,67 +127,94 @@ public class PreferenceChangeEventTest extends TestCase {
         }
     }
     
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Test is correct, functionality checked in separate Mock class.",
+      targets = {
+        @TestTarget(
+          methodName = "getKey",
+          methodArgs = {}
+        )
+    })
     public void testGetKey() {
-		AbstractPreferences parent = (AbstractPreferences) Preferences
-				.userNodeForPackage(Preferences.class);
+        AbstractPreferences parent = (AbstractPreferences) Preferences
+                .userNodeForPackage(Preferences.class);
 
-		AbstractPreferences pref = (AbstractPreferences) parent.node("mock");
+        AbstractPreferences pref = (AbstractPreferences) parent.node("mock");
 
-		MockPreferenceChangeListener pl = new MockPreferenceChangeListener(
-				MockPreferenceChangeListener.TEST_GET_KEY);
-		pref.addPreferenceChangeListener(pl);
-		try {
-			pref.putInt("key_int", Integer.MAX_VALUE);
-			assertEquals(1, pl.getChanged());
-			assertTrue(pl.getResult());
-			pl.reset();
-		} finally {
-			pref.removePreferenceChangeListener(pl);
-		}
+        MockPreferenceChangeListener pl = new MockPreferenceChangeListener(
+                MockPreferenceChangeListener.TEST_GET_KEY);
+        pref.addPreferenceChangeListener(pl);
+        try {
+            pref.putInt("key_int", Integer.MAX_VALUE);
+            assertEquals(1, pl.getChanged());
+            assertTrue(pl.getResult());
+            pl.reset();
+        } finally {
+            pref.removePreferenceChangeListener(pl);
+        }
     }
     
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Test is correct, functionality checked in separate Mock class.",
+      targets = {
+        @TestTarget(
+          methodName = "getNewValue",
+          methodArgs = {}
+        )
+    })
     public void testGetNewValue() {
-		AbstractPreferences parent = (AbstractPreferences) Preferences
-				.userNodeForPackage(Preferences.class);
+        AbstractPreferences parent = (AbstractPreferences) Preferences
+                .userNodeForPackage(Preferences.class);
 
-		AbstractPreferences pref = (AbstractPreferences) parent.node("mock");
+        AbstractPreferences pref = (AbstractPreferences) parent.node("mock");
 
-		MockPreferenceChangeListener pl = new MockPreferenceChangeListener(
-				MockPreferenceChangeListener.TEST_GET_NEW_VALUE);
-		pref.addPreferenceChangeListener(pl);
-		try {
-			pref.putInt("key_int", Integer.MAX_VALUE);
-			assertEquals(1, pl.getChanged());
-			assertTrue(pl.getResult());
-			pl.reset();
-			
-			pref.putInt("key_int", Integer.MAX_VALUE);
-			assertEquals(1, pl.getChanged());
-			assertTrue(pl.getResult());
-			pl.reset();
-		} finally {
-			pref.removePreferenceChangeListener(pl);
-		}
+        MockPreferenceChangeListener pl = new MockPreferenceChangeListener(
+                MockPreferenceChangeListener.TEST_GET_NEW_VALUE);
+        pref.addPreferenceChangeListener(pl);
+        try {
+            pref.putInt("key_int", Integer.MAX_VALUE);
+            assertEquals(1, pl.getChanged());
+            assertTrue(pl.getResult());
+            pl.reset();
+            
+            pref.putInt("key_int", Integer.MAX_VALUE);
+            assertEquals(1, pl.getChanged());
+            assertTrue(pl.getResult());
+            pl.reset();
+        } finally {
+            pref.removePreferenceChangeListener(pl);
+        }
     }
     
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Test is correct, functionality checked in separate Mock class.",
+      targets = {
+        @TestTarget(
+          methodName = "getNode",
+          methodArgs = {}
+        )
+    })
     public void testGetNode() {
-		AbstractPreferences parent = (AbstractPreferences) Preferences
-				.userNodeForPackage(Preferences.class);
+        AbstractPreferences parent = (AbstractPreferences) Preferences
+                .userNodeForPackage(Preferences.class);
 
-		AbstractPreferences pref = (AbstractPreferences) parent.node("mock");
+        AbstractPreferences pref = (AbstractPreferences) parent.node("mock");
 
-		MockPreferenceChangeListener pl = new MockPreferenceChangeListener(
-				MockPreferenceChangeListener.TEST_GET_NODE);
-		pref.addPreferenceChangeListener(pl);
-		try {
-			pref.putInt("key_int", Integer.MAX_VALUE);
-			assertEquals(1, pl.getChanged());
-			assertTrue(pl.getResult());
-			pl.reset();
+        MockPreferenceChangeListener pl = new MockPreferenceChangeListener(
+                MockPreferenceChangeListener.TEST_GET_NODE);
+        pref.addPreferenceChangeListener(pl);
+        try {
+            pref.putInt("key_int", Integer.MAX_VALUE);
+            assertEquals(1, pl.getChanged());
+            assertTrue(pl.getResult());
+            pl.reset();
 
-		} finally {
-			pref.removePreferenceChangeListener(pl);
-		}
+        } finally {
+            pref.removePreferenceChangeListener(pl);
+        }
     }
 
 }

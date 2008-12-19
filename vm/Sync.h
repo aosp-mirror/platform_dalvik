@@ -79,6 +79,13 @@ void dvmObjectNotifyAll(struct Thread* self, struct Object* obj);
  */
 void dvmThreadSleep(u8 msec, u4 nsec);
 
+/*
+ * Implementation of Thread.interrupt().
+ *
+ * Interrupt a thread.  If it's waiting on a monitor, wake it up.
+ */
+void dvmThreadInterrupt(volatile struct Thread* thread);
+
 /* create a new Monitor struct */
 Monitor* dvmCreateMonitor(struct Object* obj);
 

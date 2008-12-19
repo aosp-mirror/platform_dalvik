@@ -16,6 +16,11 @@
 
 package tests.api.javax.net.ssl;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.security.KeyManagementException;
 import java.security.SecureRandom;
 
@@ -29,6 +34,7 @@ import javax.net.ssl.TrustManager;
 
 import junit.framework.TestCase;
 
+@TestTargetClass(SSLContextSpi.class) 
 public class SSLContextSpiTest extends TestCase {
 
     private class MockSSLContextSpi extends SSLContextSpi {
@@ -102,6 +108,15 @@ public class SSLContextSpiTest extends TestCase {
     /**
      * @tests javax.net.ssl.SSLContextSpi#SSLContextSpi()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "SSLContextSpi",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         try {
             new MockSSLContextSpi();

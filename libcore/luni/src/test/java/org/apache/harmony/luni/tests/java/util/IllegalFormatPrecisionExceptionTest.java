@@ -15,19 +15,34 @@
  */
 package org.apache.harmony.luni.tests.java.util;
 
-import java.io.Serializable;
-import java.util.IllegalFormatPrecisionException;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
+
+import java.io.Serializable;
+import java.util.IllegalFormatPrecisionException;
 
 import org.apache.harmony.testframework.serialization.SerializationTest;
 import org.apache.harmony.testframework.serialization.SerializationTest.SerializableAssert;
 
+@TestTargetClass(IllegalFormatPrecisionException.class) 
 public class IllegalFormatPrecisionExceptionTest extends TestCase {
 
     /**
      * @tests java.util.IllegalFormatPrecisionException#IllegalFormatPrecisionException(int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "IllegalFormatPrecisionException",
+          methodArgs = {int.class}
+        )
+    })
     public void test_illegalFormatPrecisionException() {
         IllegalFormatPrecisionException illegalFormatPrecisionException = new IllegalFormatPrecisionException(
                 Integer.MIN_VALUE);
@@ -38,6 +53,15 @@ public class IllegalFormatPrecisionExceptionTest extends TestCase {
     /**
      * @tests java.util.IllegalFormatPrecisionException#getPrecision()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getPrecision",
+          methodArgs = {}
+        )
+    })
     public void test_getPrecision() {
         int precision = 12345;
         IllegalFormatPrecisionException illegalFormatPrecisionException = new IllegalFormatPrecisionException(
@@ -48,6 +72,15 @@ public class IllegalFormatPrecisionExceptionTest extends TestCase {
     /**
      * @tests method for 'java.util.IllegalFormatPrecisionException#getMessage()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getMessage",
+          methodArgs = {}
+        )
+    })
     public void test_getMessage() {
         int precision = 12345;
         IllegalFormatPrecisionException illegalFormatPrecisionException = new IllegalFormatPrecisionException(
@@ -75,6 +108,15 @@ public class IllegalFormatPrecisionExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization.
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationSelf",
+          methodArgs = {}
+        )
+    })
     public void testSerializationSelf() throws Exception {
 
         SerializationTest.verifySelf(
@@ -84,6 +126,15 @@ public class IllegalFormatPrecisionExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationGolden",
+          methodArgs = {}
+        )
+    })
     public void testSerializationCompatibility() throws Exception {
 
         SerializationTest.verifyGolden(this,

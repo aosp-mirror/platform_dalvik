@@ -17,13 +17,28 @@
 
 package org.apache.harmony.security.tests.java.security;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.security.KeyStoreException;
 
+@TestTargetClass(KeyStoreException.class)
 public class KeyStoreException2Test extends junit.framework.TestCase {
 
     /**
      * @tests java.security.KeyStoreException#KeyStoreException()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "KeyStoreException",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         // Test for method java.security.KeyStoreException()
         KeyStoreException e = new KeyStoreException();
@@ -34,6 +49,15 @@ public class KeyStoreException2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.KeyStoreException#KeyStoreException(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies constructor with one variant of string parameter",
+      targets = {
+        @TestTarget(
+          methodName = "KeyStoreException",
+          methodArgs = {String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() {
         // Test for method java.security.KeyStoreException(java.lang.String)
         KeyStoreException e = new KeyStoreException("test message");

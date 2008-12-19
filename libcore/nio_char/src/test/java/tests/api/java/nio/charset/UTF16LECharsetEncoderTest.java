@@ -16,6 +16,11 @@
 
 package tests.api.java.nio.charset;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestLevel;
+
 import java.nio.CharBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
@@ -23,6 +28,7 @@ import java.nio.charset.Charset;
 /**
  * TODO type def
  */
+@TestTargetClass(java.nio.charset.CharsetEncoder.class)
 public class UTF16LECharsetEncoderTest extends CharsetEncoderTest {
 
     // charset for utf-16le
@@ -51,10 +57,28 @@ public class UTF16LECharsetEncoderTest extends CharsetEncoderTest {
         super.tearDown();
     }
 
+@TestInfo(
+      level = TestLevel.TODO,
+      purpose = "Empty constructor test.",
+      targets = {
+        @TestTarget(
+          methodName = "CharsetEncoder",
+          methodArgs = {java.nio.charset.Charset.class, float.class, float.class}
+        )
+    })
     public void testCharsetEncoderCharsetfloatfloat() {
         // this constructor is invalid for UTF16LE CharsetEncoder
     }
 
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IllegalStateException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "canEncode",
+          methodArgs = {char.class}
+        )
+    })
     public void testCanEncodechar() throws CharacterCodingException {
         // normal case for utfCS
         assertTrue(encoder.canEncode('\u0077'));
@@ -64,6 +88,15 @@ public class UTF16LECharsetEncoderTest extends CharsetEncoderTest {
         assertTrue(encoder.canEncode('\uc2c0'));
     }
 
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "IllegalStateException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "canEncode",
+          methodArgs = {java.lang.CharSequence.class}
+        )
+    })
     public void testCanEncodeCharSequence() {
         // normal case for utfCS
         assertTrue(encoder.canEncode("\u0077"));
@@ -82,15 +115,45 @@ public class UTF16LECharsetEncoderTest extends CharsetEncoderTest {
         assertFalse(encoder.canEncode("\ud800\udb00"));
     }
 
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Regression test. IllegalStateException checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "canEncode",
+          methodArgs = {java.lang.CharSequence.class}
+        )
+    })
     public void testCanEncodeICUBug() {
         assertFalse(encoder.canEncode("\ud800"));
     }
 
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "averageBytesPerChar",
+          methodArgs = {}
+        ), @TestTarget(
+          methodName = "maxBytesPerChar",
+          methodArgs = {}
+        )
+    })
     public void testSpecificDefaultValue() {
         assertEquals(2, encoder.averageBytesPerChar(), 0.001);
         assertEquals(2, encoder.maxBytesPerChar(), 0.001);
     }
 
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isLegalReplacement",
+          methodArgs = {byte[].class}
+        )
+    })
     public void testIsLegalReplacementEmptyArray() {
         assertTrue(encoder.isLegalReplacement(new byte[0]));
     }

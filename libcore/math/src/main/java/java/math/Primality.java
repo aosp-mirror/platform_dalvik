@@ -1,20 +1,4 @@
 /*
- * Copyright (C) 2008 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-/*
  *  Licensed to the Apache Software Foundation (ASF) under one or more
  *  contributor license agreements.  See the NOTICE file distributed with
  *  this work for additional information regarding copyright ownership.
@@ -30,17 +14,31 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
 /*
- * Since the original Harmony Code of the BigInteger class was strongly modified,
- * in order to use the more efficient OpenSSL BIGNUM implementation,
- * no android-modification-tags were placed, at all.
+ * Copyright (C) 2008 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
+// BEGIN android-note
+// Since the original Harmony Code of the BigInteger class was strongly modified,
+// in order to use the more efficient OpenSSL BIGNUM implementation,
+// no android-modification-tags were placed, at all.
+// END android-note
 
 package java.math;
 
 import java.util.Arrays;
-import java.util.Random;
 
 class Primality {
 
@@ -96,7 +94,6 @@ class Primality {
         }
     }
 
-
     /* Package Methods */
 
     /**
@@ -115,8 +112,6 @@ class Primality {
         int gapSize = 1024; // for searching of the next probable prime number
         int modules[] = new int[primes.length];
         boolean isDivisible[] = new boolean[gapSize];
-        BigInt startPoint;
-        BigInt probPrime;
         BigInt ni = n.bigInt;
         // If n < "last prime of table" searches next prime in the table
         if (ni.bitLength() <= 10) {
@@ -126,15 +121,12 @@ class Primality {
                 return BIprimes[i];
             }
         }
-        /*
-         * Creates a "N" enough big to hold the next probable prime Note that: N <
-         * "next prime" < 2*N
-         */
-        startPoint = ni.copy();
-        probPrime = new BigInt();
 
-        // To fix N to the "next odd number"
-        ni.addPositiveInt(BigInt.remainderByPositiveInt(ni, 2) + 1);
+        BigInt startPoint = ni.copy();
+        BigInt probPrime = new BigInt();
+
+        // Fix startPoint to "next odd number":
+        startPoint.addPositiveInt(BigInt.remainderByPositiveInt(ni, 2) + 1);
 
 //        // To set the improved certainty of Miller-Rabin
 //        j = startPoint.bitLength();

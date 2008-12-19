@@ -16,19 +16,34 @@
 
 package org.apache.harmony.luni.tests.java.util;
 
-import java.io.Serializable;
-import java.util.IllegalFormatCodePointException;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
+
+import java.io.Serializable;
+import java.util.IllegalFormatCodePointException;
 
 import org.apache.harmony.testframework.serialization.SerializationTest;
 import org.apache.harmony.testframework.serialization.SerializationTest.SerializableAssert;
 
+@TestTargetClass(IllegalFormatCodePointException.class) 
 public class IllegalFormatCodePointExceptionTest extends TestCase {
 
     /**
      * @tests java.util.IllegalFormatCodePointException.IllegalFormatCodePointException(int)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "IllegalFormatCodePointException",
+          methodArgs = {int.class}
+        )
+    })
     public void test_illegalFormatCodePointException() {
         IllegalFormatCodePointException illegalFormatCodePointException = new IllegalFormatCodePointException(
                 -1);
@@ -38,6 +53,15 @@ public class IllegalFormatCodePointExceptionTest extends TestCase {
     /**
      * @tests java.util.IllegalFormatCodePointException.getCodePoint()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getCodePoint",
+          methodArgs = {}
+        )
+    })
     public void test_getCodePoint() {
         int codePoint = 12345;
         IllegalFormatCodePointException illegalFormatCodePointException = new IllegalFormatCodePointException(
@@ -48,6 +72,15 @@ public class IllegalFormatCodePointExceptionTest extends TestCase {
     /**
      * @tests java.util.IllegalFormatCodePointException.getMessage()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getMessage",
+          methodArgs = {}
+        )
+    })
     public void test_getMessage() {
         int codePoint = 12345;
         IllegalFormatCodePointException illegalFormatCodePointException = new IllegalFormatCodePointException(
@@ -74,6 +107,15 @@ public class IllegalFormatCodePointExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization.
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationSelf",
+          methodArgs = {}
+        )
+    })
     public void testSerializationSelf() throws Exception {
 
         SerializationTest.verifySelf(
@@ -83,6 +125,15 @@ public class IllegalFormatCodePointExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "!SerializationGolden",
+          methodArgs = {}
+        )
+    })
     public void testSerializationCompatibility() throws Exception {
 
         SerializationTest.verifyGolden(this,

@@ -20,7 +20,6 @@ import sun.misc.Unsafe;
  */
 public class AtomicBoolean implements java.io.Serializable {
     private static final long serialVersionUID = 4654671469794556979L;
-
     // setup to use Unsafe.compareAndSwapInt for updates
     // BEGIN android-changed
     private static final Unsafe unsafe = UnsafeAccess.THE_ONE;

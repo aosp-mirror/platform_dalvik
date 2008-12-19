@@ -17,53 +17,72 @@
 
 package tests.api.java.io;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass; 
 import java.io.InterruptedIOException;
 
+@TestTargetClass(InterruptedIOException.class) 
 public class InterruptedIOExceptionTest extends junit.framework.TestCase {
 
-	/**
-	 * @tests java.io.InterruptedIOException#InterruptedIOException()
-	 */
-	public void test_Constructor() {
-		// Test for method java.io.InterruptedIOException()
-		try {
-			throw new InterruptedIOException();
-		} catch (InterruptedIOException e) {
-			return;
-		} catch (Exception e) {
-			fail("Exception during InterruptedIOException test"
-					+ e.toString());
-		}
-		fail("Failed to generate exception");
-	}
+    /**
+     * @tests java.io.InterruptedIOException#InterruptedIOException()
+     */
+    @TestInfo(
+            level = TestLevel.COMPLETE,
+            purpose = "",
+            targets = { @TestTarget(methodName = "InterruptedIOException", 
+                                    methodArgs = {})                                    
+            }
+        )    
+    public void test_Constructor() {
+        // Test for method java.io.InterruptedIOException()
+        try {
+            throw new InterruptedIOException();
+        } catch (InterruptedIOException e) {
+            return;
+        } catch (Exception e) {
+            fail("Exception during InterruptedIOException test"
+                    + e.toString());
+        }
+        fail("Failed to generate exception");
+    }
 
-	/**
-	 * @tests java.io.InterruptedIOException#InterruptedIOException(java.lang.String)
-	 */
-	public void test_ConstructorLjava_lang_String() {
-		// Test for method java.io.InterruptedIOException(java.lang.String)
-		try {
-			throw new InterruptedIOException("Some error message");
-		} catch (InterruptedIOException e) {
-			return;
-		} catch (Exception e) {
-			fail("Exception during InterruptedIOException test"
-					+ e.toString());
-		}
-		fail("Failed to generate exception");
-	}
+    /**
+     * @tests java.io.InterruptedIOException#InterruptedIOException(java.lang.String)
+     */
+    @TestInfo(
+            level = TestLevel.COMPLETE,
+            purpose = "",
+            targets = { @TestTarget(methodName = "InterruptedIOException", 
+                                    methodArgs = {java.lang.String.class})                                    
+            }
+        )    
+    public void test_ConstructorLjava_lang_String() {
+        // Test for method java.io.InterruptedIOException(java.lang.String)
+        try {
+            throw new InterruptedIOException("Some error message");
+        } catch (InterruptedIOException e) {
+            return;
+        } catch (Exception e) {
+            fail("Exception during InterruptedIOException test"
+                    + e.toString());
+        }
+        fail("Failed to generate exception");
+    }
 
-	/**
-	 * Sets up the fixture, for example, open a network connection. This method
-	 * is called before a test is executed.
-	 */
-	protected void setUp() {
-	}
+    /**
+     * Sets up the fixture, for example, open a network connection. This method
+     * is called before a test is executed.
+     */
+    protected void setUp() {
+    }
 
-	/**
-	 * Tears down the fixture, for example, close a network connection. This
-	 * method is called after a test is executed.
-	 */
-	protected void tearDown() {
-	}
+    /**
+     * Tears down the fixture, for example, close a network connection. This
+     * method is called after a test is executed.
+     */
+    protected void tearDown() {
+    }
 }

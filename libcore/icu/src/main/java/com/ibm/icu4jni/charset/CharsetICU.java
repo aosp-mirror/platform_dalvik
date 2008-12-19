@@ -15,9 +15,10 @@ import java.nio.charset.CharsetEncoder;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.ibm.icu4jni.common.ErrorCode;
-import com.ibm.icu4jni.converters.NativeConverter;
-
+// BEGIN android-removed
+// import com.ibm.icu4jni.common.ErrorCode;
+// import com.ibm.icu4jni.converters.NativeConverter;
+// END android-removed
 
 
 public final class CharsetICU extends Charset{

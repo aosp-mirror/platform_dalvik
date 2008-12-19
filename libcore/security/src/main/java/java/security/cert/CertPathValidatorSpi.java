@@ -15,30 +15,43 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package java.security.cert;
 
 import java.security.InvalidAlgorithmParameterException;
 
 /**
- * @com.intel.drl.spec_ref
+ * The <i>Service Provider Interface</i> (<b>SPI</b>) for the {@code
+ * CertPathValidator} class to be implemented by security providers.
  * 
+ * @since Android 1.0
  */
-
 public abstract class CertPathValidatorSpi {
 
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code CertPathValidatorSpi} instance.
+     * 
+     * @since Android 1.0
      */
     public CertPathValidatorSpi() {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Validates the {@code CertPath} with the algorithm of this {@code
+     * CertPathValidator} using the specified algorithm parameters.
+     * 
+     * @param certPath
+     *            the certification path to be validated.
+     * @param params
+     *            the certification path validator algorithm parameters.
+     * @return the validation result.
+     * @throws CertPathValidatorException
+     *             if the validation fails, or the algorithm of the specified
+     *             certification path cannot be validated using the algorithm of
+     *             this instance.
+     * @throws InvalidAlgorithmParameterException
+     *             if the specified algorithm parameters cannot be used with
+     *             this algorithm.
+     * @since Android 1.0
      */
     public abstract CertPathValidatorResult engineValidate(CertPath certPath,
             CertPathParameters params) throws CertPathValidatorException,

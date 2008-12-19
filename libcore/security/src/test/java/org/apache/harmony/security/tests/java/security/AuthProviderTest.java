@@ -16,13 +16,18 @@
 
 package org.apache.harmony.security.tests.java.security;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.security.AuthProvider;
 
 import javax.security.auth.Subject;
 import javax.security.auth.callback.CallbackHandler;
 
 import junit.framework.TestCase;
-
+@TestTargetClass(AuthProvider.class)
 public class AuthProviderTest extends TestCase {
 
     protected void setUp() throws Exception {
@@ -36,7 +41,16 @@ public class AuthProviderTest extends TestCase {
     /**
      * @tests java.security.AuthProvider#AuthProvider(String, double, String)
      */
-    
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies all negative variants in the one test case instead of" +
+                  " three tests for each case",
+      targets = {
+        @TestTarget(
+          methodName = "AuthProvider",
+          methodArgs = {java.lang.String.class, double.class, java.lang.String.class}
+        )
+    })
     public void testConstructor() {
         AuthProviderStub ap = new AuthProviderStub("name", 1.0, "info");
         assertEquals("name", ap.getName());

@@ -17,13 +17,28 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import junit.framework.TestCase;
 
+@TestTargetClass(ClassNotFoundException.class) 
 public class ClassNotFoundExceptionTest extends TestCase {
 
     /**
      * @tests java.lang.ClassNotFoundException#ClassNotFoundException()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "ClassNotFoundException",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         ClassNotFoundException e = new ClassNotFoundException();
         assertNull(e.getMessage());
@@ -34,6 +49,15 @@ public class ClassNotFoundExceptionTest extends TestCase {
     /**
      * @tests java.lang.ClassNotFoundException#ClassNotFoundException(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "ClassNotFoundException",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() {
         ClassNotFoundException e = new ClassNotFoundException("fixture");
         assertEquals("fixture", e.getMessage());

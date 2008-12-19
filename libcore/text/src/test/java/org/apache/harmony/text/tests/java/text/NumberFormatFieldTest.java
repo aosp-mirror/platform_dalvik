@@ -16,18 +16,33 @@
  */
 package org.apache.harmony.text.tests.java.text;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InvalidObjectException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.text.*;
+import java.text.NumberFormat;
 
+@TestTargetClass(NumberFormat.Field.class) 
 public class NumberFormatFieldTest extends junit.framework.TestCase {
     /**
      * @tests java.text.NumberFormat$Field#Field(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "Field",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() {
         // protected constructor
         String name = "new number format";
@@ -41,6 +56,15 @@ public class NumberFormatFieldTest extends junit.framework.TestCase {
     /**
      * @tests java.text.NumberFormat$Field#readResolve()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "readResolve",
+          methodArgs = {}
+        )
+    })
     public void test_readResolve() {
         // test for method java.lang.Object readResolve()
 

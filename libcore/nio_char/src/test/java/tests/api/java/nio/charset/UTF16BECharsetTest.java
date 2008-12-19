@@ -16,9 +16,15 @@
 
 package tests.api.java.nio.charset;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestLevel;
+
 /**
  * Test UTF-16BE.
  */
+@TestTargetClass(java.nio.charset.Charset.class)
 public class UTF16BECharsetTest extends AbstractCharsetTestCase {
 
     /**
@@ -34,6 +40,15 @@ public class UTF16BECharsetTest extends AbstractCharsetTestCase {
      * 
      * @see tests.api.java.nio.charset.ConcreteCharsetTest#testEncode_Normal()
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Functional test, text source: AbstractCharsetTestCase.internalTestEncode. Exceptions checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "encode",
+          methodArgs = {java.lang.String.class}
+        )
+    })
     public void testEncode_Normal() {
         String input = "ab\u5D14\u654F";
         byte[] output = new byte[] { 0, 97, 0, 98, 93, 20, 101, 79 };
@@ -45,6 +60,15 @@ public class UTF16BECharsetTest extends AbstractCharsetTestCase {
      * 
      * @see tests.api.java.nio.charset.ConcreteCharsetTest#testDecode_Normal()
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Functional test, text source: AbstractCharsetTestCase.internalTestDecode. Exceptions checking missed.",
+      targets = {
+        @TestTarget(
+          methodName = "decode",
+          methodArgs = {java.nio.ByteBuffer.class}
+        )
+    })
     public void testDecode_Normal() {
         byte[] input = new byte[] { 0, 97, 0, 98, 93, 20, 101, 79 };
         char[] output = "ab\u5D14\u654F".toCharArray();

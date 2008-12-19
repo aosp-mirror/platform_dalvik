@@ -27,10 +27,12 @@ import java.util.NoSuchElementException;
 import org.apache.harmony.security.internal.nls.Messages;
 
 /**
- * Specific PermissionCollection for storing AllPermissions. All instances of
- * AllPermission are equivalent, so it is enough to store a single added
- * instance.
+ * Specific {@code PermissionCollection} for storing {@code AllPermission}s. All
+ * instances of {@code AllPermission} are equivalent, so it is enough to store a
+ * single added instance.
  * 
+ * @see AllPermission
+ * @since Android 1.0
  */
 final class AllPermissionCollection extends PermissionCollection {
 
@@ -46,7 +48,7 @@ final class AllPermissionCollection extends PermissionCollection {
     private transient Permission all;
 
     /**
-     * Adds an AllPermission to the collection.
+     * Adds an {@code AllPermission} to the collection.
      */
     public void add(Permission permission) {
         if (isReadOnly()) {
@@ -60,7 +62,7 @@ final class AllPermissionCollection extends PermissionCollection {
     }
 
     /**
-     * Returns enumeration of the collection.
+     * Returns the enumeration of the collection.
      */
     public Enumeration<Permission> elements() {
         return new SingletonEnumeration<Permission>(all);
@@ -103,23 +105,21 @@ final class AllPermissionCollection extends PermissionCollection {
 
     /**
      * Indicates whether the argument permission is implied by the receiver.
-     * AllPermission objects imply all other permissions.
+     * {@code AllPermission} objects imply all other permissions.
      * 
-     * @return boolean <code>true</code> if the argument permission is implied
-     *         by the receiver, and <code>false</code> if it is not.
+     * @return boolean {@code true} if the argument permission is implied by the
+     *         receiver, and {@code false} if it is not.
      * @param permission
-     *            java.security.Permission the permission to check
+     *            the permission to check.
      */
     public boolean implies(Permission permission) {
         return all != null;
     }
 
     /**
-     * Writes accordingly to expected format:
-     * <dl>
-     * <dt>boolean all_allowed
-     * <dd>This is set to true if this collection is not empty
-     * </dl>
+     * Writes the fields according to expected format, adding the boolean field
+     * {@code all_allowed} which is {@code true} if this collection is not
+     * empty.
      */
     private void writeObject(java.io.ObjectOutputStream out) throws IOException {
         ObjectOutputStream.PutField fields = out.putFields();

@@ -926,7 +926,7 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
     /**
      * Attempts to set the state to reflect a release in exclusive
      * mode.  <p>This method is always invoked by the thread
-     * performing release.
+     * performing release.  
      *
      * <p>The default implementation throws
      * {@link UnsupportedOperationException}
@@ -1795,7 +1795,6 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
          * <li> If interrupted while blocked in step 4, throw InterruptedException
          * </ol>
          * 
-         * 
          * @param nanosTimeout the maximum time to wait, in nanoseconds
          * @return A value less than or equal to zero if the wait has
          * timed out; otherwise an estimate, that
@@ -1846,7 +1845,6 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
          * <li> If timed out while blocked in step 4, return false, else true
          * </ol>
          * 
-         *
          * @param deadline the absolute time to wait until
          * @return <tt>false</tt> if the deadline has
          * elapsed upon return, else <tt>true</tt>.
@@ -1894,8 +1892,6 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
          * <li> If interrupted while blocked in step 4, throw InterruptedException
          * <li> If timed out while blocked in step 4, return false, else true
          * </ol>
-         * 
-         * 
          * 
          * @param time the maximum time to wait
          * @param unit the time unit of the <tt>time</tt> argument.
@@ -2013,11 +2009,9 @@ public abstract class AbstractQueuedSynchronizer implements java.io.Serializable
      * are at it, we do the same for other CASable fields (which could
      * otherwise be done with atomic field updaters).
      */
-
     // BEGIN android-changed
     private static final Unsafe unsafe = UnsafeAccess.THE_ONE;
     // END android-changed
-
     private static final long stateOffset;
     private static final long headOffset;
     private static final long tailOffset;

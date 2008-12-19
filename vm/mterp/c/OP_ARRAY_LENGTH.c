@@ -7,7 +7,7 @@ HANDLE_OPCODE(OP_ARRAY_LENGTH /*vA, vB*/)
         arrayObj = (ArrayObject*) GET_REGISTER(vsrc1);
         ILOGV("|array-length v%d,v%d  (%p)", vdst, vsrc1, arrayObj);
         if (!checkForNullExportPC((Object*) arrayObj, fp, pc))
-            GOTO(exceptionThrown);
+            GOTO_exceptionThrown();
         /* verifier guarantees this is an array reference */
         SET_REGISTER(vdst, arrayObj->length);
     }

@@ -26,6 +26,13 @@ import java.util.zip.ZipInputStream;
 
 import org.apache.harmony.archive.util.Util;
 
+/**
+ * The input stream from which the JAR file to be read may be fetched. It is
+ * used like the {@code ZipInputStream}.
+ * 
+ * @see ZipInputStream
+ * @since Android 1.0
+ */
 public class JarInputStream extends ZipInputStream {
 
     private Manifest manifest;
@@ -43,7 +50,16 @@ public class JarInputStream extends ZipInputStream {
     private OutputStream verStream;
 
     /**
-     * Constructs a new JarInputStream from stream
+     * Constructs a new {@code JarInputStream} from an input stream.
+     * 
+     * @param stream
+     *            the input stream containing the JAR file.
+     * @param verify
+     *            if the file should be verified with a {@code JarVerifier}.
+     * @throws IOException
+     *             If an error occurs reading entries from the input stream.
+     * @see ZipInputStream#ZipInputStream(InputStream)
+     * @since Android 1.0
      */
     public JarInputStream(InputStream stream, boolean verify)
             throws IOException {
@@ -85,32 +101,59 @@ public class JarInputStream extends ZipInputStream {
         }
     }
 
+    /**
+     * Constructs a new {@code JarInputStream} from an input stream.
+     * 
+     * @param stream
+     *            the input stream containing the JAR file.
+     * @throws IOException
+     *             If an error occurs reading entries from the input stream.
+     * @see ZipInputStream#ZipInputStream(InputStream)
+     * @since Android 1.0
+     */
     public JarInputStream(InputStream stream) throws IOException {
         this(stream, true);
     }
 
     /**
-     * Returns the Manifest object associated with this JarInputStream or null
-     * if no manifest entry exists.
+     * Returns the {@code Manifest} object associated with this {@code
+     * JarInputStream} or {@code null} if no manifest entry exists.
      * 
-     * @return java.util.jar.Manifest
+     * @return the MANIFEST specifying the contents of the JAR file.
+     * @since Android 1.0
      */
     public Manifest getManifest() {
         return manifest;
     }
 
     /**
-     * Returns the next JarEntry contained in this stream or null if no more
-     * entries are present.
+     * Returns the next {@code JarEntry} contained in this stream or {@code
+     * null} if no more entries are present.
      * 
-     * @return java.util.jar.JarEntry
-     * @exception java.io.IOException
-     *                If an error occurs while reading the entry
+     * @return the next JAR entry.
+     * @throws IOException
+     *             if an error occurs while reading the entry.
+     * @since Android 1.0
      */
     public JarEntry getNextJarEntry() throws IOException {
         return (JarEntry) getNextEntry();
     }
 
+    /**
+     * Reads up to {@code length} of decompressed data and stores it in
+     * {@code buffer} starting at {@code offset}.
+     * 
+     * @param buffer
+     *            Buffer to store into
+     * @param offset
+     *            offset in buffer to store at
+     * @param length
+     *            number of bytes to store
+     * @return Number of uncompressed bytes read
+     * @throws IOException
+     *             if an IOException occurs.
+     * @since Android 1.0
+     */
     @Override
     public int read(byte[] buffer, int offset, int length) throws IOException {
         if (mEntry != null) {
@@ -145,12 +188,13 @@ public class JarInputStream extends ZipInputStream {
     }
 
     /**
-     * Returns the next ZipEntry contained in this stream or null if no more
-     * entries are present.
+     * Returns the next {@code ZipEntry} contained in this stream or {@code
+     * null} if no more entries are present.
      * 
-     * @return java.util.zip.ZipEntry
-     * @exception java.io.IOException
-     *                If an error occurs while reading the entry
+     * @return the next extracted ZIP entry.
+     * @throws IOException
+     *             if an error occurs while reading the entry.
+     * @since Android 1.0
      */
     @Override
     public ZipEntry getNextEntry() throws IOException {

@@ -26,10 +26,11 @@ import java.io.Serializable;
 import java.lang.reflect.Array;
 
 /**
- * ArrayList is an implementation of List, backed by an array. All optional
- * operations are supported, adding, removing, and replacing. The elements can
- * be any objects.
- * @since 1.2
+ * ArrayList is an implementation of {@link List}, backed by an array. All
+ * optional operations adding, removing, and replacing are supported. The
+ * elements can be any objects.
+ * 
+ * @since Android 1.0
  */
 public class ArrayList<E> extends AbstractList<E> implements List<E>, Cloneable,
         Serializable, RandomAccess {
@@ -42,23 +43,27 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, Cloneable,
     // END android-added
 
     private transient int firstIndex;
-
+    
     private transient int lastIndex;
 
     private transient E[] array;
 
     /**
-     * Constructs a new instance of ArrayList with zero capacity.
+     * Constructs a new instance of {@code ArrayList} with zero capacity.
+     * 
+     * @since Android 1.0
      */
     public ArrayList() {
         this(0);
     }
 
     /**
-     * Constructs a new instance of ArrayList with the specified capacity.
-     *
+     * Constructs a new instance of {@code ArrayList} with the specified
+     * capacity.
+     * 
      * @param capacity
-     *            the initial capacity of this ArrayList
+     *            the initial capacity of this {@code ArrayList}.
+     * @since Android 1.0
      */
     public ArrayList(int capacity) {
         firstIndex = lastIndex = 0;
@@ -70,13 +75,13 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, Cloneable,
     }
 
     /**
-     * Constructs a new instance of ArrayList containing the elements in the
-     * specified collection. The ArrayList will have an initial capacity which
-     * is 110% of the size of the collection. The order of the elements in this
-     * ArrayList is the order they are returned by the collection iterator.
-     *
+     * Constructs a new instance of {@code ArrayList} containing the elements of
+     * the specified collection. The initial size of the {@code ArrayList} will
+     * be 10% higher than the size of the specified collection.
+     * 
      * @param collection
-     *            the collection of elements to add
+     *            the collection of elements to add.
+     * @since Android 1.0
      */
     public ArrayList(Collection<? extends E> collection) {
         int size = collection.size();
@@ -84,7 +89,7 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, Cloneable,
         array = newElementArray(size + (size / 10));
         addAll(collection);
     }
-
+    
     @SuppressWarnings("unchecked")
     private E[] newElementArray(int size) {
         // BEGIN android-added
@@ -97,18 +102,18 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, Cloneable,
     }
 
     /**
-     * Inserts the specified object into this ArrayList at the specified
+     * Inserts the specified object into this {@code ArrayList} at the specified
      * location. The object is inserted before any previous element at the
      * specified location. If the location is equal to the size of this
-     * ArrayList, the object is added at the end.
-     *
+     * {@code ArrayList}, the object is added at the end.
+     * 
      * @param location
-     *            the index at which to insert
+     *            the index at which to insert the object.
      * @param object
-     *            the object to add
-     *
-     * @exception IndexOutOfBoundsException
-     *                when <code>location < 0 || >= size()</code>
+     *            the object to add.
+     * @throws IndexOutOfBoundsException
+     *             when {@code location < 0 || >= size()}
+     * @since Android 1.0
      */
     @Override
     public void add(int location, E object) {
@@ -147,11 +152,12 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, Cloneable,
     }
 
     /**
-     * Adds the specified object at the end of this ArrayList.
-     *
+     * Adds the specified object at the end of this {@code ArrayList}.
+     * 
      * @param object
-     *            the object to add
-     * @return true
+     *            the object to add.
+     * @return always true
+     * @since Android 1.0
      */
     @Override
     public boolean add(E object) {
@@ -164,16 +170,19 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, Cloneable,
     }
 
     /**
-     * Inserts the objects in the specified Collection at the specified location
-     * in this ArrayList. The objects are added in the order they are returned
-     * from the Collection iterator.
-     *
-     * @param location the index at which to insert
-     * @param collection the Collection of objects
-     * @return true if this ArrayList is modified, false otherwise
-     *
-     * @exception IndexOutOfBoundsException when
-     *            <code>location < 0 || > size()</code>
+     * Inserts the objects in the specified collection at the specified location
+     * in this List. The objects are added in the order they are returned from
+     * the collection's iterator.
+     * 
+     * @param location
+     *            the index at which to insert.
+     * @param collection
+     *            the collection of objects.
+     * @return {@code true} if this {@code ArrayList} is modified, {@code false}
+     *         otherwise.
+     * @throws IndexOutOfBoundsException
+     *             when {@code location < 0 || > size()}
+     * @since Android 1.0
      */
     @Override
     public boolean addAll(int location, Collection<? extends E> collection) {
@@ -227,11 +236,13 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, Cloneable,
     }
 
     /**
-     * Adds the objects in the specified Collection to this ArrayList.
-     *
+     * Adds the objects in the specified collection to this {@code ArrayList}.
+     * 
      * @param collection
-     *            the Collection of objects
-     * @return true if this ArrayList is modified, false otherwise
+     *            the collection of objects.
+     * @return {@code true} if this {@code ArrayList} is modified, {@code false}
+     *         otherwise.
+     * @since Android 1.0
      */
     @Override
     public boolean addAll(Collection<? extends E> collection) {
@@ -252,10 +263,11 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, Cloneable,
     }
 
     /**
-     * Removes all elements from this ArrayList, leaving it empty.
-     *
+     * Removes all elements from this {@code ArrayList}, leaving it empty.
+     * 
      * @see #isEmpty
      * @see #size
+     * @since Android 1.0
      */
     @Override
     public void clear() {
@@ -267,12 +279,12 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, Cloneable,
     }
 
     /**
-     * Returns a new ArrayList with the same elements, size and capacity as this
-     * ArrayList.
-     *
-     * @return a shallow copy of this ArrayList
-     *
+     * Returns a new {@code ArrayList} with the same elements, the same size and
+     * the same capacity as this {@code ArrayList}.
+     * 
+     * @return a shallow copy of this {@code ArrayList}
      * @see java.lang.Cloneable
+     * @since Android 1.0
      */
     @Override
     @SuppressWarnings("unchecked")
@@ -287,12 +299,13 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, Cloneable,
     }
 
     /**
-     * Searches this ArrayList for the specified object.
-     *
+     * Searches this {@code ArrayList} for the specified object.
+     * 
      * @param object
-     *            the object to search for
-     * @return true if <code>object</code> is an element of this ArrayList,
-     *         false otherwise
+     *            the object to search for.
+     * @return {@code true} if {@code object} is an element of this
+     *         {@code ArrayList}, {@code false} otherwise
+     * @since Android 1.0
      */
     @Override
     public boolean contains(Object object) {
@@ -313,12 +326,12 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, Cloneable,
     }
 
     /**
-     * Ensures that this ArrayList can hold the specified number of elements
-     * without growing.
-     *
+     * Ensures that after this operation the {@code ArrayList} can hold the
+     * specified number of elements without further growing.
+     * 
      * @param minimumCapacity
-     *            the minimum number of elements that this ArrayList will hold
-     *            before growing
+     *            the minimum capacity asked for.
+     * @since Android 1.0
      */
     public void ensureCapacity(int minimumCapacity) {
         if (array.length < minimumCapacity) {
@@ -330,16 +343,6 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, Cloneable,
         }
     }
 
-    /**
-     * Returns the element at the specified location in this ArrayList.
-     *
-     * @param location
-     *            the index of the element to return
-     * @return the element at the specified index
-     *
-     * @exception IndexOutOfBoundsException
-     *                when <code>location < 0 || >= size()</code>
-     */
     @Override
     public E get(int location) {
         // BEGIN android-changed: slight performance improvement
@@ -438,14 +441,6 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, Cloneable,
         array = newArray;
     }
 
-    /**
-     * Searches this ArrayList for the specified object and returns the index of
-     * the first occurrence.
-     *
-     * @param object
-     *            the object to search for
-     * @return the index of the first occurrence of the object
-     */
     @Override
     public int indexOf(Object object) {
         if (object != null) {
@@ -464,26 +459,11 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, Cloneable,
         return -1;
     }
 
-    /**
-     * Returns if this ArrayList has no elements, a size of zero.
-     *
-     * @return true if this ArrayList has no elements, false otherwise
-     *
-     * @see #size
-     */
     @Override
     public boolean isEmpty() {
         return lastIndex == firstIndex;
     }
 
-    /**
-     * Searches this ArrayList for the specified object and returns the index of
-     * the last occurrence.
-     *
-     * @param object
-     *            the object to search for
-     * @return the index of the last occurrence of the object
-     */
     @Override
     public int lastIndexOf(Object object) {
         if (object != null) {
@@ -503,14 +483,14 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, Cloneable,
     }
 
     /**
-     * Removes the object at the specified location from this ArrayList.
-     *
+     * Removes the object at the specified location from this list.
+     * 
      * @param location
-     *            the index of the object to remove
-     * @return the removed object
-     *
-     * @exception IndexOutOfBoundsException
-     *                when <code>location < 0 || >= size()</code>
+     *            the index of the object to remove.
+     * @return the removed object.
+     * @throws IndexOutOfBoundsException
+     *             when {@code location < 0 || >= size()}
+     * @since Android 1.0
      */
     @Override
     public E remove(int location) {
@@ -546,7 +526,7 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, Cloneable,
         return result;
     }
 
-    // BEGIN android-changed
+    // BEGIN android-added
     /*
      * The remove(Object) implementation from AbstractCollection creates
      * a new Iterator on every remove and ends up calling remove(int).
@@ -560,20 +540,19 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, Cloneable,
         }
         return false;
     }
-    // END android-changed
+    // END android-added
 
     /**
      * Removes the objects in the specified range from the start to the end, but
      * not including the end index.
-     *
+     * 
      * @param start
-     *            the index at which to start removing
+     *            the index at which to start removing.
      * @param end
-     *            the index one past the end of the range to remove
-     *
-     * @exception IndexOutOfBoundsException
-     *                when <code>start < 0, start > end</code> or
-     *                <code>end > size()</code>
+     *            the index one after the end of the range to remove.
+     * @throws IndexOutOfBoundsException
+     *             when {@code start < 0, start > end} or {@code end > size()}
+     * @since Android 1.0
      */
     @Override
     protected void removeRange(int start, int end) {
@@ -602,17 +581,17 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, Cloneable,
     }
 
     /**
-     * Replaces the element at the specified location in this ArrayList with the
-     * specified object.
-     *
+     * Replaces the element at the specified location in this {@code ArrayList}
+     * with the specified object.
+     * 
      * @param location
-     *            the index at which to put the specified object
+     *            the index at which to put the specified object.
      * @param object
-     *            the object to add
-     * @return the previous element at the index
-     *
-     * @exception IndexOutOfBoundsException
-     *                when <code>location < 0 || >= size()</code>
+     *            the object to add.
+     * @return the previous element at the index.
+     * @throws IndexOutOfBoundsException
+     *             when {@code location < 0 || >= size()}
+     * @since Android 1.0
      */
     @Override
     public E set(int location, E object) {
@@ -627,9 +606,10 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, Cloneable,
     }
 
     /**
-     * Returns the number of elements in this ArrayList.
-     *
-     * @return the number of elements in this ArrayList
+     * Returns the number of elements in this {@code ArrayList}.
+     * 
+     * @return the number of elements in this {@code ArrayList}.
+     * @since Android 1.0
      */
     @Override
     public int size() {
@@ -637,9 +617,11 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, Cloneable,
     }
 
     /**
-     * Returns a new array containing all elements contained in this ArrayList.
-     *
-     * @return an array of the elements from this ArrayList
+     * Returns a new array containing all elements contained in this
+     * {@code ArrayList}.
+     * 
+     * @return an array of the elements from this {@code ArrayList}
+     * @since Android 1.0
      */
     @Override
     public Object[] toArray() {
@@ -650,19 +632,20 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, Cloneable,
     }
 
     /**
-     * Returns an array containing all elements contained in this ArrayList. If
-     * the specified array is large enough to hold the elements, the specified
-     * array is used, otherwise an array of the same type is created. If the
-     * specified array is used and is larger than this ArrayList, the array
-     * element following the collection elements is set to null.
-     *
+     * Returns an array containing all elements contained in this
+     * {@code ArrayList}. If the specified array is large enough to hold the
+     * elements, the specified array is used, otherwise an array of the same
+     * type is created. If the specified array is used and is larger than this
+     * {@code ArrayList}, the array element following the collection elements
+     * is set to null.
+     * 
      * @param contents
-     *            the array
-     * @return an array of the elements from this ArrayList
-     *
-     * @exception ArrayStoreException
-     *                when the type of an element in this ArrayList cannot be
-     *                stored in the type of the specified array
+     *            the array.
+     * @return an array of the elements from this {@code ArrayList}.
+     * @throws ArrayStoreException
+     *             when the type of an element in this {@code ArrayList} cannot
+     *             be stored in the type of the specified array.
+     * @since Android 1.0
      */
     @Override
     @SuppressWarnings("unchecked")
@@ -680,9 +663,11 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, Cloneable,
     }
 
     /**
-     * Sets the capacity of this ArrayList to be the same as the size.
-     *
+     * Sets the capacity of this {@code ArrayList} to be the same as the current
+     * size.
+     * 
      * @see #size
+     * @since Android 1.0
      */
     public void trimToSize() {
         int size = size();

@@ -17,43 +17,48 @@
 
 package java.lang;
 
-
 /**
- * This error is thrown when the VM notices that a an attempt is being made to
- * create a new instance of a class which has no visible constructors from the
- * location where new is invoked.
+ * Thrown when the virtual machine notices that a program tries to create a new
+ * instance of a class which has no visible constructors from the location where
+ * {@code new} is invoked.
  * <p>
  * Note that this can only occur when inconsistent class files are being loaded.
+ * </p>
  * 
+ * @since Android 1.0
  */
 public class InstantiationError extends IncompatibleClassChangeError {
     private static final long serialVersionUID = -4885810657349421204L;
 
     /**
-     * Constructs a new instance of this class with its walkback filled in.
+     * Constructs a new {@code InstantiationError} that includes the current
+     * stack trace.
      * 
+     * @since Android 1.0
      */
     public InstantiationError() {
         super();
     }
 
     /**
-     * Constructs a new instance of this class with its walkback and message
-     * filled in.
+     * Constructs a new {@code InstantiationError} with the current stack trace
+     * and the specified detail message.
      * 
      * @param detailMessage
-     *            String The detail message for the exception.
+     *            the detail message for this error.
+     * @since Android 1.0
      */
     public InstantiationError(String detailMessage) {
         super(detailMessage);
     }
 
     /**
-     * Constructs a new instance of this class with its walkback and message
-     * filled in.
+     * Constructs a new {@code InstantiationError} with the current stack trace
+     * and the class that caused this error.
      * 
      * @param clazz
-     *            Class The class which cannot be instantiated.
+     *            the class that can not be instantiated.
+     * @since Android 1.0
      */
     InstantiationError(Class<?> clazz) {
         super(clazz.getName());

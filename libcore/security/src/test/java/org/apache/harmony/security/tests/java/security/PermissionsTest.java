@@ -21,6 +21,12 @@
 */
 
 package org.apache.harmony.security.tests.java.security;
+
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.security.AllPermission;
 import java.security.BasicPermission;
 import java.security.Permission;
@@ -36,8 +42,7 @@ import java.util.NoSuchElementException;
 
 
 import junit.framework.TestCase;
-
-
+@TestTargetClass(Permissions.class)
 /**
  * Tests for <code>Permissions</code>
  * 
@@ -52,6 +57,15 @@ public class PermissionsTest extends TestCase {
     /**
      * Can add any type of permissions. Cannot add if collection is read-only.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "add",
+          methodArgs = {Permission.class}
+        )
+    })
     public void testAdd() {
         Permissions ps = new Permissions();
         Permission ap = new AllPermission();
@@ -87,6 +101,15 @@ public class PermissionsTest extends TestCase {
      * non-empty collection, should always return enumeration over unique
      * elements.
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "elements",
+          methodArgs = {}
+        )
+    })
     public void testElements() {
         Permissions ps = new Permissions();
         Permission ap = new AllPermission();
@@ -135,6 +158,23 @@ public class PermissionsTest extends TestCase {
     /**
      * input parameter is null 
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "implies - non null checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "implies",
+          methodArgs = {Permission.class}
+        ),
+        @TestTarget(
+          methodName = "add",
+          methodArgs = {Permission.class}
+        ),
+        @TestTarget(
+          methodName = "elements",
+          methodArgs = {}
+        )
+    })
     public void testNull(){
         Permissions ps = new Permissions();
         try {

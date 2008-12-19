@@ -18,21 +18,25 @@
 package java.nio.charset;
 
 /**
- * Errors thrown when the encoder/decoder is malfunctioning.
+ * A {@code CoderMalfunctionError} is thrown when the encoder/decoder is
+ * malfunctioning.
+ * 
+ * @since Android 1.0
  */
 public class CoderMalfunctionError extends Error {
 
     /*
-     * This constant is used during deserialization to check the J2SE version
+     * This constant is used during deserialization to check the version
      * which created the serialized object.
      */
     private static final long serialVersionUID = -1151412348057794301L;
 
     /**
-     * Constructs an instance of this error.
+     * Constructs a new {@code CoderMalfunctionError}.
      * 
      * @param ex
-     *            the original exception thrown by the encoder/decoder
+     *            the original exception thrown by the encoder/decoder.
+     * @since Android 1.0
      */
     public CoderMalfunctionError(Exception ex) {
         super(ex);

@@ -15,43 +15,61 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package java.security.cert;
 
 import java.security.InvalidAlgorithmParameterException;
 import java.util.Collection;
 
 /**
- * @com.intel.drl.spec_ref
+ * The <i>Service Provider Interface</i> (<b>SPI</b>) definition for the {@code
+ * CertStore} class to be implemented by security providers.
  * 
+ * @since Android 1.0
  */
-
 public abstract class CertStoreSpi {
+
     /**
-     * @com.intel.drl.spec_ref
+     * Creates a new {@code CertStoreSpi}.
      * 
-     * Parameter 'params' is unusable but required by the spec
+     * @param params
+     *            the initialization parameters.
+     * @throws InvalidAlgorithmParameterException
+     *             if the specified initialization parameters cannot be used to
+     *             initialize this instance.
+     * @since Android 1.0
      */
     public CertStoreSpi(CertStoreParameters params)
             throws InvalidAlgorithmParameterException {
     }
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the list of {@code Certificate}s for the specified {@code
+     * CertSelector} from this instance.
      * 
-     * FIXME: 1.5 updated are needed Collection <? extends Certificate>
+     * @param selector
+     *            the selector containing the criteria to search for
+     *            certificates in this instance.
+     * @return the list of {@code Certificate}s that match the criteria of the
+     *         specified selector.
+     * @throws CertStoreException
+     *             if error(s) occur.
+     * @since Android 1.0
      */
     public abstract Collection<? extends Certificate> engineGetCertificates(CertSelector selector)
             throws CertStoreException;
 
     /**
-     * @com.intel.drl.spec_ref
+     * Returns the list of {@code CRL}s for the specified {@code CRLSelector}
+     * from this instance.
      * 
-     * FIXME: 1.5 updated are needed Collection <? extends CRL>
+     * @param selector
+     *            the selector containing the criteria to search for certificate
+     *            revocation lists in instance.
+     * @return the list of {@code CRL}s that match the criteria of the specified
+     *         selector
+     * @throws CertStoreException
+     *             if error(s) occur.
+     * @since Android 1.0
      */
     public abstract Collection<? extends CRL> engineGetCRLs(CRLSelector selector)
             throws CertStoreException;

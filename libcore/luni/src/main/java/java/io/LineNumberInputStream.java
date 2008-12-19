@@ -17,13 +17,20 @@
 
 package java.io;
 
+// BEGIN android-added
+import org.apache.harmony.luni.util.Msg;
+// END android-added
+
 /**
- * LineNumberInputStream is a filter class which counts the number of line
- * terminators from the data read from the target InputStream. A line delimiter
- * sequence is determined by '\r', '\n', or '\r\n'. When using <code>read</code>,
- * the sequence is always translated into '\n'.
+ * Wraps an existing {@link InputStream} and counts the line terminators
+ * encountered while reading the data. Line numbering starts at 0. Recognized
+ * line terminator sequences are {@code '\r'}, {@code '\n'} and {@code "\r\n"}.
+ * When using {@code read}, line terminator sequences are always translated into
+ * {@code '\n'}.
  * 
  * @deprecated Use {@link LineNumberReader}
+ * 
+ * @since Android 1.0
  */
 @Deprecated
 public class LineNumberInputStream extends FilterInputStream {
@@ -37,28 +44,31 @@ public class LineNumberInputStream extends FilterInputStream {
     private int markedLastChar;
 
     /**
-     * Constructs a new LineNumberInputStream on the InputStream <code>in</code>.
-     * All reads are now filtered through this stream and line numbers will be
-     * counted for all data read from this Stream.
+     * Constructs a new {@code LineNumberInputStream} on the {@link InputStream}
+     * {@code in}. Line numbers are counted for all data read from this stream.
      * 
      * @param in
-     *            The non-null InputStream to count line numbers.
+     *            The non-null input stream to count line numbers.
+     * @since Android 1.0
      */
     public LineNumberInputStream(InputStream in) {
         super(in);
     }
 
     /**
-     * Returns a int representing the number of bytes that are available before
-     * this LineNumberInputStream will block. This method returns the number of
-     * bytes available in the target stream. Since the target input stream may
-     * just be a sequence of <code>\r\n</code> characters and this filter only
-     * returns <code>\n<code> then <code>available</code> can only
-     * guarantee <code>target.available()/2</code> characters.
-     *
-     * @return int the number of bytes available before blocking.
-     *
-     * @throws IOException If an error occurs in this stream.
+     * Returns the number of bytes that are available before this stream will
+     * block.
+     * <p>
+     * Note: The source stream may just be a sequence of {@code "\r\n"} bytes
+     * which are converted into {@code '\n'} by this stream. Therefore,
+     * {@code available} returns only {@code in.available() / 2} bytes as
+     * result.
+     * </p>
+     * 
+     * @return the guaranteed number of bytes available before blocking.
+     * @throws IOException
+     *             if an error occurs in this stream.
+     * @since Android 1.0
      */
     @Override
     public int available() throws IOException {
@@ -66,28 +76,32 @@ public class LineNumberInputStream extends FilterInputStream {
     }
 
     /**
-     * Returns a int representing the current line number for this
-     * LineNumberInputStream.
+     * Returns the current line number for this stream. Numbering starts at 0.
      * 
-     * @return int the current line number.
+     * @return the current line number.
+     * @since Android 1.0
      */
     public int getLineNumber() {
         return lineNumber;
     }
 
     /**
-     * Set a Mark position in this LineNumberInputStream. The parameter
-     * <code>readLimit</code> indicates how many bytes can be read before a
-     * mark is invalidated. Sending reset() will reposition the Stream back to
-     * the marked position provided <code>readLimit</code> has not been
-     * surpassed. The lineNumber count will also be reset to the last marked
-     * lineNumber count.
+     * Sets a mark position in this stream. The parameter {@code readlimit}
+     * indicates how many bytes can be read before the mark is invalidated.
+     * Sending {@code reset()} will reposition this stream back to the marked
+     * position, provided that {@code readlimit} has not been surpassed.
+     * The line number count will also be reset to the last marked
+     * line number count.
      * <p>
-     * This implementation sets a mark in the target stream.
+     * This implementation sets a mark in the filtered stream.
+     * </p>
      * 
      * @param readlimit
-     *            The number of bytes to be able to read before invalidating the
-     *            mark.
+     *            the number of bytes that can be read from this stream before
+     *            the mark is invalidated.
+     * @see #markSupported()
+     * @see #reset()
+     * @since Android 1.0
      */
     @Override
     public void mark(int readlimit) {
@@ -97,18 +111,21 @@ public class LineNumberInputStream extends FilterInputStream {
     }
 
     /**
-     * Reads a single byte from this LineNumberInputStream and returns the
-     * result as an int. The low-order byte is returned or -1 of the end of
-     * stream was encountered. This implementation returns a byte from the
-     * target stream. The line number count is incremented if a line terminator
-     * is encountered. A line delimiter sequence is determined by '\r', '\n', or
-     * '\r\n'. In this method, the sequence is always translated into '\n'.
+     * Reads a single byte from the filtered stream and returns it as an integer
+     * in the range from 0 to 255. Returns -1 if the end of this stream has been
+     * reached.
+     * <p>
+     * The line number count is incremented if a line terminator is encountered.
+     * Recognized line terminator sequences are {@code '\r'}, {@code '\n'} and
+     * {@code "\r\n"}. Line terminator sequences are always translated into
+     * {@code '\n'}.
+     * </p>
      * 
-     * @return int The byte read or -1 if end of stream.
-     * 
+     * @return the byte read or -1 if the end of the filtered stream has been
+     *         reached.
      * @throws IOException
-     *             If the stream is already closed or another IOException
-     *             occurs.
+     *             if the stream is closed or another IOException occurs.
+     * @since Android 1.0
      */
     @Override
     public int read() throws IOException {
@@ -133,42 +150,51 @@ public class LineNumberInputStream extends FilterInputStream {
     }
 
     /**
-     * Reads at most <code>length</code> bytes from this LineNumberInputStream
-     * and stores them in byte array <code>buffer</code> starting at
-     * <code>offset</code>. Answer the number of bytes actually read or -1 if
-     * no bytes were read and end of stream was encountered. This implementation
-     * reads bytes from the target stream. The line number count is incremented
-     * if a line terminator is encountered. A line delimiter sequence is
-     * determined by '\r', '\n', or '\r\n'. In this method, the sequence is
-     * always translated into '\n'.
+     * Reads at most {@code length} bytes from the filtered stream and stores
+     * them in the byte array {@code buffer} starting at {@code offset}.
+     * Returns the number of bytes actually read or -1 if no bytes have been
+     * read and the end of this stream has been reached.
+     * <p>
+     * The line number count is incremented if a line terminator is encountered.
+     * Recognized line terminator sequences are {@code '\r'}, {@code '\n'} and
+     * {@code "\r\n"}. Line terminator sequences are always translated into
+     * {@code '\n'}.
+     * </p>
      * 
      * @param buffer
-     *            the non-null byte array in which to store the read bytes.
+     *            the array in which to store the bytes read.
      * @param offset
-     *            the offset in <code>buffer</code> to store the read bytes.
+     *            the initial position in {@code buffer} to store the bytes read
+     *            from this stream.
      * @param length
-     *            the maximum number of bytes to store in <code>buffer</code>.
-     * @return The number of bytes actually read or -1 if end of stream.
-     * 
+     *            the maximum number of bytes to store in {@code buffer}.
+     * @return the number of bytes actually read or -1 if the end of the
+     *         filtered stream has been reached while reading.
+     * @throws ArrayIndexOutOfBoundsException
+     *             if {@code offset < 0} or {@code length < 0}, or if
+     *             {@code offset + length} is greater than the length of
+     *             {@code buffer}.
      * @throws IOException
-     *             If the stream is already closed or another IOException
-     *             occurs.
+     *             if this stream is closed or another IOException occurs.
      * @throws NullPointerException
-     *             If <code>buffer</code> is <code>null</code>.
-     * @throws IllegalArgumentException
-     *             If <code>offset</code> or <code>count</code> are out of
-     *             bounds.
+     *             if {@code buffer} is {@code null}.
+     * @since Android 1.0
      */
     @Override
     public int read(byte[] buffer, int offset, int length) throws IOException {
+        // BEGIN android-changed
         if (buffer == null) {
-            throw new NullPointerException();
+            throw new NullPointerException(Msg.getString("K0047")); //$NON-NLS-1$
         }
         // avoid int overflow
-        if (offset < 0 || offset > buffer.length || length < 0
-                || length > buffer.length - offset) {
-            throw new ArrayIndexOutOfBoundsException();
+        // Exception priorities (in case of multiple errors) differ from
+        // RI, but are spec-compliant.
+        // removed redundant check, used (offset | length) < 0
+        // instead of (offset < 0) || (length < 0) to safe one operation
+        if ((offset | length) < 0 || length > buffer.length - offset) {
+            throw new ArrayIndexOutOfBoundsException(Msg.getString("K002f")); //$NON-NLS-1$
         }
+        // END android-changed
 
         for (int i = 0; i < length; i++) {
             int currentChar;
@@ -189,15 +215,16 @@ public class LineNumberInputStream extends FilterInputStream {
     }
 
     /**
-     * Reset this LineNumberInputStream to the last marked location. If the
-     * <code>readlimit</code> has been passed or no <code>mark</code> has
-     * been set, throw IOException. This implementation resets the target
-     * stream. It also resets the line count to what is was when this Stream was
-     * marked.
+     * Resets this stream to the last marked location. It also resets the line
+     * count to what is was when this stream was marked.
      * 
      * @throws IOException
-     *             If the stream is already closed or another IOException
-     *             occurs.
+     *             if this stream is already closed, no mark has been set or the
+     *             mark is no longer valid because more than {@code readlimit}
+     *             bytes have been read since setting the mark.
+     * @see #mark(int)
+     * @see #markSupported()
+     * @since Android 1.0
      */
     @Override
     public void reset() throws IOException {
@@ -207,31 +234,36 @@ public class LineNumberInputStream extends FilterInputStream {
     }
 
     /**
-     * Sets the lineNumber of this LineNumberInputStream to the specified
-     * <code>lineNumber</code>. Note that this may have side effects on the
+     * Sets the line number of this stream to the specified
+     * {@code lineNumber}. Note that this may have side effects on the
      * line number associated with the last marked position.
      * 
      * @param lineNumber
      *            the new lineNumber value.
+     * @see #mark(int)
+     * @see #reset()
+     * @since Android 1.0
      */
     public void setLineNumber(int lineNumber) {
         this.lineNumber = lineNumber;
     }
 
     /**
-     * Skips <code>count</code> number of bytes in this InputStream.
-     * Subsequent <code>read()</code>'s will not return these bytes unless
-     * <code>reset()</code> is used. This implementation skips
-     * <code>count</code> number of bytes in the target stream and increments
-     * the lineNumber count as bytes are skipped.
+     * Skips {@code count} number of bytes in this stream. Subsequent
+     * {@code read()}'s will not return these bytes unless {@code reset()} is
+     * used. This implementation skips {@code count} number of bytes in the
+     * filtered stream and increments the line number count whenever line
+     * terminator sequences are skipped.
      * 
      * @param count
      *            the number of bytes to skip.
      * @return the number of bytes actually skipped.
-     * 
      * @throws IOException
-     *             If the stream is already closed or another IOException
-     *             occurs.
+     *             if this stream is closed or another IOException occurs.
+     * @see #mark(int)
+     * @see #read()
+     * @see #reset()
+     * @since Android 1.0
      */
     @Override
     public long skip(long count) throws IOException {

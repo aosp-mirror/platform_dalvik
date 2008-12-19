@@ -24,80 +24,185 @@ import java.util.Enumeration;
 
 
 /**
- * Manipulate DEX files.  Similar in principle to java.util.zip.ZipFile.
- * Used primarily by class loaders.
- *
- * We don't directly open and read the DEX file here.  They're mapped read-only
- * by the VM.
+ * Manipulates DEX files. The class is similar in principle to
+ * {@link java.util.zip.ZipFile}. It is used primarily by class loaders.
+ * <p>
+ * Note we don't directly open and read the DEX file here. They're memory-mapped
+ * read-only by the VM.
+ * 
+ * @since Android 1.0
  */
 public final class DexFile {
     private final int mCookie;
     private String mFileName;
 
     /**
-     * Open a DEX file from a File object.
+     * Opens a DEX file from a given File object. This will usually be a ZIP/JAR
+     * file with a "classes.dex" inside. The method should not be used for files
+     * inside the Dalvik cache.
+     * 
+     * @cts What will happen if we refer to the Dalvik cache? Should be either
+     *      specified or throw an exception...
+     * 
+     * @param file
+     *            the File object referencing the actual DEX file
+     * 
+     * @throws IOException
+     *             if an I/O error occurs, such as the file not being found or
+     *             access rights missing for opening it
      */
     public DexFile(File file) throws IOException {
         this(file.getPath());
     }
 
     /**
-     * Open a DEX file from a filename (preferrably a full path).
-     *
-     * This will usually be a Zip/Jar with a "classes.dex" inside.  Do not
-     * specify the "dalvik-cache" version directly.
+     * Opens a DEX file from a given filename. This will usually be a ZIP/JAR
+     * file with a "classes.dex" inside. The method should not be used for files
+     * inside the Dalvik cache.
+     * 
+     * @cts What will happen if we refer to the Dalvik cache? Should be either
+     *      specified or throw an exception...
+     * 
+     * @param fileName
+     *            the filename of the DEX file
+     * 
+     * @throws IOException
+     *             if an I/O error occurs, such as the file not being found or
+     *             access rights missing for opening it
      */
     public DexFile(String fileName) throws IOException {
         String wantDex = System.getProperty("android.vm.dexfile", "false");
         if (!wantDex.equals("true"))
             throw new UnsupportedOperationException("No dex in this VM");
 
-        mCookie = openDexFile(fileName);
+        mCookie = openDexFile(fileName, null, 0);
         mFileName = fileName;
         //System.out.println("DEX FILE cookie is " + mCookie);
     }
 
     /**
-     * Get the name of the open file.
+     * Opens a DEX file from a given filename, using a specified file
+     * to hold the optimized data.
+     *
+     * @param sourceName
+     *  Jar or APK file with "classes.dex".
+     * @param outputName
+     *  File that will hold the optimized form of the DEX data.
+     * @param flags
+     *  Enable optional features.
+     */
+    private DexFile(String sourceName, String outputName, int flags)
+        throws IOException {
+
+        String wantDex = System.getProperty("android.vm.dexfile", "false");
+        if (!wantDex.equals("true"))
+            throw new UnsupportedOperationException("No dex in this VM");
+
+        mCookie = openDexFile(sourceName, outputName, flags);
+        mFileName = sourceName;
+        //System.out.println("DEX FILE cookie is " + mCookie);
+    }
+
+    /**
+     * Open a DEX file, specifying the file in which the optimized DEX
+     * data should be written.  If the optimized form exists and appears
+     * to be current, it will be used; if not, the VM will attempt to
+     * regenerate it.
+     *
+     * This is intended for use by applications that wish to download
+     * and execute DEX files outside the usual application installation
+     * mechanism.  This function should not be called directly by an
+     * application; instead, use a class loader such as
+     * dalvik.system.DexClassLoader.
+     *
+     * @param sourcePathName
+     *  Jar or APK file with "classes.dex".  (May expand this to include
+     *  "raw DEX" in the future.)
+     * @param outputPathName
+     *  File that will hold the optimized form of the DEX data.
+     * @param flags
+     *  Enable optional features.  (Currently none defined.)
+     * @return
+     *  A new or previously-opened DexFile.
+     * @throws IOException
+     *  If unable to open the source or output file.
+     */
+    static public DexFile loadDex(String sourcePathName, String outputPathName,
+        int flags) throws IOException {
+
+        /*
+         * TODO: we may want to cache previously-opened DexFile objects.
+         * The cache would be synchronized with close().  This would help
+         * us avoid mapping the same DEX more than once when an app
+         * decided to open it multiple times.  In practice this may not
+         * be a real issue.
+         */
+        return new DexFile(sourcePathName, outputPathName, flags);
+    }
+
+    /**
+     * Gets the name of the (already opened) DEX file.
+     * 
+     * @return the file name
      */
     public String getName() {
         return mFileName;
     }
 
     /**
-     * Close a DEX file.
-     *
-     * This may not be able to release any resources.  If classes have
-     * been loaded, the underlying storage can't be discarded.
+     * Closes the DEX file.
+     * <p>
+     * This may not be able to release any resources. If classes have been
+     * loaded, the underlying storage can't be discarded.
+     * 
+     * @throws IOException
+     *             if an I/O error occurs during closing the file, which
+     *             normally should not happen
+     * 
+     * @cts Second sentence is a bit cryptic.
      */
     public void close() throws IOException {
         closeDexFile(mCookie);
     }
 
     /**
-     * Load a class.  Returns the class on success, or a null reference
+     * Loads a class. Returns the class on success, or a {@code null} reference
      * on failure.
-     *
-     * If you are not calling this from a class loader, this is most likely
-     * not going to do what you want.  Use Class.forName() instead.
-     *
-     * "name" should look like "java/lang/String".
-     *
-     * I'm not throwing an exception if the class isn't found because I
-     * don't want to be throwing exceptions wildly every time we load a
-     * class that isn't in the first DEX file we look at.  This method
-     * *will* throw exceptions for anything that isn't ClassNotFoundException.
+     * <p>
+     * If you are not calling this from a class loader, this is most likely not
+     * going to do what you want. Use {@link Class#forName(String)} instead.
+     * <p>
+     * The method does not throw {@link ClassNotFoundException} if the class
+     * isn't found because it isn't feasible to throw exceptions wildly every
+     * time a class is not found in the first DEX file we look at. It will
+     * throw exceptions for other failures, though.
+     * 
+     * @param name
+     *            the class name, which should look like "java/lang/String"
+     * 
+     * @param loader
+     *            the class loader that tries to load the class (in most cases
+     *            the caller of the method
+     * 
+     * @return the {@link Class} object representing the class, or {@code null}
+     *         if the class cannot be loaded
+     * 
+     * @cts Exception comment is a bit cryptic. What exception will be thrown?
      */
     public Class loadClass(String name, ClassLoader loader) {
         return defineClass(name, loader, mCookie,
             null);
             //new ProtectionDomain(name) /*DEBUG ONLY*/);
     }
+    
     native private static Class defineClass(String name, ClassLoader loader,
         int cookie, ProtectionDomain pd);
 
     /**
      * Enumerate the names of the classes in this DEX file.
+     * 
+     * @return an enumeration of names of classes contained in the DEX file, in
+     *         the usual internal form (like "java/lang/String").
      */
     public Enumeration<String> entries() {
         return new DFEnum(this);
@@ -128,7 +233,11 @@ public final class DexFile {
     native private static String[] getClassNameList(int cookie);
 
     /** 
-     * GC helper.
+     * Called when the class is finalized. Makes sure the DEX file is closed.
+     * 
+     * @throws IOException
+     *             if an I/O error occurs during closing the file, which
+     *             normally should not happen
      */
     protected void finalize() throws IOException {
         close();
@@ -138,7 +247,12 @@ public final class DexFile {
      * Open a DEX file.  The value returned is a magic VM cookie.  On
      * failure, an IOException is thrown.
      */
-    native private static int openDexFile(String fileName) throws IOException;
+    native private static int openDexFile(String sourceName, String outputName,
+        int flags) throws IOException;
+
+    /*
+     * Close DEX file.
+     */
     native private static void closeDexFile(int cookie);
 
     /**

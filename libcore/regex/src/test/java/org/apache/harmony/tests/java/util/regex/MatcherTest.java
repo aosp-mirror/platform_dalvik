@@ -20,7 +20,7 @@ package org.apache.harmony.tests.java.util.regex;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestStatus;
+import dalvik.annotation.TestLevel;
 
 import junit.framework.TestCase;
 import java.util.regex.Matcher;
@@ -42,9 +42,9 @@ public class MatcherTest extends TestCase {
             "(((a)|(b))*)aabb", "(((a)|(b))*)aa(b)b", "(((a)|(b))*)a(a(b)b)" };
 
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies appendReplacement(StringBuffer sb, " +
-                    "String replacement) method.",
+            level = TestLevel.PARTIAL,
+            purpose = "Verifies appendReplacement(StringBuffer sb, " +
+                    "String replacement) method. Doesn't verify exceptions.",
             targets = { @TestTarget(methodName = "appendReplacement", 
                                     methodArgs = { java.lang.StringBuffer.class,
                                                    java.lang.String.class })                         
@@ -63,9 +63,9 @@ public class MatcherTest extends TestCase {
     }
 
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies appendReplacement(StringBuffer sb, " +
-                    "String replacement) method.",
+            level = TestLevel.PARTIAL,
+            purpose = "Verifies appendReplacement(StringBuffer sb, " +
+                    "String replacement) method. Doesn\'t verify exceptions.",
             targets = { @TestTarget(methodName = "appendReplacement", 
                                     methodArgs = { java.lang.StringBuffer.class,
                                                    java.lang.String.class })                         
@@ -84,8 +84,8 @@ public class MatcherTest extends TestCase {
     }
 
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies replaceAll(String replacement) method.",
+            level = TestLevel.PARTIAL_OK,
+            purpose = "Verifies replaceAll(String replacement) method.",
             targets = { @TestTarget(methodName = "replaceAll", 
                                     methodArgs = {java.lang.String.class}) 
             }
@@ -104,8 +104,8 @@ public class MatcherTest extends TestCase {
      * test reset(String) method.
      */
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies the reset(CharSequence input) method.",
+            level = TestLevel.COMPLETE,
+            purpose = "Verifies the reset(CharSequence input) method.",
             targets = { @TestTarget(methodName = "reset", 
                                     methodArgs = {java.lang.CharSequence.class})                         
             }
@@ -125,9 +125,10 @@ public class MatcherTest extends TestCase {
     }
 
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies appendReplacement(StringBuffer sb, " +
-                    "String replacement) method with string of slashes as a parameter.",
+            level = TestLevel.PARTIAL,
+            purpose = "Verifies appendReplacement(StringBuffer sb, " +
+                    "String replacement) method with string of slashes as a parameter." +
+                    "Doesn't verify exceptions.",
             targets = { @TestTarget(methodName = "appendReplacement", 
                                     methodArgs = { java.lang.StringBuffer.class,
                                                    java.lang.String.class })                         
@@ -145,8 +146,8 @@ public class MatcherTest extends TestCase {
 
     }
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies replaceFirst(String replacement) method.",
+            level = TestLevel.PARTIAL_OK,
+            purpose = "Verifies replaceFirst(String replacement) method. ",
             targets = { @TestTarget(methodName = "replaceFirst", 
                                     methodArgs = {java.lang.String.class}) 
             }
@@ -160,8 +161,8 @@ public class MatcherTest extends TestCase {
         assertEquals("zzzcatzzzdogzzz", mat.replaceFirst("cat"));
     }
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies pattern() method.",
+            level = TestLevel.COMPLETE,
+            purpose = "Verifies pattern() method.",
             targets = { @TestTarget(methodName = "pattern", 
                                     methodArgs = {})
             }
@@ -183,8 +184,8 @@ public class MatcherTest extends TestCase {
      * test reset() method.
      */
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies the reset() method.",
+            level = TestLevel.COMPLETE,
+            purpose = "Verifies the reset() method. ",
             targets = { @TestTarget(methodName = "reset", 
                                     methodArgs = {})                         
             }
@@ -204,8 +205,8 @@ public class MatcherTest extends TestCase {
      * Class under test for String group(int)
      */
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies group(int group) method.",
+            level = TestLevel.PARTIAL_OK,
+            purpose = "Verifies group(int group) method.",
             targets = { @TestTarget(methodName = "group", 
                                     methodArgs = { int.class })                                            
             }
@@ -254,8 +255,8 @@ public class MatcherTest extends TestCase {
 
     }
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies group() and group(int group) methods.",
+            level = TestLevel.PARTIAL_OK,
+            purpose = "Verifies group() and group(int group) methods.",
             targets = { @TestTarget(methodName = "group", 
                                     methodArgs = {}),
                         @TestTarget(methodName = "group", 
@@ -289,8 +290,8 @@ public class MatcherTest extends TestCase {
     }
 
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies group(int group) method.",
+            level = TestLevel.PARTIAL_OK,
+            purpose = "Verifies group(int group) method.",
             targets = { @TestTarget(methodName = "group", 
                                     methodArgs = { int.class })                                            
             }
@@ -308,8 +309,8 @@ public class MatcherTest extends TestCase {
      * test hasAnchoringBounds() method.
      */
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies that hasAnchoringBounds method returns" +
+            level = TestLevel.COMPLETE,
+            purpose = "Verifies that hasAnchoringBounds method returns" +
                     " correct value.",
             targets = { @TestTarget(methodName = "hasAnchoringBounds", 
                                     methodArgs = {})                         
@@ -338,10 +339,10 @@ public class MatcherTest extends TestCase {
      * test hasTransparentBounds() method.
      */
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies that hasTransparentBound method returns" +
+            level = TestLevel.COMPLETE,
+            purpose = "Verifies that hasTransparentBound method returns" +
                     " correct value.",
-            targets = { @TestTarget(methodName = "hasTransparentBound", 
+            targets = { @TestTarget(methodName = "hasTransparentBounds", 
                                     methodArgs = {})                         
             }
     )  
@@ -368,8 +369,8 @@ public class MatcherTest extends TestCase {
      * test start(int) method.
      */
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies the start(int group) method.",
+            level = TestLevel.PARTIAL_OK,
+            purpose = "Verifies the start(int group) method.",
             targets = { @TestTarget(methodName = "start", 
                                     methodArgs = {int.class})                         
             }
@@ -401,8 +402,8 @@ public class MatcherTest extends TestCase {
      * test end(int) method.
      */
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies the basic functionality of end(int group) method.",
+            level = TestLevel.PARTIAL_OK,
+            purpose = "Verifies the basic functionality of end(int group) method.",
             targets = { @TestTarget(methodName = "end", 
                                     methodArgs = {int.class})                         
             }
@@ -429,8 +430,8 @@ public class MatcherTest extends TestCase {
         }
     }
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies matches() method in miscellaneous cases.",
+            level = TestLevel.PARTIAL_OK,
+            purpose = "Verifies matches() method in miscellaneous cases.",
             targets = { @TestTarget(methodName = "matches", 
                                     methodArgs = {})                                            
             }
@@ -464,8 +465,8 @@ public class MatcherTest extends TestCase {
     }
 
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "Stress test for matches() method.",
+            level = TestLevel.PARTIAL_OK,
+            purpose = "Stress test for matches() method.",
             targets = { @TestTarget(methodName = "matches", 
                                     methodArgs = {})                                            
             }
@@ -510,8 +511,8 @@ public class MatcherTest extends TestCase {
         }
     }
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies matches() and group(int group) methods" +
+            level = TestLevel.PARTIAL_OK,
+            purpose = "Verifies matches() and group(int group) methods" +
                     " for specific pattern.",
             targets = { @TestTarget(methodName = "matches", 
                                     methodArgs = {}),
@@ -540,8 +541,8 @@ public class MatcherTest extends TestCase {
      * test lookingAt() method.
      */
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies that lookingAt() method returns" +
+            level = TestLevel.COMPLETE,
+            purpose = "Verifies that lookingAt() method returns" +
                     " correct value.",
             targets = { @TestTarget(methodName = "lookingAt", 
                                     methodArgs = {})                         
@@ -565,8 +566,8 @@ public class MatcherTest extends TestCase {
      * Class under test for boolean find()
      */
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies that find() method returns" +
+            level = TestLevel.PARTIAL_OK,
+            purpose = "Verifies that find() method returns" +
                     " correct value.",
             targets = { @TestTarget(methodName = "find", 
                                     methodArgs = {})                         
@@ -606,8 +607,9 @@ public class MatcherTest extends TestCase {
      * test find (int) method. Created via modifying method for find
      */
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies the basic functionality of find(int start) method.",
+            level = TestLevel.PARTIAL,
+            purpose = "Verifies the basic functionality of find(int start) " +
+                    "method. Doesn't verify IndexOutOfBoundsException.",
             targets = { @TestTarget(methodName = "find", 
                                     methodArgs = {int.class})                         
             }
@@ -648,9 +650,8 @@ public class MatcherTest extends TestCase {
         }
     }
     @TestInfo(
-            status = TestStatus.TODO,
-            notes = "The test verifies matches() method for predefined " +
-                    "characters in sequence.",
+            level = TestLevel.PARTIAL_OK,
+            purpose = "Verifies matches() method for predefined.",
             targets = { @TestTarget(methodName = "replaceFirst", 
                                     methodArgs = {java.lang.String.class}) 
             }
@@ -667,8 +668,8 @@ public class MatcherTest extends TestCase {
      * test start() method.
      */
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies the start() method.",
+            level = TestLevel.PARTIAL_OK,
+            purpose = "Verifies the start() method.",
             targets = { @TestTarget(methodName = "start", 
                                     methodArgs = {})                         
             }
@@ -697,8 +698,8 @@ public class MatcherTest extends TestCase {
      * test end() method.
      */
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies the basic functionality of end() method.",
+            level = TestLevel.PARTIAL_OK,
+            purpose = "Verifies the basic functionality of end() method. ",
             targets = { @TestTarget(methodName = "end", 
                                     methodArgs = {})                         
             }
@@ -722,8 +723,8 @@ public class MatcherTest extends TestCase {
         }
     }
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies groupCount() method.",
+            level = TestLevel.COMPLETE,
+            purpose = "Verifies groupCount() method.",
             targets = { @TestTarget(methodName = "groupCount", 
                                     methodArgs = {})                                    
             }
@@ -737,8 +738,8 @@ public class MatcherTest extends TestCase {
         }
     }
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies matches() and group(int group) methods" +
+            level = TestLevel.PARTIAL_OK,
+            purpose = "Verifies matches() and group(int group) methods" +
                     " for specific pattern.",
             targets = { @TestTarget(methodName = "matches", 
                                     methodArgs = {}),
@@ -757,8 +758,8 @@ public class MatcherTest extends TestCase {
         }
     }
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies find() method.",
+            level = TestLevel.PARTIAL_OK,
+            purpose = "Verifies find() method.",
             targets = { @TestTarget(methodName = "find", 
                                     methodArgs = {})                         
             }
@@ -774,8 +775,8 @@ public class MatcherTest extends TestCase {
     }
 
     @TestInfo(
-            status = TestStatus.TODO,
-            notes = "The test verifies matches method for input sequence " +
+            level = TestLevel.TODO,
+            purpose = "Verifies matches method for input sequence " +
                     "specified by URL.",
             targets = { @TestTarget(methodName = "matches", 
                                     methodArgs = {})                         
@@ -821,8 +822,8 @@ public class MatcherTest extends TestCase {
 
     }
     @TestInfo(
-            status = TestStatus.TODO,
-            notes = "TODO there is no any testing.",
+            level = TestLevel.TODO,
+            purpose = "TODO there is no any testing.",
             targets = { @TestTarget(methodName = "", 
                                     methodArgs = {})                         
             }
@@ -837,8 +838,8 @@ public class MatcherTest extends TestCase {
     }
 
     @TestInfo(
-            status = TestStatus.TODO,
-            notes = "TODO there is no any testing.",
+            level = TestLevel.TODO,
+            purpose = "DOesn't verify anything.",
             targets = { @TestTarget(methodName = "", 
                                     methodArgs = {})                         
             }
@@ -851,8 +852,8 @@ public class MatcherTest extends TestCase {
     }
 
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies matches() method for " +
+            level = TestLevel.PARTIAL_OK,
+            purpose = "Verifies matches() method for " +
                     "composite pattern groups.",
             targets = { @TestTarget(methodName = "matches", 
                                     methodArgs = {})                         
@@ -879,8 +880,8 @@ public class MatcherTest extends TestCase {
 
     }
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies  matches() method for specific patterns.",
+            level = TestLevel.PARTIAL_OK,
+            purpose = "Verifies  matches() method for specific patterns.",
             targets = { @TestTarget(methodName = "matches", 
                                     methodArgs = {})
             }
@@ -905,8 +906,8 @@ public class MatcherTest extends TestCase {
         assertTrue(Pattern.matches("(aa|bb)?+bb", "aabb"));
     }
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies matches() and group(int group) methods" +
+            level = TestLevel.PARTIAL_OK,
+            purpose = "Verifies matches() and group(int group) methods" +
                     " for specific pattern.",
             targets = { @TestTarget(methodName = "matches", 
                                     methodArgs = {}),
@@ -928,8 +929,8 @@ public class MatcherTest extends TestCase {
         }
     }
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies matches() and group(int group) methods" +
+            level = TestLevel.PARTIAL_OK,
+            purpose = "Verifies matches() and group(int group) methods" +
                     " for specific pattern.",
             targets = { @TestTarget(methodName = "matches", 
                                     methodArgs = {}),
@@ -954,8 +955,8 @@ public class MatcherTest extends TestCase {
     }
 
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies matches() method for case insensitive " +
+            level = TestLevel.PARTIAL_OK,
+            purpose = "Verifies matches() method for case insensitive " +
                     "pattern.",
             targets = { @TestTarget(methodName = "matches", 
                                     methodArgs = {})                                            
@@ -977,8 +978,9 @@ public class MatcherTest extends TestCase {
 
     }
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies quoteReplacement(String s) method.",
+            level = TestLevel.PARTIAL,
+            purpose = "Verifies quoteReplacement(String s) method. " +
+                    "Doesn't check negative cases.",
             targets = { @TestTarget(methodName = "quoteReplacement", 
                                     methodArgs = {java.lang.String.class}) 
             }
@@ -988,8 +990,8 @@ public class MatcherTest extends TestCase {
     }
 
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies matches() and group(int group) methods.",
+            level = TestLevel.PARTIAL_OK,
+            purpose = "Verifies matches() and group(int group) methods.",
             targets = { @TestTarget(methodName = "matches", 
                                     methodArgs = {}),
                         @TestTarget(methodName = "group", 
@@ -1022,8 +1024,9 @@ public class MatcherTest extends TestCase {
 
     }
     @TestInfo(
-            status = TestStatus.TODO,
-            notes = "The test doesn't verify Matcher and should be moved to PatterTest",
+            level = TestLevel.PARTIAL,
+            purpose = "The test doesn't verify Matcher and should be moved " +
+                    "to PatterTest",
             targets = { @TestTarget(methodName = "matches", 
                                     methodArgs = { java.lang.String.class, 
                                                    java.lang.CharSequence.class }) 
@@ -1038,8 +1041,9 @@ public class MatcherTest extends TestCase {
 
     }
     @TestInfo(
-            status = TestStatus.TODO,
-            notes = "The test doesn't verify Matcher and should be moved to PatterTest",
+            level = TestLevel.PARTIAL,
+            purpose = "Doesn't verify Matcher and should be moved " +
+                    "to PatterTest",
             targets = { @TestTarget(methodName = "matches", 
                                     methodArgs = { java.lang.String.class, 
                                                    java.lang.CharSequence.class }) 
@@ -1073,8 +1077,9 @@ public class MatcherTest extends TestCase {
 
     }
     @TestInfo(
-            status = TestStatus.TODO,
-            notes = "The test doesn't verify Matcher and should be moved to PatterTest",
+            level = TestLevel.PARTIAL,
+            purpose = "The test doesn't verify Matcher and should be moved to " +
+                    "PatterTest.",
             targets = { @TestTarget(methodName = "split", 
                                     methodArgs = { java.lang.CharSequence.class, 
                                                    int.class }) 
@@ -1090,8 +1095,8 @@ public class MatcherTest extends TestCase {
     }
 
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies that find() method works correctly " +
+            level = TestLevel.PARTIAL_OK,
+            purpose = "Verifies that find() method works correctly " +
                     "with $ pattern.",
             targets = { @TestTarget(methodName = "find", 
                                     methodArgs = {})                         
@@ -1107,8 +1112,8 @@ public class MatcherTest extends TestCase {
      * Verify if the Matcher can match the input when region is changed
      */
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies matches() method for the specified region.",
+            level = TestLevel.PARTIAL_OK,
+            purpose = "Verifies matches() method for the specified region.",
             targets = { @TestTarget(methodName = "matches", 
                                     methodArgs = {})                                            
             }
@@ -1126,8 +1131,8 @@ public class MatcherTest extends TestCase {
     // Test took ages, now going in steps of 16 code points to speed things up.
     // END android-note
     @TestInfo(
-            status = TestStatus.TODO,
-            notes = "The stress test for matches(String regex) method from String class.",
+            level = TestLevel.PARTIAL,
+            purpose = "The stress test for matches(String regex) method from String class.",
             targets = { @TestTarget(methodName = "matches", 
                                     methodArgs = {java.lang.String.class})                         
             }
@@ -1171,8 +1176,8 @@ public class MatcherTest extends TestCase {
      * Verify if the Matcher behaves correct when region is changed
      */
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies find() method for specified region in " +
+            level = TestLevel.PARTIAL_OK,
+            purpose = "Verifies find() method for specified region in " +
                     "positive case.",
             targets = { @TestTarget(methodName = "find", 
                                     methodArgs = {})                         
@@ -1197,8 +1202,8 @@ public class MatcherTest extends TestCase {
      * changed
      */
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies find() method for specified region in " +
+            level = TestLevel.PARTIAL_OK,
+            purpose = "Verifies find() method for specified region in " +
                     "negative case.",
             targets = { @TestTarget(methodName = "find", 
                                     methodArgs = {})                         
@@ -1220,8 +1225,8 @@ public class MatcherTest extends TestCase {
      * test quoteReplacement(String) method.
      */
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies the quoteReplacement(String s) method.",
+            level = TestLevel.PARTIAL,
+            purpose = "Verifies the quoteReplacement(String s) method.",
             targets = { @TestTarget(methodName = "lookingAt", 
                                     methodArgs = {java.lang.String.class})                         
             }
@@ -1240,8 +1245,8 @@ public class MatcherTest extends TestCase {
      * test regionStart() method.
      */
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies the regionStart() method.",
+            level = TestLevel.COMPLETE,
+            purpose = "Verifies the regionStart() method.",
             targets = { @TestTarget(methodName = "regionStart", 
                                     methodArgs = {})                         
             }
@@ -1264,8 +1269,8 @@ public class MatcherTest extends TestCase {
      * test regionEnd() method.
      */
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies the regionEnd() method.",
+            level = TestLevel.COMPLETE,
+            purpose = "Verifies the regionEnd() method.",
             targets = { @TestTarget(methodName = "regionEnd", 
                                     methodArgs = {})                         
             }
@@ -1288,8 +1293,8 @@ public class MatcherTest extends TestCase {
      * test toMatchResult() method.
      */
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies the toMatchResult method.",
+            level = TestLevel.COMPLETE,
+            purpose = "Verifies the toMatchResult method.",
             targets = { @TestTarget(methodName = "toMatchResult", 
                                     methodArgs = {})                         
             }
@@ -1316,8 +1321,8 @@ public class MatcherTest extends TestCase {
      * test usePattern(Pattern newPattern) method.
      */
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies the usePattern(Pattern newPattern) method.",
+            level = TestLevel.PARTIAL_OK,
+            purpose = "Verifies the usePattern(Pattern newPattern) method.",
             targets = { @TestTarget(methodName = "usePattern", 
                                     methodArgs = {java.util.regex.Pattern.class})                         
             }
@@ -1343,9 +1348,11 @@ public class MatcherTest extends TestCase {
      * test useAchoringBounds() method.
      */
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies useAnchoringBounds method.",
-            targets = { @TestTarget(methodName = " useAnchoringBounds", 
+            level = TestLevel.PARTIAL,
+            purpose = "Verifies useAnchoringBounds method. " +
+                    "The same verification in assert methods for different " +
+                    "cases.",
+            targets = { @TestTarget(methodName = "useAnchoringBounds", 
                                     methodArgs = {boolean.class})                         
             }
     )    
@@ -1369,8 +1376,8 @@ public class MatcherTest extends TestCase {
      * test useTransparentBounds() method.
      */
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies the useTransparentBounds(boolean b) method.",
+            level = TestLevel.COMPLETE,
+            purpose = "Verifies the useTransparentBounds(boolean b) method.",
             targets = { @TestTarget(methodName = "useTransparentBounds", 
                                     methodArgs = {boolean.class})                         
             }
@@ -1406,9 +1413,9 @@ public class MatcherTest extends TestCase {
      * test hitEnd() method.
      */
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies that hitEnd() method returns" +
-                    " correct value.",
+            level = TestLevel.COMPLETE,
+            purpose = "Verifies that hitEnd() method returns" +
+                    " correct value. ",
             targets = { @TestTarget(methodName = "hitEnd", 
                                     methodArgs = {})                         
             }
@@ -1430,8 +1437,8 @@ public class MatcherTest extends TestCase {
      * test requireEnd() method.
      */
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "The test verifies the requireEnd() method.",
+            level = TestLevel.COMPLETE,
+            purpose = "Verifies the requireEnd() method.",
             targets = { @TestTarget(methodName = "requireEnd", 
                                     methodArgs = {})                         
             }
@@ -1458,8 +1465,8 @@ public class MatcherTest extends TestCase {
      * Regression test for HARMONY-674
      */
     @TestInfo(
-            status = TestStatus.LGTM,
-            notes = "Special regression test for matches() method.",
+            level = TestLevel.PARTIAL_OK,
+            purpose = "Special regression test for matches() method.",
             targets = { @TestTarget(methodName = "matches", 
                                     methodArgs = {})
             }

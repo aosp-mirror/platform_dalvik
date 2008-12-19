@@ -17,6 +17,11 @@
 
 package tests.api.javax.net.ssl;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -36,7 +41,7 @@ import junit.framework.TestCase;
  * Tests for TrustManagerFactory class constructors and methods
  * 
  */
-
+@TestTargetClass(TrustManagerFactory.class) 
 public class TrustManagerFactory2Test extends TestCase {
     private static final String srvTrustManagerFactory = "TrustManagerFactory";
     private static final String defaultAlg = "TMF";
@@ -115,6 +120,15 @@ public class TrustManagerFactory2Test extends TestCase {
      * throws NoSuchAlgorithmException when algorithm is not correct;
      * returns TrustManagerFactory object
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getInstance",
+          methodArgs = {String.class}
+        )
+    })
     public void test_getInstanceLjava_lang_String() throws Exception {
         try {
             TrustManagerFactory.getInstance(null);
@@ -152,6 +166,15 @@ public class TrustManagerFactory2Test extends TestCase {
      * throws NoSuchProviderException when provider is available;
      * returns TrustManagerFactory object
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getInstance",
+          methodArgs = {String.class, String.class}
+        )
+    })
     public void test_getInstanceLjava_lang_StringLjava_lang_String() throws Exception {
         try {
             TrustManagerFactory.getInstance(null, mProv.getName());
@@ -218,6 +241,15 @@ public class TrustManagerFactory2Test extends TestCase {
      * throws IllegalArgumentException when provider is null;
      * returns TrustManagerFactory object
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getInstance",
+          methodArgs = {String.class, Provider.class}
+        )
+    })
     public void testLjava_lang_StringLjava_security_Provider() throws Exception {
         try {
             TrustManagerFactory.getInstance(null, mProv);

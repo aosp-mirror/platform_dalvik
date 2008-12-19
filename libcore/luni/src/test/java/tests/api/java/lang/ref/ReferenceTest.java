@@ -16,18 +16,72 @@
  */
 package tests.api.java.lang.ref;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
+import junit.framework.AssertionFailedError;
+
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
 import java.lang.ref.WeakReference;
-import junit.framework.AssertionFailedError;
 
+@TestTargetClass(Reference.class) 
 public class ReferenceTest extends junit.framework.TestCase {
     Object tmpA, tmpB, obj;
 
     volatile WeakReference wr;
+
+    /* 
+     * For test_subclass().
+     */
+    static TestWeakReference twr;
     static AssertionFailedError error;
     static boolean testObjectFinalized;
+    static class TestWeakReference<T> extends WeakReference<T> {
+        public volatile boolean clearSeen = false;
+        public volatile boolean enqueueSeen = false;
+
+        public TestWeakReference(T referent) {
+            super(referent);
+        }
+
+        public TestWeakReference(T referent, ReferenceQueue<? super T> q) {
+            super(referent, q);
+        }
+
+        public void clear() {
+            super.clear();
+            clearSeen = true;
+            if (testObjectFinalized) {
+                error = new AssertionFailedError("Clear should happen " +
+                        "before finalization.");
+                throw error;
+            }
+            if (enqueueSeen) {
+                error = new AssertionFailedError("Clear should happen " +
+                        "before enqueue.");
+                throw error;
+            }
+        }
+
+        public boolean enqueue() {
+            enqueueSeen = true;
+            if (!clearSeen) {
+                error = new AssertionFailedError("Clear should happen " +
+                        "before enqueue.");
+                throw error;
+            }
+
+            /* Do this last;  it may notify the main test thread,
+             * and anything we'd do after it (e.g., setting clearSeen)
+             * wouldn't be seen.
+             */
+            return super.enqueue();
+        }
+    }
 
     protected void doneSuite() {
         tmpA = tmpB = obj = null;
@@ -36,6 +90,15 @@ public class ReferenceTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.ref.Reference#clear()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "clear",
+          methodArgs = {}
+        )
+    })
     public void test_clear() {
         tmpA = new Object();
         tmpB = new Object();
@@ -54,6 +117,15 @@ public class ReferenceTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.ref.Reference#enqueue()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "enqueue",
+          methodArgs = {}
+        )
+    })
     public void test_enqueue() {
         ReferenceQueue rq = new ReferenceQueue();
         obj = new Object();
@@ -81,6 +153,15 @@ public class ReferenceTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.ref.Reference#enqueue()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verifies positive functionality.",
+      targets = {
+        @TestTarget(
+          methodName = "get",
+          methodArgs = {}
+        )
+    })
     public void test_general() {
         // Test the general/overall functionality of Reference.
 
@@ -142,8 +223,102 @@ public class ReferenceTest extends junit.framework.TestCase {
     }
 
     /**
+     * Makes sure that overridden versions of clear() and enqueue()
+     * get called, and that clear/enqueue/finalize happen in the
+     * right order for WeakReferences.
+     *
+     * @tests java.lang.ref.Reference#clear()
+     * @tests java.lang.ref.Reference#enqueue()
+     * @tests java.lang.Object#finalize()
+     */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Makes sure that overridden versions of clear() and enqueue() " + 
+            " get called, and that clear/enqueue/finalize happen in the " + 
+            " right order for WeakReferences.",
+      targets = {
+        @TestTarget(
+          methodName = "clear",
+          methodArgs = {}
+        ),
+        @TestTarget(
+          methodName = "enqueue",
+          methodArgs = {}
+        )
+
+    })
+    public void _test_subclass() {
+        error = null;
+        testObjectFinalized = false;
+        twr = null;
+
+        class TestObject {
+            public TestWeakReference testWeakReference = null;
+
+            public void setTestWeakReference(TestWeakReference twr) {
+                testWeakReference = twr;
+            }
+
+            protected void finalize() {
+                testObjectFinalized = true;
+                if (!testWeakReference.clearSeen) {
+                    error = new AssertionFailedError("Clear should happen " +
+                            "before finalize.");
+                    throw error;
+                }
+            }
+        }
+
+        final ReferenceQueue rq = new ReferenceQueue();
+
+        class TestThread extends Thread {
+            public void run() {
+                // Create the object in a separate thread to ensure it will be
+                // gc'ed
+                TestObject testObj = new TestObject();
+                twr = new TestWeakReference(testObj, rq);
+                testObj.setTestWeakReference(twr);
+                testObj = null;
+            }
+        }
+
+        Reference ref;
+
+        try {
+            Thread t = new TestThread();
+            t.start();
+            t.join();
+            System.gc();
+            System.runFinalization();
+            ref = rq.remove(5000L);    // Give up after five seconds.
+
+            assertNotNull("Object not garbage collected.", ref);
+            assertTrue("Unexpected reference.", ref == twr);
+            assertNull("Object could not be reclaimed.", twr.get());
+            assertTrue("Overridden clear() should have been called.",
+                    twr.clearSeen);
+            assertTrue("Overridden enqueue() should have been called.",
+                    twr.enqueueSeen);
+            assertTrue("finalize() should have been called.",
+                    testObjectFinalized);
+        } catch (InterruptedException e) {
+            fail("InterruptedException : " + e.getMessage());
+        }
+
+    }
+
+    /**
      * @tests java.lang.ref.Reference#get()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't check that get() can return null.",
+      targets = {
+        @TestTarget(
+          methodName = "get",
+          methodArgs = {}
+        )
+    })
     public void test_get() {
         // SM.
         obj = new Object();
@@ -154,6 +329,15 @@ public class ReferenceTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.ref.Reference#isEnqueued()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "isEnqueued",
+          methodArgs = {}
+        )
+    })
     public void test_isEnqueued() {
         ReferenceQueue rq = new ReferenceQueue();
         obj = new Object();
@@ -168,63 +352,75 @@ public class ReferenceTest extends junit.framework.TestCase {
         assertTrue("Should now be not enqueued.", !ref.isEnqueued());
     }
 
-	/* Contrives a situation where the only reference to a string
-	 * is a WeakReference from an object that is being finalized.
-	 * Checks to make sure that the referent of the WeakReference
-	 * is still pointing to a valid object.
-	 */
-	public void test_finalizeReferenceInteraction() {
-		error = null;
-		testObjectFinalized = false;
+    /* Contrives a situation where the only reference to a string
+     * is a WeakReference from an object that is being finalized.
+     * Checks to make sure that the referent of the WeakReference
+     * is still pointing to a valid object.
+     */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Contrives a situation where the only reference to a string " + 
+            " is a WeakReference from an object that is being finalized. " + 
+            " Checks to make sure that the referent of the WeakReference " + 
+            " is still pointing to a valid object.",
+      targets = {
+        @TestTarget(
+          methodName = "get",
+          methodArgs = {}
+        )
+    })
+    public void test_finalizeReferenceInteraction() {
+        error = null;
+        testObjectFinalized = false;
     
-		class TestObject {
-			WeakReference<String> stringRef;
+        class TestObject {
+            WeakReference<String> stringRef;
 
-			public TestObject(String referent) {
-				stringRef = new WeakReference<String>(referent);
-			}
+            public TestObject(String referent) {
+                stringRef = new WeakReference<String>(referent);
+            }
 
-			protected void finalize() {
-				try {
-					/* If a VM bug has caused the referent to get
-					 * freed without the reference getting cleared,
-					 * looking it up, assigning it to a local and
-					 * doing a GC should cause some sort of exception.
-					 */
-					String s = stringRef.get();
-					System.gc();
-					testObjectFinalized = true;
-				} catch (Throwable t) {
-					error = new AssertionFailedError("something threw '" + t +
-							"' in finalize()");
-				}
-			}
-		}
+            protected void finalize() {
+                try {
+                    /* If a VM bug has caused the referent to get
+                     * freed without the reference getting cleared,
+                     * looking it up, assigning it to a local and
+                     * doing a GC should cause some sort of exception.
+                     */
+                    String s = stringRef.get();
+                    System.gc();
+                    testObjectFinalized = true;
+                } catch (Throwable t) {
+                    error = new AssertionFailedError("something threw '" + t +
+                            "' in finalize()");
+                }
+            }
+        }
 
-		class TestThread extends Thread {
-			public void run() {
-				// Create the object in a separate thread to ensure it will be
-				// gc'ed
-				TestObject testObj = new TestObject(new String("sup /b/"));
-			}
-		}
+        class TestThread extends Thread {
+            public void run() {
+                // Create the object in a separate thread to ensure it will be
+                // gc'ed
+                TestObject testObj = new TestObject(new String("sup /b/"));
+            }
+        }
 
-		try {
-			Thread t = new TestThread();
-			t.start();
-			t.join();
-			System.gc();
-			System.runFinalization();
+        try {
+            Thread t = new TestThread();
+            t.start();
+            t.join();
+            System.gc();
+            System.runFinalization();
 
-			if (error != null) {
-				throw error;
-			}
-			assertTrue("finalize() should have been called.",
-					testObjectFinalized);
-		} catch (InterruptedException e) {
-			fail("InterruptedException : " + e.getMessage());
-		}
-	}
+            if (error != null) {
+                throw error;
+            }
+            assertTrue("finalize() should have been called.",
+                    testObjectFinalized);
+        } catch (InterruptedException e) {
+            fail("InterruptedException : " + e.getMessage());
+        }
+    }
 
 
     protected void setUp() {

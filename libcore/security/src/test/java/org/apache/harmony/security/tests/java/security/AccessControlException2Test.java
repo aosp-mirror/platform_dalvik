@@ -17,9 +17,15 @@
 
 package org.apache.harmony.security.tests.java.security;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.io.FilePermission;
 import java.security.AccessControlException;
 
+@TestTargetClass(AccessControlException.class)
 public class AccessControlException2Test extends junit.framework.TestCase {
     FilePermission filePermission;
 
@@ -30,6 +36,15 @@ public class AccessControlException2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.AccessControlException#AccessControlException(java.lang.String)
      */
+    @TestInfo(
+        level = TestLevel.PARTIAL_OK,
+        purpose = "",
+        targets = {
+        @TestTarget(
+            methodName = "AccessControlException",
+            methodArgs = {java.lang.String.class}
+        )
+    })    
     public void test_ConstructorLjava_lang_String() {
         // Test for method
         // java.security.AccessControlException(java.lang.String)
@@ -43,6 +58,15 @@ public class AccessControlException2Test extends junit.framework.TestCase {
      * @tests java.security.AccessControlException#AccessControlException(java.lang.String,
      *        java.security.Permission)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL_OK,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "AccessControlException",
+          methodArgs = {java.lang.String.class, java.security.Permission.class}
+        )
+    })
     public void test_ConstructorLjava_lang_StringLjava_security_Permission() {
         // Test for method
         // java.security.AccessControlException(java.lang.String,
@@ -57,6 +81,15 @@ public class AccessControlException2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.AccessControlException#getPermission()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getPermission",
+          methodArgs = {}
+        )
+    })
     public void test_getPermission() {
         // Test for method java.security.Permission
         // java.security.AccessControlException.getPermission()

@@ -22,11 +22,12 @@ import java.text.MessageFormat;
 import java.util.ResourceBundle;
 
 /**
- * <code>Formatter</code> objects are used to format <code>LogRecord</code>
- * objects into a string representation. Head and tail strings are sometime used
- * to wrap a set of records. The <code>getHead</code> and <code>getTail</code>
- * methods are presented for this purpose.
+ * {@code Formatter} objects are used to format {@link LogRecord} objects into a
+ * string representation. Head and tail strings are sometimes used to wrap a set
+ * of records. The {@code getHead} and {@code getTail} methods are used for this
+ * purpose.
  * 
+ * @since Android 1.0
  */
 public abstract class Formatter {
 
@@ -37,7 +38,9 @@ public abstract class Formatter {
      */
 
     /**
-     * Constructs a <code>Formatter</code> object.
+     * Constructs a {@code Formatter} object.
+     * 
+     * @since Android 1.0
      */
     protected Formatter() {
         super();
@@ -50,29 +53,34 @@ public abstract class Formatter {
      */
 
     /**
-     * Formats a <code>LogRecord</code> object into a string representation.
-     * The resulted string is usually localized and includes the message field
-     * of the supplied <code>LogRecord</code> object.
+     * Converts a {@link LogRecord} object into a string representation. The
+     * resulted string is usually localized and includes the message field of
+     * the record.
      * 
      * @param r
-     *            the log record to be formatted into a string
-     * @return the string resulted from the formatting
+     *            the log record to be formatted into a string.
+     * @return the formatted string.
+     * @since Android 1.0
      */
     public abstract String format(LogRecord r);
 
     /**
-     * Formats a <code>LogRecord</code> object into a localized string
-     * representation. This method can be regarded as a convenience for
-     * subclasses of <code>Formatter</code> to use.
+     * Formats a {@code LogRecord} object into a localized string
+     * representation. This is a convenience method for subclasses of {@code
+     * Formatter}.
      * <p>
-     * The message string is firstly localized using the
-     * <code>ResourceBundle</code> object associated with the supplied
-     * <code>LogRecord</code>.
+     * The message string is firstly localized using the {@code ResourceBundle}
+     * object associated with the supplied {@code LogRecord}.
+     * </p>
+     * <p>
+     * Notice : if message contains "{0", then java.text.MessageFormat is used.
+     * Otherwise no formatting is performed.
      * </p>
      * 
      * @param r
-     *            the log record to be formatted
-     * @return the string resulted from the formatting
+     *            the log record to be formatted.
+     * @return the string resulted from the formatting.
+     * @since Android 1.0
      */
     public String formatMessage(LogRecord r) {
         String pattern = r.getMessage();
@@ -105,11 +113,13 @@ public abstract class Formatter {
 
     /**
      * Gets the head string used to wrap a set of log records. This base class
-     * always returns the empty string.
+     * always returns an empty string.
      * 
      * @param h
-     *            the target handler
-     * @return the head string used to wrap a set of log records
+     *            the target handler.
+     * @return the head string used to wrap a set of log records, empty in this
+     *         implementation.
+     * @since Android 1.0
      */
     @SuppressWarnings("unused")
     public String getHead(Handler h) {
@@ -121,8 +131,10 @@ public abstract class Formatter {
      * always returns the empty string.
      * 
      * @param h
-     *            the target handler
-     * @return the tail string used to wrap a set of log records
+     *            the target handler.
+     * @return the tail string used to wrap a set of log records, empty in this
+     *         implementation.
+     * @since Android 1.0
      */
     @SuppressWarnings("unused")
     public String getTail(Handler h) {

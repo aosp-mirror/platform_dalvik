@@ -17,13 +17,28 @@
 
 package org.apache.harmony.security.tests.java.security;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+
 import java.security.SecurityPermission;
 
+@TestTargetClass(SecurityPermission.class)
 public class SecurityPermission2Test extends junit.framework.TestCase {
 
     /**
      * @tests java.security.SecurityPermission#SecurityPermission(java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verification with valid parameter only",
+      targets = {
+        @TestTarget(
+          methodName = "SecurityPermission",
+          methodArgs = {String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_String() {
         // Test for method java.security.SecurityPermission(java.lang.String)
         assertEquals("create securityPermission constructor(string) failed",
@@ -36,6 +51,15 @@ public class SecurityPermission2Test extends junit.framework.TestCase {
      * @tests java.security.SecurityPermission#SecurityPermission(java.lang.String,
      *        java.lang.String)
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Verification with valid parameters only",
+      targets = {
+        @TestTarget(
+          methodName = "SecurityPermission",
+          methodArgs = {String.class, String.class}
+        )
+    })
     public void test_ConstructorLjava_lang_StringLjava_lang_String() {
         // Test for method java.security.SecurityPermission(java.lang.String,
         // java.lang.String)

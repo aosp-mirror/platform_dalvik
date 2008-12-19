@@ -14,39 +14,235 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/**
+*******************************************************************************
+* Copyright (C) 1996-2007, International Business Machines Corporation and    *
+* others. All Rights Reserved.                                                *
+*******************************************************************************
+*/
+
+// BEGIN android-note
+// The class javadoc and some of the method descriptions are copied from ICU4J
+// source files. Changes have been made to the copied descriptions.
+// The icu license header was added to this file. 
+// The icu implementation used was changed from icu4j to icu4jni.
+// END android-note
 
 package java.text;
 
 import java.util.Locale;
 
 /**
- * This class is used to locate the boundaries of text. Instance of this class
- * can be got by some factory methods:
+ * Locates boundaries in text. This class defines a protocol for objects that
+ * break up a piece of natural-language text according to a set of criteria.
+ * Instances or subclasses of {@code BreakIterator} can be provided, for
+ * example, to break a piece of text into words, sentences, or logical
+ * characters according to the conventions of some language or group of
+ * languages. We provide four built-in types of {@code BreakIterator}:
  * <ul>
- * <li>
- * <code>getCharacterInstance()<code> returns a BreakIterator that iterate the 
- * logical characters without worrying about how the character is stored. For 
- * example, some character may be stored in more than one Unicode code point 
- * according to Unicode specification, this character can handle the logical 
- * characters with multi code points.</li>
- * <li>
- * <code>getWordInstance()<code> returns a <code>BreakIterator</code> that 
- * iterate the word-breaks. The beginning and end of each word(including numbers) 
- * is treated as boundary position. Whitespace and punctuation are kept separate 
- * from real words.</li>
- * <li>
- * <code>getSentenceInstance()</code> returns a BreakIterator that iterate the 
- * sentence-breaks.</li>
- * <li><code>getLineInstance()</code> returns a BreakIterator that iterate the 
- * line-breaks which can be used to wrap lines. This iterator can handle whitespaces, 
- * hyphens and punctuations.  
+ * <li>{@link #getSentenceInstance()} returns a {@code BreakIterator} that
+ * locates boundaries between sentences. This is useful for triple-click
+ * selection, for example.</li>
+ * <li>{@link #getWordInstance()} returns a {@code BreakIterator} that locates
+ * boundaries between words. This is useful for double-click selection or "find
+ * whole words" searches. This type of {@code BreakIterator} makes sure there is
+ * a boundary position at the beginning and end of each legal word (numbers
+ * count as words, too). Whitespace and punctuation are kept separate from real
+ * words.</li>
+ * <li>{@code getLineInstance()} returns a {@code BreakIterator} that locates
+ * positions where it is legal for a text editor to wrap lines. This is similar
+ * to word breaking, but not the same: punctuation and whitespace are generally
+ * kept with words (you don't want a line to start with whitespace, for
+ * example), and some special characters can force a position to be considered a
+ * line break position or prevent a position from being a line break position.</li>
+ * <li>{@code getCharacterInstance()} returns a {@code BreakIterator} that
+ * locates boundaries between logical characters. Because of the structure of
+ * the Unicode encoding, a logical character may be stored internally as more
+ * than one Unicode code point. (A with an umlaut may be stored as an a followed
+ * by a separate combining umlaut character, for example, but the user still
+ * thinks of it as one character.) This iterator allows various processes
+ * (especially text editors) to treat as characters the units of text that a
+ * user would think of as characters, rather than the units of text that the
+ * computer sees as "characters".</li>
+ * </ul> {@code BreakIterator}'s interface follows an "iterator" model (hence
+ * the name), meaning it has a concept of a "current position" and methods like
+ * {@code first()}, {@code last()}, {@code next()}, and {@code previous()} that
+ * update the current position. All {@code BreakIterator}s uphold the following
+ * invariants:
+ * <ul>
+ * <li>The beginning and end of the text are always treated as boundary
+ * positions.</li>
+ * <li>The current position of the iterator is always a boundary position
+ * (random- access methods move the iterator to the nearest boundary position
+ * before or after the specified position, not <i>to</i> the specified
+ * position).</li>
+ * <li>{@code DONE} is used as a flag to indicate when iteration has stopped.
+ * {@code DONE} is only returned when the current position is the end of the
+ * text and the user calls {@code next()}, or when the current position is the
+ * beginning of the text and the user calls {@code previous()}.</li>
+ * <li>Break positions are numbered by the positions of the characters that
+ * follow them. Thus, under normal circumstances, the position before the first
+ * character is 0, the position after the first character is 1, and the position
+ * after the last character is 1 plus the length of the string.</li>
+ * <li>The client can change the position of an iterator, or the text it
+ * analyzes, at will, but cannot change the behavior. If the user wants
+ * different behavior, he must instantiate a new iterator.</li>
  * </ul>
+ * <p>
+ * {@code BreakIterator} accesses the text it analyzes through a
+ * {@link CharacterIterator}, which makes it possible to use {@code
+ * BreakIterator} to analyze text in any text-storage vehicle that provides a
+ * {@code CharacterIterator} interface.
+ * </p>
+ * <p>
+ * <em>Note:</em> Some types of {@code BreakIterator} can take a long time to
+ * create, and instances of {@code BreakIterator} are not currently cached by
+ * the system. For optimal performance, keep instances of {@code BreakIterator}
+ * around as long as it makes sense. For example, when word-wrapping a document,
+ * don't create and destroy a new {@code BreakIterator} for each line. Create
+ * one break iterator for the whole document (or whatever stretch of text you're
+ * wrapping) and use it to do the whole job of wrapping the text.
+ * <p>
+ * <em>Examples</em>:
+ * </p>
+ * <p>
+ * Creating and using text boundaries:
+ * </p>
+ * <blockquote>
  * 
- * <code>BreakIterator</code> uses <code>CharacterIterator</code> to perform the 
- * analysis, so that any storage which provides <code>CharacterIterator</code> 
- * interface.
+ * <pre>
+ * public static void main(String args[]) {
+ *     if (args.length == 1) {
+ *         String stringToExamine = args[0];
+ *         //print each word in order
+ *         BreakIterator boundary = BreakIterator.getWordInstance();
+ *         boundary.setText(stringToExamine);
+ *         printEachForward(boundary, stringToExamine);
+ *         //print each sentence in reverse order
+ *         boundary = BreakIterator.getSentenceInstance(Locale.US);
+ *         boundary.setText(stringToExamine);
+ *         printEachBackward(boundary, stringToExamine);
+ *         printFirst(boundary, stringToExamine);
+ *         printLast(boundary, stringToExamine);
+ *     }
+ * }
+ * </pre>
+ * 
+ * </blockquote>
+ * <p>
+ * Print each element in order:
+ * </p>
+ * <blockquote>
+ * 
+ * <pre>
+ * public static void printEachForward(BreakIterator boundary, String source) {
+ *     int start = boundary.first();
+ *     for (int end = boundary.next(); end != BreakIterator.DONE; start = end, end = boundary.next()) {
+ *         System.out.println(source.substring(start, end));
+ *     }
+ * }
+ * </pre>
+ * 
+ * </blockquote>
+ * <p>
+ * Print each element in reverse order:
+ * </p>
+ * <blockquote>
+ * 
+ * <pre>
+ * public static void printEachBackward(BreakIterator boundary, String source) {
+ *     int end = boundary.last();
+ *     for (int start = boundary.previous(); start != BreakIterator.DONE; end = start, start = boundary
+ *             .previous()) {
+ *         System.out.println(source.substring(start, end));
+ *     }
+ * }
+ * </pre>
+ * 
+ * </blockquote>
+ * <p>
+ * Print the first element:
+ * </p>
+ * <blockquote>
+ * 
+ * <pre>
+ * public static void printFirst(BreakIterator boundary, String source) {
+ *     int start = boundary.first();
+ *     int end = boundary.next();
+ *     System.out.println(source.substring(start, end));
+ * }
+ * </pre>
+ * 
+ * </blockquote>
+ * <p>
+ * Print the last element:
+ * </p>
+ * <blockquote>
+ * 
+ * <pre>
+ * public static void printLast(BreakIterator boundary, String source) {
+ *     int end = boundary.last();
+ *     int start = boundary.previous();
+ *     System.out.println(source.substring(start, end));
+ * }
+ * </pre>
+ * 
+ * </blockquote>
+ * <p>
+ * Print the element at a specified position:
+ * </p>
+ * <blockquote>
+ * 
+ * <pre>
+ * public static void printAt(BreakIterator boundary, int pos, String source) {
+ *     int end = boundary.following(pos);
+ *     int start = boundary.previous();
+ *     System.out.println(source.substring(start, end));
+ * }
+ * </pre>
+ * 
+ * </blockquote>
+ * <p>
+ * Find the next word:
+ * </p>
+ * <blockquote>
+ * 
+ * <pre>
+ * public static int nextWordStartAfter(int pos, String text) {
+ *     BreakIterator wb = BreakIterator.getWordInstance();
+ *     wb.setText(text);
+ *     int last = wb.following(pos);
+ *     int current = wb.next();
+ *     while (current != BreakIterator.DONE) {
+ *         for (int p = last; p &lt; current; p++) {
+ *             if (Character.isLetter(text.charAt(p)))
+ *                 return last;
+ *         }
+ *         last = current;
+ *         current = wb.next();
+ *     }
+ *     return BreakIterator.DONE;
+ * }
+ * </pre>
+ * 
+ * </blockquote>
+ * <p>
+ * The iterator returned by {@code BreakIterator.getWordInstance()} is unique in
+ * that the break positions it returns don't represent both the start and end of
+ * the thing being iterated over. That is, a sentence-break iterator returns
+ * breaks that each represent the end of one sentence and the beginning of the
+ * next. With the word-break iterator, the characters between two boundaries
+ * might be a word, or they might be the punctuation or whitespace between two
+ * words. The above code uses a simple heuristic to determine which boundary is
+ * the beginning of a word: If the characters between this boundary and the next
+ * boundary include at least one letter (this can be an alphabetical letter, a
+ * CJK ideograph, a Hangul syllable, a Kana character, etc.), then the text
+ * between this boundary and the next is a word; otherwise, it's the material
+ * between words.)
+ * </p>
  * 
  * @see CharacterIterator
+ * @since Android 1.0
  */
 public abstract class BreakIterator implements Cloneable {
 
@@ -56,8 +252,10 @@ public abstract class BreakIterator implements Cloneable {
      * -----------------------------------------------------------------------
      */
     /**
-     * This constant is returned by iterate methods like previous() or next() if
-     * they have returned all valid boundaries.
+     * This constant is returned by iterate methods like {@code previous()} or
+     * {@code next()} if they have returned all valid boundaries.
+     * 
+     * @since Android 1.0
      */
     public static final int DONE = -1;
 
@@ -81,7 +279,9 @@ public abstract class BreakIterator implements Cloneable {
      * -----------------------------------------------------------------------
      */
     /**
-     * Default constructor, just for invocation by subclass.
+     * Default constructor, just for invocation by a subclass.
+     * 
+     * @since Android 1.0
      */
     protected BreakIterator() {
         super();
@@ -100,20 +300,21 @@ public abstract class BreakIterator implements Cloneable {
      * -----------------------------------------------------------------------
      */
     /**
-     * Return all supported locales.
+     * Returns all supported locales in an array.
      * 
-     * @return all supported locales
+     * @return all supported locales.
+     * @since Android 1.0
      */
     public static Locale[] getAvailableLocales() {
         return com.ibm.icu4jni.text.BreakIterator.getAvailableLocales();
     }
 
     /**
-     * Return a new instance of BreakIterator used to iterate characters using
-     * default locale.
+     * Returns a new instance of {@code BreakIterator} to iterate over
+     * characters using the default locale.
      * 
-     * @return a new instance of BreakIterator used to iterate characters using
-     *         default locale.
+     * @return a new instance of {@code BreakIterator} using the default locale.
+     * @since Android 1.0
      */
     public static BreakIterator getCharacterInstance() {
         return new RuleBasedBreakIterator(com.ibm.icu4jni.text.BreakIterator
@@ -121,13 +322,13 @@ public abstract class BreakIterator implements Cloneable {
     }
 
     /**
-     * Return a new instance of BreakIterator used to iterate characters using
-     * given locale.
+     * Returns a new instance of {@code BreakIterator} to iterate over
+     * characters using the given locale.
      * 
      * @param where
-     *            the given locale
-     * @return a new instance of BreakIterator used to iterate characters using
-     *         given locale.
+     *            the given locale.
+     * @return a new instance of {@code BreakIterator} using the given locale.
+     * @since Android 1.0
      */
     public static BreakIterator getCharacterInstance(Locale where) {
         if (where == null) {
@@ -139,11 +340,11 @@ public abstract class BreakIterator implements Cloneable {
     }
 
     /**
-     * Return a new instance of BreakIterator used to iterate line-breaks using
-     * default locale.
+     * Returns a new instance of {{@code BreakIterator} to iterate over
+     * line breaks using the default locale.
      * 
-     * @return a new instance of BreakIterator used to iterate line-breaks using
-     *         default locale.
+     * @return a new instance of {@code BreakIterator} using the default locale.
+     * @since Android 1.0
      */
     public static BreakIterator getLineInstance() {
         return new RuleBasedBreakIterator(com.ibm.icu4jni.text.BreakIterator
@@ -151,13 +352,14 @@ public abstract class BreakIterator implements Cloneable {
     }
 
     /**
-     * Return a new instance of BreakIterator used to iterate line-breaks using
-     * given locale.
+     * Returns a new instance of {@code BreakIterator} to iterate over
+     * line breaks using the given locale.
      * 
      * @param where
-     *            the given locale
-     * @return a new instance of BreakIterator used to iterate line-breaks using
-     *         given locale.
+     *            the given locale.
+     * @return a new instance of {@code BreakIterator} using the given locale.
+     * @throws NullPointerException if {@code where} is {@code null}.
+     * @since Android 1.0
      */
     public static BreakIterator getLineInstance(Locale where) {
         if (where == null) {
@@ -169,11 +371,11 @@ public abstract class BreakIterator implements Cloneable {
     }
 
     /**
-     * Return a new instance of BreakIterator used to iterate sentence-breaks
-     * using default locale.
+     * Returns a new instance of {@code BreakIterator} to iterate over
+     * sentence-breaks using the default locale.
      * 
-     * @return a new instance of BreakIterator used to iterate sentence-breaks
-     *         using default locale.
+     * @return a new instance of {@code BreakIterator} using the default locale.
+     * @since Android 1.0
      */
     public static BreakIterator getSentenceInstance() {
         return new RuleBasedBreakIterator(com.ibm.icu4jni.text.BreakIterator
@@ -181,13 +383,14 @@ public abstract class BreakIterator implements Cloneable {
     }
 
     /**
-     * Return a new instance of BreakIterator used to iterate sentence-breaks
-     * using given locale.
+     * Returns a new instance of {@code BreakIterator} to iterate over
+     * sentence-breaks using the given locale.
      * 
      * @param where
-     *            the given locale
-     * @return a new instance of BreakIterator used to iterate sentence-breaks
-     *         using given locale.
+     *            the given locale.
+     * @return a new instance of {@code BreakIterator} using the given locale.
+     * @throws NullPointerException if {@code where} is {@code null}.
+     * @since Android 1.0
      */
     public static BreakIterator getSentenceInstance(Locale where) {
         if (where == null) {
@@ -199,11 +402,11 @@ public abstract class BreakIterator implements Cloneable {
     }
 
     /**
-     * Return a new instance of BreakIterator used to iterate word-breaks using
-     * default locale.
+     * Returns a new instance of {@code BreakIterator} to iterate over
+     * word-breaks using the default locale.
      * 
-     * @return a new instance of BreakIterator used to iterate word-breaks using
-     *         default locale.
+     * @return a new instance of {@code BreakIterator} using the default locale.
+     * @since Android 1.0
      */
     public static BreakIterator getWordInstance() {
         return new RuleBasedBreakIterator(com.ibm.icu4jni.text.BreakIterator
@@ -211,13 +414,14 @@ public abstract class BreakIterator implements Cloneable {
     }
 
     /**
-     * Return a new instance of BreakIterator used to iterate word-breaks using
-     * given locale.
+     * Returns a new instance of {@code BreakIterator} to iterate over
+     * word-breaks using the given locale.
      * 
      * @param where
-     *            the given locale
-     * @return a new instance of BreakIterator used to iterate word-breaks using
-     *         given locale.
+     *            the given locale.
+     * @return a new instance of {@code BreakIterator} using the given locale.
+     * @throws NullPointerException if {@code where} is {@code null}.
+     * @since Android 1.0
      */
     public static BreakIterator getWordInstance(Locale where) {
         if (where == null) {
@@ -229,42 +433,43 @@ public abstract class BreakIterator implements Cloneable {
     }
 
     /**
-     * Return true if the given offset is a boundary position. If this method
+     * Indicates whether the given offset is a boundary position. If this method
      * returns true, the current iteration position is set to the given
      * position; if the function returns false, the current iteration position
-     * is set as though following() had been called.
+     * is set as though {@link #following(int)} had been called.
      * 
      * @param offset
-     *            the given offset to check
-     * @return true if the given offset is a boundary position
+     *            the given offset to check.
+     * @return {@code true} if the given offset is a boundary position; {@code
+     *         false} otherwise.
+     * @since Android 1.0
      */
     public boolean isBoundary(int offset) {
         return wrapped.isBoundary(offset);
     }
 
     /**
-     * Return the position of last boundary precede the given offset, and set
-     * current position to returned value, or <code>DONE</code> if the given
-     * offset specifies the starting position.
-     * <p>
-     * <code>IllegalArgumentException</code> will be thrown if given offset is
-     * invalid.
-     * </p>
+     * Returns the position of last boundary preceding the given offset, and
+     * sets the current position to the returned value, or {@code DONE} if the
+     * given offset specifies the starting position.
      * 
      * @param offset
-     *            the given start position to be searched for
-     * @return the position of last boundary precede the given offset
+     *            the given start position to be searched for.
+     * @return the position of the last boundary preceding the given offset.
+     * @since Android 1.0
      */
     public int preceding(int offset) {
         return wrapped.preceding(offset);
     }
 
     /**
-     * Set the new text string to be analyzed, the current position will be
-     * reset to beginning of this new string, and the old string will lost.
+     * Sets the new text string to be analyzed, the current position will be
+     * reset to the beginning of this new string, and the old string will be
+     * lost.
      * 
      * @param newText
-     *            the new text string to be analyzed
+     *            the new text string to be analyzed.
+     * @since Android 1.0
      */
     public void setText(String newText) {
         wrapped.setText(newText);
@@ -276,92 +481,97 @@ public abstract class BreakIterator implements Cloneable {
      * -----------------------------------------------------------------------
      */
     /**
-     * Return this iterator's current position.
+     * Returns this iterator's current position.
      * 
-     * @return this iterator's current position
+     * @return this iterator's current position.
+     * @since Android 1.0
      */
     public abstract int current();
 
     /**
-     * Set this iterator's current position to the first boundary, and return
-     * this position.
+     * Sets this iterator's current position to the first boundary and returns
+     * that position.
      * 
-     * @return the position of first boundary
+     * @return the position of the first boundary.
+     * @since Android 1.0
      */
     public abstract int first();
 
     /**
-     * Set the position of the first boundary following the given offset, and
-     * return this position. If there is no boundary after the given offset,
-     * return DONE.
-     * <p>
-     * <code>IllegalArgumentException</code> will be thrown if given offset is
-     * invalid.
-     * </p>
+     * Sets the position of the first boundary to the one following the given
+     * offset and returns this position. Returns {@code DONE} if there is no
+     * boundary after the given offset.
      * 
      * @param offset
-     *            the given position to be searched for
-     * @return the position of the first boundary following the given offset
+     *            the given position to be searched for.
+     * @return the position of the first boundary following the given offset.
+     * @since Android 1.0
      */
     public abstract int following(int offset);
 
     /**
-     * Return a <code>CharacterIterator</code> which represents the text being
+     * Returns a {@code CharacterIterator} which represents the text being
      * analyzed. Please note that the returned value is probably the internal
-     * iterator used by this object, so that if the invoker want to modify the
-     * status of the returned iterator, a clone operation at first is
-     * recommended.
+     * iterator used by this object. If the invoker wants to modify the status
+     * of the returned iterator, it is recommended to first create a clone of
+     * the iterator returned.
      * 
-     * @return a <code>CharacterIterator</code> which represents the text
-     *         being analyzed.
+     * @return a {@code CharacterIterator} which represents the text being
+     *         analyzed.
+     * @since Android 1.0
      */
     public abstract CharacterIterator getText();
 
     /**
-     * Set this iterator's current position to the last boundary, and return
-     * this position.
+     * Sets this iterator's current position to the last boundary and returns
+     * that position.
      * 
-     * @return the position of last boundary
+     * @return the position of last boundary.
+     * @since Android 1.0
      */
     public abstract int last();
 
     /**
-     * Set this iterator's current position to the next boundary after current
-     * position, and return this position. Return <code>DONE</code> if no
-     * boundary found after current position.
+     * Sets this iterator's current position to the next boundary after the
+     * current position, and returns this position. Returns {@code DONE} if no
+     * boundary was found after the current position.
      * 
-     * @return the position of last boundary
+     * @return the position of last boundary.
+     * @since Android 1.0
      */
     public abstract int next();
 
     /**
-     * Set this iterator's current position to the next boundary after the given
-     * position, and return this position. Return <code>DONE</code> if no
-     * boundary found after the given position.
+     * Sets this iterator's current position to the next boundary after the
+     * given position, and returns that position. Returns {@code DONE} if no
+     * boundary was found after the given position.
      * 
      * @param n
      *            the given position.
-     * @return the position of last boundary
+     * @return the position of last boundary.
+     * @since Android 1.0
      */
     public abstract int next(int n);
 
     /**
-     * Set this iterator's current position to the previous boundary before
-     * current position, and return this position. Return <code>DONE</code> if
-     * no boundary found before current position.
+     * Sets this iterator's current position to the previous boundary before the
+     * current position and returns that position. Returns {@code DONE} if
+     * no boundary was found before the current position.
      * 
-     * @return the position of last boundary
+     * @return the position of last boundary.
+     * @since Android 1.0
      */
     public abstract int previous();
 
     /**
-     * Set new text to be analyzed by given <code>CharacterIterator</code>.
+     * Sets the new text to be analyzed by the given {@code CharacterIterator}.
      * The position will be reset to the beginning of the new text, and other
-     * status of this iterator will be kept.
+     * status information of this iterator will be kept.
      * 
      * @param newText
-     *            the given <code>CharacterIterator</code> refer to the text
-     *            to be analyzed
+     *            the {@code CharacterIterator} referring to the text to be
+     *            analyzed.
+     * @since Android 1.0
      */
     public abstract void setText(CharacterIterator newText);
 
@@ -371,10 +581,11 @@ public abstract class BreakIterator implements Cloneable {
      * -----------------------------------------------------------------------
      */
     /**
-     * Create copy of this iterator, all status including current position is
-     * kept.
+     * Creates a copy of this iterator, all status information including the
+     * current position are kept the same.
      * 
-     * @return copy of this iterator
+     * @return a copy of this iterator.
+     * @since Android 1.0
      */
     @Override
     public Object clone() {
@@ -388,13 +599,20 @@ public abstract class BreakIterator implements Cloneable {
     }
 
     /**
-     * Get a long value from the given byte array, start from given offset.
+     * Gets a long value from the given byte array, starting from the given
+     * offset.
      * 
      * @param buf
-     *            the bytes to be converted
+     *            the bytes to be converted.
      * @param offset
-     *            the start position of conversion
-     * @return the converted long value
+     *            the start position of the conversion.
+     * @return the converted long value.
+     * @throws NullPointerException
+     *             if {@code buf} is {@code null}.
+     * @throws ArrayIndexOutOfBoundsException
+     *             if {@code offset < 0} or {@code offset + LONG_LENGTH} is
+     *             greater than the length of {@code buf}.
+     * @since Android 1.0
      */
     protected static long getLong(byte[] buf, int offset) {
         if (null == buf) {
@@ -411,13 +629,20 @@ public abstract class BreakIterator implements Cloneable {
     }
 
     /**
-     * Get an int value from the given byte array, start from given offset.
+     * Gets an int value from the given byte array, starting from the given
+     * offset.
      * 
      * @param buf
-     *            the bytes to be converted
+     *            the bytes to be converted.
      * @param offset
-     *            the start position of conversion
-     * @return the converted int value
+     *            the start position of the conversion.
+     * @return the converted int value.
+     * @throws NullPointerException
+     *             if {@code buf} is {@code null}.
+     * @throws ArrayIndexOutOfBoundsException
+     *             if {@code offset < 0} or {@code offset + INT_LENGTH} is
+     *             greater than the length of {@code buf}.
+     * @since Android 1.0
      */
     protected static int getInt(byte[] buf, int offset) {
         if (null == buf) {
@@ -434,13 +659,20 @@ public abstract class BreakIterator implements Cloneable {
     }
 
     /**
-     * Get a short value from the given byte array, start from given offset.
+     * Gets a short value from the given byte array, starting from the given
+     * offset.
      * 
      * @param buf
-     *            the bytes to be converted
+     *            the bytes to be converted.
      * @param offset
-     *            the start position of conversion
-     * @return the converted short value
+     *            the start position of the conversion.
+     * @return the converted short value.
+     * @throws NullPointerException
+     *             if {@code buf} is {@code null}.
+     * @throws ArrayIndexOutOfBoundsException
+     *             if {@code offset < 0} or {@code offset + SHORT_LENGTH} is
+     *             greater than the length of {@code buf}.
+     * @since Android 1.0
      */
     protected static short getShort(byte[] buf, int offset) {
         if (null == buf) {

@@ -16,6 +16,11 @@
 
 package tests.api.javax.net.ssl;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
@@ -24,6 +29,7 @@ import javax.net.ssl.SSLServerSocketFactory;
 
 import junit.framework.TestCase;
 
+@TestTargetClass(SSLServerSocketFactory.class) 
 public class SSLServerSocketFactoryTest extends TestCase {
     
     private class MockSSLServerSocketFactory extends SSLServerSocketFactory {
@@ -80,6 +86,15 @@ public class SSLServerSocketFactoryTest extends TestCase {
     /**
      * @tests javax.net.ssl.SSLServerSocketFactory#SSLServerSocketFactory()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "SSLServerSocketFactory",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         try {
             new MockSSLServerSocketFactory();
@@ -91,6 +106,15 @@ public class SSLServerSocketFactoryTest extends TestCase {
     /**
      * @tests javax.net.ssl.SSLServerSocketFactory#getDefault()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "getDefault",
+          methodArgs = {}
+        )
+    })
     public void test_getDefault() {
         assertNotNull("Incorrect default socket factory",
                 SSLServerSocketFactory.getDefault());

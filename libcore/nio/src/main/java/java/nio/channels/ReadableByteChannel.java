@@ -21,12 +21,16 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 /**
- * A ReadableByteChannel is a type of Channel that can read bytes.
+ * A {@code ReadableByteChannel} is a type of {@link Channel} that can read
+ * bytes.
  * <p>
- * Reads are synchronous on a ReadableByteChannel, that is, if a read is already
- * in progress on the channel then subsequent reads will block until the first
- * read completes. It is undefined whether non-read operations will block.
+ * Read operations are synchronous on a {@code ReadableByteChannel}, that is,
+ * if a read is already in progress on the channel then subsequent reads will
+ * block until the first read completes. It is undefined whether non-read
+ * operations will block.
+ * </p>
  * 
+ * @since Android 1.0
  */
 public interface ReadableByteChannel extends Channel {
 
@@ -34,34 +38,37 @@ public interface ReadableByteChannel extends Channel {
      * Reads bytes from the channel into the given buffer.
      * <p>
      * The maximum number of bytes that will be read is the
-     * <code>remaining()</code> number of bytes in the buffer when the method
-     * invoked. The bytes will be read into the buffer starting at the buffer's
-     * <code>position</code>.
+     * {@link java.nio.Buffer#remaining() remaining} number of bytes in the
+     * buffer when the method is invoked. The bytes will be read into the buffer
+     * starting at the buffer's current
+     * {@link java.nio.Buffer#position() position}.
      * </p>
      * <p>
-     * The call may block if other threads are also attempting to read on the
+     * The call may block if other threads are also attempting to read from the
      * same channel.
      * </p>
      * <p>
-     * Upon completion, the buffer's <code>position()</code> is updated to the
-     * end of the bytes that were read. The buffer's <code>limit()</code> is
-     * unmodified.
+     * Upon completion, the buffer's {@code position} is updated to the end of
+     * the bytes that were read. The buffer's
+     * {@link java.nio.Buffer#limit() limit} is not changed.
      * </p>
      * 
      * @param buffer
      *            the byte buffer to receive the bytes.
      * @return the number of bytes actually read.
-     * @throws NonReadableChannelException
-     *             if the channel was not opened for reading.
-     * @throws ClosedChannelException
-     *             if the channel was already closed.
      * @throws AsynchronousCloseException
      *             if another thread closes the channel during the read.
      * @throws ClosedByInterruptException
-     *             if another thread interrupt the calling thread during the
-     *             read.
+     *             if another thread interrupts the calling thread while the
+     *             operation is in progress. The interrupt state of the calling 
+     *             thread is set and the channel is closed.
+     * @throws ClosedChannelException
+     *             if the channel is closed.
      * @throws IOException
-     *             another IO exception occurs, details are in the message.
+     *             another I/O error occurs, details are in the message.
+     * @throws NonReadableChannelException
+     *             if the channel was not opened for reading.
+     * @since Android 1.0
      */
     public int read(ByteBuffer buffer) throws IOException;
 }

@@ -21,10 +21,16 @@
 */
 
 package org.apache.harmony.security.tests.java.security;
+
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.security.Permission;
 
 import junit.framework.TestCase;
-
+@TestTargetClass(Permission.class)
 /**
  * Tests for <code>Permission</code>
  */
@@ -72,6 +78,15 @@ public class PermissionTest extends TestCase {
      * Test that a permission object is created with the specified name and is
      * properly converted to String
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Non null string parameter verified",
+      targets = {
+        @TestTarget(
+          methodName = "Permission",
+          methodArgs = {String.class}
+        )
+    })
     public void testCtor() {
         String name = "testCtor123^%$#&^ &^$";
         Permission test = new RealPermission(name);
@@ -85,6 +100,15 @@ public class PermissionTest extends TestCase {
      * checkPermission() should be called with this permission, otherwise
      * nothing happens
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "SecurityException checking missed",
+      targets = {
+        @TestTarget(
+          methodName = "checkGuard",
+          methodArgs = {Object.class}
+        )
+    })
     public void testCheckGuard() {
         final Permission test = new RealPermission("234234");
         SecurityManager old = System.getSecurityManager();
@@ -108,6 +132,15 @@ public class PermissionTest extends TestCase {
     }
 
     /** newPermissionCollection() should return null */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Returned parameter was tested.",
+      targets = {
+        @TestTarget(
+          methodName = "newPermissionCollection",
+          methodArgs = {}
+        )
+    })
     public void testCollection() {
         assertNull(new RealPermission("123").newPermissionCollection());
     }

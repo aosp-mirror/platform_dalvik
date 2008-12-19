@@ -16,7 +16,12 @@
 
 package org.apache.harmony.nio.tests.java.nio;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
 
+@TestTargetClass(java.nio.ByteBuffer.class)
 public class DuplicateWrappedByteBufferTest extends WrappedByteBufferTest {
 
     protected void setUp() throws Exception {

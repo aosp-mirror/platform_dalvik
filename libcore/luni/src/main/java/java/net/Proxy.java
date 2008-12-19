@@ -18,20 +18,24 @@ package java.net;
 import org.apache.harmony.luni.util.Msg;
 
 /**
- * This class is about proxy setting. A proxy contains <code>type</code>,
- * proxy host address information. There are three types of <code>Proxy</code>:
- * <li>Direct type proxy</li>
- * <li>HTTP type proxy</li>
- * <li>SOCKS type proxy</li>
+ * This class represents proxy server settings. A created instance of {@code
+ * Proxy} stores a type and an address and is immutable. There are three types
+ * of proxies:
+ * <ul>
+ * <li>DIRECT</li>
+ * <li>HTTP</li>
+ * <li>SOCKS</li></ul
  * 
- * A <code>Proxy</code> instance is immutable.
- * 
+ * @since Android 1.0
  */
 public class Proxy {
 
     /**
-     * Represents <code>Proxy.Type.DIRECT</code> type proxy setting. It tells
-     * protocol handlers not to use any proxy.
+     * Represents the proxy type setting {@code Proxy.Type.DIRECT}. It tells
+     * protocol handlers that there is no proxy to be used. The address is set
+     * to {@code null}.
+     * 
+     * @since Android 1.0
      */
     public static final Proxy NO_PROXY = new Proxy();
 
@@ -40,19 +44,21 @@ public class Proxy {
     private SocketAddress address;
 
     /**
-     * New a <code>Proxy</code> instance. SocketAddress must NOT be null when
-     * <code>type</code> is either <code>Proxy.Type.HTTP</code> or
-     * <code>Proxy.Type.SOCKS</code>. For <code>Proxy.Type.DIRECT</code>
-     * type proxy, use <code>Proxy.NO_PROXY</code> directly instead of
-     * constructing it.
+     * Creates a new {@code Proxy} instance. {@code SocketAddress} must NOT be
+     * {@code null} when {@code type} is either {@code Proxy.Type.HTTP} or
+     * {@code Proxy.Type.SOCKS}. To create a {@code Proxy} instance representing
+     * the proxy type {@code Proxy.Type.DIRECT}, use {@code Proxy.NO_PROXY}
+     * instead of this constructor.
      * 
      * @param type
-     *            proxy type
+     *            the proxy type of this instance.
      * @param sa
-     *            proxy address
+     *            the proxy address of this instance.
      * @throws IllegalArgumentException
-     *             when <code>type</code> is <code>Proxy.Type.DIRECT</code>
-     *             or SocketAddress is null.
+     *             if the parameter {@code type} is set to {@code
+     *             Proxy.Type.DIRECT} or the value for {@code SocketAddress} is
+     *             {@code null}.
+     * @since Android 1.0
      */
     public Proxy(Proxy.Type type, SocketAddress sa) {
         /*
@@ -77,33 +83,33 @@ public class Proxy {
     }
 
     /**
-     * Gets the proxy type.
+     * Gets the type of this {@code Proxy} instance.
      * 
-     * @return the proxy type.
+     * @return the stored proxy type.
+     * @since Android 1.0
      */
     public Proxy.Type type() {
         return type;
     }
 
     /**
-     * Gets the proxy address.
+     * Gets the address of this {@code Proxy} instance.
      * 
-     * @return the proxy address for <code>HTTP</code> and <code>SOCKS</code>
-     *         type proxy. Returns null for <code>DIRECT</code> type proxy.
+     * @return the stored proxy address or {@code null} if the proxy type is
+     *         {@code DIRECT}.
+     * @since Android 1.0
      */
     public SocketAddress address() {
         return address;
     }
 
     /**
-     * <p>
-     * Representing string of the proxy. The string consists of
-     * <code>type.toString()</code> and <code>address.toString()</code> if
-     * <code>type</code> and <code>address</code> are not null.
-     * </p>
+     * Gets a textual representation of this {@code Proxy} instance. The string
+     * includes the two parts {@code type.toString()} and {@code
+     * address.toString()} if {@code address} is not {@code null}.
      * 
-     * @see java.lang.Object#equals(java.lang.Object)
-     * @return representing string of the proxy.
+     * @return the representing string of this proxy.
+     * @since Android 1.0
      */
     @Override
     public String toString() {
@@ -115,16 +121,17 @@ public class Proxy {
     }
 
     /**
-     * <p>
-     * Compare <code>obj</code> with current proxy. Returns false if the
-     * <code>obj</code> is not a <code>Proxy</code> object. Returns true if
-     * and only if the <code>obj</code> has the same <code>address</code>
-     * and <code>type</code> value as current proxy.
-     * </p>
+     * Compares the specified {@code obj} to this {@code Proxy} instance and
+     * returns whether they are equal or not. The given object must be an
+     * instance of {@code Proxy} with the same address and the same type value
+     * to be equal.
      * 
-     * @see java.lang.Object#equals(java.lang.Object)
-     * @return true if <code>obj</code> represents the same proxy. Otherwise,
-     *         returns false.
+     * @param obj
+     *            the object to compare with this instance.
+     * @return {@code true} if the given object represents the same {@code
+     *         Proxy} as this instance, {@code false} otherwise.
+     * @see #hashCode
+     * @since Android 1.0
      */
     @Override
     public final boolean equals(Object obj) {
@@ -140,10 +147,10 @@ public class Proxy {
     }
 
     /**
-     * gets the hash code of <code>Proxy</code>.
+     * Gets the hashcode for this {@code Proxy} instance.
      * 
-     * @see java.lang.Object#hashCode()
-     * @return the hash code of <code>Proxy</code>.
+     * @return the hashcode value for this Proxy instance.
+     * @since Android 1.0
      */
     @Override
     public final int hashCode() {
@@ -156,8 +163,10 @@ public class Proxy {
     }
 
     /**
-     * The proxy type, includes <code>DIRECT</code>, <code>HTTP</code> and
-     * <code>SOCKS</code>.
+     * {@code Enum} class for the proxy type. Possible options are {@code
+     * DIRECT}, {@code HTTP} and {@code SOCKS}.
+     * 
+     * @since Android 1.0
      */
     public enum Type {
         /**

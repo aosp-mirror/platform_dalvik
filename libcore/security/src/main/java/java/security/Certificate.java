@@ -20,6 +20,10 @@
 * @version $Revision$
 */
 
+// BEGIN android-note
+// Added Deprecated annotation.
+// END android-note
+
 package java.security;
 
 import java.io.IOException;
@@ -27,50 +31,99 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
- * @com.intel.drl.spec_ref
+ * {@code Certificate} represents an identity certificate, such as X.509 or PGP.
+ * Note: A {@code Certificate} instances does not make any statement about the
+ * validity of itself. It's in the responsibility of the application to verify
+ * the validity of its certificates.
  * 
- * @deprecated Replaced by behavior in
- *             {@link javax.security.cert javax.security.cert}
+ * @deprecated Replaced by behavior in {@link javax.security.cert}
+ * @see java.security.cert.Certificate
+ * @since Android 1.0
  */
+@Deprecated
 public interface Certificate {
 
     /**
-     * @com.intel.drl.spec_ref
+     * Decodes a certificate from the given {@code InputStream}. The format of
+     * the data to encode must be that identified by {@link #getFormat()} and
+     * encoded by {@link #encode(OutputStream)}.
+     * 
+     * @param stream
+     *            the {@code InputStream} to read from.
+     * @throws KeyException
+     *             if certificate information is incomplete or incorrect.
+     * @throws IOException
+     *             if an exception is thrown by accessing the provided stream.
+     * @see #encode(OutputStream)
+     * @see #getFormat()
+     * @since Android 1.0
      */
     public void decode(InputStream stream) throws KeyException, IOException;
 
     /**
-     * @com.intel.drl.spec_ref
+     * Encodes this certificate to an output stream. The
+     * {@link #decode(InputStream)} method must be able to decode the format
+     * written by this method.
+     * 
+     * @param stream
+     *            the {@code OutputStream} to encode this certificate to.
+     * @throws KeyException
+     *             if certificate information is incomplete or incorrect.
+     * @throws IOException
+     *             if an exception is thrown by accessing the provided stream.
+     * @see #decode(InputStream)
+     * @since Android 1.0
      */
     public void encode(OutputStream stream) throws KeyException, IOException;
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Returns a string identifying the format of this certificate.
+     * 
+     * @return a string identifying the format of this certificate.
+     * @since Android 1.0
      */
     public String getFormat();
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Returns the guarantor of this certificate. That guarantor guarantees,
+     * that the public key of this certificate is from the principal returned by
+     * {@link #getPrincipal()}.
+     * 
+     * @return the guarantor of this certificate.
+     * @see #getPrincipal()
+     * @since Android 1.0
      */
     public Principal getGuarantor();
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Returns the principal of this certificate. The principal is guaranteed by
+     * the guarantor returned by {@link #getGuarantor()}.
+     * 
+     * @return the principal of this certificate.
+     * @see #getGuarantor()
+     * @since Android 1.0
      */
     public Principal getPrincipal();
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Returns the public key of this certificate. The public key is guaranteed
+     * by the guarantor to belong to the principal.
+     * 
+     * @return the public key of this certificate.
+     * @see #getGuarantor()
+     * @see Certificate#getPrincipal()
+     * @since Android 1.0
      */
     public PublicKey getPublicKey();
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Returns a string containing a concise, human-readable description of the
+     * this {@code Certificate}.
+     * 
+     * @param detailed
+     *            whether or not this method should return detailed information.
+     * @return a string representation of this certificate.
+     * @since Android 1.0
      */
     public String toString(boolean detailed);
 }

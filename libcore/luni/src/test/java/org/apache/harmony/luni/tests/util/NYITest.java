@@ -17,6 +17,11 @@
 
 package org.apache.harmony.luni.tests.util;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
@@ -28,8 +33,19 @@ import org.apache.harmony.luni.util.NotImplementedException;
 /**
  * Testing the NYI framework code.
  */
+// well this should be the past now.
+@TestTargetClass(NotImplementedException.class)
 public class NYITest extends TestCase {
 
+    @TestInfo(
+              level = TestLevel.COMPLETE,
+              purpose = "",
+              targets = {
+                @TestTarget(
+                  methodName = "NotImplementedException",
+                  methodArgs = {java.io.PrintStream.class}
+                )
+            })      
     public void testNYI() throws UnsupportedEncodingException {
         ByteArrayOutputStream bos = new ByteArrayOutputStream(400);
         PrintStream stream = new PrintStream(bos, true, "UTF-8");

@@ -15,30 +15,30 @@
  *  limitations under the License.
  */
 
-/**
-* @author Vera Y. Petrashkova
-* @version $Revision$
-*/
-
 package java.security.interfaces;
 
 import java.math.BigInteger;
 import java.security.PrivateKey;
 
 /**
- * @com.intel.drl.spec_ref
+ * The interface for a Digital Signature Algorithm (DSA) private key.
  * 
+ * @since Android 1.0
  */
 public interface DSAPrivateKey extends DSAKey, PrivateKey {
+
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * The serial version identifier.
+     * 
+     * @since Android 1.0
      */
     public static final long serialVersionUID = 7776497482533790279L;
 
     /**
-     * @com.intel.drl.spec_ref
-     *  
+     * Returns the private key value {@code x}.
+     * 
+     * @return the private key value {@code x}.
+     * @since Android 1.0
      */
     public BigInteger getX();
 

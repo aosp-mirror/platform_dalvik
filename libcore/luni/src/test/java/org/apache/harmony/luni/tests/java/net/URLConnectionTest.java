@@ -16,6 +16,11 @@
 
 package org.apache.harmony.luni.tests.java.net;
 
+import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -23,11 +28,21 @@ import java.net.URLConnection;
 
 import junit.framework.TestCase;
 
+@TestTargetClass(URLConnection.class) 
 public class URLConnectionTest extends TestCase {
 
     /**
      * @tests java.net.URLConnection#addRequestProperty(String, String)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions checked only.",
+      targets = {
+        @TestTarget(
+          methodName = "addRequestProperty",
+          methodArgs = {String.class, String.class}
+        )
+    })
     public void test_addRequestProperty() throws MalformedURLException,
             IOException {
 
@@ -55,6 +70,15 @@ public class URLConnectionTest extends TestCase {
     /**
      * @tests java.net.URLConnection#setRequestProperty(String, String)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions checked only.",
+      targets = {
+        @TestTarget(
+          methodName = "setRequestProperty",
+          methodArgs = {String.class, String.class}
+        )
+    })
     public void test_setRequestProperty() throws MalformedURLException,
             IOException {
 
@@ -81,6 +105,15 @@ public class URLConnectionTest extends TestCase {
     /**
      * @tests java.net.URLConnection#setUseCaches(boolean)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions checked only.",
+      targets = {
+        @TestTarget(
+          methodName = "setUseCaches",
+          methodArgs = {boolean.class}
+        )
+    })
     public void test_setUseCachesZ() throws MalformedURLException, IOException {
 
         // Regression for HARMONY-71
@@ -98,6 +131,15 @@ public class URLConnectionTest extends TestCase {
     /**
      * @tests java.net.URLConnection#setAllowUserInteraction(boolean)
      */
+@TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Exceptions checked only.",
+      targets = {
+        @TestTarget(
+          methodName = "setAllowUserInteraction",
+          methodArgs = {boolean.class}
+        )
+    })
     public void test_setAllowUserInteractionZ() throws MalformedURLException,
             IOException {
 

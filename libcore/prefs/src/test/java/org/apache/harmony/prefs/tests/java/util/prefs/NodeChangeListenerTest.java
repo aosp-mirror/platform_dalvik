@@ -16,6 +16,11 @@
 
 package org.apache.harmony.prefs.tests.java.util.prefs;
 
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+
 import java.util.prefs.NodeChangeEvent;
 import java.util.prefs.NodeChangeListener;
 import java.util.prefs.Preferences;
@@ -25,43 +30,62 @@ import junit.framework.TestCase;
 /**
  * 
  */
+@TestTargetClass(NodeChangeListener.class)
 public class NodeChangeListenerTest extends TestCase {
 
-	NodeChangeListener l;
+    NodeChangeListener l;
 
-	/*
-	 * @see TestCase#setUp()
-	 */
-	protected void setUp() throws Exception {
-		super.setUp();
-		l = new NodeChangeListenerImpl();
-	}
+    /*
+     * @see TestCase#setUp()
+     */
+    protected void setUp() throws Exception {
+        super.setUp();
+        l = new NodeChangeListenerImpl();
+    }
 
-	/*
-	 * @see TestCase#tearDown()
-	 */
-	protected void tearDown() throws Exception {
-		super.tearDown();
-	}
+    /*
+     * @see TestCase#tearDown()
+     */
+    protected void tearDown() throws Exception {
+        super.tearDown();
+    }
 
-	public void testChildAdded() {
-		l.childAdded(new NodeChangeEvent(Preferences.userRoot(), Preferences
-				.userRoot()));
-	}
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Testing Interface",
+      targets = {
+        @TestTarget(
+          methodName = "childAdded",
+          methodArgs = {java.util.prefs.NodeChangeEvent.class}
+        )
+    })
+    public void testChildAdded() {
+        l.childAdded(new NodeChangeEvent(Preferences.userRoot(), Preferences
+                .userRoot()));
+    }
 
-	public void testChildRemoved() {
-		l.childRemoved(new NodeChangeEvent(Preferences.userRoot(), Preferences
-				.userRoot()));
-	}
+@TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "Testing Interface",
+      targets = {
+        @TestTarget(
+          methodName = "childRemoved",
+          methodArgs = {java.util.prefs.NodeChangeEvent.class}
+        )
+    })
+    public void testChildRemoved() {
+        l.childRemoved(new NodeChangeEvent(Preferences.userRoot(), Preferences
+                .userRoot()));
+    }
 
-	public static class NodeChangeListenerImpl implements NodeChangeListener {
+    public static class NodeChangeListenerImpl implements NodeChangeListener {
 
-		public void childAdded(NodeChangeEvent e) {
-		}
+        public void childAdded(NodeChangeEvent e) {
+        }
 
-		public void childRemoved(NodeChangeEvent e) {
-		}
+        public void childRemoved(NodeChangeEvent e) {
+        }
 
-	}
+    }
 
 }

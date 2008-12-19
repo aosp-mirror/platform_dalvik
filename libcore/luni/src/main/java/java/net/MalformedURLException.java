@@ -24,6 +24,7 @@ import java.io.IOException;
  * incorrect specification.
  * 
  * @see URL
+ * @since Android 1.0
  */
 public class MalformedURLException extends IOException {
 
@@ -31,6 +32,8 @@ public class MalformedURLException extends IOException {
 
     /**
      * Constructs a new instance of this class with its walkback filled in.
+     * 
+     * @since Android 1.0
      */
     public MalformedURLException() {
         super();
@@ -41,7 +44,8 @@ public class MalformedURLException extends IOException {
      * filled in.
      * 
      * @param detailMessage
-     *            String The detail message for the exception.
+     *            the detail message for this exception instance.
+     * @since Android 1.0
      */
     public MalformedURLException(String detailMessage) {
         super(detailMessage);

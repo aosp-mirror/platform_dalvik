@@ -67,7 +67,7 @@ void dvmPrintHexDumpEx(int priority, const char* tag, const void* vaddr,
     while (length) {
         unsigned int lineOffset = offset & ~0x0f;
         int i, count;
-        
+
         hex = out;
         asc = out + 59;
 
@@ -199,7 +199,7 @@ BitVector* dvmAllocBitVector(int startBits, bool expandable)
     int count;
 
     assert(sizeof(bv->storage[0]) == 4);        /* assuming 32-bit units */
-    assert(startBits > 0);
+    assert(startBits >= 0);
 
     bv = (BitVector*) malloc(sizeof(BitVector));
 
@@ -208,7 +208,7 @@ BitVector* dvmAllocBitVector(int startBits, bool expandable)
     bv->storageSize = count;
     bv->expandable = expandable;
     bv->storage = (u4*) malloc(count * sizeof(u4));
-    memset(bv->storage, 0xff, count * sizeof(u4));
+    memset(bv->storage, 0x00, count * sizeof(u4));
     return bv;
 }
 
@@ -230,9 +230,6 @@ void dvmFreeBitVector(BitVector* pBits)
  * This is not synchronized.  The caller is expected to hold some sort of
  * lock that prevents multiple threads from executing simultaneously in
  * dvmAllocBit/dvmFreeBit.
- *
- * The bitmap indicates which resources are free, so we use '1' to indicate
- * available and '0' to indicate allocated.
  */
 int dvmAllocBit(BitVector* pBits)
 {
@@ -240,13 +237,13 @@ int dvmAllocBit(BitVector* pBits)
 
 retry:
     for (word = 0; word < pBits->storageSize; word++) {
-        if (pBits->storage[word] != 0) {
+        if (pBits->storage[word] != 0xffffffff) {
             /*
              * There are unallocated bits in this word.  Return the first.
              */
-            bit = ffs(pBits->storage[word]) -1;
+            bit = ffs(~(pBits->storage[word])) -1;
             assert(bit >= 0 && bit < 32);
-            pBits->storage[word] &= ~(1 << bit);
+            pBits->storage[word] |= 1 << bit;
             return (word << 5) | bit;
         }
     }
@@ -259,20 +256,82 @@ retry:
 
     pBits->storage = realloc(pBits->storage,
                     (pBits->storageSize + kBitVectorGrowth) * sizeof(u4));
-    memset(&pBits->storage[pBits->storageSize], 0xff,
+    memset(&pBits->storage[pBits->storageSize], 0x00,
         kBitVectorGrowth * sizeof(u4));
     pBits->storageSize += kBitVectorGrowth;
     goto retry;
 }
 
 /*
- * Mark the specified bit as "free".
+ * Mark the specified bit as "set".
+ *
+ * Returns "false" if the bit is outside the range of the vector and we're
+ * not allowed to expand.
  */
-void dvmFreeBit(BitVector* pBits, int num)
+bool dvmSetBit(BitVector* pBits, int num)
+{
+    assert(num >= 0);
+    if (num >= pBits->storageSize * (int)sizeof(u4) * 8) {
+        if (!pBits->expandable)
+            return false;
+
+        int newSize = (num + 31) >> 5;
+        assert(newSize > pBits->storageSize);
+        pBits->storage = realloc(pBits->storage, newSize * sizeof(u4));
+        memset(&pBits->storage[pBits->storageSize], 0x00,
+            (newSize - pBits->storageSize) * sizeof(u4));
+    }
+
+    pBits->storage[num >> 5] |= 1 << (num & 0x1f);
+    return true;
+}
+
+/*
+ * Mark the specified bit as "clear".
+ */
+void dvmClearBit(BitVector* pBits, int num)
 {
     assert(num >= 0 && num < (int) pBits->storageSize * (int)sizeof(u4) * 8);
 
-    pBits->storage[num >> 5] |= 1 << (num & 0x1f);
+    pBits->storage[num >> 5] &= ~(1 << (num & 0x1f));
+}
+
+/*
+ * Determine whether or not the specified bit is set.
+ */
+bool dvmIsBitSet(const BitVector* pBits, int num)
+{
+    assert(num >= 0 && num < (int) pBits->storageSize * (int)sizeof(u4) * 8);
+
+    int val = pBits->storage[num >> 5] & (1 << (num & 0x1f));
+    return (val != 0);
+}
+
+/*
+ * Count the number of bits that are set.
+ */
+int dvmCountSetBits(const BitVector* pBits)
+{
+    int word, bit;
+    int count = 0;
+
+    for (word = 0; word < pBits->storageSize; word++) {
+        u4 val = pBits->storage[word];
+
+        if (val != 0) {
+            if (val == 0xffffffff) {
+                count += 32;
+            } else {
+                /* count the number of '1' bits */
+                while (val != 0) {
+                    val &= val - 1;
+                    count++;
+                }
+            }
+        }
+    }
+
+    return count;
 }
 
 
@@ -314,7 +373,7 @@ char* dvmDescriptorToDot(const char* str)
         at -= 2; /* Two fewer chars to copy. */
         str++; /* Skip the 'L'. */
     }
-    
+
     newStr = malloc(at + 1); /* Add one for the '\0'. */
     newStr[at] = '\0';
 
@@ -345,11 +404,11 @@ char* dvmDotToDescriptor(const char* str)
     }
 
     newStr = at = malloc(length + 1); /* + 1 for the '\0' */
-    
+
     if (newStr == NULL) {
         return NULL;
     }
-    
+
     if (wrapElSemi) {
         *(at++) = 'L';
     }
@@ -384,7 +443,7 @@ char* dvmDescriptorToName(const char* str)
         if (newStr == NULL) {
             return NULL;
         }
-        
+
         strlcpy(newStr, str + 1, length);
         return newStr;
     }
@@ -406,7 +465,7 @@ char* dvmNameToDescriptor(const char* str)
         if (descriptor == NULL) {
             return NULL;
         }
-        
+
         descriptor[0] = 'L';
         strcpy(descriptor + 1, str);
         descriptor[length + 1] = ';';
@@ -459,7 +518,7 @@ u8 dvmGetOtherThreadCpuTimeNsec(pthread_t thread)
 {
 #if 0 /*def HAVE_POSIX_CLOCKS*/
     int clockId;
-    
+
     if (pthread_getcpuclockid(thread, &clockId) != 0)
         return (u8) -1;
 
@@ -483,6 +542,10 @@ u8 dvmGetOtherThreadCpuTimeNsec(pthread_t thread)
  * The initial start time value for "relStartTime" MUST come from the
  * dvmGetRelativeTimeUsec call.  On the device this must come from the
  * monotonic clock source, not the wall clock.
+ *
+ * This should be used wherever you might be tempted to call sched_yield()
+ * in a loop.  The problem with sched_yield is that, for a high-priority
+ * thread, the kernel might not actually transfer control elsewhere.
  *
  * Returns "false" if we were unable to sleep because our time was up.
  */
@@ -570,7 +633,7 @@ size_t strlcpy(char *dst, const char *src, size_t size) {
         strncpy(dst, src, copyLength);
         dst[copyLength] = '\0';
     }
-    
+
     return srcLength;
 }
 #endif

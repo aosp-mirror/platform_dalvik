@@ -21,83 +21,81 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 /**
- * The interface to channels that can write a set of buffers in a single
- * operation.
- * <p>
- * The corresponding interface for reads is called
- * <code>ScatteringByteChannel</code>.
+ * The interface for channels that can write a set of buffers in a single
+ * operation. The corresponding interface for read operations is
+ * {@link ScatteringByteChannel}.
  * 
+ * @since Android 1.0
  */
 public interface GatheringByteChannel extends WritableByteChannel {
 
     /**
-     * Writes bytes from all the given buffers to the channel.
+     * Writes bytes from all the given buffers to a channel.
      * <p>
-     * This method is equivalent to:
-     * 
-     * <pre>
-     * write(buffers, 0, buffers.length);
-     * </pre>
-     * 
+     * This method is equivalent to: {@code write(buffers, 0, buffers.length);}
      * </p>
      * 
      * @param buffers
      *            the buffers containing bytes to be written.
      * @return the number of bytes actually written.
+     * @throws AsynchronousCloseException
+     *             if the channel is closed by another thread during this write
+     *             operation.
+     * @throws ClosedByInterruptException
+     *             if another thread interrupts the calling thread while the
+     *             operation is in progress. The interrupt state of the calling 
+     *             thread is set and the channel is closed.
      * @throws ClosedChannelException
      *             if the channel is closed.
-     * @throws NonWritableChannelException
-     *             if the channel is open, but not in a mode that permits
-     *             writing.
-     * @throws ClosedByInterruptException
-     *             if the thread is interrupted in its IO operation by another
-     *             thread closing the channel.
-     * @throws AsynchronousCloseException
-     *             if the write is interrupted by another thread sending an
-     *             explicit interrupt.
+     * @throws IndexOutOfBoundsException
+     *             if {@code offset < 0} or {@code length < 0}, or if
+     *             {@code offset + length} is greater than the size of
+     *             {@code buffers}.
      * @throws IOException
-     *             if some other type of exception occurs. Details are in the
-     *             message.
+     *             if another I/O error occurs; details are in the message.
+     * @throws NonWritableChannelException
+     *             if the channel has not been opened in a mode that permits
+     *             writing.
+     * @since Android 1.0
      */
     public long write(ByteBuffer[] buffers) throws IOException;
 
     /**
-     * Writes a subset of the given bytes from the buffers to the channel.
-     * <p>
-     * This method attempts to write all of the <code>remaining()</code> bytes
-     * from <code>length</code> byte buffers, in order, starting at
-     * <code>buffers[offset]</code>. The number of bytes actually written is
-     * returned.
-     * </p>
+     * Writes bytes from a subset of the specified array of buffers to a
+     * channel. The subset is defined by {@code offset} and {@code length},
+     * indicating the first buffer and the number of buffers to use.
      * <p>
      * If a write operation is in progress, subsequent threads will block until
-     * the write is completed, and will then contend for the ability to write.
+     * the write is completed and then contend for the ability to write.
      * </p>
      * 
      * @param buffers
-     *            the array of byte buffers containing the source of remaining
-     *            bytes that will be attempted to be written.
+     *            the array of byte buffers that is the source for bytes written
+     *            to the channel.
      * @param offset
-     *            the index of the first buffer to write.
+     *            the index of the first buffer in {@code buffers }to get bytes
+     *            from.
      * @param length
-     *            the number of buffers to write.
+     *            the number of buffers to get bytes from.
      * @return the number of bytes actually written.
+     * @throws AsynchronousCloseException
+     *             if the channel is closed by another thread during this write
+     *             operation.
+     * @throws ClosedByInterruptException
+     *             if another thread interrupts the calling thread while the
+     *             operation is in progress. The interrupt state of the calling 
+     *             thread is set and the channel is closed.
+     * @throws ClosedChannelException
+     *             if the channel is closed.
      * @throws IndexOutOfBoundsException
-     *             if offset < 0 or > buffers.length; or length < 0 or >
-     *             buffers.length - offset.
+     *             if {@code offset < 0} or {@code length < 0}, or if
+     *             {@code offset + length} is greater than the size of
+     *             {@code buffers}.
+     * @throws IOException
+     *             if another I/O error occurs; details are in the message.
      * @throws NonWritableChannelException
      *             if the channel was not opened for writing.
-     * @throws ClosedChannelException
-     *             the channel is currently closed.
-     * @throws AsynchronousCloseException
-     *             the channel was closed by another thread while the write was
-     *             underway.
-     * @throws ClosedByInterruptException
-     *             the thread was interrupted by another thread while the write
-     *             was underway.
-     * @throws IOException
-     *             if some other type of exception occurs. Details are in the
-     *             message.
+     * @since Android 1.0
      */
     public long write(ByteBuffer[] buffers, int offset, int length)
             throws IOException;

@@ -24,61 +24,62 @@ import java.nio.CharBuffer;
 import org.apache.harmony.niochar.internal.nls.Messages;
 
 /**
- * An converter that can convert 16-bit Unicode character sequence to byte
- * sequence in some charset .
+ * A converter that can converts a 16-bit Unicode character sequence to a byte
+ * sequence in some charset.
  * <p>
- * The input character sequence is wrapped by
- * {@link java.nio.CharBuffer CharBuffer} and the output character sequence is
- * {@link java.nio.ByteBuffer ByteBuffer}. A encoder instance should be used in
- * following sequence, which is referred to as a encoding operation:
+ * The input character sequence is wrapped by a
+ * {@link java.nio.CharBuffer CharBuffer} and the output character sequence is a
+ * {@link java.nio.ByteBuffer ByteBuffer}. An encoder instance should be used
+ * in the following sequence, which is referred to as a encoding operation:
  * <ol>
- * <li>Invoking the {@link #reset() reset} method to reset the encoder if the
+ * <li>invoking the {@link #reset() reset} method to reset the encoder if the
  * encoder has been used;</li>
- * <li>Invoking the {@link #encode(CharBuffer, ByteBuffer, boolean) encode}
+ * <li>invoking the {@link #encode(CharBuffer, ByteBuffer, boolean) encode}
  * method until the additional input is not needed, the <code>endOfInput</code>
  * parameter must be set to false, the input buffer must be filled and the
  * output buffer must be flushed between invocations;</li>
- * <li>Invoking the {@link #encode(CharBuffer, ByteBuffer, boolean) encode}
- * method last time, and the the <code>endOfInput</code> parameter must be set
- * to true</li>
- * <li>Invoking the {@link #flush(ByteBuffer) flush} method to flush the
+ * <li>invoking the {@link #encode(CharBuffer, ByteBuffer, boolean) encode}
+ * method for the last time and the <code>endOfInput</code> parameter must be
+ * set to {@code true}</li>
+ * <li>invoking the {@link #flush(ByteBuffer) flush} method to flush the
  * output.</li>
  * </ol>
  * </p>
  * <p>
  * The {@link #encode(CharBuffer, ByteBuffer, boolean) encode} method will
- * convert as many characters as possible, and the process won't stop except the
- * input characters has been run out of, the output buffer has been filled or
- * some error has happened. A {@link CoderResult CoderResult} instance will be
+ * convert as many characters as possible, and the process won't stop until the
+ * input characters have run out, the output buffer has been filled or some
+ * error has happened. A {@link CoderResult CoderResult} instance will be
  * returned to indicate the stop reason, and the invoker can identify the result
- * and choose further action, which can include filling the input buffer,
- * flushing the output buffer, recovering from error and trying again.
+ * and choose further action, which includes filling the input buffer, flushing
+ * the output buffer or recovering from an error and trying again.
  * </p>
  * <p>
- * There are two common encoding errors. One is named as malformed and it is
- * returned when the input content is illegal 16-bit Unicode character sequence,
- * the other is named as unmappable character and occurs when there is a problem
- * mapping the input to a valid byte sequence in the specific charset.
+ * There are two common encoding errors. One is named malformed and it is
+ * returned when the input content is an illegal 16-bit Unicode character
+ * sequence, the other is named unmappable character and occurs when there is a
+ * problem mapping the input to a valid byte sequence in the specified charset.
  * </p>
  * <p>
- * The two errors can be handled in three ways, the default one is to report the
+ * Both errors can be handled in three ways, the default one is to report the
  * error to the invoker by a {@link CoderResult CoderResult} instance, and the
  * alternatives are to ignore it or to replace the erroneous input with the
- * replacement byte array. The replacement byte array is {(byte)'?'} by default
- * and can be changed by invoking {@link #replaceWith(byte[]) replaceWith}
- * method. The invoker of this encoder can choose one way by specifying a
+ * replacement byte array. The replacement byte array is '{@code ?}' by
+ * default and can be changed by invoking the
+ * {@link #replaceWith(byte[]) replaceWith} method. The invoker of this encoder
+ * can choose one way by specifying a
  * {@link CodingErrorAction CodingErrorAction} instance for each error type via
- * {@link #onMalformedInput(CodingErrorAction) onMalformedInput} method and
- * {@link #onUnmappableCharacter(CodingErrorAction) onUnmappableCharacter}
+ * the {@link #onMalformedInput(CodingErrorAction) onMalformedInput} method and
+ * the {@link #onUnmappableCharacter(CodingErrorAction) onUnmappableCharacter}
  * method.
  * </p>
  * <p>
- * This class is abstract class and encapsulate many common operations of
- * encoding process for all charsets. encoder for specific charset should extend
- * this class and need only implement
+ * This class is abstract and encapsulates many common operations of the
+ * encoding process for all charsets. Encoders for a specific charset should
+ * extend this class and need only to implement the
  * {@link #encodeLoop(CharBuffer, ByteBuffer) encodeLoop} method for basic
- * encoding loop. If a subclass maintains internal state, it should override the
- * {@link #implFlush(ByteBuffer) implFlush} method and
+ * encoding. If a subclass maintains an internal state, it should override the
+ * {@link #implFlush(ByteBuffer) implFlush} method and the
  * {@link #implReset() implReset} method in addition.
  * </p>
  * <p>
@@ -87,6 +88,7 @@ import org.apache.harmony.niochar.internal.nls.Messages;
  * 
  * @see java.nio.charset.Charset
  * @see java.nio.charset.CharsetDecoder
+ * @since Android 1.0
  */
 public abstract class CharsetEncoder {
     /*
@@ -139,22 +141,22 @@ public abstract class CharsetEncoder {
      */
 
     /**
-     * Construct a new <code>CharsetEncoder</code> using given
+     * Constructs a new <code>CharsetEncoder</code> using the given
      * <code>Charset</code>, average number and maximum number of bytes
      * created by this encoder for one input character.
      * 
      * @param cs
-     *            this encoder's <code>Charset</code>, which create this
-     *            encoder
+     *            the <code>Charset</code> to be used by this encoder.
      * @param averageBytesPerChar
      *            average number of bytes created by this encoder for one input
-     *            character, must be positive
+     *            character, must be positive.
      * @param maxBytesPerChar
      *            maximum number of bytes which can be created by this encoder
-     *            for one input character, must be positive
+     *            for one input character, must be positive.
      * @throws IllegalArgumentException
      *             if <code>maxBytesPerChar</code> or
-     *             <code>averageBytePerChar</code> is negative
+     *             <code>averageBytesPerChar</code> is negative.
+     * @since Android 1.0
      */
     protected CharsetEncoder(Charset cs, float averageBytesPerChar,
             float maxBytesPerChar) {
@@ -163,26 +165,26 @@ public abstract class CharsetEncoder {
     }
 
     /**
-     * Construct a new <code>CharsetEncoder</code> using given
-     * <code>Charset</code>, replace byte array, average number and maximum
-     * number of bytes created by this encoder for one input character.
+     * Constructs a new <code>CharsetEncoder</code> using the given
+     * <code>Charset</code>, replacement byte array, average number and
+     * maximum number of bytes created by this encoder for one input character.
      * 
      * @param cs
-     *            the this encoder's <code>Charset</code>, which create this
-     *            encoder
+     *            the <code>Charset</code> to be used by this encoder.
      * @param averageBytesPerChar
-     *            average number of bytes created by this encoder for single
-     *            input character, must be positive
+     *            average number of bytes created by this encoder for one single
+     *            input character, must be positive.
      * @param maxBytesPerChar
      *            maximum number of bytes which can be created by this encoder
-     *            for single input character, must be positive
+     *            for one single input character, must be positive.
      * @param replacement
      *            the replacement byte array, cannot be null or empty, its
-     *            length cannot larger than <code>maxBytesPerChar</code>, and
-     *            must be legal replacement, which can be justified by
-     *            {@link #isLegalReplacement(byte[]) isLegalReplacement}
+     *            length cannot be larger than <code>maxBytesPerChar</code>,
+     *            and must be a legal replacement, which can be justified by
+     *            {@link #isLegalReplacement(byte[]) isLegalReplacement}.
      * @throws IllegalArgumentException
-     *             if any parameters are invalid
+     *             if any parameters are invalid.
+     * @since Android 1.0
      */
     protected CharsetEncoder(Charset cs, float averageBytesPerChar,
             float maxBytesPerChar, byte[] replacement) {
@@ -208,31 +210,35 @@ public abstract class CharsetEncoder {
      * ---------------------------------------
      */
     /**
-     * get the average number of bytes created by this encoder for single input
-     * character
+     * Gets the average number of bytes created by this encoder for a single
+     * input character.
      * 
-     * @return the average number of bytes created by this encoder for single
-     *         input character
+     * @return the average number of bytes created by this encoder for a single
+     *         input character.
+     * @since Android 1.0
      */
     public final float averageBytesPerChar() {
         return averBytes;
     }
 
     /**
-     * Check if given character can be encoded by this encoder.
-     * 
+     * Checks if the given character can be encoded by this encoder.
+     * <p>
      * Note that this method can change the internal status of this encoder, so
-     * it should not be called when another encode process is ongoing, otherwise
-     * it will throw <code>IllegalStateException</code>.
-     * 
+     * it should not be called when another encoding process is ongoing,
+     * otherwise it will throw an <code>IllegalStateException</code>.
+     * </p>
+     * <p>
      * This method can be overridden for performance improvement.
+     * </p>
      * 
      * @param c
-     *            the given encoder
-     * @return true if given character can be encoded by this encoder
+     *            the given encoder.
+     * @return true if given character can be encoded by this encoder.
      * @throws IllegalStateException
-     *             if another encode process is ongoing so that current internal
-     *             status is neither RESET or FLUSH
+     *             if another encode process is ongoing so that the current
+     *             internal status is neither RESET or FLUSH.
+     * @since Android 1.0
      */
     public boolean canEncode(char c) {
         return implCanEncode(CharBuffer.wrap(new char[] { c }));
@@ -264,21 +270,22 @@ public abstract class CharsetEncoder {
     }
 
     /**
-     * Check if given <code>CharSequence</code> can be encoded by this
+     * Checks if a given <code>CharSequence</code> can be encoded by this
      * encoder.
      * 
      * Note that this method can change the internal status of this encoder, so
      * it should not be called when another encode process is ongoing, otherwise
-     * it will throw <code>IllegalStateException</code>.
+     * it will throw an <code>IllegalStateException</code>.
      * 
      * This method can be overridden for performance improvement.
      * 
      * @param sequence
-     *            the given <code>CharSequence</code>
-     * @return true if given <code>CharSequence</code> can be encoded by this
-     *         encoder
+     *            the given <code>CharSequence</code>.
+     * @return true if the given <code>CharSequence</code> can be encoded by
+     *         this encoder.
      * @throws IllegalStateException
-     *             if current internal status is neither RESET or FLUSH
+     *             if current internal status is neither RESET or FLUSH.
+     * @since Android 1.0
      */
     public boolean canEncode(CharSequence sequence) {
         CharBuffer cb;
@@ -291,16 +298,17 @@ public abstract class CharsetEncoder {
     }
 
     /**
-     * Get the <code>Charset</code> which creates this encoder.
+     * Gets the <code>Charset</code> which this encoder uses.
      * 
-     * @return the <code>Charset</code> which creates this encoder
+     * @return the <code>Charset</code> which this encoder uses.
+     * @since Android 1.0
      */
     public final Charset charset() {
         return cs;
     }
 
     /**
-     * This is a facade method for encoding operation.
+     * This is a facade method for the encoding operation.
      * <p>
      * This method encodes the remaining character sequence of the given
      * character buffer into a new byte buffer. This method performs a complete
@@ -311,26 +319,27 @@ public abstract class CharsetEncoder {
      * </p>
      * 
      * @param in
-     *            the input buffer
-     * @return a new <code>ByteBuffer</code> containing the the bytes produced
-     *         by this encoding operation. The buffer's limit will be the
-     *         position of last byte in buffer, and the position will be zero
+     *            the input buffer.
+     * @return a new <code>ByteBuffer</code> containing the bytes produced by
+     *         this encoding operation. The buffer's limit will be the position
+     *         of the last byte in the buffer, and the position will be zero.
      * @throws IllegalStateException
-     *             if another encoding operation is ongoing
+     *             if another encoding operation is ongoing.
      * @throws MalformedInputException
-     *             if illegal input character sequence for this charset
+     *             if an illegal input character sequence for this charset is
      *             encountered, and the action for malformed error is
      *             {@link CodingErrorAction#REPORT CodingErrorAction.REPORT}
      * @throws UnmappableCharacterException
-     *             if legal but unmappable input character sequence for this
-     *             charset encountered, and the action for unmappable character
-     *             error is
+     *             if a legal but unmappable input character sequence for this
+     *             charset is encountered, and the action for unmappable
+     *             character error is
      *             {@link CodingErrorAction#REPORT CodingErrorAction.REPORT}.
      *             Unmappable means the Unicode character sequence at the input
      *             buffer's current position cannot be mapped to a equivalent
      *             byte sequence.
      * @throws CharacterCodingException
-     *             if other exception happened during the encode operation
+     *             if other exception happened during the encode operation.
+     * @since Android 1.0
      */
     public final ByteBuffer encode(CharBuffer in)
             throws CharacterCodingException {
@@ -410,58 +419,59 @@ public abstract class CharsetEncoder {
      * following rules:
      * <ul>
      * <li>A {@link CoderResult#malformedForLength(int) malformed input} result
-     * indicates that some malformed input error encountered, and the erroneous
-     * characters start at the input buffer's position and their number can be
-     * got by result's {@link CoderResult#length() length}. This kind of result
-     * can be returned only if the malformed action is
-     * {@link CodingErrorAction#REPORT CodingErrorAction.REPORT}. </li>
+     * indicates that some malformed input error was encountered, and the
+     * erroneous characters start at the input buffer's position and their
+     * number can be got by result's {@link CoderResult#length() length}. This
+     * kind of result can be returned only if the malformed action is
+     * {@link CodingErrorAction#REPORT CodingErrorAction.REPORT}.</li>
      * <li>{@link CoderResult#UNDERFLOW CoderResult.UNDERFLOW} indicates that
-     * as many characters as possible in the input buffer has been encoded. If
+     * as many characters as possible in the input buffer have been encoded. If
      * there is no further input and no characters left in the input buffer then
      * this task is complete. If this is not the case then the client should
      * call this method again supplying some more input characters.</li>
      * <li>{@link CoderResult#OVERFLOW CoderResult.OVERFLOW} indicates that the
      * output buffer has been filled, while there are still some characters
      * remaining in the input buffer. This method should be invoked again with a
-     * non-full output buffer </li>
+     * non-full output buffer.</li>
      * <li>A {@link CoderResult#unmappableForLength(int) unmappable character}
      * result indicates that some unmappable character error was encountered,
      * and the erroneous characters start at the input buffer's position and
      * their number can be got by result's {@link CoderResult#length() length}.
      * This kind of result can be returned only on
-     * {@link CodingErrorAction#REPORT CodingErrorAction.REPORT}. </li>
+     * {@link CodingErrorAction#REPORT CodingErrorAction.REPORT}.</li>
      * </ul>
      * </p>
      * <p>
-     * The <code>endOfInput</code> parameter indicates that if the invoker can
+     * The <code>endOfInput</code> parameter indicates if the invoker can
      * provider further input. This parameter is true if and only if the
-     * characters in current input buffer are all inputs for this encoding
-     * operation. Note that it is common and won't cause error that the invoker
-     * sets false and then finds no more input available; while it may cause
-     * error that the invoker always sets true in several consecutive
-     * invocations so that any remaining input will be treated as malformed
+     * characters in the current input buffer are all inputs for this encoding
+     * operation. Note that it is common and won't cause an error if the invoker
+     * sets false and then has no more input available, while it may cause an
+     * error if the invoker always sets true in several consecutive invocations.
+     * This would make the remaining input to be treated as malformed input.
      * input.
      * </p>
      * <p>
-     * This method invokes
+     * This method invokes the
      * {@link #encodeLoop(CharBuffer, ByteBuffer) encodeLoop} method to
-     * implement basic encode logic for specific charset.
+     * implement the basic encode logic for a specific charset.
      * </p>
      * 
      * @param in
-     *            the input buffer
+     *            the input buffer.
      * @param out
-     *            the output buffer
+     *            the output buffer.
      * @param endOfInput
-     *            true if all the input characters have been provided
-     * @return a <code>CoderResult</code> instance indicating the result
+     *            true if all the input characters have been provided.
+     * @return a <code>CoderResult</code> instance indicating the result.
      * @throws IllegalStateException
      *             if the encoding operation has already started or no more
-     *             input needed in this encoding progress.
+     *             input is needed in this encoding process.
      * @throws CoderMalfunctionError
      *             If the {@link #encodeLoop(CharBuffer, ByteBuffer) encodeLoop}
      *             method threw an <code>BufferUnderflowException</code> or
-     *             <code>BufferUnderflowException</code>
+     *             <code>BufferUnderflowException</code>.
+     * @since Android 1.0
      */
     public final CoderResult encode(CharBuffer in, ByteBuffer out,
             boolean endOfInput) {
@@ -512,68 +522,74 @@ public abstract class CharsetEncoder {
     }
 
     /**
-     * Encode characters into bytes. This method is called by
+     * Encodes characters into bytes. This method is called by
      * {@link #encode(CharBuffer, ByteBuffer, boolean) encode}.
-     * 
+     * <p>
      * This method will implement the essential encoding operation, and it won't
      * stop encoding until either all the input characters are read, the output
-     * buffer is filled, or some exception encountered. And then it will return
-     * a <code>CoderResult</code> object indicating the result of current
-     * encoding operation. The rules to construct the <code>CoderResult</code>
-     * is same as the {@link #encode(CharBuffer, ByteBuffer, boolean) encode}.
-     * When exception encountered in the encoding operation, most implementation
-     * of this method will return a relevant result object to
+     * buffer is filled, or some exception is encountered. Then it will
+     * return a <code>CoderResult</code> object indicating the result of the
+     * current encoding operation. The rule to construct the
+     * <code>CoderResult</code> is the same as for
+     * {@link #encode(CharBuffer, ByteBuffer, boolean) encode}. When an
+     * exception is encountered in the encoding operation, most implementations
+     * of this method will return a relevant result object to the
      * {@link #encode(CharBuffer, ByteBuffer, boolean) encode} method, and some
      * performance optimized implementation may handle the exception and
      * implement the error action itself.
-     * 
+     * </p><p>
      * The buffers are scanned from their current positions, and their positions
      * will be modified accordingly, while their marks and limits will be
      * intact. At most {@link CharBuffer#remaining() in.remaining()} characters
      * will be read, and {@link ByteBuffer#remaining() out.remaining()} bytes
      * will be written.
-     * 
-     * Note that some implementation may pre-scan the input buffer and return
+     * </p><p>
+     * Note that some implementations may pre-scan the input buffer and return
      * <code>CoderResult.UNDERFLOW</code> until it receives sufficient input.
-     * 
+     * <p>
      * @param in
-     *            the input buffer
+     *            the input buffer.
      * @param out
-     *            the output buffer
-     * @return a <code>CoderResult</code> instance indicating the result
+     *            the output buffer.
+     * @return a <code>CoderResult</code> instance indicating the result.
+     * @since Android 1.0
      */
     protected abstract CoderResult encodeLoop(CharBuffer in, ByteBuffer out);
 
     /**
-     * Flush this encoder.
-     * 
+     * Flushes this encoder.
+     * <p>
      * This method will call {@link #implFlush(ByteBuffer) implFlush}. Some
      * encoders may need to write some bytes to the output buffer when they have
      * read all input characters, subclasses can overridden
      * {@link #implFlush(ByteBuffer) implFlush} to perform writing action.
-     * 
+     * </p>
+     * <p>
      * The maximum number of written bytes won't larger than
-     * {@link ByteBuffer#remaining() out.remaining()}. If some encoder want to
-     * write more bytes than output buffer's remaining spaces, then
+     * {@link ByteBuffer#remaining() out.remaining()}. If some encoder wants to
+     * write more bytes than the output buffer's available remaining space, then
      * <code>CoderResult.OVERFLOW</code> will be returned, and this method
-     * must be called again with a byte buffer has more spaces. Otherwise this
-     * method will return <code>CoderResult.UNDERFLOW</code>, which means one
-     * encoding process has been completed successfully.
-     * 
+     * must be called again with a byte buffer that has free space. Otherwise
+     * this method will return <code>CoderResult.UNDERFLOW</code>, which
+     * means one encoding process has been completed successfully.
+     * </p>
+     * <p>
      * During the flush, the output buffer's position will be changed
      * accordingly, while its mark and limit will be intact.
+     * </p>
      * 
      * @param out
-     *            the given output buffer
+     *            the given output buffer.
      * @return <code>CoderResult.UNDERFLOW</code> or
-     *         <code>CoderResult.OVERFLOW</code>
+     *         <code>CoderResult.OVERFLOW</code>.
      * @throws IllegalStateException
      *             if this encoder hasn't read all input characters during one
      *             encoding process, which means neither after calling
      *             {@link #encode(CharBuffer) encode(CharBuffer)} nor after
      *             calling {@link #encode(CharBuffer, ByteBuffer, boolean) 
-     *             encode(CharBuffer, ByteBuffer, boolean)} with true value for
-     *             the last boolean parameter
+     *             encode(CharBuffer, ByteBuffer, boolean)} with {@code true}
+     *             for the last boolean parameter.
+     * @since Android 1.0
      */
     public final CoderResult flush(ByteBuffer out) {
         if (status != END && status != INIT) {
@@ -587,64 +603,70 @@ public abstract class CharsetEncoder {
     }
 
     /**
-     * Flush this encoder. Default implementation does nothing and always return
-     * <code>CoderResult.UNDERFLOW</code>, and this method can be overridden
-     * if needed.
+     * Flushes this encoder. The default implementation does nothing and always
+     * returns <code>CoderResult.UNDERFLOW</code>; this method can be
+     * overridden if needed.
      * 
      * @param out
-     *            the output buffer
+     *            the output buffer.
      * @return <code>CoderResult.UNDERFLOW</code> or
-     *         <code>CoderResult.OVERFLOW</code>
+     *         <code>CoderResult.OVERFLOW</code>.
+     * @since Android 1.0
      */
     protected CoderResult implFlush(ByteBuffer out) {
         return CoderResult.UNDERFLOW;
     }
 
     /**
-     * Notify that this encoder's <code>CodingErrorAction</code> specified for
-     * malformed input error has been changed. Default implementation does
-     * nothing, and this method can be overridden if needed.
+     * Notifies that this encoder's <code>CodingErrorAction</code> specified
+     * for malformed input error has been changed. The default implementation
+     * does nothing; this method can be overridden if needed.
      * 
      * @param newAction
-     *            The new action
+     *            the new action.
+     * @since Android 1.0
      */
     protected void implOnMalformedInput(CodingErrorAction newAction) {
         // default implementation is empty
     }
 
     /**
-     * Notify that this encoder's <code>CodingErrorAction</code> specified for
-     * unmappable character error has been changed. Default implementation does
-     * nothing, and this method can be overridden if needed.
+     * Notifies that this encoder's <code>CodingErrorAction</code> specified
+     * for unmappable character error has been changed. The default
+     * implementation does nothing; this method can be overridden if needed.
      * 
      * @param newAction
-     *            The new action
+     *            the new action.
+     * @since Android 1.0
      */
     protected void implOnUnmappableCharacter(CodingErrorAction newAction) {
         // default implementation is empty
     }
 
     /**
-     * Notify that this encoder's replacement has been changed. Default
-     * implementation does nothing, and this method can be overridden if needed.
+     * Notifies that this encoder's replacement has been changed. The default
+     * implementation does nothing; this method can be overridden if needed.
      * 
      * @param newReplacement
-     *            the new replacement string
+     *            the new replacement string.
+     * @since Android 1.0
      */
     protected void implReplaceWith(byte[] newReplacement) {
         // default implementation is empty
     }
 
     /**
-     * Reset this encoder's charset related state. Default implementation does
-     * nothing, and this method can be overridden if needed.
+     * Resets this encoder's charset related state. The default implementation
+     * does nothing; this method can be overridden if needed.
+     * 
+     * @since Android 1.0
      */
     protected void implReset() {
         // default implementation is empty
     }
 
     /**
-     * Check if the given argument is legal as this encoder's replacement byte
+     * Checks if the given argument is legal as this encoder's replacement byte
      * array.
      * 
      * The given byte array is legal if and only if it can be decode into
@@ -653,9 +675,10 @@ public abstract class CharsetEncoder {
      * This method can be overridden for performance improvement.
      * 
      * @param repl
-     *            the given byte array to be checked
+     *            the given byte array to be checked.
      * @return true if the the given argument is legal as this encoder's
      *         replacement byte array.
+     * @since Android 1.0
      */
     public boolean isLegalReplacement(byte[] repl) {
         if (decoder == null) {
@@ -676,39 +699,42 @@ public abstract class CharsetEncoder {
     }
 
     /**
-     * Gets this encoder's <code>CodingErrorAction</code> when malformed input
-     * occurred during encoding process.
+     * Gets this encoder's <code>CodingErrorAction</code> when a malformed
+     * input error occurred during the encoding process.
      * 
-     * @return this encoder's <code>CodingErrorAction</code> when malformed
-     *         input occurred during encoding process.
+     * @return this encoder's <code>CodingErrorAction</code> when a malformed
+     *         input error occurred during the encoding process.
+     * @since Android 1.0
      */
     public CodingErrorAction malformedInputAction() {
         return malformAction;
     }
 
     /**
-     * Get the maximum number of bytes which can be created by this encoder for
-     * one input character, must be positive
+     * Gets the maximum number of bytes which can be created by this encoder for
+     * one input character, must be positive.
      * 
      * @return the maximum number of bytes which can be created by this encoder
-     *         for one input character, must be positive
+     *         for one input character, must be positive.
+     * @since Android 1.0
      */
     public final float maxBytesPerChar() {
         return maxBytes;
     }
 
     /**
-     * Set this encoder's action on malformed input error.
+     * Sets this encoder's action on malformed input error.
      * 
      * This method will call the
      * {@link #implOnMalformedInput(CodingErrorAction) implOnMalformedInput}
      * method with the given new action as argument.
      * 
      * @param newAction
-     *            the new action on malformed input error
-     * @return this encoder
+     *            the new action on malformed input error.
+     * @return this encoder.
      * @throws IllegalArgumentException
-     *             if the given newAction is null
+     *             if the given newAction is null.
+     * @since Android 1.0
      */
     public final CharsetEncoder onMalformedInput(CodingErrorAction newAction) {
         if (null == newAction) {
@@ -721,17 +747,18 @@ public abstract class CharsetEncoder {
     }
 
     /**
-     * Set this encoder's action on unmappable character error.
+     * Sets this encoder's action on unmappable character error.
      * 
      * This method will call the
      * {@link #implOnUnmappableCharacter(CodingErrorAction) implOnUnmappableCharacter}
      * method with the given new action as argument.
      * 
      * @param newAction
-     *            the new action on unmappable character error
-     * @return this encoder
+     *            the new action on unmappable character error.
+     * @return this encoder.
      * @throws IllegalArgumentException
-     *             if the given newAction is null
+     *             if the given newAction is null.
+     * @since Android 1.0
      */
     public final CharsetEncoder onUnmappableCharacter(
             CodingErrorAction newAction) {
@@ -745,33 +772,33 @@ public abstract class CharsetEncoder {
     }
 
     /**
-     * Get the replacement byte array, which is never null or empty, and it is
-     * legal
+     * Gets the replacement byte array, which is never null or empty.
      * 
-     * @return the replacement byte array, cannot be null or empty, and it is
-     *         legal
+     * @return the replacement byte array, cannot be null or empty.
+     * @since Android 1.0
      */
     public final byte[] replacement() {
         return replace;
     }
 
     /**
-     * Set new replacement value.
+     * Sets the new replacement value.
      * 
      * This method first checks the given replacement's validity, then changes
-     * the replacement value, and at last calls
+     * the replacement value and finally calls the
      * {@link #implReplaceWith(byte[]) implReplaceWith} method with the given
      * new replacement as argument.
      * 
      * @param replacement
      *            the replacement byte array, cannot be null or empty, its
-     *            length cannot larger than <code>maxBytesPerChar</code>, and
-     *            must be legal replacement, which can be justified by
-     *            <code>isLegalReplacement(byte[] repl)</code>
-     * @return this encoder
+     *            length cannot be larger than <code>maxBytesPerChar</code>,
+     *            and it must be legal replacement, which can be justified by
+     *            calling <code>isLegalReplacement(byte[] repl)</code>.
+     * @return this encoder.
      * @throws IllegalArgumentException
      *             if the given replacement cannot satisfy the requirement
-     *             mentioned above
+     *             mentioned above.
+     * @since Android 1.0
      */
     public final CharsetEncoder replaceWith(byte[] replacement) {
         if (null == replacement || 0 == replacement.length
@@ -786,11 +813,12 @@ public abstract class CharsetEncoder {
     }
 
     /**
-     * Reset this encoder. This method will reset internal status, and then call
-     * <code>implReset()</code> to reset any status related to specific
-     * charset.
+     * Resets this encoder. This method will reset the internal status and then
+     * calla <code>implReset()</code> to reset any status related to the
+     * specific charset.
      * 
-     * @return this encoder
+     * @return this encoder.
+     * @since Android 1.0
      */
     public final CharsetEncoder reset() {
         status = INIT;
@@ -804,6 +832,7 @@ public abstract class CharsetEncoder {
      * 
      * @return this encoder's <code>CodingErrorAction</code> when unmappable
      *         character occurred during encoding process.
+     * @since Android 1.0
      */
     public CodingErrorAction unmappableCharacterAction() {
         return unmapAction;

@@ -15,21 +15,30 @@
  *  limitations under the License.
  */
 
+// BEGIN android-note
+// the abstract modifier of the interface was removed.
+// END android-note
+
 package java.io;
 
 /**
- * FileFilter is an interface for filtering abstract Files
+ * An interface for filtering {@link File} objects based on their names
+ * or other information.
+ * 
+ * @see File#listFiles(FileFilter)
+ * 
+ * @since Android 1.0
  */
-public abstract interface FileFilter {
+public interface FileFilter {
 
     /**
-     * Returns a boolean indicating whether or not a specific File should be
-     * included in a pathname list.
+     * Indicating whether a specific file should be included in a pathname list.
      * 
      * @param pathname
-     *            the abstract File to check.
-     * @return <code>true</code> if the File should be includes,
-     *         <code>false</code> otherwise.
+     *            the abstract file to check.
+     * @return {@code true} if the file should be included, {@code false}
+     *         otherwise.
+     * @since Android 1.0
      */
     public abstract boolean accept(File pathname);
 }

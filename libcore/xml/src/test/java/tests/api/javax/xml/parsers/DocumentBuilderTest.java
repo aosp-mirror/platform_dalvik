@@ -16,6 +16,20 @@
 
 package tests.api.javax.xml.parsers;
 
+import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+
+import junit.framework.TestCase;
+
+import org.w3c.dom.DOMImplementation;
+import org.w3c.dom.Document;
+import org.xml.sax.EntityResolver;
+import org.xml.sax.ErrorHandler;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -25,15 +39,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.w3c.dom.DOMImplementation;
-import org.w3c.dom.Document;
-import org.xml.sax.EntityResolver;
-import org.xml.sax.ErrorHandler;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-
-import junit.framework.TestCase;
-
+@TestTargetClass(DocumentBuilder.class) 
 public class DocumentBuilderTest extends TestCase {
 
     private class MockDocumentBuilder extends DocumentBuilder {
@@ -130,6 +136,15 @@ public class DocumentBuilderTest extends TestCase {
     /**
      * @tests javax.xml.parsers.DocumentBuilder#DocumentBuilder()
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "DocumentBuilder",
+          methodArgs = {}
+        )
+    })
     public void test_Constructor() {
         try {
             new MockDocumentBuilder();
@@ -179,7 +194,16 @@ public class DocumentBuilderTest extends TestCase {
      * Case 3: Try to parse a non-existent file.
      * Case 4: Try to parse incorrect xml file.
      */
-    public void test_parseLjava_io_File() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "parse",
+          methodArgs = {java.io.File.class}
+        )
+    })
+    public void _test_parseLjava_io_File() {
         File f = new File("/tmp/xml_source/simple.xml");
         // case 1: Trivial use.
         try {
@@ -239,6 +263,15 @@ public class DocumentBuilderTest extends TestCase {
      * Case 3: Try to parse a non-existent file.
      * Case 4: Try to parse incorrect xml file.
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "parse",
+          methodArgs = {java.io.InputStream.class}
+        )
+    })
     public void test_parseLjava_io_InputStream() {
         InputStream is = getClass().getResourceAsStream("/simple.xml");
         // case 1: Trivial use.
@@ -300,6 +333,15 @@ public class DocumentBuilderTest extends TestCase {
      * Case 3: Try to parse a non-existent file.
      * Case 4: Try to parse incorrect xml file.
      */
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "parse",
+          methodArgs = {java.io.InputStream.class, java.lang.String.class}
+        )
+    })
     public void test_parseLjava_io_InputStreamLjava_lang_String() {
         InputStream is = getClass().getResourceAsStream("/systemid.xml");
         // case 1: Trivial use.
@@ -365,7 +407,16 @@ public class DocumentBuilderTest extends TestCase {
      * Case 3: Try to parse a non-existent uri.
      * Case 4: Try to parse incorrect xml file.
      */
-    public void test_parseLjava_lang_String() {
+    @TestInfo(
+      level = TestLevel.COMPLETE,
+      purpose = "",
+      targets = {
+        @TestTarget(
+          methodName = "parse",
+          methodArgs = {java.lang.String.class}
+        )
+    })
+    public void _test_parseLjava_lang_String() {
         // case 1: Trivial use.
         File f = new File(getClass().getResource("/simple.xml").getFile());
         try {
@@ -421,6 +472,16 @@ public class DocumentBuilderTest extends TestCase {
     /**
      * @tests javax.xml.parsers.DocumentBuilder#reset()
      */
+    @TestInfo(
+      level = TestLevel.PARTIAL,
+      purpose = "Doesn't verify that reset() method resets the DocumentBuilder " +
+            "to its original configuration.",
+      targets = {
+        @TestTarget(
+          methodName = "reset",
+          methodArgs = {}
+        )
+    })
     public void test_reset() {
         try {
             dbf = DocumentBuilderFactory.newInstance();

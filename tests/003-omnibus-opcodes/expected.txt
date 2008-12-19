@@ -21,6 +21,7 @@ IntMath.longShiftTest
 IntMath.longShiftCheck
 IntMath.truncateTest
 IntMath.divideByZero
+IntMath.bigDivideOverflow
 IntMath.checkConsts
 FloatMath.convTest
 FloatMath.floatOperTest
