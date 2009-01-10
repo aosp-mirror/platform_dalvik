@@ -17,10 +17,6 @@
 
 package tests.api.java.io;
 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestTargetClass; 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -29,14 +25,19 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
-import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CodingErrorAction;
 import java.nio.charset.MalformedInputException;
 import java.util.Arrays;
 
+import tests.support.Support_ASimpleInputStream;
+
 import junit.framework.TestCase;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 
 /**
  * 
@@ -138,33 +139,16 @@ public class InputStreamReaderTest extends TestCase {
 
         super.tearDown();
     }
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "close", 
-                                    methodArgs = {})                                    
-            }
-        )    
-    public void testClose() throws IOException {
-        reader.close();
-        try {
-            reader.ready();
-            fail("Should throw IOException");
-        } catch (IOException e) {
-        }
-        reader.close();
-    }
 
     /*
      * Class under test for int read()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL_OK,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "read", 
-                                    methodArgs = {})                                    
-            }
-        )    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "IOException checking missed.",
+        method = "read",
+        args = {}
+    )    
     public void testRead() throws IOException {
         assertEquals('T', (char) reader.read());
         assertEquals('h', (char) reader.read());
@@ -179,13 +163,12 @@ public class InputStreamReaderTest extends TestCase {
      * Class under test for int read()
      * Regression for Harmony-411
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL_OK,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "read", 
-                                    methodArgs = {})                                    
-            }
-        )    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "IOException checking missed.",
+        method = "read",
+        args = {}
+    )    
     
     public void testRead1() throws IOException {
         // if the decoder is constructed by InputStreamReader itself, the decoder's 
@@ -226,13 +209,12 @@ public class InputStreamReaderTest extends TestCase {
     /*
      * Class under test for int read(char[], int, int)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL_OK,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "read", 
-                                    methodArgs = {char[].class, int.class, int.class})                                    
-            }
-        )     
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "IOException checking missed.",
+        method = "read",
+        args = {char[].class, int.class, int.class}
+    )     
     public void testReadcharArrayintint() throws IOException {
         try {
             reader.read(new char[3], -1, 0);
@@ -290,39 +272,36 @@ public class InputStreamReaderTest extends TestCase {
         assertEquals(-1, reader.read(chars, 0, chars.length));
         assertTrue(Arrays.equals(chars, source.toCharArray()));
     }
-    @TestInfo(
-            level = TestLevel.PARTIAL_OK,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "read", 
-                                    methodArgs = {char[].class, int.class, int.class})                                    
-            }
-        )
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "IOException checking missed.",
+        method = "read",
+        args = {char[].class, int.class, int.class}
+    )
     public void testReadcharArrayintint2() throws IOException {
         char[] chars = new char[source.length()];
         assertEquals(source.length() - 3, reader.read(chars, 0,
                 chars.length - 3));
         assertEquals(3, reader.read(chars, 0, 10));
     }
-    @TestInfo(
-            level = TestLevel.PARTIAL_OK,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "ready", 
-                                    methodArgs = {})                                    
-            }
-        )
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "IOException checking missed.",
+        method = "ready",
+        args = {}
+    )
     public void testReady() throws IOException {
         assertTrue(reader.ready());
         reader.read(new char[source.length()]);
         assertFalse(reader.ready());
     }
-    @TestInfo(
-            level = TestLevel.PARTIAL_OK,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "read", 
-                                    methodArgs = {})                                    
-            }
-        )
-    public void _testSpecialCharsetReading() throws IOException {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "IOException checking missed.",
+        method = "read",
+        args = {}
+    )
+    public void testSpecialCharsetReading() throws Exception {
         reader.close();
         in = this.getClass().getClassLoader().getResourceAsStream(
                 "tests/api/java/io/testfile-utf8.txt");
@@ -339,27 +318,28 @@ public class InputStreamReaderTest extends TestCase {
         reader.close();
         in = this.getClass().getClassLoader().getResourceAsStream(
                 "tests/api/java/io/testfile.txt");
-        try {
-            reader = new InputStreamReader(in, "gb18030");
-        } catch (UnsupportedEncodingException e) {
-            System.out
-                    .println("GB18030 is not supported, abort test InputStreamReaderTest.testSpecialCharsetReading().");
-        }
+        reader = new InputStreamReader(in, "GB2312");
+        
         while ((c = reader.read()) != -1) {
             sb.append((char) c);
         }
         assertEquals(source, sb.toString());
     }
 
-    @TestInfo(
-            level = TestLevel.PARTIAL_OK,
-            purpose = "IOException checking.",
-            targets = { @TestTarget(methodName = "read", 
-                                    methodArgs = {}),
-                        @TestTarget(methodName = "ready", 
-                                    methodArgs = {})                                    
-            }
-        )      
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "IOException checking.",
+            method = "read",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "IOException checking.",
+            method = "ready",
+            args = {}
+        )
+    })      
     public void testAfterClose() throws IOException {
         reader.close();
         in = new BufferedInputStream(this.getClass().getClassLoader()
@@ -386,13 +366,12 @@ public class InputStreamReaderTest extends TestCase {
     /*
      * Class under test for void InputStreamReader(InputStream)
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = { @TestTarget(methodName = "InputStreamReader", 
-                                    methodArgs = {java.io.InputStream.class})                                    
-            }
-        )
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "InputStreamReader",
+        args = {java.io.InputStream.class}
+    )
     public void testInputStreamReaderInputStream() throws IOException {
         try {
             reader = new InputStreamReader(null);
@@ -406,14 +385,12 @@ public class InputStreamReaderTest extends TestCase {
     /*
      * Class under test for void InputStreamReader(InputStream, String)
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = { @TestTarget(methodName = "InputStreamReader", 
-                                    methodArgs = {java.io.InputStream.class,
-                                                  java.lang.String.class})                                    
-            }
-        )        
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "InputStreamReader",
+        args = {java.io.InputStream.class, java.lang.String.class}
+    )        
     public void testInputStreamReaderInputStreamString() throws IOException {
         try {
             reader = new InputStreamReader(null, "utf-8");
@@ -448,14 +425,12 @@ public class InputStreamReaderTest extends TestCase {
     /*
      * Class under test for void InputStreamReader(InputStream, CharsetDecoder)
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = { @TestTarget(methodName = "InputStreamReader", 
-                                    methodArgs = {java.io.InputStream.class,
-                                                  CharsetDecoder.class})                                    
-            }
-        )        
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "InputStreamReader",
+        args = {java.io.InputStream.class, java.nio.charset.CharsetDecoder.class}
+    )        
     public void testInputStreamReaderInputStreamCharsetDecoder()
             throws Exception {
         CharsetDecoder decoder = Charset.forName("utf-8").newDecoder();
@@ -477,14 +452,12 @@ public class InputStreamReaderTest extends TestCase {
     /*
      * Class under test for void InputStreamReader(InputStream, Charset)
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = { @TestTarget(methodName = "InputStreamReader", 
-                                    methodArgs = {java.io.InputStream.class,
-                                                  Charset.class})                                    
-            }
-        )    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "InputStreamReader",
+        args = {java.io.InputStream.class, java.nio.charset.Charset.class}
+    )    
     public void testInputStreamReaderInputStreamCharset() throws IOException {
         Charset cs = Charset.forName("utf-8");
         try {
@@ -501,13 +474,12 @@ public class InputStreamReaderTest extends TestCase {
         assertEquals(Charset.forName(reader2.getEncoding()), cs);
         reader2.close();
     }
-    @TestInfo(
-            level = TestLevel.PARTIAL_OK,
-            purpose = "",
-            targets = { @TestTarget(methodName = "read", 
-                                    methodArgs = {char[].class, int.class, int.class})                                    
-            }
-        )
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {char[].class, int.class, int.class}
+    )
     public void testInputStreamReaderSuccessiveReads() throws IOException {
         byte[] data = new byte[8192 * 2];
         Arrays.fill(data, (byte) 116); // 116 = ISO-8859-1 value for 't'
@@ -529,13 +501,12 @@ public class InputStreamReaderTest extends TestCase {
     /**
      * @tests java.io.InputStreamReader#InputStreamReader(java.io.InputStream)
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "See setUp.",
-            targets = { @TestTarget(methodName = "InputStreamReader", 
-                                    methodArgs = {java.io.InputStream.class})                         
-            }
-        )    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "See setUp.",
+        method = "InputStreamReader",
+        args = {java.io.InputStream.class}
+    )    
     public void test_ConstructorLjava_io_InputStream() {
         // Test for method java.io.InputStreamReader(java.io.InputStream)
         assertTrue("Used to test other methods", true);
@@ -545,13 +516,12 @@ public class InputStreamReaderTest extends TestCase {
      * @tests java.io.InputStreamReader#InputStreamReader(java.io.InputStream,
      *        java.lang.String)
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies InputStreamReader(java.io.InputStream) constructor.",
-            targets = { @TestTarget(methodName = "InputStreamReader", 
-                                    methodArgs = {java.io.InputStream.class})                         
-            }
-        )    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies InputStreamReader(java.io.InputStream) constructor.",
+        method = "InputStreamReader",
+        args = {java.io.InputStream.class}
+    )    
     public void test_ConstructorLjava_io_InputStreamLjava_lang_String() {
         // Test for method java.io.InputStreamReader(java.io.InputStream,
         // java.lang.String)
@@ -572,13 +542,11 @@ public class InputStreamReaderTest extends TestCase {
     /**
      * @tests java.io.InputStreamReader#close()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "close", 
-                                    methodArgs = {})                         
-            }
-        )    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "close",
+        args = {}
+    )    
     public void test_close() {
         // Test for method void java.io.InputStreamReader.close()
         try {
@@ -588,23 +556,45 @@ public class InputStreamReaderTest extends TestCase {
         }
         try {
             is.read();
-            fail("Should throw IOException");
+            fail("Test 1: IOException expected.");
         } catch (IOException e) {
             // Exception means read failed due to close
         } 
 
+        is = new InputStreamReader(new Support_ASimpleInputStream(true));
+        try {
+            is.read();
+            fail("Test 2: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        } 
+        
+    }
+
+    @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            method = "close",
+            args = {}
+    )    
+    public void testClose() throws IOException {
+        reader.close();
+        try {
+            reader.ready();
+            fail("Should throw IOException");
+        } catch (IOException e) {
+        }
+        reader.close();
     }
 
     /**
      * @tests java.io.InputStreamReader#getEncoding()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies getEncoding() method.",
-            targets = { @TestTarget(methodName = "getEncoding", 
-                                    methodArgs = {})                         
-            }
-        )       
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies getEncoding() method.",
+        method = "getEncoding",
+        args = {}
+    )       
     public void test_getEncoding() {
         // Test for method java.lang.String
         // java.io.InputStreamReader.getEncoding()
@@ -619,13 +609,12 @@ public class InputStreamReaderTest extends TestCase {
     /**
      * @tests java.io.InputStreamReader#read()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL_OK,
-            purpose = "",
-            targets = { @TestTarget(methodName = "read", 
-                                    methodArgs = {})                         
-            }
-        )      
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {}
+    )      
     public void test_read() throws IOException{
         // Test for method int java.io.InputStreamReader.read()
         try {
@@ -665,13 +654,12 @@ public class InputStreamReaderTest extends TestCase {
     /**
      * @tests java.io.InputStreamReader#read(char[], int, int)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL_OK,
-            purpose = "",
-            targets = { @TestTarget(methodName = "read", 
-                                    methodArgs = {char[].class, int.class, int.class})                         
-            }
-        )      
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {char[].class, int.class, int.class}
+    )      
      public void test_read$CII() {
         // Test for method int java.io.InputStreamReader.read(char [], int, int)
         try {
@@ -689,13 +677,12 @@ public class InputStreamReaderTest extends TestCase {
     /**
      * @tests java.io.InputStreamReader#ready()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL_OK,
-            purpose = "[No verification for empty buffer]",
-            targets = { @TestTarget(methodName = "ready", 
-                                    methodArgs = {})                         
-            }
-        )      
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "[No verification for empty buffer]",
+        method = "ready",
+        args = {}
+    )      
     public void test_ready() {
         // Test for method boolean java.io.InputStreamReader.ready()
         try {

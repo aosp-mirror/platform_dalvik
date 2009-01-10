@@ -16,27 +16,26 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
 
+import java.io.FileOutputStream;
+import java.io.PrintWriter;
 import java.util.Arrays;
 
 @TestTargetClass(Character.class) 
 public class CharacterTest extends TestCase {
 
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "valueOf",
-          methodArgs = {char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "valueOf",
+        args = {char.class}
+    )
     public void test_valueOfC() {
         // test the cache range
         for (char c = '\u0000'; c < 512; c++) {
@@ -49,15 +48,12 @@ public class CharacterTest extends TestCase {
             assertEquals(new Character((char) c), Character.valueOf((char) c));
         }
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isValidCodePoint",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isValidCodePoint",
+        args = {int.class}
+    )
     public void test_isValidCodePointI() {
         assertFalse(Character.isValidCodePoint(-1));
         assertTrue(Character.isValidCodePoint(0));
@@ -70,15 +66,12 @@ public class CharacterTest extends TestCase {
 
         assertFalse(Character.isValidCodePoint(0x10FFFF + 1));
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isSupplementaryCodePoint",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isSupplementaryCodePoint",
+        args = {int.class}
+    )
     public void test_isSupplementaryCodePointI() {
         assertFalse(Character.isSupplementaryCodePoint(-1));
 
@@ -92,15 +85,12 @@ public class CharacterTest extends TestCase {
 
         assertFalse(Character.isSupplementaryCodePoint(0x10FFFF + 1));
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isHighSurrogate",
-          methodArgs = {char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isHighSurrogate",
+        args = {char.class}
+    )
     public void test_isHighSurrogateC() {
         // (\uD800-\uDBFF)
         assertFalse(Character.isHighSurrogate((char) ('\uD800' - 1)));
@@ -110,15 +100,12 @@ public class CharacterTest extends TestCase {
         assertFalse(Character.isHighSurrogate((char) ('\uDBFF' + 1)));
         assertFalse(Character.isHighSurrogate('\uFFFF'));
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isLowSurrogate",
-          methodArgs = {char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isLowSurrogate",
+        args = {char.class}
+    )
     public void test_isLowSurrogateC() {
         // (\uDC00-\uDFFF)
         assertFalse(Character.isLowSurrogate((char) ('\uDC00' - 1)));
@@ -127,15 +114,12 @@ public class CharacterTest extends TestCase {
         }
         assertFalse(Character.isLowSurrogate((char) ('\uDFFF' + 1)));
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isSurrogatePair",
-          methodArgs = {char.class, char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isSurrogatePair",
+        args = {char.class, char.class}
+    )
     public void test_isSurrogatePairCC() {
         assertFalse(Character.isSurrogatePair('\u0000', '\u0000'));
         assertFalse(Character.isSurrogatePair('\u0000', '\uDC00'));
@@ -146,15 +130,12 @@ public class CharacterTest extends TestCase {
 
         assertFalse(Character.isSurrogatePair('\uDBFF', '\uF000'));
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "charCount",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "charCount",
+        args = {int.class}
+    )
     public void test_charCountI() {
 
         for (int c = '\u0000'; c <= '\uFFFF'; c++) {
@@ -168,15 +149,12 @@ public class CharacterTest extends TestCase {
         // invalid code points work in this method
         assertEquals(2, Character.charCount(Integer.MAX_VALUE));
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toCodePoint",
-          methodArgs = {char.class, char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toCodePoint",
+        args = {char.class, char.class}
+    )
     public void test_toCodePointCC() {
         int result = Character.toCodePoint('\uD800', '\uDC00');
         assertEquals(0x00010000, result);
@@ -192,15 +170,12 @@ public class CharacterTest extends TestCase {
     }
 
     @SuppressWarnings("cast")
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "codePointAt",
-          methodArgs = {java.lang.CharSequence.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "codePointAt",
+        args = {java.lang.CharSequence.class, int.class}
+    )
     public void test_codePointAtLjava_lang_CharSequenceI() {
 
         assertEquals('a', Character.codePointAt((CharSequence) "abc", 0));
@@ -229,15 +204,12 @@ public class CharacterTest extends TestCase {
         } catch (IndexOutOfBoundsException e) {
         }
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "codePointAt",
-          methodArgs = {char[].class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "codePointAt",
+        args = {char[].class, int.class}
+    )
     public void test_codePointAt$CI() {
 
         assertEquals('a', Character.codePointAt("abc".toCharArray(), 0));
@@ -266,15 +238,12 @@ public class CharacterTest extends TestCase {
         } catch (IndexOutOfBoundsException e) {
         }
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "codePointAt",
-          methodArgs = {char[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "codePointAt",
+        args = {char[].class, int.class, int.class}
+    )
     public void test_codePointAt$CII() {
 
         assertEquals('a', Character.codePointAt("abc".toCharArray(), 0, 3));
@@ -317,15 +286,12 @@ public class CharacterTest extends TestCase {
         } catch (IndexOutOfBoundsException e) {
         }
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "codePointBefore",
-          methodArgs = {java.lang.CharSequence.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "codePointBefore",
+        args = {java.lang.CharSequence.class, int.class}
+    )
     @SuppressWarnings("cast")
     public void test_codePointBeforeLjava_lang_CharSequenceI() {
 
@@ -355,15 +321,12 @@ public class CharacterTest extends TestCase {
         } catch (IndexOutOfBoundsException e) {
         }
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "codePointBefore",
-          methodArgs = {char[].class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "codePointBefore",
+        args = {char[].class, int.class}
+    )
     public void test_codePointBefore$CI() {
 
         assertEquals('a', Character.codePointBefore("abc".toCharArray(), 1));
@@ -392,15 +355,12 @@ public class CharacterTest extends TestCase {
         } catch (IndexOutOfBoundsException e) {
         }
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "codePointBefore",
-          methodArgs = {char[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "codePointBefore",
+        args = {char[].class, int.class, int.class}
+    )
     public void test_codePointBefore$CII() {
 
         assertEquals('a', Character.codePointBefore("abc".toCharArray(), 1, 0));
@@ -443,15 +403,12 @@ public class CharacterTest extends TestCase {
         } catch (IndexOutOfBoundsException e) {
         }
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toChars",
-          methodArgs = {int.class, char[].class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toChars",
+        args = {int.class, char[].class, int.class}
+    )
     public void test_toCharsI$CI() {
         char[] dst = new char[2];
         int result = Character.toChars(0x10000, dst, 0);
@@ -494,15 +451,12 @@ public class CharacterTest extends TestCase {
         } catch (IndexOutOfBoundsException e) {
         }
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toChars",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toChars",
+        args = {int.class}
+    )
     public void test_toCharsI() {
         assertTrue(Arrays.equals(new char[] { '\uD800', '\uDC00' }, Character
                 .toChars(0x10000)));
@@ -519,15 +473,12 @@ public class CharacterTest extends TestCase {
         } catch (IllegalArgumentException e) {
         }
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "codePointCount",
-          methodArgs = {java.lang.CharSequence.class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "codePointCount",
+        args = {java.lang.CharSequence.class, int.class, int.class}
+    )
     public void test_codePointCountLjava_lang_CharSequenceII() {
         assertEquals(1, Character.codePointCount("\uD800\uDC00", 0, 2));
         assertEquals(1, Character.codePointCount("\uD800\uDC01", 0, 2));
@@ -561,15 +512,117 @@ public class CharacterTest extends TestCase {
         } catch (IndexOutOfBoundsException e) {
         }
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "offsetByCodePoints",
-          methodArgs = {java.lang.CharSequence.class, int.class, int.class}
-        )
-    })
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "codePointCount",
+        args = {char[].class, int.class, int.class}
+    )
+    public void test_codePointCountLjava_lang_CharArrayII() {
+           
+      assertEquals(1, Character.codePointCount("\uD800\uDC00".toCharArray(), 
+                                               0, 2));
+      assertEquals(3, Character.codePointCount("a\uD800\uDC00b".toCharArray(), 
+                                               0, 4));
+      assertEquals(4, Character.codePointCount("a\uD800\uDC00b\uD800".toCharArray(), 
+                                               0, 5));
+      assertEquals(4, Character.codePointCount("ab\uD800\uDC00b\uD800".toCharArray(), 
+                                                1, 5));
+
+      try {
+          Character.codePointCount((char[]) null, 0, 1);
+          fail("No NPE, null char sequence.");
+      } catch (NullPointerException e) {
+      }
+
+      try {
+          Character.codePointCount("abc".toCharArray(), -1, 1);
+          fail("No IOOBE, negative start.");
+      } catch (IndexOutOfBoundsException e) {
+      }
+
+      try {
+          Character.codePointCount("abc".toCharArray(), 0, 4);
+          fail("No IOOBE, end greater than length.");
+      } catch (IndexOutOfBoundsException e) {
+      }
+
+      try {
+          Character.codePointCount("abc".toCharArray(), 1, 3);
+          fail("No IOOBE, end greater than start.");
+      } catch (IndexOutOfBoundsException e) {
+      }
+    }    
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getDirectionality",
+        args = {char.class}
+    )
+    public void test_getDirectionality() throws Exception {
+
+        byte[] directionalities = {
+                Character.DIRECTIONALITY_UNDEFINED,
+                Character.DIRECTIONALITY_LEFT_TO_RIGHT,
+                Character.DIRECTIONALITY_RIGHT_TO_LEFT,
+                Character.DIRECTIONALITY_RIGHT_TO_LEFT_ARABIC,
+                Character.DIRECTIONALITY_EUROPEAN_NUMBER,
+                // Character.DIRECTIONALITY_EUROPEAN_NUMBER_SEPARATOR,
+                Character.DIRECTIONALITY_EUROPEAN_NUMBER_TERMINATOR,
+                Character.DIRECTIONALITY_ARABIC_NUMBER,
+                Character.DIRECTIONALITY_COMMON_NUMBER_SEPARATOR,
+                Character.DIRECTIONALITY_NONSPACING_MARK,
+                Character.DIRECTIONALITY_BOUNDARY_NEUTRAL,
+                Character.DIRECTIONALITY_PARAGRAPH_SEPARATOR,
+                Character.DIRECTIONALITY_SEGMENT_SEPARATOR,
+                Character.DIRECTIONALITY_WHITESPACE,
+                Character.DIRECTIONALITY_OTHER_NEUTRALS,
+                Character.DIRECTIONALITY_LEFT_TO_RIGHT_EMBEDDING,
+                Character.DIRECTIONALITY_LEFT_TO_RIGHT_OVERRIDE,
+                Character.DIRECTIONALITY_RIGHT_TO_LEFT_EMBEDDING,
+                Character.DIRECTIONALITY_RIGHT_TO_LEFT_OVERRIDE,
+                Character.DIRECTIONALITY_POP_DIRECTIONAL_FORMAT
+                };
+
+        char[] characters = {
+                '\u0370', // -1
+                '\u00B5', // 0
+                '\u05BE', // 1
+                '\u0600', // 2
+                '\u00B2', // 3
+                // '', // No common char in this group on android and java.
+                '\u00B1', // 5
+                '\u0660', // 6
+                '\u00A0', // 7
+                '\u0300', // 8
+                '\u009F', // 9
+                '\u0085', // 10
+                '\u001F', // 11
+                '\u0020', // 12
+                '\u00AB', // 13
+                '\u202A', // 14
+                '\u202D', // 15
+                '\u202B', // 16
+                '\u202E', // 17
+                '\u202C' // 18
+                };
+        
+        for(int i = 0; i < directionalities.length; i++) {
+            assertEquals(directionalities[i],
+                    Character.getDirectionality(characters[i]));
+        }
+        
+        
+    }
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "offsetByCodePoints",
+        args = {java.lang.CharSequence.class, int.class, int.class}
+    )
     public void test_offsetByCodePointsLjava_lang_CharSequenceII() {
         int result = Character.offsetByCodePoints("a\uD800\uDC00b", 0, 2);
         assertEquals(3, result);
@@ -625,15 +678,12 @@ public class CharacterTest extends TestCase {
         } catch (IndexOutOfBoundsException e) {
         }
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "offsetByCodePoints",
-          methodArgs = {char[].class, int.class, int.class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "offsetByCodePoints",
+        args = {char[].class, int.class, int.class, int.class, int.class}
+    )
     public void test_offsetByCodePoints$CIIII() {
         int result = Character.offsetByCodePoints("a\uD800\uDC00b"
                 .toCharArray(), 0, 4, 0, 2);
@@ -737,15 +787,12 @@ public class CharacterTest extends TestCase {
     /**
      * @tests java.lang.Character#compareTo(Character)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "compareTo",
-          methodArgs = {java.lang.Character.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "compareTo",
+        args = {java.lang.Character.class}
+    )
     public void test_compareToLjava_lang_Byte() {
         final Character min = new Character(Character.MIN_VALUE);
         final Character mid = new Character((char)(Character.MAX_VALUE/2));
@@ -770,15 +817,12 @@ public class CharacterTest extends TestCase {
         } catch (NullPointerException e) {
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Checks exceptions.",
-      targets = {
-        @TestTarget(
-          methodName = "codePointAt",
-          methodArgs = {char[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Checks exceptions.",
+        method = "codePointAt",
+        args = {char[].class, int.class, int.class}
+    )
     public void test_codePointAt_Invalid() {
 
         try {           
@@ -812,15 +856,12 @@ public class CharacterTest extends TestCase {
     /**
      * @tests java.lang.Character#Character(char)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "Character",
-          methodArgs = {char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Character",
+        args = {char.class}
+    )
     public void test_ConstructorC() {
         assertEquals("Constructor failed", 'T', new Character('T').charValue());
     }
@@ -828,15 +869,12 @@ public class CharacterTest extends TestCase {
     /**
      * @tests java.lang.Character#charValue()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "charValue",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "charValue",
+        args = {}
+    )
     public void test_charValue() {
         assertEquals("Incorrect char value returned", 'T', new Character('T')
                 .charValue());
@@ -845,15 +883,12 @@ public class CharacterTest extends TestCase {
     /**
      * @tests java.lang.Character#compareTo(java.lang.Character)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "compareTo",
-          methodArgs = {java.lang.Character.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "compareTo",
+        args = {java.lang.Character.class}
+    )
     public void test_compareToLjava_lang_Character() {
         Character c = new Character('c');
         Character x = new Character('c');
@@ -872,32 +907,27 @@ public class CharacterTest extends TestCase {
     /**
      * @tests java.lang.Character#digit(char, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify boundary value.",
-      targets = {
-        @TestTarget(
-          methodName = "digit",
-          methodArgs = {char.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "digit",
+        args = {char.class, int.class}
+    )
     public void test_digitCI() {
         assertEquals("Returned incorrect digit", 1, Character.digit('1', 10));
         assertEquals("Returned incorrect digit", 15, Character.digit('F', 16));
+        assertEquals(-1, Character.digit('\uFFFF', 1));
     }
     
     /**
      * @tests java.lang.Character#digit(int, int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "digit",
-          methodArgs = {int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "digit",
+        args = {int.class, int.class}
+    )
     public void test_digit_II() {
         assertEquals(1, Character.digit((int)'1', 10));
         assertEquals(15, Character.digit((int)'F', 16));
@@ -914,15 +944,12 @@ public class CharacterTest extends TestCase {
     /**
      * @tests java.lang.Character#equals(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "equals",
+        args = {java.lang.Object.class}
+    )
     public void test_equalsLjava_lang_Object() {
         // Test for method boolean java.lang.Character.equals(java.lang.Object)
         assertTrue("Equality test failed", new Character('A')
@@ -934,15 +961,12 @@ public class CharacterTest extends TestCase {
     /**
      * @tests java.lang.Character#forDigit(int, int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "forDigit",
-          methodArgs = {int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "forDigit",
+        args = {int.class, int.class}
+    )
     public void test_forDigitII() {
         char hexChars[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
                 'a', 'b', 'c', 'd', 'e', 'f' };
@@ -964,15 +988,12 @@ public class CharacterTest extends TestCase {
     /**
      * @tests java.lang.Character#getNumericValue(char)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getNumericValue",
-          methodArgs = {char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getNumericValue",
+        args = {char.class}
+    )
     public void test_getNumericValueC() {
         assertEquals("Returned incorrect numeric value 1", 1, Character
                 .getNumericValue('1'));
@@ -991,15 +1012,12 @@ public class CharacterTest extends TestCase {
     /**
      * @tests java.lang.Character#getNumericValue(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getNumericValue",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getNumericValue",
+        args = {int.class}
+    )
     public void test_getNumericValue_I() {
         assertEquals(1, Character.getNumericValue((int)'1'));
         assertEquals(15, Character.getNumericValue((int)'F'));
@@ -1034,15 +1052,12 @@ public class CharacterTest extends TestCase {
     /**
      * @tests java.lang.Character#getType(char)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getType",
-          methodArgs = {char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getType",
+        args = {char.class}
+    )
     public void test_getTypeC() {
         assertTrue("Returned incorrect type for: \n",
                 Character.getType('\n') == Character.CONTROL);
@@ -1073,15 +1088,12 @@ public class CharacterTest extends TestCase {
     /**
      * @tests java.lang.Character#getType(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getType",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getType",
+        args = {int.class}
+    )
     public void test_getType_I() {
         assertTrue(Character.getType((int) '\n') == Character.CONTROL);
         assertTrue(Character.getType((int) '1') == Character.DECIMAL_DIGIT_NUMBER);
@@ -1187,15 +1199,12 @@ public class CharacterTest extends TestCase {
     /**
      * @tests java.lang.Character#hashCode()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "hashCode",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hashCode",
+        args = {}
+    )
     public void test_hashCode() {
         assertEquals("Incorrect hash returned",
                 89, new Character('Y').hashCode());
@@ -1204,15 +1213,12 @@ public class CharacterTest extends TestCase {
     /**
      * @tests java.lang.Character#isDefined(char)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isDefined",
-          methodArgs = {char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isDefined",
+        args = {char.class}
+    )
     public void test_isDefinedC() {
         assertTrue("Defined character returned false", Character.isDefined('v'));
         assertTrue("Defined character returned false", Character
@@ -1222,15 +1228,12 @@ public class CharacterTest extends TestCase {
     /**
      * @tests java.lang.Character#isDefined(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isDefined",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isDefined",
+        args = {int.class}
+    )
     public void test_isDefined_I(){
         assertTrue(Character.isDefined((int)'v'));
         assertTrue(Character.isDefined((int)'\u6039'));
@@ -1244,15 +1247,12 @@ public class CharacterTest extends TestCase {
     /**
      * @tests java.lang.Character#isDigit(char)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isDigit",
-          methodArgs = {char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isDigit",
+        args = {char.class}
+    )
     public void test_isDigitC() {
         assertTrue("Digit returned false", Character.isDigit('1'));
         assertTrue("Non-Digit returned false", !Character.isDigit('A'));
@@ -1261,15 +1261,12 @@ public class CharacterTest extends TestCase {
     /**
      * @tests java.lang.Character#isDigit(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isDigit",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isDigit",
+        args = {int.class}
+    )
     public void test_isDigit_I() {
         assertTrue(Character.isDigit((int) '1'));
         assertFalse(Character.isDigit((int) 'A'));
@@ -1305,15 +1302,12 @@ public class CharacterTest extends TestCase {
     /**
      * @tests java.lang.Character#isIdentifierIgnorable(char)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isIdentifierIgnorable",
-          methodArgs = {char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isIdentifierIgnorable",
+        args = {char.class}
+    )
     public void test_isIdentifierIgnorableC() {
         assertTrue("Ignorable whitespace returned false", Character
                 .isIdentifierIgnorable('\u0007'));
@@ -1338,15 +1332,12 @@ public class CharacterTest extends TestCase {
     /**
      * @tests java.lang.Character#isIdentifierIgnorable(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isIdentifierIgnorable",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isIdentifierIgnorable",
+        args = {int.class}
+    )
     public void test_isIdentifierIgnorable_I() {
         assertTrue(Character.isIdentifierIgnorable(0x0000));
         assertTrue(Character.isIdentifierIgnorable(0x0004));
@@ -1374,15 +1365,12 @@ public class CharacterTest extends TestCase {
     /**
      * @tests java.lang.Character#isMirrored(char)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isMirrored",
-          methodArgs = {char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isMirrored",
+        args = {char.class}
+    )
     public void test_isMirrored_C() {
         assertTrue(Character.isMirrored('\u0028'));
         assertFalse(Character.isMirrored('\uFFFF'));
@@ -1391,15 +1379,12 @@ public class CharacterTest extends TestCase {
     /**
      * @tests java.lang.Character#isMirrored(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isMirrored",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isMirrored",
+        args = {int.class}
+    )
     public void test_isMirrored_I() {
         assertTrue(Character.isMirrored(0x0028));
         assertFalse(Character.isMirrored(0xFFFF));     
@@ -1409,15 +1394,12 @@ public class CharacterTest extends TestCase {
     /**
      * @tests java.lang.Character#isISOControl(char)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check returned false method.",
-      targets = {
-        @TestTarget(
-          methodName = "isISOControl",
-          methodArgs = {char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isISOControl",
+        args = {char.class}
+    )
     public void test_isISOControlC() {
         // Test for method boolean java.lang.Character.isISOControl(char)
         for (int i = 0; i < 32; i++)
@@ -1427,20 +1409,21 @@ public class CharacterTest extends TestCase {
         for (int i = 127; i < 160; i++)
             assertTrue("ISOConstrol char returned false", Character
                     .isISOControl((char) i));
+        
+        for (int i = 160; i < 260; i++)
+            assertFalse("Not ISOConstrol char returned true", Character
+                .isISOControl((char) i));
     }
 
     /**
      * @tests java.lang.Character#isISOControl(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isISOControl",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isISOControl",
+        args = {int.class}
+    )
     public void test_isISOControlI() {
         // Test for method boolean java.lang.Character.isISOControl(char)
         for (int i = 0; i < 32; i++)
@@ -1461,15 +1444,12 @@ public class CharacterTest extends TestCase {
     /**
      * @tests java.lang.Character#isJavaIdentifierPart(char)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isJavaIdentifierPart",
-          methodArgs = {char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isJavaIdentifierPart",
+        args = {char.class}
+    )
     public void test_isJavaIdentifierPartC() {
         assertTrue("letter returned false", Character.isJavaIdentifierPart('l'));
         assertTrue("currency returned false", Character
@@ -1477,24 +1457,20 @@ public class CharacterTest extends TestCase {
         assertTrue("digit returned false", Character.isJavaIdentifierPart('9'));
         assertTrue("connecting char returned false", Character
                 .isJavaIdentifierPart('_'));
-        // RI fails because 0x200B changes category in Unicode 4.1
         assertTrue("ignorable control returned false", Character
-                .isJavaIdentifierPart('\u200b'));
+                .isJavaIdentifierPart('\u200c'));
         assertTrue("semi returned true", !Character.isJavaIdentifierPart(';'));
     }
     
     /**
      * @tests java.lang.Character#isJavaIdentifierPart(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isJavaIdentifierPart",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isJavaIdentifierPart",
+        args = {int.class}
+    )
     public void test_isJavaIdentifierPart_I() {      
         assertTrue(Character.isJavaIdentifierPart((int)'l'));
         assertTrue(Character.isJavaIdentifierPart((int)'$'));
@@ -1536,22 +1512,18 @@ public class CharacterTest extends TestCase {
         assertTrue(Character.isJavaIdentifierPart(0x00AD));
         assertTrue(Character.isJavaIdentifierPart(0xE007F));
         
-        // RI fails because 0x200B changes category in Unicode 4.1
-        assertTrue(Character.isJavaIdentifierPart(0x200B));
+        assertTrue(Character.isJavaIdentifierPart(0x200C));
     }
 
     /**
      * @tests java.lang.Character#isJavaIdentifierStart(char)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isJavaIdentifierStart",
-          methodArgs = {char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isJavaIdentifierStart",
+        args = {char.class}
+    )
     public void test_isJavaIdentifierStartC() {
         assertTrue("letter returned false", Character
                 .isJavaIdentifierStart('l'));
@@ -1568,15 +1540,12 @@ public class CharacterTest extends TestCase {
     /**
      * @tests java.lang.Character#isJavaIdentifierStart(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isJavaIdentifierStart",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isJavaIdentifierStart",
+        args = {int.class}
+    )
     public void test_isJavaIdentifierStart_I() {
         assertTrue(Character.isJavaIdentifierStart((int)'l'));
         assertTrue(Character.isJavaIdentifierStart((int)'$'));
@@ -1611,15 +1580,12 @@ public class CharacterTest extends TestCase {
     /**
      * @tests java.lang.Character#isJavaLetter(char)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isJavaLetter",
-          methodArgs = {char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isJavaLetter",
+        args = {char.class}
+    )
     @SuppressWarnings("deprecation")
     public void test_isJavaLetterC() {
         assertTrue("letter returned false", Character.isJavaLetter('l'));
@@ -1636,15 +1602,12 @@ public class CharacterTest extends TestCase {
     /**
      * @tests java.lang.Character#isJavaLetterOrDigit(char)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isJavaLetterOrDigit",
-          methodArgs = {char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isJavaLetterOrDigit",
+        args = {char.class}
+    )
     @SuppressWarnings("deprecation")
     public void test_isJavaLetterOrDigitC() {
         assertTrue("letter returned false", Character.isJavaLetterOrDigit('l'));
@@ -1659,15 +1622,12 @@ public class CharacterTest extends TestCase {
     /**
      * @tests java.lang.Character#isLetter(char)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isLetter",
-          methodArgs = {char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isLetter",
+        args = {char.class}
+    )
     public void test_isLetterC() {
         assertTrue("Letter returned false", Character.isLetter('L'));
         assertTrue("Non-Letter returned true", !Character.isLetter('9'));
@@ -1676,15 +1636,12 @@ public class CharacterTest extends TestCase {
     /**
      * @tests java.lang.Character#isLetter(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isLetter",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isLetter",
+        args = {int.class}
+    )
     public void test_isLetter_I() {
         assertTrue(Character.isLetter((int)'L'));
         assertFalse(Character.isLetter((int)'9'));
@@ -1701,15 +1658,12 @@ public class CharacterTest extends TestCase {
     /**
      * @tests java.lang.Character#isLetterOrDigit(char)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isLetterOrDigit",
-          methodArgs = {char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isLetterOrDigit",
+        args = {char.class}
+    )
     public void test_isLetterOrDigitC() {
         assertTrue("Digit returned false", Character.isLetterOrDigit('9'));
         assertTrue("Letter returned false", Character.isLetterOrDigit('K'));
@@ -1720,15 +1674,12 @@ public class CharacterTest extends TestCase {
     /**
      * @tests java.lang.Character#isLetterOrDigit(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isLetterOrDigit",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isLetterOrDigit",
+        args = {int.class}
+    )
     public void test_isLetterOrDigit_I() {
         assertTrue(Character.isLetterOrDigit((int)'9'));
         assertTrue(Character.isLetterOrDigit((int)'K'));
@@ -1751,15 +1702,12 @@ public class CharacterTest extends TestCase {
     /**
      * @tests java.lang.Character#isLowerCase(char)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isLowerCase",
-          methodArgs = {char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isLowerCase",
+        args = {char.class}
+    )
     public void test_isLowerCaseC() {
         assertTrue("lower returned false", Character.isLowerCase('a'));
         assertTrue("upper returned true", !Character.isLowerCase('T'));
@@ -1768,15 +1716,12 @@ public class CharacterTest extends TestCase {
     /**
      * @tests java.lang.Character#isLowerCase(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isLowerCase",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isLowerCase",
+        args = {int.class}
+    )
     public void test_isLowerCase_I() {
         assertTrue(Character.isLowerCase((int)'a'));
         assertFalse(Character.isLowerCase((int)'T'));
@@ -1792,15 +1737,12 @@ public class CharacterTest extends TestCase {
     /**
      * @tests java.lang.Character#isSpace(char)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isSpace",
-          methodArgs = {char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isSpace",
+        args = {char.class}
+    )
     @SuppressWarnings("deprecation")
     public void test_isSpaceC() {
         // Test for method boolean java.lang.Character.isSpace(char)
@@ -1811,15 +1753,12 @@ public class CharacterTest extends TestCase {
     /**
      * @tests java.lang.Character#isSpaceChar(char)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isSpaceChar",
-          methodArgs = {char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isSpaceChar",
+        args = {char.class}
+    )
     public void test_isSpaceCharC() {
         assertTrue("space returned false", Character.isSpaceChar('\u0020'));
         assertTrue("non-space returned true", !Character.isSpaceChar('\n'));
@@ -1828,15 +1767,12 @@ public class CharacterTest extends TestCase {
     /**
      * @tests java.lang.Character#isSpaceChar(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isSpaceChar",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isSpaceChar",
+        args = {int.class}
+    )
     public void test_isSpaceChar_I() {
         assertTrue(Character.isSpaceChar((int)'\u0020'));
         assertFalse(Character.isSpaceChar((int)'\n'));
@@ -1853,15 +1789,12 @@ public class CharacterTest extends TestCase {
     /**
      * @tests java.lang.Character#isTitleCase(char)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isTitleCase",
-          methodArgs = {char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isTitleCase",
+        args = {char.class}
+    )
     public void test_isTitleCaseC() {
         char[] tChars = { (char) 0x01c5, (char) 0x01c8, (char) 0x01cb,
                 (char) 0x01f2, (char) 0x1f88, (char) 0x1f89, (char) 0x1f8a,
@@ -1890,15 +1823,12 @@ public class CharacterTest extends TestCase {
     /**
      * @tests java.lang.Character#isTitleCase(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isTitleCase",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isTitleCase",
+        args = {int.class}
+    )
     public void test_isTitleCase_I() {
         //all the titlecase characters
         int[] titleCaseCharacters = { 0x01c5, 0x01c8, 0x01cb, 0x01f2, 0x1f88,
@@ -1917,15 +1847,12 @@ public class CharacterTest extends TestCase {
     /**
      * @tests java.lang.Character#isUnicodeIdentifierPart(char)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isUnicodeIdentifierPart",
-          methodArgs = {char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isUnicodeIdentifierPart",
+        args = {char.class}
+    )
     public void test_isUnicodeIdentifierPartC() {
         assertTrue("'a' returned false", Character.isUnicodeIdentifierPart('a'));
         assertTrue("'2' returned false", Character.isUnicodeIdentifierPart('2'));
@@ -1935,15 +1862,12 @@ public class CharacterTest extends TestCase {
     /**
      * @tests java.lang.Character#isUnicodeIdentifierPart(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isUnicodeIdentifierPart",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isUnicodeIdentifierPart",
+        args = {int.class}
+    )
     public void test_isUnicodeIdentifierPart_I() {
         assertTrue(Character.isUnicodeIdentifierPart((int)'a'));
         assertTrue(Character.isUnicodeIdentifierPart((int)'2'));
@@ -1991,15 +1915,12 @@ public class CharacterTest extends TestCase {
     /**
      * @tests java.lang.Character#isUnicodeIdentifierStart(char)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isUnicodeIdentifierStart",
-          methodArgs = {char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isUnicodeIdentifierStart",
+        args = {char.class}
+    )
     public void test_isUnicodeIdentifierStartC() {
         assertTrue("'a' returned false", Character
                 .isUnicodeIdentifierStart('a'));
@@ -2012,15 +1933,12 @@ public class CharacterTest extends TestCase {
     /**
      * @tests java.lang.Character#isUnicodeIdentifierStart(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isUnicodeIdentifierStart",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isUnicodeIdentifierStart",
+        args = {int.class}
+    )
     public void test_isUnicodeIdentifierStart_I() {
        
         assertTrue(Character.isUnicodeIdentifierStart((int) 'a'));
@@ -2049,32 +1967,28 @@ public class CharacterTest extends TestCase {
     /**
      * @tests java.lang.Character#isUpperCase(char)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify symbols.",
-      targets = {
-        @TestTarget(
-          methodName = "isUpperCase",
-          methodArgs = {char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isUpperCase",
+        args = {char.class}
+    )
     public void test_isUpperCaseC() {
         assertTrue("Incorrect case value", !Character.isUpperCase('t'));
         assertTrue("Incorrect case value", Character.isUpperCase('T'));
+        assertFalse("Incorrect case value", Character.isUpperCase('1'));
+        assertFalse("Incorrect case value", Character.isUpperCase('?'));
     }
     
     /**
      * @tests java.lang.Character#isUpperCase(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isUpperCase",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isUpperCase",
+        args = {int.class}
+    )
     public void test_isUpperCase_I() {
         assertFalse(Character.isUpperCase((int)'t'));
         assertTrue(Character.isUpperCase((int)'T'));
@@ -2090,15 +2004,12 @@ public class CharacterTest extends TestCase {
     /**
      * @tests java.lang.Character#isWhitespace(char)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isWhitespace",
-          methodArgs = {char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isWhitespace",
+        args = {char.class}
+    )
     public void test_isWhitespaceC() {
         assertTrue("space returned false", Character.isWhitespace('\n'));
         assertTrue("non-space returned true", !Character.isWhitespace('T'));
@@ -2107,15 +2018,12 @@ public class CharacterTest extends TestCase {
     /**
      * @tests java.lang.Character#isWhitespace(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isWhitespace",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isWhitespace",
+        args = {int.class}
+    )
     public void test_isWhitespace_I() {
         assertTrue(Character.isWhitespace((int)'\n'));
         assertFalse(Character.isWhitespace((int)'T'));
@@ -2150,15 +2058,12 @@ public class CharacterTest extends TestCase {
     /**
      * @tests java.lang.Character#reverseBytes(char)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "reverseBytes",
-          methodArgs = {char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "reverseBytes",
+        args = {char.class}
+    )
     public void test_reverseBytesC() {
         char original[] = new char[]{0x0000, 0x0010, 0x00AA, 0xB000, 0xCC00, 0xABCD, 0xFFAA};
         char reversed[] = new char[]{0x0000, 0x1000, 0xAA00, 0x00B0, 0x00CC, 0xCDAB, 0xAAFF};
@@ -2178,31 +2083,27 @@ public class CharacterTest extends TestCase {
     /**
      * @tests java.lang.Character#toLowerCase(char)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify symbols, letter in low case.",
-      targets = {
-        @TestTarget(
-          methodName = "toLowerCase",
-          methodArgs = {char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toLowerCase",
+        args = {char.class}
+    )
     public void test_toLowerCaseC() {
         assertEquals("Failed to change case", 't', Character.toLowerCase('T'));
+        assertEquals("Failed to change case", 't', Character.toLowerCase('t'));
+        assertEquals("Failed to change case", '1', Character.toLowerCase('1'));
     }
     
     /**
      * @tests java.lang.Character#toLowerCase(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toLowerCase",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toLowerCase",
+        args = {int.class}
+    )
     public void test_toLowerCase_I() {
         assertEquals('t', Character.toLowerCase((int)'T'));
         
@@ -2217,31 +2118,40 @@ public class CharacterTest extends TestCase {
     /**
      * @tests java.lang.Character#toString()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify symbols.",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public void test_toString() {
         assertEquals("Incorrect String returned", "T", new Character('T').toString());
+        assertEquals("Incorrect String returned", "1", new Character('1').toString());
+        assertEquals("Incorrect String returned", "$", new Character('$').toString());
     }
 
     /**
+     * @tests java.lang.Character#toString(char)
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {char.class}
+    )
+    public void test_toString_char() {
+        assertEquals("Incorrect String returned", "T", Character.toString('T'));
+    }
+    
+    /**
      * @tests java.lang.Character#toTitleCase(char)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toTitleCase",
-          methodArgs = {char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toTitleCase",
+        args = {char.class}
+    )
     public void test_toTitleCaseC() {
         assertEquals("Incorrect title case for a",
                 'A', Character.toTitleCase('a'));
@@ -2254,15 +2164,12 @@ public class CharacterTest extends TestCase {
     /**
      * @tests java.lang.Character#toTitleCase(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toTitleCase",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toTitleCase",
+        args = {int.class}
+    )
     public void test_toTitleCase_I() {
         assertEquals('A', Character.toTitleCase((int)'a'));
         assertEquals('A', Character.toTitleCase((int)'A'));
@@ -2278,15 +2185,12 @@ public class CharacterTest extends TestCase {
     /**
      * @tests java.lang.Character#toUpperCase(char)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toUpperCase",
-          methodArgs = {char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toUpperCase",
+        args = {char.class}
+    )
     public void test_toUpperCaseC() {
         // Test for method char java.lang.Character.toUpperCase(char)
         assertEquals("Incorrect upper case for a",
@@ -2296,19 +2200,16 @@ public class CharacterTest extends TestCase {
         assertEquals("Incorrect upper case for 1",
                 '1', Character.toUpperCase('1'));
     }
-    
+ 
     /**
      * @tests java.lang.Character#toUpperCase(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toUpperCase",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toUpperCase",
+        args = {int.class}
+    )
     public void test_toUpperCase_I() {
         assertEquals('A', Character.toUpperCase((int)'a'));
         assertEquals('A', Character.toUpperCase((int)'A'));
@@ -2324,15 +2225,12 @@ public class CharacterTest extends TestCase {
     /**
      * @tests java.lang.Character#getDirectionality(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getDirectionality",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getDirectionality",
+        args = {int.class}
+    )
     public void test_isDirectionaliy_I(){
         assertEquals(Character.DIRECTIONALITY_UNDEFINED, Character
                 .getDirectionality(0xFFFE));
@@ -2365,11 +2263,11 @@ public class CharacterTest extends TestCase {
         assertEquals(Character.DIRECTIONALITY_EUROPEAN_NUMBER, Character
                 .getDirectionality(0x1D7FF));
         
-        //RI fails ,this is non-bug difference between Unicode 4.0 and 4.1
-        assertEquals(Character.DIRECTIONALITY_EUROPEAN_NUMBER_SEPARATOR, Character
-                .getDirectionality(0x002B));
-        assertEquals(Character.DIRECTIONALITY_EUROPEAN_NUMBER_SEPARATOR, Character
-                .getDirectionality(0xFF0B));
+        // No common char in this group on android and java.
+        // assertEquals(Character.DIRECTIONALITY_EUROPEAN_NUMBER_SEPARATOR, Character
+        //         .getDirectionality(0x002B));
+        // assertEquals(Character.DIRECTIONALITY_EUROPEAN_NUMBER_SEPARATOR, Character
+        //         .getDirectionality(0xFF0B));
         
         assertEquals(Character.DIRECTIONALITY_EUROPEAN_NUMBER_TERMINATOR, Character
                 .getDirectionality(0x0023));

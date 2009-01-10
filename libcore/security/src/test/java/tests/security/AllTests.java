@@ -29,22 +29,26 @@ public class AllTests {
     }
 
     public static Test suite() {
-        TestSuite suite = new TestSuite("All security test suites");
+        TestSuite suite = tests.TestSuiteFactory.createTestSuite("All security test suites");
         // $JUnit-BEGIN$
         suite.addTest(org.apache.harmony.security.tests.java.security.AllTests.suite());
         suite.addTest(tests.api.java.security.AllTests.suite());
         suite.addTest(tests.java.security.AllTests.suite());
     
-    suite.addTest(tests.security.acl.AllTests.suite());
-    suite.addTest(tests.security.cert.AllTests.suite());
-    suite.addTest(tests.security.interfaces.AllTests.suite());
-    suite.addTest(tests.security.spec.AllTests.suite());
+        suite.addTest(tests.security.acl.AllTests.suite());
+        suite.addTest(tests.security.cert.AllTests.suite());
+        suite.addTest(tests.security.interfaces.AllTests.suite());
+        suite.addTest(tests.security.spec.AllTests.suite());
 
-//        suite.addTestSuite(tests.security.SecurityPermissionsTest.class);
-        suite.addTestSuite(tests.security.AccessControllerTest.class);
+        suite.addTestSuite(tests.security.SecurityPermissionsTest.class);
     
         suite.addTest(tests.api.javax.security.cert.AllTests.suite());
+        
+        suite.addTest(tests.targets.security.AllTests.suite());
         // $JUnit-END$
+        
+        // at the very last because of some non-resetting securitymanager
+        suite.addTestSuite(tests.security.AccessControllerTest.class);
         return suite;
     }
 }

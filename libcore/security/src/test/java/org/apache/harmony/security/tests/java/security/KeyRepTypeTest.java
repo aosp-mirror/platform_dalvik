@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,15 +17,15 @@
 package org.apache.harmony.security.tests.java.security;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.security.KeyRep;
 import java.util.Arrays;
 
 import junit.framework.TestCase;
-@TestTargetClass(KeyRep.class)
+@TestTargetClass(KeyRep.Type.class)
 public class KeyRepTypeTest extends TestCase {
 
     protected void setUp() throws Exception {
@@ -39,15 +39,12 @@ public class KeyRepTypeTest extends TestCase {
     /**
      * @tests java.security.KeyRep.Type#valueOf(String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "valueOf",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "valueOf",
+        args = {java.lang.String.class}
+    )
     public void testValueOf() {
         try {
             KeyRep.Type.valueOf("type");
@@ -72,15 +69,12 @@ public class KeyRepTypeTest extends TestCase {
     /**
      * @tests java.security.KeyRep.Type#values()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "values",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "values",
+        args = {}
+    )
     public void testValues() {
         KeyRep.Type[] types = new KeyRep.Type[] { KeyRep.Type.SECRET,
                 KeyRep.Type.PUBLIC, KeyRep.Type.PRIVATE };

@@ -17,31 +17,31 @@
 
 package org.apache.harmony.sql.tests.javax.sql;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
+import junit.framework.TestCase;
+
 import java.sql.SQLException;
+
 import javax.sql.ConnectionEvent;
 import javax.sql.PooledConnection;
-import javax.sql.RowSet;
-
-import junit.framework.TestCase;
 
 @TestTargetClass(ConnectionEvent.class)
 public class ConnectionEventTest extends TestCase {
 
     /**
-     * @tests {@link javax.sql.RowSetEvent#RowSetEvent(javax.sql.RowSet)}.
+     * @tests {@link javax.sql.ConnectionEvent#ConnectionEvent(PooledConnection)}
+     * 
      */
-    @TestInfo(
-            level = TestLevel.TODO,
-            purpose = "Verifies RowSetEvent() constructor.",
-            targets = { @TestTarget(methodName = "RowSetEvent", 
-                                    methodArgs = {RowSet.class})                         
-            }
-    )    
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "functional test missing but not feasible: no implementation available.",
+        method = "ConnectionEvent",
+        args = {javax.sql.PooledConnection.class}
+    )  
     public void testConstructorConnection() {
         try {
             new ConnectionEvent(null);
@@ -53,17 +53,22 @@ public class ConnectionEventTest extends TestCase {
         ConnectionEvent ce = new ConnectionEvent(ipc);
         assertSame(ipc, ce.getSource());
         assertNull(ce.getSQLException());
+        
+        //cross test
+        ConnectionEvent ce2 = new ConnectionEvent(ipc,null);
+        assertSame(ce2.getSource(),ce.getSource());
     }
+    
+    
     
     /**
      * @tests {@link javax.sql.ConnectionEvent#ConnectionEvent(PooledConnection, SQLException)}
      */
-    @TestInfo(
-            level = TestLevel.TODO,
-            purpose = "Verifies ConnectionEvent() constructor for the abnormal case that an error has occurred on the pooled connection.",
-            targets = { @TestTarget(methodName = "testConnectionEventPooledConnection", 
-                                    methodArgs = {PooledConnection.class,SQLException.class})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "functional test missing but not feasible: no implementation available.",
+        method = "ConnectionEvent",
+        args = {javax.sql.PooledConnection.class, java.sql.SQLException.class}
     )  
     public void testConstructorConnectionSQLException() {
         try {
@@ -81,6 +86,31 @@ public class ConnectionEventTest extends TestCase {
         ce = new ConnectionEvent(ipc, e);
         assertSame(ipc, ce.getSource());
         assertSame(e, ce.getSQLException());
+    }
+    
+    /**
+     * @tests {@link javax.sql.ConnectionEvent#getSQLException()}
+     */
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "functional test missing but not feasible: no implementation available.",
+        method = "getSQLException",
+        args = {}
+    )    
+    public void testGetSQLException() {
+
+        Impl_PooledConnection ipc = new Impl_PooledConnection();
+        ConnectionEvent ce = new ConnectionEvent(ipc);
+        
+        ConnectionEvent ce2 = new ConnectionEvent(ipc, null);
+        assertNull(ce.getSQLException());
+        assertEquals(ce2.getSQLException(), ce.getSQLException());
+        
+        SQLException e = new SQLException();
+        ConnectionEvent ce3 = new ConnectionEvent(ipc, e);
+        assertNotNull(ce3.getSQLException());
+        assertNotSame(ce3.getSQLException(), ce2.getSQLException());
+
     }
 }   
 

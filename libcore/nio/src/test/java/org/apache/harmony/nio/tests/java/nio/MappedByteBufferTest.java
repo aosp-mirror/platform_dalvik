@@ -15,7 +15,15 @@
  *  limitations under the License.
  */
 
+// BEGIN android-note
+// This test was copied from a newer version of Harmony
+// END android-note
+
 package org.apache.harmony.nio.tests.java.nio;
+
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargetClass;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -30,6 +38,16 @@ import java.nio.channels.FileChannel.MapMode;
 
 import junit.framework.TestCase;
 
+@TestTargetClass(
+    value = MappedByteBuffer.class,
+    untestedMethods = {
+        @TestTargetNew(
+            level = TestLevel.NOT_FEASIBLE,
+            method = "isLoaded",
+            args = {}
+        )
+    }
+)
 public class MappedByteBufferTest extends TestCase {
 
     File tmpFile;
@@ -38,7 +56,13 @@ public class MappedByteBufferTest extends TestCase {
      * A regression test for failing to correctly set capacity of underlying
      * wrapped buffer from a mapped byte buffer.
      */
-    public void testasIntBuffer() throws IOException {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "A regression test for failing to correctly set capacity",
+        method = "asIntBuffer",
+        args = {}
+    )
+    public void test_asIntBuffer() throws IOException {
         // Map file
         FileInputStream fis = new FileInputStream(tmpFile);
         FileChannel fc = fis.getChannel();
@@ -65,6 +89,12 @@ public class MappedByteBufferTest extends TestCase {
     /**
      * @tests {@link java.nio.MappedByteBuffer#force()}
      */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "force",
+        args = {}
+    )
     public void test_force() throws IOException {
         // buffer was not mapped in read/write mode
         FileInputStream fileInputStream = new FileInputStream(tmpFile);
@@ -110,12 +140,18 @@ public class MappedByteBufferTest extends TestCase {
     /**
      * @tests {@link java.nio.MappedByteBuffer#load()}
      */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "load",
+        args = {}
+    )
     public void test_load() throws IOException {
         FileInputStream fileInputStream = new FileInputStream(tmpFile);
         FileChannel fileChannelRead = fileInputStream.getChannel();
         MappedByteBuffer mmbRead = fileChannelRead.map(MapMode.READ_ONLY, 0,
                 fileChannelRead.size());
-        
+
         assertEquals(mmbRead, mmbRead.load());
 
         RandomAccessFile randomFile = new RandomAccessFile(tmpFile, "rw");
@@ -124,14 +160,15 @@ public class MappedByteBufferTest extends TestCase {
                 FileChannel.MapMode.READ_WRITE, 0, fileChannelReadWrite.size());
 
         assertEquals(mmbReadWrite, mmbReadWrite.load());
-        
+
         fileChannelRead.close();
         fileChannelReadWrite.close();
     }
 
     protected void setUp() throws IOException {
         // Create temp file with 26 bytes and 5 ints
-        tmpFile = File.createTempFile("harmony", "test");  //$NON-NLS-1$//$NON-NLS-2$
+        tmpFile = new File(System.getProperty("ctsdir"), "MappedByteBufferTest");  //$NON-NLS-1$//$NON-NLS-2$
+        tmpFile.createNewFile();
         tmpFile.deleteOnExit();
         FileOutputStream fileOutputStream = new FileOutputStream(tmpFile);
         FileChannel fileChannel = fileOutputStream.getChannel();

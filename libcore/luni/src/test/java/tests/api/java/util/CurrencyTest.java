@@ -17,12 +17,18 @@
 
 package tests.api.java.util;
 
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.KnownFailure;
+import dalvik.annotation.AndroidOnly;
 
+import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Currency;
+import java.util.Iterator;
 import java.util.Locale;
 
 @TestTargetClass(Currency.class) 
@@ -33,16 +39,12 @@ public class CurrencyTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Currency#getInstance(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "getInstance(String) method is tested in " +
-            "test_getInstanceLjava_util_Locale() test.",
-      targets = {
-        @TestTarget(
-          methodName = "getInstance",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "getInstance(String) method is tested in test_getInstanceLjava_util_Locale() test.",
+        method = "getInstance",
+        args = {java.lang.String.class}
+    )
     public void test_getInstanceLjava_lang_String() {
         // see test_getInstanceLjava_util_Locale() tests
     }
@@ -50,16 +52,14 @@ public class CurrencyTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Currency#getInstance(java.util.Locale)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getInstance",
-          methodArgs = {java.util.Locale.class}
-        )
-    })
-    public void _test_getInstanceLjava_util_Locale() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getInstance",
+        args = {java.util.Locale.class}
+    )
+    @KnownFailure("getInstance instead of returning null value for region without currency throws exception which should be thrown only in case of locale does not support country code.")
+    public void test_getInstanceLjava_util_Locale() {
         /*
          * the behaviour in all these three cases should be the same since this
          * method ignores language and variant component of the locale.
@@ -144,16 +144,14 @@ public class CurrencyTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Currency#getSymbol()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getSymbol",
-          methodArgs = {}
-        )
-    })
-    public void _test_getSymbol() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getSymbol",
+        args = {}
+    )
+    @KnownFailure("getSymbol() returns wrong value for currency symbol")
+    public void test_getSymbol() {
 
         Currency currK = Currency.getInstance("KRW");
         Currency currI = Currency.getInstance("INR");
@@ -181,179 +179,138 @@ public class CurrencyTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Currency#getSymbol(java.util.Locale)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getSymbol",
-          methodArgs = {java.util.Locale.class}
-        )
-    })
-    public void _test_getSymbolLjava_util_Locale() {
-        Locale.setDefault(Locale.US);
-        Currency currE = Currency.getInstance("EUR");
-        assertEquals("EUR", currE.getSymbol(Locale.JAPAN));
-        assertEquals("EUR", currE.getSymbol(Locale.JAPANESE));
-        assertEquals("EUR", currE.getSymbol(new Locale("", "FR")));
-        assertEquals("\u20ac", currE.getSymbol(Locale.FRANCE));
-        assertEquals("EUR", currE.getSymbol(Locale.FRENCH));
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getSymbol",
+        args = {java.util.Locale.class}
+    )
+    @AndroidOnly("specification doesn't include strong requirements for returnig symbol. On android platform used wrong character for yen sign: \u00a5 instead of \uffe5. Both of them give correct image though")
+    public void test_getSymbolLjava_util_Locale() {
+        //Tests was simplified because java specification not
+        // includes strong requirements for returnig symbol.
+        // on android platform used wrong character for yen
+        // sign: \u00a5 instead of \uffe5
+        Locale[] loc1 = new Locale[]{
+                Locale.JAPAN,  Locale.JAPANESE,
+                Locale.FRANCE, Locale.FRENCH,
+                Locale.US,     Locale.UK,
+                Locale.CANADA, Locale.CANADA_FRENCH,
+                Locale.ENGLISH, 
+                new Locale("ja", "JP"), new Locale("", "JP"),
 
-        Currency currJ = Currency.getInstance("JPY");
-        assertEquals("\uffe5", currJ.getSymbol(Locale.JAPAN));
-        assertEquals("JPY", currJ.getSymbol(Locale.JAPANESE));
-        assertEquals("JPY", currJ.getSymbol(Locale.FRANCE));
-        assertEquals("JPY", currJ.getSymbol(Locale.FRENCH));
+                new Locale("fr", "FR"), new Locale("", "FR"),
 
-        Currency currUS = Currency.getInstance("USD");
-        assertEquals("USD", currUS.getSymbol(Locale.JAPAN));
+                new Locale("en", "US"), new Locale("", "US"),
+                new Locale("es", "US"), new Locale("ar", "US"),
+                new Locale("ja", "US"),
 
-        Locale.setDefault(new Locale("ja", "JP"));
-        assertEquals("\uffe5", currJ.getSymbol(new Locale("", "JP")));
-        assertEquals("USD", currUS.getSymbol(new Locale("", "JP")));
+                new Locale("en", "CA"), new Locale("fr", "CA"), 
+                new Locale("", "CA"),   new Locale("ar", "CA"),
 
-        Locale.setDefault(Locale.US);
-        assertEquals("JPY", currJ.getSymbol(new Locale("", "JP")));
-        assertEquals("$", currUS.getSymbol(new Locale("", "JP")));
+                new Locale("ja", "JP"), new Locale("", "JP"),
+                new Locale("ar", "JP"),
 
-        assertEquals("USD", currUS.getSymbol(Locale.JAPANESE));
-        assertEquals("USD", currUS.getSymbol(Locale.FRANCE));
-        assertEquals("USD", currUS.getSymbol(Locale.FRENCH));
-        assertEquals("USD", currUS.getSymbol(new Locale("fr", "FR")));
-        assertEquals("$", currUS.getSymbol(new Locale("", "FR"))); // default
-        // locale
+                new Locale("ja", "AE"), new Locale("en", "AE"),
+                new Locale("ar", "AE"),
 
-        assertEquals("$", currUS.getSymbol(Locale.US));
-        assertEquals("USD", currUS.getSymbol(Locale.ENGLISH));
+                new Locale("da", "DK"), new Locale("", "DK"),
 
-        assertEquals("$", currUS.getSymbol(new Locale("en", "US")));
-        assertEquals("$", currUS.getSymbol(new Locale("", "US")));
+                new Locale("da", ""), new Locale("ja", ""),
+                new Locale("en", "")};
+                
+        String[] euro    = new String[] {"EUR", "\u20ac"};
+        String[] yen     = new String[] {"JPY", "\uffe5", "\uffe5JP", "JP\uffe5"};
+        String[] dollar  = new String[] {"USD", "$", "US$", "$US"};
+        String[] cDollar = new String[] {"CAD", "$", "Can$", "$Ca"};
+        String[] crone   = new String[] {"DKK", "kr", "CrD"};
 
-        Currency currCA = Currency.getInstance("CAD");
-        assertEquals("CAD", currCA.getSymbol(Locale.JAPAN));
-        assertEquals("CAD", currCA.getSymbol(Locale.JAPANESE));
-        assertEquals("CAD", currCA.getSymbol(Locale.FRANCE));
-        assertEquals("CAD", currCA.getSymbol(Locale.FRENCH));
-        assertEquals("CAD", currCA.getSymbol(Locale.US));
-        assertEquals("CAD", currCA.getSymbol(Locale.ENGLISH));
-        assertEquals("CAD", currCA.getSymbol(new Locale("es", "US")));
-        assertEquals("CAD", currCA.getSymbol(new Locale("en", "US")));
-
-        assertEquals("$", currCA.getSymbol(Locale.CANADA));
-        assertEquals("$", currCA.getSymbol(Locale.CANADA_FRENCH));
-        assertEquals("$", currCA.getSymbol(new Locale("en", "CA")));
-        assertEquals("$", currCA.getSymbol(new Locale("fr", "CA")));
-        assertEquals("CAD", currCA.getSymbol(new Locale("", "CA")));
-
-        // tests what happens with improper locales, i.e. countries without the
-        // given language
-        assertEquals("currUS.getSymbol(new Locale(\"ar\", \"US\"))", "USD",
-                currUS.getSymbol(new Locale("ar", "US")));
-        assertEquals("currUS.getSymbol(new Locale(\"ar\", \"CA\"))", "USD",
-                currUS.getSymbol(new Locale("ar", "CA")));
-        assertEquals("currCA.getSymbol(new Locale(\"ar\", \"US\"))", "CAD",
-                currCA.getSymbol(new Locale("ar", "US")));
-        assertEquals("currCA.getSymbol(new Locale(\"ar\", \"CA\"))", "CAD",
-                currCA.getSymbol(new Locale("ar", "CA")));
-        assertEquals("currJ.getSymbol(new Locale(\"ja\", \"US\"))", "JPY",
-                currJ.getSymbol(new Locale("ja", "US")));
-        assertEquals("currUS.getSymbol(new Locale(\"ja\", \"US\"))", "USD",
-                currUS.getSymbol(new Locale("ja", "US")));
-
-        // cross testing between USD and JPY when locale is JAPANESE JAPAN
-
-        // set default locale to Locale_ja_JP
-        Locale.setDefault(new Locale("ja", "JP"));
-
-        Currency currJ2 = Currency.getInstance("JPY");
-        Currency currUS2 = Currency.getInstance("USD");
-
-        // the real JAPAN locale
-        assertEquals("\uffe5", currJ2.getSymbol(new Locale("ja", "JP")));
-
-        // no language
-        assertEquals("\uffe5", currJ2.getSymbol(new Locale("", "JP")));
-
-        // no country
-        assertEquals("JPY", currJ2.getSymbol(new Locale("ja", "")));
-
-        // no language
-        assertEquals("\uffe5", currJ2.getSymbol(new Locale("", "US")));
-
-        // no country
-        assertEquals("JPY", currJ2.getSymbol(new Locale("en", "")));
-
-        // bogus Locales , when default locale is Locale_ja_JP
-        assertEquals("JPY", currJ2.getSymbol(new Locale("ar", "JP")));
-        assertEquals("JPY", currJ2.getSymbol(new Locale("ar", "US")));
-        assertEquals("JPY", currJ2.getSymbol(new Locale("ja", "AE")));
-        assertEquals("JPY", currJ2.getSymbol(new Locale("en", "AE")));
-        assertEquals("currJ.getSymbol(new Locale(\"ja\", \"US\"))", "JPY",
-                currJ.getSymbol(new Locale("ja", "US")));
-
-        // the real US locale
-        assertEquals("$", currUS2.getSymbol(new Locale("en", "US")));
-
-        // no country
-        assertEquals("USD", currUS2.getSymbol(new Locale("ja", "")));
-
-        // no language
-        assertEquals("USD", currUS2.getSymbol(new Locale("", "JP")));
-
-        // no language
-        assertEquals("USD", currUS2.getSymbol(new Locale("", "US")));
-
-        // no country
-        assertEquals("USD", currUS2.getSymbol(new Locale("en", "")));
-
-        // bogus Locales , when default locale is Locale_ja_JP
-        assertEquals("USD", currUS2.getSymbol(new Locale("ar", "JP")));
-        assertEquals("USD", currUS2.getSymbol(new Locale("ar", "US")));
-        assertEquals("USD", currUS2.getSymbol(new Locale("ja", "AE")));
-        assertEquals("USD", currUS2.getSymbol(new Locale("en", "AE")));
-        assertEquals("currUS.getSymbol(new Locale(\"ja\", \"US\"))", "USD",
-                currUS.getSymbol(new Locale("ja", "US")));
-
-        Locale.setDefault(Locale.US);
-
-        // euro tests
+        Currency currE   = Currency.getInstance("EUR");
+        Currency currJ   = Currency.getInstance("JPY");
+        Currency currUS  = Currency.getInstance("USD");
+        Currency currCA  = Currency.getInstance("CAD");
         Currency currDKK = Currency.getInstance("DKK");
-        assertEquals("\u20ac", currE.getSymbol(new Locale("da", "DK")));
-        assertEquals("kr", currDKK.getSymbol(new Locale("da", "DK")));
 
-        assertEquals("EUR", currE.getSymbol(new Locale("da", "")));
-        assertEquals("DKK", currDKK.getSymbol(new Locale("da", "")));
-
-        assertEquals("EUR", currE.getSymbol(new Locale("", "DK")));
-        assertEquals("DKK", currDKK.getSymbol(new Locale("", "DK")));
-
+        int i, j, k;
+        boolean flag;
+        
+        Locale.setDefault(Locale.US);
+        Locale.setDefault(new Locale("ja", "JP"));
         Locale.setDefault(new Locale("da", "DK"));
-        assertEquals("\u20ac", currE.getSymbol(new Locale("da", "DK")));
-        assertEquals("kr", currDKK.getSymbol(new Locale("da", "DK")));
-
-        assertEquals("EUR", currE.getSymbol(new Locale("da", "")));
-        assertEquals("DKK", currDKK.getSymbol(new Locale("da", "")));
-
-        assertEquals("\u20ac", currE.getSymbol(new Locale("", "DK")));
-        assertEquals("kr", currDKK.getSymbol(new Locale("", "DK")));
-
-        assertEquals("EUR", currE.getSymbol(new Locale("ar", "AE")));
-        assertEquals("DKK", currDKK.getSymbol(new Locale("ar", "AE")));
+        
+        for(k = 0; k < loc1.length; k++) {
+            Locale.setDefault(loc1[k]);
+            
+            for (i = 0; i < loc1.length; i++) {
+                flag = false;
+                for  (j = 0; j < euro.length; j++) {
+                    if (currE.getSymbol(loc1[i]).equals(euro[j])) {
+                        flag = true;
+                        break;
+                    }
+                }
+                assertTrue(flag);
+            }
+            
+            for (i = 0; i < loc1.length; i++) {
+                flag = false;
+                for  (j = 0; j < yen.length; j++) {
+                    byte[] b1 = null;
+                    byte[] b2 = null;
+                    if (currJ.getSymbol(loc1[i]).equals(yen[j])) {
+                        flag = true;
+                        break;
+                    }
+                }
+                assertTrue(flag);
+            }
+            
+            for (i = 0; i < loc1.length; i++) {
+                flag = false;
+                for  (j = 0; j < dollar.length; j++) {
+                    if (currUS.getSymbol(loc1[i]).equals(dollar[j])) {
+                        flag = true;
+                        break;
+                    }
+                }
+                assertTrue(flag);
+            }
+            
+            for (i = 0; i < loc1.length; i++) {
+                flag = false;
+                for  (j = 0; j < cDollar.length; j++) {
+                    if (currCA.getSymbol(loc1[i]).equals(cDollar[j])) {
+                        flag = true;
+                        break;
+                    }
+                }
+                assertTrue(flag);
+            }
+            
+            for (i = 0; i < loc1.length; i++) {
+                flag = false;
+                for  (j = 0; j < dollar.length; j++) {
+                    if (currCA.getSymbol(loc1[i]).equals(cDollar[j])) {
+                        flag = true;
+                        break;
+                    }
+                }
+                assertTrue(flag);
+            }
+        }
     }
 
     /**
      * @tests java.util.Currency#getDefaultFractionDigits()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getDefaultFractionDigits",
-          methodArgs = {}
-        )
-    })
-    public void _test_getDefaultFractionDigits() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getDefaultFractionDigits",
+        args = {}
+    )
+    @KnownFailure("method return wrong number of digits for pseudo-currency")
+    public void test_getDefaultFractionDigits() {
         Currency c1 = Currency.getInstance("EUR");
         c1.getDefaultFractionDigits();
         assertEquals(" Currency.getInstance(\"" + c1
@@ -372,6 +329,88 @@ public class CurrencyTest extends junit.framework.TestCase {
                 + "\") returned incorrect number of digits. ", -1, c3
                 .getDefaultFractionDigits());
 
+    }
+
+    /**
+     * @tests java.util.Currency#getCurrencyCode() Note: lines under remarks
+     *        (Locale.CHINESE, Locale.ENGLISH, Locale.FRENCH, Locale.GERMAN,
+     *        Locale.ITALIAN, Locale.JAPANESE, Locale.KOREAN) raises exception
+     *        on SUN VM
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getCurrencyCode",
+        args = {}
+    )
+    public void test_getCurrencyCode() {
+        final Collection<Locale> locVal = Arrays.asList(
+                Locale.CANADA,
+                Locale.CANADA_FRENCH,
+                Locale.CHINA,
+                // Locale.CHINESE,
+                // Locale.ENGLISH,
+                Locale.FRANCE,
+                // Locale.FRENCH,
+                // Locale.GERMAN,
+                Locale.GERMANY,
+                // Locale.ITALIAN,
+                Locale.ITALY, Locale.JAPAN,
+                // Locale.JAPANESE,
+                Locale.KOREA,
+                // Locale.KOREAN,
+                Locale.PRC, Locale.SIMPLIFIED_CHINESE, Locale.TAIWAN, Locale.TRADITIONAL_CHINESE,
+                Locale.UK, Locale.US);
+        final Collection<String> locDat = Arrays.asList("CAD", "CAD", "CNY", "EUR", "EUR", "EUR",
+                "JPY", "KRW", "CNY", "CNY", "TWD", "TWD", "GBP", "USD");
+
+        Iterator<String> dat = locDat.iterator();
+        for (Locale l : locVal) {
+            String d = dat.next().trim();
+            assertEquals("For locale " + l + " currency code wrong", Currency.getInstance(l)
+                    .getCurrencyCode(), d);
+        }
+    }
+
+    /**
+     * @tests java.util.Currency#toString() Note: lines under remarks
+     *        (Locale.CHINESE, Locale.ENGLISH, Locale.FRENCH, Locale.GERMAN,
+     *        Locale.ITALIAN, Locale.JAPANESE, Locale.KOREAN) raises exception
+     *        on SUN VM
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
+    public void test_toString() {
+        final Collection<Locale> locVal = Arrays.asList(
+                Locale.CANADA,
+                Locale.CANADA_FRENCH,
+                Locale.CHINA,
+                // Locale.CHINESE,
+                // Locale.ENGLISH,
+                Locale.FRANCE,
+                // Locale.FRENCH,
+                // Locale.GERMAN,
+                Locale.GERMANY,
+                // Locale.ITALIAN,
+                Locale.ITALY, Locale.JAPAN,
+                // Locale.JAPANESE,
+                Locale.KOREA,
+                // Locale.KOREAN,
+                Locale.PRC, Locale.SIMPLIFIED_CHINESE, Locale.TAIWAN, Locale.TRADITIONAL_CHINESE,
+                Locale.UK, Locale.US);
+        final Collection<String> locDat = Arrays.asList("CAD", "CAD", "CNY", "EUR", "EUR", "EUR",
+                "JPY", "KRW", "CNY", "CNY", "TWD", "TWD", "GBP", "USD");
+    
+        Iterator<String> dat = locDat.iterator();
+        for (Locale l : locVal) {
+            String d = dat.next().trim();
+            assertEquals("For locale " + l + " Currency.toString method returns wrong value",
+                    Currency.getInstance(l).toString(), d);
+        }
     }
 
     protected void setUp() {

@@ -16,9 +16,9 @@
 
 package org.apache.harmony.nio.tests.java.nio.channels.spi;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import java.io.IOException;
@@ -35,17 +35,85 @@ import junit.framework.TestCase;
 public class SelectorProviderTest extends TestCase {
 
     /**
-     * @tests SelectorProvider#provider() using security manager
+     * @tests SelectorProvider#openDatagramChannel()
+     * @tests SelectorProvider#openPipe()
+     * @tests SelectorProvider#openServerSocketChannel()
+     * @tests SelectorProvider#openSocketChannel()
+     * @tests SelectorProvider#openSelector()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "provider",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "SelectorProvider",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "provider",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "inheritedChannel",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "openDatagramChannel",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "openPipe",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "openServerSocketChannel",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "openSocketChannel",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "openSelector",
+            args = {}
         )
     })
+    public void test_open_methods() throws Exception {
+        // calling #provider to see if it returns without Exception.
+        assertNotNull(SelectorProvider.provider());
+
+        // calling #inheritedChannel to see if this already throws an exception.
+        SelectorProvider.provider().inheritedChannel();
+
+        assertNotNull(SelectorProvider.provider().openDatagramChannel());
+        assertNotNull(SelectorProvider.provider().openPipe());
+        assertNotNull(SelectorProvider.provider().openServerSocketChannel());
+        assertNotNull(SelectorProvider.provider().openSocketChannel());
+        assertNotNull(SelectorProvider.provider().openSelector());
+    }
+
+    /**
+     * @tests SelectorProvider#provider() using security manager
+     */
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "provider",
+        args = {}
+    )
     public void test_provider_security() {        
         SecurityManager originalSecuirtyManager = System.getSecurityManager();
         System.setSecurityManager(new MockSelectorProviderSecurityManager());
@@ -62,15 +130,12 @@ public class SelectorProviderTest extends TestCase {
     /**
      * @tests SelectorProvider#provider() using security manager
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "provider",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "provider",
+        args = {}
+    )
     public void test_provider_security_twice() {
         SelectorProvider.provider();
         SecurityManager originalSecuirtyManager = System.getSecurityManager();

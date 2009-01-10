@@ -17,9 +17,9 @@
 
 package tests.api.java.io;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass; 
 
 import java.io.ByteArrayInputStream;
@@ -43,6 +43,14 @@ public class ObjectStreamFieldTest extends junit.framework.TestCase {
     static class DummyClass implements Serializable {
         private static final long serialVersionUID = 999999999999998L;
 
+        boolean bField = true;
+        char cField = 'c';
+        double dField = 424242.4242;
+        float fField = 24.12F;
+        int iField = 1965;
+        long lField = 9999999L;
+        short sField = 42;
+        
         long bam = 999L;
 
         int ham = 9999;
@@ -56,6 +64,16 @@ public class ObjectStreamFieldTest extends junit.framework.TestCase {
         }
     }
 
+    class MyObjectStreamField extends ObjectStreamField {
+        public MyObjectStreamField(String name, Class<?> cl) {
+            super(name, cl);
+        }
+        
+        public void setOffset(int newValue) {
+            super.setOffset(newValue);
+        }
+    }
+    
     ObjectStreamClass osc;
 
     ObjectStreamField hamField;
@@ -70,30 +88,95 @@ public class ObjectStreamFieldTest extends junit.framework.TestCase {
      * @tests java.io.ObjectStreamField#ObjectStreamField(java.lang.String,
      *        java.lang.Class)
      */
-    @TestInfo(
-            level = TestLevel.TODO,
-            purpose = "Dummy test.",
-            targets = { @TestTarget(methodName = "ObjectStreamField", 
-                                    methodArgs = {java.lang.String.class,
-                                                  java.lang.Class.class})                                    
-            }
-        )      
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies ObjectStreamField(String, Class<T>)",
+        method = "ObjectStreamField",
+        args = {java.lang.String.class, java.lang.Class.class}
+    )      
     public void test_ConstructorLjava_lang_StringLjava_lang_Class() {
-        // Test for method java.io.ObjectStreamField(java.lang.String,
-        // java.lang.Class)
-        assertTrue("Used to test", true);
+        ObjectStreamField osf = new ObjectStreamField("aField", int.class);
+        assertTrue("Test 1: Name member not set correctly.", 
+                   osf.getName().equals("aField"));
+        assertTrue("Test 2: Type member not set correctly.",
+                   osf.getType().equals(int.class));
+        
+        // Repeat the tests with a different object to make sure
+        // that we have not tested against default values.
+        osf = new ObjectStreamField("anotherField", String.class);
+        assertTrue("Test 3: Name member not set correctly.", 
+                   osf.getName().equals("anotherField"));
+        assertTrue("Test 4: Type member not set correctly.",
+                   osf.getType().equals(String.class));
+        
+        // Invalid argument tests.
+        try {
+            osf = new ObjectStreamField(null, boolean.class);
+            fail("Test 5: NullPointerException expected.");
+        } catch (NullPointerException e) {
+            // Expected.
+        }
+        try {
+            osf = new ObjectStreamField("thisField", null);
+            fail("Test 6: NullPointerException expected.");
+        } catch (NullPointerException e) {
+            // Expected.
+        }        
+    }
+
+    /**
+     * @tests java.io.ObjectStreamField#ObjectStreamField(java.lang.String,
+     *        java.lang.Class)
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies ObjectStreamField(String, Class<T>, boolean)",
+        method = "ObjectStreamField",
+        args = {java.lang.String.class, java.lang.Class.class, boolean.class}
+    )      
+    public void test_ConstructorLjava_lang_StringLjava_lang_ClassB() {
+        ObjectStreamField osf = new ObjectStreamField("aField", int.class, false);
+        assertTrue("Test 1: Name member not set correctly.", 
+                   osf.getName().equals("aField"));
+        assertTrue("Test 2: Type member not set correctly.",
+                   osf.getType().equals(int.class));
+        assertFalse("Test 3: Unshared member not set correctly.", 
+                    osf.isUnshared());
+        
+        // Repeat the tests with a different object to make sure
+        // that we have not tested against default values.
+        osf = new ObjectStreamField("anotherField", String.class, true);
+        assertTrue("Test 4: Name member not set correctly.", 
+                   osf.getName().equals("anotherField"));
+        assertTrue("Test 5: Type member not set correctly.",
+                   osf.getType().equals(String.class));
+        assertTrue("Test 6: Unshared member not set correctly.", 
+                   osf.isUnshared());
+        
+        // Invalid argument tests.
+        try {
+            osf = new ObjectStreamField(null, boolean.class);
+            fail("Test 7: NullPointerException expected.");
+        } catch (NullPointerException e) {
+            // Expected.
+        }
+        try {
+            osf = new ObjectStreamField("thisField", null);
+            fail("Test 8: NullPointerException expected.");
+        } catch (NullPointerException e) {
+            // Expected.
+        }        
     }
 
     /**
      * @tests java.io.ObjectStreamField#compareTo(java.lang.Object)
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = { @TestTarget(methodName = "compareTo", 
-                                    methodArgs = {java.lang.Object.class})                                    
-            }
-        )      
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "compareTo",
+        args = {java.lang.Object.class}
+    )      
     public void test_compareToLjava_lang_Object() {
         // Test for method int
         // java.io.ObjectStreamField.compareTo(java.lang.Object)
@@ -108,13 +191,12 @@ public class ObjectStreamFieldTest extends junit.framework.TestCase {
     /**
      * @tests java.io.ObjectStreamField#getName()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = { @TestTarget(methodName = "getName", 
-                                    methodArgs = {})                                    
-            }
-        )    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getName",
+        args = {}
+    )    
     public void test_getName() {
         // Test for method java.lang.String java.io.ObjectStreamField.getName()
         assertEquals("Field did not return correct name", "hola", holaField.getName());
@@ -123,37 +205,37 @@ public class ObjectStreamFieldTest extends junit.framework.TestCase {
     /**
      * @tests java.io.ObjectStreamField#getOffset()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = { @TestTarget(methodName = "getOffset", 
-                                    methodArgs = {})                                    
-            }
-        )    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getOffset",
+        args = {}
+    )    
     public void test_getOffset() {
         // Test for method int java.io.ObjectStreamField.getOffset()
         ObjectStreamField[] osfArray;
         osfArray = osc.getFields();
-        assertTrue("getOffset did not return reasonable values", osfArray[0]
+        int[] expectedOffsets = {0, 1, 9, 11, 19, 23, 27, 31, 39, 41, 0};
+        
+        assertTrue("getOffset() did not return reasonable values.", osfArray[0]
                 .getOffset() != osfArray[1].getOffset());
-        assertEquals("getOffset for osfArray[0].getOffset() did not return 0",
-                0, osfArray[0].getOffset());
-        assertEquals("osfArray[1].getOffset() did not return    8", 8, osfArray[1]
-                .getOffset());
-        assertEquals("osfArray[2].getOffset() did not return 12", 12, osfArray[2]
-                .getOffset());
+        
+        for (int i = 0; i < expectedOffsets.length; i++) {
+            assertEquals(String.format("Unexpected value for osfArray[%d].getOffset(): ", i),
+                    expectedOffsets[i], osfArray[i].getOffset());
+            
+        }
     }
 
     /**
      * @tests java.io.ObjectStreamField#getType()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = { @TestTarget(methodName = "getType", 
-                                    methodArgs = {})                                    
-            }
-        )     
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getType",
+        args = {}
+    )     
     public void test_getType() {
         // Test for method java.lang.Class java.io.ObjectStreamField.getType()
         assertTrue("getType on an Object field did not answer Object",
@@ -163,15 +245,12 @@ public class ObjectStreamFieldTest extends junit.framework.TestCase {
     /**
      * @tests java.io.ObjectStreamField#getTypeCode()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getTypeCode",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getTypeCode",
+        args = {}
+    )
     public void test_getTypeCode() {
         // Test for method char java.io.ObjectStreamField.getTypeCode()
         assertEquals("getTypeCode on an Object field did not answer 'L'",
@@ -183,15 +262,12 @@ public class ObjectStreamFieldTest extends junit.framework.TestCase {
     /**
      * @tests java.io.ObjectStreamField#getTypeString()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getTypeString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getTypeString",
+        args = {}
+    )
     public void test_getTypeString() {
         assertTrue("getTypeString returned: " + holaField.getTypeString(),
                 holaField.getTypeString().indexOf("Object") >= 0);
@@ -204,15 +280,12 @@ public class ObjectStreamFieldTest extends junit.framework.TestCase {
     /**
      * @tests java.io.ObjectStreamField#toString()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public void test_toString() {
         // Test for method java.lang.String java.io.ObjectStreamField.toString()
         assertTrue("toString on a long returned: " + bamField.toString(),
@@ -222,13 +295,12 @@ public class ObjectStreamFieldTest extends junit.framework.TestCase {
     /**
      * @tests java.io.ObjectStreamField#getType() 
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = { @TestTarget(methodName = "getType", 
-                                    methodArgs = {})                                    
-            }
-        )      
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getType",
+        args = {}
+    )      
     public void test_getType_Deserialized() throws IOException,
             ClassNotFoundException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream(1024);
@@ -248,17 +320,31 @@ public class ObjectStreamFieldTest extends junit.framework.TestCase {
     }
     
     /**
+     * @tests java.io.ObjectStreamField#setOffset()
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setOffset",
+        args = {int.class}
+    )    
+    public void test_setOffsetI() {
+        MyObjectStreamField f = new MyObjectStreamField("aField", int.class);
+        f.setOffset(42);
+        assertEquals("Test 1: Unexpected offset value.", 42, f.getOffset());
+        f.setOffset(2008);
+        assertEquals("Test 2: Unexpected offset value.", 2008, f.getOffset());
+    }
+        
+    /**
      * @tests java.io.ObjectStreamField#getType()
      */
-    @TestInfo(
-          level = TestLevel.COMPLETE,
-          purpose = "",
-          targets = {
-            @TestTarget(
-              methodName = "getType",
-              methodArgs = {}
-            )
-        })    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getType",
+        args = {}
+    )    
     public void test_getType_MockObjectInputStream() throws IOException, ClassNotFoundException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream(1024);
         ObjectOutputStream oos = new ObjectOutputStream(baos);
@@ -275,15 +361,36 @@ public class ObjectStreamFieldTest extends junit.framework.TestCase {
         ObjectStreamField field = oc.getField("i");
         assertEquals(Object.class, field.getType());
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isUnshared",
-          methodArgs = {}
-        )
-    })
+    
+    /**
+     * @tests java.io.ObjectStreamField#isPrimitive()
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isPrimitive",
+        args = {}
+    )    
+    public void test_isPrimitive() {
+        // Test for method int java.io.ObjectStreamField.getOffset()
+        ObjectStreamField[] osfArray;
+        osfArray = osc.getFields();
+        
+        for (int i = 0; i < (osfArray.length - 1); i++) {
+            assertTrue(String.format("osfArray[%d].isPrimitive() should return true.", i),
+                       osfArray[i].isPrimitive());
+        }
+        assertFalse(String.format("osfArray[%d].isPrimitive() should return false.", 
+                                  osfArray.length - 1),
+                    osfArray[(osfArray.length - 1)].isPrimitive());
+    }
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isUnshared",
+        args = {}
+    )
     public void test_isUnshared() throws Exception {
         SerializableObject2 obj = new SerializableObject2();
         

@@ -18,9 +18,9 @@
 package org.apache.harmony.logging.tests.java.util.logging;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -82,16 +82,12 @@ public class ConsoleHandlerTest extends TestCase {
     /*
      * Test the constructor with no relevant log manager properties are set.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies the constructor with no relevant log manager " +
-            "properties are set.",
-      targets = {
-        @TestTarget(
-          methodName = "ConsoleHandler",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies the constructor with no relevant log manager properties are set.",
+        method = "ConsoleHandler",
+        args = {}
+    )
     public void testConstructor_NoProperties() {
         assertNull(LogManager.getLogManager().getProperty(
                 "java.util.logging.ConsoleHandler.level"));
@@ -112,15 +108,12 @@ public class ConsoleHandlerTest extends TestCase {
     /*
      * Test the constructor with insufficient privilege.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies the constructor with insufficient privilege.",
-      targets = {
-        @TestTarget(
-          methodName = "ConsoleHandler",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies the constructor with insufficient privilege.",
+        method = "ConsoleHandler",
+        args = {}
+    )
     public void testConstructor_InsufficientPrivilege() {
         assertNull(LogManager.getLogManager().getProperty(
                 "java.util.logging.ConsoleHandler.level"));
@@ -148,16 +141,12 @@ public class ConsoleHandlerTest extends TestCase {
     /*
      * Test the constructor with valid relevant log manager properties are set.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies the constructor with valid relevant log manager " +
-            "properties are set.",
-      targets = {
-        @TestTarget(
-          methodName = "ConsoleHandler",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies the constructor with valid relevant log manager properties are set.",
+        method = "ConsoleHandler",
+        args = {}
+    )
     public void testConstructor_ValidProperties() throws Exception {
         Properties p = new Properties();
         p.put("java.util.logging.ConsoleHandler.level", "FINE");
@@ -184,16 +173,12 @@ public class ConsoleHandlerTest extends TestCase {
      * Test the constructor with invalid relevant log manager properties are
      * set.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies the constructor with invalid relevant " +
-            "log manager properties are set.",
-      targets = {
-        @TestTarget(
-          methodName = "ConsoleHandler",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies the constructor with invalid relevant log manager properties are set.",
+        method = "ConsoleHandler",
+        args = {}
+    )
     public void testConstructor_InvalidProperties() throws Exception {
         Properties p = new Properties();
         p.put("java.util.logging.ConsoleHandler.level", INVALID_LEVEL);
@@ -220,16 +205,12 @@ public class ConsoleHandlerTest extends TestCase {
      * Test close() when having sufficient privilege, and a record has been
      * written to the output stream.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies close() when having sufficient privilege, " +
-            "and a record has been written to the output stream.",
-      targets = {
-        @TestTarget(
-          methodName = "close",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies close() when having sufficient privilege, and a record has been written to the output stream.",
+        method = "close",
+        args = {}
+    )
     public void testClose_SufficientPrivilege_NormalClose() throws Exception {
         Properties p = new Properties();
         p.put("java.util.logging.ConsoleHandler.formatter", className
@@ -250,16 +231,12 @@ public class ConsoleHandlerTest extends TestCase {
      * Test close() when having sufficient privilege, and an output stream that
      * always throws exceptions.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies close() when having sufficient privilege, " +
-            "and an output stream that always throws exceptions",
-      targets = {
-        @TestTarget(
-          methodName = "close",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies close() when having sufficient privilege, and an output stream that always throws exceptions",
+        method = "close",
+        args = {}
+    )
     public void testClose_SufficientPrivilege_Exception() throws Exception {
         Properties p = new Properties();
         p.put("java.util.logging.ConsoleHandler.formatter", className
@@ -278,16 +255,12 @@ public class ConsoleHandlerTest extends TestCase {
      * Test close() when having sufficient privilege, and no record has been
      * written to the output stream.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Checks close() when having sufficient privilege, and no record " +
-            "has been written to the output stream",
-      targets = {
-        @TestTarget(
-          methodName = "close",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Checks close() when having sufficient privilege, and no record has been written to the output stream",
+        method = "close",
+        args = {}
+    )
     public void testClose_SufficientPrivilege_DirectClose() throws Exception {
         Properties p = new Properties();
         p.put("java.util.logging.ConsoleHandler.formatter", className
@@ -306,15 +279,12 @@ public class ConsoleHandlerTest extends TestCase {
     /*
      * Test close() when having insufficient privilege.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies close() when insufficient privilege is set up.",
-      targets = {
-        @TestTarget(
-          methodName = "close",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies close() when insufficient privilege is set up.",
+        method = "close",
+        args = {}
+    )
     public void testClose_InsufficientPrivilege() throws Exception {
         Properties p = new Properties();
         p.put("java.util.logging.ConsoleHandler.formatter", className
@@ -334,16 +304,12 @@ public class ConsoleHandlerTest extends TestCase {
     /*
      * Test publish(), use no filter, having output stream, normal log record.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies publish(), use no filter, having output stream, " +
-            "normal log record.",
-      targets = {
-        @TestTarget(
-          methodName = "publish",
-          methodArgs = {java.util.logging.LogRecord.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies publish(), use no filter, having output stream, normal log record.",
+        method = "publish",
+        args = {java.util.logging.LogRecord.class}
+    )
     public void testPublish_NoFilter() throws Exception {
         Properties p = new Properties();
         p.put("java.util.logging.ConsoleHandler.formatter", className
@@ -382,15 +348,12 @@ public class ConsoleHandlerTest extends TestCase {
     /*
      * Test publish(), after system err is reset.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies publish(), after system err is reset.",
-      targets = {
-        @TestTarget(
-          methodName = "publish",
-          methodArgs = {java.util.logging.LogRecord.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies publish(), after system err is reset.",
+        method = "publish",
+        args = {java.util.logging.LogRecord.class}
+    )
     public void testPublish_AfterResetSystemErr() throws Exception {
         Properties p = new Properties();
         p.put("java.util.logging.ConsoleHandler.formatter", className
@@ -413,16 +376,12 @@ public class ConsoleHandlerTest extends TestCase {
     /*
      * Test publish(), use a filter, having output stream, normal log record.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies  publish(), use a filter, having output stream, " +
-            "normal log record.",
-      targets = {
-        @TestTarget(
-          methodName = "publish",
-          methodArgs = {java.util.logging.LogRecord.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies  publish(), use a filter, having output stream, normal log record.",
+        method = "publish",
+        args = {java.util.logging.LogRecord.class}
+    )
     public void testPublish_WithFilter() throws Exception {
         Properties p = new Properties();
         p.put("java.util.logging.ConsoleHandler.formatter", className
@@ -464,17 +423,12 @@ public class ConsoleHandlerTest extends TestCase {
      * rather than throw exception, handler should call errormanager to handle
      * exception case, so NullPointerException shouldn't be thrown.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies publish(), null log record, having output stream, spec said " + 
-            "rather than throw exception, handler should call errormanager to handle " + 
-            "exception case, so NullPointerException shouldn't be thrown.",
-      targets = {
-        @TestTarget(
-          methodName = "publish",
-          methodArgs = {java.util.logging.LogRecord.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies publish(), null log record, having output stream, spec said rather than throw exception, handler should call errormanager to handle exception case, so NullPointerException shouldn't be thrown.",
+        method = "publish",
+        args = {java.util.logging.LogRecord.class}
+    )
     public void testPublish_Null() throws Exception {
         Properties p = new Properties();
         p.put("java.util.logging.ConsoleHandler.formatter", className
@@ -488,16 +442,12 @@ public class ConsoleHandlerTest extends TestCase {
     /*
      * Test publish(), a log record with empty msg, having output stream
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies publish(), a log record with empty msg, " +
-            "having output stream.",
-      targets = {
-        @TestTarget(
-          methodName = "publish",
-          methodArgs = {java.util.logging.LogRecord.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies publish(), a log record with empty msg, having output stream.",
+        method = "publish",
+        args = {java.util.logging.LogRecord.class}
+    )
     public void testPublish_EmptyMsg() throws Exception {
         Properties p = new Properties();
         p.put("java.util.logging.ConsoleHandler.formatter", className
@@ -514,15 +464,12 @@ public class ConsoleHandlerTest extends TestCase {
     /*
      * Test publish(), a log record with null msg, having output stream
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies publish(), a log record with null msg, having output stream.",
-      targets = {
-        @TestTarget(
-          methodName = "publish",
-          methodArgs = {java.util.logging.LogRecord.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies publish(), a log record with null msg, having output stream.",
+        method = "publish",
+        args = {java.util.logging.LogRecord.class}
+    )
     public void testPublish_NullMsg() throws Exception {
         Properties p = new Properties();
         p.put("java.util.logging.ConsoleHandler.formatter", className
@@ -536,15 +483,12 @@ public class ConsoleHandlerTest extends TestCase {
         // assertEquals("MockFormatter_Head",
         // this.errSubstituteStream.toString());
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies publish method after close.",
-      targets = {
-        @TestTarget(
-          methodName = "publish",
-          methodArgs = {java.util.logging.LogRecord.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies publish method after close.",
+        method = "publish",
+        args = {java.util.logging.LogRecord.class}
+    )
     public void testPublish_AfterClose() throws Exception {
         PrintStream backup = System.err;
         try {
@@ -581,15 +525,12 @@ public class ConsoleHandlerTest extends TestCase {
     /*
      * Test setOutputStream() under normal condition.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Verifies setOutputStream() under normal condition.",
-      targets = {
-        @TestTarget(
-          methodName = "setOutputStream",
-          methodArgs = {java.io.OutputStream.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies setOutputStream() under normal condition.",
+        method = "setOutputStream",
+        args = {java.io.OutputStream.class}
+    )
     public void testSetOutputStream_Normal() {
         MockStreamHandler h = new MockStreamHandler();
         h.setFormatter(new MockFormatter());

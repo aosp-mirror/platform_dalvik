@@ -693,7 +693,7 @@ public class PrintStream extends FilterOutputStream implements Appendable,
      *            the index of the first byte in {@code buffer} to write.
      * @param count
      *            the number of bytes in {@code buffer} to write.
-     * @throws ArrayIndexOutOfBoundsException
+     * @throws IndexOutOfBoundsException
      *             if {@code offset < 0} or {@code count < 0}, or if {@code
      *             offset + count} is bigger than the length of {@code buffer}.
      * @see #flush()

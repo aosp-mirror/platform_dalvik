@@ -19,9 +19,10 @@ package com.android.hit;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Set;
 
-public class ClassObj extends Instance {
+public class ClassObj extends Instance implements Comparable<ClassObj> {
     String mClassName;
     long mSuperclassId;
 
@@ -33,6 +34,7 @@ public class ClassObj extends Instance {
     byte[] mStaticFieldValues;
 
     ArrayList<Instance> mInstances = new ArrayList<Instance>();
+    Set<ClassObj> mSubclasses = new HashSet<ClassObj>();
 
     int mSize;
 
@@ -98,6 +100,23 @@ public class ClassObj extends Instance {
         } catch (Exception e) {
             e.printStackTrace();
             System.exit(1);
+        }
+
+        //  Lastly, add ourself as a subclass of our superclass
+        if (mSuperclassId != 0) {
+            ClassObj superclass = state.findClass(mSuperclassId);
+            
+            superclass.addSubclass(this);
+        }
+    }
+
+    public final void addSubclass(ClassObj subclass) {
+        mSubclasses.add(subclass);
+    }
+
+    public final void dumpSubclasses() {
+        for (ClassObj subclass: mSubclasses) {
+            System.out.println("     " + subclass.mClassName);
         }
     }
 
@@ -206,5 +225,17 @@ public class ClassObj extends Instance {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public final int compareTo(ClassObj o) {
+        return mClassName.compareTo(o.mClassName);
+    }
+
+    public final boolean equals(Object o) {
+        if (! (o instanceof ClassObj)) {
+            return false;
+        }
+        
+        return 0 == compareTo((ClassObj) o);
     }
 }

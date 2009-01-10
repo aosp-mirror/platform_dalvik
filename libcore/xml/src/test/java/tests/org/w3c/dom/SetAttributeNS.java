@@ -21,9 +21,9 @@
 
 package tests.org.w3c.dom;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import org.w3c.dom.Element;
@@ -82,15 +82,12 @@ public final class SetAttributeNS extends DOMTestCase {
      * @throws Throwable
      *             Any uncaught exception causes test to fail
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies DOMException with INVALID_CHARACTER_ERR code.",
-      targets = {
-        @TestTarget(
-          methodName = "setAttributeNS",
-          methodArgs = {java.lang.String.class, java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies DOMException with INVALID_CHARACTER_ERR code.",
+        method = "setAttributeNS",
+        args = {java.lang.String.class, java.lang.String.class, java.lang.String.class}
+    )
     public void testSetAttributeNS1() throws Throwable {
         String namespaceURI = "http://www.nist.gov";
         String qualifiedName = "emp:qual?name";
@@ -112,15 +109,12 @@ public final class SetAttributeNS extends DOMTestCase {
             assertTrue("throw_INVALID_CHARACTER_ERR", success);
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies DOMException with NAMESPACE_ERR code.",
-      targets = {
-        @TestTarget(
-          methodName = "setAttributeNS",
-          methodArgs = {java.lang.String.class, java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies DOMException with NAMESPACE_ERR code.",
+        method = "setAttributeNS",
+        args = {java.lang.String.class, java.lang.String.class, java.lang.String.class}
+    )
     public void testSetAttributeNS2() throws Throwable {
         String namespaceURI = "http://www.nist.gov";
         String qualifiedName = "emp:";
@@ -181,15 +175,12 @@ public final class SetAttributeNS extends DOMTestCase {
 //            assertTrue("throw_NO_MODIFICATION_ALLOWED_ERR", success);
 //        }
 //    }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies positive functionality.",
-      targets = {
-        @TestTarget(
-          methodName = "setAttributeNS",
-          methodArgs = {java.lang.String.class, java.lang.String.class, boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies positive functionality.",
+        method = "setAttributeNS",
+        args = {String.class, String.class, String.class}
+    )
     public void testSetAttributeNS4() throws Throwable {
         Document doc;
         NodeList elementList;
@@ -217,15 +208,13 @@ public final class SetAttributeNS extends DOMTestCase {
         resultPrefix = addrAttr.getPrefix();
         assertEquals("prefix", "newprefix", resultPrefix);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies positive functionality.",
-      targets = {
-        @TestTarget(
-          methodName = "setAttributeNS",
-          methodArgs = {java.lang.String.class, java.lang.String.class, java.lang.String.class}
-        )
-    })
+    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies positive functionality.",
+        method = "setAttributeNS",
+        args = {java.lang.String.class, java.lang.String.class, java.lang.String.class}
+    )
     public void testSetAttributeNS5() throws Throwable {
         String localName = "newAttr";
         String namespaceURI = "http://www.newattr.com";
@@ -245,15 +234,12 @@ public final class SetAttributeNS extends DOMTestCase {
                 namespaceURI, localName);
         assertEquals("throw_Equals", "<newValue>", resultAttr);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies DOMException with NAMESPACE_ERR code.",
-      targets = {
-        @TestTarget(
-          methodName = "setAttributeNS",
-          methodArgs = {java.lang.String.class, java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies DOMException with NAMESPACE_ERR code.",
+        method = "setAttributeNS",
+        args = {java.lang.String.class, java.lang.String.class, java.lang.String.class}
+    )
     public void testSetAttributeNS6() throws Throwable {
         String namespaceURI = "http://www.nist.gov";
         String qualifiedName = "xml:qualifiedName";
@@ -275,15 +261,12 @@ public final class SetAttributeNS extends DOMTestCase {
             assertTrue("throw_NAMESPACE_ERR", success);
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies DOMException with NAMESPACE_ERR.",
-      targets = {
-        @TestTarget(
-          methodName = "setAttributeNS",
-          methodArgs = {java.lang.String.class, java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies DOMException with NAMESPACE_ERR.",
+        method = "setAttributeNS",
+        args = {java.lang.String.class, java.lang.String.class, java.lang.String.class}
+    )
     public void testSetAttributeNS7() throws Throwable {
         String namespaceURI = "http://www.nist.gov";
         String qualifiedName = "xmlns";
@@ -305,15 +288,12 @@ public final class SetAttributeNS extends DOMTestCase {
             assertTrue("throw_NAMESPACE_ERR", success);
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies positive functionality.",
-      targets = {
-        @TestTarget(
-          methodName = "setAttributeNS",
-          methodArgs = {java.lang.String.class, java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies positive functionality.",
+        method = "setAttributeNS",
+        args = {java.lang.String.class, java.lang.String.class, java.lang.String.class}
+    )
     public void testSetAttributeNS9() throws Throwable {
         String localName = "newAttr";
         String namespaceURI = "http://www.newattr.com";
@@ -344,15 +324,12 @@ public final class SetAttributeNS extends DOMTestCase {
         resultPrefix = addrAttr.getPrefix();
         assertEquals("prefix", "emp", resultPrefix);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies DOMException with NAMESPACE_ERR code.",
-      targets = {
-        @TestTarget(
-          methodName = "setAttributeNS",
-          methodArgs = {java.lang.String.class, java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies DOMException with NAMESPACE_ERR code.",
+        method = "setAttributeNS",
+        args = {java.lang.String.class, java.lang.String.class, java.lang.String.class}
+    )
     public void testSetAttributeNS10() throws Throwable {
         String namespaceURI = "http://www.example.gov";
         Document doc;

@@ -153,7 +153,6 @@ public class HprofParser
         }
 
         mState.resolveReferences();
-        mState.dumpSizes();
         
         return state;
     }

@@ -203,6 +203,14 @@ final class IntToByteBufferAdapter extends IntBuffer implements DirectBuffer {
             return super.put(i, off, len);
         }
     }
+    
+    @Override
+    void internalClear() {
+        if (byteBuffer instanceof ReadWriteDirectByteBuffer) {
+            byteBuffer.clear();
+        }
+        super.internalClear();
+    }
     // END android-added
 
     public IntBuffer slice() {

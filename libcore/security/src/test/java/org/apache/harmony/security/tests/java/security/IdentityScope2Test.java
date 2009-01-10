@@ -17,11 +17,6 @@
 
 package org.apache.harmony.security.tests.java.security;
 
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
-
 import java.security.Identity;
 import java.security.IdentityScope;
 import java.security.KeyManagementException;
@@ -31,6 +26,10 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 
 import org.apache.harmony.security.tests.java.security.Identity2Test.IdentitySubclass;
+
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 @SuppressWarnings("deprecation")
 @TestTargetClass(IdentityScope.class)
 public class IdentityScope2Test extends junit.framework.TestCase {
@@ -45,6 +44,7 @@ public class IdentityScope2Test extends junit.framework.TestCase {
     }
 
     public static class IdentityScopeSubclass extends IdentityScope {
+        private static final long serialVersionUID = 1L;
         Hashtable<Identity, Identity> identities;
 
         public IdentityScopeSubclass(String name, PublicKey pk) {
@@ -77,7 +77,7 @@ public class IdentityScope2Test extends junit.framework.TestCase {
         }
 
         public Identity getIdentity(String name) {
-            Enumeration en = identities();
+            Enumeration<Identity> en = identities();
             while (en.hasMoreElements()) {
                 Identity current = (Identity) en.nextElement();
                 if (current.getName().equals(name))
@@ -87,7 +87,7 @@ public class IdentityScope2Test extends junit.framework.TestCase {
         }
 
         public Identity getIdentity(PublicKey pk) {
-            Enumeration en = identities();
+            Enumeration<Identity> en = identities();
             while (en.hasMoreElements()) {
                 Identity current = (Identity) en.nextElement();
                 if (current.getPublicKey() == pk)
@@ -121,15 +121,12 @@ public class IdentityScope2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.IdentityScope#IdentityScope()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "IdentityScope",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "IdentityScope",
+        args = {}
+    )
     public void test_Constructor() {
         new IdentityScopeSubclass();
     }
@@ -137,48 +134,72 @@ public class IdentityScope2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.IdentityScope#IdentityScope(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Other variants (null, empty) for parameter are not tested",
-      targets = {
-        @TestTarget(
-          methodName = "IdentityScope",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "IdentityScope",
+        args = {java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_String() {
-        new IdentityScopeSubclass("test");
+        String[] str = {"test", "", null};
+        IdentityScopeSubclass iss;
+        
+        for (int i = 0; i < str.length; i++) {
+            try {
+                iss = new IdentityScopeSubclass(str[i]);
+                assertNotNull(iss);
+                assertTrue(iss instanceof IdentityScope);
+            } catch (Exception e) {
+                fail("Unexpected exception for parameter " + str[i]);
+            }
+        }
     }
 
     /**
      * @tests java.security.IdentityScope#IdentityScope(java.lang.String,
      *        java.security.IdentityScope)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Other variants for parameter are not tested",
-      targets = {
-        @TestTarget(
-          methodName = "IdentityScope",
-          methodArgs = {String.class, IdentityScope.class}
-        )
-    })
-    public void test_ConstructorLjava_lang_StringLjava_security_IdentityScope() throws Exception {
-        new IdentityScopeSubclass("test", new IdentityScopeSubclass());
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "IdentityScope",
+        args = {java.lang.String.class, java.security.IdentityScope.class}
+    )
+    public void test_ConstructorLjava_lang_StringLjava_security_IdentityScope() {
+        String[] str = {"test", "", "!@#$%^&*()", "identity name", null};
+        IdentityScope is;
+        IdentityScope iss = new IdentityScopeSubclass("test scope");
+        
+        for (int i = 0; i < str.length; i++) {
+            try {
+                is = new IdentityScopeSubclass(str[i], new IdentityScopeSubclass());
+                assertNotNull(is);
+                assertTrue(is instanceof IdentityScope);
+            } catch (Exception e) {
+                fail("Unexpected exception for parameter " + str[i]);
+            }
+        }
+        
+        try {
+            is = new IdentityScopeSubclass("test", iss);
+            is = new IdentityScopeSubclass("test", iss);
+            fail("KeyManagementException was not thrown");
+        } catch (KeyManagementException npe) {
+            //expected
+        } catch (Exception e) {
+            fail("Incorrect exception " + e + " was thrown instead of KeyManagementException");
+        }
     }
 
     /**
      * @tests java.security.IdentityScope#addIdentity(java.security.Identity)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "addIdentity",
-          methodArgs = {Identity.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "addIdentity",
+        args = {java.security.Identity.class}
+    )
     public void test_addIdentityLjava_security_Identity() throws Exception {
                IdentityScopeSubclass sub = new IdentityScopeSubclass("test",
                        new IdentityScopeSubclass());
@@ -198,15 +219,12 @@ public class IdentityScope2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.IdentityScope#removeIdentity(java.security.Identity)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "removeIdentity",
-          methodArgs = {Identity.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "removeIdentity",
+        args = {java.security.Identity.class}
+    )
     public void test_removeIdentityLjava_security_Identity() throws Exception {
                IdentityScopeSubclass sub = new IdentityScopeSubclass("test",
                        new IdentityScopeSubclass());
@@ -225,22 +243,19 @@ public class IdentityScope2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.IdentityScope#identities()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "identities",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "identities",
+        args = {}
+    )
     public void test_identities() throws Exception {
                IdentityScopeSubclass sub = new IdentityScopeSubclass("test",
                        new IdentityScopeSubclass());
                Identity id = new IdentitySubclass();
                id.setPublicKey(pubKey);
                sub.addIdentity(id);
-               Enumeration en = sub.identities();
+               Enumeration<Identity> en = sub.identities();
                assertTrue("Wrong object contained in identities", en.nextElement()
                        .equals(id));
                assertTrue("Contains too many elements", !en.hasMoreElements());
@@ -249,63 +264,79 @@ public class IdentityScope2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.IdentityScope#getIdentity(java.security.Principal)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Method with null (if there are no identities of the same name " +
-                  "in this scope) is not tested",
-      targets = {
-        @TestTarget(
-          methodName = "getIdentity",
-          methodArgs = {java.security.Principal.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "getIdentity",
+        args = {java.security.Principal.class}
+    )
     public void test_getIdentityLjava_security_Principal() throws Exception {
-               Identity id = new IdentitySubclass("principal name");
-               id.setPublicKey(pubKey);
-               IdentityScopeSubclass sub = new IdentityScopeSubclass("test",
-                       new IdentityScopeSubclass());
-               sub.addIdentity(id);
-               Identity returnedId = sub.getIdentity(id);
-               assertEquals("Returned Identity not the same as the added one", id,
-                       returnedId);
+        Identity id = new IdentitySubclass("principal name");
+        id.setPublicKey(pubKey);
+        IdentityScopeSubclass sub = new IdentityScopeSubclass("test",
+                new IdentityScopeSubclass());
+
+        try {
+            sub.getIdentity((java.security.Principal) null);
+            fail("Test 1: NullPointerException expected.");
+        } catch (NullPointerException e) {
+            // Expected.
+        }
+
+        sub.addIdentity(id);
+        Identity returnedId = sub.getIdentity(id);
+        assertEquals("Test 2: Returned Identity not the same as the added one;", 
+                id, returnedId);
+
+        Identity id2 = new IdentitySubclass("Another identity");
+        id2.setPublicKey(pubKey);
+
+        assertNull("Test 3: Null value expected.", 
+                sub.getIdentity(id2));
+
+        try {
+            sub.getIdentity((java.security.Principal) null);
+            fail("Test 4: NullPointerException expected.");
+        } catch (NullPointerException e) {
+            // Expected.
+        }
+
     }
 
     /**
      * @tests java.security.IdentityScope#getIdentity(java.security.PublicKey)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Method with null (if there are no identities in " +
-                  "this scope with that key) is not tested",
-      targets = {
-        @TestTarget(
-          methodName = "getIdentity",
-          methodArgs = {PublicKey.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "getIdentity",
+        args = {java.security.PublicKey.class}
+    )
     public void test_getIdentityLjava_security_PublicKey() throws Exception {
-               IdentityScopeSubclass sub = new IdentityScopeSubclass("test",
-                       new IdentityScopeSubclass());
-               Identity id = new IdentitySubclass();
-               id.setPublicKey(pubKey);
-               sub.addIdentity(id);
-               Identity returnedId = sub.getIdentity(pubKey);
-               assertEquals("Returned Identity not the same as the added one", id,
-                       returnedId);
+        IdentityScopeSubclass sub = new IdentityScopeSubclass("test",
+                new IdentityScopeSubclass());
+        Identity id = new IdentitySubclass();
+        id.setPublicKey(pubKey);
+        sub.addIdentity(id);
+        Identity returnedId = sub.getIdentity(pubKey);
+        assertEquals("Test 1: Returned Identity not the same as the added one;", 
+                id, returnedId);
+
+        assertNull("Test 2: Null value expected.", 
+                sub.getIdentity((PublicKey) null));
+
+        PublicKey anotherKey = KeyPairGenerator.getInstance("DSA").genKeyPair().getPublic();
+        assertNull("Test 3: Null value expected.", 
+                sub.getIdentity(anotherKey));
     }
 
     /**
      * @tests java.security.IdentityScope#getIdentity(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getIdentity",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getIdentity",
+        args = {java.lang.String.class}
+    )
     public void test_getIdentityLjava_lang_String() throws Exception {
                IdentityScopeSubclass sub = new IdentityScopeSubclass("test",
                        new IdentityScopeSubclass());
@@ -320,15 +351,12 @@ public class IdentityScope2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.IdentityScope#size()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "size",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "size",
+        args = {}
+    )
     public void test_size() throws Exception {
                IdentityScopeSubclass sub = new IdentityScopeSubclass("test",
                        new IdentityScopeSubclass());
@@ -341,15 +369,12 @@ public class IdentityScope2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.IdentityScope#toString()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public void test_toString() throws Exception {
             IdentityScopeSubclass sub = new IdentityScopeSubclass("test",
                     new IdentityScopeSubclass());
@@ -360,15 +385,12 @@ public class IdentityScope2Test extends junit.framework.TestCase {
             assertTrue("Not a valid String ", sub.toString().length() > 0);
     }
     
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Regression test",
-      targets = {
-        @TestTarget(
-          methodName = "getIdentity",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Regression test",
+        method = "getIdentity",
+        args = {java.lang.String.class}
+    )
     public void test_getIdentity() throws Exception {
         //Regression for HARMONY-1173
         IdentityScope scope = IdentityScope.getSystemScope(); 

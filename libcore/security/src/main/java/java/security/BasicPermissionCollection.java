@@ -82,13 +82,16 @@ final class BasicPermissionCollection extends PermissionCollection {
                 permission));
         } else { 
             // this is the first element provided that another thread did not add
-            synchronized (items) {
+            // BEGIN android-changed
+            // copied from a newer version of harmony
+            synchronized (this) {
                 if (permClass != null && inClass != permClass) {
                     throw new IllegalArgumentException(Messages.getString("security.16", //$NON-NLS-1$
                         permission));
                 }
                 permClass = inClass;
             }
+            // END android-changed
         }
 
         String name = permission.getName();
@@ -188,7 +191,9 @@ final class BasicPermissionCollection extends PermissionCollection {
         ObjectInputStream.GetField fields = in.readFields();
 
         items = new HashMap<String, Permission>();
-        synchronized (items) {
+        // BEGIN android-changed
+        // copied from a newer version of harmony
+        synchronized (this) {
             permClass = (Class<? extends Permission>)fields.get("permClass", null); //$NON-NLS-1$
             items.putAll((Hashtable<String, Permission>) fields.get(
                     "permissions", new Hashtable<String, Permission>())); //$NON-NLS-1$
@@ -202,5 +207,6 @@ final class BasicPermissionCollection extends PermissionCollection {
                 throw new InvalidObjectException(Messages.getString("security.25")); //$NON-NLS-1$
             }
         }
+        // END android-changed
     }
 }

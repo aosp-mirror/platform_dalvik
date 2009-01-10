@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,16 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package tests.api.javax.net.ssl;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.io.IOException;
-import java.net.InetAddress;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
@@ -30,93 +28,37 @@ import javax.net.ssl.SSLSocketFactory;
 
 import junit.framework.TestCase;
 
+import org.apache.harmony.xnet.tests.support.SSLSocketFactoryImpl;
+
+import tests.support.Support_PortManager;
+
 @TestTargetClass(SSLSocketFactory.class) 
 public class SSLSocketFactoryTest extends TestCase {
-
-    private class MockSSLSocketFactory extends SSLSocketFactory {
-        public MockSSLSocketFactory() {
-            super();
-        }
-
-        /**
-         * @see javax.net.ssl.SSLSocketFactory#createSocket(java.net.Socket, java.lang.String, int, boolean)
-         */
-        @Override
-        public Socket createSocket(Socket s, String host, int port, boolean autoClose) throws IOException {
-            // it is a fake
-            return null;
-        }
-
-        /**
-         * @see javax.net.ssl.SSLSocketFactory#getDefaultCipherSuites()
-         */
-        @Override
-        public String[] getDefaultCipherSuites() {
-            // it is a fake
-            return null;
-        }
-
-        /**
-         * @see javax.net.ssl.SSLSocketFactory#getSupportedCipherSuites()
-         */
-        @Override
-        public String[] getSupportedCipherSuites() {
-            // it is a fake
-            return null;
-        }
-
-        /**
-         * @see javax.net.SocketFactory#createSocket(java.lang.String, int)
-         */
-        @Override
-        public Socket createSocket(String arg0, int arg1) throws IOException, UnknownHostException {
-            // it is a fake
-            return null;
-        }
-
-        /**
-         * @see javax.net.SocketFactory#createSocket(java.net.InetAddress, int)
-         */
-        @Override
-        public Socket createSocket(InetAddress arg0, int arg1) throws IOException {
-            // it is a fake
-            return null;
-        }
-
-        /**
-         * @see javax.net.SocketFactory#createSocket(java.lang.String, int, java.net.InetAddress, int)
-         */
-        @Override
-        public Socket createSocket(String arg0, int arg1, InetAddress arg2, int arg3) throws IOException, UnknownHostException {
-            // it is a fake
-            return null;
-        }
-
-        /**
-         * @see javax.net.SocketFactory#createSocket(java.net.InetAddress, int, java.net.InetAddress, int)
-         */
-        @Override
-        public Socket createSocket(InetAddress arg0, int arg1, InetAddress arg2, int arg3) throws IOException {
-            // it is a fake
-            return null;
-        }
-    }
     
+    protected int startServer(String name) {
+        int portNumber = Support_PortManager.getNextPort();
+        ServerSocket ss = null;
+        try {
+            ss = new ServerSocket(portNumber);
+        } catch (IOException e) {
+            fail(name + ": " + e);
+        }
+        return ss.getLocalPort();
+    }
+
     /**
      * @tests javax.net.ssl.SSLSocketFactory#SSLSocketFactory()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "SSLSocketFactory",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "SSLSocketFactory",
+        args = {}
+    )
     public void test_Constructor() {
         try {
-            new MockSSLSocketFactory();
+            SSLSocketFactoryImpl sf = new SSLSocketFactoryImpl();
+            assertTrue(sf instanceof SSLSocketFactory);
         } catch (Exception e) {
             fail("Unexpected exception " + e.toString());
         }
@@ -125,17 +67,103 @@ public class SSLSocketFactoryTest extends TestCase {
     /**
      * @tests javax.net.ssl.SSLSocketFactory#getDefault()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getDefault",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getDefault",
+        args = {}
+    )
     public void test_getDefault() {
         assertNotNull("Incorrect default socket factory",
                 SSLSocketFactory.getDefault());
     }
+    
+    /**
+     * @tests javax.net.ssl.SSLSocketFactory#createSocket(Socket s, String host, int port, boolean autoClose)
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "createSocket",
+        args = {java.net.Socket.class, java.lang.String.class, int.class, boolean.class}
+    )
+    public void test_createSocket() {
+        SSLSocketFactoryImpl sf = new SSLSocketFactoryImpl();
+        int sport = startServer("test_createSocket()");
+        int[] invalid = {Integer.MIN_VALUE, -1, 65536, Integer.MAX_VALUE};
+        String[] str = {null, ""};
+        try {
+           Socket s = sf.createSocket(new Socket(), "localhost", sport, false);
+           assertFalse(s.isClosed());
+        } catch (Exception ex) {
+            fail("Unexpected exception " + ex);
+        }
+        try {
+            Socket s = sf.createSocket(new Socket(), "localhost", sport, true);
+            assertTrue(s.isClosed());
+        } catch (Exception ex) {
+            fail("Unexpected exception " + ex);
+        }
+        try {
+            Socket s = sf.createSocket(null, "localhost", sport, true);
+            fail("IOException wasn't thrown");
+        } catch (IOException ioe) {
+            //expected
+        }
+        for (int i = 0; i < invalid.length; i++) {
+            try {
+                Socket s = sf.createSocket(new Socket(), "localhost", invalid[i], false);
+                fail("IOException wasn't thrown");
+            } catch (IOException ioe) {
+                //expected
+            }
+        }
+        for (int i = 0; i < str.length; i++) {
+            try {
+                Socket s = sf.createSocket(new Socket(), str[i], sport, false);
+                fail("UnknownHostException wasn't thrown");
+            } catch (UnknownHostException uhe) {
+                //expected
+            } catch (Exception e) {
+                fail(e + " was thrown instead of UnknownHostException");
+            }
+        }
+    }
+    
+    /**
+     * @tests javax.net.ssl.SSLSocketFactory#getDefaultCipherSuites()
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getDefaultCipherSuites",
+        args = {}
+    )
+    public void test_getDefaultCipherSuites() {
+        try {
+            SSLSocketFactoryImpl sf = new SSLSocketFactoryImpl();
+            assertNull(sf.getDefaultCipherSuites());
+        } catch (Exception e) {
+            fail("Unexpected exception " + e.toString());
+        }
+    }
+    
+    /**
+     * @tests javax.net.ssl.SSLSocketFactory#getSupportedCipherSuites()
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getSupportedCipherSuites",
+        args = {}
+    )
+    public void test_getSupportedCipherSuites() {
+        try {
+            SSLSocketFactoryImpl sf = new SSLSocketFactoryImpl();
+            assertNull(sf.getSupportedCipherSuites());
+        } catch (Exception e) {
+            fail("Unexpected exception " + e.toString());
+        }
+    }
+    
 }

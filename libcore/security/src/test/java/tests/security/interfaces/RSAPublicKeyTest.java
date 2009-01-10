@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 package tests.security.interfaces;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -33,15 +33,12 @@ public class RSAPublicKeyTest extends TestCase {
      * @tests java.security.interfaces.RSAPublicKey
      * #getPublicExponent()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getPublicExponent",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getPublicExponent",
+        args = {}
+    )
     public void test_getPublicExponent() throws Exception {
         KeyFactory gen = KeyFactory.getInstance("RSA", Util.prov);
         final BigInteger n = BigInteger.valueOf(3233);

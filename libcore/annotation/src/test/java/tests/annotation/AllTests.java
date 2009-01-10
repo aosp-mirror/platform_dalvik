@@ -29,7 +29,7 @@ public class AllTests {
     }
 
     public static Test suite() {
-        TestSuite suite = new TestSuite("All Annotation test suites");
+        TestSuite suite = tests.TestSuiteFactory.createTestSuite("All Annotation test suites");
         // $JUnit-BEGIN$
         suite.addTest(org.apache.harmony.annotation.tests.java.lang.annotation.AllTests.suite());
         // $JUnit-END$

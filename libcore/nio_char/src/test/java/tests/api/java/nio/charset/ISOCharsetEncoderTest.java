@@ -16,8 +16,8 @@
 package tests.api.java.nio.charset;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargets;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestLevel;
 
 import java.nio.ByteBuffer;
@@ -32,7 +32,7 @@ import java.nio.charset.UnmappableCharacterException;
  * test case specific activity of iso-8859-1 charset encoder
  */
 @TestTargetClass(java.nio.charset.CharsetEncoder.class)
-public class ISOCharsetEncoderTest extends CharsetEncoderTest {
+public class ISOCharsetEncoderTest extends AbstractCharsetEncoderTestCase {
 
     // charset for iso-8859-1
     private static final Charset CS = Charset.forName("iso-8859-1");
@@ -52,15 +52,12 @@ public class ISOCharsetEncoderTest extends CharsetEncoderTest {
         super.tearDown();
     }
 
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "canEncode",
-          methodArgs = {java.lang.CharSequence.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "IllegalStateException checking missed.",
+        method = "canEncode",
+        args = {java.lang.CharSequence.class}
+    )
     public void testCanEncodeCharSequence() {
         // normal case for isoCS
         assertTrue(encoder.canEncode("\u0077"));
@@ -73,16 +70,18 @@ public class ISOCharsetEncoderTest extends CharsetEncoderTest {
         assertTrue(encoder.canEncode(""));
     }
 
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Regression test. IllegalStateException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "canEncode",
-          methodArgs = {char.class}
-        ), @TestTarget(
-          methodName = "canEncode",
-          methodArgs = {java.lang.CharSequence.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Regression test. IllegalStateException checking missed.",
+            method = "canEncode",
+            args = {char.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Regression test. IllegalStateException checking missed.",
+            method = "canEncode",
+            args = {java.lang.CharSequence.class}
         )
     })
     public void testCanEncodeICUBug() {
@@ -90,30 +89,29 @@ public class ISOCharsetEncoderTest extends CharsetEncoderTest {
         assertFalse(encoder.canEncode((String) "\ud800"));
     }
 
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "canEncode",
-          methodArgs = {char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "IllegalStateException checking missed.",
+        method = "canEncode",
+        args = {char.class}
+    )
     public void testCanEncodechar() throws CharacterCodingException {
         assertTrue(encoder.canEncode('\u0077'));
         assertFalse(encoder.canEncode('\uc2a3'));
     }
 
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "averageBytesPerChar",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "maxBytesPerChar",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "averageBytesPerChar",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "maxBytesPerChar",
+            args = {}
         )
     })
     public void testSpecificDefaultValue() {
@@ -137,19 +135,24 @@ public class ISOCharsetEncoderTest extends CharsetEncoderTest {
         return null;
     }
 
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Checks also: flush & encode, but not covers exceptions.",
-      targets = {
-        @TestTarget(
-          methodName = "onMalformedInput",
-          methodArgs = {java.nio.charset.CodingErrorAction.class}
-        ), @TestTarget(
-          methodName = "onUnmappableCharacter",
-          methodArgs = {java.nio.charset.CodingErrorAction.class}
-        ), @TestTarget(
-          methodName = "reset",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "Checks also: flush & encode, but not covers exceptions.",
+            method = "onMalformedInput",
+            args = {java.nio.charset.CodingErrorAction.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "Checks also: flush & encode, but not covers exceptions.",
+            method = "onUnmappableCharacter",
+            args = {java.nio.charset.CodingErrorAction.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "Checks also: flush & encode, but not covers exceptions.",
+            method = "reset",
+            args = {}
         )
     })
     public void testMultiStepEncode() throws CharacterCodingException {

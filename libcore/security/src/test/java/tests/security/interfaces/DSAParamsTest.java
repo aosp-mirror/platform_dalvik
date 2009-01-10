@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 package tests.security.interfaces;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -36,15 +36,12 @@ public class DSAParamsTest extends TestCase {
      * @tests java.security.interfaces.DSAParams
      * #getG()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getG",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getG",
+        args = {}
+    )
     public void test_getG() {
         DSAParams params = new DSAParameterSpec(p, q, g);
         assertEquals("Invalid G", g, params.getG());
@@ -54,15 +51,12 @@ public class DSAParamsTest extends TestCase {
      * @tests java.security.interfaces.DSAParams
      * #getP()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getP",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getP",
+        args = {}
+    )
     public void test_getP() {
         DSAParams params = new DSAParameterSpec(p, q, g);
         assertEquals("Invalid P", p, params.getP());
@@ -72,15 +66,12 @@ public class DSAParamsTest extends TestCase {
      * @tests java.security.interfaces.DSAParams
      * #getQ()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getQ",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getQ",
+        args = {}
+    )
     public void test_getQ() {
         DSAParams params = new DSAParameterSpec(p, q, g);
         assertEquals("Invalid Q", q, params.getQ());

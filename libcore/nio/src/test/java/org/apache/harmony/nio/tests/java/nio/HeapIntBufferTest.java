@@ -15,9 +15,8 @@
  */
 package org.apache.harmony.nio.tests.java.nio;
 
-import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import java.nio.IntBuffer;
@@ -26,9 +25,6 @@ import java.nio.IntBuffer;
 public class HeapIntBufferTest extends IntBufferTest {
     protected void setUp() throws Exception {
         super.setUp();
-        buf = IntBuffer.allocate(BUFFER_LENGTH); 
-        loadTestData1(buf);
-        baseBuf = buf;
     }
 
     protected void tearDown() throws Exception {
@@ -36,15 +32,13 @@ public class HeapIntBufferTest extends IntBufferTest {
         buf = null;
         baseBuf = null;
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies IllegalArgumentException.",
-      targets = {
-        @TestTarget(
-          methodName = "allocate",
-          methodArgs = {int.class}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies IllegalArgumentException.",
+        method = "allocate",
+        args = {int.class}
+    )
     public void testAllocatedIntBuffer_IllegalArg() {
         try {
             IntBuffer.allocate(-1);

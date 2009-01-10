@@ -16,9 +16,9 @@
 
 package org.apache.harmony.luni.tests.java.util;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -31,16 +31,12 @@ public class DateTest extends TestCase {
     /**
      * @tests java.util.Date#parse(String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Special regression test. Doesn't verify all cases according " +
-            "to the specification.",
-      targets = {
-        @TestTarget(
-          methodName = "parse",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Special regression test. Doesn't verify all cases according to the specification.",
+        method = "parse",
+        args = {java.lang.String.class}
+    )
     @SuppressWarnings("deprecation")
     public void test_parseLjava_lang_String() {
         // Regression for HARMONY-102

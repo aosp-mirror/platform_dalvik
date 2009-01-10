@@ -22,15 +22,17 @@ import junit.framework.TestSuite;
 public class AllTests {
 
     public static Test suite() {
-        TestSuite suite = new TestSuite();
+        TestSuite suite = tests.TestSuiteFactory.createTestSuite();
 
         suite.addTestSuite(SimpleParserTest.class);
         suite.addTestSuite(SimpleBuilderTest.class);
         
-        suite.addTest(tests.org.w3c.dom.AllTests.suite());
+        //suite.addTest(tests.org.w3c.dom.AllTests.suite());
         suite.addTest(tests.api.javax.xml.parsers.AllTests.suite());
-    
-       return suite;
+
+        suite.addTest(tests.api.org.xml.sax.AllTests.suite());
+        
+        return suite;
     }
 
 }

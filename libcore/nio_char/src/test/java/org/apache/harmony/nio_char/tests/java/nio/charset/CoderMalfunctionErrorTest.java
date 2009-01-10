@@ -16,8 +16,8 @@
 
 package org.apache.harmony.nio_char.tests.java.nio.charset;
 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargets;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestLevel;
 
@@ -36,15 +36,12 @@ public class CoderMalfunctionErrorTest extends TestCase {
     /*
      * Test constructor with normal param.
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "CoderMalfunctionError",
-          methodArgs = {java.lang.Exception.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "CoderMalfunctionError",
+        args = {java.lang.Exception.class}
+    )
     public void testConstructor_Normal() {
         Exception ex = new Exception();
         CoderMalfunctionError e = new CoderMalfunctionError(ex);
@@ -54,15 +51,12 @@ public class CoderMalfunctionErrorTest extends TestCase {
     /*
      * Test constructor with null param.
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "CoderMalfunctionError",
-          methodArgs = {java.lang.Exception.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "CoderMalfunctionError",
+        args = {java.lang.Exception.class}
+    )
     public void testConstructor_Null() {
         CoderMalfunctionError e = new CoderMalfunctionError(null);
         assertNull(e.getCause());
@@ -71,15 +65,12 @@ public class CoderMalfunctionErrorTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility.
      */
-    @TestInfo(
-              level = TestLevel.COMPLETE,
-              purpose = "Verifies serialization.",
-              targets = {
-                @TestTarget(
-                  methodName = "!SerializationSelf",
-                  methodArgs = {}
-                )
-            })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!SerializationSelf",
+        args = {}
+    )
     public void testSerializationSelf() throws Exception {
 
         SerializationTest.verifySelf(new CoderMalfunctionError(null));
@@ -88,15 +79,12 @@ public class CoderMalfunctionErrorTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
-    @TestInfo(
-              level = TestLevel.COMPLETE,
-              purpose = "Verifies serialization.",
-              targets = {
-                @TestTarget(
-                  methodName = "!SerializationGolden",
-                  methodArgs = {}
-                )
-            })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!SerializationGolden",
+        args = {}
+    )
     public void testSerializationCompatibility() throws Exception {
         SerializationTest.verifyGolden(this, new CoderMalfunctionError(null));
 

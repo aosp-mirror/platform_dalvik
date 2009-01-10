@@ -16,9 +16,9 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -103,15 +103,12 @@ public class FloatTest extends TestCase {
     /**
      * @tests java.lang.Float#Float(float)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "Float",
-          methodArgs = {float.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Float",
+        args = {float.class}
+    )
     public void test_ConstructorF() {
         // Test for method java.lang.Float(float)
 
@@ -119,37 +116,49 @@ public class FloatTest extends TestCase {
         assertTrue("Created incorrect float", f.floatValue() == 900.89f);
     }
 
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Float",
+        args = {double.class}
+    )
+    public void test_ConstructorD() {
+
+        Float f = new Float(Double.MAX_VALUE);
+        assertTrue("Created incorrect float", f.floatValue() == Float.POSITIVE_INFINITY);
+    }
+    
     /**
      * @tests java.lang.Float#Float(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check illegal cases, NumberFormatException.",
-      targets = {
-        @TestTarget(
-          methodName = "Float",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Float",
+        args = {java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_String() {
         // Test for method java.lang.Float(java.lang.String)
 
         Float f = new Float("900.89");
         assertTrue("Created incorrect Float", f.floatValue() == 900.89f);
+        try {
+            new Float("900.89ff");
+            fail("NumberFormatException is not thrown.");
+        } catch(NumberFormatException nfe) {
+           //expected 
+        }
     }
 
     /**
      * @tests java.lang.Float#byteValue()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "byteValue",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "byteValue",
+        args = {}
+    )
     public void test_byteValue() {
         // Test for method byte java.lang.Float.byteValue()
         Float f = new Float(0.46874f);
@@ -161,15 +170,12 @@ public class FloatTest extends TestCase {
      * @tests java.lang.Float#compareTo(java.lang.Float)
      * @tests java.lang.Float#compare(float, float)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "compare",
-          methodArgs = {float.class, float.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "compare",
+        args = {float.class, float.class}
+    )
     public void test_compare() {
         float[] values = new float[] { Float.NEGATIVE_INFINITY, -Float.MAX_VALUE, -2f,
                 -Float.MIN_VALUE, -0f, 0f, Float.MIN_VALUE, 2f, Float.MAX_VALUE,
@@ -203,15 +209,12 @@ public class FloatTest extends TestCase {
     /**
      * @tests java.lang.Float#doubleValue()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "doubleValue",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "doubleValue",
+        args = {}
+    )
     public void test_doubleValue() {
         // Test for method double java.lang.Float.doubleValue()
         assertTrue("Incorrect double value returned", Math.abs(new Float(999999.999f)
@@ -221,52 +224,51 @@ public class FloatTest extends TestCase {
     /**
      * @tests java.lang.Float#floatToIntBits(float)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify boundary values according to specification.",
-      targets = {
-        @TestTarget(
-          methodName = "floatToIntBits",
-          methodArgs = {float.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "floatToIntBits",
+        args = {float.class}
+    )
     public void test_floatToIntBitsF() {
         float f = 9876.2345f;
         int bits = Float.floatToIntBits(f);
         float r = Float.intBitsToFloat(bits);
         assertTrue("Incorrect intBits returned", f == r);
+        
+        assertEquals(0x7f800000, Float.floatToIntBits(Float.POSITIVE_INFINITY));
+        assertEquals(0xff800000, Float.floatToIntBits(Float.NEGATIVE_INFINITY));
+        assertEquals(0x7fc00000, Float.floatToIntBits(Float.NaN));
     }
 
     /**
      * @tests java.lang.Float#floatToRawIntBits(float)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify boundary values according to specification.",
-      targets = {
-        @TestTarget(
-          methodName = "floatToRawIntBits",
-          methodArgs = {float.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "floatToRawIntBits",
+        args = {float.class}
+    )
     public void test_floatToRawIntBitsF() {
         int i = 0x7fc004d2;
         float f = Float.intBitsToFloat(i);
         assertTrue("Wrong raw bits", Float.floatToRawIntBits(f) == i);
+        
+        assertEquals(0x7f800000, Float.floatToRawIntBits(Float.POSITIVE_INFINITY));
+        assertEquals(0xff800000, Float.floatToRawIntBits(Float.NEGATIVE_INFINITY));
+        assertEquals(0x7fc00000, Float.floatToRawIntBits(Float.NaN));
     }
 
     /**
      * @tests java.lang.Float#floatValue()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "floatValue",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "floatValue",
+        args = {}
+    )
     public void test_floatValue() {
         // Test for method float java.lang.Float.floatValue()
         Float f = new Float(87.657f);
@@ -279,15 +281,12 @@ public class FloatTest extends TestCase {
     /**
      * @tests java.lang.Float#hashCode()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify hash codes of non equal objects.",
-      targets = {
-        @TestTarget(
-          methodName = "hashCode",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hashCode",
+        args = {}
+    )
     public void test_hashCode() {
         // Test for method int java.lang.Float.hashCode()
         Float f = new Float(1908.8786f);
@@ -301,58 +300,60 @@ public class FloatTest extends TestCase {
         f = new Float(0f);
         assertTrue("Returned invalid hash code for 0", f.hashCode() == Float.floatToIntBits(0f));
 
+        assertTrue(new Float(Float.MAX_VALUE).hashCode() != new Float(Float.MIN_VALUE).hashCode()); 
     }
 
     /**
      * @tests java.lang.Float#intBitsToFloat(int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify boundary values according to specification.",
-      targets = {
-        @TestTarget(
-          methodName = "intBitsToFloat",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "intBitsToFloat",
+        args = {int.class}
+    )
     public void test_intBitsToFloatI() {
         float f = 9876.2345f;
         int bits = Float.floatToIntBits(f);
         float r = Float.intBitsToFloat(bits);
         assertEquals("Incorrect intBits returned", f, r, 0F);
+        
+        assertEquals(Float.POSITIVE_INFINITY, Float.intBitsToFloat(0x7f800000));
+        assertEquals(Float.NEGATIVE_INFINITY, Float.intBitsToFloat(0xff800000));
+        
+        assertEquals(Float.NaN, Float.intBitsToFloat(0x7f800001));
+        assertEquals(Float.NaN, Float.intBitsToFloat(0x7fffffff));    
+        assertEquals(Float.NaN, Float.intBitsToFloat(0xff800001));
+        assertEquals(Float.NaN, Float.intBitsToFloat(0xffffffff));       
     }
 
     /**
      * @tests java.lang.Float#intValue()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify boundary values.",
-      targets = {
-        @TestTarget(
-          methodName = "intValue",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "intValue",
+        args = {}
+    )
     public void test_intValue() {
         // Test for method int java.lang.Float.intValue()
         Float f = new Float(0.46874f);
         Float f2 = new Float(90.8f);
         assertTrue("Returned incorrect int value", f.intValue() == 0 && f2.intValue() == 90);
+        assertEquals(Integer.MAX_VALUE, new Float(Float.MAX_VALUE).intValue());
+        assertEquals(0, new Float(Float.MIN_VALUE).intValue());
     }
 
     /**
      * @tests java.lang.Float#isInfinite()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isInfinite",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isInfinite",
+        args = {}
+    )
     public void test_isInfinite() {
         // Test for method boolean java.lang.Float.isInfinite()
         assertTrue("Infinity check failed",
@@ -364,15 +365,12 @@ public class FloatTest extends TestCase {
     /**
      * @tests java.lang.Float#isInfinite(float)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isInfinite",
-          methodArgs = {float.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isInfinite",
+        args = {float.class}
+    )
     public void test_isInfiniteF() {
         // Test for method boolean java.lang.Float.isInfinite(float)
 
@@ -383,15 +381,12 @@ public class FloatTest extends TestCase {
     /**
      * @tests java.lang.Float#isNaN()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isNaN",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isNaN",
+        args = {}
+    )
     public void test_isNaN() {
         // Test for method boolean java.lang.Float.isNaN()
         assertTrue("NAN check failed", new Float(Float.NaN).isNaN()
@@ -401,51 +396,65 @@ public class FloatTest extends TestCase {
     /**
      * @tests java.lang.Float#isNaN(float)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check boundary values.",
-      targets = {
-        @TestTarget(
-          methodName = "isNaN",
-          methodArgs = {float.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isNaN",
+        args = {float.class}
+    )
     public void test_isNaNF() {
         // Test for method boolean java.lang.Float.isNaN(float)
-        assertTrue("NaN check failed", Float.isNaN(Float.NaN) && !(Float.isNaN(12.09f)));
+        assertTrue("NaN check failed", Float.isNaN(Float.NaN) && !(Float.isNaN(12.09f))
+                && !Float.isNaN(Float.MAX_VALUE) && !Float.isNaN(Float.MIN_VALUE));
     }
 
     /**
      * @tests java.lang.Float#longValue()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify boundary values.",
-      targets = {
-        @TestTarget(
-          methodName = "longValue",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "longValue",
+        args = {}
+    )
     public void test_longValue() {
         // Test for method long java.lang.Float.longValue()
         Float f = new Float(0.46874f);
         Float f2 = new Float(90.8f);
         assertTrue("Returned incorrect long value", f.longValue() == 0 && f2.longValue() == 90);
+        assertEquals(Long.MAX_VALUE, new Float(Float.MAX_VALUE).longValue());
+        assertEquals(0, new Float(Float.MIN_VALUE).longValue());        
+    }
+    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies NumberFormatException.",
+        method = "parseFloat",
+        args = {java.lang.String.class}
+    )
+    public void test_parseFloatLExceptions() {
+        String [] incorrectStrings = {"", ";", "99999999EE999999", "99999l", 
+                 "0x1.f.ffffep127"};
+        for(int i = 0; i < incorrectStrings.length; i++) {
+            try {
+                Float.parseFloat(incorrectStrings[i]);
+                fail("NumberFormatException is not thrown for string: " 
+                        + incorrectStrings[i]);
+            } catch(NumberFormatException nfe) {
+                //expected
+            }
+        }
     }
 
     /**
      * @tests java.lang.Float#parseFloat(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies boundary cases.",
-      targets = {
-        @TestTarget(
-          methodName = "parseFloat",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies boundary cases.",
+        method = "parseFloat",
+        args = {java.lang.String.class}
+    )
     public void test_parseFloatLjava_lang_String() {
         assertEquals("Incorrect float returned, expected zero.", 0.0, Float
                 .parseFloat("7.0064923216240853546186479164495e-46"), 0.0);
@@ -566,15 +575,12 @@ public class FloatTest extends TestCase {
     /**
      * @tests java.lang.Float#parseFloat(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies boundary values.",
-      targets = {
-        @TestTarget(
-          methodName = "parseFloat",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies boundary values.",
+        method = "parseFloat",
+        args = {java.lang.String.class}
+    )
     public void test_parseFloat_LString_Unusual() {
         float actual;
         
@@ -621,15 +627,12 @@ public class FloatTest extends TestCase {
     /**
      * @tests java.lang.Float#parseFloat(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies positive exponent.",
-      targets = {
-        @TestTarget(
-          methodName = "parseFloat",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies positive exponent.",
+        method = "parseFloat",
+        args = {java.lang.String.class}
+    )
     public void test_parseFloat_LString_NormalPositiveExponent() {
         int[] expecteds = {
                 0x3991a2b4,                0x43cc0247,                0x47909009,
@@ -663,15 +666,12 @@ public class FloatTest extends TestCase {
     /**
      * @tests java.lang.Float#parseFloat(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies negative exponent.",
-      targets = {
-        @TestTarget(
-          methodName = "parseFloat",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies negative exponent.",
+        method = "parseFloat",
+        args = {java.lang.String.class}
+    )
     public void test_parseFloat_LString_NormalNegativeExponent() {
         int[] expecteds = {
                 0x3991a2b4,
@@ -721,16 +721,12 @@ public class FloatTest extends TestCase {
     /**
      * @tests java.lang.Float#parseFloat(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies max boundary value. " +
-            "Doesn't verify NumberFormatException.",
-      targets = {
-        @TestTarget(
-          methodName = "parseFloat",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies max boundary value. Doesn't verify NumberFormatException.",
+        method = "parseFloat",
+        args = {java.lang.String.class}
+    )
     public void test_parseFloat_LString_MaxNormalBoundary() {
         int[] expecteds ={
                 0x7f7fffff,
@@ -781,15 +777,12 @@ public class FloatTest extends TestCase {
     /**
      * @tests java.lang.Float#parseFloat(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies min boundary value.",
-      targets = {
-        @TestTarget(
-          methodName = "parseFloat",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies min boundary value.",
+        method = "parseFloat",
+        args = {java.lang.String.class}
+    )
     public void test_parseFloat_LString_MinNormalBoundary() {
         int expecteds[] = {
                 0x800000,
@@ -840,15 +833,12 @@ public class FloatTest extends TestCase {
     /**
      * @tests java.lang.Float#parseFloat(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies max boundary value.",
-      targets = {
-        @TestTarget(
-          methodName = "parseFloat",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies max boundary value.",
+        method = "parseFloat",
+        args = {java.lang.String.class}
+    )
     public void test_parseFloat_LString_MaxSubNormalBoundary() {
         int expecteds[] = {
                 0x7fffff,
@@ -899,15 +889,12 @@ public class FloatTest extends TestCase {
     /**
      * @tests java.lang.Float#parseFloat(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies min boundary value.",
-      targets = {
-        @TestTarget(
-          methodName = "parseFloat",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies min boundary value.",
+        method = "parseFloat",
+        args = {java.lang.String.class}
+    )
     public void test_parseFloat_LString_MinSubNormalBoundary() {
         int expecteds[] = {
                 0x1,
@@ -958,15 +945,12 @@ public class FloatTest extends TestCase {
     /**
      * @tests java.lang.Float#parseFloat(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies zero boundary value.",
-      targets = {
-        @TestTarget(
-          methodName = "parseFloat",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies zero boundary value.",
+        method = "parseFloat",
+        args = {java.lang.String.class}
+    )
     public void test_parseFloat_LString_ZeroBoundary() {
         int expecteds[] = {
                 0x0,
@@ -1017,15 +1001,12 @@ public class FloatTest extends TestCase {
     /**
      * @tests java.lang.Float#shortValue()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "shortValue",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "shortValue",
+        args = {}
+    )
     public void test_shortValue() {
         // Test for method short java.lang.Float.shortValue()
         Float f = new Float(0.46874f);
@@ -1037,15 +1018,12 @@ public class FloatTest extends TestCase {
     /**
      * @tests java.lang.Float#toString()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public void test_toString() {
         // Test for method java.lang.String java.lang.Float.toString()
 
@@ -1057,15 +1035,12 @@ public class FloatTest extends TestCase {
     /**
      * @tests java.lang.Float#toString(float)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {float.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {float.class}
+    )
     public void test_toStringF() {
         // Test for method java.lang.String java.lang.Float.toString(float)
 
@@ -1086,15 +1061,12 @@ public class FloatTest extends TestCase {
     /**
      * @tests java.lang.Float#valueOf(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "valueOf",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "valueOf",
+        args = {java.lang.String.class}
+    )
     public void test_valueOfLjava_lang_String() {
         // Test for method java.lang.Float
         // java.lang.Float.valueOf(java.lang.String)
@@ -1173,15 +1145,12 @@ public class FloatTest extends TestCase {
      * @tests java.lang.Float#compareTo(java.lang.Float)
      * @tests java.lang.Float#compare(float, float)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "compareTo",
-          methodArgs = {java.lang.Float.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "compareTo",
+        args = {java.lang.Float.class}
+    )
     public void test_compareToLjava_lang_Float() {
         // A selection of float values in ascending order.
         float[] values = new float[] { Float.NEGATIVE_INFINITY, -Float.MAX_VALUE, -2f,
@@ -1219,15 +1188,12 @@ public class FloatTest extends TestCase {
     /**
      * @tests java.lang.Float#equals(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "equals",
+        args = {java.lang.Object.class}
+    )
     public void test_equalsLjava_lang_Object() {
         Float f1 = new Float(8765.4321f);
         Float f2 = new Float(8765.4321f);
@@ -1256,15 +1222,12 @@ public class FloatTest extends TestCase {
     /**
      * @tests java.lang.Float#toHexString(float)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toHexString",
-          methodArgs = {float.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toHexString",
+        args = {float.class}
+    )
     public void test_toHexStringF() {
         // the follow values comes from the Float Javadoc/Spec
         assertEquals("0x0.0p0", Float.toHexString(0.0F));
@@ -1297,15 +1260,12 @@ public class FloatTest extends TestCase {
     /**
      * @tests java.lang.Float#valueOf(float)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "valueOf",
-          methodArgs = {float.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "valueOf",
+        args = {float.class}
+    )
     public void test_valueOfF() {
         assertEquals(new Float(Float.MIN_VALUE), Float.valueOf(Float.MIN_VALUE));
         assertEquals(new Float(Float.MAX_VALUE), Float.valueOf(Float.MAX_VALUE));

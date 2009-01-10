@@ -16,9 +16,9 @@
 
 package org.apache.harmony.luni.tests.java.util;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -35,15 +35,12 @@ public class DuplicateFormatFlagsExceptionTest extends TestCase {
     /**
      * @tests java.util.DuplicateFormatFlagsException#DuplicateFormatFlagsException(String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies NullPointerException.",
-      targets = {
-        @TestTarget(
-          methodName = "DuplicateFormatFlagsException",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "DuplicateFormatFlagsException",
+        args = {java.lang.String.class}
+    )
     public void test_duplicateFormatFlagsException() {
         try {
             new DuplicateFormatFlagsException(null);
@@ -51,20 +48,19 @@ public class DuplicateFormatFlagsExceptionTest extends TestCase {
         } catch (NullPointerException e) {
             // desired
         }
+        
+        assertNotNull(new DuplicateFormatFlagsException("String"));
     }
 
     /**
      * @tests java.util.DuplicateFormatFlagsException#getFlags()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getFlags",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getFlags",
+        args = {}
+    )
     public void test_getFlags() {
         String strFlags = "MYTESTFLAGS";
         DuplicateFormatFlagsException duplicateFormatException = new DuplicateFormatFlagsException(
@@ -75,15 +71,12 @@ public class DuplicateFormatFlagsExceptionTest extends TestCase {
     /**
      * @tests java.util.DuplicateFormatFlagsException#getMessage()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getMessage",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getMessage",
+        args = {}
+    )
     public void test_getMessage() {
         String strFlags = "MYTESTFLAGS";
         DuplicateFormatFlagsException duplicateFormatException = new DuplicateFormatFlagsException(
@@ -110,15 +103,12 @@ public class DuplicateFormatFlagsExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "!SerializationSelf",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "!SerializationSelf",
+        args = {}
+    )
     public void testSerializationSelf() throws Exception {
 
         SerializationTest.verifySelf(new DuplicateFormatFlagsException(
@@ -128,15 +118,12 @@ public class DuplicateFormatFlagsExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "!SerializationGolden",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "!SerializationGolden",
+        args = {}
+    )
     public void testSerializationCompatibility() throws Exception {
 
         SerializationTest.verifyGolden(this, new DuplicateFormatFlagsException(

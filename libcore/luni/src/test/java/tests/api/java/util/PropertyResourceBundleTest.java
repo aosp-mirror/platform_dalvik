@@ -17,8 +17,8 @@
 
 package tests.api.java.util;
 
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass; 
 
@@ -35,15 +35,12 @@ public class PropertyResourceBundleTest extends junit.framework.TestCase {
     /**
      * @tests java.util.PropertyResourceBundle#PropertyResourceBundle(java.io.InputStream)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verification in setUp method doesn't check IOException.",
-      targets = {
-        @TestTarget(
-          methodName = "PropertyResourceBundle",
-          methodArgs = {java.io.InputStream.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "PropertyResourceBundle",
+        args = {java.io.InputStream.class}
+    )
     public void test_ConstructorLjava_io_InputStream() {
         // Test for method java.util.PropertyResourceBundle(java.io.InputStream)
         assertTrue("Used to test", true);
@@ -52,15 +49,12 @@ public class PropertyResourceBundleTest extends junit.framework.TestCase {
     /**
      * @tests java.util.PropertyResourceBundle#getKeys()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getKeys",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getKeys",
+        args = {}
+    )
     public void test_getKeys() {
         Enumeration keyEnum = prb.getKeys();
         Vector test = new Vector();
@@ -78,15 +72,12 @@ public class PropertyResourceBundleTest extends junit.framework.TestCase {
     /**
      * @tests java.util.PropertyResourceBundle#handleGetObject(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "handleGetObject",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "handleGetObject",
+        args = {java.lang.String.class}
+    )
     public void test_handleGetObjectLjava_lang_String() {
         // Test for method java.lang.Object
         // java.util.PropertyResourceBundle.handleGetObject(java.lang.String)

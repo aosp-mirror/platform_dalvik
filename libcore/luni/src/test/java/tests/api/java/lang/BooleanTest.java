@@ -16,9 +16,9 @@
 
 package tests.api.java.lang;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -30,27 +30,21 @@ import junit.framework.TestCase;
 public class BooleanTest
     extends TestCase
 {
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Checks that booleanValue() returns true.",
-      targets = {
-        @TestTarget(
-          methodName = "booleanValue",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Checks that booleanValue() returns true.",
+        method = "booleanValue",
+        args = {}
+    )
     public void test_TRUE() {
         assertTrue(Boolean.TRUE.booleanValue() == true);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Checks that booleanValue() returns false.",
-      targets = {
-        @TestTarget(
-          methodName = "booleanValue",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Checks that booleanValue() returns false.",
+        method = "booleanValue",
+        args = {}
+    )
     public void test_FALSE() {
         assertTrue(Boolean.FALSE.booleanValue() == false);
     }

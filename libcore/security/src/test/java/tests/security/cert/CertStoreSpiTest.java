@@ -23,9 +23,9 @@
 package tests.security.cert;
 
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.Test;
@@ -63,21 +63,24 @@ public class CertStoreSpiTest extends TestCase {
      * Test for <code>CertStoreSpi</code> constructor Assertion: constructs
      * CertStoreSpi
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "CertStoreSpi",
-          methodArgs = {java.security.cert.CertStoreParameters.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "CertStoreSpi",
+            args = {java.security.cert.CertStoreParameters.class}
         ),
-        @TestTarget(
-          methodName = "engineGetCertificates",
-          methodArgs = {java.security.cert.CertSelector.class}
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "engineGetCertificates",
+            args = {java.security.cert.CertSelector.class}
         ),
-        @TestTarget(
-          methodName = "engineGetCRLs",
-          methodArgs = {java.security.cert.CRLSelector.class}
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "engineGetCRLs",
+            args = {java.security.cert.CRLSelector.class}
         )
     })
     public void testCertStoreSpi01() throws InvalidAlgorithmParameterException,

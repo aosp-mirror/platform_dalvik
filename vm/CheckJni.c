@@ -90,6 +90,8 @@
     checkString(_env, _str, __FUNCTION__)
 #define CHECK_UTF_STRING(_env, _str, _nullok)                               \
     checkUtfString(_env, _str, _nullok, __FUNCTION__)
+#define CHECK_CLASS_NAME(_env, _str)                                        \
+    checkClassName(_env, _str, __FUNCTION__)
 #define CHECK_OBJECT(_env, _obj)                                            \
     checkObject(_env, _obj, __FUNCTION__)
 #define CHECK_ARRAY(_env, _array)                                           \
@@ -394,9 +396,10 @@ static void checkString(JNIEnv* env, jstring str, const char* func)
         printWarn = true;
     } else if (obj->clazz != gDvm.classJavaLangString) {
         if (dvmIsValidObject(obj))
-            LOGW("JNI WARNING: jstring points to non-string object\n");
+            LOGW("JNI WARNING: jstring points to non-string object (%s)\n",
+                func);
         else
-            LOGW("JNI WARNING: jstring is bogus (%p)\n", str);
+            LOGW("JNI WARNING: jstring %p is bogus (%s)\n", str, func);
         printWarn = true;
     } else {
         checkObject(env, str, func);
@@ -480,6 +483,40 @@ static void checkUtfString(JNIEnv* env, const char* bytes, bool nullOk,
 fail:
     LOGW("             string: '%s'\n", origBytes);
     showLocation(dvmGetCurrentJNIMethod(), func);
+    abortMaybe();
+}
+
+/*
+ * In some circumstances the VM will screen class names, but it doesn't
+ * for class lookup.  When things get bounced through a class loader, they
+ * can actually get normalized a couple of times; as a result, passing in
+ * a class name like "java.lang.Thread" instead of "java/lang/Thread" will
+ * work in some circumstances.
+ *
+ * This is incorrect and could cause strange behavior or compatibility
+ * problems, so we want to screen that out here.
+ *
+ * We expect "full-qualified" class names, like "java/lang/Thread" or
+ * "[Ljava/lang/Object;".
+ */
+static void checkClassName(JNIEnv* env, const char* className, const char* func)
+{
+    const char* cp;
+
+    /* quick check for illegal chars */
+    cp = className;
+    while (*cp != '\0') {
+        if (*cp == '.')
+            goto fail;
+        cp++;
+    }
+
+    // TODO: need a more rigorous check here
+
+    return;
+
+fail:
+    LOGW("JNI WARNING: illegal class name '%s' (%s)\n", className, func);
     abortMaybe();
 }
 
@@ -911,6 +948,7 @@ static jclass Check_DefineClass(JNIEnv* env, const char* name, jobject loader,
     CHECK_ENTER(env, kFlag_Default);
     CHECK_OBJECT(env, loader);
     CHECK_UTF_STRING(env, name, false);
+    CHECK_CLASS_NAME(env, name);
     jclass result;
     result = BASE_ENV(env)->DefineClass(env, name, loader, buf, bufLen);
     CHECK_EXIT(env);
@@ -921,6 +959,7 @@ static jclass Check_FindClass(JNIEnv* env, const char* name)
 {
     CHECK_ENTER(env, kFlag_Default);
     CHECK_UTF_STRING(env, name, false);
+    CHECK_CLASS_NAME(env, name);
     jclass result;
     result = BASE_ENV(env)->FindClass(env, name);
     CHECK_EXIT(env);

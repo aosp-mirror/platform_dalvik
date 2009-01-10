@@ -16,13 +16,6 @@
 
 package tests.security.permissions;
 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestTargetClass;
-
-import junit.framework.TestCase;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -32,14 +25,17 @@ import java.io.SerializablePermission;
 import java.io.StreamCorruptedException;
 import java.security.Permission;
 
+import junit.framework.TestCase;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
+
 /*
- * This class tests the secrity permissions which are documented in
+ * This class tests the security permissions which are documented in
  * http://java.sun.com/j2se/1.5.0/docs/guide/security/permissions.html#PermsAndMethods
- * for classes
- *    java.io.ObjectInputStream
- *    java.io.ObjectOutputStream
+ * for class java.io.ObjectOutputStream
  */
-@TestTargetClass(SecurityManager.class)
+@TestTargetClass(java.io.ObjectOutputStream.class)
 public class JavaIoObjectOutputStreamTest extends TestCase {
     
     SecurityManager old;
@@ -55,16 +51,13 @@ public class JavaIoObjectOutputStreamTest extends TestCase {
         System.setSecurityManager(old);
         super.tearDown();
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that enableReplaceObject(boolean) method calls " +
-            "checkPermission on security manager.",
-      targets = {
-        @TestTarget(
-          methodName = "checkPermission",
-          methodArgs = {java.security.Permission.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies that enableReplaceObject(boolean) method calls " +
+                "checkPermission on security manager.",
+        method = "enableReplaceObject",
+        args = {boolean.class}
+    )
     public void test_ObjectOutputStream() throws IOException {
         class TestSecurityManager extends SecurityManager {
             boolean called;
@@ -110,17 +103,14 @@ public class JavaIoObjectOutputStreamTest extends TestCase {
         assertEquals("Name of SerializablePermission is not correct", "enableSubstitution", s.permission.getName());
     }
 
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that ObjectOutputStream constructor calls " +
-            "checkPermission of security manager.",
-      targets = {
-        @TestTarget(
-          methodName = "checkPermission",
-          methodArgs = {java.security.Permission.class}
-        )
-    })
-    public void test_ObjectInputOutputStream() throws IOException {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies that ObjectOutputStream constructor calls " +
+                "checkPermission on security manager.",
+        method = "ObjectOutputStream",
+        args = {}
+    )
+    public void test_ObjecOutputStream2() throws IOException {
         class TestSecurityManager extends SecurityManager {
             boolean called;
             Permission permission;
@@ -142,11 +132,6 @@ public class JavaIoObjectOutputStreamTest extends TestCase {
         // requires the "enableSubclassImplementation" SerializablePermission when invoked
         // (either directly or indirectly) by a subclass which overrides 
         // ObjectOutputStream.putFields or ObjectOutputStream.writeUnshared.
-        //
-        // Also beginning with J2SE 1.4.0, ObjectInputStream's public one-argument 
-        // constructor requires the "enableSubclassImplementation" SerializablePermission 
-        // when invoked (either directly or indirectly) by a subclass which overrides 
-        // ObjectInputStream.readFields or ObjectInputStream.readUnshared.
 
         class TestObjectOutputStream extends ObjectOutputStream  {
             TestObjectOutputStream(OutputStream s) throws StreamCorruptedException, IOException {

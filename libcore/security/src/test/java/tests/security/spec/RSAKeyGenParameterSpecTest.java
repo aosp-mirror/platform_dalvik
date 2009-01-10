@@ -22,9 +22,9 @@
 
 package tests.security.spec;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -53,15 +53,12 @@ public class RSAKeyGenParameterSpecTest extends TestCase {
      * Assertion: constructs <code>RSAKeyGenParameterSpec</code>
      * object using valid parameters
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "RSAKeyGenParameterSpec",
-          methodArgs = {int.class, java.math.BigInteger.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "RSAKeyGenParameterSpec",
+        args = {int.class, java.math.BigInteger.class}
+    )
     public final void testRSAKeyGenParameterSpec() {
         AlgorithmParameterSpec aps =
             new RSAKeyGenParameterSpec(512, BigInteger.valueOf(0L));
@@ -72,15 +69,12 @@ public class RSAKeyGenParameterSpecTest extends TestCase {
      * Test for <code>getKeySize()</code> method<br>
      * Assertion: returns key size value
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getKeysize",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getKeysize",
+        args = {}
+    )
     public final void testGetKeysize() {
         RSAKeyGenParameterSpec rkgps =
             new RSAKeyGenParameterSpec(512, BigInteger.valueOf(0L));
@@ -91,15 +85,12 @@ public class RSAKeyGenParameterSpecTest extends TestCase {
      * Test for <code>getPublicExponent()</code> method<br>
      * Assertion: returns public exponent value
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getPublicExponent",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getPublicExponent",
+        args = {}
+    )
     public final void testGetPublicExponent() {
         RSAKeyGenParameterSpec rkgps =
             new RSAKeyGenParameterSpec(512, BigInteger.valueOf(0L));
@@ -110,15 +101,12 @@ public class RSAKeyGenParameterSpecTest extends TestCase {
      * Test for <code>F0</code> field<br>
      * Assertion: the public exponent value F0 = 3
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Test for F0 field.",
-      targets = {
-        @TestTarget(
-          methodName = "!Constants",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Test for F0 field.",
+        method = "!Constants",
+        args = {}
+    )
     public final void testF0Value() {
         assertEquals(3, RSAKeyGenParameterSpec.F0.intValue());
     }
@@ -127,15 +115,12 @@ public class RSAKeyGenParameterSpecTest extends TestCase {
      * Test for <code>F4</code> field<br>
      * Assertion: the public exponent value F0 = 65537
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Test for F4 field.",
-      targets = {
-        @TestTarget(
-          methodName = "!Constants",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Test for F4 field.",
+        method = "!Constants",
+        args = {}
+    )
     public final void testF4Value() {
         assertEquals(65537, RSAKeyGenParameterSpec.F4.intValue());
     }

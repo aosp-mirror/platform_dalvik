@@ -1,8 +1,8 @@
 package tests.org.w3c.dom;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import org.w3c.dom.Element;
@@ -53,15 +53,12 @@ public final class ElementGetAttributeNodeNS extends DOMTestCase {
      * @throws Throwable
      *             Any uncaught exception causes test to fail
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify DOMException.",
-      targets = {
-        @TestTarget(
-          methodName = "getAttributeNodeNS",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Doesn't verify DOMException.",
+        method = "getAttributeNodeNS",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void testGetAttributeNodeNS1() throws Throwable {
         Document doc;
         Element element;
@@ -99,15 +96,12 @@ public final class ElementGetAttributeNodeNS extends DOMTestCase {
         assertEquals("elementgetattributenodens01_attrNs",
                 "http://www.w3.org/DOM/Level2", attrNS);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify DOMException.",
-      targets = {
-        @TestTarget(
-          methodName = "getAttributeNodeNS",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Doesn't verify DOMException.",
+        method = "getAttributeNodeNS",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void testGetAttributeNodeNS2() throws Throwable {
         Document doc;
         Element element;

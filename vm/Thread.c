@@ -287,6 +287,10 @@ bool dvmThreadStartup(void)
     prepareThread(thread);
     gDvm.threadList = thread;
 
+#ifdef COUNT_PRECISE_METHODS
+    gDvm.preciseMethods = dvmPointerSetAlloc(200);
+#endif
+
     return true;
 }
 
@@ -3135,6 +3139,14 @@ static void gcScanInterpStackReferences(Thread *thread)
         saveArea = SAVEAREA_FROM_FP(framePtr);
         method = saveArea->method;
         if (method != NULL) {
+#ifdef COUNT_PRECISE_METHODS
+            /* the GC is running, so no lock required */
+            if (!dvmIsNativeMethod(method)) {
+                if (dvmPointerSetAddEntry(gDvm.preciseMethods, method))
+                    LOGI("Added %s.%s %p\n",
+                        method->clazz->descriptor, method->name, method);
+            }
+#endif
             int i;
             for (i = method->registersSize - 1; i >= 0; i--) {
                 u4 rval = *framePtr++;

@@ -17,9 +17,9 @@
 
 package org.apache.harmony.logging.tests.java.util.logging;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -36,8 +36,9 @@ public class ErrorManagerTest extends TestCase {
     
     
     private final PrintStream err = System.err;
+    private final PrintStream out = System.out;
 
-    private OutputStream errSubstituteStream = null;        
+    private OutputStream errSubstituteStream = null; 
     
     public void setUp() throws Exception{
         super.setUp();
@@ -47,19 +48,17 @@ public class ErrorManagerTest extends TestCase {
     
     public void tearDown() throws Exception{
         System.setErr(err);
+        System.setOut(out);
         super.tearDown();
     }
     
     
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies positive case only with ErrorManager.GENERIC_FAILURE, impove MockStream",
-      targets = {
-        @TestTarget(
-          methodName = "error",
-          methodArgs = {java.lang.String.class, java.lang.Exception.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies positive case only with ErrorManager.GENERIC_FAILURE, impove MockStream",
+        method = "error",
+        args = {java.lang.String.class, java.lang.Exception.class, int.class}
+    )
     public void test_errorCheck() {
         ErrorManager em = new ErrorManager();
         MockStream aos = new MockStream();
@@ -72,10 +71,12 @@ public class ErrorManagerTest extends TestCase {
        assertTrue("message appears (supertest)", aos.getWrittenData().indexOf("supertest") != -1);
     }
     
-    @TestInfo(level = TestLevel.PARTIAL_OK, 
-                purpose = "Verifies positive case only with ErrorManager.GENERIC_FAILURE", 
-                targets = {@TestTarget(methodName = "error", 
-                        methodArgs = { java.lang.String.class, java.lang.Exception.class, int.class})})
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies positive case only with ErrorManager.GENERIC_FAILURE",
+        method = "error",
+        args = {java.lang.String.class, java.lang.Exception.class, int.class}
+    )
     public void test_errorStringStringint() {
         ErrorManager em = new ErrorManager();
         em.error(null, new NullPointerException(),
@@ -84,15 +85,12 @@ public class ErrorManagerTest extends TestCase {
         em.error(null, null, ErrorManager.GENERIC_FAILURE);
     }
 
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "ErrorManager",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "ErrorManager",
+        args = {}
+    )
     public void test_constants() {
         assertEquals(3, ErrorManager.CLOSE_FAILURE);
         assertEquals(2, ErrorManager.FLUSH_FAILURE);

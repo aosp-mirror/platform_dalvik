@@ -23,13 +23,16 @@
 package org.apache.harmony.security.tests.java.security;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
+import java.io.IOException;
 import java.security.KeyStore;
 
+import javax.security.auth.callback.Callback;
 import javax.security.auth.callback.CallbackHandler;
+import javax.security.auth.callback.UnsupportedCallbackException;
 
 import org.apache.harmony.security.tests.support.tmpCallbackHandler;
 
@@ -55,38 +58,52 @@ public class KSCallbackHandlerProtectionTest extends TestCase {
      * constructor
      * Assertion: throws NullPointerException when handler is null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "CallbackHandlerProtection",
-          methodArgs = {CallbackHandler.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "CallbackHandlerProtection",
+        args = {javax.security.auth.callback.CallbackHandler.class}
+    )
     public void testCallbackHandlerProtection() {
         try {
             new KeyStore.CallbackHandlerProtection(null);
             fail("NullPointerException must be thrown when handler is null");
         } catch (NullPointerException e) {
         }
+        
+        class TestCallbackHandler implements CallbackHandler {
+
+            public void handle(Callback[] callbacks) throws IOException,
+                    UnsupportedCallbackException {
+                // does nothing
+            }
+            
+        }
+        
+        try {
+            new KeyStore.CallbackHandlerProtection(new TestCallbackHandler());
+        } catch (Exception e) {
+            fail("unexpected exception: " + e);
+        }
+        
     }
     
     /**
      * Test for <code>getCallbackHandler()</code> method
      * Assertion: returns CallbackHandler 
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "CallbackHandlerProtection",
-          methodArgs = {CallbackHandler.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "CallbackHandlerProtection",
+            args = {javax.security.auth.callback.CallbackHandler.class}
         ),
-        @TestTarget(
-          methodName = "getCallbackHandler",
-          methodArgs = {}
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getCallbackHandler",
+            args = {}
         )
     })
     public void testGetCallBackHandler() {

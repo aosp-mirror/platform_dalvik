@@ -15,131 +15,63 @@
  */
 package tests.api.java.nio.charset;
 
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestTarget;
 import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 
-import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
-import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CoderResult;
 import java.nio.charset.CodingErrorAction;
-import java.nio.charset.MalformedInputException;
-import java.nio.charset.UnmappableCharacterException;
-
-import junit.framework.TestCase;
+import java.nio.charset.UnsupportedCharsetException;
 @TestTargetClass(CharsetDecoder.class)
 /**
- * API unit test for java.nio.CharsetDecoder
+ * API unit test for java.nio.charset.CharsetDecoder
  */
-public class CharsetDecoderTest extends TestCase {
-
-    static final String unistr = " buffer";// \u8000\u8001\u00a5\u3000\r\n";
-
-    byte[] unibytes = new byte[] { 32, 98, 117, 102, 102, 101, 114 };
+public class CharsetDecoderTest extends AbstractCharsetDecoderTestCase {
 
     protected static final int MAX_BYTES = 3;
 
     protected static final double AVER_BYTES = 0.5;
 
-    // default charset
-    private static final Charset MOCKCS = new CharsetEncoderTest.MockCharset(
-            "mock", new String[0]);
-
-    Charset cs = MOCKCS;
-
-    // default decoder
-    protected static CharsetDecoder decoder;
-
-    String bom = "";
 
     protected void setUp() throws Exception {
+        cs = new CharsetEncoderTest.MockCharset("mock", new String[0]);
+        unibytes = new byte[] { 32, 98, 117, 102, 102, 101, 114 };
         super.setUp();
-        decoder = cs.newDecoder();
     }
 
-    protected void tearDown() throws Exception {
-        super.tearDown();
-    }
-
-    // FIXME: give up this tests
-    // /*
-    // * test default value
-    // */
-    // public void testDefaultCharsPerByte() {
-    // assertTrue(decoder.averageCharsPerByte() == AVER_BYTES);
-    // assertTrue(decoder.maxCharsPerByte() == MAX_BYTES);
-    // }
-
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "charset",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "detectedCharset",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "isCharsetDetected",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "isAutoDetecting",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "malformedInputAction",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "unmappableCharacterAction",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "replacement",
-          methodArgs = {}
-        )
-    })
-    public void testDefaultValues() {
-        assertSame(cs, decoder.charset());
-        try {
-            decoder.detectedCharset();
-            fail("should unsupported");
-        } catch (UnsupportedOperationException e) {
-        }
-        try {
-            assertTrue(decoder.isCharsetDetected());
-            fail("should unsupported");
-        } catch (UnsupportedOperationException e) {
-        }
-        assertFalse(decoder.isAutoDetecting());
-        assertSame(CodingErrorAction.REPORT, decoder.malformedInputAction());
-        assertSame(CodingErrorAction.REPORT, decoder
-                .unmappableCharacterAction());
-        assertEquals(decoder.replacement(), "\ufffd");
-    }
 
     /*
      * test constructor
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "CharsetDecoder",
-          methodArgs = {java.nio.charset.Charset.class, float.class, float.class}
-        ), @TestTarget(
-          methodName = "charset",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "averageCharsPerByte",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "maxCharsPerByte",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "CharsetDecoder",
+            args = {java.nio.charset.Charset.class, float.class, float.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "charset",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "averageCharsPerByte",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "maxCharsPerByte",
+            args = {}
         )
     })
     public void testCharsetDecoder() {
@@ -195,701 +127,24 @@ public class CharsetDecoderTest extends TestCase {
         }
     }
 
-    /*
-     * test onMalformedInput
-     */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "malformedInputAction",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "onMalformedInput",
-          methodArgs = {java.nio.charset.CodingErrorAction.class}
-        )
-    })
-    public void testOnMalformedInput() {
-        assertSame(CodingErrorAction.REPORT, decoder.malformedInputAction());
-        try {
-            decoder.onMalformedInput(null);
-            fail("should throw null pointer exception");
-        } catch (IllegalArgumentException e) {
-        }
-        decoder.onMalformedInput(CodingErrorAction.IGNORE);
-        assertSame(CodingErrorAction.IGNORE, decoder.malformedInputAction());
-    }
-
-    /*
-     * test unmappableCharacter
-     */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "unmappableCharacterAction",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "onUnmappableCharacter",
-          methodArgs = {java.nio.charset.CodingErrorAction.class}
-        )
-    })
-    public void testOnUnmappableCharacter() {
-        assertSame(CodingErrorAction.REPORT, decoder
-                .unmappableCharacterAction());
-        try {
-            decoder.onUnmappableCharacter(null);
-            fail("should throw null pointer exception");
-        } catch (IllegalArgumentException e) {
-        }
-        decoder.onUnmappableCharacter(CodingErrorAction.IGNORE);
-        assertSame(CodingErrorAction.IGNORE, decoder
-                .unmappableCharacterAction());
-    }
-
-    /*
-     * test replaceWith
-     */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "replaceWith",
-          methodArgs = {java.lang.String.class}
-        ), @TestTarget(
-          methodName = "replacement",
-          methodArgs = {}
-        )
-    })
-    public void testReplaceWith() {
-        try {
-            decoder.replaceWith(null);
-            fail("should throw null pointer exception");
-        } catch (IllegalArgumentException e) {
-        }
-        try {
-            decoder.replaceWith("");
-            fail("should throw null pointer exception");
-        } catch (IllegalArgumentException e) {
-        }
-        try {
-            decoder.replaceWith("testReplaceWith");
-            fail("should throw illegal argument exception");
-        } catch (IllegalArgumentException e) {
-        }
-
-        decoder.replaceWith("a");
-        assertSame("a", decoder.replacement());
-    }
-
-    /*
-     * Class under test for CharBuffer decode(ByteBuffer)
-     */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException & CharacterCodingException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "decode",
-          methodArgs = {java.nio.ByteBuffer.class}
-        )
-    })
-    public void testDecodeByteBuffer() throws CharacterCodingException {
-        implTestDecodeByteBuffer();
-    }
-
-    void implTestDecodeByteBuffer() throws CharacterCodingException {
-        // Null pointer
-        try {
-            decoder.decode(null);
-            fail("should throw null pointer exception");
-        } catch (NullPointerException e) {
-        }
-
-        // empty input buffer
-        CharBuffer out = decoder.decode(ByteBuffer.allocate(0));
-        assertCharBufferValue(out, "");
-
-        // normal case
-        ByteBuffer in = ByteBuffer.wrap(getUnibytes());
-        out = decoder.decode(in);
-        assertEquals(out.position(), 0);
-        assertEquals(out.limit(), unistr.length());
-        assertEquals(out.remaining(), unistr.length());
-        assertEquals(new String(out.array(), 0, out.limit()), unistr);
-    }
-
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException & CharacterCodingException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "decode",
-          methodArgs = {java.nio.ByteBuffer.class}
-        )
-    })
-    public void testDecodeByteBufferException()
-            throws CharacterCodingException, UnsupportedEncodingException {
-        CharBuffer out;
-        ByteBuffer in;
-        String replaceStr = decoder.replacement() + " buffer";
-
-        // MalformedException:
-        decoder.onMalformedInput(CodingErrorAction.REPORT);
-        decoder.onUnmappableCharacter(CodingErrorAction.REPORT);
-        in = getMalformByteBuffer();
-        if (in != null) {
-            try {
-                CharBuffer buffer = decoder.decode(in);
-                assertTrue(buffer.remaining() > 0);
-                fail("should throw MalformedInputException");
-            } catch (MalformedInputException e) {
-            }
-
-            decoder.reset();
-            in.rewind();
-            decoder.onMalformedInput(CodingErrorAction.IGNORE);
-            out = decoder.decode(in);
-            assertCharBufferValue(out, " buffer");
-
-            decoder.reset();
-            in.rewind();
-            decoder.onMalformedInput(CodingErrorAction.REPLACE);
-            out = decoder.decode(in);
-            assertCharBufferValue(out, replaceStr);
-        }
-
-        // Unmapped Exception:
-        decoder.onMalformedInput(CodingErrorAction.REPORT);
-        decoder.onUnmappableCharacter(CodingErrorAction.REPORT);
-        in = getUnmappedByteBuffer();
-        if (in != null) {
-            try {
-                decoder.decode(in);
-                fail("should throw UnmappableCharacterException");
-            } catch (UnmappableCharacterException e) {
-            }
-
-            decoder.reset();
-            in.rewind();
-            decoder.onUnmappableCharacter(CodingErrorAction.IGNORE);
-            out = decoder.decode(in);
-            assertCharBufferValue(out, " buffer");
-
-            decoder.reset();
-            in.rewind();
-            decoder.onUnmappableCharacter(CodingErrorAction.REPLACE);
-            out = decoder.decode(in);
-            assertCharBufferValue(out, replaceStr);
-        }
-
-        // RuntimeException
-        try {
-            decoder.decode(getExceptionByteArray());
-            fail("should throw runtime exception");
-        } catch (RuntimeException e) {
-        }
-    }
-
-    /*
-     * Class under test for CoderResult decode(ByteBuffer, CharBuffer, boolean)
-     */
-
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Functional test. Exceptions checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "decode",
-          methodArgs = {java.nio.ByteBuffer.class, java.nio.CharBuffer.class, boolean.class}
-        )
-    })
-    public void testDecodeByteBufferCharBufferboolean() {
-        implTestDecodeByteBufferCharBufferboolean();
-    }
-
-    void implTestDecodeByteBufferCharBufferboolean() {
-        byte[] gb = getUnibytes();
-        ByteBuffer in = ByteBuffer.wrap(gb);
-        CharBuffer out = CharBuffer.allocate(100);
-
-        // Null pointer
-        try {
-            decoder.decode(null, out, true);
-            fail("should throw null pointer exception");
-        } catch (NullPointerException e) {
-        }
-        try {
-            decoder.decode(in, null, true);
-            fail("should throw null pointer exception");
-        } catch (NullPointerException e) {
-        }
-
-        // normal case, one complete operation
-        decoder.reset();
-        in.rewind();
-        out.rewind();
-        assertSame(CoderResult.UNDERFLOW, decoder.decode(in, out, true));
-        assertEquals(out.limit(), 100);
-        assertEquals(out.position(), unistr.length());
-        assertEquals(out.remaining(), 100 - unistr.length());
-        assertEquals(out.capacity(), 100);
-        assertCharBufferValue(out, unistr);
-        decoder.flush(out);
-
-        // normal case, one complete operation, but call twice, first time set
-        // endOfInput to false
-        decoder.reset();
-        in.rewind();
-        out.clear();
-        assertSame(CoderResult.UNDERFLOW, decoder.decode(in, out, false));
-        assertEquals(out.limit(), 100);
-        assertEquals(out.position(), unistr.length());
-        assertEquals(out.remaining(), 100 - unistr.length());
-        assertEquals(out.capacity(), 100);
-        assertCharBufferValue(out, unistr);
-
-        decoder.reset();
-        in.rewind();
-        out.clear();
-        assertSame(CoderResult.UNDERFLOW, decoder.decode(in, out, false));
-        in = ByteBuffer.wrap(unibytes);
-        assertSame(CoderResult.UNDERFLOW, decoder.decode(in, out, false));
-        in.rewind();
-        assertSame(CoderResult.UNDERFLOW, decoder.decode(in, out, true));
-        assertEquals(out.limit(), 100);
-        assertTrue(out.position() > 0);
-        assertEquals(out.remaining(), out.capacity() - out.position());
-        assertEquals(out.capacity(), 100);
-        assertCharBufferValue(out, unistr + unistr + unistr);
-
-        // overflow
-        out = CharBuffer.allocate(4);
-        decoder.reset();
-        in = ByteBuffer.wrap(getUnibytes());
-        out.rewind();
-        assertSame(CoderResult.OVERFLOW, decoder.decode(in, out, false));
-
-        assertEquals(new String(out.array()), unistr.substring(0, 4));
-        out = CharBuffer.allocate(100);
-        assertSame(CoderResult.UNDERFLOW, decoder.decode(in, out, false));
-        assertCharBufferValue(out, unistr.substring(4));
-        in.rewind();
-        out = CharBuffer.allocate(100);
-        assertSame(CoderResult.UNDERFLOW, decoder.decode(in, out, true));
-        assertCharBufferValue(out, bom + unistr);
-    }
-
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Functional test. Exceptions checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "decode",
-          methodArgs = {java.nio.ByteBuffer.class, java.nio.CharBuffer.class, boolean.class}
-        )
-    })
-    public void testDecodeCharBufferByteBufferbooleanExceptionTrue()
-            throws CharacterCodingException, UnsupportedEncodingException {
-        implTestDecodeCharBufferByteBufferbooleanException(true);
-    }
-
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Functional test. Exceptions checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "decode",
-          methodArgs = {java.nio.ByteBuffer.class, java.nio.CharBuffer.class, boolean.class}
-        )
-    })
-    public void testDecodeCharBufferByteBufferbooleanExceptionFalse()
-            throws CharacterCodingException, UnsupportedEncodingException {
-        implTestDecodeCharBufferByteBufferbooleanException(false);
-    }
-
-    void implTestDecodeCharBufferByteBufferbooleanException(boolean endOfInput)
-            throws CharacterCodingException, UnsupportedEncodingException {
-        CharBuffer out;
-        ByteBuffer in;
-
-        // Unmapped Exception:
-        in = getUnmappedByteBuffer();
-        out = CharBuffer.allocate(50);
-        decoder.onMalformedInput(CodingErrorAction.REPORT);
-        if (null != in) {
-            decoder.reset();
-            decoder.onUnmappableCharacter(CodingErrorAction.REPORT);
-            CoderResult result = decoder.decode(in, out, endOfInput);
-            assertTrue(result.isUnmappable());
-
-            decoder.reset();
-            out.clear();
-            in.rewind();
-            decoder.onUnmappableCharacter(CodingErrorAction.IGNORE);
-            assertSame(CoderResult.UNDERFLOW, decoder.decode(in, out,
-                    endOfInput));
-            assertCharBufferValue(out, " buffer");
-
-            decoder.reset();
-            out.clear();
-            in.rewind();
-            decoder.onUnmappableCharacter(CodingErrorAction.REPLACE);
-            assertSame(CoderResult.UNDERFLOW, decoder.decode(in, out,
-                    endOfInput));
-            assertCharBufferValue(out, decoder.replacement() + " buffer");
-        } else if (endOfInput) {
-            // System.err.println("Cannot find unmappable byte array for "
-            //         + cs.name());
-        }
-
-        // MalformedException:
-        in = getMalformByteBuffer();
-        out = CharBuffer.allocate(50);
-        decoder.onUnmappableCharacter(CodingErrorAction.REPORT);
-        if (null != in) {
-            decoder.onMalformedInput(CodingErrorAction.REPORT);
-            CoderResult result = decoder.decode(in, out, endOfInput);
-            assertTrue(result.isMalformed());
-
-            decoder.reset();
-            out.clear();
-            in.rewind();
-            decoder.onMalformedInput(CodingErrorAction.IGNORE);
-            assertSame(CoderResult.UNDERFLOW, decoder.decode(in, out,
-                    endOfInput));
-            assertCharBufferValue(out, " buffer");
-
-            decoder.reset();
-            out.clear();
-            in.rewind();
-            decoder.onMalformedInput(CodingErrorAction.REPLACE);
-            assertSame(CoderResult.UNDERFLOW, decoder.decode(in, out,
-                    endOfInput));
-            assertCharBufferValue(out, decoder.replacement() + " buffer");
-        } else if (endOfInput) {
-            // System.err.println("Cannot find malform byte array for "
-            //         + cs.name());
-        }
-
-        // RuntimeException
-        in = getExceptionByteArray();
-        try {
-            decoder.decode(in, out, endOfInput);
-            fail("should throw runtime exception");
-        } catch (RuntimeException e) {
-        }
-    }
-
-    ByteBuffer getExceptionByteArray() throws UnsupportedEncodingException {
-        // "runtime"
-        return ByteBuffer
-                .wrap(new byte[] { 114, 117, 110, 116, 105, 109, 101 });
-    }
-
-    ByteBuffer getUnmappedByteBuffer() throws UnsupportedEncodingException {
-        // "unmap buffer"
-        byte[] ba = new byte[] { 117, 110, 109, 97, 112, 32, 98, 117, 102, 102,
-                101, 114 };
-        return ByteBuffer.wrap(ba);
-    }
-
-    ByteBuffer getMalformByteBuffer() throws UnsupportedEncodingException {
-        // "malform buffer"
-        byte[] ba = new byte[] { 109, 97, 108, 102, 111, 114, 109, 32, 98, 117,
-                102, 102, 101, 114 };
-        return ByteBuffer.wrap(ba);
-    }
-
-    void assertCharBufferValue(CharBuffer out, String expected) {
-        if (out.position() != 0) {
-            out.flip();
-        }
-        assertEquals(new String(out.array(), 0, out.limit()), expected);
-    }
-
-    /*
-     * test flush
-     */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "flush",
-          methodArgs = {java.nio.CharBuffer.class}
-        )
-    })
-    public void testFlush() throws CharacterCodingException {
-        CharBuffer out = CharBuffer.allocate(10);
-        ByteBuffer in = ByteBuffer.wrap(new byte[] { 12, 12 });
-        decoder.decode(in, out, true);
-        assertSame(CoderResult.UNDERFLOW, decoder.flush(out));
-
-        decoder.reset();
-        decoder.decode((ByteBuffer) in.rewind(), (CharBuffer) out.rewind(),
-                true);
-        assertSame(CoderResult.UNDERFLOW, decoder
-                .flush(CharBuffer.allocate(10)));
-    }
-
-    /*
-     * ---------------------------------- methods to test illegal state
-     * -----------------------------------
-     */
-    // Normal case: just after reset, and it also means reset can be done
-    // anywhere
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "reset",
-          methodArgs = {}
-        )
-    })
-    public void testResetIllegalState() throws CharacterCodingException {
-        byte[] gb = getUnibytes();
-        decoder.reset();
-        decoder.decode(ByteBuffer.wrap(gb));
-        decoder.reset();
-        decoder.decode(ByteBuffer.wrap(gb), CharBuffer.allocate(3), false);
-        decoder.reset();
-        decoder.decode(ByteBuffer.wrap(gb), CharBuffer.allocate(3), true);
-        decoder.reset();
-    }
-
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "flush",
-          methodArgs = {java.nio.CharBuffer.class}
-        ), @TestTarget(
-          methodName = "reset",
-          methodArgs = {}
-        )
-    })
-    public void testFlushIllegalState() throws CharacterCodingException {
-        ByteBuffer in = ByteBuffer.wrap(new byte[] { 98, 98 });
-        CharBuffer out = CharBuffer.allocate(5);
-        // Normal case: after decode with endOfInput is true
-        decoder.reset();
-        decoder.decode(in, out, true);
-        out.rewind();
-        CoderResult result = decoder.flush(out);
-        assertSame(result, CoderResult.UNDERFLOW);
-
-        // Illegal state: flush twice
-        try {
-            decoder.flush(out);
-            fail("should throw IllegalStateException");
-        } catch (IllegalStateException e) {
-        }
-
-        // Illegal state: flush after decode with endOfInput is false
-        decoder.reset();
-        decoder.decode(in, out, false);
-        try {
-            decoder.flush(out);
-            fail("should throw IllegalStateException");
-        } catch (IllegalStateException e) {
-        }
-    }
-
-    byte[] getUnibytes() {
-        return unibytes;
-    }
-
-    // test illegal states for decode facade
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Exceptions checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "decode",
-          methodArgs = {java.nio.ByteBuffer.class}
-        ), @TestTarget(
-          methodName = "decode",
-          methodArgs = {java.nio.ByteBuffer.class, java.nio.CharBuffer.class, boolean.class}
-        )
-    })
-    public void testDecodeFacadeIllegalState() throws CharacterCodingException {
-        // decode facade can be execute in anywhere
-        byte[] gb = getUnibytes();
-        ByteBuffer in = ByteBuffer.wrap(gb);
-        // Normal case: just created
-        decoder.decode(in);
-        in.rewind();
-
-        // Normal case: just after decode facade
-        decoder.decode(in);
-        in.rewind();
-
-        // Normal case: just after decode with that endOfInput is true
-        decoder.reset();
-        decoder.decode(ByteBuffer.wrap(gb), CharBuffer.allocate(30), true);
-        decoder.decode(in);
-        in.rewind();
-
-        // Normal case:just after decode with that endOfInput is false
-        decoder.reset();
-        decoder.decode(ByteBuffer.wrap(gb), CharBuffer.allocate(30), false);
-        decoder.decode(in);
-        in.rewind();
-
-        // Normal case: just after flush
-        decoder.reset();
-        decoder.decode(ByteBuffer.wrap(gb), CharBuffer.allocate(30), true);
-        decoder.flush(CharBuffer.allocate(10));
-        decoder.decode(in);
-        in.rewind();
-    }
-
-    // test illegal states for two decode method with endOfInput is true
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "CoderMalfunctionError checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "decode",
-          methodArgs = {java.nio.ByteBuffer.class, java.nio.CharBuffer.class, boolean.class}
-        )
-    })
-    public void testDecodeTrueIllegalState() throws CharacterCodingException {
-        ByteBuffer in = ByteBuffer.wrap(new byte[] { 98, 98 });
-        CharBuffer out = CharBuffer.allocate(100);
-        // Normal case: just created
-        decoder.decode(in, out, true);
-        in.rewind();
-        out.rewind();
-
-        // Normal case: just after decode with that endOfInput is true
-        decoder.reset();
-        decoder.decode(in, CharBuffer.allocate(30), true);
-        in.rewind();
-        decoder.decode(in, out, true);
-        in.rewind();
-        out.rewind();
-
-        // Normal case:just after decode with that endOfInput is false
-        decoder.reset();
-        decoder.decode(in, CharBuffer.allocate(30), false);
-        in.rewind();
-        decoder.decode(in, out, true);
-        in.rewind();
-        out.rewind();
-
-        // Illegal state: just after flush
-        decoder.reset();
-        decoder.decode(in, CharBuffer.allocate(30), true);
-        decoder.flush(CharBuffer.allocate(10));
-        in.rewind();
-        try {
-            decoder.decode(in, out, true);
-            fail("should illegal state");
-        } catch (IllegalStateException e) {
-        }
-        in.rewind();
-        out.rewind();
-
-    }
-
-    // test illegal states for two decode method with endOfInput is false
-@TestInfo(
-          level = TestLevel.PARTIAL,
-          purpose = "CoderMalfunctionError checking missed",
-          targets = {
-            @TestTarget(
-              methodName = "decode",
-              methodArgs = {java.nio.ByteBuffer.class, java.nio.CharBuffer.class, boolean.class}
-            )
-        })
-    public void testDecodeFalseIllegalState() throws CharacterCodingException {
-        ByteBuffer in = ByteBuffer.wrap(new byte[] { 98, 98 });
-        CharBuffer out = CharBuffer.allocate(5);
-        // Normal case: just created
-        decoder.decode(in, out, false);
-        in.rewind();
-        out.rewind();
-
-        // Illegal state: just after decode facade
-        decoder.reset();
-        decoder.decode(in);
-        in.rewind();
-        try {
-            decoder.decode(in, out, false);
-            fail("should illegal state");
-        } catch (IllegalStateException e) {
-        }
-        in.rewind();
-        out.rewind();
-
-        // Illegal state: just after decode with that endOfInput is true
-        decoder.reset();
-        decoder.decode(in, CharBuffer.allocate(30), true);
-        in.rewind();
-        try {
-            decoder.decode(in, out, false);
-            fail("should illegal state");
-        } catch (IllegalStateException e) {
-        }
-        in.rewind();
-        out.rewind();
-
-        // Normal case:just after decode with that endOfInput is false
-        decoder.reset();
-        decoder.decode(in, CharBuffer.allocate(30), false);
-        in.rewind();
-        decoder.decode(in, out, false);
-        in.rewind();
-        out.rewind();
-
-        // Illegal state: just after flush
-        decoder.reset();
-        decoder.decode(in, CharBuffer.allocate(30), true);
-        in.rewind();
-        decoder.flush(CharBuffer.allocate(10));
-        try {
-            decoder.decode(in, out, false);
-            fail("should illegal state");
-        } catch (IllegalStateException e) {
-        }
-    }
-
-    /*
-     * --------------------------------- illegal state test end
-     * ---------------------------------
-     */
-
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "implFlush",
-          methodArgs = {java.nio.CharBuffer.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "implFlush",
+        args = {java.nio.CharBuffer.class}
+    )
     public void testImplFlush() {
         decoder = new MockCharsetDecoder(cs, 1, 3);
         assertEquals(CoderResult.UNDERFLOW, ((MockCharsetDecoder) decoder)
                 .pubImplFlush(null));
     }
 
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "implOnMalformedInput",
-          methodArgs = {java.nio.charset.CodingErrorAction.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "implOnMalformedInput",
+        args = {java.nio.charset.CodingErrorAction.class}
+    )
     public void testImplOnMalformedInput() {
         decoder = new MockCharsetDecoder(cs, 1, 3);
         assertEquals(CoderResult.UNDERFLOW, ((MockCharsetDecoder) decoder)
@@ -897,46 +152,63 @@ public class CharsetDecoderTest extends TestCase {
 
     }
 
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "implOnUnmappableCharacter",
-          methodArgs = {java.nio.charset.CodingErrorAction.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "implOnUnmappableCharacter",
+        args = {java.nio.charset.CodingErrorAction.class}
+    )
     public void testImplOnUnmappableCharacter() {
         decoder = new MockCharsetDecoder(cs, 1, 3);
         ((MockCharsetDecoder) decoder).pubImplOnUnmappableCharacter(null);
     }
 
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "implReplaceWith",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "implReplaceWith",
+        args = {java.lang.String.class}
+    )
     public void testImplReplaceWith() {
         decoder = new MockCharsetDecoder(cs, 1, 3);
         ((MockCharsetDecoder) decoder).pubImplReplaceWith(null);
     }
 
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "implReset",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "implReset",
+        args = {}
+    )
     public void testImplReset() {
         decoder = new MockCharsetDecoder(cs, 1, 3);
         ((MockCharsetDecoder) decoder).pubImplReset();
+    }
+    
+    
+    boolean deCodeLoopCalled = false;
+    
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "",
+        method = "decodeLoop",
+        args = { ByteBuffer.class, CharBuffer.class}
+    )
+    public void testEncodeLoop() throws Exception {
+        try {
+            decoder = new MockCharsetDecoder(Charset.forName("US-ASCII"), 1,
+                    MAX_BYTES) {
+                @Override
+                protected CoderResult decodeLoop(ByteBuffer in, CharBuffer out) {
+                    deCodeLoopCalled = true;
+                    return super.decodeLoop(in, out);
+                }
+            };
+            decoder.decode(ByteBuffer.wrap(new byte[]{ 'a','b','c'}));
+        } catch (UnsupportedCharsetException e) {
+            fail("us-ascii not supported");
+        }
+        assertTrue(deCodeLoopCalled);
     }
 
     /*
@@ -1015,7 +287,6 @@ public class CharsetDecoderTest extends TestCase {
         public void pubImplReset() {
             super.implReset();
         }
-
     }
 
 }

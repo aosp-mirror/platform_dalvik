@@ -16,78 +16,87 @@
 
 package org.apache.harmony.luni.tests.java.io;
 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestTargetClass;
-
 import java.io.BufferedReader;
 import java.io.CharArrayReader;
 import java.io.IOException;
 import java.io.StringReader;
 
 import junit.framework.TestCase;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 @TestTargetClass(BufferedReader.class)
 public class BufferedReaderTest extends TestCase {
 
     /**
      * @tests java.io.BufferedReader#read(char[], int, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Checks exceptions",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {char[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Checks exceptions.",
+        method = "read",
+        args = {char[].class, int.class, int.class}
+    )
     public void test_read$CII() throws IOException {
-        // Regression for HARMONY-54
-        char[] ch = {};
-        BufferedReader reader = new BufferedReader(new CharArrayReader(ch));
+        char[] in = {'L', 'o', 'r', 'e', 'm'};
+        char[] ch = new char[3];
+        BufferedReader reader = new BufferedReader(new CharArrayReader(in));
+        
         try {
-            // Check exception thrown when the reader is open.
             reader.read(null, 1, 0);
-            fail("Assert 0: NullPointerException expected");
+            fail("Test 1: NullPointerException expected.");
         } catch (NullPointerException e) {
-            // Expected
+            // Expected.
         }
 
-        // Now check IOException is thrown in preference to
-        // NullPointerexception when the reader is closed.
+        try {
+            reader.read(ch , -1, 1);
+            fail("Test 2: IndexOutOfBoundsException expected.");
+        } catch (IndexOutOfBoundsException e) {
+            // Expected.
+        }
+        
+        try {
+            reader.read(ch , 1, -1);
+            fail("Test 3: IndexOutOfBoundsException expected.");
+        } catch (IndexOutOfBoundsException e) {
+            // Expected.
+        }
+
+        try {
+            reader.read(ch, 1, 3);
+            fail("Test 4: IndexOutOfBoundsException expected.");
+        } catch (IndexOutOfBoundsException e) {
+            // Expected.
+        }
+
         reader.close();
         try {
-            reader.read(null, 1, 0);
-            fail("Assert 1: IOException expected");
+            reader.read(ch, 1, 1);
+            fail("Test 5: IOException expected.");
         } catch (IOException e) {
-            // Expected
-        }
-
-        try {
-            // And check that the IOException is thrown before
-            // ArrayIndexOutOfBoundException
-            reader.read(ch, 0, 42);
-            fail("Assert 2: IOException expected");
-        } catch (IOException e) {
-            // expected
+            // Expected.
         }
     }
     
     /**
      * @tests java.io.BufferedReader#mark(int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalArgumentException & IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "mark",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "mark",
+        args = {int.class}
+    )
     public void test_markI() throws IOException {
         BufferedReader buf = new BufferedReader(new StringReader("01234"), 2);
+
+        try {
+            buf.mark(-1);
+            fail("Test 1: IllegalArgumentException expected.");
+        } catch (IllegalArgumentException e) {
+            // Expected.
+        }
+               
         buf.mark(3);
         char[] chars = new char[3];
         int result = buf.read(chars);
@@ -113,6 +122,13 @@ public class BufferedReaderTest extends TestCase {
         reader.mark(Integer.MAX_VALUE);
         reader.read();
         reader.close();
+        
+        try {
+            reader.mark(1);
+            fail("Test 2: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
     }
 
 }

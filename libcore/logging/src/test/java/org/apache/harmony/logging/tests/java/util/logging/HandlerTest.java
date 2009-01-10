@@ -18,8 +18,8 @@
 package org.apache.harmony.logging.tests.java.util.logging;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargets;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestLevel;
 
 import java.io.IOException;
@@ -77,15 +77,12 @@ public class HandlerTest extends TestCase {
     /*
      * Test the constructor.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "Handler",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "Handler",
+        args = {}
+    )
     public void testConstructor() {
         MockHandler h = new MockHandler();
         assertSame(h.getLevel(), Level.ALL);
@@ -98,15 +95,12 @@ public class HandlerTest extends TestCase {
     /*
      * Test the constructor, with properties set
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "Handler",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "Handler",
+        args = {}
+    )
     public void testConstructor_Properties() throws Exception {
         Properties p = new Properties();
         p.put("java.util.logging.MockHandler.level", "FINE");
@@ -132,70 +126,20 @@ public class HandlerTest extends TestCase {
     }
 
     /*
-     * Abstract method, no test needed.
-     */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Abstract method.",
-      targets = {
-        @TestTarget(
-          methodName = "close",
-          methodArgs = {}
-        )
-    })
-    public void testClose() {
-        MockHandler h = new MockHandler();
-        h.close();
-    }
-
-    /*
-     * Abstract method, no test needed.
-     */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Abstract method.",
-      targets = {
-        @TestTarget(
-          methodName = "flush",
-          methodArgs = {}
-        )
-    })
-    public void testFlush() {
-        MockHandler h = new MockHandler();
-        h.flush();
-    }
-
-    /*
-     * Abstract method, no test needed.
-     */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Abstract method.",
-      targets = {
-        @TestTarget(
-          methodName = "publish",
-          methodArgs = {java.util.logging.LogRecord.class}
-        )
-    })
-    public void testPublish() {
-        MockHandler h = new MockHandler();
-        h.publish(null);
-    }
-
-    /*
      * Test getEncoding & setEncoding methods with supported encoding.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Doesn't verify exceptions.",
-      targets = {
-        @TestTarget(
-          methodName = "getEncoding",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Doesn't verify exceptions.",
+            method = "getEncoding",
+            args = {}
         ),
-        @TestTarget(
-          methodName = "setEncoding",
-          methodArgs = {java.lang.String.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Doesn't verify exceptions.",
+            method = "setEncoding",
+            args = {java.lang.String.class}
         )
     })
     public void testGetSetEncoding_Normal() throws Exception {
@@ -207,15 +151,12 @@ public class HandlerTest extends TestCase {
     /*
      * Test getEncoding & setEncoding methods with null.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies null as a parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "getEncoding",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies null as a parameter.",
+        method = "getEncoding",
+        args = {}
+    )
     public void testGetSetEncoding_Null() throws Exception {
         MockHandler h = new MockHandler();
         h.setEncoding(null);
@@ -225,15 +166,12 @@ public class HandlerTest extends TestCase {
     /*
      * Test getEncoding & setEncoding methods with unsupported encoding.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies UnsupportedEncodingException.",
-      targets = {
-        @TestTarget(
-          methodName = "setEncoding",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies UnsupportedEncodingException.",
+        method = "setEncoding",
+        args = {java.lang.String.class}
+    )
     public void testGetSetEncoding_Unsupported() {
         MockHandler h = new MockHandler();
         try {
@@ -247,15 +185,12 @@ public class HandlerTest extends TestCase {
     /*
      * Test setEncoding with insufficient privilege.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Doesn't verify UnsupportedEncodingException.",
-      targets = {
-        @TestTarget(
-          methodName = "setEncoding",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify UnsupportedEncodingException.",
+        method = "setEncoding",
+        args = {java.lang.String.class}
+    )
     public void testSetEncoding_InsufficientPrivilege() throws Exception {
         MockHandler h = new MockHandler();
         SecurityManager oldMan = System.getSecurityManager();
@@ -285,17 +220,18 @@ public class HandlerTest extends TestCase {
     /*
      * Test getErrorManager & setErrorManager methods with non-null value.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setErrorManager",
-          methodArgs = {java.util.logging.ErrorManager.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "setErrorManager",
+            args = {java.util.logging.ErrorManager.class}
         ),
-        @TestTarget(
-          methodName = "getErrorManager",
-          methodArgs = {}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "getErrorManager",
+            args = {}
         )
     })
     public void testGetSetErrorManager_Normal() throws Exception {
@@ -308,17 +244,18 @@ public class HandlerTest extends TestCase {
     /*
      * Test getErrorManager & setErrorManager methods with null.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies null as a parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "getErrorManager",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies null as a parameter.",
+            method = "getErrorManager",
+            args = {}
         ),
-        @TestTarget(
-          methodName = "setErrorManager",
-          methodArgs = {java.util.logging.ErrorManager.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies null as a parameter.",
+            method = "setErrorManager",
+            args = {java.util.logging.ErrorManager.class}
         )
     })
     public void testGetSetErrorManager_Null() throws Exception {
@@ -342,15 +279,12 @@ public class HandlerTest extends TestCase {
     /*
      * Test getErrorManager with insufficient privilege.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies SecurityException.",
-      targets = {
-        @TestTarget(
-          methodName = "getErrorManager",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies SecurityException.",
+        method = "getErrorManager",
+        args = {}
+    )
     public void testGetErrorManager_InsufficientPrivilege() throws Exception {
         MockHandler h = new MockHandler();
         SecurityManager oldMan = System.getSecurityManager();
@@ -368,15 +302,12 @@ public class HandlerTest extends TestCase {
     /*
      * Test setErrorManager with insufficient privilege.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies setErrorManager with insufficient privilege.",
-      targets = {
-        @TestTarget(
-          methodName = "setErrorManager",
-          methodArgs = {java.util.logging.ErrorManager.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies setErrorManager with insufficient privilege.",
+        method = "setErrorManager",
+        args = {java.util.logging.ErrorManager.class}
+    )
     public void testSetErrorManager_InsufficientPrivilege() throws Exception {
         MockHandler h = new MockHandler();
         SecurityManager oldMan = System.getSecurityManager();
@@ -406,17 +337,18 @@ public class HandlerTest extends TestCase {
     /*
      * Test getFilter & setFilter methods with non-null value.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Doesn't verify SecurityException.",
-      targets = {
-        @TestTarget(
-          methodName = "setFilter",
-          methodArgs = {java.util.logging.Filter.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Doesn't verify SecurityException.",
+            method = "setFilter",
+            args = {java.util.logging.Filter.class}
         ),
-        @TestTarget(
-          methodName = "getFilter",
-          methodArgs = {}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Doesn't verify SecurityException.",
+            method = "getFilter",
+            args = {}
         )
     })
     public void testGetSetFilter_Normal() throws Exception {
@@ -429,17 +361,18 @@ public class HandlerTest extends TestCase {
     /*
      * Test getFilter & setFilter methods with null.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies null as a parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "getFilter",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies null as a parameter.",
+            method = "getFilter",
+            args = {}
         ),
-        @TestTarget(
-          methodName = "setFilter",
-          methodArgs = {java.util.logging.Filter.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies null as a parameter.",
+            method = "setFilter",
+            args = {java.util.logging.Filter.class}
         )
     })
     public void testGetSetFilter_Null() throws Exception {
@@ -455,15 +388,12 @@ public class HandlerTest extends TestCase {
     /*
      * Test setFilter with insufficient privilege.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies SecurityException.",
-      targets = {
-        @TestTarget(
-          methodName = "setFilter",
-          methodArgs = {java.util.logging.Filter.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies SecurityException.",
+        method = "setFilter",
+        args = {java.util.logging.Filter.class}
+    )
     public void testSetFilter_InsufficientPrivilege() throws Exception {
         MockHandler h = new MockHandler();
         SecurityManager oldMan = System.getSecurityManager();
@@ -493,17 +423,18 @@ public class HandlerTest extends TestCase {
     /*
      * Test getFormatter & setFormatter methods with non-null value.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Doesn't verify SecurityException.",
-      targets = {
-        @TestTarget(
-          methodName = "getFormatter",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Doesn't verify SecurityException.",
+            method = "getFormatter",
+            args = {}
         ),
-        @TestTarget(
-          methodName = "setFormatter",
-          methodArgs = {java.util.logging.Formatter.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Doesn't verify SecurityException.",
+            method = "setFormatter",
+            args = {java.util.logging.Formatter.class}
         )
     })
     public void testGetSetFormatter_Normal() throws Exception {
@@ -516,17 +447,18 @@ public class HandlerTest extends TestCase {
     /*
      * Test getFormatter & setFormatter methods with null.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies null as a parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "getFormatter",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies null as a parameter.",
+            method = "getFormatter",
+            args = {}
         ),
-        @TestTarget(
-          methodName = "setFormatter",
-          methodArgs = {java.util.logging.Formatter.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies null as a parameter.",
+            method = "setFormatter",
+            args = {java.util.logging.Formatter.class}
         )
     })
     public void testGetSetFormatter_Null() throws Exception {
@@ -550,15 +482,12 @@ public class HandlerTest extends TestCase {
     /*
      * Test setFormatter with insufficient privilege.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies SecurityException.",
-      targets = {
-        @TestTarget(
-          methodName = "getFormatter",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies SecurityException.",
+        method = "getFormatter",
+        args = {}
+    )
     public void testSetFormatter_InsufficientPrivilege() throws Exception {
         MockHandler h = new MockHandler();
         SecurityManager oldMan = System.getSecurityManager();
@@ -588,17 +517,18 @@ public class HandlerTest extends TestCase {
     /*
      * Test getLevel & setLevel methods with non-null value.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Doesn't verify SecurityException.",
-      targets = {
-        @TestTarget(
-          methodName = "getLevel",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Doesn't verify SecurityException.",
+            method = "getLevel",
+            args = {}
         ),
-        @TestTarget(
-          methodName = "setLevel",
-          methodArgs = {java.util.logging.Level.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Doesn't verify SecurityException.",
+            method = "setLevel",
+            args = {java.util.logging.Level.class}
         )
     })
     public void testGetSetLevel_Normal() throws Exception {
@@ -611,17 +541,18 @@ public class HandlerTest extends TestCase {
     /*
      * Test getLevel & setLevel methods with null.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies getLevel & setLevel methods with null.",
-      targets = {
-        @TestTarget(
-          methodName = "getLevel",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies getLevel & setLevel methods with null.",
+            method = "getLevel",
+            args = {}
         ),
-        @TestTarget(
-          methodName = "setLevel",
-          methodArgs = {java.util.logging.Level.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies getLevel & setLevel methods with null.",
+            method = "setLevel",
+            args = {java.util.logging.Level.class}
         )
     })
     public void testGetSetLevel_Null() throws Exception {
@@ -645,15 +576,12 @@ public class HandlerTest extends TestCase {
     /*
      * Test setLevel with insufficient privilege.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies  NullPointerException, SecurityException.",
-      targets = {
-        @TestTarget(
-          methodName = "setLevel",
-          methodArgs = {java.util.logging.Level.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies  NullPointerException, SecurityException.",
+        method = "setLevel",
+        args = {java.util.logging.Level.class}
+    )
     public void testSetLevel_InsufficientPrivilege() throws Exception {
         MockHandler h = new MockHandler();
         SecurityManager oldMan = System.getSecurityManager();
@@ -683,15 +611,12 @@ public class HandlerTest extends TestCase {
     /*
      * Use no filter
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isLoggable",
-          methodArgs = {java.util.logging.LogRecord.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "isLoggable",
+        args = {java.util.logging.LogRecord.class}
+    )
     public void testIsLoggable_NoFilter() {
         MockHandler h = new MockHandler();
         LogRecord r = new LogRecord(Level.CONFIG, null);
@@ -711,15 +636,12 @@ public class HandlerTest extends TestCase {
     /*
      * Use a filter
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Verifies isLoggable method with filter.",
-      targets = {
-        @TestTarget(
-          methodName = "isLoggable",
-          methodArgs = {java.util.logging.LogRecord.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies isLoggable method with filter.",
+        method = "isLoggable",
+        args = {java.util.logging.LogRecord.class}
+    )
     public void testIsLoggable_WithFilter() {
         MockHandler h = new MockHandler();
         LogRecord r = new LogRecord(Level.CONFIG, null);
@@ -747,15 +669,12 @@ public class HandlerTest extends TestCase {
     /**
      * @tests java.util.logging.Handler#isLoggable(LogRecord)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies null as a parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "isLoggable",
-          methodArgs = {java.util.logging.LogRecord.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies null as a parameter.",
+        method = "isLoggable",
+        args = {java.util.logging.LogRecord.class}
+    )
     public void testIsLoggable_Null() {
         MockHandler h = new MockHandler();
         try {
@@ -770,15 +689,12 @@ public class HandlerTest extends TestCase {
      * Test whether the error manager is actually called with expected
      * parameters.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "reportError",
-          methodArgs = {java.lang.String.class, java.lang.Exception.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "reportError",
+        args = {java.lang.String.class, java.lang.Exception.class, int.class}
+    )
     public void testReportError() {
         MockHandler h = new MockHandler();
         h.setErrorManager(new MockErrorManager());

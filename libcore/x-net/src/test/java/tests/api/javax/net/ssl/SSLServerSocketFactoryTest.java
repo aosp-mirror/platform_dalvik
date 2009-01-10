@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,13 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package tests.api.javax.net.ssl;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -86,18 +85,16 @@ public class SSLServerSocketFactoryTest extends TestCase {
     /**
      * @tests javax.net.ssl.SSLServerSocketFactory#SSLServerSocketFactory()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "SSLServerSocketFactory",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "SSLServerSocketFactory",
+        args = {}
+    )
     public void test_Constructor() {
         try {
-            new MockSSLServerSocketFactory();
+            MockSSLServerSocketFactory ssf = new MockSSLServerSocketFactory();
+            assertTrue(ssf instanceof SSLServerSocketFactory);
         } catch (Exception e) {
             fail("Unexpected exception " + e.toString());
         }
@@ -106,17 +103,50 @@ public class SSLServerSocketFactoryTest extends TestCase {
     /**
      * @tests javax.net.ssl.SSLServerSocketFactory#getDefault()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getDefault",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getDefault",
+        args = {}
+    )
     public void test_getDefault() {
         assertNotNull("Incorrect default socket factory",
                 SSLServerSocketFactory.getDefault());
+    }
+    
+    /**
+     * @tests javax.net.ssl.SSLServerSocketFactory#getDefaultCipherSuites()
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getDefaultCipherSuites",
+        args = {}
+    )
+    public void test_getDefaultCipherSuites() {
+        MockSSLServerSocketFactory ssf = new MockSSLServerSocketFactory();
+        try {
+             assertNull(ssf.getDefaultCipherSuites());
+        } catch (Exception e) {
+            fail("Unexpected exception " + e);
+        }
+    }
+    
+    /**
+     * @tests javax.net.ssl.SSLServerSocketFactory#getSupportedCipherSuites()
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getSupportedCipherSuites",
+        args = {}
+    )
+    public void test_getSupportedCipherSuites() {
+        MockSSLServerSocketFactory ssf = new MockSSLServerSocketFactory();
+        try {
+             assertNull(ssf.getSupportedCipherSuites());
+        } catch (Exception e) {
+            fail("Unexpected exception " + e);
+        }
     }
 }

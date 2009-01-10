@@ -17,71 +17,133 @@
 
 package org.apache.harmony.luni.tests.java.io;
 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestTargetClass;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InvalidClassException;
-import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.ObjectStreamClass;
 import java.io.ObjectStreamException;
+import java.io.OptionalDataException;
 import java.io.Serializable;
+import java.io.StreamCorruptedException;
 import java.util.ArrayList;
+
+import junit.framework.TestCase;
 
 import org.apache.harmony.testframework.serialization.SerializationTest;
 
-import junit.framework.TestCase;
+import tests.support.Support_ASimpleInputStream;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
+
 @TestTargetClass(ObjectInputStream.class)
 public class ObjectInputStreamTest extends TestCase {
 
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Regression test. Checks ObjectStreamException",
-      targets = {
-        @TestTarget(
-          methodName = "readUnshared",
-          methodArgs = {}
-        )
-    })
-    public void test_readUnshared() throws IOException, ClassNotFoundException {
-        // Regression test for HARMONY-819
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        try {
-            ObjectOutputStream oos = new ObjectOutputStream(baos);
-            oos.writeObject("abc");
-            oos.writeObject("abc");
-            oos.close();
+    ObjectInputStream ois;
 
-            ObjectInputStream ois = new ObjectInputStream(
-                    new ByteArrayInputStream(baos.toByteArray()));
+    ObjectOutputStream oos;
+
+    ByteArrayOutputStream bao;
+    
+    private final String testString = "Lorem ipsum...";
+
+    protected void setUp() throws Exception {
+        super.setUp();
+        oos = new ObjectOutputStream(bao = new ByteArrayOutputStream());
+    }
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Checks ObjectStreamException and OptionalDataException.",
+        method = "readUnshared",
+        args = {}
+    )
+    public void test_readUnshared_1() throws IOException, ClassNotFoundException {
+        oos.writeObject(testString);
+        oos.writeObject(testString);
+        oos.writeInt(42);
+        oos.close();
+
+        ois = new ObjectInputStream(new ByteArrayInputStream(bao.toByteArray()));
+        try {
             ois.readUnshared();
             ois.readObject();
-            ois.close();
-            fail("Expected ObjectStreamException");
+            fail("Test 1: ObjectStreamException expected.");
         } catch (ObjectStreamException e) {
-            // expected
+            // Expected.
         }
+        
+        try {
+            ois.readUnshared();
+            fail("Test 2: OptionalDataException expected.");
+        } catch (OptionalDataException e) {
+            // Expected.
+        }
+        ois.close();
     } 
+
+    /**
+     * @tests java.io.ObjectInputStream#readUnshared()
+     */
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Checks StreamCorruptedException.",
+        method = "readUnshared",
+        args = {}
+    )    
+    public void test_readUnshared_2() throws IOException, ClassNotFoundException {
+        oos.close();
+        bao.write(testString.getBytes());
+        
+        ois = new ObjectInputStream(new ByteArrayInputStream(bao.toByteArray()));
+        try {
+            ois.readUnshared();
+            fail("Test 1: StreamCorruptedException expected.");
+        } catch (StreamCorruptedException e) {
+            // Expected.
+        }
+        ois.close();
+    }
+
+    /**
+     * @tests java.io.ObjectInputStream#readUnshared()
+     */
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Checks IOException.",
+        method = "readUnshared",
+        args = {}
+    )    
+    public void test_readUnshared_3() throws IOException, ClassNotFoundException {
+        bao.write(testString.getBytes());
+        oos.close();
+
+        Support_ASimpleInputStream sis = new Support_ASimpleInputStream(bao.toByteArray());
+        ois = new ObjectInputStream(sis);
+        sis.throwExceptionOnNextUse = true;
+        try {
+            ois.readUnshared();
+            fail("Test 1: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
+        sis.throwExceptionOnNextUse = false;
+        ois.close();
+    }
 
     /**
      * Micro-scenario of de/serialization of an object with non-serializable superclass.
      * The super-constructor only should be invoked on the deserialized instance.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Exceptions checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "readObject",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "readObject",
+        args = {}
+    )
     public void test_readObject_Hierarchy() throws Exception {
         ByteArrayOutputStream baos = new ByteArrayOutputStream(); 
 
@@ -102,21 +164,19 @@ public class ObjectInputStreamTest extends TestCase {
     /**
      * @tests {@link java.io.ObjectInputStream#readNewLongString()}
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Verifies serialization.",
-      targets = {
-        @TestTarget(
-          methodName = "!SerializationSelf",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!SerializationSelf",
+        args = {}
+    )
     public void test_readNewLongString() throws Exception {
         LongString longString = new LongString();
         SerializationTest.verifySelf(longString);
     }
     
     private static class LongString implements Serializable{
+        private static final long serialVersionUID = 1L;
         String lString;
         
         public LongString() {
@@ -178,21 +238,17 @@ public class ObjectInputStreamTest extends TestCase {
         
     }
  
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "why should throw NullPointerException?",
-      targets = {
-        @TestTarget(
-          methodName = "readClassDescriptor",
-          methodArgs = {}
-        )
-    })
-    public void test_readClassDescriptor() throws ClassNotFoundException,IOException {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "readClassDescriptor",
+        args = {}
+    )
+    public void test_readClassDescriptor() throws ClassNotFoundException, IOException {
         try {
             new OIS().test();
-            fail("Should throw NullPointerException");
+            fail("Test 1: NullPointerException expected.");
         } catch (NullPointerException e) {
-            // expected
+            // Expected.
         }
     }
 
@@ -201,7 +257,7 @@ public class ObjectInputStreamTest extends TestCase {
             super(in);
         }
 
-        protected Class resolveClass(ObjectStreamClass desc)
+        protected Class<?> resolveClass(ObjectStreamClass desc)
                 throws IOException, ClassNotFoundException {
             if (desc.getName().endsWith("ObjectInputStreamTest$TestClass1")) {
                 return TestClass2.class;
@@ -219,15 +275,12 @@ public class ObjectInputStreamTest extends TestCase {
         private static final long serialVersionUID = 11111L;
         int i = 0;
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Checks InvalidClassException.",
-      targets = {
-        @TestTarget(
-          methodName = "resolveClass",
-          methodArgs = {java.io.ObjectStreamClass.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Checks InvalidClassException.",
+        method = "resolveClass",
+        args = {java.io.ObjectStreamClass.class}
+    )
     public void test_resolveClass_invalidClassName()
             throws Exception {
         // Regression test for HARMONY-1920
@@ -245,11 +298,10 @@ public class ObjectInputStreamTest extends TestCase {
         ois = new TestObjectInputStream(bais);
 
         try {
-            TestClass2 to2 = (TestClass2) ois.readObject();
-
-            fail("Should throw InvalidClassException");
+            ois.readObject();
+            fail("Test 1: InvalidClassException expected.");
         } catch (InvalidClassException ice) {
-            // valid
+            // Expected.
         }
     }
 }

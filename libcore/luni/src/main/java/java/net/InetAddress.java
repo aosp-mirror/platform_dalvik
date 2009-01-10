@@ -650,21 +650,15 @@ public class InetAddress extends Object implements Serializable {
     static InetAddress getHostByNameImpl(String name,
             boolean preferIPv6Address) throws UnknownHostException {
         // TODO Mapped Harmony to Android native. Get rid of indirection later.
-        byte[] addr = new byte[4];
-        boolean found = gethostbyname(name, addr);
-
-        if (found) {
-            return new InetAddress(addr, name);
-        } else {
-            throw new UnknownHostException(name);
-        }
+        return new InetAddress(gethostbyname(name, preferIPv6Address), name);
     }
 
     /**
      * Wrapper for libc call. It is assumed to be thread-safe, which is
-     * in fact the case on Android.
+     * in fact the case on Android. Either returns a raw address or throws
+     * UnknownHostException.
      */
-    private native static boolean gethostbyname(String host, byte[] addr);
+    private native static byte[] gethostbyname(String host, boolean preferIPv6Addresses);
     // END android-changed
 
     /**

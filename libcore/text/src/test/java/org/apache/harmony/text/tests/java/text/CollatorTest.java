@@ -16,12 +16,14 @@
  */
 package org.apache.harmony.text.tests.java.text;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
 import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 
 import java.io.UnsupportedEncodingException;
+import java.text.CollationKey;
 import java.text.Collator;
 import java.text.ParseException;
 import java.text.RuleBasedCollator;
@@ -33,15 +35,12 @@ public class CollatorTest extends junit.framework.TestCase {
     /**
      * @tests java.text.Collator#clone()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "clone",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "clone",
+        args = {}
+    )
     public void test_clone() {
         Collator c = Collator.getInstance(Locale.GERMAN);
         Collator c2 = (Collator) c.clone();
@@ -52,13 +51,18 @@ public class CollatorTest extends junit.framework.TestCase {
     /**
      * @tests java.text.Collator#compare(java.lang.Object, java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "compare",
-          methodArgs = {java.lang.Object.class, java.lang.Object.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "compare",
+            args = {java.lang.Object.class, java.lang.Object.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "setStrength",
+            args = {int.class}
         )
     })
     public void test_compareLjava_lang_ObjectLjava_lang_Object() {
@@ -147,15 +151,12 @@ public class CollatorTest extends junit.framework.TestCase {
     /**
      * @tests java.text.Collator#equals(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "equals",
+        args = {java.lang.Object.class}
+    )
     public void test_equalsLjava_lang_Object() {
         Collator c = Collator.getInstance(Locale.ENGLISH);
         Collator c2 = (Collator) c.clone();
@@ -167,13 +168,18 @@ public class CollatorTest extends junit.framework.TestCase {
     /**
      * @tests java.text.Collator#equals(java.lang.String, java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "equals",
+            args = {java.lang.String.class, java.lang.String.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "setStrength",
+            args = {int.class}
         )
     })
     public void test_equalsLjava_lang_StringLjava_lang_String() {
@@ -214,57 +220,64 @@ public class CollatorTest extends junit.framework.TestCase {
     /**
      * @tests java.text.Collator#getAvailableLocales()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getAvailableLocales",
-          methodArgs = {}
-        )
-    })
-    public void _test_getAvailableLocales() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "getAvailableLocales",
+        args = {}
+    )
+    @KnownFailure("Already fixed?")
+    public void test_getAvailableLocales() {
         Locale[] locales = Collator.getAvailableLocales();
         assertTrue("No locales", locales.length > 0);
-        boolean english = false, german = false;
+        boolean hasUS = false;
         for (int i = locales.length; --i >= 0;) {
-            if (locales[i].equals(Locale.ENGLISH))
-                english = true;
-            if (locales[i].equals(Locale.GERMAN))
-                german = true;
-            // Output the working locale to help diagnose a hang
             Collator c1 = Collator.getInstance(locales[i]);
             assertTrue("Doesn't work", c1.compare("a", "b") < 0);
             assertTrue("Wrong decomposition",
                     c1.getDecomposition() == Collator.NO_DECOMPOSITION);
             assertTrue("Wrong strength", c1.getStrength() == Collator.TERTIARY);
+            // The default decomposition for collators created with getInstance
+            // is NO_DECOMPOSITION where collators created from rules have
+            // CANONICAL_DECOMPOSITION. Verified on RI.
+            c1.setDecomposition(Collator.CANONICAL_DECOMPOSITION);
+            if (locales[i].equals(Locale.US)) {
+                hasUS = true;
+            }
             if (c1 instanceof RuleBasedCollator) {
                 String rule = "";
-//                try {
+                Collator temp = null;
+                try {
                     rule = ((RuleBasedCollator) c1).getRules();
-                    System.out.println("locale: " + locales[i] + " with rule: " + rule);
-                    //new RuleBasedCollator(rule);
-//                } catch (ParseException e) {
-//                    fail(e.getMessage() + " for rule: \"" + rule + "\"");
-//                }
-                // assertTrue("Can't recreate: " + locales[i], temp.equals(c1));
+                    temp = new RuleBasedCollator(rule);
+                } catch (ParseException e) {
+                    fail(e.getMessage() + " for rule: \"" + rule + "\"");
+                }
+                assertTrue("Can't recreate: " + locales[i], temp.equals(c1));
             }
         }
-        assertTrue("Missing locales", english && german);
+        assertTrue("en_US locale not available", hasUS);
     }
 
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Collator",
+        args = {}
+    )
+    public void test_Constructor() {
+        TestCollator collator = new TestCollator();
+        assertEquals(Collator.TERTIARY, collator.getStrength());
+    }
+    
     /**
      * @tests java.text.Collator#getDecomposition()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify CANONICAL_DECOMPOSITION, FULL_DECOMPOSITION modes.",
-      targets = {
-        @TestTarget(
-          methodName = "getDecomposition",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "getDecomposition",
+        args = {}
+    )
+    @KnownFailure("Already fixed?")
     public void test_getDecomposition() {
         RuleBasedCollator collator;
         try {
@@ -273,27 +286,28 @@ public class CollatorTest extends junit.framework.TestCase {
             fail("ParseException");
             return;
         }
-        // BEGIN android-changed
-        // Difference to the RI. Harmony uses NO_DECOMPOSITION as default.
-        // assertTrue("Wrong default",
-        //         collator.getDecomposition() == Collator.CANONICAL_DECOMPOSITION);
         assertTrue("Wrong default",
-                 collator.getDecomposition() == Collator.NO_DECOMPOSITION);
-        // END android-changed
+                collator.getDecomposition() == Collator.CANONICAL_DECOMPOSITION);
+        
+        collator.setDecomposition(Collator.NO_DECOMPOSITION);
+        assertEquals(Collator.NO_DECOMPOSITION, collator.getDecomposition());
+
+        // BEGIN android-removed
+        // Android doesn't support full decomposition
+        // collator.setDecomposition(Collator.FULL_DECOMPOSITION);
+        // assertEquals(Collator.FULL_DECOMPOSITION, collator.getDecomposition());
+        // EN android-removed
     }
 
     /**
      * @tests java.text.Collator#getInstance()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getInstance",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getInstance",
+        args = {}
+    )
     public void test_getInstance() {
         Collator c1 = Collator.getInstance();
         Collator c2 = Collator.getInstance(Locale.getDefault());
@@ -303,15 +317,12 @@ public class CollatorTest extends junit.framework.TestCase {
     /**
      * @tests java.text.Collator#getInstance(java.util.Locale)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getInstance",
-          methodArgs = {java.util.Locale.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getInstance",
+        args = {java.util.Locale.class}
+    )
     public void test_getInstanceLjava_util_Locale() {
         assertTrue("Used to test", true);
     }
@@ -319,15 +330,12 @@ public class CollatorTest extends junit.framework.TestCase {
     /**
      * @tests java.text.Collator#getStrength()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getStrength",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getStrength",
+        args = {}
+    )
     public void test_getStrength() {
         RuleBasedCollator collator;
         try {
@@ -342,16 +350,13 @@ public class CollatorTest extends junit.framework.TestCase {
     /**
      * @tests java.text.Collator#setDecomposition(int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify IllegalArgumentException.",
-      targets = {
-        @TestTarget(
-          methodName = "setDecomposition",
-          methodArgs = {int.class}
-        )
-    })
-    public void _test_setDecompositionI() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "setDecomposition",
+        args = {int.class}
+    )
+    @KnownFailure("Already fixed?")
+    public void test_setDecompositionI() {
         Collator c = Collator.getInstance(Locale.FRENCH);
         c.setStrength(Collator.IDENTICAL);
         c.setDecomposition(Collator.NO_DECOMPOSITION);
@@ -362,40 +367,65 @@ public class CollatorTest extends junit.framework.TestCase {
         assertTrue("Collator should be using decomposition", c.equals("\u212B",
                 "\u00C5")); // "ANGSTROM SIGN" and "LATIN CAPITAL LETTER A WITH
         // RING ABOVE"
-        assertTrue("Should not be equal under canonical decomposition", !c
-                .equals("\u2163", "IV")); // roman number "IV"
-        c.setDecomposition(Collator.FULL_DECOMPOSITION);
-        assertTrue("Should be equal under full decomposition", c.equals(
-                "\u2163", "IV")); // roman number "IV"
+        // BEGIN android-removed
+        // Android doesn't support FULL_DECOMPOSITION
+        // c.setDecomposition(Collator.FULL_DECOMPOSITION);
+        // assertTrue("Should be equal under full decomposition", c.equals(
+        //         "\u2163", "IV")); // roman number "IV"
+        // END android-removed
+        
+        try {
+            c.setDecomposition(-1);
+            fail("IllegalArgumentException should be thrown.");
+        } catch(IllegalArgumentException iae) {
+            //expected
+        }
     }
 
     /**
      * @tests java.text.Collator#setStrength(int)
      */
-    @TestInfo(
-      level = TestLevel.TODO,
-      purpose = "Empty test.",
-      targets = {
-        @TestTarget(
-          methodName = "setStrength",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies IllegalArgumentException.",
+        method = "setStrength",
+        args = {int.class}
+    )
     public void test_setStrengthI() {
-        assertTrue("Used to test", true);
+        // Functionality is verified in compare and equals tests.
+        Collator collator = Collator.getInstance();
+        collator.setStrength(Collator.PRIMARY);
+        assertEquals(Collator.PRIMARY, collator.getStrength());
+        
+        collator.setStrength(Collator.SECONDARY);
+        assertEquals(Collator.SECONDARY, collator.getStrength());
+        
+        collator.setStrength(Collator.TERTIARY);
+        assertEquals(Collator.TERTIARY, collator.getStrength());
+        
+        collator.setStrength(Collator.IDENTICAL);
+        assertEquals(Collator.IDENTICAL, collator.getStrength());        
+        
+        try {
+            collator.setStrength(-1);
+            fail("IllegalArgumentException was not thrown.");
+        } catch(IllegalArgumentException  iae) {
+            //expected
+        }        
     }
     // Regression test for Android bug   
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Regression test.",
-      targets = {
-        @TestTarget(
-          methodName = "setStrength",
-          methodArgs = {int.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Regression test.",
+            method = "setStrength",
+            args = {int.class}
         ),
-        @TestTarget(
-          methodName = "getCollationKey",
-          methodArgs = {java.lang.String.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Regression test.",
+            method = "getCollationKey",
+            args = {java.lang.String.class}
         )
     })
     public void test_stackCorruption() {
@@ -405,15 +435,12 @@ public class CollatorTest extends junit.framework.TestCase {
     }
     
     // Test to verify that very large collation keys are not truncated.
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify null as a parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "getCollationKey",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Doesn't verify null as a parameter.",
+        method = "getCollationKey",
+        args = {java.lang.String.class}
+    )
     public void test_collationKeySize() {
         StringBuilder b = new StringBuilder();
         for (int i = 0; i < 1024; i++) {
@@ -444,13 +471,18 @@ public class CollatorTest extends junit.framework.TestCase {
             fail("UnsupportedEncodingException");
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify FULL_DECOMPOSITION mode, and exception.",
-      targets = {
-        @TestTarget(
-          methodName = "setDecomposition",
-          methodArgs = {int.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "",
+            method = "setDecomposition",
+            args = {int.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "",
+            method = "compare",
+            args = {java.lang.String.class, java.lang.String.class}
         )
     })
     public void test_decompositionCompatibility() {
@@ -463,5 +495,24 @@ public class CollatorTest extends junit.framework.TestCase {
         assertTrue("Error: \u00e0\u0325 should equal to a\u0325\u0300 " +
                 "with decomposition", 
                 myCollator.compare("\u00e0\u0325", "a\u0325\u0300") == 0);
+    }
+    
+    class TestCollator extends Collator {
+
+        @Override
+        public int compare(String source, String target) {
+            return 0;
+        }
+
+        @Override
+        public CollationKey getCollationKey(String source) {
+            return null;
+        }
+
+        @Override
+        public int hashCode() {
+            return 0;
+        }
+        
     }
 }

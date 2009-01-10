@@ -17,9 +17,9 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 @TestTargetClass(ExceptionInInitializerError.class) 
@@ -28,13 +28,18 @@ public class ExceptionInInitializerErrorTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.ExceptionInInitializerError#ExceptionInInitializerError()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "ExceptionInInitializerError",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "ExceptionInInitializerError",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getCause",
+            args = {}
         )
     })
     public void test_Constructor() {
@@ -47,13 +52,18 @@ public class ExceptionInInitializerErrorTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.ExceptionInInitializerError#ExceptionInInitializerError(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "ExceptionInInitializerError",
-          methodArgs = {java.lang.String.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "ExceptionInInitializerError",
+            args = {java.lang.String.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getCause",
+            args = {}
         )
     })
     public void test_ConstructorLjava_lang_String() {
@@ -65,13 +75,24 @@ public class ExceptionInInitializerErrorTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.ExceptionInInitializerExceptionInInitializerError#ExceptionInInitializerError(java.lang.Throwable)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "ExceptionInInitializerError",
-          methodArgs = {java.lang.Throwable.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "ExceptionInInitializerError",
+            args = {java.lang.Throwable.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getCause",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getException",
+            args = {}
         )
     })
     public void test_ConstructorLjava_lang_Throwable() {

@@ -16,9 +16,9 @@
 
 package org.apache.harmony.luni.tests.java.util;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -43,15 +43,12 @@ public class HashMapTest extends TestCase {
     /**
      * @tests java.util.HashMap#HashMap(java.util.Map)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "NullPointerException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "HashMap",
-          methodArgs = {java.util.Map.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "NullPointerException is not verified.",
+        method = "HashMap",
+        args = {java.util.Map.class}
+    )
     public void test_ConstructorLjava_util_Map() {
         HashMap map = new HashMap();
         map.put("a", "a");
@@ -63,15 +60,12 @@ public class HashMapTest extends TestCase {
     /**
      * @tests serialization/deserialization.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "!SerializationSelf",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "!SerializationSelf",
+        args = {}
+    )
     public void testSerializationSelf() throws Exception {
         HashMap<String, String> hm = new HashMap<String, String>();
         hm.put("key", "value");
@@ -86,15 +80,12 @@ public class HashMapTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "!SerializationGolden",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "!SerializationGolden",
+        args = {}
+    )
     public void testSerializationCompatibility() throws Exception {
         HashMap<String, String> hm = new HashMap<String, String>();
         hm.put("key", "value");

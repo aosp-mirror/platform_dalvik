@@ -27,9 +27,10 @@ import junit.framework.TestSuite;
 public class AllTests {
 
     public static Test suite() {
-        TestSuite suite = new TestSuite("Test for java.lang.annotation");
+        TestSuite suite = tests.TestSuiteFactory.createTestSuite("Test for java.lang.annotation");
         // $JUnit-BEGIN$
 
+        suite.addTestSuite(AnnotationTest.class);
         suite.addTestSuite(AnnotationFormatErrorTest.class);
         suite.addTestSuite(AnnotationTypeMismatchExceptionTest.class);
         suite.addTestSuite(ElementTypeTest.class);

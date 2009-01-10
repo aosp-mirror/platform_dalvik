@@ -22,9 +22,9 @@
 
 package tests.security.spec;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -60,37 +60,38 @@ public class MGF1ParameterSpecTest extends TestCase {
      * Assertion: constructs new <code>MGF1ParameterSpec</code>
      * object using valid parameter
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies positive case. Empty/invalid parameter checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "MGF1ParameterSpec",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "MGF1ParameterSpec",
+        args = {java.lang.String.class}
+    )
     public final void testMGF1ParameterSpec01() {
-        new MGF1ParameterSpec(testAlgName);
+        try {
+            MGF1ParameterSpec pgf = new MGF1ParameterSpec(testAlgName);
+            assertNotNull(pgf);
+            assertTrue(pgf instanceof MGF1ParameterSpec);
+        } catch (Exception e) {
+            fail("Unexpected exception: " + e);
+        }
     }
 
     /**
      * Test #2 for <code>MGF1ParameterSpec</code> constructor<br>
      * Assertion: <code>NullPointerException</code> if parameter is <code>null</code>
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies null as a parameter. Empty/invalid parameter checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "MGF1ParameterSpec",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "MGF1ParameterSpec",
+        args = {java.lang.String.class}
+    )
     public final void testMGF1ParameterSpec02() {
         try {
             new MGF1ParameterSpec(null);
             fail("NullPointerException has not been thrown");
         } catch (NullPointerException ok) {
+            //expected
         }
     }
 
@@ -99,15 +100,12 @@ public class MGF1ParameterSpecTest extends TestCase {
      * Assertion: returns the algorithm name of the message
      * digest used by the mask generation function
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getDigestAlgorithm",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getDigestAlgorithm",
+        args = {}
+    )
     public final void testGetDigestAlgorithm() {
         MGF1ParameterSpec aps = new MGF1ParameterSpec(testAlgName);
         assertTrue(testAlgName.equals(aps.getDigestAlgorithm()));
@@ -118,15 +116,33 @@ public class MGF1ParameterSpecTest extends TestCase {
      * Assertion: returns the algorithm name of the message
      * digest used by the mask generation function
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Field testing",
-      targets = {
-        @TestTarget(
-          methodName = "",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "Field testing",
+            method = "!field SHA1",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "Field testing",
+            method = "!field SHA256",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "Field testing",
+            method = "!field SHA384",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "Field testing",
+            method = "!field SHA512",
+            args = {}
         )
     })
+
     public final void testFieldsGetDigestAlgorithm() {
         assertEquals("SHA-1", MGF1ParameterSpec.SHA1.getDigestAlgorithm());
         assertEquals("SHA-256", MGF1ParameterSpec.SHA256.getDigestAlgorithm());

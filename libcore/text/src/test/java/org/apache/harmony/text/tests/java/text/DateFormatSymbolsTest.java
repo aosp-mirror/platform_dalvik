@@ -16,9 +16,9 @@
  */
 package org.apache.harmony.text.tests.java.text;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import java.text.DateFormatSymbols;
@@ -33,15 +33,12 @@ public class DateFormatSymbolsTest extends junit.framework.TestCase {
     /**
      * @tests java.text.DateFormatSymbols#DateFormatSymbols()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "DateFormatSymbols",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "DateFormatSymbols",
+        args = {}
+    )
     public void test_Constructor() {
         // Test for method java.text.DateFormatSymbols()
         // Used in tests
@@ -55,15 +52,12 @@ public class DateFormatSymbolsTest extends junit.framework.TestCase {
     /**
      * @tests java.text.DateFormatSymbols#DateFormatSymbols(java.util.Locale)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "DateFormatSymbols",
-          methodArgs = {java.util.Locale.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "DateFormatSymbols",
+        args = {java.util.Locale.class}
+    )
     public void test_ConstructorLjava_util_Locale() {
         // Test for method java.text.DateFormatSymbols(java.util.Locale)
         try {
@@ -76,15 +70,12 @@ public class DateFormatSymbolsTest extends junit.framework.TestCase {
     /**
      * @tests java.text.DateFormatSymbols#clone()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "clone",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "clone",
+        args = {}
+    )
     public void test_clone() {
         // Test for method java.lang.Object java.text.DateFormatSymbols.clone()
         DateFormatSymbols symbols = new DateFormatSymbols();
@@ -95,15 +86,12 @@ public class DateFormatSymbolsTest extends junit.framework.TestCase {
     /**
      * @tests java.text.DateFormatSymbols#equals(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "equals",
+        args = {java.lang.Object.class}
+    )
     public void test_equalsLjava_lang_Object() {
         // Test for method boolean
         // java.text.DateFormatSymbols.equals(java.lang.Object)
@@ -116,15 +104,12 @@ public class DateFormatSymbolsTest extends junit.framework.TestCase {
     /**
      * @tests java.text.DateFormatSymbols#getAmPmStrings()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getAmPmStrings",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getAmPmStrings",
+        args = {}
+    )
     public void test_getAmPmStrings() {
         // Test for method java.lang.String []
         // java.text.DateFormatSymbols.getAmPmStrings()
@@ -139,15 +124,12 @@ public class DateFormatSymbolsTest extends junit.framework.TestCase {
     /**
      * @tests java.text.DateFormatSymbols#getEras()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getEras",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getEras",
+        args = {}
+    )
     public void test_getEras() {
         // Test for method java.lang.String []
         // java.text.DateFormatSymbols.getEras()
@@ -162,15 +144,12 @@ public class DateFormatSymbolsTest extends junit.framework.TestCase {
     /**
      * @tests java.text.DateFormatSymbols#getLocalPatternChars()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getLocalPatternChars",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getLocalPatternChars",
+        args = {}
+    )
     public void test_getLocalPatternChars() {
         // Test for method java.lang.String
         // java.text.DateFormatSymbols.getLocalPatternChars()
@@ -184,15 +163,12 @@ public class DateFormatSymbolsTest extends junit.framework.TestCase {
     /**
      * @tests java.text.DateFormatSymbols#getMonths()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getMonths",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getMonths",
+        args = {}
+    )
     public void test_getMonths() {
         // Test for method java.lang.String []
         // java.text.DateFormatSymbols.getMonths()
@@ -209,15 +185,12 @@ public class DateFormatSymbolsTest extends junit.framework.TestCase {
     /**
      * @tests java.text.DateFormatSymbols#getShortMonths()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getShortMonths",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getShortMonths",
+        args = {}
+    )
     public void test_getShortMonths() {
         // Test for method java.lang.String []
         // java.text.DateFormatSymbols.getShortMonths()
@@ -233,15 +206,12 @@ public class DateFormatSymbolsTest extends junit.framework.TestCase {
     /**
      * @tests java.text.DateFormatSymbols#getShortWeekdays()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getShortWeekdays",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getShortWeekdays",
+        args = {}
+    )
     public void test_getShortWeekdays() {
         // Test for method java.lang.String []
         // java.text.DateFormatSymbols.getShortWeekdays()
@@ -256,15 +226,12 @@ public class DateFormatSymbolsTest extends junit.framework.TestCase {
     /**
      * @tests java.text.DateFormatSymbols#getWeekdays()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getWeekdays",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getWeekdays",
+        args = {}
+    )
     public void test_getWeekdays() {
         // Test for method java.lang.String []
         // java.text.DateFormatSymbols.getWeekdays()
@@ -280,15 +247,12 @@ public class DateFormatSymbolsTest extends junit.framework.TestCase {
     /**
      * @tests java.text.DateFormatSymbols#getZoneStrings()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getZoneStrings",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getZoneStrings",
+        args = {}
+    )
     public void test_getZoneStrings() {
         // Test for method java.lang.String [][]
         // java.text.DateFormatSymbols.getZoneStrings()
@@ -305,15 +269,12 @@ public class DateFormatSymbolsTest extends junit.framework.TestCase {
     /**
      * @tests java.text.DateFormatSymbols#hashCode()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "hashCode",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hashCode",
+        args = {}
+    )
     public void test_hashCode() {
         // Test for method int java.text.DateFormatSymbols.hashCode()
         int hc1 = dfs.hashCode();
@@ -328,15 +289,12 @@ public class DateFormatSymbolsTest extends junit.framework.TestCase {
     /**
      * @tests java.text.DateFormatSymbols#setAmPmStrings(java.lang.String[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setAmPmStrings",
-          methodArgs = {java.lang.String[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setAmPmStrings",
+        args = {java.lang.String[].class}
+    )
     public void test_setAmPmStrings$Ljava_lang_String() {
         // Test for method void
         // java.text.DateFormatSymbols.setAmPmStrings(java.lang.String [])
@@ -352,15 +310,12 @@ public class DateFormatSymbolsTest extends junit.framework.TestCase {
     /**
      * @tests java.text.DateFormatSymbols#setEras(java.lang.String[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setEras",
-          methodArgs = {java.lang.String[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setEras",
+        args = {java.lang.String[].class}
+    )
     public void test_setEras$Ljava_lang_String() {
         // Test for method void
         // java.text.DateFormatSymbols.setEras(java.lang.String [])
@@ -376,15 +331,12 @@ public class DateFormatSymbolsTest extends junit.framework.TestCase {
     /**
      * @tests java.text.DateFormatSymbols#setLocalPatternChars(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setLocalPatternChars",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setLocalPatternChars",
+        args = {java.lang.String.class}
+    )
     public void test_setLocalPatternCharsLjava_lang_String() {
         // Test for method void
         // java.text.DateFormatSymbols.setLocalPatternChars(java.lang.String)
@@ -405,15 +357,12 @@ public class DateFormatSymbolsTest extends junit.framework.TestCase {
     /**
      * @tests java.text.DateFormatSymbols#setMonths(java.lang.String[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setMonths",
-          methodArgs = {java.lang.String[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setMonths",
+        args = {java.lang.String[].class}
+    )
     public void test_setMonths$Ljava_lang_String() {
         // Test for method void
         // java.text.DateFormatSymbols.setMonths(java.lang.String [])
@@ -430,15 +379,12 @@ public class DateFormatSymbolsTest extends junit.framework.TestCase {
     /**
      * @tests java.text.DateFormatSymbols#setShortMonths(java.lang.String[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setShortMonths",
-          methodArgs = {java.lang.String[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setShortMonths",
+        args = {java.lang.String[].class}
+    )
     public void test_setShortMonths$Ljava_lang_String() {
         // Test for method void
         // java.text.DateFormatSymbols.setShortMonths(java.lang.String [])
@@ -455,15 +401,12 @@ public class DateFormatSymbolsTest extends junit.framework.TestCase {
     /**
      * @tests java.text.DateFormatSymbols#setShortWeekdays(java.lang.String[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setShortWeekdays",
-          methodArgs = {java.lang.String[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setShortWeekdays",
+        args = {java.lang.String[].class}
+    )
     public void test_setShortWeekdays$Ljava_lang_String() {
         // Test for method void
         // java.text.DateFormatSymbols.setShortWeekdays(java.lang.String [])
@@ -480,15 +423,12 @@ public class DateFormatSymbolsTest extends junit.framework.TestCase {
     /**
      * @tests java.text.DateFormatSymbols#setWeekdays(java.lang.String[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setWeekdays",
-          methodArgs = {java.lang.String[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setWeekdays",
+        args = {java.lang.String[].class}
+    )
     public void test_setWeekdays$Ljava_lang_String() {
         // Test for method void
         // java.text.DateFormatSymbols.setWeekdays(java.lang.String [])
@@ -505,15 +445,12 @@ public class DateFormatSymbolsTest extends junit.framework.TestCase {
     /**
      * @tests java.text.DateFormatSymbols#setZoneStrings(java.lang.String[][])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setZoneStrings",
-          methodArgs = {java.lang.String[][].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setZoneStrings",
+        args = {java.lang.String[][].class}
+    )
     public void test_setZoneStrings$$Ljava_lang_String() {
         // Test for method void
         // java.text.DateFormatSymbols.setZoneStrings(java.lang.String [][])

@@ -17,8 +17,8 @@
 
 package tests.api.java.util;
 
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass; 
 
@@ -49,15 +49,12 @@ public class LinkedListTest extends junit.framework.TestCase {
     /**
      * @tests java.util.LinkedList#LinkedList()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "LinkedList",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "LinkedList",
+        args = {}
+    )
     public void test_Constructor() {
         // Test for method java.util.LinkedList()
         new Support_ListTest("", ll).runTest();
@@ -71,33 +68,34 @@ public class LinkedListTest extends junit.framework.TestCase {
     /**
      * @tests java.util.LinkedList#LinkedList(java.util.Collection)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify NullPointerException.",
-      targets = {
-        @TestTarget(
-          methodName = "LinkedList",
-          methodArgs = {java.util.Collection.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "LinkedList",
+        args = {java.util.Collection.class}
+    )
     public void test_ConstructorLjava_util_Collection() {
         // Test for method java.util.LinkedList(java.util.Collection)
         assertTrue("Incorrect LinkedList constructed", new LinkedList(ll)
                 .equals(ll));
+        
+        try {
+            new LinkedList(null);
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.LinkedList#add(int, java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "add",
-          methodArgs = {int.class, Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "add",
+        args = {int.class, java.lang.Object.class}
+    )
     public void test_addILjava_lang_Object() {
         // Test for method void java.util.LinkedList.add(int, java.lang.Object)
         Object o;
@@ -113,15 +111,12 @@ public class LinkedListTest extends junit.framework.TestCase {
     /**
      * @tests java.util.LinkedList#add(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "add",
-          methodArgs = {Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "add",
+        args = {java.lang.Object.class}
+    )
     public void test_addLjava_lang_Object() {
         // Test for method boolean java.util.LinkedList.add(java.lang.Object)
         Object o;
@@ -134,16 +129,12 @@ public class LinkedListTest extends junit.framework.TestCase {
     /**
      * @tests java.util.LinkedList#addAll(int, java.util.Collection)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify IndexOutOfBoundsException, " + 
-            "NullPointerException.",
-      targets = {
-        @TestTarget(
-          methodName = "addAll",
-          methodArgs = {int.class, java.util.Collection.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "addAll",
+        args = {int.class, java.util.Collection.class}
+    )
     public void test_addAllILjava_util_Collection() {
         // Test for method boolean java.util.LinkedList.addAll(int,
         // java.util.Collection)
@@ -172,20 +163,38 @@ public class LinkedListTest extends junit.framework.TestCase {
         assertEquals("d) List w/nulls not added correctly", 
                 "Booga", ll.get(53));
         assertNull("e) List w/nulls not added correctly", ll.get(54));
+
+        try {
+            ll.addAll(-1, (Collection) null);
+            fail("IndexOutOfBoundsException expected");
+        } catch (IndexOutOfBoundsException e) {
+            //expected
+        }
+
+        try {
+            ll.addAll(ll.size() + 1, (Collection) null);
+            fail("IndexOutOfBoundsException expected");
+        } catch (IndexOutOfBoundsException e) {
+            //expected
+        }
+
+        try {
+            ll.addAll(0, null);
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.LinkedList#addAll(int, java.util.Collection)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies IndexOutOfBoundsException.",
-      targets = {
-        @TestTarget(
-          methodName = "addAll",
-          methodArgs = {int.class, java.util.Collection.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies IndexOutOfBoundsException.",
+        method = "addAll",
+        args = {int.class, java.util.Collection.class}
+    )
     public void test_addAllILjava_util_Collection_2() {
         // Regression for HARMONY-467
         LinkedList obj = new LinkedList();
@@ -199,15 +208,12 @@ public class LinkedListTest extends junit.framework.TestCase {
     /**
      * @tests java.util.LinkedList#addAll(java.util.Collection)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "addAll",
-          methodArgs = {java.util.Collection.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "addAll",
+        args = {java.util.Collection.class}
+    )
     public void test_addAllLjava_util_Collection() {
         // Test for method boolean
         // java.util.LinkedList.addAll(java.util.Collection)
@@ -239,20 +245,24 @@ public class LinkedListTest extends junit.framework.TestCase {
         assertEquals("d) List w/nulls not added correctly", 
                 "Booga", ll.get(203));
         assertNull("e) List w/nulls not added correctly", ll.get(204));
+
+        try {
+            ll.addAll(null);
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.LinkedList#addFirst(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "addFirst",
-          methodArgs = {Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "addFirst",
+        args = {java.lang.Object.class}
+    )
     public void test_addFirstLjava_lang_Object() {
         // Test for method void java.util.LinkedList.addFirst(java.lang.Object)
         Object o;
@@ -265,15 +275,12 @@ public class LinkedListTest extends junit.framework.TestCase {
     /**
      * @tests java.util.LinkedList#addLast(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "addLast",
-          methodArgs = {Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "addLast",
+        args = {java.lang.Object.class}
+    )
     public void test_addLastLjava_lang_Object() {
         // Test for method void java.util.LinkedList.addLast(java.lang.Object)
         Object o;
@@ -286,15 +293,12 @@ public class LinkedListTest extends junit.framework.TestCase {
     /**
      * @tests java.util.LinkedList#clear()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "clear",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "clear",
+        args = {}
+    )
     public void test_clear() {
         // Test for method void java.util.LinkedList.clear()
         ll.clear();
@@ -305,15 +309,12 @@ public class LinkedListTest extends junit.framework.TestCase {
     /**
      * @tests java.util.LinkedList#clone()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "clone",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "clone",
+        args = {}
+    )
     public void test_clone() {
         // Test for method java.lang.Object java.util.LinkedList.clone()
         Object x = ll.clone();
@@ -329,15 +330,12 @@ public class LinkedListTest extends junit.framework.TestCase {
     /**
      * @tests java.util.LinkedList#contains(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "contains",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "contains",
+        args = {java.lang.Object.class}
+    )
     public void test_containsLjava_lang_Object() {
         // Test for method boolean
         // java.util.LinkedList.contains(java.lang.Object)
@@ -355,15 +353,12 @@ public class LinkedListTest extends junit.framework.TestCase {
     /**
      * @tests java.util.LinkedList#get(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "get",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "get",
+        args = {int.class}
+    )
     public void test_getI() {
         // Test for method java.lang.Object java.util.LinkedList.get(int)
         assertTrue("Returned incorrect element", ll.get(22) == objArray[22]);
@@ -377,51 +372,58 @@ public class LinkedListTest extends junit.framework.TestCase {
     /**
      * @tests java.util.LinkedList#getFirst()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify NoSuchElementException.",
-      targets = {
-        @TestTarget(
-          methodName = "getFirst",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getFirst",
+        args = {}
+    )
     public void test_getFirst() {
         // Test for method java.lang.Object java.util.LinkedList.getFirst()
         assertTrue("Returned incorrect first element", ll.getFirst().equals(
                 objArray[0]));
+
+        ll.clear();
+        try {
+            ll.getFirst();
+            fail("NoSuchElementException expected");
+        } catch (NoSuchElementException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.LinkedList#getLast()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify NoSuchElementException.",
-      targets = {
-        @TestTarget(
-          methodName = "getLast",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getLast",
+        args = {}
+    )
     public void test_getLast() {
         // Test for method java.lang.Object java.util.LinkedList.getLast()
         assertTrue("Returned incorrect first element", ll.getLast().equals(
                 objArray[objArray.length - 1]));
+
+        ll.clear();
+        try {
+            ll.getLast();
+            fail("NoSuchElementException expected");
+        } catch (NoSuchElementException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.LinkedList#indexOf(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "indexOf",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "indexOf",
+        args = {java.lang.Object.class}
+    )
     public void test_indexOfLjava_lang_Object() {
         // Test for method int java.util.LinkedList.indexOf(java.lang.Object)
         assertEquals("Returned incorrect index", 87, ll.indexOf(objArray[87]));
@@ -436,15 +438,12 @@ public class LinkedListTest extends junit.framework.TestCase {
     /**
      * @tests java.util.LinkedList#lastIndexOf(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "lastIndexOf",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "lastIndexOf",
+        args = {java.lang.Object.class}
+    )
     public void test_lastIndexOfLjava_lang_Object() {
         // Test for method int
         // java.util.LinkedList.lastIndexOf(java.lang.Object)
@@ -462,42 +461,46 @@ public class LinkedListTest extends junit.framework.TestCase {
     /**
      * @tests java.util.LinkedList#listIterator(int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify IndexOutOfBoundsException.",
-      targets = {
-        @TestTarget(
-          methodName = "listIterator",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "listIterator",
+        args = {int.class}
+    )
     public void test_listIteratorI() {
         // Test for method java.util.ListIterator
         // java.util.LinkedList.listIterator(int)
-        ListIterator i = ll.listIterator();
+        ListIterator i1 = ll.listIterator();
+        ListIterator i2 = ll.listIterator(0);
         Object elm;
         int n = 0;
-        while (i.hasNext()) {
+        while (i2.hasNext()) {
             if (n == 0 || n == objArray.length - 1) {
                 if (n == 0)
-                    assertTrue("First element claimed to have a previous", !i
+                    assertTrue("First element claimed to have a previous", !i2
                             .hasPrevious());
                 if (n == objArray.length)
-                    assertTrue("Last element claimed to have next", !i
+                    assertTrue("Last element claimed to have next", !i2
                             .hasNext());
             }
-            elm = i.next();
+            elm = i2.next();
             assertTrue("Iterator returned elements in wrong order",
                     elm == objArray[n]);
             if (n > 0 && n < objArray.length - 1) {
                 assertTrue("Next index returned incorrect value",
-                        i.nextIndex() == n + 1);
+                        i2.nextIndex() == n + 1);
                 assertTrue("previousIndex returned incorrect value : "
-                        + i.previousIndex() + ", n val: " + n, i
+                        + i2.previousIndex() + ", n val: " + n, i2
                         .previousIndex() == n);
             }
+            elm = i1.next();
+            assertTrue("Iterator returned elements in wrong order",
+                    elm == objArray[n]);
             ++n;
         }
+        
+        i2 = ll.listIterator(ll.size()/2);
+        assertTrue((Integer)i2.next() == ll.size()/2);
         List myList = new LinkedList();
         myList.add(null);
         myList.add("Blah");
@@ -516,20 +519,31 @@ public class LinkedListTest extends junit.framework.TestCase {
         assertTrue("li.hasNext() should be true", li.hasNext());
         assertNull("li.next() should be null", li.next());
         assertTrue("li.hasNext() should be false", !li.hasNext());
+
+        try {
+            ll.listIterator(-1);
+            fail("IndexOutOfBoundsException expected");
+        } catch (IndexOutOfBoundsException e) {
+            //expected
+        }
+
+        try {
+            ll.listIterator(ll.size() + 1);
+            fail("IndexOutOfBoundsException expected");
+        } catch (IndexOutOfBoundsException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.LinkedList#remove(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "remove",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "remove",
+        args = {int.class}
+    )
     public void test_removeI() {
         // Test for method java.lang.Object java.util.LinkedList.remove(int)
         ll.remove(10);
@@ -549,15 +563,12 @@ public class LinkedListTest extends junit.framework.TestCase {
     /**
      * @tests java.util.LinkedList#remove(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "remove",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "remove",
+        args = {java.lang.Object.class}
+    )
     public void test_removeLjava_lang_Object() {
         // Test for method boolean java.util.LinkedList.remove(java.lang.Object)
         assertTrue("Failed to remove valid Object", ll.remove(objArray[87]));
@@ -571,73 +582,91 @@ public class LinkedListTest extends junit.framework.TestCase {
     /**
      * @tests java.util.LinkedList#removeFirst()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify NoSuchElementException.",
-      targets = {
-        @TestTarget(
-          methodName = "removeFirst",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "removeFirst",
+        args = {}
+    )
     public void test_removeFirst() {
         // Test for method java.lang.Object java.util.LinkedList.removeFirst()
         ll.removeFirst();
         assertTrue("Failed to remove first element",
                 ll.getFirst() != objArray[0]);
+
+        ll.clear();
+        try {
+            ll.removeFirst();
+            fail("NoSuchElementException expected");
+        } catch (NoSuchElementException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.LinkedList#removeLast()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify NoSuchElementException.",
-      targets = {
-        @TestTarget(
-          methodName = "removeLast",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "removeLast",
+        args = {}
+    )
     public void test_removeLast() {
         // Test for method java.lang.Object java.util.LinkedList.removeLast()
         ll.removeLast();
         assertTrue("Failed to remove last element",
                 ll.getLast() != objArray[objArray.length - 1]);
+
+        ll.clear();
+        try {
+            ll.removeLast();
+            fail("NoSuchElementException expected");
+        } catch (NoSuchElementException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.LinkedList#set(int, java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify IndexOutOfBoundsException.",
-      targets = {
-        @TestTarget(
-          methodName = "set",
-          methodArgs = {int.class, Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "set",
+        args = {int.class, java.lang.Object.class}
+    )
     public void test_setILjava_lang_Object() {
         // Test for method java.lang.Object java.util.LinkedList.set(int,
         // java.lang.Object)
         Object obj;
         ll.set(65, obj = new Object());
         assertTrue("Failed to set object", ll.get(65) == obj);
+
+        try {
+            ll.set(-1, obj = new Object());
+            fail("IndexOutOfBoundsException expected");
+        } catch (IndexOutOfBoundsException e) {
+            //expected
+        }
+
+        try {
+            ll.set(ll.size() + 1, obj = new Object());
+            fail("IndexOutOfBoundsException expected");
+        } catch (IndexOutOfBoundsException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.LinkedList#size()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "size",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "size",
+        args = {}
+    )
     public void test_size() {
         // Test for method int java.util.LinkedList.size()
         assertTrue("Returned incorrect size", ll.size() == objArray.length);
@@ -648,15 +677,12 @@ public class LinkedListTest extends junit.framework.TestCase {
     /**
      * @tests java.util.LinkedList#toArray()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toArray",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toArray",
+        args = {}
+    )
     public void test_toArray() {
         // Test for method java.lang.Object [] java.util.LinkedList.toArray()
         ll.add(null);
@@ -672,15 +698,12 @@ public class LinkedListTest extends junit.framework.TestCase {
     /**
      * @tests java.util.LinkedList#toArray(java.lang.Object[])
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify ArrayStoreException, NullPointerException.",
-      targets = {
-        @TestTarget(
-          methodName = "toArray",
-          methodArgs = {Object[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toArray",
+        args = {java.lang.Object[].class}
+    )
     public void test_toArray$Ljava_lang_Object() {
         // Test for method java.lang.Object []
         // java.util.LinkedList.toArray(java.lang.Object [])
@@ -711,45 +734,55 @@ public class LinkedListTest extends junit.framework.TestCase {
         ri = retList.iterator();
         while (li.hasNext())
             assertTrue("Lists are not equal", li.next() == ri.next());
+
+        try {
+            ll.toArray(null);
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
+            //expected
+        }
+        
+        LinkedList<String> lls = new LinkedList<String>();
+        lls.add("First");
+        lls.add("Second");
+
+        try {
+            lls.toArray(argArray);
+            fail("ArrayStoreException expected");
+        } catch (ArrayStoreException e) {
+            //expected
+        }
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "offer",
-          methodArgs = {Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "offer",
+        args = {java.lang.Object.class}
+    )
     public void test_offer() {
         int origSize = ll.size();
         assertTrue("offer() should return true'", ll.offer(objArray[0]));
         assertEquals("offer() should add an element as the last one", origSize, ll.lastIndexOf(objArray[0]));
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify that poll method removes the first element " +
-            "of the list.",
-      targets = {
-        @TestTarget(
-          methodName = "poll",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "poll",
+        args = {}
+    )
     public void test_poll() {
-        assertEquals("should return the head", objArray[0], ll.poll());
-        LinkedList list = new LinkedList();
-        assertNull("should return 'null' if list is empty", list.poll());
+        for (int i = 0; i < objArray.length; i++) {
+            assertEquals("should remove the head", objArray[i], ll.poll());
+        }
+        assertEquals("should be empty", 0, ll.size());
+        assertNull("should return 'null' if list is empty", ll.poll());
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "remove",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "remove",
+        args = {}
+    )
     public void test_remove() {
         for (int i = 0; i < objArray.length; i++) {
             assertEquals("should remove the head", objArray[i], ll.remove());
@@ -762,15 +795,12 @@ public class LinkedListTest extends junit.framework.TestCase {
             //-- expected
         }
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "element",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "element",
+        args = {}
+    )
     public void test_element() {
         assertEquals("should return the head", objArray[0], ll.element());
         assertEquals("element() should remove nothing", objArray.length, ll.size());
@@ -780,6 +810,21 @@ public class LinkedListTest extends junit.framework.TestCase {
         } catch (NoSuchElementException e) {
             //-- expected
         }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "peek",
+        args = {}
+    )
+    public void test_peek() {
+        assertEquals("should remove the head", objArray[0], ll.peek());
+        assertEquals("should remove the head", objArray[0], ll.peek());
+        
+        ll.clear();
+
+        assertNull("should return 'null' if list is empty", ll.peek());
     }
 
     /**

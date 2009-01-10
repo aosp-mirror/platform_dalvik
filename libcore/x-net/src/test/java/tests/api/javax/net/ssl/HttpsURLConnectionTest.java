@@ -19,12 +19,10 @@
 package tests.api.javax.net.ssl;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.net.URL;
 import java.security.Principal;
 import java.security.cert.Certificate;
@@ -34,9 +32,11 @@ import java.security.cert.CertificateFactory;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLPeerUnverifiedException;
+import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocketFactory;
 
 import org.apache.harmony.security.tests.support.cert.TestUtils;
+import org.apache.harmony.xnet.tests.support.SSLSocketFactoryImpl;
 
 import junit.framework.TestCase;
 
@@ -52,40 +52,103 @@ public class HttpsURLConnectionTest extends TestCase {
     /**
      * @tests javax.net.ssl.HttpsURLConnection#HttpsURLConnection(java_net_URL) 
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "HttpsURLConnection",
-          methodArgs = {URL.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "HttpsURLConnection",
+        args = {java.net.URL.class}
+    )
     public final void test_Constructor() {
         try {
-            new MyHttpsURLConnection(new URL("https://www.fortify.net"));
+            MyHttpsURLConnection huc = new MyHttpsURLConnection(new URL("https://www.fortify.net/"));
+            assertNotNull(huc);
+            assertTrue(huc instanceof HttpsURLConnection);
+        } catch (Exception e) {
+            fail("Unexpected exception: " + e.toString());
+        }
+        try {
+            MyHttpsURLConnection huc = new MyHttpsURLConnection(null);
+            assertNotNull(huc);
         } catch (Exception e) {
             fail("Unexpected exception " + e.toString());
         }
+    }
+    
+    /**
+     * @tests javax.net.ssl.HttpsURLConnection#getCipherSuite() 
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getCipherSuite",
+        args = {}
+    )
+    public final void test_getCipherSuite() {
         try {
-            new MyHttpsURLConnection(null);
+            URL url = new URL("https://localhost:55555");
+            HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+            try {
+                connection.getCipherSuite();
+                fail("IllegalStateException wasn't thrown");
+            } catch (IllegalStateException ise) {
+                //expected
+            }
         } catch (Exception e) {
-            fail("Unexpected exception " + e.toString());
+            fail("Unexpected exception " + e + " for exception case");
+        }
+        
+        try {
+            HttpsURLConnection con = new MyHttpsURLConnection(new URL("https://www.fortify.net/"));
+            assertEquals("CipherSuite", con.getCipherSuite());
+        } catch (Exception e) {
+            fail("Unexpected exception " + e);
+        }
+    }
+    
+    /**
+     * @tests javax.net.ssl.HttpsURLConnection#getLocalCertificates() 
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getLocalCertificates",
+        args = {}
+    )
+    public final void test_getLocalCertificates() {
+        try {
+            URL url = new URL("https://localhost:55555");
+            HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+            try {
+                connection.getLocalCertificates();
+                fail("IllegalStateException wasn't thrown");
+            } catch (IllegalStateException ise) {
+                //expected
+            }
+        } catch (Exception e) {
+            fail("Unexpected exception " + e + " for exception case");
+        }
+        
+        try {
+            HttpsURLConnection con = new MyHttpsURLConnection(new URL("https://www.fortify.net/"), "X.508");
+            assertNull(con.getLocalCertificates());
+            con = new MyHttpsURLConnection(new URL("https://www.fortify.net/"), "X.509");
+            Certificate[] cert = con.getLocalCertificates();
+            assertNotNull(cert);
+            assertEquals(1, cert.length);
+        } catch (Exception e) {
+            fail("Unexpected exception " + e);
         }
     }
 
     /**
      * @tests javax.net.ssl.HttpsURLConnection#getDefaultHostnameVerifier() 
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getDefaultHostnameVerifier",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getDefaultHostnameVerifier",
+        args = {}
+    )
     public final void test_getDefaultHostnameVerifier() {
         HostnameVerifier verifyer =
             HttpsURLConnection.getDefaultHostnameVerifier();
@@ -95,15 +158,12 @@ public class HttpsURLConnectionTest extends TestCase {
     /**
      * @tests javax.net.ssl.HttpsURLConnection#getDefaultSSLSocketFactory() 
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getDefaultSSLSocketFactory",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getDefaultSSLSocketFactory",
+        args = {}
+    )
     public final void test_getDefaultSSLSocketFactory() {
         SSLSocketFactory sf = HttpsURLConnection.getDefaultSSLSocketFactory();
         if (!sf.equals(SSLSocketFactory.getDefault())) {
@@ -114,19 +174,16 @@ public class HttpsURLConnectionTest extends TestCase {
     /**
      * @tests javax.net.ssl.HttpsURLConnection#getHostnameVerifier()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getHostnameVerifier",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getHostnameVerifier",
+        args = {}
+    )
     public final void test_getHostnameVerifier()
         throws Exception {
         HttpsURLConnection con = new MyHttpsURLConnection(
-                new URL("https://www.fortify.net"));
+                new URL("https://www.fortify.net/"));
         HostnameVerifier verifyer = con.getHostnameVerifier();
         assertNotNull("Hostname verifyer is null", verifyer);
         assertEquals("Incorrect value of hostname verirfyer", 
@@ -136,55 +193,125 @@ public class HttpsURLConnectionTest extends TestCase {
     /**
      * @tests javax.net.ssl.HttpsURLConnection#getLocalPrincipal()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "getLocalPrincipal",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getLocalPrincipal",
+        args = {}
+    )
     public final void test_getLocalPrincipal() {
-        HttpsURLConnection con = new MyHttpsURLConnection(null);
-        assertNotNull("Local principal is null", con.getLocalPrincipal());
+        try {
+            URL url = new URL("https://localhost:55555");
+            HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+            try {
+                connection.getLocalPrincipal();
+                fail("IllegalStateException wasn't thrown");
+            } catch (IllegalStateException ise) {
+                //expected
+            }
+        } catch (Exception e) {
+            fail("Unexpected exception " + e + " for exception case");
+        }
+        
+        try {
+            HttpsURLConnection con = new MyHttpsURLConnection(new URL("https://www.fortify.net/"), "X.508");
+            assertNull(con.getLocalPrincipal());
+            con = new MyHttpsURLConnection(new URL("https://www.fortify.net/"), "X.509");
+            assertNotNull("Local principal is null", con.getLocalPrincipal());
+        } catch (Exception e) {
+            fail("Unexpected exception " + e);
+        }
     }
 
     /**
      * @tests javax.net.ssl.HttpsURLConnection#getPeerPrincipal()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "getPeerPrincipal",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getPeerPrincipal",
+        args = {}
+    )
     public final void test_getPeerPrincipal() throws Exception {
-        HttpsURLConnection con = new MyHttpsURLConnection(
-                new URL("https://www.fortify.net"));
+        try {
+            URL url = new URL("https://localhost:55555");
+            HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+            try {
+                connection.getPeerPrincipal();
+                fail("IllegalStateException wasn't thrown");
+            } catch (IllegalStateException ise) {
+                //expected
+            }
+        } catch (Exception e) {
+            fail("Unexpected exception " + e + " for exception case");
+        }
+        HttpsURLConnection con = new MyHttpsURLConnection(new URL("https://www.fortify.net/"), "X.508");
         try {
             Principal p = con.getPeerPrincipal();
-            assertNotNull("Principal is null", p);
+            fail("SSLPeerUnverifiedException wasn't thrown");
         } catch (SSLPeerUnverifiedException e) {
-            fail("Unexpected SSLPeerUnverifiedException " + e.toString());
+            //expected
+        }
+        
+        con = new MyHttpsURLConnection(new URL("https://www.fortify.net/"), "X.509");
+        try {
+            Principal p = con.getPeerPrincipal();
+            assertNotNull(p);
+        } catch (Exception e) {
+            fail("Unexpected exception " + e);
+        }
+    }
+    
+    /**
+     * @tests javax.net.ssl.HttpsURLConnection#getServerCertificates()
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getServerCertificates",
+        args = {}
+    )
+    public final void test_getServerCertificates() throws Exception {
+        try {
+            URL url = new URL("https://localhost:55555");
+            HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+            try {
+                connection.getServerCertificates();
+                fail("IllegalStateException wasn't thrown");
+            } catch (IllegalStateException ise) {
+                //expected
+            }
+        } catch (Exception e) {
+            fail("Unexpected exception " + e + " for exception case");
+        }
+        
+        HttpsURLConnection con = new MyHttpsURLConnection(new URL("https://www.fortify.net/"), "X.508");
+        try {
+            Certificate[] cert = con.getServerCertificates();
+            fail("SSLPeerUnverifiedException wasn't thrown");
+        } catch (SSLPeerUnverifiedException e) {
+            //expected
+        }
+        
+        con = new MyHttpsURLConnection(new URL("https://www.fortify.net/"), "X.509");
+        try {
+            Certificate[] cert = con.getServerCertificates();
+            assertNotNull(cert);
+            assertEquals(1, cert.length);
+        } catch (Exception e) {
+            fail("Unexpected exception " + e);
         }
     }
 
     /**
      * @tests javax.net.ssl.HttpsURLConnection#getSSLSocketFactory()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getSSLSocketFactory",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getSSLSocketFactory",
+        args = {}
+    )
     public final void test_getSSLSocketFactory() {
         HttpsURLConnection con = new MyHttpsURLConnection(null);
         SSLSocketFactory sf = con.getSSLSocketFactory();
@@ -196,15 +323,12 @@ public class HttpsURLConnectionTest extends TestCase {
     /**
      * @tests javax.net.ssl.HttpsURLConnection#setDefaultHostnameVerifier()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Not null parameter checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "setDefaultHostnameVerifier",
-          methodArgs = {HostnameVerifier.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setDefaultHostnameVerifier",
+        args = {javax.net.ssl.HostnameVerifier.class}
+    )
     public final void test_setDefaultHostnameVerifier() {
         try {
             HttpsURLConnection.setDefaultHostnameVerifier(null);
@@ -212,20 +336,23 @@ public class HttpsURLConnectionTest extends TestCase {
         } catch (IllegalArgumentException e) {
             // expected
         }
+        try {
+            myHostnameVerifier hnv = new myHostnameVerifier();
+            HttpsURLConnection.setDefaultHostnameVerifier(hnv);
+        } catch (Exception e) {
+            fail("Unexpected exception " + e);
+        }
     }
 
     /**
      * @tests javax.net.ssl.HttpsURLConnection#setHostnameVerifier()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Not null parameter checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "setHostnameVerifier",
-          methodArgs = {HostnameVerifier.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setHostnameVerifier",
+        args = {javax.net.ssl.HostnameVerifier.class}
+    )
     public final void test_setHostnameVerifier() {
         HttpsURLConnection con = new MyHttpsURLConnection(null);
         try {
@@ -233,40 +360,46 @@ public class HttpsURLConnectionTest extends TestCase {
             fail("No expected IllegalArgumentException");
         } catch (IllegalArgumentException e) {
         }
+        try {
+            myHostnameVerifier hnv = new myHostnameVerifier();
+            con.setHostnameVerifier(hnv);
+        } catch (Exception e) {
+            fail("Unexpected exception " + e);
+        }
     }
 
     /**
      * @tests javax.net.ssl.HttpsURLConnection#setDefaultSSLSocketFactory()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Not null checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "setDefaultSSLSocketFactory",
-          methodArgs = {SSLSocketFactory.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setDefaultSSLSocketFactory",
+        args = {javax.net.ssl.SSLSocketFactory.class}
+    )
     public final void test_setDefaultSSLSocketFactory() {
         try {
             HttpsURLConnection.setDefaultSSLSocketFactory(null);
             fail("No expected IllegalArgumentException");
         } catch (IllegalArgumentException e) {
         }
+        try {
+            SSLSocketFactoryImpl ssf = new SSLSocketFactoryImpl();
+            HttpsURLConnection.setDefaultSSLSocketFactory(ssf);
+        } catch (Exception e) {
+            fail("Unexpected exception " + e);
+        }
     }
 
     /**
      * @tests javax.net.ssl.HttpsURLConnection#setSSLSocketFactory()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Not null checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "setSSLSocketFactory",
-          methodArgs = {SSLSocketFactory.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setSSLSocketFactory",
+        args = {javax.net.ssl.SSLSocketFactory.class}
+    )
     public final void test_setSSLSocketFactory() {
         HttpsURLConnection con = new MyHttpsURLConnection(null);
         try {
@@ -274,20 +407,33 @@ public class HttpsURLConnectionTest extends TestCase {
             fail("No expected IllegalArgumentException");
         } catch (IllegalArgumentException e) {
         }
+        try {
+            SSLSocketFactoryImpl ssf = new SSLSocketFactoryImpl();
+            con.setSSLSocketFactory(ssf);
+        } catch (Exception e) {
+            fail("Unexpected exception " + e);
+        }
     }
 }
 
-class MyHttpsURLConnection extends HttpsURLConnection {
-
+class MyHttpsURLConnection extends javax.net.ssl.HttpsURLConnection {
+    
+    private String typeDone;
+    
     public MyHttpsURLConnection(URL url) {
         super(url);
+    }
+    
+    public MyHttpsURLConnection(URL url, String type) {
+        super(url);
+        typeDone = type;
     }
 
     /*
      * @see javax.net.ssl.HttpsURLConnection#getCipherSuite()
      */
     public String getCipherSuite() {
-        return null;
+        return "CipherSuite";
     }
 
     /*
@@ -296,7 +442,7 @@ class MyHttpsURLConnection extends HttpsURLConnection {
     public Certificate[] getLocalCertificates() {
         Certificate cert = null;
         try {
-            CertificateFactory cf = CertificateFactory.getInstance("X.509");
+            CertificateFactory cf = CertificateFactory.getInstance(typeDone);
             byte[] barr = TestUtils.getX509Certificate_v1();
             ByteArrayInputStream bis = new ByteArrayInputStream(barr);
             cert = cf.generateCertificate(bis);
@@ -305,20 +451,19 @@ class MyHttpsURLConnection extends HttpsURLConnection {
         }
         return cert == null ? null : new Certificate[]{cert};
     }
-
+    
     /*
      * @see javax.net.ssl.HttpsURLConnection#getServerCertificates()
      */
-    public Certificate[] getServerCertificates()
-            throws SSLPeerUnverifiedException {
+    public Certificate[] getServerCertificates() throws SSLPeerUnverifiedException {
         Certificate cert = null;
         try {
-            CertificateFactory cf = CertificateFactory.getInstance("X.509");
+            CertificateFactory cf = CertificateFactory.getInstance(typeDone);
             byte[] barr = TestUtils.getX509Certificate_v3();
             ByteArrayInputStream bis = new ByteArrayInputStream(barr);
             cert = cf.generateCertificate(bis);
         } catch (CertificateException se) {
-            cert = null;
+            throw new SSLPeerUnverifiedException("No server's end-entity certificate");
         }
         return cert == null ? null : new Certificate[]{cert};
     }
@@ -336,11 +481,20 @@ class MyHttpsURLConnection extends HttpsURLConnection {
         return false;
     }
 
-    /*
-     * @see java.net.URLConnection#connect()
-     */
-    public void connect() throws IOException {
+    public void connect() {
     }
 
+}
+
+class myHostnameVerifier implements HostnameVerifier {
+    
+    myHostnameVerifier() {
+    }
+    
+    public boolean verify(String hostname, SSLSession session) {
+        if (hostname == session.getPeerHost()) {
+            return true;
+        } else return false;
+    }
 }
 

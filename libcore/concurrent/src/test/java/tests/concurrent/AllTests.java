@@ -32,7 +32,7 @@ public class AllTests {
      * Collects all JSR166 unit tests as one suite
      */ 
     public static Test suite ( ) {
-        TestSuite suite = new TestSuite("JSR166 Unit Tests");
+        TestSuite suite = tests.TestSuiteFactory.createTestSuite("JSR166 Unit Tests");
 
         suite.addTest(tests.api.java.util.concurrent.JSR166TestCase.suite());
         

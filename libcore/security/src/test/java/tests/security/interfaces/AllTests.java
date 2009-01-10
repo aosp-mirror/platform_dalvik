@@ -30,16 +30,18 @@ public class AllTests {
     }
 
     public static Test suite() {
-        TestSuite suite = new TestSuite("All tests for package tests.security.interfaces;");
+        TestSuite suite = tests.TestSuiteFactory.createTestSuite("All tests for package tests.security.interfaces;");
         // $JUnit-BEGIN$
 
         suite.addTestSuite(DSAKeyTest.class);
         suite.addTestSuite(DSAParamsTest.class);
-//        suite.addTestSuite(DSAPrivateKeyTest.class);
-//        suite.addTestSuite(DSAPublicKeyTest.class);
-//        suite.addTestSuite(ECKeyTest.class);
-//        suite.addTestSuite(ECPrivateKeyTest.class);
-//        suite.addTestSuite(ECPublicKeyTest.class);
+        suite.addTestSuite(DSAKeyPairGeneratorTest.class);
+        suite.addTestSuite(RSAMultiPrimePrivateCrtKeyTest.class);
+        suite.addTestSuite(DSAPrivateKeyTest.class);
+        suite.addTestSuite(DSAPublicKeyTest.class);
+        suite.addTestSuite(ECKeyTest.class);
+        suite.addTestSuite(ECPrivateKeyTest.class);
+        suite.addTestSuite(ECPublicKeyTest.class);
         suite.addTestSuite(RSAKeyTest.class);
         suite.addTestSuite(RSAPrivateCrtKeyTest.class);
         suite.addTestSuite(RSAPrivateKeyTest.class);

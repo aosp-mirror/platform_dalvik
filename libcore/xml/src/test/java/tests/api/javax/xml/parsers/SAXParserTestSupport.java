@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,17 +16,18 @@
 
 package tests.api.javax.xml.parsers;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashMap;
+
 import org.xml.sax.Attributes;
 import org.xml.sax.HandlerBase;
 import org.xml.sax.InputSource;
 import org.xml.sax.Locator;
 import org.xml.sax.SAXParseException;
 import org.xml.sax.helpers.DefaultHandler;
-
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.HashMap;
 
 /**
  * Support for SAXParserTest. Shares the element keys used in the golden files. 
@@ -73,6 +74,16 @@ class SAXParserTestSupport {
             KEY_SKIPPED_ENTITY, KEY_START_ELEMENT,
             KEY_START_PREFIX_MAPPING};
 
+    static {
+        String tmp = System.getProperty("java.io.tmpdir", ".");
+        
+        new File(tmp).mkdirs();
+        new File(tmp, XML_WF).mkdirs();
+        new File(tmp, XML_NWF).mkdirs();
+        new File(tmp, XML_WF_OUT_DH).mkdirs();
+        new File(tmp, XML_WF_OUT_HB).mkdirs();
+    }
+    
     /**
      * Initialize the SAXParserTest reference by filling in the data from the
      * file passed to the method. This will be the reference to compare

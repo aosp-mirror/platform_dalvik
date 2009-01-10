@@ -21,9 +21,9 @@
 
 package tests.org.w3c.dom;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import java.util.ArrayList;
@@ -85,15 +85,12 @@ public final class NodeIsSupported extends DOMTestCase {
      * @throws Throwable
      *             Any uncaught exception causes test to fail
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify that isSupported method can return false value.",
-      targets = {
-        @TestTarget(
-          methodName = "isSupported",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Doesn't verify that isSupported method can return false value.",
+        method = "isSupported",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void testIsSupported1() throws Throwable {
         Document doc;
         Element element;
@@ -129,15 +126,12 @@ public final class NodeIsSupported extends DOMTestCase {
             assertTrue("nodeissupported01_Core3", success);
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify that isSupported method can return false value.",
-      targets = {
-        @TestTarget(
-          methodName = "isSupported",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Doesn't verify that isSupported method can return false value.",
+        method = "isSupported",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void testIsSupported2() throws Throwable {
         Document doc;
         Attr attribute;
@@ -173,16 +167,12 @@ public final class NodeIsSupported extends DOMTestCase {
             assertTrue("nodeissupported02_Core3", success);
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that isSupported method returns false value " +
-            "if it's called with empty strings as parameters.",
-      targets = {
-        @TestTarget(
-          methodName = "isSupported",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies that isSupported method returns false value if it's called with empty strings as parameters.",
+        method = "isSupported",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void testIsSupported3() throws Throwable {
         Document doc;
         DocumentType docType;
@@ -192,15 +182,12 @@ public final class NodeIsSupported extends DOMTestCase {
         success = docType.isSupported("", "");
         assertFalse("nodeissupported03", success);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that isSupported method returns false value.",
-      targets = {
-        @TestTarget(
-          methodName = "isSupported",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies that isSupported method returns false value.",
+        method = "isSupported",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void testIsSupported4() throws Throwable {
         Document doc;
         EntityReference entRef;
@@ -211,15 +198,12 @@ public final class NodeIsSupported extends DOMTestCase {
         success = entRef.isSupported("XML CORE", "");
         assertFalse("nodeissupported04", success);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that isSupported method returns false value.",
-      targets = {
-        @TestTarget(
-          methodName = "isSupported",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies that isSupported method returns false value.",
+        method = "isSupported",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void testIsSupported5() throws Throwable {
         Document doc;
         ProcessingInstruction pi;

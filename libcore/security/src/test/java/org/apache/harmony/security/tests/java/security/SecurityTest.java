@@ -22,9 +22,11 @@
 
 package org.apache.harmony.security.tests.java.security;
 
+import dalvik.annotation.BrokenTest;
+import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 
 import java.security.InvalidParameterException;
@@ -49,15 +51,13 @@ import junit.framework.TestCase;
  */
 public class SecurityTest extends TestCase {
 
-    @TestInfo(
-      level = TestLevel.TODO,
-      purpose = "Methods from java.security.Security class are not tested",
-      targets = {
-        @TestTarget(
-          methodName = "",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.ADDITIONAL,
+        notes = "Methods from java.security.Security class are not tested",
+        method = "!",
+        args = {}
+    )
+    @BrokenTest("empty test")
     public final void testMixed() {
 
         TestKeyPair tkp = null;
@@ -83,15 +83,12 @@ public class SecurityTest extends TestCase {
     /**
      * @tests java.security.Security#insertProviderAt(Provider, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "SecurityException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "insertProviderAt",
-          methodArgs = {Provider.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "SecurityException checking missed",
+        method = "insertProviderAt",
+        args = {java.security.Provider.class, int.class}
+    )
     public final void test_insertProviderAtLjava_security_ProviderLI() {
 
         try {
@@ -136,16 +133,13 @@ public class SecurityTest extends TestCase {
     /**
      * @tests java.security.Security#addProvider(Provider)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "SecurityException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "addProvider",
-          methodArgs = {Provider.class}
-        )
-    })
-    public final void _test_addProviderLjava_security_Provider() {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "SecurityException checking missed",
+        method = "addProvider",
+        args = {java.security.Provider.class}
+    )
+    public final void test_addProviderLjava_security_Provider() {
 
         try {
             Security.addProvider(null);
@@ -170,21 +164,21 @@ public class SecurityTest extends TestCase {
     }
 
     /**
-     * @tests java.security.Security#getAlgorithmProperty(String algName,
-     *        String propName)
+     * @tests java.security.Security#getAlgorithmProperty(String algName, String
+     *        propName)
+     * @disabled because Security.getAlgorithmProperty looks for
+     *           "propName.algName" instead of "Alg.propName.algName"
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verification with null parameters missed",
-      targets = {
-        @TestTarget(
-          methodName = "getAlgorithmProperty",
-          methodArgs = {String.class, String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getAlgorithmProperty",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     @SuppressWarnings("deprecation")
-    public final void _testGetAlgorithmPropertyLjava_lang_String_java_lang_String() {
-        String propName = null;
+    @KnownFailure("Security.getAlgorithmProperty looks for "
+            + "\"propName.algName\" instead of \"Alg.propName.algName\"")
+    public final void testGetAlgorithmPropertyLjava_lang_String_java_lang_String() {
         
         Provider provider = new MyProvider();
         Map<String, String> m = new HashMap<String, String>();
@@ -192,60 +186,50 @@ public class SecurityTest extends TestCase {
         m.put("Alg.propName.algName", "value");
         provider.putAll(m);
         
+        try {
         Security.addProvider(provider);
         
         assertNotNull(Security.getAlgorithmProperty("algName", "propName"));
 
-        assertNull(Security.getAlgorithmProperty("DSA", propName));
+        assertNull(Security.getAlgorithmProperty("DSA", null));
         assertNull(Security.getAlgorithmProperty("DSA", "propName"));
-        Security.removeProvider(provider.getName());
+        } finally {
+            Security.removeProvider(provider.getName());
+        }
     }
 
     /**
      * @tests java.security.Security#getAlgorithms(String serviceName)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Not supported serviceName checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "getAlgorithms",
-          methodArgs = {String.class}
-        )
-    })
-    public final void _testGetAlgorithmsLjava_lang_String() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getAlgorithms",
+        args = {java.lang.String.class}
+    )
+    public final void testGetAlgorithmsLjava_lang_String() {
         String[] servicesNames = { "Signature", "MessageDigest", "Cipher",
                 "Mac", "KeyStore" };
-
-        String[][] algorithms = {
-                { "SHA256WITHRSA", "NONEWITHDSA", "SHA384WITHRSA",
-                        "MD2WITHRSA", "MD5ANDSHA1WITHRSA", "SHA512WITHRSA",
-                        "SHA1WITHRSA", "SHA1WITHDSA", "MD5WITHRSA" },
-                { "SHA-512", "MD2", "SHA", "SHA-256", "MD5", "SHA-384" },
-                { "ARCFOUR", "PBEWITHSHA1ANDDESEDE", "DESEDEWRAP",
-                        "PBEWITHMD5ANDTRIPLEDES", "DESEDE", "RSA", "AESWRAP",
-                        "AES", "PBEWITHMD5ANDDES", "BLOWFISH", "DES", "RC2",
-                        "PBEWITHSHA1ANDRC2_40" },
-                { "HMACSHA512", "HMACSHA1", "HMACMD5", "HMACPBESHA1",
-                        "HMACSHA256", "HMACSHA384" },
-                { "PKCS12", "CASEEXACTJKS", "JKS", "JCEKS" } };
+        
+        String[] invalidServiceNames = { "Rubbish", "", null };
 
         for (int i = 0; i < servicesNames.length; i++) {
             Set<String> algs = Security.getAlgorithms(servicesNames[i]);
-            Object[] actualAlgs = algs.toArray();
-            assertTrue(Arrays.equals(actualAlgs, algorithms[i]));
+            assertTrue("no services with specified name: " + servicesNames[i], algs.size() > 0);
+        }
+        
+        for (int i = 0; i < invalidServiceNames.length; i++) {
+            Set<String> algs = Security.getAlgorithms(invalidServiceNames[i]);
+            assertTrue("services with specified name: " + invalidServiceNames[i], algs.size() == 0);
         }
     }
 
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Incorrect parameter checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "removeProvider",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "removeProvider",
+        args = {java.lang.String.class}
+    )
     public final void testRemoveProvider() {
         Provider[] providers;
         Provider[] providers1;
@@ -275,13 +259,18 @@ public class SecurityTest extends TestCase {
     /**
      * @tests java.security.Security#getProvider(String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getProvider",
-          methodArgs = {String.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getProvider",
+            args = {java.lang.String.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getProviders",
+            args = {}
         )
     })
     public final void test_getProviderLjava_lang_String() {
@@ -315,15 +304,12 @@ public class SecurityTest extends TestCase {
     /**
      * @tests java.security.Security#getProviders(String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getProviders",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getProviders",
+        args = {java.lang.String.class}
+    )
     public void test_getProvidersLjava_lang_String() {
 
         try {
@@ -378,15 +364,12 @@ public class SecurityTest extends TestCase {
     /**
      * @tests java.security.Security#getProviders(java.util.Map)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getProviders",
-          methodArgs = {Map.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getProviders",
+        args = {java.util.Map.class}
+    )
     public void test_getProvidersLjava_util_Map() {
 
         Map<String, String> m = new HashMap<String, String>();
@@ -455,19 +438,51 @@ public class SecurityTest extends TestCase {
             Security.removeProvider(p.getName());
         }
     }
+    
+    /**
+     * @tests java.security.Security#getProviders()
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getProviders",
+        args = {}
+    )
+    public void test_getProviders() {
+        Provider[] prv;
+        
+        MyProvider provider = new MyProvider();
+        try {
+            prv = Security.getProviders();
+            int len1 = prv.length;
+            if (len1 == 0) {
+                fail("Array of providers is ampty");
+            }
+            Security.addProvider(provider);
+            prv = Security.getProviders();
+            int len2 = prv.length;
+            if ((len2 == len1 + 1) && (prv[len2-1].toString().equals("MyProvider version 1.0"))) {
+                // ok
+            } else {
+                fail("Method getProviders() returned incorrect values");
+            }
+        } catch (Exception ex) {
+            fail("Unexpected exception");
+        }
+        finally {
+            Security.removeProvider(provider.getName());
+        }
+    }
 
     /**
      * @tests java.security.Security#getProperty(String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verification of null parameter only.",
-      targets = {
-        @TestTarget(
-          methodName = "getProperty",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verification of null parameter only.",
+        method = "getProperty",
+        args = {java.lang.String.class}
+    )
     public void test_getPropertyLjava_lang_String() {
 
         try {
@@ -480,15 +495,12 @@ public class SecurityTest extends TestCase {
     /**
      * @tests java.security.Security#setProperty(String,String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "SecurityException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "setProperty",
-          methodArgs = {String.class, String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "SecurityException checking missed",
+        method = "setProperty",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void test_setPropertyLjava_lang_StringLjava_lang_String() {
 
         try {

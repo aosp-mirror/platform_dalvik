@@ -16,38 +16,62 @@
 
 package tests.api.java.net;
 
+import dalvik.annotation.BrokenTest;
 import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.net.CacheRequest;
 import java.net.CacheResponse;
+import java.net.HttpURLConnection;
 import java.net.NetPermission;
 import java.net.ResponseCache;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.net.URLConnection;
 import java.security.Permission;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import junit.framework.TestCase;
 
-@TestTargetClass(ResponseCache.class) 
+import tests.support.Support_Configuration;
+
+@TestTargetClass(
+    value = ResponseCache.class,
+    untestedMethods = {
+        @TestTargetNew(
+            level = TestLevel.NOT_FEASIBLE,
+            notes = "put method is not tested completely",
+            method = "put",
+            args = {java.net.URI.class, java.net.URLConnection.class}
+        )
+    }
+)
 public class ResponseCacheTest extends TestCase {
 
+    
+    
     /**
      * @tests java.net.ResponseCache#getDefault()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "This is a complete subset of tests for getDefault method.",
-      targets = {
-        @TestTarget(
-          methodName = "getDefault",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "This is a complete subset of tests for getDefault method.",
+        method = "getDefault",
+        args = {}
+    )
     public void test_GetDefault() throws Exception {
         assertNull(ResponseCache.getDefault());
     }
@@ -55,13 +79,18 @@ public class ResponseCacheTest extends TestCase {
     /**
      * @tests java.net.ResponseCache#setDefault(ResponseCache)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "This is a complete subset of tests for setDefault method.",
-      targets = {
-        @TestTarget(
-          methodName = "setDefault",
-          methodArgs = {ResponseCache.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "This is a complete subset of tests for setDefault method.",
+            method = "setDefault",
+            args = {java.net.ResponseCache.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "This is a complete subset of tests for setDefault method.",
+            method = "ResponseCache",
+            args = {}
         )
     })
     public void test_SetDefaultLjava_net_ResponseCache_Normal()
@@ -79,15 +108,12 @@ public class ResponseCacheTest extends TestCase {
     /**
      * @tests java.net.ResponseCache#getDefault()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "This is a complete subset of tests for getDefault method.",
-      targets = {
-        @TestTarget(
-          methodName = "getDefault",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "This is a complete subset of tests for getDefault method.",
+        method = "getDefault",
+        args = {}
+    )
     public void test_GetDefault_Security() {
         SecurityManager old = System.getSecurityManager();
         try {
@@ -110,15 +136,12 @@ public class ResponseCacheTest extends TestCase {
     /**
      * @tests java.net.ResponseCache#setDefault(ResponseCache)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "This is a complete subset of tests for setDefault method.",
-      targets = {
-        @TestTarget(
-          methodName = "setDefault",
-          methodArgs = {ResponseCache.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.ADDITIONAL,
+        notes = "This is a complete subset of tests for setDefault method.",
+        method = "setDefault",
+        args = {java.net.ResponseCache.class}
+    )
     public void test_setDefaultLjava_net_ResponseCache_NoPermission() {
         ResponseCache rc = new MockResponseCache();
         SecurityManager old = System.getSecurityManager();
@@ -137,6 +160,37 @@ public class ResponseCacheTest extends TestCase {
         } finally {
             System.setSecurityManager(old);
         }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "get",
+        args = {java.net.URI.class, java.lang.String.class, java.util.Map.class}
+    )
+    @BrokenTest("cache seems not to be used")
+    public void test_get_put() throws Exception {
+        
+        URL url  = new URL("http://" + 
+                Support_Configuration.SpecialInetTestAddress);
+        ResponseCache.setDefault(new TestResponseCache());
+        HttpURLConnection httpCon = (HttpURLConnection) url.openConnection();
+        httpCon.setUseCaches(true);
+        httpCon.connect();
+        try {
+            Thread.sleep(5000);
+        } catch(Exception e) {}
+        
+        InputStream is = httpCon.getInputStream();
+        byte [] array = new byte [10];
+        is.read(array);
+        assertEquals("Cache test", new String(array));
+
+        try {
+            Thread.sleep(5000);
+        } catch(Exception e) {}
+        is.close();
+        httpCon.disconnect();
     }
 
     /*
@@ -169,6 +223,7 @@ public class ResponseCacheTest extends TestCase {
 
             if (permission instanceof NetPermission) {
                 if ("getResponseCache".equals(permission.getName())) {
+                    
                     throw new SecurityException();
                 }
             }
@@ -178,6 +233,68 @@ public class ResponseCacheTest extends TestCase {
                     return;
                 }
             }
+        }
+    }
+    
+    class TestCacheResponse extends CacheResponse {
+        InputStream is = null;
+        Map<String, List<String>> headers = null;
+        
+        public TestCacheResponse(String filename) {
+            String path = getClass().getPackage().getName().replace(".", "/");
+            is = getClass().getResourceAsStream("/" + path + "/" + filename);
+        }
+
+        public InputStream getBody() throws IOException {
+           return is;
+        }
+
+         public Map getHeaders() throws IOException {
+           return null;
+         }
+    }
+    
+    class TestCacheRequest extends CacheRequest {
+        
+        public TestCacheRequest(String filename,
+                            Map<String, List<String>> rspHeaders) {
+        }
+        public OutputStream getBody() throws IOException {
+            return null;
+        }
+
+        public void abort() {
+        }
+    }
+    
+    class TestResponseCache extends ResponseCache {
+        
+        URI uri1 = null;    
+    
+        public CacheResponse get(URI uri, String rqstMethod, Map rqstHeaders)
+                throws IOException {
+          try {
+            uri1  = new URI("http://" + 
+                    Support_Configuration.SpecialInetTestAddress);
+          } catch (URISyntaxException e) {
+          }  
+          if (uri.equals(uri1)) {
+            return new TestCacheResponse("file1.cache");
+          }
+          return null;
+        }
+
+       public CacheRequest put(URI uri, URLConnection conn)
+              throws IOException {
+           try {
+               uri1  = new URI("http://www.google.com");
+             } catch (URISyntaxException e) {
+             }  
+          if (uri.equals(uri1)) {
+              return new TestCacheRequest("file2.cache",
+                          conn.getHeaderFields());
+          }
+          return null;
         }
     }
 }

@@ -304,7 +304,7 @@ public class OutputStreamWriter extends Writer {
      * @throws IOException
      *             if this writer has already been closed or another I/O error
      *             occurs.
-     * @throws StringIndexOutOfBoundsException
+     * @throws IndexOutOfBoundsException
      *             if {@code offset < 0} or {@code count < 0}, or if
      *             {@code offset + count} is bigger than the length of
      *             {@code str}.

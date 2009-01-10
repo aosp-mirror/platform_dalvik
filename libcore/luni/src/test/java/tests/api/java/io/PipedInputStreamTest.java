@@ -16,14 +16,13 @@
  */
 package tests.api.java.io;
 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestTargetClass; 
-
 import java.io.IOException;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
+
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
 @TestTargetClass(PipedInputStream.class) 
 public class PipedInputStreamTest extends junit.framework.TestCase {
@@ -35,13 +34,13 @@ public class PipedInputStreamTest extends junit.framework.TestCase {
 
         public void run() {
             try {
-                pos.write(bytes);
+                pos.write(bytes);   
                 synchronized (this) {
                     notify();
                 }
-            } catch (IOException e) {
+            } catch (Exception e) {
                 e.printStackTrace(System.out);
-                System.out.println("Could not write bytes");
+                System.out.println("Error while running the writer thread.");
             }
         }
 
@@ -50,6 +49,29 @@ public class PipedInputStreamTest extends junit.framework.TestCase {
             bytes = new byte[nbytes];
             for (int i = 0; i < bytes.length; i++)
                 bytes[i] = (byte) (System.currentTimeMillis() % 9);
+        }
+    }
+
+    static class PWriter2 implements Runnable {
+        PipedOutputStream pos;
+
+        public boolean keepRunning = true;
+
+        public void run() {
+            try {
+                pos.write(42);
+                pos.close();
+                while (keepRunning) {
+                    Thread.sleep(1000);
+                }
+            } catch (Exception e) {
+                e.printStackTrace(System.out);
+                System.out.println("Error while running the writer thread.");
+            }
+        }
+
+        public PWriter2(PipedOutputStream pout) {
+            pos = pout;
         }
     }
 
@@ -64,50 +86,53 @@ public class PipedInputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PipedInputStream#PipedInputStream()
      */
-    @TestInfo(
-      level = TestLevel.TODO,
-      purpose = "Test is empty",
-      targets = {
-        @TestTarget(
-          methodName = "PipedInputStream",
-          methodArgs = {}
-        )
-    })
-    public void test_Constructor() {
-        // Test for method java.io.PipedInputStream()
-        // Used in tests
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "PipedInputStream",
+        args = {}
+    )
+    public void test_Constructor() throws IOException {
+        pis = new PipedInputStream();
+        assertEquals("There should not be any bytes available. ", 0, pis.available());
+        pis.close();
     }
 
     /**
      * @tests java.io.PipedInputStream#PipedInputStream(java.io.PipedOutputStream)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "PipedInputStream",
-          methodArgs = {java.io.PipedOutputStream.class}
-        )
-    })
-    public void test_ConstructorLjava_io_PipedOutputStream() throws Exception {
-        // Test for method java.io.PipedInputStream(java.io.PipedOutputStream)
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "PipedInputStream",
+        args = {java.io.PipedOutputStream.class}
+    )
+    public void test_ConstructorLjava_io_PipedOutputStream() throws IOException {
+        pos = new PipedOutputStream(new PipedInputStream());
+        
+        try {
+            pis = new PipedInputStream(pos);
+            fail("IOException expected since the output stream is already connected.");
+        } catch (IOException e) {
+            // Expected.
+        }
+        
         pis = new PipedInputStream(new PipedOutputStream());
-        pis.available();
+        assertEquals("There should not be any bytes available. ", 0, pis.available());
+        
+        pis.close();
+        pos.close();
     }
 
     /**
      * @tests java.io.PipedInputStream#available()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "available",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "No IOException checking because it is never thrown in the source code.",
+        method = "available",
+        args = {}
+    )
     public void test_available() throws Exception {
         // Test for method int java.io.PipedInputStream.available()
         pis = new PipedInputStream();
@@ -120,8 +145,8 @@ public class PipedInputStreamTest extends junit.framework.TestCase {
         synchronized (pw) {
             pw.wait(10000);
         }
-        assertTrue("Available returned incorrect number of bytes: "
-                + pis.available(), pis.available() == 1000);
+        assertEquals("Test 1: Incorrect number of bytes available. ",
+                     1000, pis.available());
 
         PipedInputStream pin = new PipedInputStream();
         PipedOutputStream pout = new PipedOutputStream(pin);
@@ -130,21 +155,19 @@ public class PipedInputStreamTest extends junit.framework.TestCase {
         // for a read before returning
         for (int i = 0; i < 1024; i++)
             pout.write(i);
-        assertEquals("Incorrect available count", 1024 , pin.available());
+        assertEquals("Test 2: Incorrect number of bytes available. ", 
+                     1024 , pin.available());
     }
 
     /**
      * @tests java.io.PipedInputStream#close()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "close",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "No IOException checking because it is never thrown in the source code.",
+        method = "close",
+        args = {}
+    )
     public void test_close() throws IOException {
         // Test for method void java.io.PipedInputStream.close()
         pis = new PipedInputStream();
@@ -153,9 +176,9 @@ public class PipedInputStreamTest extends junit.framework.TestCase {
         pis.close();
         try {
             pos.write((byte) 127);
-            fail("Failed to throw expected exception");
+            fail("IOException expected.");
         } catch (IOException e) {
-            // The spec for PipedInput saya an exception should be thrown if
+            // The spec for PipedInput says an exception should be thrown if
             // a write is attempted to a closed input. The PipedOuput spec
             // indicates that an exception should be thrown only when the
             // piped input thread is terminated without closing
@@ -166,22 +189,19 @@ public class PipedInputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PipedInputStream#connect(java.io.PipedOutputStream)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "connect",
-          methodArgs = {java.io.PipedOutputStream.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "connect",
+        args = {java.io.PipedOutputStream.class}
+    )
     public void test_connectLjava_io_PipedOutputStream() throws Exception {
         // Test for method void
         // java.io.PipedInputStream.connect(java.io.PipedOutputStream)
         pis = new PipedInputStream();
         pos = new PipedOutputStream();
-        assertEquals("Non-conected pipe returned non-zero available bytes", 0,
-                pis.available());
+        assertEquals("Test 1: Not-connected pipe returned more than zero available bytes. ", 
+                     0, pis.available());
 
         pis.connect(pos);
         t = new Thread(pw = new PWriter(pos, 1000));
@@ -190,70 +210,142 @@ public class PipedInputStreamTest extends junit.framework.TestCase {
         synchronized (pw) {
             pw.wait(10000);
         }
-        assertEquals("Available returned incorrect number of bytes", 1000, pis
-                .available());
+        assertEquals("Test 2: Unexpected number of bytes available. ", 
+                     1000, pis.available());
+
+        try {
+            pis.connect(pos);
+            fail("Test 3: IOException expected when reconnecting the pipe.");
+        } catch (IOException e) {
+            // Expected.
+        }
+        
+        pis.close();
+        pos.close();
     }
 
     /**
      * @tests java.io.PipedInputStream#read()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {}
+    )
     public void test_read() throws Exception {
-        // Test for method int java.io.PipedInputStream.read()
         pis = new PipedInputStream();
         pos = new PipedOutputStream();
 
+        try {
+            pis.read();
+            fail("Test 1: IOException expected since the stream is not connected.");
+        } catch (IOException e) {
+            // Expected.
+        }
+        
         pis.connect(pos);
-        t = new Thread(pw = new PWriter(pos, 1000));
+        t = new Thread(pw = new PWriter(pos, 100));
         t.start();
 
         synchronized (pw) {
-            pw.wait(10000);
+            pw.wait(5000);
         }
-        assertEquals("Available returned incorrect number of bytes", 1000, pis
-                .available());
-        assertEquals("read returned incorrect byte", pw.bytes[0], (byte) pis
-                .read());
+        assertEquals("Test 2: Unexpected number of bytes available. ", 
+                     100, pis.available());
+        
+        for (int i = 0; i < 100; i++) {
+            assertEquals("Test 3: read() returned incorrect byte. ", 
+                         pw.bytes[i], (byte) pis.read());
+        }
+
+        try {
+            pis.read();
+            fail("Test 4: IOException expected since the thread that has " +
+                 "written to the pipe is no longer alive.");
+        } catch (IOException e) {
+            // Expected.
+        }
+
+        pis.close();
+        try {
+            pis.read();
+            fail("Test 5: IOException expected since the stream is closed.");
+        } catch (IOException e) {
+            // Expected.
+        }
+    }
+
+    /**
+     * @tests java.io.PipedInputStream#read()
+     */
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Checks that read returns -1 if the PipedOutputStream connected to this PipedInputStream is closed.",
+        method = "read",
+        args = {}
+    )
+    public void test_read_2() throws Exception {
+        Thread writerThread;
+        PWriter2 pwriter;
+        
+        pos = new PipedOutputStream(); 
+        pis = new PipedInputStream(pos);
+        writerThread = new Thread(pwriter = new PWriter2(pos));
+        writerThread.start();
+
+        synchronized (pwriter) {
+            pwriter.wait(5000);
+        }
+        pis.read();
+        assertEquals("Test 1: No more data indication expected. ", -1, pis.read());
+        pwriter.keepRunning = false;
+        
+        pis.close();
     }
 
     /**
      * @tests java.io.PipedInputStream#read(byte[], int, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {byte[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Tests read from unconnected, connected and closed pipe.",
+        method = "read",
+        args = {byte[].class, int.class, int.class}
+    )
     public void test_read$BII() throws Exception {
-        // Test for method int java.io.PipedInputStream.read(byte [], int, int)
+        byte[] buf = new byte[400];
         pis = new PipedInputStream();
         pos = new PipedOutputStream();
 
+        try {
+            pis.read(buf, 0, 10);
+            fail("Test 1: IOException expected since the stream is not connected.");
+        } catch (IOException e) {
+            // Expected.
+        }
+        
         pis.connect(pos);
         t = new Thread(pw = new PWriter(pos, 1000));
         t.start();
 
-        byte[] buf = new byte[400];
         synchronized (pw) {
             pw.wait(10000);
         }
-        assertTrue("Available returned incorrect number of bytes: "
-                + pis.available(), pis.available() == 1000);
+        assertEquals("Test 2: Unexpected number of bytes available. ",
+                     1000, pis.available());
         pis.read(buf, 0, 400);
         for (int i = 0; i < 400; i++) {
-            assertEquals("read returned incorrect byte[]", pw.bytes[i], buf[i]);
+            assertEquals("Test 3: read() returned incorrect byte. ", 
+                         pw.bytes[i], buf[i]);
+        }
+        
+        pis.close();
+        try {
+            pis.read(buf, 0, 10);
+            fail("Test 4: IOException expected since the stream is closed.");
+        } catch (IOException e) {
+            // Expected.
         }
     }
 
@@ -261,23 +353,20 @@ public class PipedInputStreamTest extends junit.framework.TestCase {
      * @tests java.io.PipedInputStream#read(byte[], int, int)
      * Regression for HARMONY-387
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {byte[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Tests illegal length argument.",
+        method = "read",
+        args = {byte[].class, int.class, int.class}
+    )
     public void test_read$BII_2() throws IOException {
         PipedInputStream obj = new PipedInputStream();
         try {
             obj.read(new byte[0], 0, -1);
-            fail("IndexOutOfBoundsException expected");
+            fail("IndexOutOfBoundsException expected.");
         } catch (IndexOutOfBoundsException t) {
             assertEquals(
-                    "IndexOutOfBoundsException rather than a subclass expected",
+                    "IndexOutOfBoundsException rather than a subclass expected.",
                     IndexOutOfBoundsException.class, t.getClass());
         }
     }
@@ -285,22 +374,19 @@ public class PipedInputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PipedInputStream#read(byte[], int, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {byte[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Tests illegal offset argument.",
+        method = "read",
+        args = {byte[].class, int.class, int.class}
+    )
     public void test_read$BII_3() throws IOException {
         PipedInputStream obj = new PipedInputStream();
         try {
             obj.read(new byte[0], -1, 0);
-            fail("IndexOutOfBoundsException expected");
+            fail("IndexOutOfBoundsException expected.");
         } catch (ArrayIndexOutOfBoundsException t) {
-            fail("IndexOutOfBoundsException expected");
+            fail("IndexOutOfBoundsException expected.");
         } catch (IndexOutOfBoundsException t) {
         }
     }
@@ -308,22 +394,19 @@ public class PipedInputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PipedInputStream#read(byte[], int, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {byte[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Tests invalid combination of offset and length arguments.",
+        method = "read",
+        args = {byte[].class, int.class, int.class}
+    )
     public void test_read$BII_4() throws IOException {
         PipedInputStream obj = new PipedInputStream();
         try {
-            obj.read(new byte[0], -1, -1);
-            fail("IndexOutOfBoundsException expected");
+            obj.read(new byte[10], 2, 9);
+            fail("IndexOutOfBoundsException expected.");
         } catch (ArrayIndexOutOfBoundsException t) {
-            fail("IndexOutOfBoundsException expected");
+            fail("IndexOutOfBoundsException expected.");
         } catch (IndexOutOfBoundsException t) {
         }
     }
@@ -331,15 +414,12 @@ public class PipedInputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PipedInputStream#receive(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "receive",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "receive",
+        args = {int.class}
+    )
     public void test_receive() throws IOException {
         pis = new PipedInputStream();
         pos = new PipedOutputStream();
@@ -375,7 +455,7 @@ public class PipedInputStreamTest extends junit.framework.TestCase {
 
             public void run() {
                 try {
-                    int one = pis.read();
+                    pis.read();
                     pass = true;
                 } catch (IOException e) {}
             }

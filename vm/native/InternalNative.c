@@ -167,7 +167,7 @@ bool dvmVerifyObjectInClass(Object* obj, ClassObject* clazz)
 }
 
 /*
- * Validate a "fully qualified" class name, e.g. "Ljava/lang/String;" or "[I".
+ * Validate a "binary" class name, e.g. "java.lang.String" or "[I".
  */
 static bool validateClassName(const char* name)
 {

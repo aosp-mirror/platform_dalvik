@@ -825,6 +825,7 @@ dvmAsmInstructionStart = .L_OP_NOP
      */
     /* new-array vA, vB, class@CCCC */
     GET_GLUE(%ecx)
+    EXPORT_PC()
     movl    offGlue_methodClassDex(%ecx),%ecx # ecx<- pDvmDex
     movzwl  2(rPC),%eax                       # eax<- CCCC
     movl    offDvmDex_pResClasses(%ecx),%ecx  # ecx<- pDvmDex->pResClasses

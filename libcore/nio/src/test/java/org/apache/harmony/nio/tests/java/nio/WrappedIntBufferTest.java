@@ -15,9 +15,8 @@
  */
 package org.apache.harmony.nio.tests.java.nio;
 
-import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import java.nio.IntBuffer;
@@ -26,6 +25,7 @@ import java.nio.IntBuffer;
 public class WrappedIntBufferTest extends IntBufferTest {
     protected void setUp() throws Exception {
         super.setUp();
+        capacity = BUFFER_LENGTH;
         buf = IntBuffer.wrap(new int[BUFFER_LENGTH]);
         loadTestData1(buf);
         baseBuf = buf;
@@ -41,15 +41,12 @@ public class WrappedIntBufferTest extends IntBufferTest {
      * @tests java.nio.CharBuffer#allocate(char[],int,int)
      * 
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "wrap",
-          methodArgs = {int[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "wrap",
+        args = {int[].class, int.class, int.class}
+    )
     public void testWrappedIntBuffer_IllegalArg() {
         int array[] = new int[20];
         try {

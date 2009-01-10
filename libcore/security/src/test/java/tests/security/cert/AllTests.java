@@ -30,19 +30,19 @@ public class AllTests {
     }
 
     public static Test suite() {
-        TestSuite suite = new TestSuite("All tests for package tests.api.java.security.cert;");
+        TestSuite suite = tests.TestSuiteFactory.createTestSuite("All tests for package tests.api.java.security.cert;");
         // $JUnit-BEGIN$
 
         suite.addTestSuite(CRLExceptionTest.class);
         suite.addTestSuite(CRLTest.class);
         suite.addTestSuite(CertPathBuilder1Test.class);
-//        suite.addTestSuite(CertPathBuilder2Test.class);
+        suite.addTestSuite(CertPathBuilder2Test.class);
         suite.addTestSuite(CertPathBuilderExceptionTest.class);
         suite.addTestSuite(CertPathBuilderSpiTest.class);
         suite.addTestSuite(CertPathCertPathRepTest.class);
         suite.addTestSuite(CertPathTest.class);
         suite.addTestSuite(CertPathValidator1Test.class);
-//        suite.addTestSuite(CertPathValidator2Test.class);
+        suite.addTestSuite(CertPathValidator2Test.class);
         suite.addTestSuite(CertPathValidator3Test.class);
         suite.addTestSuite(CertPathValidatorExceptionTest.class);
         suite.addTestSuite(CertPathValidatorSpiTest.class);
@@ -56,7 +56,7 @@ public class AllTests {
         suite.addTestSuite(CertificateExceptionTest.class);
         suite.addTestSuite(CertificateExpiredExceptionTest.class);
         suite.addTestSuite(CertificateFactory1Test.class);
-//        suite.addTestSuite(CertificateFactory2Test.class);
+        suite.addTestSuite(CertificateFactory2Test.class);
         suite.addTestSuite(CertificateFactory3Test.class);
         suite.addTestSuite(CertificateFactory4Test.class);
         suite.addTestSuite(CertificateFactorySpiTest.class);
@@ -72,14 +72,14 @@ public class AllTests {
         suite.addTestSuite(PKIXParametersTest.class);
         suite.addTestSuite(PolicyQualifierInfoTest.class);
         suite.addTestSuite(TrustAnchorTest.class);
-//        suite.addTestSuite(X509CRL2Test.class);
-//        suite.addTestSuite(X509CRLEntry2Test.class);
+        suite.addTestSuite(X509CRL2Test.class);
         suite.addTestSuite(X509CRLEntryTest.class);
         suite.addTestSuite(X509CRLSelector2Test.class);
         suite.addTestSuite(X509CRLSelectorTest.class);
         suite.addTestSuite(X509CRLTest.class);
         suite.addTestSuite(X509CertSelectorTest.class);
         suite.addTestSuite(X509Certificate2Test.class);
+        suite.addTestSuite(PolicyNodeTest.class);
 
         // $JUnit-END$
         return suite;

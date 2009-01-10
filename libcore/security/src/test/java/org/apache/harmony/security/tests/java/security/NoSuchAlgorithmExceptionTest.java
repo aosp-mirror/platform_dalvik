@@ -23,9 +23,9 @@
 package org.apache.harmony.security.tests.java.security;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.security.NoSuchAlgorithmException;
 
@@ -61,15 +61,12 @@ public class NoSuchAlgorithmExceptionTest extends TestCase {
      * Test for <code>NoSuchAlgorithmException()</code> constructor Assertion:
      * constructs NoSuchAlgorithmException with no detail message
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "NoSuchAlgorithmException",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "NoSuchAlgorithmException",
+        args = {}
+    )
     public void testNoSuchAlgorithmException01() {
         NoSuchAlgorithmException tE = new NoSuchAlgorithmException();
         assertNull("getMessage() must return null.", tE.getMessage());
@@ -81,15 +78,12 @@ public class NoSuchAlgorithmExceptionTest extends TestCase {
      * Assertion: constructs NoSuchAlgorithmException with detail message msg.
      * Parameter <code>msg</code> is not null.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "NoSuchAlgorithmException",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "NoSuchAlgorithmException",
+        args = {java.lang.String.class}
+    )
     public void testNoSuchAlgorithmException02() {
         NoSuchAlgorithmException tE;
         for (int i = 0; i < msgs.length; i++) {
@@ -105,15 +99,12 @@ public class NoSuchAlgorithmExceptionTest extends TestCase {
      * Assertion: constructs NoSuchAlgorithmException when <code>msg</code> is
      * null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "NoSuchAlgorithmException",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "NoSuchAlgorithmException",
+        args = {java.lang.String.class}
+    )
     public void testNoSuchAlgorithmException03() {
         String msg = null;
         NoSuchAlgorithmException tE = new NoSuchAlgorithmException(msg);
@@ -126,15 +117,12 @@ public class NoSuchAlgorithmExceptionTest extends TestCase {
      * Assertion: constructs NoSuchAlgorithmException when <code>cause</code>
      * is null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "NoSuchAlgorithmException",
-          methodArgs = {Throwable.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "NoSuchAlgorithmException",
+        args = {java.lang.Throwable.class}
+    )
     public void testNoSuchAlgorithmException04() {
         Throwable cause = null;
         NoSuchAlgorithmException tE = new NoSuchAlgorithmException(cause);
@@ -147,15 +135,12 @@ public class NoSuchAlgorithmExceptionTest extends TestCase {
      * Assertion: constructs NoSuchAlgorithmException when <code>cause</code>
      * is not null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "NoSuchAlgorithmException",
-          methodArgs = {Throwable.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "NoSuchAlgorithmException",
+        args = {java.lang.Throwable.class}
+    )
     public void testNoSuchAlgorithmException05() {
         NoSuchAlgorithmException tE = new NoSuchAlgorithmException(tCause);
         if (tE.getMessage() != null) {
@@ -174,15 +159,12 @@ public class NoSuchAlgorithmExceptionTest extends TestCase {
      * constructor Assertion: constructs NoSuchAlgorithmException when
      * <code>cause</code> is null <code>msg</code> is null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "NoSuchAlgorithmException",
-          methodArgs = {String.class, Throwable.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "NoSuchAlgorithmException",
+        args = {java.lang.String.class, java.lang.Throwable.class}
+    )
     public void testNoSuchAlgorithmException06() {
         NoSuchAlgorithmException tE = new NoSuchAlgorithmException(null, null);
         assertNull("getMessage() must return null", tE.getMessage());
@@ -194,15 +176,12 @@ public class NoSuchAlgorithmExceptionTest extends TestCase {
      * constructor Assertion: constructs NoSuchAlgorithmException when
      * <code>cause</code> is null <code>msg</code> is not null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "NoSuchAlgorithmException",
-          methodArgs = {String.class, Throwable.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "NoSuchAlgorithmException",
+        args = {java.lang.String.class, java.lang.Throwable.class}
+    )
     public void testNoSuchAlgorithmException07() {
         NoSuchAlgorithmException tE;
         for (int i = 0; i < msgs.length; i++) {
@@ -218,15 +197,12 @@ public class NoSuchAlgorithmExceptionTest extends TestCase {
      * constructor Assertion: constructs NoSuchAlgorithmException when
      * <code>cause</code> is not null <code>msg</code> is null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "NoSuchAlgorithmException",
-          methodArgs = {String.class, Throwable.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "NoSuchAlgorithmException",
+        args = {java.lang.String.class, java.lang.Throwable.class}
+    )
     public void testNoSuchAlgorithmException08() {
         NoSuchAlgorithmException tE = new NoSuchAlgorithmException(null, tCause);
         if (tE.getMessage() != null) {
@@ -245,15 +221,12 @@ public class NoSuchAlgorithmExceptionTest extends TestCase {
      * constructor Assertion: constructs NoSuchAlgorithmException when
      * <code>cause</code> is not null <code>msg</code> is not null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "NoSuchAlgorithmException",
-          methodArgs = {String.class, Throwable.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "NoSuchAlgorithmException",
+        args = {java.lang.String.class, java.lang.Throwable.class}
+    )
     public void testNoSuchAlgorithmException09() {
         NoSuchAlgorithmException tE;
         for (int i = 0; i < msgs.length; i++) {

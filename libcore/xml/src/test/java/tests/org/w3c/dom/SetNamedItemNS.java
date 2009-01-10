@@ -22,9 +22,9 @@ See W3C License http://www.w3.org/Consortium/Legal/ for more details.
 
 package tests.org.w3c.dom;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import org.w3c.dom.NamedNodeMap;
@@ -79,15 +79,12 @@ public final class SetNamedItemNS extends DOMTestCase {
     * Runs the test case.
     * @throws Throwable Any uncaught exception causes test to fail
     */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies DOMException with INUSE_ATTRIBUTE_ERR code.",
-      targets = {
-        @TestTarget(
-          methodName = "setNamedItemNS",
-          methodArgs = {org.w3c.dom.Node.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies DOMException with INUSE_ATTRIBUTE_ERR code.",
+        method = "setNamedItemNS",
+        args = {org.w3c.dom.Node.class}
+    )
    public void testSetNamedItemNS1() throws Throwable {
       Document doc;
       NodeList elementList;
@@ -115,15 +112,12 @@ public final class SetNamedItemNS extends DOMTestCase {
          assertTrue("throw_INUSE_ATTRIBUTE_ERR", success);
       }
 }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies DOMException with WRONG_DOCUMENT_ERR code.",
-      targets = {
-        @TestTarget(
-          methodName = "setNamedItemNS",
-          methodArgs = {org.w3c.dom.Node.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies DOMException with WRONG_DOCUMENT_ERR code.",
+        method = "setNamedItemNS",
+        args = {org.w3c.dom.Node.class}
+    )
    public void testSetNamedItemNS2() throws Throwable {
           String namespaceURI = "http://www.usa.com";
           String qualifiedName = "dmstc:domestic";
@@ -152,15 +146,12 @@ public final class SetNamedItemNS extends DOMTestCase {
              assertTrue("throw_WRONG_DOCUMENT_ERR", success);
           }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies positive fnctionality.",
-      targets = {
-        @TestTarget(
-          methodName = "getNamedItemNS",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies positive fnctionality.",
+        method = "getNamedItemNS",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
    public void testSetNamedItemNS3() throws Throwable {
           String namespaceURI = "http://www.nist.gov";
           String qualifiedName = "prefix:newAttr";
@@ -226,15 +217,12 @@ public final class SetNamedItemNS extends DOMTestCase {
 //             assertTrue("throw_NO_MODIFICATION_ALLOWED_ERR", success);
 //          }
 //    }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies positive fnctionality.",
-      targets = {
-        @TestTarget(
-          methodName = "setNamedItemNS",
-          methodArgs = {org.w3c.dom.Node.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies positive fnctionality.",
+        method = "setNamedItemNS",
+        args = {org.w3c.dom.Node.class}
+    )
    public void testSetNamedItemNS5() throws Throwable {
           String namespaceURI = "http://www.usa.com";
           String qualifiedName = "dmstc:domestic";

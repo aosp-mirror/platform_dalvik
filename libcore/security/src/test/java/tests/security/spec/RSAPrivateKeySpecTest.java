@@ -22,9 +22,9 @@
 
 package tests.security.spec;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -53,15 +53,12 @@ public class RSAPrivateKeySpecTest extends TestCase {
      * Assertion: constructs <code>RSAPrivateKeySpec</code>
      * object using valid parameters
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "RSAPrivateKeySpec",
-          methodArgs = {java.math.BigInteger.class, java.math.BigInteger.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "RSAPrivateKeySpec",
+        args = {java.math.BigInteger.class, java.math.BigInteger.class}
+    )
     public final void testRSAPrivateKeySpec() {
         KeySpec ks = new RSAPrivateKeySpec(BigInteger.valueOf(1234567890L),
                                            BigInteger.valueOf(3L));
@@ -72,15 +69,12 @@ public class RSAPrivateKeySpecTest extends TestCase {
      * Test for <code>getModulus()</code> method<br>
      * Assertion: returns modulus
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getModulus",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getModulus",
+        args = {}
+    )
     public final void testGetModulus() {
         RSAPrivateKeySpec rpks =
             new RSAPrivateKeySpec(BigInteger.valueOf(1234567890L),
@@ -92,15 +86,12 @@ public class RSAPrivateKeySpecTest extends TestCase {
      * Test for <code>getPrivateExponent()</code> method<br>
      * Assertion: returns private exponent
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getPrivateExponent",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getPrivateExponent",
+        args = {}
+    )
     public final void testGetPrivateExponent() {
         RSAPrivateKeySpec rpks =
             new RSAPrivateKeySpec(BigInteger.valueOf(1234567890L),

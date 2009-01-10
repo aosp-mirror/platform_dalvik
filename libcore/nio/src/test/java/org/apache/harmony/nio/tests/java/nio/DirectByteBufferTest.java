@@ -15,9 +15,8 @@
  */
 package org.apache.harmony.nio.tests.java.nio;
 
-import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import java.nio.ByteBuffer;
@@ -27,6 +26,7 @@ public class DirectByteBufferTest extends ByteBufferTest {
 
     protected void setUp() throws Exception {
         super.setUp();
+        capacity = BUFFER_LENGTH;
         buf = ByteBuffer.allocateDirect(BUFFER_LENGTH);
         baseBuf = buf;
     }
@@ -41,15 +41,12 @@ public class DirectByteBufferTest extends ByteBufferTest {
      * @tests java.nio.ByteBuffer#allocateDirect(int)
      * 
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies IllegalArgumentException.",
-      targets = {
-        @TestTarget(
-          methodName = "allocateDirect",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies IllegalArgumentException.",
+        method = "allocateDirect",
+        args = {int.class}
+    )
     public void testAllocatedByteBuffer_IllegalArg() {
         try {
             ByteBuffer.allocateDirect(-1);
@@ -58,39 +55,69 @@ public class DirectByteBufferTest extends ByteBufferTest {
             // expected
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies isDirect method for direct ByteBuffer.",
-      targets = {
-        @TestTarget(
-          methodName = "isDirect",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "array",
+        args = {}
+    )
+    public void testArray() {
+        try {
+            buf.array();
+            fail("Should throw UnsupportedOperationException"); //$NON-NLS-1$
+        } catch (UnsupportedOperationException e) {
+            // expected
+        }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "arrayOffset",
+        args = {}
+    )
+    public void testArrayOffset() {
+        try {
+            buf.arrayOffset();
+            fail("Should throw UnsupportedOperationException"); //$NON-NLS-1$
+        } catch (UnsupportedOperationException e) {
+            // expected
+        }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies isDirect method for direct ByteBuffer.",
+        method = "isDirect",
+        args = {}
+    )
     public void testIsDirect() {
         assertTrue(buf.isDirect());
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies hasArray method for direct ByteBuffer.",
-      targets = {
-        @TestTarget(
-          methodName = "hasArray",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies hasArray method for direct ByteBuffer.",
+        method = "hasArray",
+        args = {}
+    )
     public void testHasArray() {
         assertFalse(buf.hasArray());
+        try {
+            buf.array();
+            fail("Should throw Exception"); //$NON-NLS-1$
+        } catch (UnsupportedOperationException e) {
+            // expected
+        }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies isReadOnly method for direct ByteBuffer.",
-      targets = {
-        @TestTarget(
-          methodName = "isReadOnly",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies isReadOnly method for direct ByteBuffer.",
+        method = "isReadOnly",
+        args = {}
+    )
     public void testIsReadOnly() {
         assertFalse(buf.isReadOnly());
     }

@@ -16,9 +16,10 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.KnownFailure;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -26,7 +27,12 @@ import junit.framework.TestCase;
 import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FilePermission;
+import java.io.IOException;
+import java.lang.reflect.Member;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.net.SocketPermission;
 import java.net.UnknownHostException;
 import java.security.AccessControlContext;
@@ -35,14 +41,21 @@ import java.security.Permission;
 import java.security.ProtectionDomain;
 import java.security.Security;
 import java.security.SecurityPermission;
-import java.util.PropertyPermission;
 
 import tests.support.Support_Exec;
 
 /**
  * Test case for java.lang.SecurityManager
  */
-@TestTargetClass(SecurityManager.class) 
+@TestTargetClass(value = SecurityManager.class, 
+                 untestedMethods = {
+                     @TestTargetNew(
+                         level = TestLevel.NOT_FEASIBLE,
+                         notes = "AWTPermission class is not supported.",
+                         method = "checkSystemClipboardAccess",
+                         args = {}
+                     )
+}) 
 public class SecurityManagerTest extends TestCase {
     MutableSecurityManager mutableSM = null;
 
@@ -57,15 +70,12 @@ public class SecurityManagerTest extends TestCase {
     /**
      * @tests java.lang.SecurityManager#SecurityManager()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "SecurityManager",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "SecurityManager",
+        args = {}
+    )
     public void test_Constructor() {
         SecurityManager localManager = null;
         try {
@@ -91,15 +101,12 @@ public class SecurityManagerTest extends TestCase {
     /**
      * @tests java.lang.SecurityManager#checkPackageAccess(String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "checkPackageAccess",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "checkPackageAccess",
+        args = {java.lang.String.class}
+    )
     public void test_checkPackageAccessLjava_lang_String() {
         final String old = Security.getProperty("package.access");
         Security.setProperty("package.access", "a.,bbb, c.d.");
@@ -148,15 +155,12 @@ public class SecurityManagerTest extends TestCase {
     /**
      * @tests java.lang.SecurityManager#checkPackageDefinition(String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "checkPackageDefinition",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "checkPackageDefinition",
+        args = {java.lang.String.class}
+    )
     public void test_checkPackageDefinitionLjava_lang_String() {
         final String old = Security.getProperty("package.definition");
         Security.setProperty("package.definition", "a.,bbb, c.d.");
@@ -205,20 +209,18 @@ public class SecurityManagerTest extends TestCase {
     /**
      * @tests java.lang.SecurityManager#checkMemberAccess(java.lang.Class, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't call checkMemberAccess.",
-      targets = {
-        @TestTarget(
-          methodName = "checkMemberAccess",
-          methodArgs = {java.lang.Class.class, int.class}
-        )
-    })
-    public void _test_checkMemberAccessLjava_lang_ClassI() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "checkMemberAccess",
+        args = {java.lang.Class.class, int.class}
+    )
+    @KnownFailure("ToT fixed.") 
+    public void test_checkMemberAccessLjava_lang_ClassI() {
         // enable all but one check
         mutableSM.addPermission(new AllPermission());
-        mutableSM
-                .denyPermission(new RuntimePermission("accessDeclaredMembers"));
+        mutableSM.denyPermission(
+                new RuntimePermission("accessDeclaredMembers"));
         System.setSecurityManager(mutableSM);
         try {
             getClass().getDeclaredFields();
@@ -228,7 +230,20 @@ public class SecurityManagerTest extends TestCase {
                 fail("This should throw a SecurityException.");
             } catch (SecurityException e) {
             }
-
+            
+            try {
+                mutableSM.checkMemberAccess(Object.class, Member.DECLARED);
+                fail("SecurityException was not thrown.");
+            } catch(SecurityException se) {
+                //expected
+            }
+            
+            try {
+                mutableSM.checkMemberAccess(null, Member.PUBLIC);
+                fail("NullPointerException was not thrown.");
+            } catch(NullPointerException npe) {
+                //expected
+            }
         } finally {
             System.setSecurityManager(null);
         }
@@ -237,34 +252,40 @@ public class SecurityManagerTest extends TestCase {
     /**
      * @tests java.lang.SecurityManager#checkPermission(java.security.Permission)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Exceptions are not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "checkPermission",
-          methodArgs = {java.security.Permission.class}
-        )
-    })
-    public void _test_checkPermissionLjava_security_Permission()
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "checkPermission",
+        args = {java.security.Permission.class}
+    )
+    public void test_checkPermissionLjava_security_Permission()
             throws Exception {
 
         // tmp user home to avoid presence of ${user.home}/.java.policy
-        String tmpUserHome = System.getProperty("java.io.tmpdir")
-                + File.separatorChar + "tmpUserHomeForSecurityManagerTest";
-        File dir = new File(tmpUserHome);
-        if (!dir.exists()) {
-            dir.mkdirs();
-            dir.deleteOnExit();
+        //String tmpUserHome = System.getProperty("java.io.tmpdir")
+        //        + File.separatorChar + "tmpUserHomeForSecurityManagerTest";
+        //File dir = new File(tmpUserHome);
+        //if (!dir.exists()) {
+        //    dir.mkdirs();
+        //   dir.deleteOnExit();
+        //}
+        //String javaPolycy = tmpUserHome + File.separatorChar + ".java.policy";
+        //assertFalse("There should be no java policy file: " + javaPolycy,
+        //        new File(javaPolycy).exists());
+        // 
+        //String[] arg = new String[] { "-Duser.home=" + tmpUserHome,
+        //        checkPermissionLjava_security_PermissionTesting.class.getName() };
+        //
+        //Support_Exec.execJava(arg, null, true);
+        
+        checkPermissionLjava_security_PermissionTesting.class.getName();
+        
+       try {
+            mutableSM.checkPermission(null);
+            fail("NullPointerException was not thrown.");
+        } catch(NullPointerException npe) {
+            //expected
         }
-        String javaPolycy = tmpUserHome + File.separatorChar + ".java.policy";
-        assertFalse("There should be no java policy file: " + javaPolycy,
-                new File(javaPolycy).exists());
-
-        String[] arg = new String[] { "-Duser.home=" + tmpUserHome,
-                checkPermissionLjava_security_PermissionTesting.class.getName() };
-
-        Support_Exec.execJava(arg, null, true);
     }
 
     private static class checkPermissionLjava_security_PermissionTesting {
@@ -279,6 +300,12 @@ public class SecurityManagerTest extends TestCase {
                     fail("This should throw a SecurityException");
                 } catch (SecurityException e) {
                 }
+                
+                try {
+                    sm.checkPermission(new SecurityPermission("setSystemScope"));
+                } catch(SecurityException se) {
+                    fail("SecurityException is thrown.");
+                }                
             } finally {
                 System.setSecurityManager(null);
             }
@@ -288,119 +315,317 @@ public class SecurityManagerTest extends TestCase {
     /**
      * @tests java.lang.SecurityManager#checkAccess(java.lang.Thread)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Exceptions are not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "checkAccess",
-          methodArgs = {java.lang.Thread.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "checkAccess",
+        args = {java.lang.Thread.class}
+    )
     public void test_checkAccessLjava_lang_Thread() throws InterruptedException {
         // Regression for HARMONY-66
         Thread t = new Thread() {
             @Override
             public void run() {
-            };
+            }
         };
         t.start();
         t.join();
         new SecurityManager().checkAccess(t);
+        
+        mutableSM.addPermission(new AllPermission());
+        mutableSM.denyPermission( new RuntimePermission("modifyThread"));  
+        System.setSecurityManager(mutableSM);        
+
+        try {
+            try {
+                mutableSM.checkAccess(t);
+                // should not throw SecurityException for not system thread.
+            } catch(SecurityException se) {
+                fail("SecurityException was thrown.");
+            }
+            
+            try {
+                ThreadGroup initialThreadGroup = Thread.currentThread().getThreadGroup();
+                
+                while (initialThreadGroup.getParent() != null) {
+                    initialThreadGroup = initialThreadGroup.getParent();
+                }                
+                Thread [] systemThread = new Thread[1];
+                initialThreadGroup.enumerate(systemThread);
+                mutableSM.checkAccess(systemThread[0]);
+                fail("SecurityException was not thrown.");
+            } catch(SecurityException se) {
+                // expected
+            }
+            
+          
+        } finally { 
+            System.setSecurityManager(null);  
+        }
+        
+        try {
+            mutableSM.checkAccess((Thread) null);
+            fail("NullPointerException was not thrown.");
+        } catch(NullPointerException npe) {
+            //expected
+        }       
+        
+        try {
+            new SecurityManager().checkAccess((Thread)null);
+            fail("NullPointerException was not thrown.");
+        } catch(NullPointerException npe){
+            //expected
+        }        
     }
 
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "checkAccess",
+        args = {java.lang.ThreadGroup.class}
+    )
+    public void test_checkAccessLjava_lang_ThreadGroup() {
+        
+        ThreadGroup tg = new ThreadGroup("name");
+        
+        RuntimePermission rp = new RuntimePermission("modifyThreadGroup");
+        mutableSM.addPermission(new AllPermission());
+        
+        mutableSM.denyPermission(rp);        
+        SecurityManager sm = System.getSecurityManager();
+        System.setSecurityManager(mutableSM);
+
+        try {
+            try {
+                mutableSM.checkAccess(tg);
+         
+            } catch(SecurityException se) {
+                fail("SecurityException was thrown.");   
+            }
+            
+            try {
+                ThreadGroup initialThreadGroup = Thread.currentThread().getThreadGroup();
+                
+                while (initialThreadGroup.getParent() != null) {
+                    initialThreadGroup = initialThreadGroup.getParent();
+                }                
+                mutableSM.checkAccess(initialThreadGroup);
+            } catch(SecurityException se) {
+                
+            }
+        } finally {
+            System.setSecurityManager(sm);  
+        }
+         
+         try {
+             mutableSM.checkAccess((ThreadGroup) null);
+             fail("NullPointerException was not thrown.");
+         } catch(NullPointerException npe) {
+             //expected
+         }
+    }   
     /**
      * @tests {@link java.lang.SecurityManager#checkAccept(String, int)}
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "NullPointerException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "checkAccept",
-          methodArgs = {java.lang.String.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "checkAccept",
+        args = {java.lang.String.class, int.class}
+    )
     @SuppressWarnings("nls")
     public void test_checkAcceptLjava_lang_String_int() {
         // enable all but one check
         mutableSM.addPermission(new AllPermission());
-        mutableSM.denyPermission(new SocketPermission("localhost:1024-",
-                "accept, connect, listen"));
         System.setSecurityManager(mutableSM);
         try {
-            mutableSM.checkAccept("localhost", 1024);
-            fail("This should throw a SecurityException.");
-        } catch (SecurityException e) {
-            // expected
+            assertFalse(startServerSocket());
+            assertTrue(mutableSM.isCheckAcceptCalled);
+        
+            mutableSM.denyPermission(new SocketPermission("localhost:1024-",
+                                                    "accept, connect, listen")); 
+            assertTrue(startServerSocket());        
+            assertTrue(mutableSM.isCheckAcceptCalled);
+        
+            try {
+                mutableSM.checkAccept(null, 0);
+                fail("NullPointerException is not thrown.");
+            } catch(NullPointerException npe) {
+                //expected
+            }
+        } finally {
+            System.setSecurityManager(null);              
         }
     }
 
+    boolean startServerSocket() {
+        boolean isSecurityExceptionThrown = false;
+        ServerSocket ss = null;
+        try {
+            ss = new ServerSocket(3132);
+            Thread thr = new Thread() {
+                Socket s = null;
+                
+                public void run() {
+                    try {
+                        s = new Socket(InetAddress.getLocalHost().getHostName(), 3132);
+                        Thread.sleep(1);
+                    } catch(InterruptedException ie) {
+                        fail("InterruptedException was thrown.");
+                    } catch(UnknownHostException uhe) {
+                        fail("UnknownHostException was thrown.");
+                    } catch(IOException ioe) {
+                        fail("IOException was thrown.");
+                    } finally {
+                        try {
+                            s.close();
+                        } catch(Exception e) {}
+                    }
+                }
+            };
+            thr.start();
+            ss.accept();
+            ss.close();
+        } catch(IOException ioe) {
+            fail("IOException was thrown.");
+        } catch(SecurityException se) {
+            isSecurityExceptionThrown = true;
+        } finally {
+            try {
+                if(!ss.isClosed())
+                    ss.close();
+            } catch(Exception e) {              
+            }
+
+        }
+        return isSecurityExceptionThrown;
+    }
+    
     /**
      * @tests {@link java.lang.SecurityManager#checkConnect(String, int)}
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "NullPointerException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "checkConnect",
-          methodArgs = {java.lang.String.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "checkConnect",
+        args = {java.lang.String.class, int.class}
+    )
+    @KnownFailure("ToT fixed.") 
     public void test_checkConnectLjava_lang_StringI() {
+        String hostName = "localhost";
+        int port = 1024;
+        
         // enable all but one check
         mutableSM.addPermission(new AllPermission());
         mutableSM.denyPermission(new SocketPermission("localhost:1024-",
                 "accept, connect, listen"));
         System.setSecurityManager(mutableSM);
         try {
-            mutableSM.checkConnect("localhost", 1024);
-            fail("This should throw a SecurityException.");
-        } catch (SecurityException e) {
-            // expected
+            try {
+                mutableSM.checkConnect(hostName, port);
+                fail("This should throw a SecurityException.");
+            } catch (SecurityException e) {
+                // expected
+            } 
+            
+            assertTrue(createSocketAddress(hostName, port));
+        
+            try {
+                mutableSM.checkConnect(hostName, -1);
+                fail("This should throw a SecurityException.");
+            } catch (SecurityException e) {
+                // expected
+            } 
+            
+            try {
+                mutableSM.checkConnect(null, 1024);
+                fail("NullPointerException was not thrown.");
+            } catch(NullPointerException npe) {
+                //expected
+            }
+        } finally {
+              System.setSecurityManager(null);
         }
+        
+        assertFalse(createSocketAddress(hostName, port));
     }
+    
+    boolean createSocketAddress(String hostname, int port) {
 
+        try {
+            new InetSocketAddress(hostname, port);
+        } catch(SecurityException se) {
+            return true;
+        }
+        return false;
+    }
+    
     /**
      * @tests {@link java.lang.SecurityManager#checkConnect(String, int, Object)}
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "NullPointerException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "checkConnect",
-          methodArgs = {java.lang.String.class, int.class, java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "checkConnect",
+        args = {java.lang.String.class, int.class, java.lang.Object.class}
+    )
+    @KnownFailure("ToT fixed.") 
     @SuppressWarnings("nls")
-    public void _test_checkConnectLjava_lang_String_int_Ljava_lang_Object() {
+    public void test_checkConnectLjava_lang_String_int_Ljava_lang_Object() {
         // enable all but one check
         mutableSM.addPermission(new AllPermission());
         mutableSM.denyPermission(new SocketPermission("localhost:1024-",
                 "accept, connect, listen"));
         System.setSecurityManager(mutableSM);
-        ProtectionDomain pDomain = this.getClass().getProtectionDomain();
-        ProtectionDomain[] pd = { pDomain };
-        AccessControlContext acc = new AccessControlContext(pd);
         try {
-            mutableSM.checkConnect("localhost", 1024, acc);
-            fail("This should throw a SecurityException.");
-        } catch (SecurityException e) {
-            // expected
-        }
+            ProtectionDomain pDomain = this.getClass().getProtectionDomain();
+            ProtectionDomain[] pd = { pDomain };
+            AccessControlContext acc = new AccessControlContext(pd);
+            try {
+                mutableSM.checkConnect("localhost", 1024, acc);
+                fail("This should throw a SecurityException.");
+            } catch (SecurityException e) {
+                // expected
+            }
+            
+            try {
+                mutableSM.checkConnect("localhost", -1, acc);
+                // The action "resolve" is implicitely in the denied Permission
+                // that was added to the denied permissions at the beginning of
+                // this test. So this throws a security Exception on the RI and
+                // also on android.
+                fail("This should throw a SecurityException.");
+            } catch (SecurityException e) {
+              // expected
+            }
+            
+            assertTrue(createSocketAddress("localhost", 1024));
+        
+            try {
+                mutableSM.checkConnect(null, 1024, acc);            
+                fail("NullPointerException was not thrown.");
+            } catch(NullPointerException npe) {
+                //expected
+            }
+            System.setSecurityManager(null);
+            try {
+                mutableSM.checkConnect("localhost", 1024, null);
+                fail("SecurityException was not thrown.");            
+            } catch(SecurityException se) {
+                //expected
+            }
+        } finally {
+            System.setSecurityManager(null);
+        } 
+        assertFalse(createSocketAddress("localhost", 1024));        
     }
 
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Doesn't check positive functionlity?",
-      targets = {
-        @TestTarget(
-          methodName = "checkCreateClassLoader",
-          methodArgs = {}
-        )
-    })   
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "checkCreateClassLoader",
+        args = {}
+    )   
     public void test_checkCreateClassLoader() {
         // enable all but one check
         mutableSM.addPermission(new AllPermission());
@@ -425,25 +650,35 @@ public class SecurityManagerTest extends TestCase {
         }
     }
     
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "This methd could be verified via the delete method of class File " +
-            "according to the specification.",
-      targets = {
-        @TestTarget(
-          methodName = "checkDelete",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "checkDelete",
+        args = {java.lang.String.class}
+    )
     public void test_checkDeleteLjava_lang_String() {
         // enable all but one check
         mutableSM.addPermission(new AllPermission());
-        System.setSecurityManager(mutableSM);
+        mutableSM
+        .denyPermission(new FilePermission("<<ALL FILES>>", "delete")); 
         try {
-            mutableSM.checkDelete(null);
-            fail("NullPointerException was not thrown");
-        } catch (NullPointerException npe) {
-            // expected
+            System.setSecurityManager(mutableSM);
+          
+            try {
+                mutableSM.checkDelete("new.file");
+                fail("SecurityException was not thrown");
+            } catch (SecurityException npe) {
+                // expected
+            }            
+            
+            try {
+                mutableSM.checkDelete(null);
+                fail("NullPointerException was not thrown");
+            } catch (NullPointerException npe) {
+                // expected
+            }
+        } finally {
+            System.setSecurityManager(null);
         }
 
         SecurityManager localManager = new MockSecurityManager();
@@ -463,15 +698,12 @@ public class SecurityManagerTest extends TestCase {
     /**
      * @tests {@link java.lang.SecurityManager#checkExec(String)}
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "checkExec",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "checkExec",
+        args = {java.lang.String.class}
+    )
     @SuppressWarnings("nls")
     public void test_checkExecLjava_lang_String() {
         // enable all but one check
@@ -484,25 +716,36 @@ public class SecurityManagerTest extends TestCase {
             fail("This should throw a SecurityException.");
         } catch (SecurityException e) {
             // expected
+        } finally {
+            System.setSecurityManager(null);           
+        }
+        
+        try {
+            mutableSM.checkExec(null);
+            fail("NullPointerException was not thrown.");
+        } catch(NullPointerException npe) {
+            //expected
         }
     }
 
     /**
      * @tests {@link java.lang.SecurityManager#checkExit(int)}
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "checkExit",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "checkExit",
+        args = {int.class}
+    )
     @SuppressWarnings("nls")
     public void test_checkExit_int() {
         // enable all but one check
         mutableSM.addPermission(new AllPermission());
+        try {
+            mutableSM.checkExit(0);
+        } catch(SecurityException se) {
+            fail("SecurityException was thrown.");
+        }
         mutableSM.denyPermission(new RuntimePermission("exitVM"));
         System.setSecurityManager(mutableSM);
         try {
@@ -510,21 +753,20 @@ public class SecurityManagerTest extends TestCase {
             fail("This should throw a SecurityException.");
         } catch (SecurityException e) {
             // expected
+        } finally {
+            System.setSecurityManager(null);
         }
     }
 
     /**
      * @tests {@link java.lang.SecurityManager#checkLink(String)}
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify NullPointerException.",
-      targets = {
-        @TestTarget(
-          methodName = "checkLink",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "checkLink",
+        args = {java.lang.String.class}
+    )
     @SuppressWarnings("nls")
     public void test_checkLinkLjava_lang_String() {
         // enable all but one check
@@ -532,29 +774,42 @@ public class SecurityManagerTest extends TestCase {
         mutableSM.denyPermission(new RuntimePermission("loadLibrary.harmony"));
         System.setSecurityManager(mutableSM);
         try {
-            mutableSM.checkLink("harmony");
-            fail("This should throw a SecurityException.");
-        } catch (SecurityException e) {
-            // expected
+            try {
+                mutableSM.checkLink("harmony");
+                fail("This should throw a SecurityException.");
+            } catch (SecurityException e) {
+                // expected
+            }
+        
+            try {
+                mutableSM.checkLink(null);
+                fail("NullPointerException is not thrown.");
+            } catch(NullPointerException npe) {
+                //expected
+            }
+        } finally {
+            System.setSecurityManager(null);
         }
     }
 
     /**
      * @tests {@link java.lang.SecurityManager#checkListen(int)}
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Doesn't check positive functionality.",
-      targets = {
-        @TestTarget(
-          methodName = "checkListen",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "checkListen",
+        args = {int.class}
+    )
     @SuppressWarnings("nls")
     public void test_checkListen_int() {
         // enable all but one check
         mutableSM.addPermission(new AllPermission());
+        try {
+            mutableSM.checkListen(80);
+        } catch(SecurityException se) {
+            fail("SecurityException was thrown.");
+        }
         mutableSM
                 .denyPermission(new SocketPermission("localhost:80", "listen"));
         System.setSecurityManager(mutableSM);
@@ -581,20 +836,22 @@ public class SecurityManagerTest extends TestCase {
      * @throws UnknownHostException
      * @tests {@link java.lang.SecurityManager#checkMulticast(java.net.InetAddress)}
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies SecurityException.",
-      targets = {
-        @TestTarget(
-          methodName = "checkMulticast",
-          methodArgs = {java.net.InetAddress.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies SecurityException.",
+        method = "checkMulticast",
+        args = {java.net.InetAddress.class}
+    )
     @SuppressWarnings("nls")
     public void test_checkMulticastLjava_net_InetAddress()
             throws UnknownHostException {
         // enable all but one check
         mutableSM.addPermission(new AllPermission());
+        try {
+            mutableSM.checkMulticast(InetAddress.getByName("localhost"));
+        } catch(SecurityException se) {
+            fail("SecurityException is thrown.");
+        }            
         mutableSM.denyPermission(new SocketPermission(InetAddress.getByName(
                 "localhost").getHostAddress(), "accept,connect"));
         System.setSecurityManager(mutableSM);
@@ -603,37 +860,60 @@ public class SecurityManagerTest extends TestCase {
             fail("This should throw a SecurityException.");
         } catch (SecurityException e) {
             // expected
+        } finally {
+            System.setSecurityManager(null);
         }
+        
+        try {
+            mutableSM.checkMulticast(null);
+            fail("NullPointerException was not thrown.");            
+        } catch(NullPointerException e) {
+            //expected
+        }        
     }
 
     /**
      * @throws UnknownHostException
      * @tests {@link java.lang.SecurityManager#checkMulticast(java.net.InetAddress,byte)}
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies SecurityException.",
-      targets = {
-        @TestTarget(
-          methodName = "checkMulticast",
-          methodArgs = {java.net.InetAddress.class, byte.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "checkMulticast",
+        args = {java.net.InetAddress.class, byte.class}
+    )
     @SuppressWarnings( { "nls", "deprecation" })
     public void test_checkMulticastLjava_net_InetAddress_int()
             throws UnknownHostException {
         // enable all but one check
         mutableSM.addPermission(new AllPermission());
+        try {
+            mutableSM.checkMulticast(
+                    InetAddress.getByName("localhost"), (byte) 0);
+        } catch(SecurityException se) {
+            fail("SecurityException is thrown.");
+        }            
         mutableSM.denyPermission(new SocketPermission(InetAddress.getByName(
                 "localhost").getHostAddress(), "accept,connect"));
         System.setSecurityManager(mutableSM);
         try {
-            // the second parameter is the TTL(time to live)
-            mutableSM.checkMulticast(InetAddress.getByName("localhost"),
-                    (byte) 0);
-            fail("This should throw a SecurityException.");
-        } catch (SecurityException e) {
-            // expected
+            try {
+                // the second parameter is the TTL(time to live)
+                mutableSM.checkMulticast(InetAddress.getByName("localhost"),
+                        (byte) 0);
+                fail("This should throw a SecurityException.");
+            } catch (SecurityException e) {
+                // expected
+            }
+            
+            try {
+                mutableSM.checkMulticast(null, (byte) 0);                
+                fail("NullPointerException is not thrown.");
+            } catch(NullPointerException ne) {
+                //expected
+            }
+        } finally {
+            System.setSecurityManager(null);
         }
     }
 
@@ -641,17 +921,14 @@ public class SecurityManagerTest extends TestCase {
      *
      * @tests {@link java.lang.SecurityManager#checkPermission(Permission, Object)}
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies SecurityException.",
-      targets = {
-        @TestTarget(
-          methodName = "checkPermission",
-          methodArgs = {java.security.Permission.class, java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "checkPermission",
+        args = {java.security.Permission.class, java.lang.Object.class}
+    )
     @SuppressWarnings("nls")
-    public void _test_checkPermissionLjava_security_PermissionLjava_lang_Object() {
+    public void test_checkPermissionLjava_security_PermissionLjava_lang_Object() {
         // enable all but one check
         mutableSM.addPermission(new AllPermission());
         Permission denyp = new SocketPermission("localhost:1024-",
@@ -666,25 +943,43 @@ public class SecurityManagerTest extends TestCase {
             fail("This should throw a SecurityException.");
         } catch (SecurityException e) {
             // expected
+        } finally {
+            System.setSecurityManager(null);
         }
+        
+        try {
+            mutableSM.checkPermission(null, acc);
+            fail("NullPointerException was not thrown.");
+        } catch (NullPointerException npe) {
+            // expected
+        } 
+        
+        try {
+            mutableSM.checkPermission(denyp, null);
+            fail("SecurityException was not thrown.");
+        } catch (SecurityException se) {
+            // expected
+        }        
     }
 
     /**
      * @tests {@link java.lang.SecurityManager#checkPrintJobAccess()}
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies SecurityException.",
-      targets = {
-        @TestTarget(
-          methodName = "checkPrintJobAccess",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "checkPrintJobAccess",
+        args = {}
+    )
     @SuppressWarnings("nls")
     public void test_checkPrintJobAccess() {
         // enable all but one check
         mutableSM.addPermission(new AllPermission());
+        try {
+            mutableSM.checkPrintJobAccess();
+        } catch(SecurityException se) {
+            fail("SecurityException is thrown.");
+        }            
         mutableSM.denyPermission(new RuntimePermission("queuePrintJob"));
         System.setSecurityManager(mutableSM);
         try {
@@ -694,15 +989,12 @@ public class SecurityManagerTest extends TestCase {
             // expected
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies SecurityException.",
-      targets = {
-        @TestTarget(
-          methodName = "checkPropertiesAccess",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "checkPropertiesAccess",
+        args = {}
+    )
     public void test_checkPropertiesAccess() {
         // enable all but one check
         mutableSM.addPermission(new AllPermission());
@@ -711,6 +1003,8 @@ public class SecurityManagerTest extends TestCase {
             mutableSM.checkPropertiesAccess();
         } catch (SecurityException e) {
             fail("Unexpected SecurityException " + e.toString());
+        } finally {
+            System.setSecurityManager(null);
         }
 
         SecurityManager localManager = new MockSecurityManager();
@@ -726,15 +1020,12 @@ public class SecurityManagerTest extends TestCase {
             System.setSecurityManager(null);
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies SecurityException.",
-      targets = {
-        @TestTarget(
-          methodName = "checkPropertyAccess",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "checkPropertyAccess",
+        args = {java.lang.String.class}
+    )
     public void test_checkPropertyAccessLjava_lang_String() {
         // enable all but one check
         mutableSM.addPermission(new AllPermission());
@@ -743,6 +1034,8 @@ public class SecurityManagerTest extends TestCase {
             mutableSM.checkPropertyAccess("key");
         } catch (SecurityException e) {
             fail("Unexpected SecurityException " + e.toString());
+        } finally {
+            System.setSecurityManager(null);
         }
 
         SecurityManager localManager = new MockSecurityManager();
@@ -774,19 +1067,21 @@ public class SecurityManagerTest extends TestCase {
     /**
      * @tests {@link java.lang.SecurityManager#checkRead(FileDescriptor)}
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies SecurityException.",
-      targets = {
-        @TestTarget(
-          methodName = "checkRead",
-          methodArgs = {java.io.FileDescriptor.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "checkRead",
+        args = {java.io.FileDescriptor.class}
+    )
     @SuppressWarnings("nls")
     public void test_checkReadLjava_io_FileDescriptor() {
         // enable all but one check
         mutableSM.addPermission(new AllPermission());
+        try {
+            mutableSM.checkRead(new FileDescriptor());
+        } catch(SecurityException se) {
+            fail("SecurityException is thrown.");
+        }            
         mutableSM.denyPermission(new RuntimePermission("readFileDescriptor"));
         System.setSecurityManager(mutableSM);
         try {
@@ -796,27 +1091,29 @@ public class SecurityManagerTest extends TestCase {
             // expected
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies SecurityException.",
-      targets = {
-        @TestTarget(
-          methodName = "checkRead",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "checkRead",
+        args = {java.lang.String.class}
+    )
     public void test_checkReadLjava_lang_String() {
         // enable all but one check
         mutableSM.addPermission(new AllPermission());
+        try {
+            mutableSM.checkRead(readedFile);
+        } catch(SecurityException se) {
+            fail("SecurityException is thrown.");
+        }        
         mutableSM.denyPermission(new RuntimePermission("readFileDescriptor"));
         System.setSecurityManager(mutableSM);
         try {
-            mutableSM.checkRead(readedFile);
-        } catch (SecurityException e) {
-            fail("Unexpected SecurityException " + e.toString());
-        }
+            try {
+                mutableSM.checkRead(readedFile);
+            } catch (SecurityException e) {
+                fail("Unexpected SecurityException " + e.toString());
+            }
 
-        try {
             SecurityManager localManager = new MockSecurityManager();
             System.setSecurityManager(localManager);
             try {
@@ -824,6 +1121,13 @@ public class SecurityManagerTest extends TestCase {
                 fail("Expected SecurityException was not thrown");
             } catch (SecurityException e) {
                 // expected
+            }
+            
+            try {
+                localManager.checkRead((String) null);
+                fail("NullPointerException was not thrown.");
+            } catch(NullPointerException npe) {
+                //expected
             }
         } finally {
             System.setSecurityManager(null);
@@ -833,40 +1137,45 @@ public class SecurityManagerTest extends TestCase {
     /**
      * @tests {@link java.lang.SecurityManager#checkRead(String,Object)}
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies SecurityException.",
-      targets = {
-        @TestTarget(
-          methodName = "checkRead",
-          methodArgs = {java.lang.String.class, java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies SecurityException.",
+        method = "checkRead",
+        args = {java.lang.String.class, java.lang.Object.class}
+    )
     @SuppressWarnings("nls")
-    public void _test_checkReadLjava_lang_StringLjava_lang_Object() {
+    public void test_checkReadLjava_lang_StringLjava_lang_Object() {
         // enable all but one check
         mutableSM.addPermission(new AllPermission());
-        mutableSM.denyPermission(new FilePermission("<<ALL FILES>>", "read"));
         ProtectionDomain pDomain = this.getClass().getProtectionDomain();
         ProtectionDomain[] pd = { pDomain };
-        AccessControlContext acc = new AccessControlContext(pd);
+        AccessControlContext acc = new AccessControlContext(pd);        
+        mutableSM.denyPermission(new FilePermission("<<ALL FILES>>", "read"));
         System.setSecurityManager(mutableSM);
         try {
-            mutableSM.checkRead("aa", acc);
-            fail("This should throw a SecurityException.");
-        } catch (SecurityException e) {
-            // expected
+            try {
+                mutableSM.checkRead("aa", acc);
+                fail("This should throw a SecurityException.");
+            } catch (SecurityException e) {
+                // expected
+            }
+            
+            try {
+                mutableSM.checkRead(null, acc);
+                fail("NullPointerException was not thrown.");
+            } catch(NullPointerException npe) {
+                //expected
+            }
+        } finally {
+            System.setSecurityManager(null);
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies SecurityException.",
-      targets = {
-        @TestTarget(
-          methodName = "checkSecurityAccess",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "checkSecurityAccess",
+        args = {java.lang.String.class}
+    )
     public void test_checkSecurityAccessLjava_lang_String() {
         // enable all but one check
         mutableSM.addPermission(new AllPermission());
@@ -875,6 +1184,8 @@ public class SecurityManagerTest extends TestCase {
             mutableSM.checkSecurityAccess("getPolicy");
         } catch (SecurityException e) {
             fail("Unexpected SecurityException " + e.toString());
+        } finally {
+            System.setSecurityManager(null);
         }
 
         SecurityManager localManager = new MockSecurityManager();
@@ -906,40 +1217,75 @@ public class SecurityManagerTest extends TestCase {
     /**
      * @tests {@link java.lang.SecurityManager#checkSetFactory()}
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies SecurityException.",
-      targets = {
-        @TestTarget(
-          methodName = "checkSetFactory",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "checkSetFactory",
+        args = {}
+    )
     @SuppressWarnings("nls")
     public void test_checkSetFactory() {
         // enable all but one check
         mutableSM.addPermission(new AllPermission());
+        assertFalse(setFactory());
         mutableSM.denyPermission(new RuntimePermission("setFactory"));
         System.setSecurityManager(mutableSM);
         try {
-            mutableSM.checkSetFactory();
-            fail("This should throw a SecurityException.");
-        } catch (SecurityException e) {
-            // expected
+            try {
+                mutableSM.checkSetFactory();
+                fail("This should throw a SecurityException.");
+            } catch (SecurityException e) {
+                // expected
+            }
+            assertTrue(setFactory());
+        } finally {
+            System.setSecurityManager(null);            
         }
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "checkTopLevelWindow",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
-    public void _test_checkTopLevelWindowLjava_lang_Object() {
-        assertFalse("Calling thread isn't trusted to bring up the top-level window",
-                mutableSM.checkTopLevelWindow(this));
+    
+    boolean setFactory() {
+        try {
+            ServerSocket.setSocketFactory(null);
+        } catch(IOException ioe) {
+            fail("IOException was thrown.");
+        } catch(SecurityException se) {
+            return true;
+        }
+        return false;
+    }
+    
+    @TestTargetNew(
+        level = TestLevel.NOT_NECESSARY,
+        notes = "Mark this method not feasable: AWTPermission doesn't exist",
+        method = "checkAwtEventQueueAccess",
+        args = {}
+    )
+    public void test_checkAwtEventQueueAccess() {
+        mutableSM.addPermission(new AllPermission());
+        // TODO AWTPermission class is unavailable 
+        //mutableSM.denyPermission(new AWTPermission("accessEventQueue"));
+        //System.setSecurityManager(mutableSM);
+        //try {
+        //    try {
+        //        mutableSM.checkAwtEventQueueAccess();
+        //        fail("This should throw a SecurityException.");
+        //    } catch (SecurityException e) {
+                // expected
+        //    }
+        //} finally {
+        //   System.setSecurityManager(null);            
+        //}
+    }
+
+    @TestTargetNew(
+        level = TestLevel.NOT_NECESSARY,
+        notes = "Mark this method not feasable: AWTPermission doesn't exist",
+        method = "checkTopLevelWindow",
+        args = {java.lang.Object.class}
+    )
+    public void test_checkTopLevelWindowLjava_lang_Object() {
+     //   assertFalse("Calling thread isn't trusted to bring up the top-level window",
+      //          mutableSM.checkTopLevelWindow(this));
 
         try {
             SecurityManager localManager = new MockSecurityManager();
@@ -955,19 +1301,32 @@ public class SecurityManagerTest extends TestCase {
         } finally {
             System.setSecurityManager(null);
         }
+        //TODO AWTPermission class is unavailable
+        //mutableSM.addPermission(new AllPermission());
+        //assertTrue(mutableSM.checkTopLevelWindow(new Object()));
+        //mutableSM.denyPermission(new AWTPermission("showWindowWithoutWarningBanner"));
+        //System.setSecurityManager(mutableSM);
+        //try {
+        //    assertFalse(mutableSM.checkTopLevelWindow(new Object()));
+        //} finally {
+        //    System.setSecurityManager(null);            
+        //}
+                   
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies SecurityException.",
-      targets = {
-        @TestTarget(
-          methodName = "checkWrite",
-          methodArgs = {java.io.FileDescriptor.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "checkWrite",
+        args = {java.io.FileDescriptor.class}
+    )
     public void test_checkWriteLjava_io_FileDescriptor() {
         // enable all but one check
         mutableSM.addPermission(new AllPermission());
+        try {
+            mutableSM.checkWrite(new FileDescriptor());
+        } catch(SecurityException se) {
+            fail("SecurityException was thrown.");
+        }
         mutableSM.denyPermission(new RuntimePermission("writeFileDescriptor"));
         System.setSecurityManager(mutableSM);
         try {
@@ -975,26 +1334,39 @@ public class SecurityManagerTest extends TestCase {
             fail("This should throw a SecurityException.");
         } catch (SecurityException e) {
             // expected
+        } finally {
+            System.setSecurityManager(null);
+        }
+        
+        try {
+            mutableSM.checkWrite((FileDescriptor) null);
+            fail("NullPointerException was not thrown.");            
+        } catch(NullPointerException npe) {
+            //expected
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies SecurityException.",
-      targets = {
-        @TestTarget(
-          methodName = "checkWrite",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "checkWrite",
+        args = {java.lang.String.class}
+    )
     public void test_checkWriteLjava_lang_String() {
         // enable all but one check
         mutableSM.addPermission(new AllPermission());
+        try {
+            mutableSM.checkWrite(writedFile);
+        } catch(SecurityException se) {
+            fail("SecurityException was thrown.");
+        }
         mutableSM.denyPermission(new RuntimePermission("writeFileDescriptor"));
         System.setSecurityManager(mutableSM);
         try {
             mutableSM.checkWrite(writedFile);
         } catch (SecurityException e) {
             fail("Unexpected SecurityException " + e.toString());
+        } finally {
+            System.setSecurityManager(null);
         }
 
         try {
@@ -1009,20 +1381,24 @@ public class SecurityManagerTest extends TestCase {
         } finally {
             System.setSecurityManager(null);
         }
+        
+        try {
+            mutableSM.checkWrite((String) null);
+            fail("NullPointerException was not thrown.");
+        } catch(NullPointerException npe) {
+            //expected
+        }
     }
 
     /**
      * @tests {@link java.lang.SecurityManager#getInCheck()}
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getInCheck",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getInCheck",
+        args = {}
+    )
     public void test_getIncheck() {
         mockSM.setInCheck(false);
         assertFalse(mockSM.getInCheck());
@@ -1033,66 +1409,74 @@ public class SecurityManagerTest extends TestCase {
     /**
      * @tests {@link java.lang.SecurityManager#getSecurityContext()}
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies SecurityException.",
-      targets = {
-        @TestTarget(
-          methodName = "getSecurityContext",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getSecurityContext",
+        args = {}
+    )
     @SuppressWarnings("nls")
-    public void _test_getSecurityContext() {
+    public void test_getSecurityContext() {
         // enable all but one check
         mutableSM.addPermission(new AllPermission());
         mutableSM.denyPermission(new FilePermission("<<ALL FILES>>", "read"));
         System.setSecurityManager(mutableSM);
         try {
-            mutableSM.checkRead("aa", mutableSM.getSecurityContext());
-            fail("This should throw a SecurityException.");
-        } catch (SecurityException e) {
-            // expected
+            try {
+                mutableSM.getSecurityContext();
+            } catch(Exception e) {
+                fail("Unexpected exception was thrown: " + e.toString());
+            }            
+            
+            try {
+                mutableSM.checkRead("aa", mutableSM.getSecurityContext());
+                fail("This should throw a SecurityException.");
+            } catch (SecurityException e) {
+                // expected
+            }
+    
+        } finally {
+            System.setSecurityManager(null);            
         }
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getThreadGroup",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getThreadGroup",
+        args = {}
+    )
     public void test_getThreadGroup() throws InterruptedException {
-        ThreadGroup tgroup = mutableSM.getThreadGroup();
+        final ThreadGroup tgroup = new ThreadGroup(mutableSM.getThreadGroup(), 
+                "groupName");
         assertNotNull("Incorrect thread group", tgroup);
-        final int activeCount = tgroup.activeCount();
-        Thread t = new Thread() {
+        class MyThread extends Thread{
+            public int newCount;
+            
+            public MyThread() {
+                super(tgroup, "threadName");
+            }
+            
             @Override
             public void run() {
                 super.run();
+                newCount = tgroup.activeCount();
             }
-        };
+        }
+        MyThread t = new MyThread();
         t.start();
-        assertEquals("Incorrect active count value",
-                tgroup.activeCount(), activeCount + 1);
         t.join();
+        assertEquals("Incorrect active count value", 1, t.newCount);
     }
 
     /**
      * @tests {@link java.lang.SecurityManager#classDepth(String)}
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that classDepth(String) returns -1 for not " +
-            "found frame.",
-      targets = {
-        @TestTarget(
-          methodName = "classDepth",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = ".",
+        method = "classDepth",
+        args = {java.lang.String.class}
+    )
     @SuppressWarnings("nls")
     public void test_classDepthLjava_lang_String() {
         assertEquals(-1, mockSM.classDepth("nothing"));
@@ -1101,15 +1485,12 @@ public class SecurityManagerTest extends TestCase {
     /**
      * @tests {@link java.lang.SecurityManager#classLoaderDepth()}
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check cases according to the specification.",
-      targets = {
-        @TestTarget(
-          methodName = "classLoaderDepth",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "classLoaderDepth",
+        args = {}
+    )
     public void test_classLoaderDepth() {
         assertEquals(-1, mockSM.classLoaderDepth());
     }
@@ -1117,15 +1498,12 @@ public class SecurityManagerTest extends TestCase {
     /**
      * @tests {@link java.lang.SecurityManager#currentClassLoader()}
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check all cases according to the specification.",
-      targets = {
-        @TestTarget(
-          methodName = "currentClassLoader",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "currentClassLoader",
+        args = {}
+    )
     public void test_currentClassLoader() {
         assertNull(mockSM.currentClassLoader());
     }
@@ -1133,15 +1511,12 @@ public class SecurityManagerTest extends TestCase {
     /**
      * @tests {@link java.lang.SecurityManager#currentLoadedClass()}
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check all cases according to the specification.",
-      targets = {
-        @TestTarget(
-          methodName = "currentLoadedClass",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "currentLoadedClass",
+        args = {}
+    )
     public void test_currentLoadedClass() {
         assertNull(mockSM.currentLoadedClass());
     }
@@ -1149,15 +1524,12 @@ public class SecurityManagerTest extends TestCase {
     /**
      * @tests {@link java.lang.SecurityManager#inClass(String)}
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "inClass",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "inClass",
+        args = {java.lang.String.class}
+    )
     @SuppressWarnings("nls")
     public void test_inClassLjava_lang_String() {
         assertFalse(mockSM.inClass("nothing"));
@@ -1167,15 +1539,12 @@ public class SecurityManagerTest extends TestCase {
     /**
      * @tests {@link java.lang.SecurityManager#inClassLoader()}
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "inClassLoader",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "inClassLoader",
+        args = {}
+    )
     public void test_inClassLoader() {
         assertFalse(mockSM.inClassLoader());
     }
@@ -1183,79 +1552,31 @@ public class SecurityManagerTest extends TestCase {
     /**
      * @tests {@link java.lang.SecurityManager#getClassContext()}
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getClassContext",
-          methodArgs = {}
-        )
-    })
-    public void _test_getClassContext() {
-        assertEquals("MockSecurityManager should be the first in the classes stack",
-                mockSM.getClassContext()[0], MockSecurityManager.class);
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getClassContext",
+        args = {}
+    )
+    @KnownFailure("ToT fixed.") 
+    public void test_getClassContext() {
+        
+        Class [] stack = {MockSecurityManager.class,
+                getClass(), TestCase.class};
+        
+        Class [] returnedStack = mockSM.getClassContext();
+        
+        assertNotNull(returnedStack);
+        assertTrue(returnedStack.length > stack.length);
+        for(int i = 0; i < stack.length; i++) {
+            assertEquals(stack[i].getName() + " class should have " + i +
+                    " position in the classes stack, but there is " +
+                    returnedStack[i].getName(),
+                    stack[i], returnedStack[i]);           
+        }
     }
 
     // set some protected method to public for testing
-    class MockSecurityManager extends SecurityManager {
-
-        public void setInCheck(boolean inCheck) {
-            super.inCheck = inCheck;
-        }
-
-        @Override
-        public int classDepth(String name) {
-            return super.classDepth(name);
-        }
-
-        @Override
-        public int classLoaderDepth() {
-            return super.classLoaderDepth();
-        }
-
-        @Override
-        public void checkPermission(Permission perm) {
-            if (perm.equals(new RuntimePermission("createSecurityManager")) ||
-//              perm.equals(new AWTPermission("accessEventQueue")) ||
-                perm.equals(new RuntimePermission("createClassLoader")) ||
-                perm.equals(new FilePermission(deletedFile,"delete")) ||
-                perm.equals(new FilePermission(readedFile,"read")) ||
-                perm.equals(new PropertyPermission("*", "read,write")) ||
-                perm.equals(new PropertyPermission("key", "read")) ||
-                perm.equals(new SecurityPermission("getPolicy")) ||
-//              perm.equals(new AWTPermission("accessClipboard")) ||
-                perm.equals(new FilePermission(writedFile,"write"))) {
-                throw
-                new SecurityException("Unable to create Security Manager");
-            }
-        }
-
-        @Override
-        public ClassLoader currentClassLoader() {
-            return super.currentClassLoader();
-        }
-
-        @Override
-        public Class<?> currentLoadedClass() {
-            return super.currentLoadedClass();
-        }
-
-        @Override
-        public Class[] getClassContext() {
-            return super.getClassContext();
-        }
-
-        @Override
-        public boolean inClass(String name) {
-            return super.inClass(name);
-        }
-
-        @Override
-        public boolean inClassLoader() {
-            return super.inClassLoader();
-        }
-    }
 
     @Override
     protected void setUp() throws Exception {

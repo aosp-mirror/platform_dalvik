@@ -17,12 +17,14 @@
 
 package org.apache.harmony.text.tests.java.text;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
 import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
 import junit.framework.TestCase;
+
+import tests.support.Support_MessageFormat;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -43,8 +45,6 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Locale;
 import java.util.TimeZone;
-
-import tests.support.Support_MessageFormat;
 
 @TestTargetClass(MessageFormat.class) 
 public class MessageFormatTest extends TestCase {
@@ -75,16 +75,13 @@ public class MessageFormatTest extends TestCase {
      * @tests java.text.MessageFormat#MessageFormat(java.lang.String,
      *        java.util.Locale)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "IllegalArgumentException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "MessageFormat",
-          methodArgs = {java.lang.String.class, java.util.Locale.class}
-        )
-    })
-    public void _test_ConstructorLjava_lang_StringLjava_util_Locale() {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "IllegalArgumentException is not verified.",
+        method = "MessageFormat",
+        args = {java.lang.String.class, java.util.Locale.class}
+    )
+    public void test_ConstructorLjava_lang_StringLjava_util_Locale() {
         // Test for method java.text.MessageFormat(java.lang.String,
         // java.util.Locale)
         Locale mk = new Locale("mk", "MK");
@@ -104,16 +101,12 @@ public class MessageFormatTest extends TestCase {
     /**
      * @tests java.text.MessageFormat#MessageFormat(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "MessageFormat",
-          methodArgs = {java.lang.String.class}
-        )
-    })
-    public void _test_ConstructorLjava_lang_String() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "MessageFormat",
+        args = {java.lang.String.class}
+    )
+    public void test_ConstructorLjava_lang_String() {
         // Test for method java.text.MessageFormat(java.lang.String)
         MessageFormat format = new MessageFormat(
                 "abc {4,time} def {3,date} ghi {2,number} jkl {1,choice,0#low|1#high} mnop {0}");
@@ -199,16 +192,12 @@ public class MessageFormatTest extends TestCase {
     /**
      * @tests java.text.MessageFormat#applyPattern(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "applyPattern",
-          methodArgs = {java.lang.String.class}
-        )
-    })
-    public void _test_applyPatternLjava_lang_String() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "applyPattern",
+        args = {java.lang.String.class}
+    )
+    public void test_applyPatternLjava_lang_String() {
         // Test for method void
         // java.text.MessageFormat.applyPattern(java.lang.String)
         MessageFormat format = new MessageFormat("test");
@@ -253,8 +242,10 @@ public class MessageFormatTest extends TestCase {
         assertTrue("Wrong full time format", format.getFormats()[0]
                 .equals(DateFormat.getTimeInstance(DateFormat.FULL,
                         Locale.FRENCH)));
-        assertEquals("Wrong full time pattern", "{0,time,full}", format
-                .toPattern());
+// Outsourced to _AndroidFailure:
+//
+//        assertEquals("Wrong full time pattern", "{0,time,full}", format
+//                .toPattern());
         format.setLocale(Locale.getDefault());
 
         format.applyPattern("{0, date}");
@@ -349,18 +340,30 @@ public class MessageFormatTest extends TestCase {
         }
     }
 
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "applyPattern",
+        args = {java.lang.String.class}
+    )
+    @KnownFailure("Succeeds against RI.")
+    public void test_applyPatternLjava_lang_String_AndroidFailure() {
+        MessageFormat format = new MessageFormat("test");
+        format.setLocale(Locale.FRENCH); // use French since English has the
+        // same LONG and FULL time patterns
+        format.applyPattern("{0,time, Full}");
+        assertEquals("Wrong full time pattern", "{0,time,full}", format
+                .toPattern());
+    }
+
     /**
      * @tests java.text.MessageFormat#clone()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "clone",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "clone",
+        args = {}
+    )
     public void test_clone() {
         // Test for method java.lang.Object java.text.MessageFormat.clone()
         MessageFormat format = new MessageFormat("'{'choice'}'{0}");
@@ -379,16 +382,12 @@ public class MessageFormatTest extends TestCase {
     /**
      * @tests java.text.MessageFormat#equals(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
-    public void _test_equalsLjava_lang_Object() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "equals",
+        args = {java.lang.Object.class}
+    )
+    public void test_equalsLjava_lang_Object() {
         // Test for method boolean
         // java.text.MessageFormat.equals(java.lang.Object)
         MessageFormat format1 = new MessageFormat("{0}");
@@ -405,15 +404,12 @@ public class MessageFormatTest extends TestCase {
     /**
      * @tests java.text.MessageFormat#hashCode()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "hashCode",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hashCode",
+        args = {}
+    )
     public void test_hashCode() {
         // Test for method
         // int java.text.MessageFormat.hashCode()
@@ -424,36 +420,44 @@ public class MessageFormatTest extends TestCase {
     /**
      * @tests java.text.MessageFormat#formatToCharacterIterator(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn'verifies exceptions.",
-      targets = {
-        @TestTarget(
-          methodName = "formatToCharacterIterator",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "formatToCharacterIterator",
+        args = {java.lang.Object.class}
+    )
     // FIXME This test fails on Harmony ClassLibrary
-    public void failing_test_formatToCharacterIteratorLjava_lang_Object() {
+    public void test_formatToCharacterIteratorLjava_lang_Object() {
         // Test for method formatToCharacterIterator(java.lang.Object)
         new Support_MessageFormat(
                 "test_formatToCharacterIteratorLjava_lang_Object")
                 .t_formatToCharacterIterator();
+        
+        try {
+            new MessageFormat("{1, number}").formatToCharacterIterator(null);
+            fail("NullPointerException was not thrown.");
+        } catch(NullPointerException npe) {
+            //expected
+        }
+        
+        try {
+            new MessageFormat("{0, time}").formatToCharacterIterator(new Object[]{""});
+            fail("IllegalArgumentException was not thrown.");
+        } catch(IllegalArgumentException iae) {
+            //expected
+        }
     }
 
     /**
      * @tests java.text.MessageFormat#format(java.lang.Object[],
      *        java.lang.StringBuffer, java.text.FieldPosition)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify exceptions.",
-      targets = {
-        @TestTarget(
-          methodName = "format",
-          methodArgs = {java.lang.Object[].class, java.lang.StringBuffer.class, java.text.FieldPosition.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "format",
+        args = {java.lang.Object[].class, java.lang.StringBuffer.class, java.text.FieldPosition.class}
+    )
     public void test_format$Ljava_lang_ObjectLjava_lang_StringBufferLjava_text_FieldPosition() {
         // Test for method java.lang.StringBuffer
         // java.text.MessageFormat.format(java.lang.Object [],
@@ -461,32 +465,59 @@ public class MessageFormatTest extends TestCase {
         MessageFormat format = new MessageFormat("{1,number,integer}");
         StringBuffer buffer = new StringBuffer();
         format.format(new Object[] { "0", new Double(53.863) }, buffer,
-                new FieldPosition(0));
+                new FieldPosition(MessageFormat.Field.ARGUMENT));
         assertEquals("Wrong result", "54", buffer.toString());
+        
+        format.format(new Object[] { "0", new Double(53.863) }, buffer,
+                new FieldPosition(MessageFormat.Field.ARGUMENT));
+        
+        assertEquals("Wrong result", "5454", buffer.toString());
+      
+        buffer = new StringBuffer();
         format
                 .applyPattern("{0,choice,0#zero|1#one '{1,choice,2#two {2,time}}'}");
         Date date = new Date();
         String expected = "one two "
                 + DateFormat.getTimeInstance().format(date);
-        String result = format.format(new Object[] { new Double(1.6),
-                new Integer(3), date });
-        assertTrue("Choice not recursive:\n" + expected + "\n" + result,
-                expected.equals(result));
+        format.format(new Object[] { new Double(1.6),
+                new Integer(3), date }, buffer, new FieldPosition(MessageFormat
+                        .Field.ARGUMENT));
+        assertEquals("Choice not recursive:\n" + expected + "\n" + buffer,
+                expected, buffer.toString());
+        
+        StringBuffer str = format.format(new Object[] { new Double(0.6),
+                new Integer(3)}, buffer, null);
+        
+        assertEquals(expected + "zero", str.toString());
+        assertEquals(expected + "zero", buffer.toString());
+     
+        try {
+            format.format(new Object[] { "0", new Double(1), "" }, buffer,
+                    new FieldPosition(MessageFormat.Field.ARGUMENT));
+            fail("IllegalArgumentException was not thrown.");
+        } catch(IllegalArgumentException iae) {
+            //expected
+        }
+        
+        try {
+            format.format(new Object[] { "",  new Integer(3)}, buffer, 
+                    new FieldPosition(MessageFormat.Field.ARGUMENT));
+            fail("IllegalArgumentException was not thrown.");
+        } catch(IllegalArgumentException iae) {
+            //expected
+        }
     }
 
     /**
      * @tests java.text.MessageFormat#format(java.lang.Object,
      *        java.lang.StringBuffer, java.text.FieldPosition)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify exception.",
-      targets = {
-        @TestTarget(
-          methodName = "format",
-          methodArgs = {java.lang.Object.class, java.lang.StringBuffer.class, java.text.FieldPosition.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "format",
+        args = {java.lang.Object.class, java.lang.StringBuffer.class, java.text.FieldPosition.class}
+    )
     public void test_formatLjava_lang_ObjectLjava_lang_StringBufferLjava_text_FieldPosition() {
         // Test for method java.lang.StringBuffer
         // java.text.MessageFormat.format(java.lang.Object,
@@ -494,6 +525,20 @@ public class MessageFormatTest extends TestCase {
         new Support_MessageFormat(
                 "test_formatLjava_lang_ObjectLjava_lang_StringBufferLjava_text_FieldPosition")
                 .t_format_with_FieldPosition();
+        
+        String pattern = "On {4,date} at {3,time}, he ate {2,number, integer} " +
+                "hamburger{2,choice,1#|1<s}.";
+        MessageFormat format = new MessageFormat(pattern, Locale.US);
+
+        Object[] objects = new Object[] { "", new Integer(3), 8, ""};
+        
+        try {
+            format.format(objects, new StringBuffer(), 
+                    new FieldPosition(DateFormat.Field.AM_PM));
+            fail("IllegalArgumentException was not thrown.");
+        } catch(IllegalArgumentException iae) {
+            //expected
+        }
     }
 
     /**
@@ -502,15 +547,12 @@ public class MessageFormatTest extends TestCase {
      *        java.text.MessageFormat#format(java.lang.String,
      *        java.lang.Object...).
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "format",
-          methodArgs = {java.lang.String.class, java.lang.Object[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "format",
+        args = {java.lang.String.class, java.lang.Object[].class}
+    )
     public void test_formatLjava_lang_StringLjava_lang_Object() {
         int iCurrency = 123;
         int iInteger  = Integer.MIN_VALUE;
@@ -576,15 +618,12 @@ public class MessageFormatTest extends TestCase {
     /**
      * @tests java.text.MessageFormat#getFormats()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getFormats",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getFormats",
+        args = {}
+    )
     public void test_getFormats() {
         // Test for method java.text.Format []
         // java.text.MessageFormat.getFormats()
@@ -627,15 +666,12 @@ public class MessageFormatTest extends TestCase {
     /**
      * @tests java.text.MessageFormat#getFormatsByArgumentIndex()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getFormatsByArgumentIndex",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getFormatsByArgumentIndex",
+        args = {}
+    )
     public void test_getFormatsByArgumentIndex() {
         // Test for method java.text.Format [] test_getFormatsByArgumentIndex()
 
@@ -676,15 +712,12 @@ public class MessageFormatTest extends TestCase {
      * @tests java.text.MessageFormat#getLocale() Test of method
      *        java.text.MessageFormat#getLocale().
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getLocale",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getLocale",
+        args = {}
+    )
     public void test_getLocale() {
         try {
             Locale[] l = {
@@ -727,15 +760,12 @@ public class MessageFormatTest extends TestCase {
      *        getFormats() results after calls to setFormat(). Case 2: Try to
      *        call setFormat() using incorrect index.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setFormat",
-          methodArgs = {int.class, java.text.Format.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setFormat",
+        args = {int.class, java.text.Format.class}
+    )
     public void test_setFormatILjava_text_Format() {
         try {
             // case 1: Compare getFormats() results after calls to setFormat()
@@ -783,15 +813,12 @@ public class MessageFormatTest extends TestCase {
      * @tests java.text.MessageFormat#setFormatByArgumentIndex(int,
      *        java.text.Format)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setFormatByArgumentIndex",
-          methodArgs = {int.class, java.text.Format.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setFormatByArgumentIndex",
+        args = {int.class, java.text.Format.class}
+    )
     public void test_setFormatByArgumentIndexILjava_text_Format() {
         // test for method setFormatByArgumentIndex(int, Format)
         MessageFormat f1 = (MessageFormat) format1.clone();
@@ -876,15 +903,12 @@ public class MessageFormatTest extends TestCase {
      *        getFormats() results after calls to setFormats(Format[]) Case 2:
      *        Try to pass null argument to setFormats().
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setFormats",
-          methodArgs = {java.text.Format[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setFormats",
+        args = {java.text.Format[].class}
+    )
     public void test_setFormats$Ljava_text_Format() {
         try {
             MessageFormat f1 = (MessageFormat) format1.clone();
@@ -924,15 +948,12 @@ public class MessageFormatTest extends TestCase {
     /**
      * @tests java.text.MessageFormat#setFormatsByArgumentIndex(java.text.Format[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setFormatsByArgumentIndex",
-          methodArgs = {java.text.Format[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setFormatsByArgumentIndex",
+        args = {java.text.Format[].class}
+    )
     public void test_setFormatsByArgumentIndex$Ljava_text_Format() {
         // test for method setFormatByArgumentIndex(Format[])
         MessageFormat f1 = (MessageFormat) format1.clone();
@@ -1021,15 +1042,12 @@ public class MessageFormatTest extends TestCase {
      * @tests java.text.MessageFormat#parse(java.lang.String,
      *        java.text.ParsePosition)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify exceptions.",
-      targets = {
-        @TestTarget(
-          methodName = "parse",
-          methodArgs = {java.lang.String.class, java.text.ParsePosition.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "parse",
+        args = {java.lang.String.class, java.text.ParsePosition.class}
+    )
     public void test_parseLjava_lang_StringLjava_text_ParsePosition() {
         // Test for method java.lang.Object []
         // java.text.MessageFormat.parse(java.lang.String,
@@ -1052,20 +1070,30 @@ public class MessageFormatTest extends TestCase {
         String parse = "a; b; c";
         result = mf.parse(parse, new ParsePosition(0));
         assertEquals("Wrong variable result", "c", result[0]);
+        
+        try {
+            mf.parse(parse, null);
+            fail("NullPointerException was not thrown.");
+        } catch(NullPointerException npe) {
+            //expected
+        }
+        
+        try {
+            mf.parse(null, pos);
+        } catch(NullPointerException npe) {
+            fail("NullPointerException was thrown.");
+        }
     }
 
     /**
      * @tests java.text.MessageFormat#setLocale(java.util.Locale)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setLocale",
-          methodArgs = {java.util.Locale.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setLocale",
+        args = {java.util.Locale.class}
+    )
     public void test_setLocaleLjava_util_Locale() {
         // Test for method void
         // java.text.MessageFormat.setLocale(java.util.Locale)
@@ -1080,15 +1108,12 @@ public class MessageFormatTest extends TestCase {
     /**
      * @tests java.text.MessageFormat#toPattern()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toPattern",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toPattern",
+        args = {}
+    )
     public void test_toPattern() {
         // Test for method java.lang.String java.text.MessageFormat.toPattern()
         String pattern = "[{0}]";
@@ -1131,15 +1156,12 @@ public class MessageFormatTest extends TestCase {
     /**
      * @tests java.text.MessageFormat(java.util.Locale)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies IllegalArgumentException.",
-      targets = {
-        @TestTarget(
-          methodName = "MessageFormat",
-          methodArgs = {java.lang.String.class, java.util.Locale.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies IllegalArgumentException.",
+        method = "MessageFormat",
+        args = {java.lang.String.class, java.util.Locale.class}
+    )
     public void test_ConstructorLjava_util_Locale() {
         // Regression for HARMONY-65
         try {
@@ -1154,15 +1176,12 @@ public class MessageFormatTest extends TestCase {
      * @tests java.text.MessageFormat#parse(java.lang.String) Test of method
      *        java.text.MessageFormat#parse(java.lang.String).
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "parse",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "parse",
+        args = {java.lang.String.class}
+    )
     public void test_parseLjava_lang_String() throws ParseException {
         String pattern = "A {3, number, currency} B {2, time} C {0, number, percent} D {4}  E {1,choice,0#off|1#on} F {0, date}";
         MessageFormat mf = new MessageFormat(pattern);
@@ -1222,15 +1241,12 @@ public class MessageFormatTest extends TestCase {
      *        Case 2: Parsing of partial correct data string. Case 3: Try to use
      *        argument ParsePosition as null.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "parse",
-          methodArgs = {java.lang.String.class, java.text.ParsePosition.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "parseObject",
+        args = {java.lang.String.class, java.text.ParsePosition.class}
+    )
     public void test_parseObjectLjava_lang_StringLjavajava_text_ParsePosition() {
         MessageFormat mf = new MessageFormat("{0,number,#.##}, {0,number,#.#}");
         try {
@@ -1271,15 +1287,12 @@ public class MessageFormatTest extends TestCase {
             fail("Unexpected exception " + e.toString());
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Regression test. Doesn't verifies exception.",
-      targets = {
-        @TestTarget(
-          methodName = "format",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Regression test. Doesn't verifies exception.",
+        method = "format",
+        args = {java.lang.Object.class}
+    )
     public void test_format_Object() {
         // Regression for HARMONY-1875
         Locale.setDefault(Locale.CANADA);

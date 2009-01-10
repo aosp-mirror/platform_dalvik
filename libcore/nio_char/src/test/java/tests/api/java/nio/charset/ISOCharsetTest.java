@@ -17,13 +17,14 @@
 package tests.api.java.nio.charset;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargets;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestLevel;
 
 /**
  * Test ISO-8859-1.
  */
+
 @TestTargetClass(java.nio.charset.Charset.class)
 public class ISOCharsetTest extends AbstractCharsetTestCase {
 
@@ -42,15 +43,12 @@ public class ISOCharsetTest extends AbstractCharsetTestCase {
      * 
      * @see tests.api.java.nio.charset.ConcreteCharsetTest#testEncode_Normal()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Functional test, text source: AbstractCharsetTestCase.internalTestEncode. Exceptions checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "encode",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "ATTENTION: THIS TEST IS FOR THE ISOCharsetEncoder.encode AND NOT THE TARGET ANNOTATED!!! the Functional test, text source: AbstractCharsetTestCase.internalTestEncode. Exceptions checking missed.",
+        method = "encode",
+        args = {java.lang.String.class}
+    )
     public void testEncode_Normal() {
         String input = "ab\u5D14\u654F";
         byte[] output = new byte[] { 97, 98,
@@ -64,13 +62,12 @@ public class ISOCharsetTest extends AbstractCharsetTestCase {
      * 
      * @see tests.api.java.nio.charset.ConcreteCharsetTest#testDecode_Normal()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Functional test, text source: AbstractCharsetTestCase.internalTestDecode. Exceptions checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "decode",
-          methodArgs = {java.nio.ByteBuffer.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "ATTENTION: THIS TEST IS FOR THE ISOCharsetEncoder.encode AND NOT THE TARGET ANNOTATED!!! Functional test, text source: AbstractCharsetTestCase.internalTestDecode. Exceptions checking missed.",
+            method = "decode",
+            args = {java.nio.ByteBuffer.class}
         )
     })
     public void testDecode_Normal() {

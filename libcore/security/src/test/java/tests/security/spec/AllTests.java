@@ -30,7 +30,7 @@ public class AllTests {
     }
 
     public static Test suite() {
-        TestSuite suite = new TestSuite("All tests for package tests.security.spec;");
+        TestSuite suite = tests.TestSuiteFactory.createTestSuite("All tests for package tests.security.spec;");
         // $JUnit-BEGIN$
 
         suite.addTestSuite(DSAParameterSpecTest.class);

@@ -30,23 +30,21 @@ public class AllTests {
     }
 
     public static Test suite() {
-        TestSuite suite = new TestSuite(
+        TestSuite suite = tests.TestSuiteFactory.createTestSuite(
                 "Suite org.apache.harmony.archive.tests.java.util.jar");
-        // $JUnit-BEGIN$
         suite.addTestSuite(AttributesNameTest.class);
         suite.addTestSuite(AttributesTest.class);
         suite.addTestSuite(JarEntryTest.class);
         suite.addTestSuite(JarExceptionTest.class);
-//All tests in following class are failed on target VM
-//        suite.addTestSuite(JarExecTest.class);
+        suite.addTestSuite(JarExecTest.class);
         suite.addTestSuite(JarFileTest.class);
         suite.addTestSuite(JarInputStreamTest.class);
-//All tests in following class are failed on target VM
-//        suite.addTestSuite(JarOutputStreamTest.class);
+        suite.addTestSuite(JarOutputStreamTest.class);
         suite.addTestSuite(ManifestTest.class);
-//All tests in following class are failed on target VM
-//        suite.addTestSuite(ZipExecTest.class);
-        // $JUnit-END$
+        suite.addTestSuite(Pack200Test.class);
+        suite.addTestSuite(Pack200PackerTest.class);
+        suite.addTestSuite(Pack200UnpackerTest.class);
+        suite.addTestSuite(ZipExecTest.class);
         return suite;
     }
 }

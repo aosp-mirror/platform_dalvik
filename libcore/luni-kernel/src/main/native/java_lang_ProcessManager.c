@@ -19,10 +19,12 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <signal.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <dirent.h>
 
 #include "jni.h"
 #include "JNIHelp.h"
@@ -34,6 +36,11 @@ extern char **environ;
 
 static jmethodID onExitMethod = NULL;
 static jfieldID descriptorField = NULL;
+
+#ifdef ANDROID
+// Keeps track of the system properties fd so we don't close it.
+static int androidSystemPropertiesFd = -1;
+#endif
 
 /*
  * These are constants shared with the higher level code in
@@ -66,9 +73,9 @@ static void java_lang_ProcessManager_close(JNIEnv* env,
  * Kills process with the given ID.
  */
 static void java_lang_ProcessManager_kill(JNIEnv* env, jclass clazz, jint pid) {
-    int result = kill((pid_t) pid, SIGTERM);
+    int result = kill((pid_t) pid, SIGKILL);
     if (result == -1) {
-        LOGW("Error killing process %d: %s", pid, strerror(errno));
+        jniThrowIOException(env, errno);
     }
 }
 
@@ -148,86 +155,150 @@ static void java_lang_ProcessManager_watchChildren(JNIEnv* env, jobject o) {
     }
 }
 
-/**
- * Executes a command in a child process.
- */
-static pid_t executeProcess(JNIEnv* env,
-        char** commands, char** environment,
-        const char* workingDirectory,
-        jobject inDescriptor, jobject outDescriptor, jobject errDescriptor) {
-    int inPipe[2];
-    int outPipe[2];
-    int errPipe[2];
+/** Close all open fds > 2 (i.e. everything but stdin/out/err). */
+static void closeNonStandardFds(int skipFd) {
+    DIR* dir = opendir("/proc/self/fd");
 
-    // TODO: Ensure these pipe() calls succeed. Clean up if one call fails.
-    pipe(inPipe);
-    pipe(outPipe);
-    pipe(errPipe);
+    if (dir == NULL) {
+        // Print message to standard err. The parent process can read this
+        // from Process.getErrorStream().
+        perror("opendir");
+        return;
+    }
+
+    struct dirent* entry;
+    int dirFd = dirfd(dir);
+    while ((entry = readdir(dir)) != NULL) {
+        int fd = atoi(entry->d_name);
+        if (fd > 2 && fd != dirFd && fd != skipFd
+#ifdef ANDROID
+                && fd != androidSystemPropertiesFd
+#endif
+                ) {
+            close(fd);
+        }        
+    }
+
+    closedir(dir);
+}
+
+#define PIPE_COUNT (4) // number of pipes used to communicate with child proc
+
+/** Closes all pipes in the given array. */
+static void closePipes(int pipes[], int skipFd) {
+    int i;
+    for (i = 0; i < PIPE_COUNT * 2; i++) {
+        int fd = pipes[i];
+        if (fd == -1) {
+            return;
+        }
+        if (fd != skipFd) {
+            close(pipes[i]);
+        }
+    }
+}
+
+/** Executes a command in a child process. */
+static pid_t executeProcess(JNIEnv* env, char** commands, char** environment,
+        const char* workingDirectory, jobject inDescriptor,
+        jobject outDescriptor, jobject errDescriptor) {
+    int i, result, error;
+
+    // Create 4 pipes: stdin, stdout, stderr, and an exec() status pipe.
+    int pipes[PIPE_COUNT * 2] = { -1, -1, -1, -1, -1, -1, -1, -1 };
+    for (i = 0; i < PIPE_COUNT; i++) {
+        if (pipe(pipes + i * 2) == -1) {
+            jniThrowIOException(env, errno);
+            closePipes(pipes, -1);
+            return -1;
+        }
+    }
+    int stdinIn = pipes[0];
+    int stdinOut = pipes[1];
+    int stdoutIn = pipes[2];
+    int stdoutOut = pipes[3];
+    int stderrIn = pipes[4];
+    int stderrOut = pipes[5];
+    int statusIn = pipes[6];
+    int statusOut = pipes[7];
 
     pid_t childPid = fork();
 
     // If fork() failed...
     if (childPid == -1) {
-        LOGE("fork() failed: %s", strerror(errno));
-
         jniThrowIOException(env, errno);
-
-        // Close pipes.
-        close(inPipe[0]);
-        close(inPipe[1]);
-        close(outPipe[0]);
-        close(outPipe[1]);
-        close(errPipe[0]);
-        close(errPipe[1]);
-
+        closePipes(pipes, -1);
         return -1;
     }
 
     // If this is the child process...
     if (childPid == 0) {
         // Replace stdin, out, and err with pipes.
-        dup2(inPipe[0], 0);
-        dup2(outPipe[1], 1);
-        dup2(errPipe[1], 2);
+        dup2(stdinIn, 0);
+        dup2(stdoutOut, 1);
+        dup2(stderrOut, 2);
+
+        // Close all but statusOut. This saves some work in the next step.
+        closePipes(pipes, statusOut);
+
+        // Make statusOut automatically close if execvp() succeeds.
+        fcntl(statusOut, F_SETFD, FD_CLOEXEC);
+
+        // Close remaining open fds with the exception of statusOut.
+        closeNonStandardFds(statusOut);
 
         // Switch to working directory.
         if (workingDirectory != NULL) {
             if (chdir(workingDirectory) == -1) {
-                LOGE("Invalid working directory: %s", workingDirectory);
-                exit(-1);
+                goto execFailed;
             }
         }
 
         // Set up environment.
         if (environment != NULL) {
-            LOGI("Setting environment: %s", environment[0]);
             environ = environment;
         }
 
         // Execute process. By convention, the first argument in the arg array
         // should be the command itself. In fact, I get segfaults when this
         // isn't the case.
-        int result = execvp(commands[0], commands);
+        execvp(commands[0], commands);
 
-        LOGE("Error running %s: %s", commands[0], strerror(errno));
-
-        // If we got here, exec() failed.
-        exit(result);
+        // If we got here, execvp() failed or the working dir was invalid.
+        execFailed:
+            error = errno;
+            write(statusOut, &error, sizeof(int));
+            close(statusOut);
+            exit(error);
     }
 
     // This is the parent process.
 
-    // TODO: Check results of close() calls.
-    // Close child's fds.
-    close(inPipe[0]);
-    close(outPipe[1]);
-    close(errPipe[1]);
+    // Close child's pipe ends.
+    close(stdinIn);
+    close(stdoutOut);
+    close(stderrOut);
+    close(statusOut);
 
-    // Fill in file descriptors. inDescriptor read's child's stdout.
-    // outDescriptor writes to child's stdin.
-    jniSetFileDescriptorOfFD(env, inDescriptor, outPipe[0]);
-    jniSetFileDescriptorOfFD(env, outDescriptor, inPipe[1]);
-    jniSetFileDescriptorOfFD(env, errDescriptor, errPipe[0]);
+    // Check status pipe for an error code. If execvp() succeeds, the other
+    // end of the pipe should automatically close, in which case, we'll read
+    // nothing.
+    int count = read(statusIn, &result, sizeof(int));
+    close(statusIn);
+    if (count > 0) {
+        jniThrowIOException(env, result);
+
+        close(stdoutIn);
+        close(stdinOut);
+        close(stderrIn);
+
+        return -1;
+    }
+
+    // Fill in file descriptor wrappers.
+    jniSetFileDescriptorOfFD(env, inDescriptor, stdoutIn);
+    jniSetFileDescriptorOfFD(env, outDescriptor, stdinOut);
+    jniSetFileDescriptorOfFD(env, errDescriptor, stderrIn);
 
     return childPid;
 }
@@ -325,6 +396,13 @@ static pid_t java_lang_ProcessManager_exec(
  */
 static void java_lang_ProcessManager_staticInitialize(JNIEnv* env,
         jclass clazz) {
+#ifdef ANDROID
+    char* fdString = getenv("ANDROID_PROPERTY_WORKSPACE");
+    if (fdString) {
+        androidSystemPropertiesFd = atoi(fdString);
+    }
+#endif
+
     onExitMethod = (*env)->GetMethodID(env, clazz, "onExit", "(II)V");
     if (onExitMethod == NULL) {
         return;
@@ -355,7 +433,6 @@ static JNINativeMethod methods[] = {
 };
 
 int register_java_lang_ProcessManager(JNIEnv* env) {
-    LOGV("*** Registering ProcessManager natives.");
     return jniRegisterNativeMethods(
             env, "java/lang/ProcessManager", methods, NELEM(methods));
 }

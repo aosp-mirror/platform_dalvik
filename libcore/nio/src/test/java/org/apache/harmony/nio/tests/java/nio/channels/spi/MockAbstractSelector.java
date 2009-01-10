@@ -17,17 +17,58 @@
 package org.apache.harmony.nio.tests.java.nio.channels.spi;
 
 import java.io.IOException;
+import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.spi.AbstractSelectableChannel;
 import java.nio.channels.spi.AbstractSelectionKey;
 import java.nio.channels.spi.AbstractSelector;
 import java.nio.channels.spi.SelectorProvider;
+import java.util.HashSet;
 import java.util.Set;
 
 public class MockAbstractSelector extends AbstractSelector {
+    
+    class MockSelectionKey extends AbstractSelectionKey {
+
+        boolean cancelled = false;
+        Selector selector;
+        SelectableChannel channel;
+        
+        MockSelectionKey(Selector sel, SelectableChannel chan) {
+            selector = sel;
+            channel = chan;
+        }
+
+        @Override
+        public SelectableChannel channel() {
+            return channel;
+        }
+
+        @Override
+        public int interestOps() {
+            return 0;
+        }
+
+        @Override
+        public SelectionKey interestOps(int operations) {
+            return null;
+        }
+
+        @Override
+        public int readyOps() {
+            return 0;
+        }
+
+        @Override
+        public Selector selector() {
+            return selector;
+        }
+    }
 
     public boolean isImplCloseSelectorCalled = false;
+    private Set<SelectionKey> keys = new HashSet<SelectionKey>();
+    public boolean isRegisterCalled = false;
     
     public MockAbstractSelector(SelectorProvider arg0) {
         super(arg0);
@@ -37,7 +78,7 @@ public class MockAbstractSelector extends AbstractSelector {
         return new MockAbstractSelector(SelectorProvider.provider());
     }
 
-    public Set getCancelledKeys() {
+    public Set<SelectionKey> getCancelledKeys() {
         return super.cancelledKeys();
     }
 
@@ -47,7 +88,11 @@ public class MockAbstractSelector extends AbstractSelector {
 
     protected SelectionKey register(AbstractSelectableChannel arg0, int arg1,
             Object arg2) {
-        return null;
+        isRegisterCalled = true;
+        
+        SelectionKey key = new MockSelectionKey(this, arg0);
+        keys.add(key);
+        return key;
     }
 
     public void superBegin() {
@@ -58,12 +103,12 @@ public class MockAbstractSelector extends AbstractSelector {
         super.end();
     }
 
-    protected void mockDeregister(AbstractSelectionKey key) {
+    public void mockDeregister(AbstractSelectionKey key) {
         super.deregister(key);
     }
 
     public Set<SelectionKey> keys() {
-        return null;
+        return keys;
     }
 
     public Set<SelectionKey> selectedKeys() {

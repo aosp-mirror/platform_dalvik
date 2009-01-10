@@ -110,13 +110,15 @@ const void* dvmPointerSetGetEntry(const PointerSet* pSet, int i)
 /*
  * Insert a new entry into the list.  If it already exists, this returns
  * without doing anything.
+ *
+ * Returns "true" if the value was added.
  */
-void dvmPointerSetAddEntry(PointerSet* pSet, const void* ptr)
+bool dvmPointerSetAddEntry(PointerSet* pSet, const void* ptr)
 {
     int nearby;
 
     if (dvmPointerSetHas(pSet, ptr, &nearby))
-        return;
+        return false;
 
     /* ensure we have space to add one more */
     if (pSet->count == pSet->alloc) {
@@ -171,6 +173,7 @@ void dvmPointerSetAddEntry(PointerSet* pSet, const void* ptr)
     pSet->count++;
 
     assert(verifySorted(pSet));
+    return true;
 }
 
 /*

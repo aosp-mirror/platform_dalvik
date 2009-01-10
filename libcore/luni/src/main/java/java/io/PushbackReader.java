@@ -314,7 +314,7 @@ public class PushbackReader extends FilterReader {
      *            the index of the first byte in {@code buffer} to push back.
      * @param count
      *            the number of bytes to push back.
-     * @throws ArrayIndexOutOfBoundsException
+     * @throws IndexOutOfBoundsException
      *             if {@code offset < 0} or {@code count < 0}, or if
      *             {@code offset + count} is greater than the length of
      *             {@code buffer}.

@@ -1,18 +1,16 @@
 package tests.security.cert;
 
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
-import java.security.cert.CertPath;
+import junit.framework.TestCase;
 
 import org.apache.harmony.security.tests.support.cert.MyCertPath;
 import org.apache.harmony.security.tests.support.cert.MyCertPath.MyCertPathRep;
 
-import java.security.cert.CertPathBuilderSpi;
-
-import junit.framework.TestCase;
+import java.io.ObjectStreamException;
+import java.security.cert.CertPath;
 
 @TestTargetClass(CertPath.class)
 public class CertPathCertPathRepTest extends TestCase {
@@ -32,15 +30,12 @@ public class CertPathCertPathRepTest extends TestCase {
      * Test for <code>CertPath.CertPathRep(String type, byte[] data)</code>
      * method<br>
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Null/invalid parameters checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "!CertPathRep",
-          methodArgs = {String.class, byte.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "CertPath.CertPathRep.CertPathRep",
+        args = { String.class, byte[].class}
+    )
     public final void testCertPathCertPathRep() {
         MyCertPath cp = new MyCertPath(testEncoding);
         MyCertPathRep rep = cp.new MyCertPathRep("MyEncoding", testEncoding);
@@ -53,5 +48,32 @@ public class CertPathCertPathRepTest extends TestCase {
             fail("Unexpected exeption " + e.getMessage());
         }
 
+    }
+    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "ObjectStreamException checking missed",
+        method = "CertPath.CertPathRep.readResolve",
+        args = {}
+    )
+    public final void testReadResolve() {
+        MyCertPath cp = new MyCertPath(testEncoding);
+        MyCertPathRep rep = cp.new MyCertPathRep("MyEncoding", testEncoding);
+        
+        try {
+            Object obj = rep.readResolve();
+            assertTrue(obj instanceof CertPath);
+        } catch (ObjectStreamException e) {
+            fail("unexpected exception: " + e);
+        }
+
+        rep = cp.new MyCertPathRep("MyEncoding", new byte[] {(byte) 1, (byte) 2, (byte) 3 });
+        try {
+            rep.readResolve();
+            fail("ObjectStreamException expected");
+        } catch (ObjectStreamException e) {
+            // expected
+            System.out.println(e);
+        }
     }
 }

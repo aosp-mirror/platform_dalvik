@@ -114,7 +114,10 @@ public final class Timestamp implements Serializable {
      * @since Android 1.0
      */
     public Date getTimestamp() {
-        return timestamp;
+        // BEGIN android-changed
+        // copied from a newer version of harmony
+        return (Date) timestamp.clone();
+        // END android-changed
     }
 
     /**

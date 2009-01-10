@@ -29,9 +29,9 @@ public class AllTests {
     }
 
     public static Test suite() {
-        TestSuite suite = new TestSuite("All regex test suites");
+        TestSuite suite = tests.TestSuiteFactory.createTestSuite("All regex test suites");
         // $JUnit-BEGIN$
-        suite.addTest(org.apache.harmony.tests.java.util.regex.AllTests.suite());
+        suite.addTest(org.apache.harmony.regex.tests.java.util.regex.AllTests.suite());
         // $JUnit-END$
         return suite;
     }

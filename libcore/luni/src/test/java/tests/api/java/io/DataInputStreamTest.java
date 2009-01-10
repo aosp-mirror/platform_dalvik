@@ -16,17 +16,17 @@
  */
 package tests.api.java.io;
 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestTargetClass; 
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
+
+import tests.support.Support_ASimpleInputStream;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
 @TestTargetClass(DataInputStream.class) 
 public class DataInputStreamTest extends junit.framework.TestCase {
@@ -41,15 +41,16 @@ public class DataInputStreamTest extends junit.framework.TestCase {
 
     public String fileString = "Test_All_Tests\nTest_java_io_BufferedInputStream\nTest_java_io_BufferedOutputStream\nTest_java_io_ByteArrayInputStream\nTest_java_io_ByteArrayOutputStream\nTest_DataInputStream\n";
 
+    private final int testLength = fileString.length();
+
     /**
      * @tests java.io.DataInputStream#DataInputStream(java.io.InputStream)
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies DataInputStream(java.io.InputStream) constructor.",
-            targets = { @TestTarget(methodName = "DataInputStream", 
-                                    methodArgs = {java.io.InputStream.class})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies DataInputStream(java.io.InputStream) constructor.",
+        method = "DataInputStream",
+        args = {java.io.InputStream.class}
     )         
     public void test_ConstructorLjava_io_InputStream() {
         // Test for method java.io.DataInputStream(java.io.InputStream)
@@ -71,561 +72,350 @@ public class DataInputStreamTest extends junit.framework.TestCase {
     /**
      * @tests java.io.DataInputStream#read(byte[])
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "read", 
-                                    methodArgs = {byte[].class})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "read",
+        args = {byte[].class}
     )       
-    public void test_read$B() {
-        // Test for method int java.io.DataInputStream.read(byte [])
+    public void test_read$B() throws IOException {
+        byte rbytes[] = new byte[testLength - 5];
+        Support_ASimpleInputStream sis = new Support_ASimpleInputStream();
+        int r;
+        
+        os.write(fileString.getBytes());
+        os.close();
+        openDataInputStream();
+       
+        r = dis.read(rbytes);
+        assertEquals("Test 1: Incorrect number of bytes read;", 
+                testLength - 5, r);
+        assertTrue("Test 2: Incorrect data written or read.", 
+                new String(rbytes).equals(fileString.substring(0, testLength - 5)));
+
+        r = dis.read(rbytes);
+        assertEquals("Test 3: Incorrect number of bytes read;", 5, r);
+        assertTrue("Test 4: Incorrect data written or read.", 
+                new String(rbytes, 0, 5).equals(fileString.substring(testLength - 5)));
+        
+        dis.close();
+        sis.throwExceptionOnNextUse = true;
+        dis = new DataInputStream(sis);
         try {
-            os.write(fileString.getBytes());
-            os.close();
-            openDataInputStream();
-            byte rbytes[] = new byte[fileString.length()];
             dis.read(rbytes);
-            assertTrue("Incorrect data read", new String(rbytes, 0, fileString
-                    .length()).equals(fileString));
+            fail("Test 5: IOException expected.");
         } catch (IOException e) {
-            fail("IOException during read test : " + e.getMessage());
+            // Expected.
         }
     }
 
     /**
      * @tests java.io.DataInputStream#read(byte[], int, int)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "read", 
-                                    methodArgs = {byte[].class, int.class, int.class})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "read",
+        args = {byte[].class, int.class, int.class}
     )     
-    public void test_read$BII() {
-        // Test for method int java.io.DataInputStream.read(byte [], int, int)
-        try {
-            os.write(fileString.getBytes());
-            os.close();
-            openDataInputStream();
-            byte rbytes[] = new byte[fileString.length()];
-            dis.read(rbytes, 0, rbytes.length);
-            assertTrue("Incorrect data read", new String(rbytes, 0, fileString
-                    .length()).equals(fileString));
-        } catch (IOException e) {
-            fail("IOException during read test : " + e.getMessage());
-        }
-    }
+    public void test_read$BII() throws IOException {
+        byte rbytes[] = new byte[testLength - 5];
+        Support_ASimpleInputStream sis = new Support_ASimpleInputStream();
+        int r;
+        
+        os.write(fileString.getBytes());
+        os.close();
+        openDataInputStream();
+       
+        r = dis.read(rbytes, 1, testLength - 10);
+        assertEquals("Test 1: Incorrect number of bytes read;", 
+                testLength - 10, r);
+        assertEquals("Test 2: Incorrect data read.", 0, rbytes[0]);
+        assertTrue("Test 3: Incorrect data written or read.", 
+                new String(rbytes, 1, r).equals(fileString.substring(0, r)));
 
-    /**
-     * @tests java.io.DataInputStream#readBoolean()
-     */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "Exceptions checking missed.",
-            targets = { @TestTarget(methodName = "readBoolean", 
-                                    methodArgs = {})                         
-            }
-    )      
-    public void test_readBoolean() {
-        // Test for method boolean java.io.DataInputStream.readBoolean()
+        r = dis.read(rbytes, 0, 15);
+        assertEquals("Test 3: Incorrect number of bytes read;", 10, r);
+        assertTrue("Test 4: Incorrect data written or read.", 
+                new String(rbytes, 0, r).equals(fileString.substring(testLength - 10)));
+        
+        dis.close();
+        sis.throwExceptionOnNextUse = true;
+        dis = new DataInputStream(sis);
         try {
-            os.writeBoolean(true);
-            os.close();
-            openDataInputStream();
-            assertTrue("Incorrect boolean written", dis.readBoolean());
+            dis.read(rbytes, 1, 5);
+            fail("Test 5: IOException expected.");
         } catch (IOException e) {
-            fail("readBoolean test failed : " + e.getMessage());
-        }
-    }
-
-    /**
-     * @tests java.io.DataInputStream#readByte()
-     */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "Exceptions checking missed.",
-            targets = { @TestTarget(methodName = "readByte", 
-                                    methodArgs = {})                         
-            }
-    )    
-    public void test_readByte() {
-        // Test for method byte java.io.DataInputStream.readByte()
-        try {
-            os.writeByte((byte) 127);
-            os.close();
-            openDataInputStream();
-            assertTrue("Incorrect byte read", dis.readByte() == (byte) 127);
-        } catch (IOException e) {
-            fail("IOException during readByte test : " + e.getMessage());
-        }
-    }
-
-    /**
-     * @tests java.io.DataInputStream#readChar()
-     */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "Exceptions checking missed.",
-            targets = { @TestTarget(methodName = "readChar", 
-                                    methodArgs = {})                         
-            }
-    )        
-    public void test_readChar() {
-        // Test for method char java.io.DataInputStream.readChar()
-        try {
-            os.writeChar('t');
-            os.close();
-            openDataInputStream();
-            assertEquals("Incorrect char read", 't', dis.readChar());
-        } catch (IOException e) {
-            fail("IOException during readChar test : " + e.getMessage());
-        }
-    }
-
-    /**
-     * @tests java.io.DataInputStream#readDouble()
-     */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "Exceptions checking missed.",
-            targets = { @TestTarget(methodName = "readDouble", 
-                                    methodArgs = {})                         
-            }
-    )        
-     public void test_readDouble() {
-        // Test for method double java.io.DataInputStream.readDouble()
-        try {
-            os.writeDouble(2345.76834720202);
-            os.close();
-            openDataInputStream();
-            assertEquals("Incorrect double read",
-                    2345.76834720202, dis.readDouble());
-        } catch (IOException e) {
-            fail("IOException during readDouble test" + e.toString());
-        }
-    }
-
-    /**
-     * @tests java.io.DataInputStream#readFloat()
-     */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "Exceptions checking missed.",
-            targets = { @TestTarget(methodName = "readFloat", 
-                                    methodArgs = {})                         
-            }
-    )    
-    public void test_readFloat() {
-        // Test for method float java.io.DataInputStream.readFloat()
-        try {
-            os.writeFloat(29.08764f);
-            os.close();
-            openDataInputStream();
-            assertTrue("Incorrect float read", dis.readFloat() == 29.08764f);
-        } catch (IOException e) {
-            fail("readFloat test failed : " + e.getMessage());
+            // Expected.
         }
     }
 
     /**
      * @tests java.io.DataInputStream#readFully(byte[])
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "Exceptions checking missed.",
-            targets = { @TestTarget(methodName = "readFully", 
-                                    methodArgs = {byte[].class})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "readFully",
+        args = {byte[].class}
     )    
-    public void test_readFully$B() {
-        // Test for method void java.io.DataInputStream.readFully(byte [])
+    public void test_readFully$B() throws IOException {
+        byte rbytes[] = new byte[testLength];
+        
+        os.write(fileString.getBytes());
+        os.close();
+        openDataInputStream();
+       
+        dis.readFully(rbytes);
+        assertTrue("Test 1: Incorrect data written or read.", 
+                new String(rbytes, 0, testLength).equals(fileString));
+        
+        dis.close();
         try {
-            os.write(fileString.getBytes());
-            os.close();
-            openDataInputStream();
-            byte rbytes[] = new byte[fileString.length()];
             dis.readFully(rbytes);
-            assertTrue("Incorrect data read", new String(rbytes, 0, fileString
-                    .length()).equals(fileString));
+            fail("Test 2: IOException expected.");
         } catch (IOException e) {
-            fail("IOException during readFully test : " + e.getMessage());
+            // Expected.
+        }
+
+        openDataInputStream();
+        dis.readByte();
+        try {
+            dis.readFully(rbytes);
+            fail("Test 3: EOFException expected.");
+        } catch (EOFException e) {
+            // Expected.
         }
     }
 
     /**
      * @tests java.io.DataInputStream#readFully(byte[], int, int)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "Exceptions checking missed.",
-            targets = { @TestTarget(methodName = "readFully", 
-                                    methodArgs = {byte[].class, int.class, int.class})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies everything except illegal argument values.",
+        method = "readFully",
+        args = {byte[].class, int.class, int.class}
     )       
-    public void test_readFully$BII() {
-        // Test for method void java.io.DataInputStream.readFully(byte [], int,
-        // int)
+    public void test_readFully$BII() throws IOException {
+        byte rbytes[] = new byte[testLength];
+
+        os.write(fileString.getBytes());
+        os.close();
+        openDataInputStream();
+        
+        dis.readFully(rbytes, 2, testLength - 4);
+        assertTrue("Test 1: Incorrect data written or read.", 
+                new String(rbytes, 2, testLength - 4).equals(
+                        fileString.substring(0, testLength - 4)));
+        
+        dis.close();
         try {
-            os.write(fileString.getBytes());
-            os.close();
-            openDataInputStream();
-            byte rbytes[] = new byte[fileString.length()];
-            dis.readFully(rbytes, 0, fileString.length());
-            assertTrue("Incorrect data read", new String(rbytes, 0, fileString
-                    .length()).equals(fileString));
+            dis.readFully(rbytes, 0, testLength);
+            fail("Test 2: IOException expected.");
         } catch (IOException e) {
-            fail("IOException during readFully test : " + e.getMessage());
+            // Expected.
+        }
+
+        openDataInputStream();
+        dis.readByte();
+        try {
+            dis.readFully(rbytes, 0, testLength);
+            fail("Test 3: EOFException expected.");
+        } catch (EOFException e) {
+            // Expected.
         }
     }
     
     /**
      * @tests java.io.DataInputStream#readFully(byte[], int, int)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "Verifies that readFully(byte [], int, int) method " +
-                    "throws exceptions in appropriate cases. EOFException & IOException checking missed.",
-            targets = { @TestTarget(methodName = "readFully", 
-                                    methodArgs = {byte[].class, int.class, int.class})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies that exceptions are thrown for illegal arguments.",
+        method = "readFully",
+        args = {byte[].class, int.class, int.class}
     )     
     public void test_readFully$BII_Exception() throws IOException {
-        DataInputStream is =  new DataInputStream(new ByteArrayInputStream(new byte[fileString.length()]));
+        DataInputStream is =  new DataInputStream(new ByteArrayInputStream(new byte[testLength]));
 
-        byte[] byteArray = new byte[fileString.length()];
+        byte[] byteArray = new byte[testLength];
         
         try {
             is.readFully(byteArray, 0, -1);
-            fail("should throw IndexOutOfBoundsException");
+            fail("Test 1: IndexOutOfBoundsException expected.");
         } catch (IndexOutOfBoundsException e) {
-            // expected
+            // Expected.
         }
         
         try {
             is.readFully(byteArray, 0, byteArray.length + 1);
-            fail("should throw IndexOutOfBoundsException");
+            fail("Test 2: IndexOutOfBoundsException expected.");
         } catch (IndexOutOfBoundsException e) {
-            // expected
+            // Expected.
         }
         
         try {
             is.readFully(byteArray, 1, byteArray.length);
-            fail("should throw IndexOutOfBoundsException");
+            fail("Test 3: IndexOutOfBoundsException expected.");
         } catch (IndexOutOfBoundsException e) {
-            // expected
+            // Expected.
         }
         
         try {
             is.readFully(byteArray, -1, byteArray.length);
-            fail("should throw IndexOutOfBoundsException");
+            fail("Test 4: IndexOutOfBoundsException expected.");
         } catch (IndexOutOfBoundsException e) {
-            // expected
-        }
-    }
-    
-    /**
-     * @tests java.io.DataInputStream#readFully(byte[], int, int)
-     */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "Verifies that readFully(byte [], int, int) method " +
-                    "throws exception if it's called with null array as a parameter.",
-            targets = { @TestTarget(methodName = "readFully", 
-                                    methodArgs = {byte[].class, int.class, int.class})                         
-            }
-    )     
-    public void test_readFully$BII_NullArray() throws IOException {
-        DataInputStream is =  new DataInputStream(new ByteArrayInputStream(new byte[fileString.length()]));
-        byte[] byteArray = new byte[1];
-        
-        try {
-            is.readFully(byteArray, byteArray.length, 1);
-            fail("should throw IndexOutOfBoundsException");
-        } catch (IndexOutOfBoundsException e) {
-            // expected
+            // Expected.
         }
 
         try {
             is.readFully(null, 0, 1);
-            fail("should throw NullPointerException");
+            fail("Test 5: NullPointerException expected.");
         } catch (NullPointerException e) {
-            // expected
+            // Expected.
         }
         
+        is = new DataInputStream(null);
+           
         try {
-            new DataInputStream(null).readFully(byteArray, 0, 1);
-            fail("should throw NullPointerException");
+            is.readFully(byteArray, 0, 1);
+            fail("Test 6: NullPointerException expected.");
         } catch (NullPointerException e) {
-            // expected
+            // Expected.
         }
     }
     
     /**
-     * @tests java.io.DataInputStream#readFully(byte[], int, int)
-     */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "Verifies that readFully(byte [], int, int) method " +
-                    "throws exception if it's called with wrong int values as parameters.",
-            targets = { @TestTarget(methodName = "readFully", 
-                                    methodArgs = {byte[].class, int.class, int.class})                         
-            }
-    )     
-    public void test_readFully$BII_NullStream() throws IOException {
-        DataInputStream is = new DataInputStream(null);
-        byte[] byteArray = new byte[fileString.length()]; 
-           
-        try {
-            is.readFully(byteArray, -1, -1);
-            fail("should throw NullPointerException");
-        } catch (NullPointerException e) {
-            // expected
-        }
-    }
-
-    /**
-     * @tests java.io.DataInputStream#readFully(byte[], int, int)
-     */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "Verifies that readFully(byte [], int, int) method " +
-                    "throws exception if it's called with wrong parameters.",
-            targets = { @TestTarget(methodName = "readFully", 
-                                    methodArgs = {byte[].class, int.class, int.class})                         
-            }
-    )       
-    public void test_readFully$BII_NullStream_NullArray() throws IOException {
-        DataInputStream is = new DataInputStream(null);
-        byte[] nullByteArray = null;
-
-        is.readFully(nullByteArray, -1, 0);
-        is.readFully(nullByteArray, 0, 0);
-        is.readFully(nullByteArray, 1, 0);
-        
-        try {
-            is.readFully(nullByteArray, -1, 1);
-            fail("should throw NullPointerException");
-        } catch (NullPointerException e) {
-            // expected
-        }
-        
-        try {
-            is.readFully(nullByteArray, 0, 1);
-            fail("should throw NullPointerException");
-        } catch (NullPointerException e) {
-            // expected
-        }
-
-        try {
-            is.readFully(nullByteArray, 1, 1);
-            fail("should throw NullPointerException");
-        } catch (NullPointerException e) {
-            // expected
-        }
-        
-        try {
-            is.readFully(nullByteArray, 0, Integer.MAX_VALUE);
-            fail("should throw NullPointerException");
-        } catch (NullPointerException e) {
-            // expected
-        }
-        
-    }
-
-    /**
-     * @tests java.io.DataInputStream#readInt()
-     */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "Exceptions checking missed.",
-            targets = { @TestTarget(methodName = "readInt", 
-                                    methodArgs = {})                         
-            }
-    )     
-    public void test_readInt() {
-        // Test for method int java.io.DataInputStream.readInt()
-        try {
-            os.writeInt(768347202);
-            os.close();
-            openDataInputStream();
-            assertEquals("Incorrect int read", 768347202, dis.readInt());
-        } catch (IOException e) {
-            fail("IOException during readInt test : " + e.getMessage());
-        }
-    }
-
-    /**
      * @tests java.io.DataInputStream#readLine()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "readLine", 
-                                    methodArgs = {})                         
-            }
+    @SuppressWarnings("deprecation")
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "readLine",
+        args = {}
     )     
-     public void test_readLine() {
-        // Test for method java.lang.String java.io.DataInputStream.readLine()
+    public void test_readLine() throws IOException {
+        String line;
+        os.writeBytes("Lorem\nipsum\rdolor sit amet...");
+        os.close();
+        openDataInputStream();
+        line = dis.readLine();
+        assertTrue("Test 1: Incorrect line written or read: " + line, 
+                line.equals("Lorem"));
+        line = dis.readLine();
+        assertTrue("Test 2: Incorrect line written or read: " + line, 
+                line.equals("ipsum"));
+        line = dis.readLine();
+        assertTrue("Test 3: Incorrect line written or read: " + line, 
+                line.equals("dolor sit amet..."));
+        
+        dis.close();
         try {
-            os.writeBytes("Hello");
-            os.close();
-            openDataInputStream();
-            String line = dis.readLine();
-            assertTrue("Incorrect line read: " + line, line.equals("Hello"));
+            dis.readLine();
+            fail("Test 4: IOException expected.");
         } catch (IOException e) {
-            fail("IOException during readLine test : " + e.getMessage());
-        }
-    }
-
-    /**
-     * @tests java.io.DataInputStream#readLong()
-     */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "Exceptions checking missed.",
-            targets = { @TestTarget(methodName = "readLong", 
-                                    methodArgs = {})                         
-            }
-    )     
-    public void test_readLong() {
-        // Test for method long java.io.DataInputStream.readLong()
-        try {
-            os.writeLong(9875645283333L);
-            os.close();
-            openDataInputStream();
-            assertEquals("Incorrect long read", 9875645283333L, dis.readLong());
-        } catch (IOException e) {
-            fail("read long test failed : " + e.getMessage());
-        }
-    }
-
-    /**
-     * @tests java.io.DataInputStream#readShort()
-     */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "Exceptions checking missed.",
-            targets = { @TestTarget(methodName = "readShort", 
-                                    methodArgs = {})                         
-            }
-    )      
-    public void test_readShort() {
-        // Test for method short java.io.DataInputStream.readShort()
-        try {
-            os.writeShort(9875);
-            os.close();
-            openDataInputStream();
-            assertTrue("Incorrect short read", dis.readShort() == (short) 9875);
-        } catch (IOException e) {
-            fail("Exception during read short test : " + e.getMessage());
+            // Expected.
         }
     }
 
     /**
      * @tests java.io.DataInputStream#readUnsignedByte()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "Exceptions checking missed.",
-            targets = { @TestTarget(methodName = "readUnsignedByte", 
-                                    methodArgs = {})                         
-            }
-    )     
-    public void test_readUnsignedByte() {
-        // Test for method int java.io.DataInputStream.readUnsignedByte()
+    @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            method = "readUnsignedByte",
+            args = {}
+    )    
+    public void test_readUnsignedByte() throws IOException {
+        os.writeByte((byte) -127);
+        os.close();
+        openDataInputStream();
+        assertEquals("Test 1: Incorrect byte written or read;", 
+                129, dis.readUnsignedByte());
+        
         try {
-            os.writeByte((byte) -127);
-            os.close();
-            openDataInputStream();
-            assertEquals("Incorrect byte read", 129, dis.readUnsignedByte());
+            dis.readUnsignedByte();
+            fail("Test 2: EOFException expected.");
+        } catch (EOFException e) {
+            // Expected.
+        }
+
+        dis.close();
+        try {
+            dis.readUnsignedByte();
+            fail("Test 3: IOException expected.");
         } catch (IOException e) {
-            fail("IOException during readUnsignedByte test : " + e.getMessage());
+            // Expected.
         }
     }
 
     /**
      * @tests java.io.DataInputStream#readUnsignedShort()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "Verifies readUnsignedShort() method.",
-            targets = { @TestTarget(methodName = "readUnsignedShort", 
-                                    methodArgs = {})                         
-            }
+    @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            method = "readUnsignedShort",
+            args = {}
     )    
-    public void test_readUnsignedShort() {
-        // Test for method int java.io.DataInputStream.readUnsignedShort()
+    public void test_readUnsignedShort() throws IOException {
+        os.writeShort(Short.MIN_VALUE);
+        os.close();
+        openDataInputStream();
+        assertEquals("Test 1: Incorrect short written or read;", 
+                (Short.MAX_VALUE + 1), dis.readUnsignedShort());
+        
         try {
-            os.writeShort(9875);
-            os.close();
-            openDataInputStream();
-            assertEquals("Incorrect short read", 9875, dis.readUnsignedShort());
-        } catch (IOException e) {
-            fail("Exception during readShort test : " + e.getMessage());
+            dis.readUnsignedShort();
+            fail("Test 2: EOFException expected.");
+        } catch (EOFException e) {
+            // Expected.
         }
-    }
 
-    /**
-     * @tests java.io.DataInputStream#readUTF()
-     */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "Exceptions checking missed.",
-            targets = { @TestTarget(methodName = "readUTF", 
-                                    methodArgs = {})                         
-            }
-    )     
-    public void test_readUTF() {
-        // Test for method java.lang.String java.io.DataInputStream.readUTF()
+        dis.close();
         try {
-            os.writeUTF(unihw);
-            os.close();
-            openDataInputStream();
-            assertTrue("Failed to write string in UTF format",
-                    dis.available() == unihw.length() + 2);
-            assertTrue("Incorrect string read", dis.readUTF().equals(unihw));
-        } catch (Exception e) {
-            fail("Exception during readUTF : " + e.getMessage());
+            dis.readUnsignedShort();
+            fail("Test 3: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
         }
     }
 
     /**
      * @tests java.io.DataInputStream#readUTF(java.io.DataInput)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "Exceptions checking missed.",
-            targets = { @TestTarget(methodName = "readUTF", 
-                                    methodArgs = {java.io.DataInput.class})                         
-            }
-    )       
-    public void test_readUTFLjava_io_DataInput() {
-        // Test for method java.lang.String
-        // java.io.DataInputStream.readUTF(java.io.DataInput)
+    @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            method = "readUTF",
+            args = {java.io.DataInput.class}
+    )    
+    public void test_readUTFLjava_io_DataInput() throws IOException {
+        os.writeUTF(unihw);
+        os.close();
+        openDataInputStream();
+        assertTrue("Test 1: Incorrect UTF-8 string written or read.", 
+                DataInputStream.readUTF(dis).equals(unihw));
+        
         try {
-            os.writeUTF(unihw);
-            os.close();
-            openDataInputStream();
-            assertTrue("Failed to write string in UTF format",
-                    dis.available() == unihw.length() + 2);
-            assertTrue("Incorrect string read", DataInputStream.readUTF(dis)
-                    .equals(unihw));
-        } catch (Exception e) {
-            fail("Exception during readUTF : " + e.getMessage());
+            DataInputStream.readUTF(dis);
+            fail("Test 2: EOFException expected.");
+        } catch (EOFException e) {
+            // Expected.
+        }
+
+        dis.close();
+        try {
+            DataInputStream.readUTF(dis);
+            fail("Test 3: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
         }
     }
 
     /**
      * @tests java.io.DataInputStream#skipBytes(int)
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies skipBytes(int) method.",
-            targets = { @TestTarget(methodName = "skipBytes", 
-                                    methodArgs = {int.class} )                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "skipBytes",
+        args = {int.class}
     )     
     public void test_skipBytesI() {
         // Test for method int java.io.DataInputStream.skipBytes(int)
@@ -635,7 +425,7 @@ public class DataInputStreamTest extends junit.framework.TestCase {
             os.close();
             openDataInputStream();
             dis.skipBytes(100);
-            byte rbytes[] = new byte[fileString.length()];
+            byte rbytes[] = new byte[testLength];
             dis.read(rbytes, 0, 50);
             dis.close();
             assertTrue("Incorrect data read", new String(rbytes, 0, 50)
@@ -653,8 +443,8 @@ public class DataInputStreamTest extends junit.framework.TestCase {
                 // eofException = true;
             }
             ;
-            assertTrue("Skipped should report " + fileString.length() + " not "
-                    + skipped, skipped == fileString.length());
+            assertTrue("Skipped should report " + testLength + " not "
+                    + skipped, skipped == testLength);
         } catch (IOException e) {
             fail("IOException during skipBytes test 2 : " + e.getMessage());
         }

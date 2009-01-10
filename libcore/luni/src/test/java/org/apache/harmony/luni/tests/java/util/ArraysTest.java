@@ -17,9 +17,9 @@
 
 package org.apache.harmony.luni.tests.java.util;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -38,15 +38,12 @@ public class ArraysTest extends TestCase {
     /**
      * @tests java.util.Arrays#binarySearch(double[], double)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "binarySearch",
-          methodArgs = {double[].class, double.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "binarySearch",
+        args = {double[].class, double.class}
+    )
     public void test_binarySearch$DD() {
         double[] specials = new double[] { Double.NEGATIVE_INFINITY,
                 -Double.MAX_VALUE, -2d, -Double.MIN_VALUE, -0d, 0d,
@@ -67,15 +64,12 @@ public class ArraysTest extends TestCase {
     /**
      * @tests java.util.Arrays#binarySearch(float[], float)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "binarySearch",
-          methodArgs = {float[].class, float.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "binarySearch",
+        args = {float[].class, float.class}
+    )
     public void test_binarySearch$FF() {
         float[] specials = new float[] { Float.NEGATIVE_INFINITY,
                 -Float.MAX_VALUE, -2f, -Float.MIN_VALUE, -0f, 0f,
@@ -96,15 +90,12 @@ public class ArraysTest extends TestCase {
     /**
      * @tests java.util.Arrays#equals(double[], double[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {double[].class, double[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "equals",
+        args = {double[].class, double[].class}
+    )
     public void test_equals$D$D() {
         double d[] = new double[100];
         double x[] = new double[100];
@@ -128,15 +119,12 @@ public class ArraysTest extends TestCase {
     /**
      * @tests java.util.Arrays#equals(float[], float[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {float[].class, float[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "equals",
+        args = {float[].class, float[].class}
+    )
     public void test_equals$F$F() {
         float d[] = new float[100];
         float x[] = new float[100];
@@ -157,15 +145,12 @@ public class ArraysTest extends TestCase {
     /**
      * @tests java.util.Arrays#sort(double[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "sort",
-          methodArgs = {double[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "sort",
+        args = {double[].class}
+    )
     public void test_sort$D() {
         // Test a basic sort
         double[] reversedArray = new double[100];
@@ -203,15 +188,12 @@ public class ArraysTest extends TestCase {
     /**
      * @tests java.util.Arrays#sort(float[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "sort",
-          methodArgs = {float[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "sort",
+        args = {float[].class}
+    )
     public void test_sort$F() {
         // Test a basic sort
         float[] reversedArray = new float[100];
@@ -248,15 +230,12 @@ public class ArraysTest extends TestCase {
     /**
      * @tests java.util.Arrays#toString(boolean[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {boolean[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {boolean[].class}
+    )
     public void test_toString$Z() {
         assertEquals("null", Arrays.toString((boolean[])null));
         assertEquals("[]", Arrays.toString(new boolean[] {}));
@@ -268,15 +247,12 @@ public class ArraysTest extends TestCase {
     /**
      * @tests java.util.Arrays#toString(byte[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {byte[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {byte[].class}
+    )
     public void test_toString$B() {
         assertEquals("null", Arrays.toString((byte[])null));
         assertEquals("[]", Arrays.toString(new byte[] {}));
@@ -288,15 +264,12 @@ public class ArraysTest extends TestCase {
     /**
      * @tests java.util.Arrays#toString(char[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {char[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {char[].class}
+    )
     public void test_toString$C() {
         assertEquals("null", Arrays.toString((char[])null));
         assertEquals("[]", Arrays.toString(new char[] {}));
@@ -308,15 +281,12 @@ public class ArraysTest extends TestCase {
     /**
      * @tests java.util.Arrays#toString(double[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {double[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {double[].class}
+    )
     public void test_toString$D() {
         assertEquals("null", Arrays.toString((double[])null));
         assertEquals("[]", Arrays.toString(new double[] {}));
@@ -328,15 +298,12 @@ public class ArraysTest extends TestCase {
     /**
      * @tests java.util.Arrays#toString(float[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {float[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {float[].class}
+    )
     public void test_toString$F() {
         assertEquals("null", Arrays.toString((float[])null));
         assertEquals("[]", Arrays.toString(new float[] {}));
@@ -348,15 +315,12 @@ public class ArraysTest extends TestCase {
     /**
      * @tests java.util.Arrays#toString(int[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {int[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {int[].class}
+    )
     public void test_toString$I() {
         assertEquals("null", Arrays.toString((int[])null));
         assertEquals("[]", Arrays.toString(new int[] {}));
@@ -368,15 +332,12 @@ public class ArraysTest extends TestCase {
     /**
      * @tests java.util.Arrays#toString(long[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {long[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {long[].class}
+    )
     public void test_toString$J() {
         assertEquals("null", Arrays.toString((long[])null));
         assertEquals("[]", Arrays.toString(new long[] {}));
@@ -388,15 +349,12 @@ public class ArraysTest extends TestCase {
     /**
      * @tests java.util.Arrays#toString(short[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {short[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {short[].class}
+    )
     public void test_toString$S() {
         assertEquals("null", Arrays.toString((short[])null));
         assertEquals("[]", Arrays.toString(new short[] {}));
@@ -408,15 +366,12 @@ public class ArraysTest extends TestCase {
     /**
      * @tests java.util.Arrays#toString(Object[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {java.lang.Object[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {java.lang.Object[].class}
+    )
     public void test_toString$Ljava_lang_Object() {
         assertEquals("null", Arrays.toString((Object[])null));
         assertEquals("[]", Arrays.toString(new Object[] {}));
@@ -428,15 +383,12 @@ public class ArraysTest extends TestCase {
     /**
      * @tests java.util.Arrays#deepToString(Object[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "deepToString",
-          methodArgs = {java.lang.Object[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "deepToString",
+        args = {java.lang.Object[].class}
+    )
     public void test_deepToString$java_lang_Object() {
         assertEquals("null", Arrays.deepToString((Object[])null));
         assertEquals("[]", Arrays.deepToString(new Object[] {}));
@@ -483,15 +435,12 @@ public class ArraysTest extends TestCase {
         
         assertEquals(expected, Arrays.deepToString(fixture));
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "asList",
-          methodArgs = {Object[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "asList",
+        args = {java.lang.Object[].class}
+    )
     public void test_asListTvararg() throws Exception {
         List<String> stringsList = Arrays.asList("0", "1");
         assertEquals(2, stringsList.size());
@@ -519,15 +468,12 @@ public class ArraysTest extends TestCase {
             fail("No NPE");
         } catch (NullPointerException e) {}
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "binarySearch",
-          methodArgs = {java.lang.Object[].class, java.lang.Object.class, java.util.Comparator.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "binarySearch",
+        args = {java.lang.Object[].class, java.lang.Object.class, java.util.Comparator.class}
+    )
     public void test_binarySearch$TTLjava_util_ComparatorsuperT() {
         String[] strings = new String[] { "a", "B", "c", "D" };
         Arrays.sort(strings, String.CASE_INSENSITIVE_ORDER);
@@ -585,15 +531,12 @@ public class ArraysTest extends TestCase {
         } catch (NullPointerException e) {}
         
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify ClassCastException.",
-      targets = {
-        @TestTarget(
-          methodName = "sort",
-          methodArgs = {Object[].class, java.util.Comparator.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify ClassCastException.",
+        method = "sort",
+        args = {java.lang.Object[].class, java.util.Comparator.class}
+    )
     public void test_sort$TLjava_lang_ComparatorsuperT() {
         String[] strings = new String[] { "a", "B", "c", "D" };
         Arrays.sort(strings, String.CASE_INSENSITIVE_ORDER);
@@ -615,16 +558,12 @@ public class ArraysTest extends TestCase {
             fail("No NPE");
         } catch (NullPointerException e) {}
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify IllegalArgumentException, " + 
-            "ArrayIndexOutOfBoundsException, ClassCastException.",
-      targets = {
-        @TestTarget(
-          methodName = "sort",
-          methodArgs = {java.lang.Object[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify IllegalArgumentException, ArrayIndexOutOfBoundsException, ClassCastException.",
+        method = "sort",
+        args = {java.lang.Object[].class, int.class, int.class}
+    )
     public void test_sort$TIILjava_lang_ComparatorsuperT() {
         String[] strings = new String[] { "a", "B", "c", "D" };
         Arrays.sort(strings, 0, strings.length, String.CASE_INSENSITIVE_ORDER);

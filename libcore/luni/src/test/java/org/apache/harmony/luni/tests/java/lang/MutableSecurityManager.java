@@ -16,6 +16,7 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
+import java.net.SocketPermission;
 import java.security.Permission;
 import java.security.PermissionCollection;
 import java.security.Permissions;
@@ -27,6 +28,10 @@ class MutableSecurityManager extends SecurityManager {
     private PermissionCollection enabled;
     
     private PermissionCollection denied;
+    
+    public boolean isCheckAcceptCalled = false; 
+    public boolean isCheckAccessThreadCalled = false;
+    public boolean isCheckAccessThreadGroupCalled = false;
 
     public MutableSecurityManager() {
         super();
@@ -50,7 +55,7 @@ class MutableSecurityManager extends SecurityManager {
     
     void denyPermission(Permission p) {
         if (denied == null) {
-            denied = new Permissions();
+            denied = p.newPermissionCollection();
         }
         denied.add(p);
     }
@@ -58,15 +63,40 @@ class MutableSecurityManager extends SecurityManager {
     @Override
     public void checkPermission(Permission permission) 
     {
-        // denied should take precedence over allowed
-        if (denied != null && denied.implies(permission)){
-            throw new SecurityException("Denied " + permission);
+        if (permission != null) {
+            if (denied != null && denied.implies(permission)){
+                
+                throw new SecurityException("Denied " + permission);
+            }
+    
+            if (enabled.implies(permission)) {
+                return;
+            }
         }
 
-        if (enabled.implies(permission)) {
-            return;
-        }
-        
         super.checkPermission(permission);
+    }
+
+    @Override
+    public void checkPermission(Permission permission, Object context) 
+    {
+        if (permission != null) {
+            if (denied != null && denied.implies(permission)){
+                
+                throw new SecurityException("Denied " + permission);
+            }
+    
+            if (enabled.implies(permission)) {
+                return;
+            }
+        }
+
+        super.checkPermission(permission, context);
+    }
+    
+  //  @Override    
+    public void checkAccept(String host, int port) {
+        isCheckAcceptCalled = true;        
+        super.checkAccept(host, port);
     }
 }

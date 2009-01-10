@@ -2,9 +2,9 @@ package tests.api.java.io;
 
 import java.io.ObjectInputStream;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 @TestTargetClass(ObjectInputStream.class)
@@ -13,15 +13,12 @@ public class ComputeSerialVersionUIDTest extends junit.framework.TestCase {
 
     private String path = "serialization/tests/api/java/io/";
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void testComputeSUIDClass() throws Exception {
         ObjectInputStream ois = new ObjectInputStream(ClassLoader
                 .getSystemResourceAsStream(path + "testComputeSUIDClass.ser"));
@@ -40,15 +37,12 @@ public class ComputeSerialVersionUIDTest extends junit.framework.TestCase {
         ois.close();
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void testComputeSUIDInterfaces() throws Exception {
         ObjectInputStream ois = new ObjectInputStream(ClassLoader
                 .getSystemResourceAsStream(path
@@ -82,15 +76,12 @@ public class ComputeSerialVersionUIDTest extends junit.framework.TestCase {
         ois.close();
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void testComputeSUIDFields() throws Exception {
         ObjectInputStream ois = new ObjectInputStream(ClassLoader
                 .getSystemResourceAsStream(path + "testComputeSUIDFields.ser"));
@@ -129,15 +120,12 @@ public class ComputeSerialVersionUIDTest extends junit.framework.TestCase {
         ois.close();
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void testComputeSUIDConstructors() throws Exception {
         ObjectInputStream ois = new ObjectInputStream(ClassLoader
                 .getSystemResourceAsStream(path
@@ -161,15 +149,12 @@ public class ComputeSerialVersionUIDTest extends junit.framework.TestCase {
         ois.close();
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void testComputeSUIDMethods() throws Exception {
         ObjectInputStream ois = new ObjectInputStream(ClassLoader
                 .getSystemResourceAsStream(path + "testComputeSUIDMethods.ser"));

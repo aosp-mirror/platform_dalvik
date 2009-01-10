@@ -22,9 +22,9 @@
 
 package tests.security.cert;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -97,15 +97,12 @@ public class PKIXBuilderParametersTest extends TestCase {
      * Assertion: creates an instance of <code>PKIXBuilderParameters</code>
      * @throws InvalidAlgorithmParameterException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies positive case.",
-      targets = {
-        @TestTarget(
-          methodName = "PKIXBuilderParameters",
-          methodArgs = {java.util.Set.class, java.security.cert.CertSelector.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies positive case.",
+        method = "PKIXBuilderParameters",
+        args = {java.util.Set.class, java.security.cert.CertSelector.class}
+    )
     public final void testPKIXBuilderParametersSetCertSelector01()
         throws InvalidAlgorithmParameterException {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
@@ -125,15 +122,12 @@ public class PKIXBuilderParametersTest extends TestCase {
      * Assertion: creates an instance of <code>PKIXBuilderParameters</code>
      * @throws InvalidAlgorithmParameterException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies null as a CertSelector parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "PKIXBuilderParameters",
-          methodArgs = {java.util.Set.class, java.security.cert.CertSelector.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies null as a CertSelector parameter.",
+        method = "PKIXBuilderParameters",
+        args = {java.util.Set.class, java.security.cert.CertSelector.class}
+    )
     public final void testPKIXBuilderParametersSetCertSelector02()
         throws InvalidAlgorithmParameterException {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
@@ -153,15 +147,12 @@ public class PKIXBuilderParametersTest extends TestCase {
      * subsequent modifications
      * @throws InvalidAlgorithmParameterException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies null as a CertSelector parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "PKIXBuilderParameters",
-          methodArgs = {java.util.Set.class, java.security.cert.CertSelector.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies null as a CertSelector parameter.",
+        method = "PKIXBuilderParameters",
+        args = {java.util.Set.class, java.security.cert.CertSelector.class}
+    )
     @SuppressWarnings("unchecked")
     public final void testPKIXBuilderParametersSetCertSelector03()
         throws InvalidAlgorithmParameterException {
@@ -189,15 +180,12 @@ public class PKIXBuilderParametersTest extends TestCase {
      * Assertion: <code>NullPointerException</code> -
      * if the specified <code>Set</code> is null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies null as parameters.",
-      targets = {
-        @TestTarget(
-          methodName = "PKIXBuilderParameters",
-          methodArgs = {java.util.Set.class, java.security.cert.CertSelector.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies null as parameters.",
+        method = "PKIXBuilderParameters",
+        args = {java.util.Set.class, java.security.cert.CertSelector.class}
+    )
     public final void testPKIXBuilderParametersSetCertSelector04() throws Exception {
         try {
             // pass null
@@ -214,15 +202,12 @@ public class PKIXBuilderParametersTest extends TestCase {
      * if the specified <code>Set</code> is empty
      * (<code>trustAnchors.isEmpty() == true</code>)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies null as a parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "PKIXBuilderParameters",
-          methodArgs = {java.util.Set.class, java.security.cert.CertSelector.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies null as a parameter.",
+        method = "PKIXBuilderParameters",
+        args = {java.util.Set.class, java.security.cert.CertSelector.class}
+    )
     public final void testPKIXBuilderParametersSetCertSelector05() {
         try {
             // use empty set
@@ -239,15 +224,12 @@ public class PKIXBuilderParametersTest extends TestCase {
      * if any of the elements in the <code>Set</code> are not of type
      * <code>java.security.cert.TrustAnchor</code>
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies ClassCastException.",
-      targets = {
-        @TestTarget(
-          methodName = "PKIXBuilderParameters",
-          methodArgs = {java.util.Set.class, java.security.cert.CertSelector.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies ClassCastException.",
+        method = "PKIXBuilderParameters",
+        args = {java.util.Set.class, java.security.cert.CertSelector.class}
+    )
     @SuppressWarnings("unchecked")
     public final void testPKIXBuilderParametersSetCertSelector06()
             throws Exception {
@@ -272,15 +254,12 @@ public class PKIXBuilderParametersTest extends TestCase {
      * Assertion: <code>NullPointerException</code> - if the
      * <code>keystore</code> is <code>null</code>
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Veirifies null as a KeyStore parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "PKIXBuilderParameters",
-          methodArgs = {java.security.KeyStore.class, java.security.cert.CertSelector.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Veirifies null as a KeyStore parameter.",
+        method = "PKIXBuilderParameters",
+        args = {java.security.KeyStore.class, java.security.cert.CertSelector.class}
+    )
     public final void testPKIXBuilderParametersKeyStoreCertSelector01()
             throws Exception {
         try {
@@ -297,15 +276,12 @@ public class PKIXBuilderParametersTest extends TestCase {
      * Assertion: <code>KeyStoreException</code> - if the
      * <code>keystore</code> has not been initialized
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Veirifies null as a CertSelector parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "PKIXBuilderParameters",
-          methodArgs = {java.security.KeyStore.class, java.security.cert.CertSelector.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Veirifies null as a CertSelector parameter.",
+        method = "PKIXBuilderParameters",
+        args = {java.security.KeyStore.class, java.security.cert.CertSelector.class}
+    )
     public final void testPKIXBuilderParametersKeyStoreCertSelector02()
             throws Exception {
         KeyStore keyTest = KeyStore.getInstance(KeyStore.getDefaultType());
@@ -324,15 +300,12 @@ public class PKIXBuilderParametersTest extends TestCase {
      * <code>keystore</code> does not contain at least one trusted certificate
      * entry
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies null as parameters.",
-      targets = {
-        @TestTarget(
-          methodName = "PKIXBuilderParameters",
-          methodArgs = {java.security.KeyStore.class, java.security.cert.CertSelector.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies null as parameters.",
+        method = "PKIXBuilderParameters",
+        args = {java.security.KeyStore.class, java.security.cert.CertSelector.class}
+    )
     public final void testPKIXBuilderParametersKeyStoreCertSelector03()
             throws Exception {
         KeyStore keyTest = KeyStore.getInstance(KeyStore.getDefaultType());
@@ -351,15 +324,12 @@ public class PKIXBuilderParametersTest extends TestCase {
      * Assertion: <code>NullPointerException</code> -
      * if the <code>keystore</code> is <code>null</code>
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies positive case.",
-      targets = {
-        @TestTarget(
-          methodName = "PKIXBuilderParameters",
-          methodArgs = {java.security.KeyStore.class, java.security.cert.CertSelector.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies positive case.",
+        method = "PKIXBuilderParameters",
+        args = {java.security.KeyStore.class, java.security.cert.CertSelector.class}
+    )
     public final void testPKIXBuilderParametersKeyStoreCertSelector04()
             throws Exception {
         KeyStore keyTest = KeyStore.getInstance(KeyStore.getDefaultType());
@@ -392,15 +362,12 @@ public class PKIXBuilderParametersTest extends TestCase {
     /**
      * Test for <code>getMaxPathLength()</code>
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getMaxPathLength",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getMaxPathLength",
+        args = {}
+    )
     public final void testGetMaxPathLength() throws Exception {
         KeyStore keyTest = KeyStore.getInstance(KeyStore.getDefaultType());
         keyTest.load(null, null);
@@ -429,15 +396,12 @@ public class PKIXBuilderParametersTest extends TestCase {
     /**
      * Test for <code>setMaxPathLength()</code>
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Boundary checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "setMaxPathLength",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setMaxPathLength",
+        args = {int.class}
+    )
     public final void testSetMaxPathLength() throws Exception {
         KeyStore keyTest = KeyStore.getInstance(KeyStore.getDefaultType());
         keyTest.load(null, null);
@@ -467,26 +431,26 @@ public class PKIXBuilderParametersTest extends TestCase {
         p.setMaxPathLength(-1);
         assertEquals(-1, p.getMaxPathLength());
         
-        try {
-            p.setMaxPathLength(-10);
-            fail("InvalidParameterException expected ");
-        } catch (InvalidParameterException e) {
-            // expected
+        int[] maxPathLength = {-2, -10, Integer.MIN_VALUE};
+        for (int i = 0; i < maxPathLength.length; i++) {
+            try {
+                p.setMaxPathLength(maxPathLength[i]);
+                fail("InvalidParameterException expected ");
+            } catch (InvalidParameterException e) {
+                // expected
+            }
         }
     }
 
     /**
      * Test for <code>toString()</code>
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public final void testToString() throws Exception {
         KeyStore keyTest = KeyStore.getInstance(KeyStore.getDefaultType());
         keyTest.load(null, null);
@@ -507,7 +471,6 @@ public class PKIXBuilderParametersTest extends TestCase {
 
         PKIXBuilderParameters p = new PKIXBuilderParameters(keyTest,
                 new X509CertSelector());
-        System.out.println(p.toString());
         assertNotNull(p.toString());
 
     }

@@ -16,28 +16,25 @@
 
 package org.apache.harmony.luni.tests.java.io;
 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestTargetClass;
-
 import java.io.ObjectStreamConstants;
+
 import junit.framework.TestCase;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
+
 @TestTargetClass(ObjectStreamConstants.class)
 public class ObjectStreamConstantsTest extends TestCase {
 
     /**
      * @tests java.io.ObjectStreamConstants#TC_ENUM
      */
-    @TestInfo(
-              level = TestLevel.COMPLETE,
-              purpose = "Constant test, still many constants not tested",
-              targets = {
-                @TestTarget(
-                  methodName = "!Constants",
-                  methodArgs = {}
-                )
-            })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Constant test, still many constants not tested",
+        method = "!Constants",
+        args = {}
+    )
     public void test_Constants() {
         assertEquals(126, ObjectStreamConstants.TC_ENUM);
         assertEquals(16, ObjectStreamConstants.SC_ENUM);

@@ -17,8 +17,8 @@
 
 package tests.api.java.util;
 
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass; 
 
@@ -53,13 +53,18 @@ public class WeakHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.WeakHashMap#WeakHashMap()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "WeakHashMap",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "WeakHashMap",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "get",
+            args = {java.lang.Object.class}
         )
     })
     public void test_Constructor() {
@@ -78,13 +83,18 @@ public class WeakHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.WeakHashMap#WeakHashMap(int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalArgumentException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "WeakHashMap",
-          methodArgs = {int.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "WeakHashMap",
+            args = {int.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "get",
+            args = {java.lang.Object.class}
         )
     })
     public void test_ConstructorI() {
@@ -100,18 +110,30 @@ public class WeakHashMapTest extends junit.framework.TestCase {
         assertNull("Empty weakhashmap access", empty.get("nothing"));
         empty.put("something", "here");
         assertTrue("cannot get element", empty.get("something") == "here");
+        
+        try {
+            new WeakHashMap(-50);
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.WeakHashMap#WeakHashMap(int, float)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalArgumentException is not checked.",
-      targets = {
-        @TestTarget(
-          methodName = "WeakHashMap",
-          methodArgs = {int.class, float.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "WeakHashMap",
+            args = {int.class, float.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "get",
+            args = {java.lang.Object.class}
         )
     })
     public void test_ConstructorIF() {
@@ -127,36 +149,59 @@ public class WeakHashMapTest extends junit.framework.TestCase {
         assertNull("Empty hashtable access", empty.get("nothing"));
         empty.put("something", "here");
         assertTrue("cannot get element", empty.get("something") == "here");
+        
+        try {
+            new WeakHashMap(50, -0.5f);
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            //expected
+        }
+        
+        try {
+            new WeakHashMap(-50, 0.5f);
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            //expected
+        }
     }
     
     /**
      * @tests java.util.WeakHashMap#WeakHashMap(java.util.Map)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "NullPointerException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "WeakHashMap",
-          methodArgs = {java.util.Map.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "WeakHashMap",
+        args = {java.util.Map.class}
+    )
     public void test_ConstructorLjava_util_Map() {
         Map mockMap = new MockMap();
         WeakHashMap map = new WeakHashMap(mockMap);
         assertEquals("Size should be 0", 0, map.size());
+        
+        try {
+            new WeakHashMap(null);
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.WeakHashMap#clear()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "clear",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "clear",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "get",
+            args = {java.lang.Object.class}
         )
     })
     public void test_clear() {
@@ -175,15 +220,12 @@ public class WeakHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.WeakHashMap#containsKey(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "containsKey",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "containsKey",
+        args = {java.lang.Object.class}
+    )
     public void test_containsKeyLjava_lang_Object() {
         // Test for method boolean java.util.WeakHashMap.containsKey()
         whm = new WeakHashMap();
@@ -199,15 +241,12 @@ public class WeakHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.WeakHashMap#containsValue(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "containsValue",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "containsValue",
+        args = {java.lang.Object.class}
+    )
     public void test_containsValueLjava_lang_Object() {
         // Test for method boolean java.util.WeakHashMap.containsValue()
         whm = new WeakHashMap();
@@ -223,15 +262,12 @@ public class WeakHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.WeakHashMap#entrySet()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "entrySet",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "entrySet",
+        args = {}
+    )
     public void test_entrySet() {
         // Test for method java.util.Set java.util.WeakHashMap.entrySet()
         whm = new WeakHashMap();
@@ -268,35 +304,14 @@ public class WeakHashMapTest extends junit.framework.TestCase {
     }
 
     /**
-     * @tests java.util.WeakHashMap#get(java.lang.Object)
-     */
-    @TestInfo(
-      level = TestLevel.TODO,
-      purpose = "Empty test.",
-      targets = {
-        @TestTarget(
-          methodName = "get",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
-    public void test_getLjava_lang_Object() {
-        // Test for method java.lang.Object
-        // java.util.WeakHashMap.get(java.lang.Object)
-        assertTrue("Used to test", true);
-    }
-
-    /**
      * @tests java.util.WeakHashMap#isEmpty()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isEmpty",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isEmpty",
+        args = {}
+    )
     public void test_isEmpty() {
         // Test for method boolean java.util.WeakHashMap.isEmpty()
         whm = new WeakHashMap();
@@ -311,15 +326,12 @@ public class WeakHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.WeakHashMap#put(java.lang.Object, java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "put",
-          methodArgs = {Object.class, Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "put",
+        args = {java.lang.Object.class, java.lang.Object.class}
+    )
     public void test_putLjava_lang_ObjectLjava_lang_Object() {
         // Test for method java.lang.Object
         // java.util.WeakHashMap.put(java.lang.Object, java.lang.Object)
@@ -334,34 +346,35 @@ public class WeakHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.WeakHashMap#putAll(java.util.Map)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "NullPointerException is not tested.",
-      targets = {
-        @TestTarget(
-          methodName = "putAll",
-          methodArgs = {java.util.Map.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "putAll",
+        args = {java.util.Map.class}
+    )
     public void test_putAllLjava_util_Map() {
         Map mockMap=new MockMap();
         WeakHashMap map = new WeakHashMap();
         map.putAll(mockMap);
         assertEquals("Size should be 0", 0, map.size());
+        
+        try {
+            map.putAll(null);
+            fail("NullPointerException exected");
+        } catch (NullPointerException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.WeakHashMap#remove(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "remove",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "remove",
+        args = {java.lang.Object.class}
+    )
     public void test_removeLjava_lang_Object() {
         // Test for method java.lang.Object
         // java.util.WeakHashMap.remove(java.lang.Object)
@@ -379,30 +392,32 @@ public class WeakHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.WeakHashMap#size()
      */
-    @TestInfo(
-      level = TestLevel.TODO,
-      purpose = "Empty test",
-      targets = {
-        @TestTarget(
-          methodName = "size",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "size",
+        args = {}
+    )
     public void test_size() {
-        // Test for method int java.util.WeakHashMap.size()
-        assertTrue("Used to test", true);
+        whm = new WeakHashMap();
+        assertEquals(0, whm.size());
     }
 
     /**
      * @tests java.util.WeakHashMap#keySet()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "keySet",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "keySet",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "size",
+            args = {}
         )
     })
     public void test_keySet() {
@@ -441,13 +456,18 @@ public class WeakHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.WeakHashMap#values()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "values",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "values",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "size",
+            args = {}
         )
     })
     public void test_values() {

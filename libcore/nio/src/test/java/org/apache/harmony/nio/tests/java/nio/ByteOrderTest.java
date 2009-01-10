@@ -17,46 +17,42 @@
 
 package org.apache.harmony.nio.tests.java.nio;
 
-import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import java.nio.ByteOrder;
 
 import junit.framework.TestCase;
-@TestTargetClass(ByteOrder.class)
+
 /**
  * Test java.nio.ByteOrder
  * 
  */
+@TestTargetClass(ByteOrder.class)
 public class ByteOrderTest extends TestCase {
 
     public static void main(String[] args) {
         junit.textui.TestRunner.run(ByteOrderTest.class);
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public void testToString() {
         assertEquals(ByteOrder.BIG_ENDIAN.toString(), "BIG_ENDIAN");
         assertEquals(ByteOrder.LITTLE_ENDIAN.toString(), "LITTLE_ENDIAN");
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "nativeOrder",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "nativeOrder",
+        args = {}
+    )
     public void testNativeOrder() {
         ByteOrder o = ByteOrder.nativeOrder();
         assertTrue(o == ByteOrder.BIG_ENDIAN || o == ByteOrder.LITTLE_ENDIAN);

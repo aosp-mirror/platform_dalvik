@@ -16,19 +16,33 @@
 
 package org.apache.harmony.nio.tests.java.nio.channels;
 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargets;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.AsynchronousCloseException;
+import java.nio.channels.ClosedByInterruptException;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.Pipe;
 import java.nio.channels.SelectionKey;
+import java.nio.channels.Pipe.SourceChannel;
+import java.nio.channels.spi.SelectorProvider;
 
 import junit.framework.TestCase;
-@TestTargetClass(java.nio.channels.Pipe.SourceChannel.class)
+@TestTargetClass(
+    value = java.nio.channels.Pipe.SourceChannel.class,
+    untestedMethods = {
+        @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            notes = "AsynchronousCloseException can not easily be tested",
+            method = "read",
+            args = {java.nio.ByteBuffer[].class}
+        ) 
+    }
+)
 /**
  * Tests for java.nio.channels.Pipe.SourceChannel
  */
@@ -61,15 +75,12 @@ public class SourceChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.Pipe.SourceChannel#validOps()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "validOps",                        
-                methodArgs = {}
-              )
-          })   
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "validOps",
+        args = {}
+    )   
     public void test_validOps() {
         assertEquals(SelectionKey.OP_READ, source.validOps());
     }
@@ -77,15 +88,12 @@ public class SourceChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.Pipe.SourceChannel#read(ByteBuffer)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "read",                        
-                methodArgs = {ByteBuffer[].class}
-              )
-          })   
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {java.nio.ByteBuffer[].class}
+    )   
     public void test_read_LByteBuffer_DataAvailable() throws IOException {
         // if anything can read, read method will not block
         sink.write(ByteBuffer.allocate(1));
@@ -96,15 +104,12 @@ public class SourceChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.Pipe.SourceChannel#read(ByteBuffer)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "Verifies NullPointerException.",
-            targets = {
-              @TestTarget(
-                methodName = "read",                        
-                methodArgs = {ByteBuffer[].class}
-              )
-          })       
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies NullPointerException.",
+        method = "read",
+        args = {java.nio.ByteBuffer[].class}
+    )       
     public void test_read_LByteBuffer_Exception() throws IOException {
         ByteBuffer nullBuf = null;
         try {
@@ -118,15 +123,12 @@ public class SourceChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.Pipe.SourceChannel#read(ByteBuffer)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "read",                        
-                methodArgs = {ByteBuffer[].class}
-              )
-          })       
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {java.nio.ByteBuffer[].class}
+    )       
     public void test_read_LByteBuffer_SinkClosed() throws IOException {
         ByteBuffer readBuf = ByteBuffer.allocate(BUFFER_SIZE);
         sink.write(buffer);
@@ -145,16 +147,12 @@ public class SourceChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.Pipe.SourceChannel#read(ByteBuffer)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "Verifies ClosedChannelException, " +
-                    "NullPointerException.",
-            targets = {
-              @TestTarget(
-                methodName = "read",                        
-                methodArgs = {ByteBuffer[].class}
-              )
-          })   
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies ClosedChannelException, NullPointerException.",
+        method = "read",
+        args = {java.nio.ByteBuffer[].class}
+    )   
     public void test_read_LByteBuffer_SourceClosed() throws IOException {
         ByteBuffer readBuf = ByteBuffer.allocate(BUFFER_SIZE);
         source.close();
@@ -177,8 +175,10 @@ public class SourceChannelTest extends TestCase {
         try {
             source.read(nullBuf);
             fail("should throw NullPointerException");
+        } catch (ClosedChannelException e) {
+            // expected on RI
         } catch (NullPointerException e) {
-            // expected
+            // expected on Harmony/Android
         }
         
         ByteBuffer[] bufArray = null; 
@@ -201,15 +201,12 @@ public class SourceChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.Pipe.SourceChannel#read(ByteBuffer[])
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "read",                        
-                methodArgs = {ByteBuffer[].class}
-              )
-          })     
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {java.nio.ByteBuffer[].class}
+    )     
     public void test_read_$LByteBuffer() throws IOException {
         ByteBuffer[] bufArray = { buffer, positionedBuffer };
         boolean[] sinkBlockingMode = { true, true, false, false };
@@ -261,15 +258,12 @@ public class SourceChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.Pipe.SourceChannel#read(ByteBuffer)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "Verifies NullPointerException.",
-            targets = {
-              @TestTarget(
-                methodName = "read",                        
-                methodArgs = {ByteBuffer[].class}
-              )
-          })     
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies NullPointerException.",
+        method = "read",
+        args = {java.nio.ByteBuffer[].class}
+    )     
     public void test_read_$LByteBuffer_Exception() throws IOException {
         ByteBuffer[] nullBufArrayRef = null;
         try {
@@ -301,15 +295,12 @@ public class SourceChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.Pipe.SourceChannel#read(ByteBuffer)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "read",                        
-                methodArgs = {ByteBuffer[].class}
-              )
-          })     
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {java.nio.ByteBuffer[].class}
+    )     
     public void test_read_$LByteBuffer_SinkClosed() throws IOException {
         ByteBuffer readBuf = ByteBuffer.allocate(BUFFER_SIZE);
         ByteBuffer[] readBufArray = { readBuf };
@@ -330,15 +321,12 @@ public class SourceChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.Pipe.SourceChannel#read(ByteBuffer)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "Verifies ClosedChannelException, NullPointerException.",
-            targets = {
-              @TestTarget(
-                methodName = "read",                        
-                methodArgs = {ByteBuffer[].class}
-              )
-          })     
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies ClosedChannelException, NullPointerException.",
+        method = "read",
+        args = {java.nio.ByteBuffer[].class}
+    )     
     public void test_read_$LByteBuffer_SourceClosed() throws IOException {
         ByteBuffer readBuf = ByteBuffer.allocate(BUFFER_SIZE);
         ByteBuffer[] readBufArray = { readBuf };
@@ -380,15 +368,12 @@ public class SourceChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.Pipe.SourceChannel#read(ByteBuffer[], int, int)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "read",                        
-                methodArgs = {ByteBuffer[].class, int.class, int.class}
-              )
-          })     
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {java.nio.ByteBuffer[].class, int.class, int.class}
+    )     
     public void test_read_$LByteBufferII() throws IOException {
         ByteBuffer[] bufArray = { buffer, positionedBuffer };
         boolean[] sinkBlockingMode = { true, true, false, false };
@@ -440,16 +425,12 @@ public class SourceChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.Pipe.SourceChannel#read(ByteBuffer)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "Verifies NullPointerException, " +
-                    "IndexOutOfBoundsException.",
-            targets = {
-              @TestTarget(
-                methodName = "read",                        
-                methodArgs = {ByteBuffer[].class, int.class, int.class}
-              )
-          })   
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies NullPointerException, IndexOutOfBoundsException.",
+        method = "read",
+        args = {java.nio.ByteBuffer[].class, int.class, int.class}
+    )   
     public void test_read_$LByteBufferII_Exception() throws IOException {
 
         ByteBuffer[] nullBufArrayRef = null;
@@ -522,15 +503,12 @@ public class SourceChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.Pipe.SourceChannel#read(ByteBuffer)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "read",                        
-                methodArgs = {ByteBuffer[].class, int.class, int.class}
-              )
-          })   
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {java.nio.ByteBuffer[].class, int.class, int.class}
+    )   
     public void test_read_$LByteBufferII_SinkClosed() throws IOException {
         ByteBuffer readBuf = ByteBuffer.allocate(BUFFER_SIZE);
         ByteBuffer[] readBufArray = { readBuf };
@@ -550,16 +528,12 @@ public class SourceChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.Pipe.SourceChannel#read(ByteBuffer)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "Verifies IndexOutOfBoundsException, " +
-                    "ClosedChannelException.",
-            targets = {
-              @TestTarget(
-                methodName = "read",                        
-                methodArgs = {ByteBuffer[].class, int.class, int.class}
-              )
-          })   
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies IndexOutOfBoundsException, ClosedChannelException.",
+        method = "read",
+        args = {java.nio.ByteBuffer[].class, int.class, int.class}
+    )   
     public void test_read_$LByteBufferII_SourceClosed() throws IOException {
         ByteBuffer readBuf = ByteBuffer.allocate(BUFFER_SIZE);
         ByteBuffer[] readBufArray = { readBuf };
@@ -648,19 +622,100 @@ public class SourceChannelTest extends TestCase {
 
     /**
      * @tests java.nio.channels.Pipe.SourceChannel#close()
+     * @tests {@link java.nio.channels.Pipe.SourceChannel#isOpen()}
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "close",                        
-                methodArgs = {}
-              )
-          })     
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "close",
+            args = {}
+        ),@TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "isOpen",
+            args = {}
+        )
+    })    
     public void test_close() throws IOException {
+        assertTrue(sink.isOpen());
         sink.close();
         assertFalse(sink.isOpen());
     }
 
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "SourceChannel",
+        args = {java.nio.channels.spi.SelectorProvider.class}
+    )
+    public void testConstructor() throws IOException {
+        SourceChannel channel =
+                SelectorProvider.provider().openPipe().source();
+        assertNotNull(channel);
+        assertSame(SelectorProvider.provider(),channel.provider());
+        channel = Pipe.open().source();
+        assertNotNull(channel);
+        assertSame(SelectorProvider.provider(),channel.provider());
+    }
+
+    /**
+     * @tests java.nio.channels.Pipe.SourceChannel#read(ByteBuffer)
+     */
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies ClosedByInterruptException",
+        method = "read",
+        args = {java.nio.ByteBuffer[].class}
+    )    
+    public void test_read_LByteBuffer_mutliThread_interrupt() throws Exception {
+
+        source.configureBlocking(true);
+
+        Thread thread = new Thread() {
+            public void run() {
+                try {
+                    source.read(ByteBuffer.allocate(10));
+                    fail("should have thrown a ClosedByInterruptException.");
+                } catch (ClosedByInterruptException e) {
+                    // expected
+                    return;
+                } catch (IOException e) {
+                    fail("should throw a ClosedByInterruptException but " +
+                            "threw " + e.getClass() + ": " + e.getMessage());
+                }
+            }
+        };
+        
+        thread.start();
+        Thread.currentThread().sleep(500);
+        thread.interrupt();
+        
+    }
+
+    /**
+     * @tests java.nio.channels.Pipe.SourceChannel#read(ByteBuffer)
+     */
+    public void disabled_test_read_LByteBuffer_mutliThread_close() throws Exception {
+
+        ByteBuffer sourceBuf = ByteBuffer.allocate(1000);
+        source.configureBlocking(true);
+
+        new Thread() {
+            public void run() {
+                try {
+                    Thread.currentThread().sleep(500);
+                    source.close();
+                } catch (Exception e) {
+                    //ignore
+                }
+            }
+        }.start();
+        try {
+            source.read(sourceBuf);
+            fail("should throw AsynchronousCloseException");
+        } catch (AsynchronousCloseException e) {
+            // ok
+        }
+    }
 }

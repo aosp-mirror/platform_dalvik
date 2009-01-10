@@ -16,9 +16,9 @@
  */
 package tests.api.java.io;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass; 
 
 import java.io.IOException;
@@ -362,15 +362,12 @@ public class SerializationStressTest1 extends SerializationStressTest {
         super(name);
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_18_1_writeObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
@@ -398,15 +395,12 @@ public class SerializationStressTest1 extends SerializationStressTest {
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_18_2_writeObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
@@ -433,15 +427,12 @@ public class SerializationStressTest1 extends SerializationStressTest {
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_18_3_writeObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
@@ -470,15 +461,12 @@ public class SerializationStressTest1 extends SerializationStressTest {
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_18_4_writeObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
@@ -506,15 +494,12 @@ public class SerializationStressTest1 extends SerializationStressTest {
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_18_5_writeObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
@@ -544,15 +529,12 @@ public class SerializationStressTest1 extends SerializationStressTest {
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_18_6_writeObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
@@ -581,15 +563,12 @@ public class SerializationStressTest1 extends SerializationStressTest {
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_18_7_writeObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
@@ -618,15 +597,12 @@ public class SerializationStressTest1 extends SerializationStressTest {
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_18_8_writeObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
@@ -655,15 +631,12 @@ public class SerializationStressTest1 extends SerializationStressTest {
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_18_9_writeObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
@@ -691,15 +664,12 @@ public class SerializationStressTest1 extends SerializationStressTest {
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_18_10_writeObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
@@ -729,15 +699,12 @@ public class SerializationStressTest1 extends SerializationStressTest {
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_18_11_writeObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
@@ -772,15 +739,12 @@ public class SerializationStressTest1 extends SerializationStressTest {
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_18_12_writeObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
@@ -801,15 +765,12 @@ public class SerializationStressTest1 extends SerializationStressTest {
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_18_13_writeObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
@@ -849,15 +810,12 @@ public class SerializationStressTest1 extends SerializationStressTest {
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void _test_18_14_writeObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
@@ -897,15 +855,12 @@ public class SerializationStressTest1 extends SerializationStressTest {
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void _test_18_15_writeObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
@@ -939,15 +894,12 @@ public class SerializationStressTest1 extends SerializationStressTest {
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_18_16_writeObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
@@ -982,15 +934,12 @@ public class SerializationStressTest1 extends SerializationStressTest {
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_18_17_writeObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
@@ -1024,15 +973,12 @@ public class SerializationStressTest1 extends SerializationStressTest {
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_18_18_writeObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
@@ -1066,15 +1012,12 @@ public class SerializationStressTest1 extends SerializationStressTest {
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_18_19_writeObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
@@ -1105,15 +1048,12 @@ public class SerializationStressTest1 extends SerializationStressTest {
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_18_20_writeObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
@@ -1142,15 +1082,12 @@ public class SerializationStressTest1 extends SerializationStressTest {
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_18_21_writeObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
@@ -1183,15 +1120,12 @@ public class SerializationStressTest1 extends SerializationStressTest {
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_18_22_writeObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
@@ -1221,15 +1155,12 @@ public class SerializationStressTest1 extends SerializationStressTest {
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_18_23_writeObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
@@ -1262,15 +1193,12 @@ public class SerializationStressTest1 extends SerializationStressTest {
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_18_24_writeObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
@@ -1303,15 +1231,12 @@ public class SerializationStressTest1 extends SerializationStressTest {
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_18_25_writeObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
@@ -1342,15 +1267,12 @@ public class SerializationStressTest1 extends SerializationStressTest {
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_18_26_writeObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
@@ -1382,15 +1304,12 @@ public class SerializationStressTest1 extends SerializationStressTest {
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_18_27_writeObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
@@ -1424,15 +1343,12 @@ public class SerializationStressTest1 extends SerializationStressTest {
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_18_28_writeObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
@@ -1465,15 +1381,12 @@ public class SerializationStressTest1 extends SerializationStressTest {
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_18_29_writeObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
@@ -1503,15 +1416,12 @@ public class SerializationStressTest1 extends SerializationStressTest {
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_18_30_writeObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
@@ -1547,15 +1457,12 @@ public class SerializationStressTest1 extends SerializationStressTest {
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_18_31_writeObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
@@ -1602,15 +1509,12 @@ public class SerializationStressTest1 extends SerializationStressTest {
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_18_32_writeObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
@@ -1656,15 +1560,12 @@ public class SerializationStressTest1 extends SerializationStressTest {
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_NonSerializableExceptionWhenDumping() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
@@ -1709,15 +1610,12 @@ public class SerializationStressTest1 extends SerializationStressTest {
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_18_33_writeObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
@@ -1754,15 +1652,12 @@ public class SerializationStressTest1 extends SerializationStressTest {
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_18_34_writeObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
@@ -1792,15 +1687,12 @@ public class SerializationStressTest1 extends SerializationStressTest {
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_18_35_writeObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
@@ -1829,15 +1721,12 @@ public class SerializationStressTest1 extends SerializationStressTest {
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_18_36_writeObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
@@ -1867,15 +1756,12 @@ public class SerializationStressTest1 extends SerializationStressTest {
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_18_37_writeObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
@@ -1905,15 +1791,12 @@ public class SerializationStressTest1 extends SerializationStressTest {
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_18_38_writeObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
@@ -1943,15 +1826,12 @@ public class SerializationStressTest1 extends SerializationStressTest {
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_18_39_writeObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)
@@ -1981,15 +1861,12 @@ public class SerializationStressTest1 extends SerializationStressTest {
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_18_40_writeObject() {
         // Test for method void
         // java.io.ObjectOutputStream.writeObject(java.lang.Object)

@@ -54,8 +54,6 @@ public class MyCertPath extends CertPath {
     /**
      * Constructs new instance of <code>MyCertPath</code>
      * 
-     * @param type
-     * @param encoding
      */
     public MyCertPath(byte[] encoding) {
         super("MyEncoding");
@@ -76,6 +74,7 @@ public class MyCertPath extends CertPath {
 
     /**
      * @return default encoded form of this cert path
+     * @throws CertificateEncodingException 
      * @see java.security.cert.CertPath#getEncoded()
      */
     public byte[] getEncoded() throws CertificateEncodingException {

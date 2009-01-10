@@ -18,9 +18,9 @@
 package org.apache.harmony.security.tests.java.security;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.security.Permission;
 import java.security.PermissionCollection;
@@ -53,36 +53,48 @@ public class Permission2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.Permission#Permission(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verification when string parameter empty/null is missed",
-      targets = {
-        @TestTarget(
-          methodName = "Permission",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Permission",
+        args = {java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_String() {
         // test method java.security.permission.Permission(string)
+        try {
         SecurityPermission permi = new SecurityPermission(
                 "Testing the permission abstract class");
         String name = permi.getName();
         assertEquals("Permission Constructor failed",
                 "Testing the permission abstract class", name);
+        } catch (Exception e) {
+            fail("Unexpected excpetion");
+        }
+        
+        try {
+            SecurityPermission permi = new SecurityPermission(null);
+            fail("NullPointerException was not thrown for NULL parameter");
+        } catch (NullPointerException e) {
+            //expected
+        }
+        
+        try {
+            SecurityPermission permi = new SecurityPermission("");
+            fail("IllegalArgumentException was not thrown for empty parameter");
+        } catch (IllegalArgumentException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.security.Permission#checkGuard(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "SecurityException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "checkGuard",
-          methodArgs = {Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "checkGuard",
+        args = {java.lang.Object.class}
+    )
     public void test_checkGuardLjava_lang_Object() {
         // test method java.security.permission.checkGuard(object)
         SecurityPermission permi = new SecurityPermission(
@@ -98,15 +110,12 @@ public class Permission2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.Permission#getName()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getName",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getName",
+        args = {}
+    )
     public void test_getName() {
         // test method java.security.permission.getName()
         SecurityPermission permi = new SecurityPermission("testing getName()");
@@ -122,15 +131,12 @@ public class Permission2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.Permission#newPermissionCollection()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Case when null returned if one is not defined is missed",
-      targets = {
-        @TestTarget(
-          methodName = "newPermissionCollection",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "newPermissionCollection",
+        args = {}
+    )
     public void test_newPermissionCollection() {
         // test method java.security.permission.newPermissionCollection
         Permission permi = new ConcretePermission();
@@ -143,15 +149,12 @@ public class Permission2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.Permission#toString()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public void test_toString() {
         // test method java.security.permission.toString
         // test for permission with no action

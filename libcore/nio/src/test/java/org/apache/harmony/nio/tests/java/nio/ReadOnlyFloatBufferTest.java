@@ -15,9 +15,8 @@
  */
 package org.apache.harmony.nio.tests.java.nio;
 
-import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import java.nio.FloatBuffer;
@@ -34,40 +33,33 @@ public class ReadOnlyFloatBufferTest extends FloatBufferTest {
     protected void tearDown() throws Exception {
         super.tearDown();
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies isReadOnly method for read only FloatBuffer.",
-      targets = {
-        @TestTarget(
-          methodName = "isReadOnly",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies isReadOnly method for read only FloatBuffer.",
+        method = "isReadOnly",
+        args = {}
+    )
     public void testIsReadOnly() {
         assertTrue(buf.isReadOnly());
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that hasArray returns false for Read Only " +
-            "FloatBuffer.",
-      targets = {
-        @TestTarget(
-          methodName = "hasArray",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies that hasArray returns false for Read Only FloatBuffer.",
+        method = "hasArray",
+        args = {}
+    )
     public void testHasArray() {
         assertFalse(buf.hasArray());
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies ReadOnlyBufferException.",
-      targets = {
-        @TestTarget(
-          methodName = "array",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies ReadOnlyBufferException.",
+        method = "array",
+        args = {}
+    )
     public void testArray() {
         try {
             buf.array();
@@ -76,45 +68,39 @@ public class ReadOnlyFloatBufferTest extends FloatBufferTest {
             //expected
         }
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "hashCode",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "hashCode",
+        args = {}
+    )
     public void testHashCode() {
         FloatBuffer duplicate = buf.duplicate();
         assertEquals(buf.hashCode(), duplicate.hashCode());
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies UnsupportedOperationException.",
-      targets = {
-        @TestTarget(
-          methodName = "arrayOffset",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies ReadOnlyBufferException.",
+        method = "arrayOffset",
+        args = {}
+    )
     public void testArrayOffset() {
         try {
             buf.arrayOffset();
-            fail("Should throw Exception"); //$NON-NLS-1$
-        } catch (UnsupportedOperationException e) {
+            fail("Should throw ReadOnlyBufferException"); //$NON-NLS-1$
+        } catch (ReadOnlyBufferException e) {
             //expected
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies ReadOnlyBufferException.",
-      targets = {
-        @TestTarget(
-          methodName = "compact",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies ReadOnlyBufferException.",
+        method = "compact",
+        args = {}
+    )
     public void testCompact() {
         try {
             buf.compact();
@@ -123,15 +109,13 @@ public class ReadOnlyFloatBufferTest extends FloatBufferTest {
             // expected
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies ReadOnlyBufferException.",
-      targets = {
-        @TestTarget(
-          methodName = "put",
-          methodArgs = {float.class}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies ReadOnlyBufferException.",
+        method = "put",
+        args = {float.class}
+    )
     public void testPutfloat() {
         try {
             buf.put(0);
@@ -140,15 +124,13 @@ public class ReadOnlyFloatBufferTest extends FloatBufferTest {
             // expected
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies ReadOnlyBufferException.",
-      targets = {
-        @TestTarget(
-          methodName = "put",
-          methodArgs = {float[].class}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies ReadOnlyBufferException.",
+        method = "put",
+        args = {float[].class}
+    )
     public void testPutfloatArray() {
         float array[] = new float[1];
         try {
@@ -164,15 +146,13 @@ public class ReadOnlyFloatBufferTest extends FloatBufferTest {
             // expected
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies ReadOnlyBufferException.",
-      targets = {
-        @TestTarget(
-          methodName = "put",
-          methodArgs = {float[].class, int.class, int.class}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies ReadOnlyBufferException.",
+        method = "put",
+        args = {float[].class, int.class, int.class}
+    )
     public void testPutfloatArrayintint() {
         float array[] = new float[1];
         try {
@@ -200,15 +180,13 @@ public class ReadOnlyFloatBufferTest extends FloatBufferTest {
             // expected
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies ReadOnlyBufferException.",
-      targets = {
-        @TestTarget(
-          methodName = "put",
-          methodArgs = {java.nio.FloatBuffer.class}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies ReadOnlyBufferException.",
+        method = "put",
+        args = {java.nio.FloatBuffer.class}
+    )
     public void testPutFloatBuffer() {
         FloatBuffer other = FloatBuffer.allocate(1);
         try {
@@ -230,15 +208,13 @@ public class ReadOnlyFloatBufferTest extends FloatBufferTest {
             // expected
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies ReadOnlyBufferException.",
-      targets = {
-        @TestTarget(
-          methodName = "put",
-          methodArgs = {int.class, float.class}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies ReadOnlyBufferException.",
+        method = "put",
+        args = {int.class, float.class}
+    )
     public void testPutintfloat() {
         try {
             buf.put(0, (float) 0);

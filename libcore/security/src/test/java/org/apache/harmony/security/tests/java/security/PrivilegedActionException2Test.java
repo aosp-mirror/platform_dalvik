@@ -18,28 +18,27 @@
 package org.apache.harmony.security.tests.java.security;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.io.IOException;
 import java.security.PrivilegedActionException;
 
 @TestTargetClass(PrivilegedActionException.class)
 public class PrivilegedActionException2Test extends junit.framework.TestCase {
+    
+    private static Throwable tCause = new Throwable("Test cause");
 
     /**
      * @tests java.security.PrivilegedActionException#PrivilegedActionException(java.lang.Exception)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "PrivilegedActionException",
-          methodArgs = {Exception.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "PrivilegedActionException",
+        args = {java.lang.Exception.class}
+    )
     public void test_ConstructorLjava_lang_Exception() {
         Exception e = new Exception("test exception");
         PrivilegedActionException pe = new PrivilegedActionException(e);
@@ -55,19 +54,39 @@ public class PrivilegedActionException2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.PrivilegedActionException#getException()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getException",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getException",
+        args = {}
+    )
     public void test_getException() {
         Exception e = new IOException("test IOException");
         PrivilegedActionException pe = new PrivilegedActionException(e);
         assertEquals("Did not encapsulate test IOException!", e, pe
                 .getException());
+    }
+    
+    /**
+     * @tests java.security.PrivilegedActionException#getCause()
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getCause",
+        args = {}
+    )
+    public void test_getCause() {
+        Exception ex = new Exception("Test message", tCause);
+        PrivilegedActionException pe = new PrivilegedActionException(ex);
+        
+        try {
+            Throwable res = pe.getCause();
+            if (!res.equals(ex)) {
+                fail("Method getCause() returned incorrect value");
+            }
+        } catch (Exception e) {
+            fail("Unexpected exception");
+        }
     }
 }

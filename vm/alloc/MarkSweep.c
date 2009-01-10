@@ -99,7 +99,7 @@ createMarkStack(GcMarkStack *stack)
      * TODO: be better about memory usage; use a smaller stack with
      *       overflow detection and recovery.
      */
-    size = dvmHeapSourceGetIdealFootprint() /
+    size = dvmHeapSourceGetIdealFootprint() * sizeof(Object*) /
             (sizeof(Object) + HEAP_SOURCE_CHUNK_OVERHEAD);
     size = ALIGN_UP_TO_PAGE_SIZE(size);
     fd = ashmem_create_region("dalvik-heap-markstack", size);

@@ -22,9 +22,9 @@
 
 package tests.api.javax.security.cert;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -61,15 +61,12 @@ public class CertificateEncodingExceptionTest extends TestCase {
      * Test for <code>CertificateEncodingException()</code> constructor
      * Assertion: constructs CertificateEncodingException with no detail message
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "CertificateEncodingException",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "CertificateEncodingException",
+        args = {}
+    )
     public void testCertificateEncodingException01() {
         CertificateEncodingException tE = new CertificateEncodingException();
         assertNull("getMessage() must return null.", tE.getMessage());
@@ -81,15 +78,12 @@ public class CertificateEncodingExceptionTest extends TestCase {
      * Assertion: constructs CertificateEncodingException with detail message
      * msg. Parameter <code>msg</code> is not null.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies CertificateEncodingException with valid parameters.",
-      targets = {
-        @TestTarget(
-          methodName = "CertificateEncodingException",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies CertificateEncodingException with valid parameters.",
+        method = "CertificateEncodingException",
+        args = {java.lang.String.class}
+    )
     public void testCertificateEncodingException02() {
         CertificateEncodingException tE;
         for (int i = 0; i < msgs.length; i++) {
@@ -105,15 +99,12 @@ public class CertificateEncodingExceptionTest extends TestCase {
      * Assertion: constructs CertificateEncodingException when <code>msg</code>
      * is null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies null as a parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "CertificateEncodingException",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies null as a parameter.",
+        method = "CertificateEncodingException",
+        args = {java.lang.String.class}
+    )
     public void testCertificateEncodingException03() {
         String msg = null;
         CertificateEncodingException tE = new CertificateEncodingException(msg);

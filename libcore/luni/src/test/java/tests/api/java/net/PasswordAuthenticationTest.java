@@ -18,9 +18,9 @@
 package tests.api.java.net;
 
 import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.net.PasswordAuthentication;
 
@@ -31,13 +31,24 @@ public class PasswordAuthenticationTest extends junit.framework.TestCase {
      * @tests java.net.PasswordAuthentication#PasswordAuthentication(java.lang.String,
      *        char[])
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "PasswordAuthentication",
-          methodArgs = {String.class, char[].class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "PasswordAuthentication",
+            args = {java.lang.String.class, char[].class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getPassword",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getUserName",
+            args = {}
         )
     })
     public void test_ConstructorLjava_lang_String$C() {
@@ -54,42 +65,18 @@ public class PasswordAuthenticationTest extends junit.framework.TestCase {
         for (int counter = password.length - 1; counter >= 0; counter--)
             assertTrue("Passwords not equal",
                     returnedPassword[counter] == password[counter]);
-    }
+        
+        try {
+            new PasswordAuthentication(name, null);
+            fail("NullPointerException was not thrown.");
+        } catch(NullPointerException npe) {
+            //expected
+        }
 
-    /**
-     * @tests java.net.PasswordAuthentication#getPassword()
-     */
-@TestInfo(
-      level = TestLevel.TODO,
-      purpose = "Empty test.",
-      targets = {
-        @TestTarget(
-          methodName = "getPassword",
-          methodArgs = {}
-        )
-    })
-    public void test_getPassword() {
-        // Test for method char [] java.net.PasswordAuthentication.getPassword()
-        assertTrue("Used to test", true);
-    }
-
-    /**
-     * @tests java.net.PasswordAuthentication#getUserName()
-     */
-@TestInfo(
-      level = TestLevel.TODO,
-      purpose = "Empty test.",
-      targets = {
-        @TestTarget(
-          methodName = "getUserName",
-          methodArgs = {}
-        )
-    })
-    public void test_getUserName() {
-        // Test for method java.lang.String
-        // java.net.PasswordAuthentication.getUserName()
-        assertTrue("Used to test", true);
-    }
+        pa = new PasswordAuthentication(null, password);
+        assertNull(pa.getUserName());
+        assertEquals(password.length, pa.getPassword().length);
+      }
 
     /**
      * Sets up the fixture, for example, open a network connection. This method

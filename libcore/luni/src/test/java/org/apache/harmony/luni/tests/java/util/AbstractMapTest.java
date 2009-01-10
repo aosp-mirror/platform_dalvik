@@ -17,21 +17,26 @@
 
 package org.apache.harmony.luni.tests.java.util;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.KnownFailure;
 
 import java.util.AbstractMap;
+import java.util.AbstractSet;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.IdentityHashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.Vector;
 import java.util.WeakHashMap;
 
 @TestTargetClass(java.util.AbstractMap.class)
@@ -74,15 +79,12 @@ public class AbstractMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.AbstractMap#keySet()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify returned set of keys.",
-      targets = {
-        @TestTarget(
-          methodName = "keySet",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Class is abstract. Functionality tested in subclasses for example in java.util.HashMap.",
+        method = "keySet",
+        args = {}
+    )
     public void test_keySet() {
         AbstractMap map1 = new HashMap(0);
         assertSame("HashMap(0)", map1.keySet(), map1.keySet());
@@ -109,16 +111,12 @@ public class AbstractMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.AbstractMap#remove(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify UnsupportedOperationException and " +
-            "negative case.",
-      targets = {
-        @TestTarget(
-          methodName = "remove",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Class is abstract. Functionality tested in subclasses for example in java.util.HashMap.",
+        method = "remove",
+        args = {java.lang.Object.class}
+    )
     public void test_removeLjava_lang_Object() {
         Object key = new Object();
         Object value = new Object();
@@ -157,15 +155,12 @@ public class AbstractMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.AbstractMap#values()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify returned Collection.",
-      targets = {
-        @TestTarget(
-          methodName = "values",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Class is abstract. Functionality tested in subclasses for example in java.util.HashMap.",
+        method = "values",
+        args = {}
+    )
     public void test_values() {
         AbstractMap map1 = new HashMap(0);
         assertSame("HashMap(0)", map1.values(), map1.values());
@@ -192,15 +187,12 @@ public class AbstractMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.AbstractMap#clone()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify CloneNotSupportedException.",
-      targets = {
-        @TestTarget(
-          methodName = "clone",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Class is abstract. Functionality tested in subclasses for example in java.util.HashMap.",
+        method = "clone",
+        args = {}
+    )
     public void test_clone() {
         class MyMap extends AbstractMap implements Cloneable {
             private Map map = new HashMap();
@@ -233,6 +225,307 @@ public class AbstractMapTest extends junit.framework.TestCase {
                 && entry.getValue() == "1");
         MyMap mapClone = (MyMap) map.clone();
         assertTrue("clone not shallow", map.getMap() == mapClone.getMap());
+    }
+
+    class MocAbstractMap<K, V> extends AbstractMap {
+
+        public Set entrySet() {
+            Set set = new MySet();
+            return set;
+        }
+
+        class MySet extends HashSet {
+            public void clear() {
+                throw new UnsupportedOperationException();
+            }
+        }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Class is abstract. Functionality tested in subclasses for example in java.util.HashMap.",
+        method = "clear",
+        args = {}
+    )
+    public void test_clear() {
+        // normal clear()
+        AbstractMap map = new HashMap();
+        map.put(1, 1);
+        map.clear();
+        assertTrue(map.isEmpty());
+
+        // Special entrySet return a Set with no clear method.
+        AbstractMap myMap = new MocAbstractMap();
+        try {
+            myMap.clear();
+            fail("Should throw UnsupportedOprationException");
+        } catch (UnsupportedOperationException e) {
+            // expected
+        }
+    }
+
+    /**
+     * @tests java.util.AbstractMap#containsKey(Object)
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Class is abstract. Functionality tested in subclasses for example in java.util.HashMap.",
+        method = "containsKey",
+        args = {java.lang.Object.class}
+    )
+    public void test_containsKey() {
+        AbstractMap map = new AMT();
+
+        assertFalse(map.containsKey("k"));
+        assertFalse(map.containsKey(null));
+
+        map.put("k", "v");
+        map.put("key", null);
+        map.put(null, "value");
+        map.put(null, null);
+
+        assertTrue(map.containsKey("k"));
+        assertTrue(map.containsKey("key"));
+        assertTrue(map.containsKey(null));
+    }
+
+    /**
+     * @tests java.util.AbstractMap#containsValue(Object)
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Class is abstract. Functionality tested in subclasses for example in java.util.HashMap.",
+        method = "containsValue",
+        args = {java.lang.Object.class}
+    )
+    public void test_containValue() {
+        AbstractMap map = new AMT();
+
+        assertFalse(map.containsValue("v"));
+        assertFalse(map.containsValue(null));
+
+        map.put("k", "v");
+        map.put("key", null);
+        map.put(null, "value");
+
+        assertTrue(map.containsValue("v"));
+        assertTrue(map.containsValue("value"));
+        assertTrue(map.containsValue(null));
+    }
+
+    /**
+     * @tests java.util.AbstractMap#get(Object)
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Class is abstract. Functionality tested in subclasses for example in java.util.HashMap.",
+        method = "get",
+        args = {java.lang.Object.class}
+    )
+    public void test_get() {
+        AbstractMap map = new AMT();
+        assertNull(map.get("key"));
+        assertNull(map.get(null));
+
+        map.put("k", "v");
+        map.put("key", null);
+        map.put(null, "value");
+
+        assertEquals("v", map.get("k"));
+        assertNull(map.get("key"));
+        assertEquals("value", map.get(null));
+    }
+
+    public class AMT extends AbstractMap {
+
+        // Very crude AbstractMap implementation
+        Vector values = new Vector();
+
+        Vector keys = new Vector();
+
+        public Set entrySet() {
+            return new AbstractSet() {
+                public Iterator iterator() {
+                    return new Iterator() {
+                        int index = 0;
+
+                        public boolean hasNext() {
+                            return index < values.size();
+                        }
+
+                        public Object next() {
+                            if (index < values.size()) {
+                                Map.Entry me = new Map.Entry() {
+                                    Object v = values.elementAt(index);
+
+                                    Object k = keys.elementAt(index);
+
+                                    public Object getKey() {
+                                        return k;
+                                    }
+
+                                    public Object getValue() {
+                                        return v;
+                                    }
+
+                                    public Object setValue(Object value) {
+                                        return null;
+                                    }
+                                };
+                                index++;
+                                return me;
+                            }
+                            return null;
+                        }
+
+                        public void remove() {
+                        }
+                    };
+                }
+
+                public int size() {
+                    return values.size();
+                }
+            };
+        }
+
+        public Object put(Object k, Object v) {
+            keys.add(k);
+            values.add(v);
+            return v;
+        }
+    }
+
+    /**
+     * @tests {@link java.util.AbstractMap#putAll(Map)}
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Class is abstract. Functionality tested in subclasses for example in java.util.HashMap.",
+        method = "putAll",
+        args = {java.util.Map.class}
+    )
+    @KnownFailure("ToT fixed")
+    public void test_putAllLMap() {
+        Hashtable ht = new Hashtable();
+        AbstractMap amt = new AMT();
+        ht.put("this", "that");
+        amt.putAll(ht);
+        assertEquals("Should be equal", amt, ht);
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Class is abstract. Functionality tested in subclasses for example in java.util.HashMap.",
+        method = "AbstractMap",
+        args = {}
+    )
+    public void test_Constructor() {
+        AMT amt = new AMT();
+        assertNotNull(amt);
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Class is abstract. Functionality tested in subclasses for example in java.util.HashMap.",
+        method = "equals",
+        args = {java.lang.Object.class}
+    )
+    @KnownFailure("ToT fixed")
+    public void test_equalsLjava_lang_Object() {
+        AbstractMap amt1 = new AMT();
+        AbstractMap amt2 = new AMT();
+        assertTrue("assert 0", amt1.equals(amt2));
+        assertTrue("assert 1", amt1.equals(amt1));
+        assertTrue("assert 2", amt2.equals(amt1));
+        amt1.put("1", "one");
+        assertFalse("assert 3", amt1.equals(amt2));
+        amt1.put("2", "two");
+        amt1.put("3", "three");
+    
+        amt2.put("1", "one");
+        amt2.put("2", "two");
+        amt2.put("3", "three");
+        assertTrue("assert 4", amt1.equals(amt2));
+        assertFalse("assert 5", amt1.equals(this));
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Class is abstract. Functionality tested in subclasses for example in java.util.HashMap.",
+        method = "hashCode",
+        args = {}
+    )
+    public void test_hashCode() {
+        AMT amt1 = new AMT();
+        AMT amt2 = new AMT();
+        amt1.put("1", "one");
+
+        assertNotSame(amt1.hashCode(), amt2.hashCode());
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Class is abstract. Functionality tested in subclasses for example in java.util.HashMap.",
+        method = "isEmpty",
+        args = {}
+    )
+    public void test_isEmpty() {
+        AMT amt = new AMT();
+        assertTrue(amt.isEmpty());
+        amt.put("1", "one");
+        assertFalse(amt.isEmpty());
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Class is abstract. Functionality tested in subclasses for example in java.util.HashMap.",
+        method = "put",
+        args = {java.lang.Object.class, java.lang.Object.class}
+    )
+    public void test_put() {
+        AMT amt = new AMT();
+        assertEquals(0, amt.size());
+        amt.put("1", "one");
+        assertEquals(1, amt.size());
+        amt.put("2", "two");
+        assertEquals(2, amt.size());
+        amt.put("3", "three");
+        assertEquals(3, amt.size());
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Class is abstract. Functionality tested in subclasses for example in java.util.HashMap.",
+        method = "size",
+        args = {}
+    )
+    public void test_size() {
+        AMT amt = new AMT();
+        assertEquals(0, amt.size());
+        amt.put("1", "one");
+        assertEquals(1, amt.size());
+        amt.put("2", "two");
+        assertEquals(2, amt.size());
+        amt.put("3", "three");
+        assertEquals(3, amt.size());
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Class is abstract. Functionality tested in subclasses for example in java.util.HashMap.",
+        method = "toString",
+        args = {}
+    )
+    public void test_toString() {
+        AMT amt = new AMT();
+        assertEquals("{}", amt.toString());
+        amt.put("1", "one");
+        assertEquals("{1=one}", amt.toString());
+        amt.put("2", "two");
+        assertEquals("{1=one, 2=two}", amt.toString());
+        amt.put("3", "three");
+        assertEquals("{1=one, 2=two, 3=three}", amt.toString());
     }
 
     protected void setUp() {

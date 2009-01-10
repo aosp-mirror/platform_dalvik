@@ -5,10 +5,6 @@ import java.util.prefs.NodeChangeListener;
 import java.util.prefs.Preferences;
 
 public class MockNodeChangeListener implements NodeChangeListener {
-    private boolean addDispatched = false;
-
-    private boolean removeDispatched = false;
-
     private Object addLock = new Object();
 
     private Object removeLock = new Object();
@@ -33,6 +29,15 @@ public class MockNodeChangeListener implements NodeChangeListener {
 
     public MockNodeChangeListener() {
 
+    }
+    
+    public void waitForEvent() {
+        try {
+            synchronized (addLock) {
+                addLock.wait(500);
+            }
+        } catch (InterruptedException e) {
+        }
     }
 
     public void childAdded(NodeChangeEvent e) {
@@ -62,7 +67,6 @@ public class MockNodeChangeListener implements NodeChangeListener {
                 break;
             }
             ++added;
-            addDispatched = true;
             addLock.notifyAll();
         }
     }
@@ -93,69 +97,32 @@ public class MockNodeChangeListener implements NodeChangeListener {
                 break;
             }
             removed++;
-            removeDispatched = true;
             removeLock.notifyAll();
         }
     }
 
     public boolean getAddResult() {
         synchronized (addLock) {
-            if (!addDispatched) {
-                try {
-                    // TODO: don't know why must add limitation
-                    addLock.wait(100);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-            addDispatched = false;
+            return addResult;
         }
-        return addResult;
     }
 
     public boolean getRemoveResult() {
         synchronized (removeLock) {
-            if (!removeDispatched) {
-                try {
-                    // TODO: don't know why must add limitation
-                    removeLock.wait(100);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-            removeDispatched = false;
+            return removeResult;
         }
-        return removeResult;
     }
 
     public int getAdded() {
         synchronized (addLock) {
-            if (!addDispatched) {
-                try {
-                    // TODO: don't know why must add limitation
-                    addLock.wait(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-            addDispatched = false;
+            return added;
         }
-        return added;
     }
 
     public int getRemoved() {
         synchronized (removeLock) {
-            if (!removeDispatched) {
-                try {
-                    removeLock.wait(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-            removeDispatched = false;
+            return removed;
         }
-        return removed;
-
     }
 
     public void reset() {

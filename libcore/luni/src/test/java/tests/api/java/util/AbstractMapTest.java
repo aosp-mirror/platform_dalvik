@@ -17,8 +17,9 @@
 
 package tests.api.java.util;
 
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.KnownFailure;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass; 
 
@@ -78,15 +79,12 @@ public class AbstractMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.AbstractMap#keySet()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify returned set of keys.",
-      targets = {
-        @TestTarget(
-          methodName = "keySet",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify returned set of keys.",
+        method = "keySet",
+        args = {}
+    )
     public void test_keySet() {
         AbstractMap map1 = new HashMap(0);
         assertSame("HashMap(0)", map1.keySet(), map1.keySet());
@@ -113,15 +111,12 @@ public class AbstractMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.AbstractMap#remove(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify UnsupportedOperationException.",
-      targets = {
-        @TestTarget(
-          methodName = "remove",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify UnsupportedOperationException.",
+        method = "remove",
+        args = {java.lang.Object.class}
+    )
     public void test_removeLjava_lang_Object() {
         Object key = new Object();
         Object value = new Object();
@@ -160,15 +155,12 @@ public class AbstractMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.AbstractMap#values()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify returned Collection.",
-      targets = {
-        @TestTarget(
-          methodName = "values",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify returned Collection.",
+        method = "values",
+        args = {}
+    )
     public void test_values() {
         AbstractMap map1 = new HashMap(0);
         assertSame("HashMap(0)", map1.values(), map1.values());
@@ -195,15 +187,12 @@ public class AbstractMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.AbstractMap#clone()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify CloneNotSupportedException.",
-      targets = {
-        @TestTarget(
-          methodName = "clone",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify CloneNotSupportedException.",
+        method = "clone",
+        args = {}
+    )
     public void test_clone() {
         class MyMap extends AbstractMap implements Cloneable {
             private Map map = new HashMap();
@@ -300,20 +289,19 @@ public class AbstractMapTest extends junit.framework.TestCase {
     /**
      * @tests {@link java.util.AbstractMap#putAll(Map)}
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify exceptions.",
-      targets = {
-        @TestTarget(
-          methodName = "putAll",
-          methodArgs = {java.util.Map.class}
-        )
-    })
-    public void _test_putAllLMap() {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify exceptions.",
+        method = "putAll",
+        args = {java.util.Map.class}
+    )
+    @KnownFailure("ToT fixed.")
+    public void test_putAllLMap() {
         Hashtable ht  = new Hashtable();
-        AMT       amt = new AMT();
+        AMT amt = new AMT();
         ht.put("this", "that");
         amt.putAll(ht);
+      
         assertEquals("Should be equal", amt, ht);
     }
 

@@ -17,8 +17,8 @@
 package org.apache.harmony.logging.tests.java.util.logging;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargets;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestLevel;
 
 import junit.framework.TestCase;
@@ -53,55 +53,43 @@ public class LoggingMXBeanTest extends TestCase {
     
        
     
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getLoggerLevel",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getLoggerLevel",
+        args = {java.lang.String.class}
+    )
     public void testGetLoggerLevel() {
         assertNull(m.getLoggerLevel(null));
     }
 
     
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "getLoggerNames",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getLoggerNames",
+        args = {}
+    )
           public void testGetLoggerNames() {
                 assertNull(m.getLoggerNames());
           }
     
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "getParentLoggerName",
-                methodArgs = {String.class}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getParentLoggerName",
+        args = {java.lang.String.class}
+    )
           public void testGetParentLoggerName() {
               assertNull(m.getParentLoggerName(null));
           }
     
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "setLoggerLevel",
-                methodArgs = {String.class, String.class}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setLoggerLevel",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
           public void testSetLoggerLevel() {
             try{
                 m.setLoggerLevel(null,null);

@@ -17,8 +17,8 @@
 
 package tests.api.java.util;
 
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass; 
 
@@ -61,15 +61,12 @@ public class AbstractListTest extends junit.framework.TestCase {
     /**
      * @tests java.util.AbstractList#hashCode()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "hashCode",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hashCode",
+        args = {}
+    )
     public void test_hashCode() {
         
         List list = new ArrayList();
@@ -91,15 +88,12 @@ public class AbstractListTest extends junit.framework.TestCase {
     /**
      * @tests java.util.AbstractList#iterator()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "iterator",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "iterator",
+        args = {}
+    )
     public void test_iterator() {
         SimpleList list = new SimpleList();
         list.add(new Object());
@@ -113,15 +107,12 @@ public class AbstractListTest extends junit.framework.TestCase {
     /**
      * @tests java.util.AbstractList#listIterator()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "listIterator",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "listIterator",
+        args = {}
+    )
     public void test_listIterator() {
         Integer tempValue;
         List list = new ArrayList();
@@ -148,17 +139,12 @@ public class AbstractListTest extends junit.framework.TestCase {
     /**
      * @tests java.util.AbstractList#subList(int, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies each of the SubList operations to ensure a " + 
-            "ConcurrentModificationException does not occur on an " +
-            "AbstractList which does not update modCount.",
-      targets = {
-        @TestTarget(
-          methodName = "subList",
-          methodArgs = {int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies each of the SubList operations to ensure a ConcurrentModificationException does not occur on an AbstractList which does not update modCount.",
+        method = "subList",
+        args = {int.class, int.class}
+    )
     public void test_subListII() {
         // Test each of the SubList operations to ensure a
         // ConcurrentModificationException does not occur on an AbstractList
@@ -213,15 +199,12 @@ public class AbstractListTest extends junit.framework.TestCase {
     /**
      * @tests java.util.AbstractList#subList(int, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies IndexOutOfBoundsException.",
-      targets = {
-        @TestTarget(
-          methodName = "subList",
-          methodArgs = {int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies IndexOutOfBoundsException.",
+        method = "subList",
+        args = {int.class, int.class}
+    )
     public void test_subList_empty() {
         // Regression for HARMONY-389
         List al = new ArrayList();
@@ -253,16 +236,12 @@ public class AbstractListTest extends junit.framework.TestCase {
     /**
      * @tests java.util.AbstractList#subList(int, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Doesn't verify IndexOutOfBoundsException, " + 
-            "IllegalArgumentException.",
-      targets = {
-        @TestTarget(
-          methodName = "subList",
-          methodArgs = {int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify IndexOutOfBoundsException, IllegalArgumentException.",
+        method = "subList",
+        args = {int.class, int.class}
+    )
     public void test_subList_addAll() {
         // Regression for HARMONY-390
         List mainList = new ArrayList();
@@ -286,6 +265,87 @@ public class AbstractListTest extends junit.framework.TestCase {
             assertTrue("should be more elements", iter.hasNext());
             assertEquals("element in incorrect position", expected[i], iter
                     .next());
+        }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "indexOf",
+        args = {java.lang.Object.class}
+    )
+    public void test_indexOfLjava_lang_Object() {
+        AbstractList al = new ArrayList();
+        al.add(0);
+        al.add(1);
+        al.add(2);
+        al.add(3);
+        al.add(4);
+        
+        assertEquals(-1, al.indexOf(5));
+        assertEquals(2, al.indexOf(2));
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "lastIndexOf",
+        args = {java.lang.Object.class}
+    )
+    public void test_lastIndexOfLjava_lang_Object() {
+        AbstractList al = new ArrayList();
+        al.add(0);
+        al.add(1);
+        al.add(2);
+        al.add(2);
+        al.add(2);
+        al.add(2);
+        al.add(2);
+        al.add(3);
+        al.add(4);
+        
+        assertEquals(-1, al.lastIndexOf(5));
+        assertEquals(6, al.lastIndexOf(2));
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "listIterator",
+        args = {int.class}
+    )
+    public void test_listIteratorI() {
+        AbstractList al1 = new ArrayList();
+        AbstractList al2 = new ArrayList();
+        al1.add(0);
+        al1.add(1);
+        al1.add(2);
+        al1.add(3);
+        al1.add(4);
+        al2.add(2);
+        al2.add(3);
+        al2.add(4);
+        
+        Iterator li1 = al1.listIterator(2);
+        Iterator li2 = al2.listIterator();
+        
+        while(li1.hasNext()&&li2.hasNext()) {
+            assertEquals(li1.next(), li2.next());
+        }
+        assertSame(li1.hasNext(),li2.hasNext());
+        
+        try {
+            al1.listIterator(-1);
+            fail("IndexOutOfBoundsException expected");
+        } catch (IndexOutOfBoundsException ee) {
+            //expected
+        }
+        
+        try {
+            al1.listIterator(al1.size() + 1);
+            fail("IndexOutOfBoundsException expected");
+        } catch (IndexOutOfBoundsException ee) {
+            //expected
         }
     }
 

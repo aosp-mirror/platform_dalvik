@@ -16,9 +16,10 @@
 
 package tests.xml;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.BrokenTest;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -63,15 +64,12 @@ public class SimpleBuilderTest extends TestCase {
 
         return result;
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Regression test.",
-      targets = {
-        @TestTarget(
-          methodName = "parse",
-          methodArgs = {java.io.InputStream.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Regression test.",
+        method = "parse",
+        args = {java.io.InputStream.class}
+    )
     public void testGoodFile1() throws Exception {
         Document document = builder.parse(getClass().getResourceAsStream(
                 "/SimpleBuilderTest.xml"));
@@ -124,15 +122,12 @@ public class SimpleBuilderTest extends TestCase {
         assertEquals("The quick brown fox jumps over the lazy dog.", proinst);
         assertEquals(" Fragile!  Handle me with care! ", comment);
     }
-    @TestInfo(
-      level = TestLevel.TODO,
-      purpose = "Doesn't verify anything.",
-      targets = {
-        @TestTarget(
-          methodName = "parse",
-          methodArgs = {java.io.InputStream.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.ADDITIONAL,
+        method = "!todo parse",
+        args = {java.io.InputStream.class}
+    )
+    @BrokenTest("Doesn't verify anything.")
     public void testGoodFile2() throws Exception {
         Document document = builder.parse(getClass().getResourceAsStream(
                 "/staffNS.xml"));

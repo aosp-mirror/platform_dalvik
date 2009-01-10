@@ -18,8 +18,8 @@
 package tests.api.java.io;
 
 import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargets;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestLevel;
 
 import java.io.IOException;
@@ -33,35 +33,35 @@ public class StringWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.StringWriter#StringWriter()
      */
-    @TestInfo(
-              level = TestLevel.COMPLETE,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "StringWriter",
-                  methodArgs = {}
-                )
-            })
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "StringWriter",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "StringWriter",
+            args = {int.class}
+        )
+    })
     public void test_Constructor() {
-        try {
-            new StringWriter();
-        } catch (Exception ee) {
-            fail ("Exception " + ee.getMessage() + "not expected in this case");
-        }
+        new StringWriter();
+        new StringWriter(10);
+        new StringWriter(10000);
     }
 
     /**
      * @tests java.io.StringWriter#close()
      */
-    @TestInfo(
-              level = TestLevel.PARTIAL,
-              purpose = "IOException checking missed.",
-              targets = {
-                @TestTarget(
-                  methodName = "close",
-                  methodArgs = {}
-                )
-            })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "There won't be IOException, ever!",
+        method = "close",
+        args = {}
+    )
     public void test_close() {
         // Test for method void java.io.StringWriter.close()
         try {
@@ -74,15 +74,12 @@ public class StringWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.StringWriter#flush()
      */
-    @TestInfo(
-              level = TestLevel.COMPLETE,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "flush",
-                  methodArgs = {}
-                )
-            })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "flush",
+        args = {}
+    )
     public void test_flush() {
         // Test for method void java.io.StringWriter.flush()
         sw.flush();
@@ -93,15 +90,12 @@ public class StringWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.StringWriter#getBuffer()
      */
-    @TestInfo(
-              level = TestLevel.COMPLETE,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "getBuffer",
-                  methodArgs = {}
-                )
-            })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getBuffer",
+        args = {}
+    )
     public void test_getBuffer() {
         // Test for method java.lang.StringBuffer
         // java.io.StringWriter.getBuffer()
@@ -115,15 +109,12 @@ public class StringWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.StringWriter#toString()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public void test_toString() {
         // Test for method java.lang.String java.io.StringWriter.toString()
         sw.write("This is a test string");
@@ -134,21 +125,17 @@ public class StringWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.StringWriter#write(char[], int, int)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {char[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "write",
+        args = {char[].class, int.class, int.class}
+    )
     public void test_write$CII() {
         // Test for method void java.io.StringWriter.write(char [], int, int)
         char[] c = new char[1000];
         "This is a test string".getChars(0, 21, c, 0);
         sw.write(c, 4, 14);
-        System.out.println(sw);
         assertEquals("Chars not written properly", 
                 " is a test str", sw.toString());
     }
@@ -157,15 +144,12 @@ public class StringWriterTest extends junit.framework.TestCase {
      * @tests java.io.StringWriter#write(char[], int, int)
      * Regression for HARMONY-387
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {char[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "write",
+        args = {char[].class, int.class, int.class}
+    )
     public void test_write$CII_2() {
         StringWriter obj = null;
         try {
@@ -182,15 +166,12 @@ public class StringWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.StringWriter#write(char[], int, int)
      */
-@TestInfo(
-          level = TestLevel.PARTIAL,
-          purpose = "",
-          targets = {
-            @TestTarget(
-              methodName = "write",
-              methodArgs = {char[].class, int.class, int.class}
-            )
-        })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "write",
+        args = {char[].class, int.class, int.class}
+    )
     public void test_write$CII_3() {
         StringWriter obj = null;
         try {
@@ -206,15 +187,12 @@ public class StringWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.StringWriter#write(char[], int, int)
      */
-@TestInfo(
-          level = TestLevel.PARTIAL,
-          purpose = "",
-          targets = {
-            @TestTarget(
-              methodName = "write",
-              methodArgs = {char[].class, int.class, int.class}
-            )
-        })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "write",
+        args = {char[].class, int.class, int.class}
+    )
     public void test_write$CII_4() {
         StringWriter obj = null;
         try {
@@ -230,15 +208,12 @@ public class StringWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.StringWriter#write(int)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "write",
+        args = {int.class}
+    )
     public void test_writeI() {
         // Test for method void java.io.StringWriter.write(int)
         sw.write('c');
@@ -248,15 +223,12 @@ public class StringWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.StringWriter#write(java.lang.String)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "write",
+        args = {java.lang.String.class}
+    )
     public void test_writeLjava_lang_String() {
         // Test for method void java.io.StringWriter.write(java.lang.String)
         sw.write("This is a test string");
@@ -267,15 +239,12 @@ public class StringWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.StringWriter#write(java.lang.String, int, int)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {java.lang.String.class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "write",
+        args = {java.lang.String.class, int.class, int.class}
+    )
     public void test_writeLjava_lang_StringII() {
         // Test for method void java.io.StringWriter.write(java.lang.String,
         // int, int)
@@ -286,15 +255,12 @@ public class StringWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.StringWriter#append(char)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "append",
-          methodArgs = {char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "append",
+        args = {char.class}
+    )
     public void test_appendChar() throws IOException {
         char testChar = ' ';
         StringWriter stringWriter = new StringWriter(20);
@@ -306,15 +272,12 @@ public class StringWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintWriter#append(CharSequence)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "append",
-          methodArgs = {java.lang.CharSequence.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "append",
+        args = {java.lang.CharSequence.class}
+    )
     public void test_appendCharSequence() throws IOException {
 
         String testString = "My Test String";
@@ -327,15 +290,12 @@ public class StringWriterTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PrintWriter#append(CharSequence, int, int)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IndexOutOfBoundsException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "append",
-          methodArgs = {java.lang.CharSequence.class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "append",
+        args = {java.lang.CharSequence.class, int.class, int.class}
+    )
     public void test_appendCharSequenceIntInt() throws IOException {
         String testString = "My Test String";
         StringWriter stringWriter = new StringWriter(20);
@@ -343,6 +303,20 @@ public class StringWriterTest extends junit.framework.TestCase {
         assertEquals(testString.substring(1, 3), stringWriter.toString());
         stringWriter.close();
 
+        try {
+            StringWriter tobj = new StringWriter(9);
+            tobj.append("01234567890123456789", 19, 2);
+            fail("IndexOutOfBoundsException not thrown!");
+        } catch (IndexOutOfBoundsException e) {
+            // expected
+        }
+        try {
+            StringWriter tobj = new StringWriter(9);
+            tobj.append("01234567890123456789", 29, 2);
+            fail("IndexOutOfBoundsException not thrown!");
+        } catch (IndexOutOfBoundsException e) {
+            // expected
+        }
     }
     
     /**

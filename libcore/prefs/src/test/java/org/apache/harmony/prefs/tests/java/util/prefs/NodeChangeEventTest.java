@@ -17,9 +17,9 @@
 package org.apache.harmony.prefs.tests.java.util.prefs;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.io.NotSerializableException;
 import java.util.prefs.AbstractPreferences;
@@ -39,15 +39,12 @@ public class NodeChangeEventTest extends TestCase {
 
     NodeChangeEvent event;
 
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "NodeChangeEvent",
-          methodArgs = {java.util.prefs.Preferences.class, java.util.prefs.Preferences.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "NodeChangeEvent",
+        args = {java.util.prefs.Preferences.class, java.util.prefs.Preferences.class}
+    )
     public void testConstructor() {
         event = new NodeChangeEvent(Preferences.systemRoot(), Preferences
                 .userRoot());
@@ -56,15 +53,12 @@ public class NodeChangeEventTest extends TestCase {
         assertSame(Preferences.systemRoot(), event.getSource());
     }
 
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "NodeChangeEvent",
-          methodArgs = {java.util.prefs.Preferences.class, java.util.prefs.Preferences.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "NodeChangeEvent",
+        args = {java.util.prefs.Preferences.class, java.util.prefs.Preferences.class}
+    )
     public void testConstructorNullParam() {
         try {
             event = new NodeChangeEvent(null, Preferences.userRoot());
@@ -78,15 +72,12 @@ public class NodeChangeEventTest extends TestCase {
         assertSame(Preferences.systemRoot(), event.getSource());
     }
 
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Verifies serialization",
-      targets = {
-        @TestTarget(
-          methodName = "!Serialization",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization",
+        method = "!Serialization",
+        args = {}
+    )
     public void testSerialization() throws Exception {
 
         event = new NodeChangeEvent(Preferences.systemRoot(), null);
@@ -98,15 +89,12 @@ public class NodeChangeEventTest extends TestCase {
         }
     }
 
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Test is correct, functionality checked in separate Mock class.",
-      targets = {
-        @TestTarget(
-          methodName = "getChild",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Test is correct, functionality checked in separate Mock class.",
+        method = "getChild",
+        args = {}
+    )
     public void testGetChild() throws BackingStoreException {
 
         AbstractPreferences parent = (AbstractPreferences) Preferences
@@ -119,10 +107,12 @@ public class NodeChangeEventTest extends TestCase {
         try {
             pref.addNodeChangeListener(nl);
             Preferences child1 = pref.node("mock1");
+            nl.waitForEvent();
             assertEquals(1, nl.getAdded());
             assertTrue(nl.getAddResult());
             nl.reset();
             child1.removeNode();
+            nl.waitForEvent();
             assertEquals(1, nl.getRemoved());
             assertTrue(nl.getRemoveResult());
             nl.reset();
@@ -131,15 +121,12 @@ public class NodeChangeEventTest extends TestCase {
         }
     }
     
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Test is correct, functionality checked in separate Mock class.",
-      targets = {
-        @TestTarget(
-          methodName = "getParent",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Test is correct, functionality checked in separate Mock class.",
+        method = "getParent",
+        args = {}
+    )
     public void testGetParent() throws BackingStoreException {
 
         AbstractPreferences parent = (AbstractPreferences) Preferences
@@ -152,10 +139,12 @@ public class NodeChangeEventTest extends TestCase {
         try {
             pref.addNodeChangeListener(nl);
             Preferences child1 = pref.node("mock1");
+            nl.waitForEvent();
             assertEquals(1, nl.getAdded());
             assertTrue(nl.getAddResult());
             nl.reset();
             child1.removeNode();
+            nl.waitForEvent();
             assertEquals(1, nl.getRemoved());
             assertTrue(nl.getRemoveResult());
             nl.reset();

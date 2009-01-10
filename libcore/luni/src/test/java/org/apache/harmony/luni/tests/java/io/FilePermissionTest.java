@@ -16,30 +16,25 @@
 
 package org.apache.harmony.luni.tests.java.io;
 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestTargetClass;
-
 import java.io.File;
 import java.io.FilePermission;
 
 import junit.framework.TestCase;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 @TestTargetClass(FilePermission.class)
 public class FilePermissionTest extends TestCase {
 
     /**
      * @tests java.io.FilePermission#implies(java.security.Permission)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "implies",
-          methodArgs = {java.security.Permission.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "implies",
+        args = {java.security.Permission.class}
+    )
     public void test_impliesLjava_io_FilePermission() {
         // Regression for HARMONY-47
         char separator = File.separatorChar;

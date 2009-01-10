@@ -22,9 +22,9 @@
 
 package tests.security.cert;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -57,15 +57,12 @@ public class LDAPCertStoreParametersTest extends TestCase {
      * Assertion: Creates an instance of <code>LDAPCertStoreParameters</code>
      * with the default parameter values (server name "localhost", port 389)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "LDAPCertStoreParameters",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "LDAPCertStoreParameters",
+        args = {}
+    )
     public final void testLDAPCertStoreParameters01() {
         CertStoreParameters cp = new LDAPCertStoreParameters();
         assertTrue("isLDAPCertStoreParameters",
@@ -77,15 +74,12 @@ public class LDAPCertStoreParametersTest extends TestCase {
      * Assertion: Creates an instance of <code>LDAPCertStoreParameters</code>
      * with the default parameter values (server name "localhost", port 389)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "LDAPCertStoreParameters",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "LDAPCertStoreParameters",
+        args = {}
+    )
     public final void testLDAPCertStoreParameters02() {
         LDAPCertStoreParameters cp = new LDAPCertStoreParameters();
         assertEquals("host", "localhost", cp.getServerName());
@@ -97,15 +91,12 @@ public class LDAPCertStoreParametersTest extends TestCase {
      * Assertion: Creates an instance of <code>LDAPCertStoreParameters</code>
      * with the specified server name and a default port of 389
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "LDAPCertStoreParameters",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "LDAPCertStoreParameters",
+        args = {java.lang.String.class}
+    )
     public final void testLDAPCertStoreParametersString01() {
         CertStoreParameters cp = new LDAPCertStoreParameters("myhost");
         assertTrue("isLDAPCertStoreParameters",
@@ -117,15 +108,12 @@ public class LDAPCertStoreParametersTest extends TestCase {
      * Assertion: Creates an instance of <code>LDAPCertStoreParameters</code>
      * with the specified server name and a default port of 389
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "LDAPCertStoreParameters",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "LDAPCertStoreParameters",
+        args = {java.lang.String.class}
+    )
     public final void testLDAPCertStoreParametersString02() {
         String serverName = "myhost";
         LDAPCertStoreParameters cp = new LDAPCertStoreParameters(serverName);
@@ -138,15 +126,12 @@ public class LDAPCertStoreParametersTest extends TestCase {
      * Assertion: throws <code>NullPointerException</code> -
      * if <code>serverName</code> is <code>null</code>
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies NullPointerException.",
-      targets = {
-        @TestTarget(
-          methodName = "LDAPCertStoreParameters",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies NullPointerException.",
+        method = "LDAPCertStoreParameters",
+        args = {java.lang.String.class}
+    )
     public final void testLDAPCertStoreParametersString03() {
         try {
             new LDAPCertStoreParameters(null);
@@ -160,15 +145,12 @@ public class LDAPCertStoreParametersTest extends TestCase {
      * Assertion: Creates an instance of <code>LDAPCertStoreParameters</code>
      * with the specified parameter values
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Incorrect int parameter checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "LDAPCertStoreParameters",
-          methodArgs = {java.lang.String.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "LDAPCertStoreParameters",
+        args = {java.lang.String.class, int.class}
+    )
     public final void testLDAPCertStoreParametersStringint01() {
         CertStoreParameters cp = new LDAPCertStoreParameters("myhost", 1098);
         assertTrue("isLDAPCertStoreParameters",
@@ -180,15 +162,12 @@ public class LDAPCertStoreParametersTest extends TestCase {
      * Assertion: Creates an instance of <code>LDAPCertStoreParameters</code>
      * with the specified parameter values
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Incorrect int parameter checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "LDAPCertStoreParameters",
-          methodArgs = {java.lang.String.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "LDAPCertStoreParameters",
+        args = {java.lang.String.class, int.class}
+    )
     public final void testLDAPCertStoreParametersStringint02() {
         String serverName = "myhost";
         int portNumber = 1099;
@@ -203,20 +182,27 @@ public class LDAPCertStoreParametersTest extends TestCase {
      * Assertion: throws <code>NullPointerException</code> -
      * if <code>serverName</code> is <code>null</code>
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies NullPointerException. Incorrect int parameter checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "LDAPCertStoreParameters",
-          methodArgs = {java.lang.String.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies NullPointerException.",
+        method = "LDAPCertStoreParameters",
+        args = {java.lang.String.class, int.class}
+    )
     public final void testLDAPCertStoreParametersStringint03() {
         try {
             new LDAPCertStoreParameters(null, 0);
             fail("NPE expected");
         } catch (NullPointerException e) {
+        }
+        
+        String serverName = "myhost";
+        int[] portNumber = {-1, -100, Integer.MIN_VALUE, Integer.MAX_VALUE};
+        for (int i = 0; i < portNumber.length; i++) {
+            try {
+                new LDAPCertStoreParameters(serverName, portNumber[i]);
+            } catch (Exception e) {
+                fail("Unexpected exception for incorrect integer parametr");
+            }
         }
     }
 
@@ -224,15 +210,12 @@ public class LDAPCertStoreParametersTest extends TestCase {
      * Test for <code>clone()</code> method<br>
      * Assertion: Returns a copy of this object
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "clone",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "clone",
+        args = {}
+    )
     public final void testClone() {
         LDAPCertStoreParameters cp1 =
             new LDAPCertStoreParameters("myhost", 1100);
@@ -248,15 +231,12 @@ public class LDAPCertStoreParametersTest extends TestCase {
      * Test for <code>toString()</code> method<br>
      * Assertion: returns the formatted string describing parameters
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public final void testToString() {
         LDAPCertStoreParameters cp1 =
             new LDAPCertStoreParameters("myhost", 1101);
@@ -268,15 +248,12 @@ public class LDAPCertStoreParametersTest extends TestCase {
      * Test for <code>toString()</code> method<br>
      * Assertion: returns the port number
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getPort",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getPort",
+        args = {}
+    )
     public final void testGetPort() {
         int portNumber = -1099;
         LDAPCertStoreParameters cp =
@@ -288,15 +265,12 @@ public class LDAPCertStoreParametersTest extends TestCase {
      * Test for <code>toString()</code> method<br>
      * Assertion: returns the server name (never <code>null</code>)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getServerName",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getServerName",
+        args = {}
+    )
     public final void testGetServerName() {
         LDAPCertStoreParameters cp =
             new LDAPCertStoreParameters("serverName");

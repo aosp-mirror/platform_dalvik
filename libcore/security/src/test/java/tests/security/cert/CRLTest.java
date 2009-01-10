@@ -22,9 +22,9 @@
 
 package tests.security.cert;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -60,15 +60,12 @@ public class CRLTest extends TestCase {
     /**
      * Test for <code>CRL(String type)</code> constructor<br>
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Null parameter missed",
-      targets = {
-        @TestTarget(
-          methodName = "CRL",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "CRL",
+        args = {java.lang.String.class}
+    )
     public final void testConstructor() {
         for (int i = 0; i< validValues.length; i++) {
             CRL crl = new MyCRL(validValues[i]);
@@ -79,6 +76,12 @@ public class CRLTest extends TestCase {
             CRL crl = new MyCRL(invalidValues[i]);
             assertEquals(invalidValues[i], crl.getType());
         }
+        
+        try {
+            CRL crl = new MyCRL(null);
+        } catch (Exception e) {
+            fail("Unexpected exception for NULL parameter");
+        }
     }
 
     
@@ -86,15 +89,12 @@ public class CRLTest extends TestCase {
      * Test #1 for <code>getType()</code> method<br>
      * Assertion: returns <code>CRL</code> type
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getType",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getType",
+        args = {}
+    )
     public final void testGetType01() {
         CRL crl = new MyCRL("TEST_TYPE");
         assertEquals("TEST_TYPE", crl.getType());
@@ -104,15 +104,12 @@ public class CRLTest extends TestCase {
      * Test #2 for <code>getType()</code> method<br>
      * Assertion: returns <code>CRL</code> type
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies null as a parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "getType",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies null as a parameter.",
+        method = "getType",
+        args = {}
+    )
     public final void testGetType02() {
         CRL crl = new MyCRL(null);
         assertNull(crl.getType());
@@ -127,15 +124,12 @@ public class CRLTest extends TestCase {
     /**
      * Test for <code>toString()</code> method
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public final void testToString() {
         CRL crl = new MyCRL("TEST_TYPE");
         crl.toString();
@@ -144,15 +138,12 @@ public class CRLTest extends TestCase {
     /**
      * Test for <code>isRevoked()</code> method
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies null as a parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "isRevoked",
-          methodArgs = {java.security.cert.Certificate.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isRevoked",
+        args = {java.security.cert.Certificate.class}
+    )
     public final void testIsRevoked() {
         CRL crl = new MyCRL("TEST_TYPE");
         crl.isRevoked(null);

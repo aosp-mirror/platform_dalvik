@@ -15,22 +15,13 @@
  */
 package org.apache.harmony.nio.tests.java.nio;
 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestTarget;
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestLevel;
-
-import java.nio.ShortBuffer;
 
 @TestTargetClass(java.nio.ShortBuffer.class)
 public class ReadOnlyHeapShortBufferTest extends ReadOnlyShortBufferTest {
     
     protected void setUp() throws Exception {
         super.setUp();
-        buf = ShortBuffer.allocate(BUFFER_LENGTH);
-        super.loadTestData1(buf);
-        buf = buf.asReadOnlyBuffer();
-        baseBuf = buf;
     }
 
     protected void tearDown() throws Exception {

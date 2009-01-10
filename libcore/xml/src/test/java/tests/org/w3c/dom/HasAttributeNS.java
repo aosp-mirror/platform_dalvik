@@ -21,9 +21,9 @@
 
 package tests.org.w3c.dom;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import org.w3c.dom.Element;
@@ -76,15 +76,12 @@ public final class HasAttributeNS extends DOMTestCase {
      * @throws Throwable
      *             Any uncaught exception causes test to fail
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify DOMException.",
-      targets = {
-        @TestTarget(
-          methodName = "hasAttributeNS",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Doesn't verify DOMException.",
+        method = "hasAttributeNS",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void testHasAttributeNS1() throws Throwable {
         String localName = "nomatch";
         String namespaceURI = "http://www.usa.com";
@@ -98,15 +95,12 @@ public final class HasAttributeNS extends DOMTestCase {
         state = testNode.hasAttributeNS(namespaceURI, localName);
         assertFalse("throw_False", state);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify DOMException.",
-      targets = {
-        @TestTarget(
-          methodName = "hasAttributeNS",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Doesn't verify DOMException.",
+        method = "hasAttributeNS",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void testHasAttributeNS2() throws Throwable {
         String localName = "domestic";
         String namespaceURI = "http://www.nomatch.com";
@@ -120,15 +114,12 @@ public final class HasAttributeNS extends DOMTestCase {
         state = testNode.hasAttributeNS(namespaceURI, localName);
         assertFalse("throw_False", state);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify DOMException.",
-      targets = {
-        @TestTarget(
-          methodName = "hasAttributeNS",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Doesn't verify DOMException.",
+        method = "hasAttributeNS",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void testHasAttributeNS3() throws Throwable {
         String localName = "blank";
         String namespaceURI = "http://www.nist.gov";
@@ -159,15 +150,12 @@ public final class HasAttributeNS extends DOMTestCase {
 //        state = testNode.hasAttributeNS(namespaceURI, localName);
 //        assertTrue("hasAttribute", state);
 //    }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify DOMException.",
-      targets = {
-        @TestTarget(
-          methodName = "hasAttributeNS",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Doesn't verify DOMException.",
+        method = "hasAttributeNS",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void testHasAttributeNS5() throws Throwable {
         String localName = "domestic";
         String namespaceURI = "http://www.usa.com";

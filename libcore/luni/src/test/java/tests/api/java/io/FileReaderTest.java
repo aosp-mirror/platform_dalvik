@@ -17,16 +17,16 @@
 
 package tests.api.java.io;
 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestTargetClass; 
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
+
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
 @TestTargetClass(FileReader.class) 
 public class FileReaderTest extends junit.framework.TestCase {
@@ -42,13 +42,11 @@ public class FileReaderTest extends junit.framework.TestCase {
     /**
      * @tests java.io.FileReader#FileReader(java.io.File)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "FileNotFoundException checking missed.",
-            targets = { @TestTarget(methodName = "FileReader", 
-                                    methodArgs = {java.io.File.class})                         
-            }
-        )     
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "FileReader",
+        args = {java.io.File.class}
+    )     
     public void test_ConstructorLjava_io_File() {
         // Test for method java.io.FileReader(java.io.File)
         try {
@@ -59,23 +57,30 @@ public class FileReaderTest extends junit.framework.TestCase {
             char[] buf = new char[100];
             int r = br.read(buf);
             br.close();
-            assertEquals("Failed to read correct chars", " After test string", new String(buf, 0, r)
-                    );
+            assertEquals("Test 1: Failed to read correct chars", 
+                    " After test string", new String(buf, 0, r));
         } catch (Exception e) {
             fail("Exception during Constructor test " + e.toString());
+        }
+        
+        File noFile = new File(System.getProperty("java.io.tmpdir"), "noreader.tst");
+        try {
+            br = new FileReader(noFile);
+            fail("Test 2: FileNotFoundException expected.");
+        } catch (FileNotFoundException e) {
+            // Expected.
         }
     }
 
     /**
      * @tests java.io.FileReader#FileReader(java.io.FileDescriptor)
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies FileReader(java.io.FileDescriptor) constructor.",
-            targets = { @TestTarget(methodName = "FileReader", 
-                                    methodArgs = {java.io.FileDescriptor.class})                         
-            }
-        )     
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies FileReader(java.io.FileDescriptor) constructor.",
+        method = "FileReader",
+        args = {java.io.FileDescriptor.class}
+    )     
     public void test_ConstructorLjava_io_FileDescriptor() {
         // Test for method java.io.FileReader(java.io.FileDescriptor)
         try {
@@ -88,8 +93,8 @@ public class FileReaderTest extends junit.framework.TestCase {
             int r = br.read(buf);
             br.close();
             fis.close();
-            assertEquals("Failed to read correct chars", " After test string", new String(buf, 0, r)
-                    );
+            assertEquals("Failed to read correct chars", 
+                    " After test string", new String(buf, 0, r));
         } catch (Exception e) {
             fail("Exception during Constructor test " + e.toString());
         }
@@ -98,13 +103,11 @@ public class FileReaderTest extends junit.framework.TestCase {
     /**
      * @tests java.io.FileReader#FileReader(java.lang.String)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "FileNotFoundException checking missed.",
-            targets = { @TestTarget(methodName = "FileReader", 
-                                    methodArgs = {java.lang.String.class})                         
-            }
-        )         
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "FileReader",
+        args = {java.lang.String.class}
+    )         
     public void test_ConstructorLjava_lang_String() {
         // Test for method java.io.FileReader(java.lang.String)
         try {
@@ -115,12 +118,19 @@ public class FileReaderTest extends junit.framework.TestCase {
             char[] buf = new char[100];
             int r = br.read(buf);
             br.close();
-            assertEquals("Failed to read correct chars", " After test string", new String(buf, 0, r)
-                    );
+            assertEquals("Test 1: Failed to read correct chars", 
+                    " After test string", new String(buf, 0, r));
         } catch (Exception e) {
             fail("Exception during Constructor test " + e.toString());
         }
-    }
+ 
+        try {
+            br = new FileReader(System.getProperty("java.io.tmpdir") + "/noreader.tst");
+            fail("Test 2: FileNotFoundException expected.");
+        } catch (FileNotFoundException e) {
+            // Expected.
+        }
+      }
 
     /**
      * Sets up the fixture, for example, open a network connection. This method
@@ -128,7 +138,7 @@ public class FileReaderTest extends junit.framework.TestCase {
      */
     protected void setUp() {
 
-        f = new File(System.getProperty("user.home"), "reader.tst");
+        f = new File(System.getProperty("java.io.tmpdir"), "reader.tst");
 
         if (f.exists()) {
             if (!f.delete()) {

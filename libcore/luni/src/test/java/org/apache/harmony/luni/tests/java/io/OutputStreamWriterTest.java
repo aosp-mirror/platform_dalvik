@@ -16,9 +16,9 @@
 
 package org.apache.harmony.luni.tests.java.io;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import java.io.ByteArrayOutputStream;
@@ -30,17 +30,18 @@ import junit.framework.TestCase;
 @TestTargetClass(OutputStreamWriter.class)
 public class OutputStreamWriterTest extends TestCase {
     
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Checks IOException",
-      targets = {
-        @TestTarget(
-          methodName = "getEncoding",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Checks IOException",
+            method = "getEncoding",
+            args = {}
         ),
-        @TestTarget(
-          methodName = "close",
-          methodArgs = {}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Checks IOException",
+            method = "close",
+            args = {}
         )
     })
     public void testGetEncoding_StreamClosed() {
@@ -60,15 +61,12 @@ public class OutputStreamWriterTest extends TestCase {
         assertNull(result);
     }
 
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getEncoding",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getEncoding",
+        args = {}
+    )
     public void testGetEncoding_NotHistorical() {
         OutputStreamWriter out = null;
         try {

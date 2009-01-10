@@ -43,7 +43,7 @@ public interface CallbackHandler {
      * 
      * @param callbacks
      *            the array of {@code Callback}s that need handling
-     * @throws java.io.IOException
+     * @throws IOException
      *             if an I/O related error occurs
      * @throws UnsupportedCallbackException
      *             if the {@code CallbackHandler} is not able to handle a

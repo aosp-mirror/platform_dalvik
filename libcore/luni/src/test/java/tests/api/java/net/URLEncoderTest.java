@@ -18,10 +18,11 @@
 package tests.api.java.net;
 
 import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 
@@ -33,15 +34,12 @@ public class URLEncoderTest extends junit.framework.TestCase {
     /**
      * @tests java.net.URLEncoder#encode(java.lang.String)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "encode",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "encode",
+        args = {java.lang.String.class}
+    )
     public void test_encodeLjava_lang_String() {
         // Test for method java.lang.String
         // java.net.URLEncoder.encode(java.lang.String)
@@ -58,6 +56,53 @@ public class URLEncoderTest extends junit.framework.TestCase {
         } catch (Exception e) {
             fail("Exception during test : " + e.getMessage());
         }
+    }
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "encode",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
+    public void test_encodeLjava_lang_StringLjava_lang_String() {
+       
+        String enc = "UTF-8";
+        
+        String [] urls = {"http://" + Support_Configuration.HomeAddress + 
+                              "/test?hl=en&q=te st",
+                              "file://a b/c/d.e-f*g_ l",
+                              "jar:file://a.jar !/b.c/\u1052",
+                              "ftp://test:pwd@localhost:2121/%D0%9C"};
+        
+        String [] expected = { "http%3A%2F%2Fjcltest.apache.org%2Ftest%3Fhl%" +
+                "3Den%26q%3Dte+st", 
+                "file%3A%2F%2Fa+b%2Fc%2Fd.e-f*g_+l",
+                "jar%3Afile%3A%2F%2Fa.jar+%21%2Fb.c%2F%E1%81%92"};        
+
+        for(int i = 0; i < urls.length-1; i++) {
+            try {
+                String encodedString = URLEncoder.encode(urls[i], enc);
+                assertEquals(expected[i], encodedString);
+                assertEquals(urls[i], URLDecoder.decode(encodedString, enc));
+            } catch (UnsupportedEncodingException e) {
+                fail("UnsupportedEncodingException: " + e.getMessage());
+            }
+        }
+        
+        try {
+            String encodedString = URLEncoder.encode(urls[urls.length - 1], enc);
+            assertEquals(urls[urls.length - 1], URLDecoder.decode(encodedString, enc));
+        } catch (UnsupportedEncodingException e) {
+            fail("UnsupportedEncodingException: " + e.getMessage());
+        }
+        
+        try {
+            URLDecoder.decode("", "");
+            fail("UnsupportedEncodingException expected");
+        } catch (UnsupportedEncodingException e) {
+            //expected
+        }
+        
     }
 
     /**

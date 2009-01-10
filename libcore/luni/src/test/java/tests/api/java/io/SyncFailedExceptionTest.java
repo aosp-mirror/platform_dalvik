@@ -17,15 +17,11 @@
 
 package tests.api.java.io;
 
-import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestLevel;
-
-import java.io.File;
-import java.io.FileDescriptor;
-import java.io.FileOutputStream;
 import java.io.SyncFailedException;
+
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
 @TestTargetClass(SyncFailedException.class) 
 public class SyncFailedExceptionTest extends junit.framework.TestCase {
@@ -33,44 +29,19 @@ public class SyncFailedExceptionTest extends junit.framework.TestCase {
     /**
      * @tests java.io.SyncFailedException#SyncFailedException(java.lang.String)
      */
-    @TestInfo(
-              level = TestLevel.COMPLETE,
-              purpose = "",
-              targets = {
-                @TestTarget(
-                  methodName = "SyncFailedException",
-                  methodArgs = {java.lang.String.class}
-                )
-            })
+    @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            method = "SyncFailedException",
+            args = {java.lang.String.class}
+        )     
     public void test_ConstructorLjava_lang_String() {
-        // Test for method java.io.SyncFailedException(java.lang.String)
-        File f = null;
         try {
-            f = new File(System.getProperty("user.dir"), "synfail.tst");
-            FileOutputStream fos = new FileOutputStream(f.getPath());
-            FileDescriptor fd = fos.getFD();
-            fos.close();
-            fd.sync();
+            if (true) // To avoid unreachable code compilation error.
+                throw new SyncFailedException("Something went wrong.");
+            fail("Test 1: SyncFailedException expected.");
         } catch (SyncFailedException e) {
-            f.delete();
-            return;
-        } catch (Exception e) {
-            fail("Exception during test : " + e.getMessage());
+            assertEquals("Test 2: Incorrect message;",
+                    "Something went wrong.", e.getMessage());
         }
-        fail("Failed to generate expected Exception");
-    }
-
-    /**
-     * Sets up the fixture, for example, open a network connection. This method
-     * is called before a test is executed.
-     */
-    protected void setUp() {
-    }
-
-    /**
-     * Tears down the fixture, for example, close a network connection. This
-     * method is called after a test is executed.
-     */
-    protected void tearDown() {
     }
 }

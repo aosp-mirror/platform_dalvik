@@ -18,9 +18,9 @@
 package org.apache.harmony.security.tests.java.security;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.security.NoSuchAlgorithmException;
 
@@ -30,15 +30,12 @@ public class NoSuchAlgorithmException2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.NoSuchAlgorithmException#NoSuchAlgorithmException()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "NoSuchAlgorithmException",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "NoSuchAlgorithmException",
+        args = {}
+    )
     public void test_Constructor() {
         try {
             throw new NoSuchAlgorithmException();
@@ -52,15 +49,12 @@ public class NoSuchAlgorithmException2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.NoSuchAlgorithmException#NoSuchAlgorithmException(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Null parameter checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "NoSuchAlgorithmException",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Null parameter checking missed",
+        method = "NoSuchAlgorithmException",
+        args = {java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_String() {
         // Test for method
         // java.security.NoSuchAlgorithmException(java.lang.String)

@@ -23,8 +23,8 @@
 package org.apache.harmony.security.tests.java.security;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 
 import java.security.SecurityPermission;
@@ -55,17 +55,18 @@ public class SecurityPermissionTest extends TestCase {
      * If  name is empty then IAE should be thrown. 
      * Action is ignored.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "SecurityPermission",
-          methodArgs = {String.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "SecurityPermission",
+            args = {java.lang.String.class}
         ),
-        @TestTarget(
-          methodName = "SecurityPermission",
-          methodArgs = {String.class, String.class}
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "SecurityPermission",
+            args = {java.lang.String.class, java.lang.String.class}
         )
     })
     public void testCtor()

@@ -18,9 +18,9 @@
 package tests.api.java.net;
 
 import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -28,6 +28,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 
 import tests.support.Support_Configuration;
@@ -43,15 +44,12 @@ public class DatagramPacketTest extends junit.framework.TestCase {
     /**
      * @tests java.net.DatagramPacket#DatagramPacket(byte[], int)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "DatagramPacket",
-          methodArgs = {byte[].class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "DatagramPacket",
+        args = {byte[].class, int.class}
+    )
     public void test_Constructor$BI() {
         // Test for method java.net.DatagramPacket(byte [], int)
         try {
@@ -76,15 +74,12 @@ public class DatagramPacketTest extends junit.framework.TestCase {
     /**
      * @tests java.net.DatagramPacket#DatagramPacket(byte[], int, int)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "DatagramPacket",
-          methodArgs = {byte[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "DatagramPacket",
+        args = {byte[].class, int.class, int.class}
+    )
     public void test_Constructor$BII() {
         try {
             dp = new DatagramPacket("Hello".getBytes(), 2, 3);
@@ -101,15 +96,12 @@ public class DatagramPacketTest extends junit.framework.TestCase {
      * @tests java.net.DatagramPacket#DatagramPacket(byte[], int, int,
      *        java.net.InetAddress, int)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "DatagramPacket",
-          methodArgs = {byte[].class, int.class, int.class, InetAddress.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "DatagramPacket",
+        args = {byte[].class, int.class, int.class, java.net.InetAddress.class, int.class}
+    )
     public void test_Constructor$BIILjava_net_InetAddressI() {
         try {
             dp = new DatagramPacket("Hello".getBytes(), 2, 3, InetAddress
@@ -128,15 +120,12 @@ public class DatagramPacketTest extends junit.framework.TestCase {
      * @tests java.net.DatagramPacket#DatagramPacket(byte[], int,
      *        java.net.InetAddress, int)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "DatagramPacket",
-          methodArgs = {byte[].class, int.class, InetAddress.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "DatagramPacket",
+        args = {byte[].class, int.class, java.net.InetAddress.class, int.class}
+    )
     public void test_Constructor$BILjava_net_InetAddressI() {
         // Test for method java.net.DatagramPacket(byte [], int,
         // java.net.InetAddress, int)
@@ -155,15 +144,12 @@ public class DatagramPacketTest extends junit.framework.TestCase {
     /**
      * @tests java.net.DatagramPacket#getAddress()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getAddress",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getAddress",
+        args = {}
+    )
     public void test_getAddress() {
         // Test for method java.net.InetAddress
         // java.net.DatagramPacket.getAddress()
@@ -180,15 +166,12 @@ public class DatagramPacketTest extends junit.framework.TestCase {
     /**
      * @tests java.net.DatagramPacket#getData()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getData",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getData",
+        args = {}
+    )
     public void test_getData() {
         // Test for method byte [] java.net.DatagramPacket.getData()
 
@@ -200,15 +183,12 @@ public class DatagramPacketTest extends junit.framework.TestCase {
     /**
      * @tests java.net.DatagramPacket#getLength()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getLength",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getLength",
+        args = {}
+    )
     public void test_getLength() {
         // Test for method int java.net.DatagramPacket.getLength()
 
@@ -219,15 +199,12 @@ public class DatagramPacketTest extends junit.framework.TestCase {
     /**
      * @tests java.net.DatagramPacket#getOffset()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getOffset",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getOffset",
+        args = {}
+    )
     public void test_getOffset() {
         dp = new DatagramPacket("Hello".getBytes(), 3, 2);
         assertEquals("Incorrect length returned", 3, dp.getOffset());
@@ -236,15 +213,12 @@ public class DatagramPacketTest extends junit.framework.TestCase {
     /**
      * @tests java.net.DatagramPacket#getPort()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getPort",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getPort",
+        args = {}
+    )
     public void test_getPort() {
         // Test for method int java.net.DatagramPacket.getPort()
         try {
@@ -321,15 +295,12 @@ public class DatagramPacketTest extends junit.framework.TestCase {
     /**
      * @tests java.net.DatagramPacket#setAddress(java.net.InetAddress)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setAddress",
-          methodArgs = {InetAddress.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setAddress",
+        args = {java.net.InetAddress.class}
+    )
     public void test_setAddressLjava_net_InetAddress() {
         // Test for method void
         // java.net.DatagramPacket.setAddress(java.net.InetAddress)
@@ -348,73 +319,88 @@ public class DatagramPacketTest extends junit.framework.TestCase {
     /**
      * @tests java.net.DatagramPacket#setData(byte[], int, int)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "NullPointerException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "setData",
-          methodArgs = {byte[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setData",
+        args = {byte[].class, int.class, int.class}
+    )
     public void test_setData$BII() {
         dp = new DatagramPacket("Hello".getBytes(), 5);
         dp.setData("Wagga Wagga".getBytes(), 2, 3);
         assertEquals("Incorrect data set", "Wagga Wagga", new String(dp.getData())
                 );
+        try {
+            dp.setData(null, 2, 3);
+            fail("NullPointerException was not thrown.");
+        } catch(NullPointerException npe) {
+            //expected
+        }
     }
 
     /**
      * @tests java.net.DatagramPacket#setData(byte[])
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "NullPointerException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "setData",
-          methodArgs = {byte[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setData",
+        args = {byte[].class}
+    )
     public void test_setData$B() {
         // Test for method void java.net.DatagramPacket.setData(byte [])
         dp = new DatagramPacket("Hello".getBytes(), 5);
         dp.setData("Ralph".getBytes());
         assertEquals("Incorrect data set", "Ralph", new String(dp.getData(), 0, dp
                 .getData().length));
+        
+        try {
+            dp.setData(null);
+            fail("NullPointerException was not thrown.");
+        } catch(NullPointerException npe) {
+            //expected
+        }
     }
 
     /**
      * @tests java.net.DatagramPacket#setLength(int)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalArgumentException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "setLength",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setLength",
+        args = {int.class}
+    )
     public void test_setLengthI() {
         // Test for method void java.net.DatagramPacket.setLength(int)
         dp = new DatagramPacket("Hello".getBytes(), 5);
         dp.setLength(1);
         assertEquals("Failed to set packet length", 1, dp.getLength());
+        
+        try {
+            new DatagramPacket("Hello".getBytes(), 6);
+            fail("IllegalArgumentException was not thrown.");
+        } catch(IllegalArgumentException iae) {
+            //expected
+        }
+        
+        try {
+            new DatagramPacket("Hello".getBytes(), -1);
+            fail("IllegalArgumentException was not thrown.");
+        } catch(IllegalArgumentException iae) {
+            //expected
+        }        
     }
 
     /**
      * @tests java.net.DatagramPacket#setPort(int)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setPort",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setPort",
+        args = {int.class}
+    )
     public void test_setPortI() {
         // Test for method void java.net.DatagramPacket.setPort(int)
         try {
@@ -431,15 +417,12 @@ public class DatagramPacketTest extends junit.framework.TestCase {
      * @tests java.net.DatagramPacket#DatagramPacket(byte[], int,
      *        java.net.SocketAddress)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "SocketException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "DatagramPacket",
-          methodArgs = {byte[].class, int.class, SocketAddress.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "SocketException checking missed.",
+        method = "DatagramPacket",
+        args = {byte[].class, int.class, java.net.SocketAddress.class}
+    )
     public void test_Constructor$BILjava_net_SocketAddress() {
         class mySocketAddress extends SocketAddress {
 
@@ -484,15 +467,12 @@ public class DatagramPacketTest extends junit.framework.TestCase {
      * @tests java.net.DatagramPacket#DatagramPacket(byte[], int, int,
      *        java.net.SocketAddress)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "SocketException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "DatagramPacket",
-          methodArgs = {byte[].class, int.class, int.class, SocketAddress.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "SocketException checking missed.",
+        method = "DatagramPacket",
+        args = {byte[].class, int.class, int.class, java.net.SocketAddress.class}
+    )
     public void test_Constructor$BIILjava_net_SocketAddress() {
         class mySocketAddress extends SocketAddress {
 
@@ -537,15 +517,12 @@ public class DatagramPacketTest extends junit.framework.TestCase {
     /**
      * @tests java.net.DatagramPacket#getSocketAddress()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getSocketAddress",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getSocketAddress",
+        args = {}
+    )
     public void test_getSocketAddress() {
         try {
             byte buf[] = new byte[1];
@@ -567,15 +544,12 @@ public class DatagramPacketTest extends junit.framework.TestCase {
     /**
      * @tests java.net.DatagramPacket#setSocketAddress(java.net.SocketAddress)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setSocketAddress",
-          methodArgs = {SocketAddress.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setSocketAddress",
+        args = {java.net.SocketAddress.class}
+    )
     public void test_setSocketAddressLjava_net_SocketAddress() {
 
         class mySocketAddress extends SocketAddress {

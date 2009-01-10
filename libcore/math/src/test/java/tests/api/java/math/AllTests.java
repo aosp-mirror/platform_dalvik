@@ -29,10 +29,12 @@ public class AllTests {
     }
 
     public static Test suite() {
-        TestSuite suite = new TestSuite("Tests for java.math");
+        TestSuite suite = tests.TestSuiteFactory.createTestSuite("Tests for java.math");
         // $JUnit-BEGIN$
         suite.addTestSuite(BigDecimalTest.class);
         suite.addTestSuite(BigIntegerTest.class);
+        suite.addTestSuite(RoundingModeTest.class);
+        suite.addTestSuite(MathContextTest.class);
         // $JUnit-END$
         return suite;
     }

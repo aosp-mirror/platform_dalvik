@@ -18,9 +18,9 @@
 package org.apache.harmony.sql.tests.java.sql;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.sql.SQLPermission;
 
@@ -40,15 +40,12 @@ public class SQLPermissionTest extends TestCase {
     /*
      * Constructor test
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Null/invalid parameters checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "SQLPermission",
-          methodArgs = {String.class, String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "invalid parameters checking missed. not fully supported",
+        method = "SQLPermission",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void testSQLPermissionStringString() {
         String validName = "setLog";
         String validActions = "theActions";
@@ -65,15 +62,12 @@ public class SQLPermissionTest extends TestCase {
     /*
      * Constructor test
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Null parameter checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "SQLPermission",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "not fully supported",
+        method = "SQLPermission",
+        args = {java.lang.String.class}
+    )
     public void testSQLPermissionString() {
         String validName = "setLog";
 

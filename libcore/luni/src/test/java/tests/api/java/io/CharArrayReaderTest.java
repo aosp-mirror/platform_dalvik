@@ -17,13 +17,13 @@
 
 package tests.api.java.io;
 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestTargetClass; 
-
 import java.io.CharArrayReader;
 import java.io.IOException;
+
+import dalvik.annotation.AndroidOnly;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
 @TestTargetClass(CharArrayReader.class) 
 public class CharArrayReaderTest extends junit.framework.TestCase {
@@ -35,12 +35,11 @@ public class CharArrayReaderTest extends junit.framework.TestCase {
     /**
      * @tests java.io.CharArrayReader#CharArrayReader(char[])
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies CharArrayReader(char[] buf) constructor.",
-            targets = { @TestTarget(methodName = "CharArrayReader", 
-                                    methodArgs = {char[].class})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies CharArrayReader(char[] buf) constructor.",
+        method = "CharArrayReader",
+        args = {char[].class}
     )         
     public void test_Constructor$C() {
         // Test for method java.io.CharArrayReader(char [])
@@ -56,48 +55,60 @@ public class CharArrayReaderTest extends junit.framework.TestCase {
     /**
      * @tests java.io.CharArrayReader#CharArrayReader(char[], int, int)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IllegalArgumentException checking missed.",
-            targets = { @TestTarget(methodName = "CharArrayReader", 
-                                    methodArgs = {char[].class, int.class, int.class})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "CharArrayReader",
+        args = {char[].class, int.class, int.class}
     )         
-    public void test_Constructor$CII() {
-        // Test for method java.io.CharArrayReader(char [], int, int)
+    public void test_Constructor$CII() throws IOException {
         try {
-            cr = new CharArrayReader(hw, 5, 5);
-            assertTrue("Failed to create reader", cr.ready());
-        } catch (IOException e) {
-            fail("Exception determining ready state : " + e.getMessage());
+            cr = new CharArrayReader(null, 0, 0);
+            fail("Test 1: NullPointerException expected.");
+        } catch (NullPointerException e) {
+            // Expected.
         }
         try {
-            int c = cr.read();
-            assertTrue("Created incorrect reader--returned '" + (char) c
-                    + "' intsead of 'W'", c == 'W');
-        } catch (IOException e) {
-            fail("Exception reading from new reader : " + e.getMessage());
+            cr = new CharArrayReader(hw, -1, 0);
+            fail("Test 2: IllegalArgumentException expected.");
+        } catch (IllegalArgumentException e) {
+            // Expected.
         }
+        try {
+            cr = new CharArrayReader(hw, 0, -1);
+            fail("Test 3: IllegalArgumentException expected.");
+        } catch (IllegalArgumentException e) {
+            // Expected.
+        }
+        try {
+            cr = new CharArrayReader(hw, hw.length + 1, 1);
+            fail("Test 4: IllegalArgumentException expected.");
+        } catch (IllegalArgumentException e) {
+            // Expected.
+        }
+        
+        cr = new CharArrayReader(hw, 5, 5);
+        assertTrue("Test 5: Failed to create reader", cr.ready());
+        assertEquals("Test 6: Incorrect character read;",
+                'W', cr.read());
     }
 
     /**
      * @tests java.io.CharArrayReader#close()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies close() method.",
-            targets = { @TestTarget(methodName = "close", 
-                                    methodArgs = {})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies close() method.",
+        method = "close",
+        args = {}
     )     
     public void test_close() {
-        // Test for method void java.io.CharArrayReader.close()
         cr = new CharArrayReader(hw);
         cr.close();
         try {
             cr.read();
-            fail("Failed to throw exception on reqad from closed stream");            
-        } catch (IOException e) { // Correct
+            fail("Failed to throw exception on read from closed stream");            
+        } catch (IOException e) { 
+            // Expected.
         }
 
     }
@@ -105,36 +116,38 @@ public class CharArrayReaderTest extends junit.framework.TestCase {
     /**
      * @tests java.io.CharArrayReader#mark(int)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "mark", 
-                                    methodArgs = { int.class })                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "mark",
+        args = {int.class}
     )     
-    public void test_markI() {
+    public void test_markI() throws IOException {
         // Test for method void java.io.CharArrayReader.mark(int)
+        cr = new CharArrayReader(hw);
+        cr.skip(5L);
+        cr.mark(100);
+        cr.read();
+        cr.reset();
+        assertEquals("Test 1: Failed to mark correct position;", 
+                'W', cr.read());
+        
+        cr.close();
         try {
-            cr = new CharArrayReader(hw);
-            cr.skip(5L);
             cr.mark(100);
-            cr.read();
-            cr.reset();
-            assertEquals("Failed to mark correct position", 'W', cr.read());
+            fail("Test 2: IOException expected.");
         } catch (IOException e) {
-            fail("Exception during mark test: " + e.getMessage());
+            // Expected.
         }
     }
 
     /**
      * @tests java.io.CharArrayReader#markSupported()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies markSupported() method.",
-            targets = { @TestTarget(methodName = "markSupported", 
-                                    methodArgs = {})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies markSupported() method.",
+        method = "markSupported",
+        args = {}
     )       
     public void test_markSupported() {
         // Test for method boolean java.io.CharArrayReader.markSupported()
@@ -145,57 +158,93 @@ public class CharArrayReaderTest extends junit.framework.TestCase {
     /**
      * @tests java.io.CharArrayReader#read()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "read", 
-                                    methodArgs = {})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "read",
+        args = {}
     )        
-    public void test_read() {
-        // Test for method int java.io.CharArrayReader.read()
+    public void test_read() throws IOException {
+        cr = new CharArrayReader(hw);
+        assertEquals("Test 1: Read returned incorrect char;", 
+                'H', cr.read());
+        cr = new CharArrayReader(new char[] { '\u8765' });
+        assertTrue("Test 2: Incorrect double byte char;", 
+                cr.read() == '\u8765');
+
+        cr.close();
         try {
-            cr = new CharArrayReader(hw);
-            assertEquals("Read returned incorrect char", 'H', cr.read());
-            cr = new CharArrayReader(new char[] { '\u8765' });
-            assertTrue("Incorrect double byte char", cr.read() == '\u8765');
+            cr.read();
+            fail("Test 3: IOException expected.");
         } catch (IOException e) {
-            fail("Exception during read test: " + e.getMessage());
+            // Expected.
         }
     }
 
     /**
      * @tests java.io.CharArrayReader#read(char[], int, int)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "read", 
-                                    methodArgs = {char[].class, int.class, int.class})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "read",
+        args = {char[].class, int.class, int.class}
     )        
-    public void test_read$CII() {
+    @AndroidOnly("The RI throws an IndexOutOfBoundsException instead of an" +
+            "ArrayIndexOutOfBoundsException. The RI specification does not" +
+            "define the expected behavior.")
+    public void test_read$CII() throws IOException {
         // Test for method int java.io.CharArrayReader.read(char [], int, int)
         char[] c = new char[11];
+        cr = new CharArrayReader(hw);
+        cr.read(c, 1, 10);
+        assertTrue("Test 1: Read returned incorrect chars.", 
+                new String(c, 1, 10).equals(new String(hw, 0, 10)));
+        
+        // Illegal argument checks.
         try {
-            cr = new CharArrayReader(hw);
-            cr.read(c, 1, 10);
-            assertTrue("Read returned incorrect chars", new String(c, 1, 10)
-                    .equals(new String(hw, 0, 10)));
+            cr.read(null, 1, 0);
+            fail("Test 2: NullPointerException expected.");
+        } catch (NullPointerException e) {
+            // Expected.
+        }
+
+        try {
+            cr.read(c , -1, 1);
+            fail("Test 3: ArrayIndexOutOfBoundsException expected.");
+        } catch (IndexOutOfBoundsException e) {
+            // Expected.
+        }
+        
+        try {
+            cr.read(c , 1, -1);
+            fail("Test 4: ArrayIndexOutOfBoundsException expected.");
+        } catch (IndexOutOfBoundsException e) {
+            // Expected.
+        }
+
+        try {
+            cr.read(c, 1, c.length);
+            fail("Test 5: ArrayIndexOutOfBoundsException expected.");
+        } catch (IndexOutOfBoundsException e) {
+            // Expected.
+        }
+
+        cr.close();
+        try {
+            cr.read(c, 1, 1);
+            fail("Test 6: IOException expected.");
         } catch (IOException e) {
-            fail("Exception during read test : " + e.getMessage());
+            // Expected.
         }
     }
 
     /**
      * @tests java.io.CharArrayReader#ready()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies ready() method.",
-            targets = { @TestTarget(methodName = "ready", 
-                                    methodArgs = {})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies ready() method.",
+        method = "ready",
+        args = {}
     )         
     public void test_ready() {
         // Test for method boolean java.io.CharArrayReader.ready()
@@ -226,52 +275,52 @@ public class CharArrayReaderTest extends junit.framework.TestCase {
     /**
      * @tests java.io.CharArrayReader#reset()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "reset", 
-                                    methodArgs = {})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "reset",
+        args = {}
     )        
-    public void test_reset() {
-        // Test for method void java.io.CharArrayReader.reset()
+    public void test_reset() throws IOException {
+        cr = new CharArrayReader(hw);
+        cr.skip(5L);
+        cr.mark(100);
+        cr.read();
+        cr.reset();
+        assertEquals("Test 1: Reset failed to return to marker position.",
+                'W', cr.read());
+        
+        cr.close();
         try {
-            cr = new CharArrayReader(hw);
-            cr.skip(5L);
-            cr.mark(100);
-            cr.read();
             cr.reset();
-            assertEquals("Reset failed to return to marker position",
-                    'W', cr.read());
+            fail("Test 2: IOException expected.");
         } catch (IOException e) {
-            fail("Exception during reset test : " + e.getMessage());
+            // Expected.
         }
     }
 
     /**
      * @tests java.io.CharArrayReader#skip(long)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "skip", 
-                                    methodArgs = {long.class})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "skip",
+        args = {long.class}
     )         
-    public void test_skipJ() {
-        // Test for method long java.io.CharArrayReader.skip(long)
+    public void test_skipJ() throws IOException {
         long skipped = 0;
+        cr = new CharArrayReader(hw);
+        skipped = cr.skip(5L);
+        assertEquals("Test 1: Failed to skip correct number of chars;", 
+                5L, skipped);
+        assertEquals("Test 2: Skip skipped wrong chars;", 
+                'W', cr.read());
+        
+        cr.close();
         try {
-            cr = new CharArrayReader(hw);
-            skipped = cr.skip(5L);
+            cr.skip(1);
+            fail("Test 3: IOException expected.");
         } catch (IOException e) {
-            fail("Exception during skip test : " + e.getMessage());
-        }
-        assertEquals("Failed to skip correct number of chars", 5L, skipped);
-        try {
-            assertEquals("Skip skipped wrong chars", 'W', cr.read());
-        } catch (IOException e) {
-            fail("read exception during skip test : " + e.getMessage());
+            // Expected.
         }
     }
 

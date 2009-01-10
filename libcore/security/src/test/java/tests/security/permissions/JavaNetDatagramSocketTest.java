@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,25 +16,29 @@
 
 package tests.security.permissions;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
+
+import tests.support.Support_PortManager;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import java.net.SocketTimeoutException;
 
 /*
- * This class tests the secrity permissions which are documented in
+ * This class tests the security permissions which are documented in
  * http://java.sun.com/j2se/1.5.0/docs/guide/security/permissions.html#PermsAndMethods
  * for class java.net.DatagramSocket
  */
-@TestTargetClass(SecurityManager.class)
+@TestTargetClass(DatagramSocket.class)
 public class JavaNetDatagramSocketTest extends TestCase {
     
     SecurityManager old;
@@ -50,14 +54,25 @@ public class JavaNetDatagramSocketTest extends TestCase {
         System.setSecurityManager(old);
         super.tearDown();
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that java.net.DatagramSocket constructor calls " +
-            "checkListen of security manager.",
-      targets = {
-        @TestTarget(
-          methodName = "checkListen",
-          methodArgs = {int.class}
+    
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Verifies that java.net.DatagramSocket constructor calls checkListen of security manager.",
+            method = "DatagramSocket",
+            args = {int.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Verifies that java.net.DatagramSocket constructor calls checkListen of security manager.",
+            method = "DatagramSocket",
+            args = {java.net.SocketAddress.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Verifies that java.net.DatagramSocket constructor calls checkListen of security manager.",
+            method = "DatagramSocket",
+            args = {int.class, java.net.InetAddress.class}
         )
     })
     public void test_ctor() throws IOException {
@@ -76,46 +91,102 @@ public class JavaNetDatagramSocketTest extends TestCase {
                 this.port = port;
                 super.checkListen(port);
             }
-            @Override
-            public void checkAccept(String host, int port) {
-                this.host = host;
-                this.port = port;
-                super.checkAccept(host, port);
-            }
         }
         
         TestSecurityManager s = new TestSecurityManager();
         System.setSecurityManager(s);
-        
+
+        int port = Support_PortManager.getNextPortForUDP();
         s.reset();
-        DatagramSocket s1 = new DatagramSocket(8881);
+        DatagramSocket s1 = new DatagramSocket(port);
         assertTrue("java.net.DatagramSocket ctor must call checkListen on security manager", s.called);
-        assertEquals("Argument of checkListen is not correct", 8881, s.port);
-        
+        assertEquals("Argument of checkListen is not correct", port, s.port);
+
         s.reset();
         DatagramSocket s2 = new DatagramSocket();
         assertTrue("java.net.DatagramSocket ctor must call checkListen on security manager", s.called);
         assertEquals("Argument of checkListen is not correct", 0, s.port);
-        
+
+        port = Support_PortManager.getNextPortForUDP();
         s.reset();
-        DatagramSocket s3 = new DatagramSocket(new InetSocketAddress(8882));
+        DatagramSocket s3 = new DatagramSocket(new InetSocketAddress(port));
         assertTrue("java.net.DatagramSocket ctor must call checkListen on security manager", s.called);
-        assertEquals("Argument of checkListen is not correct", 8882, s.port);
-        
+        assertEquals("Argument of checkListen is not correct", port, s.port);
+
+        port = Support_PortManager.getNextPortForUDP();
         s.reset();
-        DatagramSocket s4 = new DatagramSocket(8883, InetAddress.getLocalHost());
+        DatagramSocket s4 = new DatagramSocket(port, InetAddress.getLocalHost());
         assertTrue("java.net.DatagramSocket ctor must call checkListen on security manager", s.called);
-        assertEquals("Argument of checkListen is not correct", 8883, s.port);
+        assertEquals("Argument of checkListen is not correct", port, s.port);
+
+    }
+   
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies that java.net.DatagramSocket receive calls checkAccept of security manager.",
+        method = "receive",
+        args = {java.net.DatagramPacket.class}
+    )
+    public void test_receive() throws IOException {
+        class TestSecurityManager extends SecurityManager {
+            boolean called = false;
+            String host = null;
+            int port = 0;
+            void reset(){
+                called = false;
+                host = null;
+                port = 0;
+            }
+            @Override
+            public void checkAccept(String host, int port) {
+                this.host = host;
+                this.port = port;
+                this.called = true;
+                super.checkAccept(host, port);
+            }
+        }
         
+        final int port = Support_PortManager.getNextPortForUDP();
+        DatagramSocket s1 = new DatagramSocket(port);
+        //s1.setSoTimeout(100);
         
+        Thread sender = new Thread(){
+            public void run(){
+                try {
+                    DatagramPacket sendPacket = new DatagramPacket(new byte[256], 256, InetAddress.getLocalHost(), port);
+                    DatagramSocket sender = new DatagramSocket();
+                    while(!isInterrupted()){
+                        sender.send(sendPacket);
+                        Thread.sleep(10);
+                    }
+                }
+                catch(InterruptedException e){
+                    // expected
+                }
+                catch(Exception e){
+                    fail("unexpected exception " + e);
+                }
+            }
+        };
+        sender.start();
+
         DatagramPacket p = new DatagramPacket(new byte[256], 0, 256);
         
-        s1.setSoTimeout(0);
+        TestSecurityManager s = new TestSecurityManager();
+        System.setSecurityManager(s);
+
         s.reset();
         assert(s1.getInetAddress()==null);
-        s1.receive(p);
+        assertTrue(s1.getInetAddress()==null);
+        try {
+            s1.receive(p);
+        }
+        catch(Exception e){
+            fail("unexpected exception " + e);
+        }
+        sender.interrupt();
         assertTrue("java.net.DatagramSocket.receive must call checkAccept on security manager", s.called);
     }
     
 }
-

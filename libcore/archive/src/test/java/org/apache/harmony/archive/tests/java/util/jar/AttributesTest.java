@@ -17,10 +17,10 @@
 
 package org.apache.harmony.archive.tests.java.util.jar;
 
-import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -31,7 +31,7 @@ import java.util.Set;
 import java.util.jar.Attributes;
 import junit.framework.TestCase;
 
-@TestTargetClass(Attributes.class) 
+@TestTargetClass(Attributes.class)
 public class AttributesTest extends TestCase {
     private Attributes a;
 
@@ -47,15 +47,12 @@ public class AttributesTest extends TestCase {
     /**
      * @tests java.util.jar.Attributes#Attributes(java.util.jar.Attributes)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "Attributes",
-          methodArgs = {java.util.jar.Attributes.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Attributes",
+        args = {java.util.jar.Attributes.class}
+    )
     public void test_ConstructorLjava_util_jar_Attributes() {
         Attributes a2 = new Attributes(a);
         assertEquals(a, a2);
@@ -66,15 +63,12 @@ public class AttributesTest extends TestCase {
     /**
      * @tests java.util.jar.Attributes#clear()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "clear",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "clear",
+        args = {}
+    )
     public void test_clear() {
         a.clear();
         assertNull("a) All entries should be null after clear", a.get("1"));
@@ -87,33 +81,29 @@ public class AttributesTest extends TestCase {
     /**
      * @tests java.util.jar.Attributes#containsKey(java.lang.Object)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "containsKey",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "containsKey",
+        args = {java.lang.Object.class}
+    )
     public void test_containsKeyLjava_lang_Object() {
-        assertTrue("a) Should have returned false", !a.containsKey(new Integer(1)));
+        assertTrue("a) Should have returned false", !a.containsKey(new Integer(
+                1)));
         assertTrue("b) Should have returned false", !a.containsKey("0"));
-        assertTrue("Should have returned true", a.containsKey(new Attributes.Name("1")));
+        assertTrue("Should have returned true", a
+                .containsKey(new Attributes.Name("1")));
     }
 
     /**
      * @tests java.util.jar.Attributes#containsValue(java.lang.Object)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "containsValue",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "containsValue",
+        args = {java.lang.Object.class}
+    )
     public void test_containsValueLjava_lang_Object() {
         assertTrue("Should have returned false", !a.containsValue("One"));
         assertTrue("Should have returned true", a.containsValue("one"));
@@ -122,15 +112,12 @@ public class AttributesTest extends TestCase {
     /**
      * @tests java.util.jar.Attributes#entrySet()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "entrySet",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "entrySet",
+        args = {}
+    )
     public void test_entrySet() {
         Set<Map.Entry<Object, Object>> entrySet = a.entrySet();
         Set<Object> keySet = new HashSet<Object>();
@@ -148,41 +135,45 @@ public class AttributesTest extends TestCase {
         assertTrue("b) Should contain entry", valueSet.contains("two"));
         assertTrue("c) Should contain entry", valueSet.contains("three"));
         assertTrue("d) Should contain entry", valueSet.contains("four"));
-        assertTrue("a) Should contain key", keySet.contains(new Attributes.Name("1")));
-        assertTrue("b) Should contain key", keySet.contains(new Attributes.Name("2")));
-        assertTrue("c) Should contain key", keySet.contains(new Attributes.Name("3")));
-        assertTrue("d) Should contain key", keySet.contains(new Attributes.Name("4")));
+        assertTrue("a) Should contain key", keySet
+                .contains(new Attributes.Name("1")));
+        assertTrue("b) Should contain key", keySet
+                .contains(new Attributes.Name("2")));
+        assertTrue("c) Should contain key", keySet
+                .contains(new Attributes.Name("3")));
+        assertTrue("d) Should contain key", keySet
+                .contains(new Attributes.Name("4")));
     }
 
     /**
      * @tests java.util.jar.Attributes#get(java.lang.Object)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalArgumentException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "getValue",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getValue",
+        args = {java.lang.String.class}
+    )
     public void test_getLjava_lang_Object() {
         assertEquals("a) Incorrect value returned", "one", a.getValue("1"));
         assertNull("b) Incorrect value returned", a.getValue("0"));
+
+        try {
+            a.getValue("IllegalArgumentException expected");
+        } catch (IllegalArgumentException ee) {
+            // expected
+        }
     }
 
     /**
      * @tests java.util.jar.Attributes#isEmpty()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isEmpty",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isEmpty",
+        args = {}
+    )
     public void test_isEmpty() {
         assertTrue("Should not be empty", !a.isEmpty());
         a.clear();
@@ -194,36 +185,34 @@ public class AttributesTest extends TestCase {
     /**
      * @tests java.util.jar.Attributes#keySet()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "keySet",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "keySet",
+        args = {}
+    )
     public void test_keySet() {
         Set<?> s = a.keySet();
         assertEquals(4, s.size());
-        assertTrue("a) Should contain entry", s.contains(new Attributes.Name("1")));
-        assertTrue("b) Should contain entry", s.contains(new Attributes.Name("2")));
-        assertTrue("c) Should contain entry", s.contains(new Attributes.Name("3")));
-        assertTrue("d) Should contain entry", s.contains(new Attributes.Name("4")));
+        assertTrue("a) Should contain entry", s.contains(new Attributes.Name(
+                "1")));
+        assertTrue("b) Should contain entry", s.contains(new Attributes.Name(
+                "2")));
+        assertTrue("c) Should contain entry", s.contains(new Attributes.Name(
+                "3")));
+        assertTrue("d) Should contain entry", s.contains(new Attributes.Name(
+                "4")));
     }
 
     /**
      * @tests java.util.jar.Attributes#putAll(java.util.Map)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "putAll",
-          methodArgs = {java.util.Map.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "putAll",
+        args = {java.util.Map.class}
+    )
     public void test_putAllLjava_util_Map() {
         Attributes b = new Attributes();
         b.putValue("3", "san");
@@ -235,12 +224,16 @@ public class AttributesTest extends TestCase {
         assertEquals("Should have been replaced", "san", a.getValue("3"));
         assertEquals("Should have been added", "go", a.getValue("5"));
         Attributes atts = new Attributes();
-        assertNull("Assert 0: ", atts.put(Attributes.Name.CLASS_PATH, "tools.jar"));
-        assertNull("Assert 1: ", atts.put(Attributes.Name.MANIFEST_VERSION, "1"));
+        assertNull("Assert 0: ", atts.put(Attributes.Name.CLASS_PATH,
+                "tools.jar"));
+        assertNull("Assert 1: ", atts
+                .put(Attributes.Name.MANIFEST_VERSION, "1"));
         Attributes atts2 = new Attributes();
         atts2.putAll(atts);
-        assertEquals("Assert 2:", "tools.jar", atts2.get(Attributes.Name.CLASS_PATH));
-        assertEquals("Assert 3: ", "1", atts2.get(Attributes.Name.MANIFEST_VERSION));
+        assertEquals("Assert 2:", "tools.jar", atts2
+                .get(Attributes.Name.CLASS_PATH));
+        assertEquals("Assert 3: ", "1", atts2
+                .get(Attributes.Name.MANIFEST_VERSION));
         try {
             atts.putAll(Collections.EMPTY_MAP);
             fail("Assert 4: no class cast from attrib parameter");
@@ -252,15 +245,12 @@ public class AttributesTest extends TestCase {
     /**
      * @tests java.util.jar.Attributes#putAll(java.util.Map)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Regression test",
-      targets = {
-        @TestTarget(
-          methodName = "putAll",
-          methodArgs = {java.util.Map.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Regression test",
+        method = "putAll",
+        args = {java.util.Map.class}
+    )
     public void test_putAllLjava_util_Map2() {
         // Regression for HARMONY-464
         try {
@@ -285,15 +275,12 @@ public class AttributesTest extends TestCase {
     /**
      * @tests java.util.jar.Attributes#remove(java.lang.Object)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "remove",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "remove",
+        args = {java.lang.Object.class}
+    )
     public void test_removeLjava_lang_Object() {
         a.remove(new Attributes.Name("1"));
         a.remove(new Attributes.Name("3"));
@@ -304,15 +291,12 @@ public class AttributesTest extends TestCase {
     /**
      * @tests java.util.jar.Attributes#size()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "size",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "size",
+        args = {}
+    )
     public void test_size() {
         assertEquals("Incorrect size returned", 4, a.size());
         a.clear();
@@ -322,15 +306,12 @@ public class AttributesTest extends TestCase {
     /**
      * @tests java.util.jar.Attributes#values()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "values",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "values",
+        args = {}
+    )
     public void test_values() {
         Collection<?> valueCollection = a.values();
         assertTrue("a) Should contain entry", valueCollection.contains("one"));
@@ -342,15 +323,12 @@ public class AttributesTest extends TestCase {
     /**
      * @tests java.util.jar.Attributes#clone()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "clone",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "clone",
+        args = {}
+    )
     public void test_clone() {
         Attributes a2 = (Attributes) a.clone();
         assertEquals(a, a2);
@@ -361,17 +339,15 @@ public class AttributesTest extends TestCase {
     /**
      * @tests java.util.jar.Attributes#equals(java.lang.Object)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "equals",
+        args = {java.lang.Object.class}
+    )
     public void test_equalsLjava_lang_Object() {
-        Attributes.Name n1 = new Attributes.Name("name"), n2 = new Attributes.Name("Name");
+        Attributes.Name n1 = new Attributes.Name("name"), n2 = new Attributes.Name(
+                "Name");
         assertEquals(n1, n2);
         Attributes a1 = new Attributes();
         a1.putValue("one", "1");
@@ -385,19 +361,18 @@ public class AttributesTest extends TestCase {
     /**
      * @tests java.util.jar.Attributes.put(java.lang.Object, java.lang.Object)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Regression test. Checks ClassCastException",
-      targets = {
-        @TestTarget(
-          methodName = "put",
-          methodArgs = {java.lang.Object.class, java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Regression test. Checks ClassCastException",
+        method = "put",
+        args = {java.lang.Object.class, java.lang.Object.class}
+    )
     public void test_putLjava_lang_ObjectLjava_lang_Object() {
         Attributes atts = new Attributes();
-        assertNull("Assert 0: ", atts.put(Attributes.Name.CLASS_PATH, "tools.jar"));
-        assertEquals("Assert 1: ", "tools.jar", atts.getValue(Attributes.Name.CLASS_PATH));
+        assertNull("Assert 0: ", atts.put(Attributes.Name.CLASS_PATH,
+                "tools.jar"));
+        assertEquals("Assert 1: ", "tools.jar", atts
+                .getValue(Attributes.Name.CLASS_PATH));
         // Regression for HARMONY-79
         try {
             atts.put("not a name", "value");
@@ -412,19 +387,16 @@ public class AttributesTest extends TestCase {
             // Expected
         }
     }
-    
+
     /**
      * @tests java.util.jar.Attributes.put(java.lang.Object, java.lang.Object)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "ClassCastException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "put",
-          methodArgs = {java.lang.Object.class, java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "ClassCastException checking missed.",
+        method = "put",
+        args = {java.lang.Object.class, java.lang.Object.class}
+    )
     public void test_putLjava_lang_ObjectLjava_lang_Object_Null() {
 
         Attributes attribute = new Attributes();
@@ -449,4 +421,100 @@ public class AttributesTest extends TestCase {
         assertNull(attribute.get(name));
     }
 
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Attributes",
+        args = {}
+    )
+    public void test_Constructor() {
+        Attributes attr = new Attributes();
+        assertTrue(attr.size() >= 0);
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Attributes",
+        args = {int.class}
+    )
+    public void test_ConstructorI() {
+        Attributes attr = new Attributes(10);
+        assertTrue(attr.size() >= 0);
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "get",
+        args = {java.lang.Object.class}
+    )
+    public void test_getLjava_lang_Object_true() {
+        assertEquals("a) Incorrect value returned", "one", a
+                .get(new Attributes.Name("1")));
+        assertNull("b) Incorrect value returned", a.get("0"));
+        assertNull("b) Incorrect value returned", a.get("1"));
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getValue",
+        args = {java.util.jar.Attributes.Name.class}
+    )
+    public void test_getValueLjava_util_jar_Attributes_Name() {
+        assertEquals("a) Incorrect value returned", "one", a
+                .getValue(new Attributes.Name("1")));
+        assertNull("b) Incorrect value returned", a
+                .getValue(new Attributes.Name("0")));
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hashCode",
+        args = {}
+    )
+    public void test_hashCode() {
+        Attributes b = (Attributes) a.clone();
+        b.putValue("33", "Thirty three");
+        assertNotSame(a.hashCode(), b.hashCode());
+        b = (Attributes) a.clone();
+        b.clear();
+        assertNotSame(a.hashCode(), b.hashCode());
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "putValue",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
+    public void test_putValueLjava_lang_StringLjava_lang_String() {
+        Attributes b = new Attributes();
+        b.put(new Attributes.Name("1"), "one");
+        b.putValue("2", "two");
+        b.put(new Attributes.Name("3"), "three");
+        b.putValue("4", "four");
+
+        assertTrue(a.equals(b));
+
+        try {
+            b.putValue(null, "null");
+            fail("NullPointerException expected");
+        } catch (NullPointerException ee) {
+            // expected
+        }
+
+        StringBuffer sb = new StringBuffer();
+        for (int i = 0; i < 0x10000; i++) {
+            sb.append('3');
+        }
+        try {
+            b.putValue(new String(sb), "wrong name");
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException ee) {
+            // expected
+        }
+    }
 }

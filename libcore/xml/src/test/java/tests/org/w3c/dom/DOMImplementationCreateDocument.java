@@ -1,8 +1,8 @@
 package tests.org.w3c.dom;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import java.util.ArrayList;
@@ -58,15 +58,12 @@ public final class DOMImplementationCreateDocument extends DOMTestCase {
      * @throws Throwable
      *             Any uncaught exception causes test to fail
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify DOMException.",
-      targets = {
-        @TestTarget(
-          methodName = "createDocument",
-          methodArgs = {java.lang.String.class, java.lang.String.class, org.w3c.dom.DocumentType.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Doesn't verify DOMException.",
+        method = "createDocument",
+        args = {java.lang.String.class, java.lang.String.class, org.w3c.dom.DocumentType.class}
+    )
     public void testCreateDocument3() throws Throwable {
         Document doc;
         DOMImplementation domImpl;
@@ -96,15 +93,12 @@ public final class DOMImplementationCreateDocument extends DOMTestCase {
             assertNotNull("domimplementationcreatedocument03", newDoc);
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies DOMException with NAMESPACE_ERR code.",
-      targets = {
-        @TestTarget(
-          methodName = "createDocument",
-          methodArgs = {java.lang.String.class, java.lang.String.class, org.w3c.dom.DocumentType.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies DOMException with NAMESPACE_ERR code.",
+        method = "createDocument",
+        args = {java.lang.String.class, java.lang.String.class, org.w3c.dom.DocumentType.class}
+    )
     public void testCreateDocument4() throws Throwable {
         Document doc;
         DOMImplementation domImpl;
@@ -127,15 +121,12 @@ public final class DOMImplementationCreateDocument extends DOMTestCase {
             assertTrue("domimplementationcreatedocument04", success);
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies DOMException with NAMESPACE_ERR code.",
-      targets = {
-        @TestTarget(
-          methodName = "createDocument",
-          methodArgs = {java.lang.String.class, java.lang.String.class, org.w3c.dom.DocumentType.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies DOMException with NAMESPACE_ERR code.",
+        method = "createDocument",
+        args = {java.lang.String.class, java.lang.String.class, org.w3c.dom.DocumentType.class}
+    )
     public void testCreateDocument5() throws Throwable {
         Document doc;
         DOMImplementation domImpl;
@@ -157,15 +148,12 @@ public final class DOMImplementationCreateDocument extends DOMTestCase {
             assertTrue("domimplementationcreatedocument05", success);
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies DOMException with NAMESPACE_ERR code.",
-      targets = {
-        @TestTarget(
-          methodName = "createDocument",
-          methodArgs = {java.lang.String.class, java.lang.String.class, org.w3c.dom.DocumentType.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies DOMException with NAMESPACE_ERR code.",
+        method = "createDocument",
+        args = {java.lang.String.class, java.lang.String.class, org.w3c.dom.DocumentType.class}
+    )
     public void testCreateDocument7() throws Throwable {
         Document doc;
         DOMImplementation domImpl;

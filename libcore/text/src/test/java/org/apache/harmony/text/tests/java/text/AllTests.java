@@ -27,7 +27,7 @@ public class AllTests {
     }
 
     public static Test suite() {
-        TestSuite suite = new TestSuite(
+        TestSuite suite = tests.TestSuiteFactory.createTestSuite(
                 "Suite org.apache.harmony.text.tests.java.text");
         //$JUnit-BEGIN$
         suite.addTestSuite(AnnotationTest.class);

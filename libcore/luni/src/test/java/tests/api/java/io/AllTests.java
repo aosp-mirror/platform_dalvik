@@ -30,7 +30,7 @@ public class AllTests {
     }
 
     public static Test suite() {
-        TestSuite suite = new TestSuite("All tests for package tests.api.java.io;");
+        TestSuite suite = tests.TestSuiteFactory.createTestSuite("All tests for package tests.api.java.io;");
         // $JUnit-BEGIN$
 
         suite.addTestSuite(BufferedInputStreamTest.class);
@@ -44,6 +44,7 @@ public class AllTests {
         suite.addTestSuite(CharConversionExceptionTest.class);
         suite.addTestSuite(ComputeSerialVersionUIDTest.class);
         suite.addTestSuite(DataInputStreamTest.class);
+        suite.addTestSuite(DataInputOutputStreamTest.class);
         suite.addTestSuite(DataOutputStreamTest.class);
         suite.addTestSuite(EOFExceptionTest.class);
         suite.addTestSuite(FileDescriptorTest.class);
@@ -56,19 +57,27 @@ public class AllTests {
         suite.addTestSuite(FileWriterTest.class);
         suite.addTestSuite(FilterInputStreamTest.class);
         suite.addTestSuite(FilterOutputStreamTest.class);
+        suite.addTestSuite(FilterReaderTest.class);
+        suite.addTestSuite(FilterWriterTest.class);
         suite.addTestSuite(IOExceptionTest.class);
         suite.addTestSuite(InputStreamReaderTest.class);
         suite.addTestSuite(InterruptedIOExceptionTest.class);
         suite.addTestSuite(InvalidClassExceptionTest.class);
+        suite.addTestSuite(InvalidObjectExceptionTest.class);
         suite.addTestSuite(LineNumberInputStreamTest.class);
         suite.addTestSuite(LineNumberReaderTest.class);
         suite.addTestSuite(NotActiveExceptionTest.class);
         suite.addTestSuite(NotSerializableExceptionTest.class);
         suite.addTestSuite(ObjectInputStreamTest.class);
+        suite.addTestSuite(ObjectInputStreamGetFieldTest.class);
+        suite.addTestSuite(ObjectInputOutputStreamTest.class);
         suite.addTestSuite(ObjectOutputStreamTest.class);
+        suite.addTestSuite(ObjectOutputStreamPutFieldTest.class);
         suite.addTestSuite(ObjectStreamClassTest.class);
+        suite.addTestSuite(ObjectStreamExceptionTest.class);
         suite.addTestSuite(ObjectStreamFieldTest.class);
         suite.addTestSuite(OpenRandomFileTest.class);
+        suite.addTestSuite(OutputStreamTest.class);
         suite.addTestSuite(OutputStreamWriterTest.class);
         suite.addTestSuite(PipedInputStreamTest.class);
         suite.addTestSuite(PipedOutputStreamTest.class);

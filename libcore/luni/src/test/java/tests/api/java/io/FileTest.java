@@ -17,11 +17,6 @@
 
 package tests.api.java.io;
 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestTargetClass; 
-
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
@@ -37,7 +32,12 @@ import java.net.URISyntaxException;
 import java.net.URL;
 
 import tests.support.Support_Exec;
-import tests.support.Support_PlatformFile;
+import dalvik.annotation.AndroidOnly;
+import dalvik.annotation.KnownFailure;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 
 @TestTargetClass(File.class) 
 public class FileTest extends junit.framework.TestCase {
@@ -53,7 +53,7 @@ public class FileTest extends junit.framework.TestCase {
 
     public String fileString = "Test_All_Tests\nTest_java_io_BufferedInputStream\nTest_java_io_BufferedOutputStream\nTest_java_io_ByteArrayInputStream\nTest_java_io_ByteArrayOutputStream\nTest_java_io_DataInputStream\nTest_File\nTest_FileDescriptor\nTest_FileInputStream\nTest_FileNotFoundException\nTest_FileOutputStream\nTest_java_io_FilterInputStream\nTest_java_io_FilterOutputStream\nTest_java_io_InputStream\nTest_java_io_IOException\nTest_java_io_OutputStream\nTest_java_io_PrintStream\nTest_java_io_RandomAccessFile\nTest_java_io_SyncFailedException\nTest_java_lang_AbstractMethodError\nTest_java_lang_ArithmeticException\nTest_java_lang_ArrayIndexOutOfBoundsException\nTest_java_lang_ArrayStoreException\nTest_java_lang_Boolean\nTest_java_lang_Byte\nTest_java_lang_Character\nTest_java_lang_Class\nTest_java_lang_ClassCastException\nTest_java_lang_ClassCircularityError\nTest_java_lang_ClassFormatError\nTest_java_lang_ClassLoader\nTest_java_lang_ClassNotFoundException\nTest_java_lang_CloneNotSupportedException\nTest_java_lang_Double\nTest_java_lang_Error\nTest_java_lang_Exception\nTest_java_lang_ExceptionInInitializerError\nTest_java_lang_Float\nTest_java_lang_IllegalAccessError\nTest_java_lang_IllegalAccessException\nTest_java_lang_IllegalArgumentException\nTest_java_lang_IllegalMonitorStateException\nTest_java_lang_IllegalThreadStateException\nTest_java_lang_IncompatibleClassChangeError\nTest_java_lang_IndexOutOfBoundsException\nTest_java_lang_InstantiationError\nTest_java_lang_InstantiationException\nTest_java_lang_Integer\nTest_java_lang_InternalError\nTest_java_lang_InterruptedException\nTest_java_lang_LinkageError\nTest_java_lang_Long\nTest_java_lang_Math\nTest_java_lang_NegativeArraySizeException\nTest_java_lang_NoClassDefFoundError\nTest_java_lang_NoSuchFieldError\nTest_java_lang_NoSuchMethodError\nTest_java_lang_NullPointerException\nTest_java_lang_Number\nTest_java_lang_NumberFormatException\nTest_java_lang_Object\nTest_java_lang_OutOfMemoryError\nTest_java_lang_RuntimeException\nTest_java_lang_SecurityManager\nTest_java_lang_Short\nTest_java_lang_StackOverflowError\nTest_java_lang_String\nTest_java_lang_StringBuffer\nTest_java_lang_StringIndexOutOfBoundsException\nTest_java_lang_System\nTest_java_lang_Thread\nTest_java_lang_ThreadDeath\nTest_java_lang_ThreadGroup\nTest_java_lang_Throwable\nTest_java_lang_UnknownError\nTest_java_lang_UnsatisfiedLinkError\nTest_java_lang_VerifyError\nTest_java_lang_VirtualMachineError\nTest_java_lang_vm_Image\nTest_java_lang_vm_MemorySegment\nTest_java_lang_vm_ROMStoreException\nTest_java_lang_vm_VM\nTest_java_lang_Void\nTest_java_net_BindException\nTest_java_net_ConnectException\nTest_java_net_DatagramPacket\nTest_java_net_DatagramSocket\nTest_java_net_DatagramSocketImpl\nTest_java_net_InetAddress\nTest_java_net_NoRouteToHostException\nTest_java_net_PlainDatagramSocketImpl\nTest_java_net_PlainSocketImpl\nTest_java_net_Socket\nTest_java_net_SocketException\nTest_java_net_SocketImpl\nTest_java_net_SocketInputStream\nTest_java_net_SocketOutputStream\nTest_java_net_UnknownHostException\nTest_java_util_ArrayEnumerator\nTest_java_util_Date\nTest_java_util_EventObject\nTest_java_util_HashEnumerator\nTest_java_util_Hashtable\nTest_java_util_Properties\nTest_java_util_ResourceBundle\nTest_java_util_tm\nTest_java_util_Vector\n";
 
-    private static String platformId = "JDK"
+    private static String platformId = "Android"
             + System.getProperty("java.vm.version").replace('.', '-');
 
     {
@@ -88,131 +88,138 @@ public class FileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.File#File(java.io.File, java.lang.String)
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies File(java.io.File, java.lang.String) constructor.",
-            targets = { @TestTarget(methodName = "File", 
-                                    methodArgs = {java.io.File.class,
-                                                  java.lang.String.class})                         
-            }
-        )    
-    public void test_ConstructorLjava_io_FileLjava_lang_String() {
-        // Test for method java.io.File(java.io.File, java.lang.String)
-        String dirName = System.getProperty("user.dir");
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "File",
+        args = {java.io.File.class, java.lang.String.class}
+    )    
+    public void test_ConstructorLjava_io_FileLjava_lang_String() throws Exception {
+        String error;
+        String dirName = System.getProperty("java.io.tmpdir");
+        String oldUserDir = System.getProperty("user.dir");
+        System.setProperty("user.dir", dirName);
+        
         File d = new File(dirName);
         File f = new File(d, "input.tst");
         if (!dirName.regionMatches((dirName.length() - 1), slash, 0, 1))
             dirName += slash;
         dirName += "input.tst";
-        assertTrue("Test 1: Created Incorrect File " + f.getPath(), f.getPath()
-                .equals(dirName));
+        error = String.format("Test 1: Incorrect file created: %s; %s expected.", f.getPath(), dirName);
+        assertTrue(error, f.getPath().equals(dirName));
 
         String fileName = null;
         try {
             f = new File(d, fileName);
-            fail("NullPointerException Not Thrown.");
+            fail("Test 2: NullPointerException expected.");
         } catch (NullPointerException e) {
         }
 
         d = null;
         f = new File(d, "input.tst");
-        assertTrue("Test 2: Created Incorrect File " + f.getPath(), f
-                .getAbsolutePath().equals(dirName));
+        error = String.format("Test 3: Incorrect file created: %s; %s expected.", 
+                f.getAbsolutePath(), dirName);
+        assertTrue(error, f.getAbsolutePath().equals(dirName));
 
         // Regression test for Harmony-382
         File s = null;
         f = new File("/abc");
         d = new File(s, "/abc");
-        assertEquals("Test3: Created Incorrect File " + d.getAbsolutePath(), f
-                .getAbsolutePath(), d.getAbsolutePath());
+        assertEquals("Test 4: Incorrect file created;", 
+                f.getAbsolutePath(), d.getAbsolutePath());
+        
+        System.setProperty("user.dir", oldUserDir);
     }
 
     /**
      * @tests java.io.File#File(java.lang.String)
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies File(java.lang.String) constructor.",
-            targets = { @TestTarget(methodName = "File", 
-                                    methodArgs = {java.lang.String.class})                         
-            }
-        )    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies File(java.lang.String) constructor.",
+        method = "File",
+        args = {java.lang.String.class}
+    )    
     public void test_ConstructorLjava_lang_String() {
         // Test for method java.io.File(java.lang.String)
         String fileName = null;
         try {
             new File(fileName);
-            fail("NullPointerException Not Thrown.");
+            fail("Test 1: NullPointerException expected.");
         } catch (NullPointerException e) {
         }
 
-        fileName = System.getProperty("user.dir");
+        fileName = System.getProperty("java.io.tmpdir");
         if (!fileName.regionMatches((fileName.length() - 1), slash, 0, 1))
             fileName += slash;
         fileName += "input.tst";
 
         File f = new File(fileName);
-        assertTrue("Created incorrect File " + f.getPath(), f.getPath().equals(
+        assertTrue("Created incorrect file " + f.getPath(), f.getPath().equals(
                 fileName));
     }
 
     /**
      * @tests java.io.File#File(java.lang.String, java.lang.String)
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies File(java.lang.String, java.lang.String) constructor " +
-                    "with incorrect parameters.",
-            targets = { @TestTarget(methodName = "File", 
-                                    methodArgs = {java.lang.String.class, 
-                                                  java.lang.String.class})                         
-            }
-        )    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "File",
+        args = {java.lang.String.class, java.lang.String.class}
+    )    
     public void test_ConstructorLjava_lang_StringLjava_lang_String() {
-        // Test for method java.io.File(java.lang.String, java.lang.String)
+        String error;
         String dirName = null;
         String fileName = "input.tst";
+
+        String userDir = System.getProperty("java.io.tmpdir");
+        String oldUserDir = System.getProperty("user.dir");
+        System.setProperty("user.dir", userDir);
+        
         File f = new File(dirName, fileName);
-        String userDir = System.getProperty("user.dir");
         if (!userDir.regionMatches((userDir.length() - 1), slash, 0, 1))
             userDir += slash;
         userDir += "input.tst";
-        assertTrue("Test 1: Created Incorrect File.", f.getAbsolutePath()
-                .equals(userDir));
+        error = String.format("Test 1: Incorrect file created: %s; %s expected.", 
+                f.getAbsolutePath(), userDir);
+        assertTrue(error, f.getAbsolutePath().equals(userDir));
 
-        dirName = System.getProperty("user.dir");
+        dirName = System.getProperty("java.io.tmpdir");
         fileName = null;
         try {
             f = new File(dirName, fileName);
-            fail("NullPointerException Not Thrown.");
+            fail("Test 2: NullPointerException expected.");
         } catch (NullPointerException e) {
+            // Expected.
         }
 
         fileName = "input.tst";
         f = new File(dirName, fileName);
-        assertTrue("Test 2: Created Incorrect File", f.getPath()
+        assertTrue("Test 3: Incorrect file created.", f.getPath()
                 .equals(userDir));
 
         // Regression test for Harmony-382
         String s = null;
         f = new File("/abc");
         File d = new File(s, "/abc");
-        assertEquals("Test3: Created Incorrect File", d.getAbsolutePath(), f
+        assertEquals("Test 4: Incorrect file created;", d.getAbsolutePath(), f
                 .getAbsolutePath());
+        assertEquals("Test3: Created Incorrect File", "/abc", f
+                .getAbsolutePath());
+
+        System.setProperty("user.dir", oldUserDir);
     }
 
     /**
      * @tests java.io.File#File(java.lang.String, java.lang.String)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "NullPointerException checking missed.",
-            targets = { @TestTarget(methodName = "File", 
-                                    methodArgs = {java.lang.String.class,
-                                                  java.lang.String.class})                         
-            }
-        )    
-    public void test_Constructor_String_String_112270() {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "File",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
+    @AndroidOnly("Test 3 incorrectly fails on the RI; Android is more " +
+            "better at resolving path names.")
+    public void test_ConstructorLjava_lang_StringLjava_lang_String_112270() {
         File ref1 = new File("/dir1/file1");
 
         File file1 = new File("/", "/dir1/file1");
@@ -238,15 +245,14 @@ public class FileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.File#File(java.io.File, java.lang.String)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "NullPointerException checking missed.",
-            targets = { @TestTarget(methodName = "File", 
-                                    methodArgs = {java.io.File.class,
-                                                  java.lang.String.class})                         
-            }
-        )    
-    public void test_Constructor_File_String_112270() {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "File",
+        args = {java.io.File.class, java.lang.String.class}
+    )    
+    @AndroidOnly("Test 3 incorrectly fails on the RI; Android is more " +
+            "better at resolving path names.")
+    public void test_ConstructorLjava_io_FileLjava_lang_String_112270() {
         File ref1 = new File("/dir1/file1");
 
         File root = new File("/");
@@ -272,14 +278,12 @@ public class FileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.File#File(java.net.URI)
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies File(java.net.URI) constructor " +
-                    "with incorrect parameter.",
-            targets = { @TestTarget(methodName = "File", 
-                                    methodArgs = {java.net.URI.class})                         
-            }
-        )    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies File(java.net.URI) constructor with incorrect parameter.",
+        method = "File",
+        args = {java.net.URI.class}
+    )    
     public void test_ConstructorLjava_net_URI() {
         // Test for method java.io.File(java.net.URI)
         URI uri = null;
@@ -330,13 +334,11 @@ public class FileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.File#canRead()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "SecurityException checking missed.",
-            targets = { @TestTarget(methodName = "canRead", 
-                                    methodArgs = {})                         
-            }
-        )    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "canRead",
+        args = {}
+    )    
     public void test_canRead() {
         // Test for method boolean java.io.File.canRead()
         // canRead only returns if the file exists so cannot be fully tested.
@@ -348,7 +350,7 @@ public class FileTest extends junit.framework.TestCase {
             assertTrue("canRead returned false", f.canRead());
             f.delete();
         } catch (IOException e) {
-            fail("Unexpected IOException During Test: " + e);
+            fail("Unexpected IOException: " + e.getMessage());
         } finally {
             f.delete();
         }
@@ -357,13 +359,11 @@ public class FileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.File#canWrite()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "SecurityException checking missed.",
-            targets = { @TestTarget(methodName = "canWrite", 
-                                    methodArgs = {})                         
-            }
-        )    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "canWrite",
+        args = {}
+    )    
     public void test_canWrite() {
         // Test for method boolean java.io.File.canWrite()
         // canWrite only returns if the file exists so cannot be fully tested.
@@ -374,7 +374,7 @@ public class FileTest extends junit.framework.TestCase {
             fos.close();
             assertTrue("canWrite returned false", f.canWrite());
         } catch (IOException e) {
-            fail("Unexpected IOException During Test: " + e);
+            fail("Unexpected IOException: " + e.getMessage());
         } finally {
             f.delete();
         }
@@ -383,13 +383,12 @@ public class FileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.File#compareTo(java.io.File)
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies compareTo(java.io.File) method.",
-            targets = { @TestTarget(methodName = "compareTo", 
-                                    methodArgs = {java.io.File.class})                         
-            }
-        )     
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies compareTo(java.io.File) method.",
+        method = "compareTo",
+        args = {java.io.File.class}
+    )     
     public void test_compareToLjava_io_File() {
         File f1 = new File("thisFile.file");
         File f2 = new File("thisFile.file");
@@ -405,14 +404,13 @@ public class FileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.File#createNewFile()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checked.",
-            targets = { @TestTarget(methodName = "createNewFile", 
-                                    methodArgs = {})                         
-            }
-        )      
-    public void _test_createNewFile_EmptyString() {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "IOException checked.",
+        method = "createNewFile",
+        args = {}
+    )      
+    public void test_createNewFile_EmptyString() {
         File f = new File("");
         try {
             f.createNewFile();
@@ -425,14 +423,12 @@ public class FileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.File#createNewFile()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "SecurityException checking missed.",
-            targets = { @TestTarget(methodName = "createNewFile", 
-                                    methodArgs = {})                         
-            }
-        )     
-    public void _test_createNewFile() throws IOException {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "createNewFile",
+        args = {}
+    )     
+    public void test_createNewFile() throws IOException {
         // Test for method java.io.File.createNewFile()
         String base = System.getProperty("java.io.tmpdir");
         boolean dirExists = true;
@@ -457,8 +453,9 @@ public class FileTest extends junit.framework.TestCase {
             // Try to create a file in a directory that does not exist
             File f1 = new File(dir, "tempfile.tst");
             f1.createNewFile();
-            fail("IOException not thrown");
+            fail("Test 1: IOException expected.");
         } catch (IOException e) {
+            // Expected.
         }
 
         dir.mkdir();
@@ -467,62 +464,48 @@ public class FileTest extends junit.framework.TestCase {
         File f2 = new File(dir, "tempfile.tst");
         f1.deleteOnExit();
         f2.deleteOnExit();
-        dir.deleteOnExit();
-        assertFalse("File Should Not Exist", f1.isFile());
+        dir.deleteOnExit(); 
+        assertFalse("Test 2: File should not exist.", f1.isFile());
         f1.createNewFile();
-        assertTrue("File Should Exist.", f1.isFile());
-        assertTrue("File Should Exist.", f2.isFile());
+        assertTrue("Test 3: File should exist.", f1.isFile());
+        assertTrue("Test 4: File should exist.", f2.isFile());
         String dirName = f1.getParent();
         if (!dirName.endsWith(slash))
             dirName += slash;
-        assertTrue("File Saved To Wrong Directory.", dirName.equals(dir
-                .getPath()
-                + slash));
-        assertEquals("File Saved With Incorrect Name.", "tempfile.tst", f1
-                .getName());
+        assertTrue("Test 5: File saved in the wrong directory.", 
+                dirName.equals(dir.getPath() + slash));
+        assertEquals("Test 6: File saved with incorrect name;", 
+                "tempfile.tst", f1.getName());
 
         // Test for creating a file that already exists.
-        assertFalse("File Already Exists, createNewFile Should Return False.",
-                f2.createNewFile());
+        assertFalse("Test 7: File already exists, createNewFile should " +
+                "return false.", f2.createNewFile());
         
-        // Test create an illegal file
+        // Trying to create an illegal file.
         String sep = File.separator;
-        f1 = new File(sep+"..");
-        try {
-            f1.createNewFile();
-            fail("should throw IOE");
-        } catch (IOException e) {
-            // expected;
-        }
         f1 = new File(sep+"a"+sep+".."+sep+".."+sep);
         try {
             f1.createNewFile();
-            fail("should throw IOE");
+            fail("Test 8: IOException expected.");
         } catch (IOException e) {
-            // expected;
+            // Expected.
         }
         
-        // Test create an exist path
         f1 = new File(base);
-        try {
-            assertFalse(f1.createNewFile());
-            fail("should throw IOE");
-        } catch (IOException e) {
-            // expected;
-        }
+        assertFalse("Test 9: False expected when trying to create an " +
+                "existing file", f1.createNewFile());
     }
 
     /**
      * @tests java.io.File#createTempFile(java.lang.String, java.lang.String)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException & SecurityException checking missed.",
-            targets = { @TestTarget(methodName = "createTempFile", 
-                                    methodArgs = {java.lang.String.class,
-                                                  java.lang.String.class})                         
-            }
-        )      
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "createTempFile",
+        args = {java.lang.String.class, java.lang.String.class}
+    )      
+    @AndroidOnly("The RI does not throw an IOException when an illegal" +
+            "file prefix is passed to createTempFile.")
     public void test_createTempFileLjava_lang_StringLjava_lang_String() {
         // Test for method java.io.File.createTempFile(String, String)
         // Error protection against using a suffix without a "."?
@@ -582,9 +565,16 @@ public class FileTest extends junit.framework.TestCase {
                 fail("IllegalArgumentException Not Thrown.");
             } catch (IllegalArgumentException e) {
             }
+            try {
+                // Providing an illegal file prefix.
+                File f3 = File.createTempFile("/../../../../../", null);
+                f3.delete();
+                fail("IOException not thrown");
+            } catch (IOException e) {
+            }
 
         } catch (IOException e) {
-            fail("Unexpected IOException During Test: " + e);
+            fail("Unexpected IOException: " + e.getMessage());
         } finally {
             if (f1 != null)
                 f1.delete();
@@ -597,15 +587,11 @@ public class FileTest extends junit.framework.TestCase {
      * @tests java.io.File#createTempFile(java.lang.String, java.lang.String,
      *        java.io.File)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "SecurityException checking missed.",
-            targets = { @TestTarget(methodName = "createTempFile", 
-                                    methodArgs = {java.lang.String.class,
-                                                  java.lang.String.class,
-                                                  java.io.File.class})                         
-            }
-        )    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "createTempFile",
+        args = {java.lang.String.class, java.lang.String.class, java.io.File.class}
+    )    
     public void test_createTempFileLjava_lang_StringLjava_lang_StringLjava_io_File() {
         // Test for method java.io.File.createTempFile(String, String, File)
         File f1 = null;
@@ -689,7 +675,7 @@ public class FileTest extends junit.framework.TestCase {
             }
 
         } catch (IOException e) {
-            fail("Unexpected IOException During Test: " + e);
+            fail("Unexpected IOException: " + e.getMessage());
         } finally {
             if (f1 != null)
                 f1.delete();
@@ -701,17 +687,15 @@ public class FileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.File#delete()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "SecurityException checking missed.",
-            targets = { @TestTarget(methodName = "delete", 
-                                    methodArgs = {})                         
-            }
-        )        
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "delete",
+        args = {}
+    )        
     public void test_delete() {
         // Test for method boolean java.io.File.delete()
         try {
-            File dir = new File(System.getProperty("user.dir"), platformId
+            File dir = new File(System.getProperty("java.io.tmpdir"), platformId
                     + "filechk");
             dir.mkdir();
             assertTrue("Directory Does Not Exist", dir.exists()
@@ -733,77 +717,14 @@ public class FileTest extends junit.framework.TestCase {
     }
 
     /**
-     * A partial test for deleteOnExit. Since we need to shutdown the VM to
-     * actually delete the files, we can never observe the results.
-     */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "SecurityException checking missed.",
-            targets = { @TestTarget(methodName = "deleteOnExit", 
-                                    methodArgs = {})                         
-            }
-        )    
-    public void _test_DeleteOnExit() {
-        File f1 = new File(System.getProperty("java.io.tmpdir"), "DeleteOnExitF1-" + System.currentTimeMillis());
-        File d1 = new File(System.getProperty("java.io.tmpdir"), "DeleteOnExitD1-" + System.currentTimeMillis());
-        File f2 = new File(d1, "DeleteOnExitF2-" + System.currentTimeMillis());
-        
-        try {
-            (new FileOutputStream(f1)).close();
-            d1.mkdirs();
-            (new FileOutputStream(f2)).close();
-        } catch (IOException ex) {
-            fail(ex.getMessage());
-        }
-        
-        f1.deleteOnExit();
-        d1.deleteOnExit();
-        f2.deleteOnExit();
-    }
-    
-// GCH    
-// TODO : This test passes on Windows but fails on Linux with a 
-// java.lang.NoClassDefFoundError. Temporarily removing from the test
-// suite while I investigate the cause. 
-//    /**
-//     * @tests java.io.File#deleteOnExit()
-//     */
-//    public void test_deleteOnExit() {
-//        File f1 = new File(System.getProperty("java.io.tmpdir"), platformId
-//                + "deleteOnExit.tst");
-//        try {
-//            FileOutputStream fos = new FileOutputStream(f1);
-//            fos.close();
-//        } catch (IOException e) {
-//            fail("Unexpected IOException During Test : " + e.getMessage());
-//        }
-//        assertTrue("File Should Exist.", f1.exists());
-//
-//        try {
-//            Support_Exec.execJava(new String[] {
-//                    "tests.support.Support_DeleteOnExitTest", f1.getPath() },
-//                    null, true);
-//        } catch (IOException e) {
-//            fail("Unexpected IOException During Test + " + e.getMessage());
-//        } catch (InterruptedException e) {
-//            fail("Unexpected InterruptedException During Test: " + e);
-//        }
-//
-//        boolean gone = !f1.exists();
-//        f1.delete();
-//        assertTrue("File Should Already Be Deleted.", gone);
-//    }
-
-    /**
      * @tests java.io.File#equals(java.lang.Object)
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies equals() method.",
-            targets = { @TestTarget(methodName = "equals", 
-                                    methodArgs = {java.lang.Object.class})                         
-            }
-        )    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies equals() method.",
+        method = "equals",
+        args = {java.lang.Object.class}
+    )    
     public void test_equalsLjava_lang_Object() {
         // Test for method boolean java.io.File.equals(java.lang.Object)
         File f1 = new File("filechk.tst");
@@ -849,17 +770,15 @@ public class FileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.File#exists()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "SecurityException checking missed.",
-            targets = { @TestTarget(methodName = "exists", 
-                                    methodArgs = {})                         
-            }
-        ) 
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "exists",
+        args = {}
+    ) 
     public void test_exists() {
         // Test for method boolean java.io.File.exists()
         try {
-            File f = new File(System.getProperty("user.dir"), platformId
+            File f = new File(System.getProperty("java.io.tmpdir"), platformId
                     + "exists.tst");
             assertTrue("Exists returned true for non-existent file", !f
                     .exists());
@@ -875,16 +794,14 @@ public class FileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.File#getAbsoluteFile()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "SecurityException checking missed.",
-            targets = { @TestTarget(methodName = "getAbsoluteFile", 
-                                    methodArgs = {})                         
-            }
-        )     
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "getAbsoluteFile",
+        args = {}
+    )     
     public void test_getAbsoluteFile() {
         // Test for method java.io.File getAbsoluteFile()
-        String base = System.getProperty("user.dir");
+        String base = System.getProperty("java.io.tmpdir");
         if (!base.endsWith(slash))
             base += slash;
         File f = new File(base, "temp.tst");
@@ -906,27 +823,25 @@ public class FileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.File#getAbsolutePath()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "SecurityException checking missed.",
-            targets = { @TestTarget(methodName = "getAbsolutePath", 
-                                    methodArgs = {})                         
-            }
-        )     
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "getAbsolutePath",
+        args = {}
+    )     
     public void test_getAbsolutePath() {
         // Test for method java.lang.String java.io.File.getAbsolutePath()
-        String base = System.getProperty("user.dir");
+        String base = System.getProperty("java.io.tmpdir");
         if (!base.regionMatches((base.length() - 1), slash, 0, 1))
             base += slash;
         File f = new File(base, "temp.tst");
-        assertTrue("Test 1: Incorrect Path Returned.", f.getAbsolutePath()
+        assertTrue("Test 1: Incorrect path returned.", f.getAbsolutePath()
                 .equals(base + "temp.tst"));
         f = new File(base + "Temp" + slash + slash + slash + "Testing" + slash
                 + "temp.tst");
-        assertTrue("Test 2: Incorrect Path Returned.", f.getAbsolutePath()
+        assertTrue("Test 2: Incorrect path returned.", f.getAbsolutePath()
                 .equals(base + "Temp" + slash + "Testing" + slash + "temp.tst"));
         f = new File(base + "a" + slash + slash + ".." + slash + "temp.tst");
-        assertTrue("Test 3: Incorrect Path Returned." + f.getAbsolutePath(), f
+        assertTrue("Test 3: Incorrect path returned." + f.getAbsolutePath(), f
                 .getAbsolutePath().equals(
                         base + "a" + slash + ".." + slash + "temp.tst"));
         f.delete();
@@ -935,36 +850,36 @@ public class FileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.File#getCanonicalFile()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException & SecurityException checking missed.",
-            targets = { @TestTarget(methodName = "getCanonicalFile", 
-                                    methodArgs = {})                         
-            }
-        )     
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "IOException not checked since it may only occur if" +
+                "the native access to the filesystem fails.",
+        method = "getCanonicalFile",
+        args = {}
+    )     
     public void test_getCanonicalFile() {
         // Test for method java.io.File.getCanonicalFile()
         try {
-            String base = System.getProperty("user.dir");
+            String base = System.getProperty("java.io.tmpdir");
             if (!base.endsWith(slash))
                 base += slash;
             File f = new File(base, "temp.tst");
             File f2 = f.getCanonicalFile();
-            assertEquals("Test 1: Incorrect File Returned.", 0, f2
+            assertEquals("Test 1: Incorrect file returned.", 0, f2
                     .getCanonicalFile().compareTo(f.getCanonicalFile()));
             f = new File(base + "Temp" + slash + slash + "temp.tst");
             f2 = f.getCanonicalFile();
-            assertEquals("Test 2: Incorrect File Returned.", 0, f2
+            assertEquals("Test 2: Incorrect file returned.", 0, f2
                     .getCanonicalFile().compareTo(f.getCanonicalFile()));
             f = new File(base + "Temp" + slash + slash + ".." + slash
                     + "temp.tst");
             f2 = f.getCanonicalFile();
-            assertEquals("Test 3: Incorrect File Returned.", 0, f2
+            assertEquals("Test 3: Incorrect file returned.", 0, f2
                     .getCanonicalFile().compareTo(f.getCanonicalFile()));
 
             // Test for when long directory/file names in Windows    
             boolean onWindows = File.separatorChar == '\\';
-            // String userDir = System.getProperty("user.dir");
+            // String userDir = System.getProperty("java.io.tmpdir");
             if (onWindows) {
                 File testdir = new File(base, "long-" + platformId);
                 testdir.mkdir();
@@ -973,24 +888,20 @@ public class FileTest extends junit.framework.TestCase {
                     dir.mkdir();
                     f = new File(dir, "longfilename.tst");
                     f2 = f.getCanonicalFile();
-                    assertEquals("Test 4: Incorrect File Returned.",
+                    assertEquals("Test 4: Incorrect file returned.",
                             0, f2.getCanonicalFile().compareTo(
                                     f.getCanonicalFile()));
                     FileOutputStream fos = new FileOutputStream(f);
                     fos.close();
                     f2 = new File(testdir + slash + "longdi~1" + slash
                             + "longfi~1.tst");
-                    // System.out.println("");
-                    // System.out.println("test_getCanonicalFile");
-                    // System.out.println("f: " + f.getCanonicalFile());
-                    // System.out.println("f3: " + f3.getCanonicalFile());
                     File canonicalf2 = f2.getCanonicalFile();
                     /*
                      * If the "short file name" doesn't exist, then assume that
                      * the 8.3 file name compatibility is disabled.
                      */
                     if (canonicalf2.exists()) {
-                    assertTrue("Test 5: Incorrect File Returned: "
+                    assertTrue("Test 5: Incorrect file returned: "
                             + canonicalf2, canonicalf2.compareTo(f
                             .getCanonicalFile()) == 0);
                     }
@@ -1009,19 +920,24 @@ public class FileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.File#getCanonicalPath()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException & SecurityException checking missed.",
-            targets = { @TestTarget(methodName = "getCanonicalPath", 
-                                    methodArgs = {})                         
-            }
-        )    
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "IOException not checked since it may only occur if" +
+                "the native access to the filesystem fails.",
+        method = "getCanonicalPath",
+        args = {}
+    )    
     public void test_getCanonicalPath() {
         // Test for method java.lang.String java.io.File.getCanonicalPath()
         // Should work for Unix/Windows.
         String dots = "..";
+        String expected;
+        String error;
+        String tmpDir = System.getProperty("java.io.tmpdir");
+        String oldUserDir = System.getProperty("user.dir");
+        System.setProperty("user.dir", tmpDir);
         try {
-            String base = new File(System.getProperty("user.dir")).getCanonicalPath();
+            String base = new File(tmpDir).getCanonicalPath();
             if (!base.regionMatches((base.length() - 1), slash, 0, 1))
                 base += slash;
             File f = new File(base, "temp.tst");
@@ -1050,75 +966,35 @@ public class FileTest extends junit.framework.TestCase {
             }
             f = new File(base + dirNumber + slash + dots + slash + dirNumber + slash
                     + "temp.tst");
-            // System.out.println(f.getCanonicalPath());
-            // System.out.println(userDir + dirNumber + slash + "temp.tst");
-            assertEquals("Test 3: Incorrect Path Returned.", base + dirNumber + slash
+            assertEquals("Test 3: Incorrect path returned.", base + dirNumber + slash
                     + "temp.tst", f.getCanonicalPath());
             f = new File(base + dirNumber + slash + "Temp" + slash + dots + slash + "Test"
                     + slash + "temp.tst");
-            assertEquals("Test 4: Incorrect Path Returned.", base + dirNumber + slash + "Test"
+            assertEquals("Test 4: Incorrect path returned.", base + dirNumber + slash + "Test"
                     + slash + "temp.tst", f.getCanonicalPath());
 
             f = new File("1234.567");
-            assertEquals("Test 5: Incorrect Path Returned.", base + "1234.567", f
-                    .getCanonicalPath());
+            expected = System.getProperty("user.dir") + "/1234.567";
+            error = String.format("Test 5: Incorrect path %s returned; %s expected.",
+                    f.getCanonicalPath(), expected);
+            assertTrue(error, f.getCanonicalPath().equals(expected));
 
-            // Test for long file names on Windows
-            boolean onWindows = (File.separatorChar == '\\');
-            if (onWindows) {
-                File testdir = new File(base, "long-" + platformId);
-                testdir.mkdir();
-                File f1 = new File(testdir, "longfilename" + platformId + ".tst");
-                FileOutputStream fos = new FileOutputStream(f1);
-                File f2 = null, f3 = null, dir2 = null;
-                try {
-                    fos.close();
-                    String dirName1 = f1.getCanonicalPath();
-                    File f4 = new File(testdir, "longfi~1.tst");
-                    /*
-                     * If the "short file name" doesn't exist, then assume that
-                     * the 8.3 file name compatibility is disabled.
-                     */
-                    if (f4.exists()) {
-                        String dirName2 = f4.getCanonicalPath();
-                        assertEquals("Test 6: Incorrect Path Returned.", dirName1, dirName2);
-                        dir2 = new File(testdir, "longdirectory" + platformId);
-                        if (!dir2.exists())
-                            assertTrue("Could not create dir: " + dir2, dir2.mkdir());
-                        f2 = new File(testdir.getPath() + slash + "longdirectory" + platformId
-                                + slash + "Test" + slash + dots + slash + "longfilename.tst");
-                        FileOutputStream fos2 = new FileOutputStream(f2);
-                        fos2.close();
-                        dirName1 = f2.getCanonicalPath();
-                        f3 = new File(testdir.getPath() + slash + "longdi~1" + slash + "Test"
-                                + slash + dots + slash + "longfi~1.tst");
-                        dirName2 = f3.getCanonicalPath();
-                        assertEquals("Test 7: Incorrect Path Returned.", dirName1, dirName2);
-                    }
-                } finally {
-                    f1.delete();
-                    if (f2 != null)
-                        f2.delete();
-                    if (dir2 != null)
-                        dir2.delete();
-                    testdir.delete();
-                }
-            }
         } catch (IOException e) {
             fail("Unexpected IOException During Test : " + e.getMessage());
+        } finally {
+            System.setProperty("user.dir", oldUserDir);
         }
     }
 
     /**
      * @tests java.io.File#getName()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies getName() method.",
-            targets = { @TestTarget(methodName = "getName", 
-                                    methodArgs = {})                         
-            }
-        )    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies getName() method.",
+        method = "getName",
+        args = {}
+    )    
     public void test_getName() {
         // Test for method java.lang.String java.io.File.getName()
         File f = new File("name.tst");
@@ -1134,20 +1010,23 @@ public class FileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.File#getParent()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies getParent() method.",
-            targets = { @TestTarget(methodName = "getParent", 
-                                    methodArgs = {})                         
-            }
-        )     
-    public void test_getParent() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies getParent() method.",
+        method = "getParent",
+        args = {}
+    )     
+    public void test_getParent() throws Exception {
         // Test for method java.lang.String java.io.File.getParent()
+        String dir = System.getProperty("java.io.tmpdir");
+        if (dir == null)
+            throw new Exception("System property java.io.tmpdir not defined.");
+
         File f = new File("p.tst");
-        assertNull("Incorrect path returned", f.getParent());
-        f = new File(System.getProperty("user.home"), "p.tst");
-        assertTrue("Incorrect path returned", f.getParent().equals(
-                System.getProperty("user.home")));
+        assertNull("Test 1: Incorrect path returned", f.getParent());
+        f = new File(dir, "p.tst");
+        assertTrue("Test 2: Incorrect path returned", 
+                   f.getParent().equals(dir));
         try {
             f.delete();
         } catch (Exception e) {
@@ -1186,23 +1065,22 @@ public class FileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.File#getParentFile()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies getParentFile() method.",
-            targets = { @TestTarget(methodName = "getParentFile", 
-                                    methodArgs = {})                         
-            }
-        )       
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies getParentFile() method.",
+        method = "getParentFile",
+        args = {}
+    )       
     public void test_getParentFile() {
         // Test for method java.io.File.getParentFile()
         File f = new File("tempfile.tst");
         assertNull("Incorrect path returned", f.getParentFile());
-        f = new File(System.getProperty("user.dir"), "tempfile1.tmp");
-        File f2 = new File(System.getProperty("user.dir"), "tempfile2.tmp");
-        File f3 = new File(System.getProperty("user.dir"), "/a/tempfile.tmp");
-        assertEquals("Incorrect File Returned", 0, f.getParentFile().compareTo(
+        f = new File(System.getProperty("java.io.tmpdir"), "tempfile1.tmp");
+        File f2 = new File(System.getProperty("java.io.tmpdir"), "tempfile2.tmp");
+        File f3 = new File(System.getProperty("java.io.tmpdir"), "/a/tempfile.tmp");
+        assertEquals("Incorrect file returned", 0, f.getParentFile().compareTo(
                 f2.getParentFile()));
-        assertTrue("Incorrect File Returned", f.getParentFile().compareTo(
+        assertTrue("Incorrect file returned", f.getParentFile().compareTo(
                 f3.getParentFile()) != 0);
         f.delete();
         f2.delete();
@@ -1212,15 +1090,14 @@ public class FileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.File#getPath()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies getPath() method.",
-            targets = { @TestTarget(methodName = "getPath", 
-                                    methodArgs = {})                         
-            }
-        )    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies getPath() method.",
+        method = "getPath",
+        args = {}
+    )    
     public void test_getPath() {
-        // Test for method java.lang.String java.io.File.getPath()
+        System.setProperty("user.home", System.getProperty("java.io.tmpdir"));
         String base = System.getProperty("user.home");
         String fname;
         File f1;
@@ -1250,13 +1127,12 @@ public class FileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.File#isAbsolute()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies isAbsolute() method.",
-            targets = { @TestTarget(methodName = "isAbsolute", 
-                                    methodArgs = {})                         
-            }
-        )      
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies isAbsolute() method.",
+        method = "isAbsolute",
+        args = {}
+    )      
     public void test_isAbsolute() {
         // Test for method boolean java.io.File.isAbsolute()
         if (File.separatorChar == '\\') {
@@ -1277,27 +1153,25 @@ public class FileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.File#isDirectory()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "SecurityException checking missed.",
-            targets = { @TestTarget(methodName = "isDirectory", 
-                                    methodArgs = {})                         
-            }
-        )     
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "isDirectory",
+        args = {}
+    )     
     public void test_isDirectory() {
         // Test for method boolean java.io.File.isDirectory()
 
-        String base = System.getProperty("user.dir");
+        String base = System.getProperty("java.io.tmpdir");
         if (!base.regionMatches((base.length() - 1), slash, 0, 1))
             base += slash;
         File f = new File(base);
-        assertTrue("Test 1: Directory Returned False", f.isDirectory());
+        assertTrue("Test 1: Directory returned false", f.isDirectory());
         f = new File(base + "zxzxzxz" + platformId);
-        assertTrue("Test 2: (Not Created) Directory Returned True.", !f
+        assertTrue("Test 2: (Not created) directory returned true.", !f
                 .isDirectory());
         f.mkdir();
         try {
-            assertTrue("Test 3: Directory Returned False.", f.isDirectory());
+            assertTrue("Test 3: Directory returned false.", f.isDirectory());
         } finally {
             f.delete();
         }
@@ -1306,23 +1180,21 @@ public class FileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.File#isFile()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "SecurityException checking missed.",
-            targets = { @TestTarget(methodName = "isFile", 
-                                    methodArgs = {})                         
-            }
-        )     
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "isFile",
+        args = {}
+    )     
     public void test_isFile() {
         // Test for method boolean java.io.File.isFile()
         try {
-            String base = System.getProperty("user.dir");
+            String base = System.getProperty("java.io.tmpdir");
             File f = new File(base);
-            assertTrue("Directory Returned True As Being A File.", !f.isFile());
+            assertTrue("Directory returned true as being a file.", !f.isFile());
             if (!base.regionMatches((base.length() - 1), slash, 0, 1))
                 base += slash;
             f = new File(base, platformId + "amiafile");
-            assertTrue("Non-existent File Returned True", !f.isFile());
+            assertTrue("Non-existent file returned true", !f.isFile());
             FileOutputStream fos = new FileOutputStream(f);
             fos.close();
             assertTrue("File returned false", f.isFile());
@@ -1335,22 +1207,21 @@ public class FileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.File#isHidden()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "SecurityException checking missed.",
-            targets = { @TestTarget(methodName = "isHidden", 
-                                    methodArgs = {})                         
-            }
-        )      
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "isHidden",
+        args = {}
+    )      
     public void test_isHidden() {
         // Test for method boolean java.io.File.isHidden()
         boolean onUnix = File.separatorChar == '/';
+        
         try {
             File f = File.createTempFile("hyts_", ".tmp");
             // On Unix hidden files are marked with a "." at the beginning
             // of the file name.
             if (onUnix) {
-                File f2 = new File(".test.tst" + platformId);
+                File f2 = new File(System.getProperty("java.io.tmpdir"), ".test.tst" + platformId);
                 FileOutputStream fos2 = new FileOutputStream(f2);
                 fos2.close();
                 assertTrue("File returned hidden on Unix", !f.isHidden());
@@ -1380,13 +1251,11 @@ public class FileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.File#lastModified()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "SecurityException checking missed.",
-            targets = { @TestTarget(methodName = "lastModified", 
-                                    methodArgs = {})                         
-            }
-        )      
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "lastModified",
+        args = {}
+    )      
     public void test_lastModified() {
         // Test for method long java.io.File.lastModified()
         try {
@@ -1415,19 +1284,17 @@ public class FileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.File#length()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "SecurityException checking missed.",
-            targets = { @TestTarget(methodName = "length", 
-                                    methodArgs = {})                         
-            }
-        )      
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "length",
+        args = {}
+    )      
     public void test_length() throws Exception {
         // Test for method long java.io.File.length()
         try {
-            File f = new File(System.getProperty("user.dir"), platformId
+            File f = new File(System.getProperty("java.io.tmpdir"), platformId
                     + "input.tst");
-            assertEquals("File Length Should Have Returned 0.", 0, f.length());
+            assertEquals("File length should have returned 0.", 0, f.length());
             FileOutputStream fos = new FileOutputStream(f);
             fos.write(fileString.getBytes());
             fos.close();
@@ -1439,7 +1306,7 @@ public class FileTest extends junit.framework.TestCase {
         }
         
         // regression test for Harmony-1497
-        File f = File.createTempFile("test", "tmp");
+        File f = File.createTempFile("cts", ".tmp");
         f.deleteOnExit();
         RandomAccessFile raf = new RandomAccessFile(f, "rwd");
         raf.write(0x41);
@@ -1449,17 +1316,15 @@ public class FileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.File#list()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "SecurityException checking missed.",
-            targets = { @TestTarget(methodName = "list", 
-                                    methodArgs = {})                         
-            }
-        )         
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "list",
+        args = {}
+    )         
     public void test_list() {
         // Test for method java.lang.String [] java.io.File.list()
 
-        String base = System.getProperty("user.dir");
+        String base = System.getProperty("java.io.tmpdir");
         // Old test left behind "garbage files" so this time it creates a
         // directory
         // that is guaranteed not to already exist (and deletes it afterward.)
@@ -1556,18 +1421,16 @@ public class FileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.File#listFiles()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "SecurityException checking missed.",
-            targets = { @TestTarget(methodName = "listFiles", 
-                                    methodArgs = {})                         
-            }
-        )         
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "listFiles",
+        args = {}
+    )         
     public void test_listFiles() {
         // Test for method java.io.File.listFiles()
 
         try {
-            String base = System.getProperty("user.dir");
+            String base = System.getProperty("java.io.tmpdir");
             // Finding a non-existent directory to create.
             int dirNumber = 1;
             boolean dirExists = true;
@@ -1692,13 +1555,11 @@ public class FileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.File#listFiles(java.io.FileFilter)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "SecurityException checking missed.",
-            targets = { @TestTarget(methodName = "listFiles", 
-                                    methodArgs = {java.io.FileFilter.class})                         
-            }
-        )      
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "listFiles",
+        args = {java.io.FileFilter.class}
+    )      
     public void test_listFilesLjava_io_FileFilter() {
         // Test for method java.io.File.listFiles(File Filter filter)
         
@@ -1829,13 +1690,11 @@ public class FileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.File#listFiles(java.io.FilenameFilter)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "SecurityException checking missed.",
-            targets = { @TestTarget(methodName = "listFiles", 
-                                    methodArgs = {java.io.FilenameFilter.class})                         
-            }
-        )      
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "listFiles",
+        args = {java.io.FilenameFilter.class}
+    )      
     public void test_listFilesLjava_io_FilenameFilter() {
         // Test for method java.io.File.listFiles(FilenameFilter filter)
 
@@ -1942,18 +1801,16 @@ public class FileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.File#list(java.io.FilenameFilter)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "SecurityException checking missed.",
-            targets = { @TestTarget(methodName = "list", 
-                                    methodArgs = {java.io.FilenameFilter.class})                         
-            }
-        )      
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "list",
+        args = {java.io.FilenameFilter.class}
+    )      
     public void test_listLjava_io_FilenameFilter() {
         // Test for method java.lang.String []
         // java.io.File.list(java.io.FilenameFilter)
 
-        String base = System.getProperty("user.dir");
+        String base = System.getProperty("java.io.tmpdir");
         // Old test left behind "garbage files" so this time it creates a
         // directory
         // that is guaranteed not to already exist (and deletes it afterward.)
@@ -2056,13 +1913,12 @@ public class FileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.File#listRoots()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies listRoots() method.",
-            targets = { @TestTarget(methodName = "listRoots", 
-                                    methodArgs = {})                         
-            }
-        )     
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies listRoots() method.",
+        method = "listRoots",
+        args = {}
+    )     
     public void test_listRoots() {
         // Test for method java.io.File.listRoots()
 
@@ -2085,17 +1941,15 @@ public class FileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.File#mkdir()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "SecurityException checking missed.",
-            targets = { @TestTarget(methodName = "mkdir", 
-                                    methodArgs = {})                         
-            }
-        )     
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "mkdir",
+        args = {}
+    )     
     public void test_mkdir() throws IOException {
         // Test for method boolean java.io.File.mkdir()
 
-        String base = System.getProperty("user.dir");
+        String base = System.getProperty("java.io.tmpdir");
         // Old test left behind "garbage files" so this time it creates a
         // directory
         // that is guaranteed not to already exist (and deletes it afterward.)
@@ -2147,17 +2001,15 @@ public class FileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.File#mkdirs()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "SecurityException checking missed.",
-            targets = { @TestTarget(methodName = "mkdirs", 
-                                    methodArgs = {})                         
-            }
-        )     
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "mkdirs",
+        args = {}
+    )     
     public void test_mkdirs() {
         // Test for method boolean java.io.File.mkdirs()
 
-        String userHome = System.getProperty("user.dir");
+        String userHome = System.getProperty("java.io.tmpdir");
         if (!userHome.endsWith(slash))
             userHome += slash;
         File f = new File(userHome + "mdtest" + platformId + slash + "mdtest2",
@@ -2179,16 +2031,14 @@ public class FileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.File#renameTo(java.io.File)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "NullPointerException & SecurityException checking missed.",
-            targets = { @TestTarget(methodName = "renameTo", 
-                                    methodArgs = {java.io.File.class})                         
-            }
-        )     
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "renameTo",
+        args = {java.io.File.class}
+    )     
     public void test_renameToLjava_io_File() {
         // Test for method boolean java.io.File.renameTo(java.io.File)
-        String base = System.getProperty("user.dir");
+        String base = System.getProperty("java.io.tmpdir");
         File dir = new File(base, platformId);
         dir.mkdir();
         File f = new File(dir, "xxx.xxx");
@@ -2201,18 +2051,25 @@ public class FileTest extends junit.framework.TestCase {
             long lengthOfFile = f.length();
 
             rfile.delete(); // in case it already exists
+            
+            try {
+                f.renameTo(null);
+                fail("Test 1: NullPointerException expected.");
+            } catch (NullPointerException e) {
+                // Expected.
+            }
 
-            assertTrue("Test 1: File Rename Failed", f.renameTo(rfile));
-            assertTrue("Test 2: File Rename Failed.", rfile.exists());
-            assertTrue("Test 3: Size Of File Changed.",
+            assertTrue("Test 2: File rename failed.", f.renameTo(rfile));
+            assertTrue("Test 3: File rename failed.", rfile.exists());
+            assertTrue("Test 4: Size Of File Changed.",
                     rfile.length() == lengthOfFile);
 
             fos = new FileOutputStream(rfile);
             fos.close();
 
             f2.delete(); // in case it already exists
-            assertTrue("Test 4: File Rename Failed", rfile.renameTo(f2));
-            assertTrue("Test 5: File Rename Failed.", f2.exists());
+            assertTrue("Test 5: File rename failed.", rfile.renameTo(f2));
+            assertTrue("Test 6: File rename failed.", f2.exists());
         } catch (IOException e) {
             fail("Unexpected IOException during test : " + e.getMessage());
         } finally {
@@ -2226,21 +2083,19 @@ public class FileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.File#setLastModified(long)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "SecurityException checking missed.",
-            targets = { @TestTarget(methodName = "setLastModified", 
-                                    methodArgs = {long.class})                         
-            }
-        )      
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "setLastModified",
+        args = {long.class}
+    )      
     public void test_setLastModifiedJ() {
         // Test for method java.io.File.setLastModified()
         File f1 = null;
         try {
             // f1 = File.createTempFile("hyts_tf" , ".tmp");
             // jclRM does not include File.createTempFile
-            f1 = new File(Support_PlatformFile.getNewPlatformFile(
-                    "hyts_tf_slm", ".tmp"));
+            f1 = new File(System.getProperty("java.io.tmpdir"), 
+                          platformId + "hyts_tf_slm.tst");            
             f1.createNewFile();
             long orgTime = f1.lastModified();
             // Subtracting 100 000 milliseconds from the orgTime of File f1
@@ -2281,7 +2136,7 @@ public class FileTest extends junit.framework.TestCase {
             // Trying to set time to a negative number
             try {
                 f1.setLastModified(-25);
-                fail("IllegalArgumentException Not Thrown.");
+                fail("IllegalArgumentException not thrown.");
             } catch (IllegalArgumentException e) {
             }
         } catch (IOException e) {
@@ -2295,54 +2150,58 @@ public class FileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.File#setReadOnly()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "SecurityException checking missed.",
-            targets = { @TestTarget(methodName = "setReadOnly", 
-                                    methodArgs = {})                         
-            }
-        )    
+    @TestTargets({
+        @TestTargetNew(
+                level = TestLevel.PARTIAL_COMPLETE,
+                method = "setReadOnly",
+                args = {}
+        ),
+        @TestTargetNew(
+                level = TestLevel.PARTIAL_COMPLETE,
+                method = "canWrite",
+                args = {}
+        )
+    })
+    @KnownFailure("canWrite() returns true even when a file is marked " +
+            "read-only (Test 2). It is also possible to open this file " +
+            "for writing (Test 3).")
     public void test_setReadOnly() {
         // Test for method java.io.File.setReadOnly()
 
         File f1 = null;
         File f2 = null;
+        Runtime r = Runtime.getRuntime();
+        Process p;
         try {
             f1 = File.createTempFile("hyts_tf", ".tmp");
             f2 = File.createTempFile("hyts_tf", ".tmp");
-            // Assert is flawed because canWrite does not work.
-            // assertTrue("File f1 Is Set To ReadOnly." , f1.canWrite());
+            
+            assertTrue("Test 1: File is read-only." , f1.canWrite());
             f1.setReadOnly();
-            // Assert is flawed because canWrite does not work.
-            // assertTrue("File f1 Is Not Set To ReadOnly." , !f1.canWrite());
+            assertTrue("Test 2: File is not read-only." , !f1.canWrite());
+            
             try {
-                // Attempt to write to a file that is setReadOnly.
+                // Attempt to write to a file that is read-only.
                 new FileOutputStream(f1);
-                fail("IOException not thrown.");
+                fail("Test 3: IOException expected.");
             } catch (IOException e) {
+                // Expected.
             }
-            Runtime r = Runtime.getRuntime();
-            Process p;
-            boolean onUnix = File.separatorChar == '/';
-            if (onUnix)
-                p = r.exec("chmod +w " + f1.getAbsolutePath());
-            else
-                p = r.exec("attrib -r \"" + f1.getAbsolutePath() + "\"");
+            p = r.exec("chmod +w " + f1.getAbsolutePath());
             p.waitFor();
-            // Assert is flawed because canWrite does not work.
-            // assertTrue("File f1 Is Set To ReadOnly." , f1.canWrite());
+
+            assertTrue("Test 4: File is read-only." , f1.canWrite());
             try {
                 FileOutputStream fos = new FileOutputStream(f1);
                 fos.write(fileString.getBytes());
                 fos.close();
-                assertTrue("File Was Not Able To Be Written To.",
+                assertTrue("Test 5: Unable to write to the file.",
                         f1.length() == fileString.length());
             } catch (IOException e) {
-                fail(
-                        "Test 1: Unexpected IOException While Attempting To Write To File."
-                                + e);
+                fail("Test 6: Unexpected IOException while attempting to " +
+                        "write to the file. " + e);
             }
-            assertTrue("File f1 Did Not Delete", f1.delete());
+            assertTrue("Test 7: File has not been deleted.", f1.delete());
 
             // Assert is flawed because canWrite does not work.
             // assertTrue("File f2 Is Set To ReadOnly." , f2.canWrite());
@@ -2358,38 +2217,35 @@ public class FileTest extends junit.framework.TestCase {
                 // to.
                 // and is now set to read only.
                 fos = new FileOutputStream(f2);
-                fail("IOException not thrown.");
+                fail("Test 8: IOException expected.");
             } catch (IOException e) {
             }
-            r = Runtime.getRuntime();
-            if (onUnix)
-                p = r.exec("chmod +w " + f2.getAbsolutePath());
-            else
-                p = r.exec("attrib -r \"" + f2.getAbsolutePath() + "\"");
+            p = r.exec("chmod +w " + f2.getAbsolutePath());
             p.waitFor();
-            assertTrue("File f2 Is Set To ReadOnly.", f2.canWrite());
+            assertTrue("Test 9: File is read-only.", f2.canWrite());
             try {
                 fos = new FileOutputStream(f2);
                 fos.write(fileString.getBytes());
                 fos.close();
             } catch (IOException e) {
-                fail(
-                        "Test 2: Unexpected IOException While Attempting To Write To File."
-                                + e);
+                fail("Test 10: Unexpected IOException while attempting to " +
+                        "write to the file. " + e);
             }
             f2.setReadOnly();
-            assertTrue("File f2 Did Not Delete", f2.delete());
+            assertTrue("Test 11: File has not been deleted.", f2.delete());
             // Similarly, trying to delete a read-only directory should succeed
-            f2 = new File(System.getProperty("user.dir"), "deltestdir");
+            f2 = new File(System.getProperty("java.io.tmpdir"), "deltestdir");
             f2.mkdir();
             f2.setReadOnly();
-            assertTrue("Directory f2 Did Not Delete", f2.delete());
-            assertTrue("Directory f2 Did Not Delete", !f2.exists());
+            assertTrue("Test 12: Directory has not been deleted.", 
+                    f2.delete());
+            assertTrue("Test 13: Directory has not been deleted.", 
+                    ! f2.exists());
 
         } catch (IOException e) {
-            fail("Unexpected IOException during test : " + e.getMessage());
+            fail("Test 14: Unexpected IOException: " + e.getMessage());
         } catch (InterruptedException e) {
-            fail("Unexpected InterruptedException During Test." + e);
+            fail("Test 15: Unexpected InterruptedException: " + e);
         } finally {
             if (f1 != null)
                 f1.delete();
@@ -2401,16 +2257,15 @@ public class FileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.File#toString()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies toString() method.",
-            targets = { @TestTarget(methodName = "toString", 
-                                    methodArgs = {})                         
-            }
-        )
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies toString() method.",
+        method = "toString",
+        args = {}
+    )
     public void test_toString() {
         // Test for method java.lang.String java.io.File.toString()
-        String fileName = System.getProperty("user.home") + slash + "input.tst";
+        String fileName = System.getProperty("java.io.tmpdir") + slash + "input.tst";
         File f = new File(fileName);
         assertTrue("Incorrect string returned", f.toString().equals(fileName));
 
@@ -2423,18 +2278,17 @@ public class FileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.File#toURI()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies toURI() method.",
-            targets = { @TestTarget(methodName = "toURI", 
-                                    methodArgs = {})                         
-            }
-        )    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies toURI() method.",
+        method = "toURI",
+        args = {}
+    )    
     public void test_toURI() {
         // Test for method java.io.File.toURI()
         try {
             // Need a directory that exists
-            File dir = new File(System.getProperty("user.dir"));
+            File dir = new File(System.getProperty("java.io.tmpdir"));
 
             // Test for toURI when the file is a directory.
             String newURIPath = dir.getAbsolutePath();
@@ -2474,71 +2328,17 @@ public class FileTest extends junit.framework.TestCase {
     }
 
     /**
-     * @tests java.io.File#toURL()
-     */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "MalformedURLException checking missed.",
-            targets = { @TestTarget(methodName = "toURL", 
-                                    methodArgs = {})                         
-            }
-        )    
-    public void test_toURL() {
-        // Test for method java.io.File.toURL()
-
-        try {
-            // Need a directory that exists
-            File dir = new File(System.getProperty("user.dir"));
-
-            // Test for toURL when the file is a directory.
-            String newDirURL = dir.getAbsolutePath();
-            newDirURL = newDirURL.replace(File.separatorChar, '/');
-            if (newDirURL.startsWith("/"))
-                newDirURL = "file:" + newDirURL;
-            else
-                newDirURL = "file:/" + newDirURL;
-            if (!newDirURL.endsWith("/"))
-                newDirURL += '/';
-            assertTrue("Test 1: Incorrect URL Returned.", newDirURL.equals(dir
-                    .toURL().toString()));
-
-            // Test for toURL with a file.
-            File f = new File(dir, "test.tst");
-            String newURL = f.getAbsolutePath();
-            newURL = newURL.replace(File.separatorChar, '/');
-            if (newURL.startsWith("/"))
-                newURL = "file:" + newURL;
-            else
-                newURL = "file:/" + newURL;
-            assertTrue("Test 2: Incorrect URL Returned.", newURL.equals(f
-                    .toURL().toString()));
-
-            // Regression test for HARMONY-3207
-            dir = new File(""); // current directory
-            newDirURL = dir.toURL().toString();
-            assertTrue("Test current dir: URL does not end with slash.",
-                    newDirURL.endsWith("/"));
-        } catch (java.net.MalformedURLException e) {
-            fail(
-                    "Unexpected java.net.MalformedURLException During Test.");
-        }
-
-    }
-
-    /**
      * @tests java.io.File#toURI()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "Verifies that toURI() method works with URIs " +
-                    "created with null parameters.",
-            targets = { @TestTarget(methodName = "toURI", 
-                                    methodArgs = {})                         
-            }
-        )
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies that toURI() method works with URIs created with null parameters.",
+        method = "toURI",
+        args = {}
+    )
     public void test_toURI2() {
 
-        File f = new File(System.getProperty("user.dir"), "a/b/c/../d/e/./f");
+        File f = new File(System.getProperty("ctsdir"), "a/b/c/../d/e/./f");
 
         String path = f.getAbsolutePath();
         path = path.replace(File.separatorChar, '/');
@@ -2557,17 +2357,56 @@ public class FileTest extends junit.framework.TestCase {
     /**
      * @tests java.io.File#toURL()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "MalformedURLException checking missed.",
-            targets = { @TestTarget(methodName = "toURL", 
-                                    methodArgs = {})                         
-            }
-        )    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "toURL",
+        args = {}
+    )
+    public void test_toURL() {
+        // Test for method java.io.File.toURL()
 
+        try {
+            // Need a directory that exists
+            File dir = new File(System.getProperty("java.io.tmpdir"));
+
+            // Test for toURL when the file is a directory.
+            String newDirURL = dir.getAbsolutePath();
+            newDirURL = newDirURL.replace(File.separatorChar, '/');
+            if (newDirURL.startsWith("/"))
+                newDirURL = "file:" + newDirURL;
+            else
+                newDirURL = "file:/" + newDirURL;
+            if (!newDirURL.endsWith("/"))
+                newDirURL += '/';
+            assertEquals("Test 1: Incorrect URL returned;", newDirURL,
+                    dir.toURL().toString());
+
+            // Test for toURL with a file.
+            File f = new File(dir, "test.tst");
+            String newURL = f.getAbsolutePath();
+            newURL = newURL.replace(File.separatorChar, '/');
+            if (newURL.startsWith("/"))
+                newURL = "file:" + newURL;
+            else
+                newURL = "file:/" + newURL;
+            assertEquals("Test 2: Incorrect URL returned;", newURL, 
+                    f.toURL().toString());
+        } catch (java.net.MalformedURLException e) {
+            fail("Unexpected java.net.MalformedURLException during test.");
+        }
+    }
+
+    /**
+     * @tests java.io.File#toURL()
+     */
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "toURL",
+        args = {}
+    )    
     public void test_toURL2() {
 
-        File f = new File(System.getProperty("user.dir"), "a/b/c/../d/e/./f");
+        File f = new File(System.getProperty("java.io.tmpdir"), "a/b/c/../d/e/./f");
 
         String path = f.getAbsolutePath();
         path = path.replace(File.separatorChar, '/');
@@ -2582,22 +2421,40 @@ public class FileTest extends junit.framework.TestCase {
             fail("Unexpected MalformedURLException," + e);
         }
     }
-    
+
+    /**
+     * @tests java.io.File#toURL()
+     */
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "toURL",
+        args = {}
+    )
+    @AndroidOnly("Incorrectly fails on the RI.")
+    public void test_toURL3() throws MalformedURLException {
+        File dir = new File(""); // current directory
+        String newDirURL = dir.toURL().toString();
+        assertTrue("Test 1: URL does not end with slash.",
+                newDirURL.endsWith("/"));
+    }
+
     /**
      * @tests java.io.File#deleteOnExit()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "SecurityException checking missed.",
-            targets = { @TestTarget(methodName = "deleteOnExit", 
-                                    methodArgs = {})                         
-            }
-        )    
-    public void _test_deleteOnExit() throws IOException, InterruptedException {
-        File dir = new File("dir4filetest");
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "deleteOnExit",
+        args = {}
+    )
+    @AndroidOnly("This test only runs on Android because it instantiates " +
+            "a second Dalvik VM.")
+    public void test_deleteOnExit() throws IOException, InterruptedException {
+        String cts = System.getProperty("java.io.tmpdir");
+        File dir = new File(cts + "/hello");
         dir.mkdir();
         assertTrue(dir.exists());
-        File subDir = new File("dir4filetest/subdir");
+        File subDir = new File(cts + "/hello/world");
         subDir.mkdir();
         assertTrue(subDir.exists());
 
@@ -2605,6 +2462,7 @@ public class FileTest extends junit.framework.TestCase {
                 "tests.support.Support_DeleteOnExitTest",
                 dir.getAbsolutePath(), subDir.getAbsolutePath() },
                 new String[] {}, false);
+        Thread.sleep(2000);
         assertFalse(dir.exists());
         assertFalse(subDir.exists());
     }
@@ -2612,13 +2470,12 @@ public class FileTest extends junit.framework.TestCase {
     /**
      * @tests serialization
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "regression test",
-            targets = { @TestTarget(methodName = "!Serialization", 
-                                    methodArgs = {})                         
-            }
-        )     
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "regression test",
+        method = "!Serialization",
+        args = {}
+    )     
     public void test_objectStreamClass_getFields() throws Exception {
         //Regression for HARMONY-2674
         ObjectStreamClass objectStreamClass = ObjectStreamClass
@@ -2634,17 +2491,20 @@ public class FileTest extends junit.framework.TestCase {
      * Sets up the fixture, for example, open a network connection. This method
      * is called before a test is executed.
      */
-    protected void setUp() {
-        /** Setup the temporary directory */
-        String userDir = System.getProperty("user.dir");
+    protected void setUp() throws Exception {
+        // Make sure that system properties are set correctly
+        String userDir = System.getProperty("java.io.tmpdir");
         if (userDir == null)
-            userDir = "j:\\jcl-builddir\\temp\\source";
+            throw new Exception("System property java.io.tmpdir not defined.");
+        System.setProperty("java.io.tmpdir", userDir);
+
+        /** Setup the temporary directory */
         if (!userDir.regionMatches((userDir.length() - 1), slash, 0, 1))
             userDir += slash;
         tempDirectory = new File(userDir + "tempDir"
                 + String.valueOf(System.currentTimeMillis()));
         if (!tempDirectory.mkdir())
-            System.out.println("Setup for FileTest failed.");
+            System.out.println("Setup for FileTest failed (1).");
 
         /** Setup the temporary file */
         tempFile = new File(tempDirectory, "tempfile");
@@ -2653,7 +2513,7 @@ public class FileTest extends junit.framework.TestCase {
             tempStream = new FileOutputStream(tempFile.getPath(), false);
             tempStream.close();
         } catch (IOException e) {
-            System.out.println("Setup for FileTest failed.");
+            System.out.println("Setup for FileTest failed (2).");
             return;
         }
     }

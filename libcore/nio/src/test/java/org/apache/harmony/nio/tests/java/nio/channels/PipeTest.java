@@ -16,8 +16,7 @@
 
 package org.apache.harmony.nio.tests.java.nio.channels;
 
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
 
@@ -27,7 +26,16 @@ import java.nio.channels.Pipe.SinkChannel;
 import java.nio.channels.Pipe.SourceChannel;
 
 import junit.framework.TestCase;
-@TestTargetClass(Pipe.class)
+@TestTargetClass(
+    value = Pipe.class,
+    untestedMethods = {
+        @TestTargetNew(
+            level = TestLevel.NOT_NECESSARY,
+            method = "Pipe",
+            args = {}
+        )
+    }
+)
 /*
  * Tests for Pipe and its default implementation
  */
@@ -36,15 +44,12 @@ public class PipeTest extends TestCase {
     /**
      * @tests java.nio.channels.Pipe#open()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "open",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "open",
+        args = {}
+    )
     public void test_open() throws IOException{
         Pipe pipe = Pipe.open();
         assertNotNull(pipe);
@@ -53,15 +58,12 @@ public class PipeTest extends TestCase {
     /**
      * @tests java.nio.channels.Pipe#sink()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "sink",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "sink",
+        args = {}
+    )
     public void test_sink() throws IOException {
         Pipe pipe = Pipe.open();
         SinkChannel sink = pipe.sink();
@@ -71,19 +73,15 @@ public class PipeTest extends TestCase {
     /**
      * @tests java.nio.channels.Pipe#source()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "source",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "source",
+        args = {}
+    )
     public void test_source() throws IOException {
         Pipe pipe = Pipe.open();
         SourceChannel source = pipe.source();
         assertTrue(source.isBlocking());
     }
-
 }

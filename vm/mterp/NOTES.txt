@@ -1,0 +1,37 @@
+Interpreter Notes
+
+
+==== Thread suspension and GC points ====
+
+The interpreter is expected to use a safe-point mechanism to allow thread
+suspension for garbage collection and the debugger.  This typically
+means an explicit check of the thread-suspend flag on backward branches
+(including self-branches on certain instructions), exception throws,
+and method returns.  The interpreter must also be prepared to switch in
+and out of the "debug" interpreter at these points.
+
+There are other ways for a thread to be stopped when a GC happens, notably:
+
+ - object allocation (either while executing an instruction that performs
+   allocation, or indirectly by allocating an exception when something
+   goes wrong)
+ - transitions to native code or indefinite wait (e.g. monitor-enter)
+
+(A debugger can in theory cause the interpreter to advance one instruction
+at a time, but since that only happens in the "debug" interpreter it's not
+necessary for authors of platform-specific code to worry about it.)
+
+For the most part the implementation does not need to worry about these
+things, but they matter when considering the contents of Dalvik's virtual
+registers for "precise" garbage collection.  So, all opcode handlers must
+follow this rule:
+
+ * Do not modify the contents of a virtual register before executing
+   code that can pause the thread.
+
+This should be fairly hard to violate given the nature of essentially all
+instructions, which will compute a result and then finish by storing that
+result into the specified destination register.  Using a virtual register
+to hold a partial or temporary result is not allowed.  Virtual registers
+must not be modified if we abort the instruction with an exception.
+

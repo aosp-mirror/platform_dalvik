@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,30 +16,28 @@
 
 package org.apache.harmony.security.tests.java.security;
 
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.BrokenTest;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.security.InvalidKeyException;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.Provider;
-import java.security.Security;
-import java.security.cert.CertificateException;
-import java.security.spec.InvalidKeySpecException;
-import java.util.Enumeration;
+import junit.framework.TestCase;
 
 import org.apache.harmony.security.tests.support.KeyStoreTestSupport;
 import org.apache.harmony.security.tests.support.tmpCallbackHandler;
 
-import junit.framework.TestCase;
-@TestTargetClass(KeyStore.class)
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.Provider;
+import java.security.Security;
+import java.security.cert.CertificateException;
+import java.util.Enumeration;
+@TestTargetClass(KeyStore.Builder.class)
 public class KeyStoreBuilderTest extends TestCase {
 
     protected void setUp() throws Exception {
@@ -77,18 +75,34 @@ public class KeyStoreBuilderTest extends TestCase {
     /*
      * test for constructor KeyStoreBuilder
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "KeyStoreBuilder",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "Builder",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getKeyStore",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getProtectionParameter",
+            args = {java.lang.String.class}
         )
     })
     public void testConstructor() {
+        KeyStoreBuilder ksb;
         try {
-            new KeyStoreBuilder();
+            ksb = new KeyStoreBuilder();
+            assertNotNull(ksb);
+            
+            ksb.getKeyStore();
+            ksb.getProtectionParameter("test");
         } catch (Exception e) {
             fail("Unexpected exception " + e.getMessage());
         }
@@ -97,18 +111,15 @@ public class KeyStoreBuilderTest extends TestCase {
     /*
      * test for method newInstance(KeyStore, KeyStore.ProtectionParameter) 
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "newInstance",
-          methodArgs = {java.security.KeyStore.class, java.security.KeyStore.ProtectionParameter.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "newInstance",
+        args = {java.security.KeyStore.class, java.security.KeyStore.ProtectionParameter.class}
+    )
     public void testNewInstanceKeyStoreProtectionParameter()
             throws KeyStoreException, NoSuchAlgorithmException, IOException,
-            CertificateException, InvalidKeyException, InvalidKeySpecException {
+            CertificateException {
         // exceptions verification
         
         try {
@@ -222,16 +233,14 @@ public class KeyStoreBuilderTest extends TestCase {
      * ProtectionParameter which is used in newInstance(...)
      * 
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "newInstance",
-          methodArgs = {String.class, java.security.Provider.class, java.io.File.class, java.security.KeyStore.ProtectionParameter.class}
-        )
-    })
-    public void _testNewInstanceStringProviderFileProtectionParameter()
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "newInstance",
+        args = {java.lang.String.class, java.security.Provider.class, java.io.File.class, java.security.KeyStore.ProtectionParameter.class}
+    )
+    @BrokenTest("different tests are not performed in the loop")
+    public void testNewInstanceStringProviderFileProtectionParameter()
             throws Exception {
         
         File fl = File.createTempFile("KSBuilder_ImplTest", "keystore");
@@ -334,11 +343,11 @@ public class KeyStoreBuilderTest extends TestCase {
                 fail("Unexpected KeyException was thrown");
             }
             assertEquals("Incorrect KeyStore size", ks.size(), ks1.size());
-            Enumeration iter = ks.aliases();
+            Enumeration<String> iter = ks.aliases();
             String aName;
 
             while (iter.hasMoreElements()) {
-                aName = (String) iter.nextElement();
+                aName = iter.nextElement();
                 try {
                     assertEquals("Incorrect ProtectionParameter", ksB
                             .getProtectionParameter(aName), pp[i]);
@@ -357,7 +366,7 @@ public class KeyStoreBuilderTest extends TestCase {
 
             iter = ks1.aliases();
             while (iter.hasMoreElements()) {
-                aName = (String) iter.nextElement();
+                aName = iter.nextElement();
                 assertEquals("Incorrect ProtectionParameter", ksB1
                         .getProtectionParameter(aName), pp[i]);
             }
@@ -383,15 +392,12 @@ public class KeyStoreBuilderTest extends TestCase {
      * when alias is not available
      * 
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "newInstance",
-                methodArgs = {String.class, java.security.Provider.class, java.security.KeyStore.ProtectionParameter.class}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "newInstance",
+        args = {java.lang.String.class, java.security.Provider.class, java.security.KeyStore.ProtectionParameter.class}
+    )
     public void testNewInstanceStringProviderProtectionParameter()
             throws KeyStoreException {
         
@@ -525,30 +531,6 @@ public class KeyStoreBuilderTest extends TestCase {
         return ff;
     }
 
-    private static class tmpPrivateKey implements PrivateKey {
-        private String alg = "My algorithm";
-
-        public String getAlgorithm() {
-            return alg;
-        }
-
-        public String getFormat() {
-            return "My Format";
-        }
-
-        public byte[] getEncoded() {
-            return new byte[1];
-        }
-
-        public tmpPrivateKey() {
-        }
-
-        public tmpPrivateKey(String algorithm) {
-            super();
-            alg = algorithm;
-        }
-    }
-    
     class KeyStoreBuilder extends KeyStore.Builder {
         public KeyStoreBuilder() {
             super();

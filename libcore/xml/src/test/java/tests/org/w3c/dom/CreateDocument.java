@@ -21,9 +21,9 @@
 
 package tests.org.w3c.dom;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import java.util.ArrayList;
@@ -86,15 +86,12 @@ public final class CreateDocument extends DOMTestCase {
      * @throws Throwable
      *             Any uncaught exception causes test to fail
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify null as parameters.",
-      targets = {
-        @TestTarget(
-          methodName = "createDocument",
-          methodArgs = {java.lang.String.class, java.lang.String.class, org.w3c.dom.DocumentType.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Doesn't verify null as parameters.",
+        method = "createDocument",
+        args = {java.lang.String.class, java.lang.String.class, org.w3c.dom.DocumentType.class}
+    )
     public void testCreateDocument1() throws Throwable {
         String namespaceURI = "http://www.ecommerce.org/";
         String malformedName = "prefix::local";
@@ -115,15 +112,12 @@ public final class CreateDocument extends DOMTestCase {
         assertTrue("throw_NAMESPACE_ERR", success);
 
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify null as parameters.",
-      targets = {
-        @TestTarget(
-          methodName = "createDocument",
-          methodArgs = {java.lang.String.class, java.lang.String.class, org.w3c.dom.DocumentType.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Doesn't verify null as parameters.",
+        method = "createDocument",
+        args = {java.lang.String.class, java.lang.String.class, org.w3c.dom.DocumentType.class}
+    )
     public void testCreateDocument2() throws Throwable {
         String namespaceURI = null;
 
@@ -189,15 +183,12 @@ public final class CreateDocument extends DOMTestCase {
 //        assertTrue("throw_WRONG_DOCUMENT_ERR", success);
 //
 //    }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify null as parameters.",
-      targets = {
-        @TestTarget(
-          methodName = "createDocument",
-          methodArgs = {java.lang.String.class, java.lang.String.class, org.w3c.dom.DocumentType.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Doesn't verify null as parameters.",
+        method = "createDocument",
+        args = {java.lang.String.class, java.lang.String.class, org.w3c.dom.DocumentType.class}
+    )
     public void testCreateDocument5() throws Throwable {
         String namespaceURI = "http://www.ecommerce.org/schema";
         String qualifiedName;
@@ -250,15 +241,12 @@ public final class CreateDocument extends DOMTestCase {
 
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify null as parameters.",
-      targets = {
-        @TestTarget(
-          methodName = "createDocument",
-          methodArgs = {java.lang.String.class, java.lang.String.class, org.w3c.dom.DocumentType.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Doesn't verify null as parameters.",
+        method = "createDocument",
+        args = {java.lang.String.class, java.lang.String.class, org.w3c.dom.DocumentType.class}
+    )
     public void testCreateDocument6() throws Throwable {
         String namespaceURI = "http://ecommerce.org/schema";
         String qualifiedName = "xml:local";
@@ -279,15 +267,12 @@ public final class CreateDocument extends DOMTestCase {
         assertTrue("throw_NAMESPACE_ERR", success);
 
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify null as parameters.",
-      targets = {
-        @TestTarget(
-          methodName = "createDocument",
-          methodArgs = {java.lang.String.class, java.lang.String.class, org.w3c.dom.DocumentType.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Doesn't verify null as parameters.",
+        method = "createDocument",
+        args = {java.lang.String.class, java.lang.String.class, org.w3c.dom.DocumentType.class}
+    )
     public void testCreateDocument7() throws Throwable {
         String namespaceURI = "http://www.ecommerce.org/schema";
         String qualifiedName = "y:x";
@@ -306,15 +291,12 @@ public final class CreateDocument extends DOMTestCase {
         assertEquals("nodeName", "#document", nodeName);
         assertNull("nodeValue", nodeValue);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify null as parameters.",
-      targets = {
-        @TestTarget(
-          methodName = "createDocument",
-          methodArgs = {java.lang.String.class, java.lang.String.class, org.w3c.dom.DocumentType.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Doesn't verify null as parameters.",
+        method = "createDocument",
+        args = {java.lang.String.class, java.lang.String.class, org.w3c.dom.DocumentType.class}
+    )
     public void testCreateDocument8() throws Throwable {
         String namespaceURI = "http://www.example.org/schema";
         DocumentType docType = null;

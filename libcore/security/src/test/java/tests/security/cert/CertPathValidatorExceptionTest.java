@@ -22,9 +22,9 @@
 
 package tests.security.cert;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -69,15 +69,12 @@ public class CertPathValidatorExceptionTest extends TestCase {
      * Test for <code>CertPathValidatorException()</code> constructor
      * Assertion: constructs CertPathValidatorException with no detail message
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "CertPathValidatorException",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "CertPathValidatorException",
+        args = {}
+    )
     public void testCertPathValidatorException01() {
         CertPathValidatorException tE = new CertPathValidatorException();
         assertNull("getMessage() must return null.", tE.getMessage());
@@ -89,15 +86,12 @@ public class CertPathValidatorExceptionTest extends TestCase {
      * Assertion: constructs CertPathValidatorException with detail message msg.
      * Parameter <code>msg</code> is not null.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "CertPathValidatorException",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "CertPathValidatorException",
+        args = {java.lang.String.class}
+    )
     public void testCertPathValidatorException02() {
         CertPathValidatorException tE;
         for (int i = 0; i < msgs.length; i++) {
@@ -113,15 +107,12 @@ public class CertPathValidatorExceptionTest extends TestCase {
      * Assertion: constructs CertPathValidatorException when <code>msg</code>
      * is null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies null as a parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "CertPathValidatorException",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies null as a parameter.",
+        method = "CertPathValidatorException",
+        args = {java.lang.String.class}
+    )
     public void testCertPathValidatorException03() {
         String msg = null;
         CertPathValidatorException tE = new CertPathValidatorException(msg);
@@ -134,15 +125,12 @@ public class CertPathValidatorExceptionTest extends TestCase {
      * Assertion: constructs CertPathValidatorException when <code>cause</code>
      * is null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies null as a parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "CertPathValidatorException",
-          methodArgs = {java.lang.Throwable.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies null as a parameter.",
+        method = "CertPathValidatorException",
+        args = {java.lang.Throwable.class}
+    )
     public void testCertPathValidatorException04() {
         Throwable cause = null;
         CertPathValidatorException tE = new CertPathValidatorException(cause);
@@ -155,15 +143,12 @@ public class CertPathValidatorExceptionTest extends TestCase {
      * Assertion: constructs CertPathValidatorException when <code>cause</code>
      * is not null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "CertPathValidatorException",
-          methodArgs = {java.lang.Throwable.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "CertPathValidatorException",
+        args = {java.lang.Throwable.class}
+    )
     public void testCertPathValidatorException05() {
         CertPathValidatorException tE = new CertPathValidatorException(tCause);
         if (tE.getMessage() != null) {
@@ -182,15 +167,12 @@ public class CertPathValidatorExceptionTest extends TestCase {
      * constructor Assertion: constructs CertPathValidatorException when
      * <code>cause</code> is null <code>msg</code> is null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies null as parameters.",
-      targets = {
-        @TestTarget(
-          methodName = "CertPathValidatorException",
-          methodArgs = {java.lang.String.class, java.lang.Throwable.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies null as parameters.",
+        method = "CertPathValidatorException",
+        args = {java.lang.String.class, java.lang.Throwable.class}
+    )
     public void testCertPathValidatorException06() {
         CertPathValidatorException tE = new CertPathValidatorException(null,
                 null);
@@ -203,15 +185,12 @@ public class CertPathValidatorExceptionTest extends TestCase {
      * constructor Assertion: constructs CertPathValidatorException when
      * <code>cause</code> is null <code>msg</code> is not null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies null as the second parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "CertPathValidatorException",
-          methodArgs = {java.lang.String.class, java.lang.Throwable.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies null as the second parameter.",
+        method = "CertPathValidatorException",
+        args = {java.lang.String.class, java.lang.Throwable.class}
+    )
     public void testCertPathValidatorException07() {
         CertPathValidatorException tE;
         for (int i = 0; i < msgs.length; i++) {
@@ -227,15 +206,12 @@ public class CertPathValidatorExceptionTest extends TestCase {
      * constructor Assertion: constructs CertPathValidatorException when
      * <code>cause</code> is not null <code>msg</code> is null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies null as the first parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "CertPathValidatorException",
-          methodArgs = {java.lang.String.class, java.lang.Throwable.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies null as the first parameter.",
+        method = "CertPathValidatorException",
+        args = {java.lang.String.class, java.lang.Throwable.class}
+    )
     public void testCertPathValidatorException08() {
         CertPathValidatorException tE = new CertPathValidatorException(null,
                 tCause);
@@ -255,15 +231,12 @@ public class CertPathValidatorExceptionTest extends TestCase {
      * constructor Assertion: constructs CertPathValidatorException when
      * <code>cause</code> is not null <code>msg</code> is not null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "CertPathValidatorException",
-          methodArgs = {java.lang.String.class, java.lang.Throwable.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "CertPathValidatorException",
+        args = {java.lang.String.class, java.lang.Throwable.class}
+    )
     public void testCertPathValidatorException09() {
         CertPathValidatorException tE;
         for (int i = 0; i < msgs.length; i++) {
@@ -291,15 +264,12 @@ public class CertPathValidatorExceptionTest extends TestCase {
      * <code>cause</code> is null <code>msg</code> is null
      * <code>certPath</code> is null <code>index</code> is -1
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies null as parameters.",
-      targets = {
-        @TestTarget(
-          methodName = "CertPathValidatorException",
-          methodArgs = {java.lang.String.class, java.lang.Throwable.class, java.security.cert.CertPath.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies null as parameters.",
+        method = "CertPathValidatorException",
+        args = {java.lang.String.class, java.lang.Throwable.class, java.security.cert.CertPath.class, int.class}
+    )
     public void testCertPathValidatorException10() {
         CertPathValidatorException tE = new CertPathValidatorException(null,
                 null, null, -1);
@@ -317,15 +287,12 @@ public class CertPathValidatorExceptionTest extends TestCase {
      * <code>certPath</code> is null <code>index</code> not -1 throws:
      * IllegalArgumentException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies that IllegalArgumentException is thrown.",
-      targets = {
-        @TestTarget(
-          methodName = "CertPathValidatorException",
-          methodArgs = {java.lang.String.class, java.lang.Throwable.class, java.security.cert.CertPath.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies that IllegalArgumentException is thrown.",
+        method = "CertPathValidatorException",
+        args = {java.lang.String.class, java.lang.Throwable.class, java.security.cert.CertPath.class, int.class}
+    )
     public void testCertPathValidatorException11() {
         int[] indx = { 0, 1, 100, Integer.MAX_VALUE, Integer.MIN_VALUE };
         for (int j = 0; j < indx.length; j++) {
@@ -349,15 +316,12 @@ public class CertPathValidatorExceptionTest extends TestCase {
      * <code>cause</code> not null <code>msg</code> not null
      * <code>certPath</code> is null <code>index</code> is -1
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies IndexOutOfBoundsException.",
-      targets = {
-        @TestTarget(
-          methodName = "CertPathValidatorException",
-          methodArgs = {java.lang.String.class, java.lang.Throwable.class, java.security.cert.CertPath.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies IndexOutOfBoundsException.",
+        method = "CertPathValidatorException",
+        args = {java.lang.String.class, java.lang.Throwable.class, java.security.cert.CertPath.class, int.class}
+    )
     public void testCertPathValidatorException12() {
         CertPathValidatorException tE;
 
@@ -395,15 +359,12 @@ public class CertPathValidatorExceptionTest extends TestCase {
      * <code>certPath</code> not null <code>index</code>< -1 || >=
      * certPath.getCertificates().size() throws: IndexOutOfBoundsException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies IndexOutOfBoundsException.",
-      targets = {
-        @TestTarget(
-          methodName = "CertPathValidatorException",
-          methodArgs = {java.lang.String.class, java.lang.Throwable.class, java.security.cert.CertPath.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies IndexOutOfBoundsException.",
+        method = "CertPathValidatorException",
+        args = {java.lang.String.class, java.lang.Throwable.class, java.security.cert.CertPath.class, int.class}
+    )
     public void testCertPathValidatorException13() {
         myCertPath mcp = new myCertPath("X.509", "");
         CertPath cp = mcp.get("X.509");
@@ -431,15 +392,12 @@ public class CertPathValidatorExceptionTest extends TestCase {
      * <code>certPath</code> not null <code>index</code><
      * certPath.getCertificates().size()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies IndexOutOfBoundsException.",
-      targets = {
-        @TestTarget(
-          methodName = "CertPathValidatorException",
-          methodArgs = {java.lang.String.class, java.lang.Throwable.class, java.security.cert.CertPath.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies IndexOutOfBoundsException.",
+        method = "CertPathValidatorException",
+        args = {java.lang.String.class, java.lang.Throwable.class, java.security.cert.CertPath.class, int.class}
+    )
     public void testCertPathValidatorException14() {
         CertPathValidatorException tE;
         myCertPath mcp = new myCertPath("X.509", "");
@@ -478,16 +436,12 @@ public class CertPathValidatorExceptionTest extends TestCase {
      * Test for <code>getCertPath()</code>. Returns the certification path
      * that was being validated when the exception was thrown.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Verifies that getCertPath method returns the certification path" + 
-            "that was being validated when the exception was thrown.",
-      targets = {
-        @TestTarget(
-          methodName = "getCertPath",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies that getCertPath method returns the certification paththat was being validated when the exception was thrown.",
+        method = "getCertPath",
+        args = {}
+    )
     public void testCertPathValidatorException15() {
         CertPathValidatorException tE = new CertPathValidatorException();
         assertNull("getCertPath() must return null.", tE.getCertPath());
@@ -544,15 +498,12 @@ public class CertPathValidatorExceptionTest extends TestCase {
      * that the list of certificates in a CertPath is zero based. If no index
      * has been set, -1 is returned.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getIndex",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getIndex",
+        args = {}
+    )
     public void testCertPathValidatorException16() {
         CertPathValidatorException tE = new CertPathValidatorException();
         assertEquals("getIndex() must be equals -1", -1, tE.getIndex());

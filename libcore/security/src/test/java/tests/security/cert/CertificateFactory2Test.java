@@ -22,14 +22,14 @@
 
 package tests.security.cert;
 
-import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
 import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
 import junit.framework.TestCase;
 
-import tests.security.cert.myCertPathBuilder.MyProvider;
+import org.apache.harmony.security.tests.support.SpiEngUtils;
+import org.apache.harmony.security.tests.support.cert.MyCertificateFactorySpi;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -46,9 +46,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.harmony.security.tests.support.cert.MyCertificateFactorySpi;
-import org.apache.harmony.security.tests.support.SpiEngUtils;
-
 /**
  * Tests for CertificateFactory class constructors and methods
  * 
@@ -56,7 +53,7 @@ import org.apache.harmony.security.tests.support.SpiEngUtils;
 @TestTargetClass(CertificateFactory.class)
 public class CertificateFactory2Test extends TestCase {
     private static final String defaultAlg = "CertFac";
-    private static final String CertificateFactoryProviderClass = "tests.security.cert.support.cert.MyCertificateFactorySpi";
+    private static final String CertificateFactoryProviderClass = "org.apache.harmony.security.tests.support.cert.MyCertificateFactorySpi";
     
     private static final String[] invalidValues = SpiEngUtils.invalidValues;
 
@@ -148,7 +145,7 @@ public class CertificateFactory2Test extends TestCase {
         }
         Certificate cert = certFactory.generateCertificate(dis);
         assertNull("Result must be null", cert);
-        Collection col = certFactory.generateCertificates(dis);
+        Collection<? extends Certificate> col = certFactory.generateCertificates(dis);
         assertNull("Result must be null", col);
 
         try {
@@ -163,8 +160,8 @@ public class CertificateFactory2Test extends TestCase {
         }
         CRL crl = certFactory.generateCRL(dis);
         assertNull("Result must be null", crl);
-        col = certFactory.generateCRLs(dis);
-        assertNull("Result must be null", col);
+        Collection<? extends CRL> colc = certFactory.generateCRLs(dis);
+        assertNull("Result must be null", colc);
 
         List<Certificate> list = null;
         CertPath cp;
@@ -180,7 +177,7 @@ public class CertificateFactory2Test extends TestCase {
                 fail("Unexpected NullPointerException was thrown");
             }
         }
-        Iterator it = certFactory.getCertPathEncodings();
+        Iterator<String> it = certFactory.getCertPathEncodings();
         if (mode) {
             assertTrue(it.hasNext());
         } else {
@@ -327,79 +324,61 @@ public class CertificateFactory2Test extends TestCase {
             checkResult(cerF,  mode);
         }
     }
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "getInstance",
-                methodArgs = {java.lang.String.class}
-              )
-          })
-    public void _testGetInstance01() throws CertificateException, CRLException {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getInstance",
+        args = {java.lang.String.class}
+    )
+    public void testGetInstance01() throws CertificateException, CRLException {
         GetInstance01(true);   
     }
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "getInstance",
-                methodArgs = {java.lang.String.class, java.security.Provider.class}
-              )
-          })
-    public void _testGetInstance02() throws CertificateException,
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getInstance",
+        args = {java.lang.String.class, java.security.Provider.class}
+    )
+    public void testGetInstance02() throws CertificateException,
         NoSuchProviderException, IllegalArgumentException, CRLException {
         GetInstance02(true);   
     }
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "getInstance",
-                methodArgs = {java.lang.String.class, java.security.Provider.class}
-              )
-          })    
-    public void _testGetInstance03() throws CertificateException,
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getInstance",
+        args = {java.lang.String.class, java.security.Provider.class}
+    )    
+    public void testGetInstance03() throws CertificateException,
         IllegalArgumentException, CRLException {
         GetInstance03(true);   
     }
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "getInstance",
-                methodArgs = {java.lang.String.class}
-              )
-          })
-    public void _testGetInstance04() throws CertificateException, CRLException {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getInstance",
+        args = {java.lang.String.class}
+    )
+    public void testGetInstance04() throws CertificateException, CRLException {
         GetInstance01(false);   
     }
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "getInstance",
-                methodArgs = {java.lang.String.class, java.security.Provider.class}
-              )
-          })
-    public void _testGetInstance05() throws CertificateException,
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getInstance",
+        args = {java.lang.String.class, java.security.Provider.class}
+    )
+    public void testGetInstance05() throws CertificateException,
         NoSuchProviderException, IllegalArgumentException, CRLException {
         GetInstance02(false);   
     }
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "getInstance",
-                methodArgs = {java.lang.String.class, java.security.Provider.class}
-              )
-          })    
-    public void _testGetInstance06() throws CertificateException,
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getInstance",
+        args = {java.lang.String.class, java.security.Provider.class}
+    )    
+    public void testGetInstance06() throws CertificateException,
         IllegalArgumentException, CRLException {
         GetInstance03(false);   
     }

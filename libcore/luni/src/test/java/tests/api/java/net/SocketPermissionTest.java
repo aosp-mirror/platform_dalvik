@@ -18,9 +18,9 @@
 package tests.api.java.net;
 
 import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.net.InetAddress;
 import java.net.SocketPermission;
@@ -51,15 +51,12 @@ public class SocketPermissionTest extends junit.framework.TestCase {
      * @tests java.net.SocketPermission#SocketPermission(java.lang.String,
      *        java.lang.String)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "SocketPermission",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "SocketPermission",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_StringLjava_lang_String() {
         // Test for method java.net.SocketPermission(java.lang.String,
         // java.lang.String)
@@ -85,15 +82,12 @@ public class SocketPermissionTest extends junit.framework.TestCase {
     /**
      * @tests java.net.SocketPermission#equals(java.lang.Object)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "equals",
+        args = {java.lang.Object.class}
+    )
     public void test_equalsLjava_lang_Object() {
         // Test for method boolean
         // java.net.SocketPermission.equals(java.lang.Object)
@@ -123,15 +117,12 @@ public class SocketPermissionTest extends junit.framework.TestCase {
     /**
      * @tests java.net.SocketPermission#equals(java.lang.Object)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "equals",
+        args = {java.lang.Object.class}
+    )
     public void test_equalsLjava_lang_Object_subtest0() {
         SocketPermission sp1 = new SocketPermission(
                 Support_Configuration.InetTestAddress, "resolve,connect");
@@ -140,19 +131,34 @@ public class SocketPermissionTest extends junit.framework.TestCase {
         assertTrue("Same IP address should be equal", sp1.equals(sp2));
 
     }
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hashCode",
+        args = {}
+    )
+    public void test_hashCode() {
+        SocketPermission sp1 = new SocketPermission(
+                Support_Configuration.InetTestIP, "resolve,connect");
+        SocketPermission sp2 = new SocketPermission(
+                Support_Configuration.InetTestIP, "resolve,connect");
+        assertTrue("Same IP address should have equal hash codes", 
+                sp1.hashCode() == sp2.hashCode());
+        
+        assertTrue("Different names but returned equal hash codes", 
+                star_All.hashCode() != www_All.hashCode());
+    }
 
     /**
      * @tests java.net.SocketPermission#getActions()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getActions",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getActions",
+        args = {}
+    )
     public void test_getActions() {
         // Test for method java.lang.String
         // java.net.SocketPermission.getActions()
@@ -165,15 +171,12 @@ public class SocketPermissionTest extends junit.framework.TestCase {
     /**
      * @tests java.net.SocketPermission#implies(java.security.Permission)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "implies",
-          methodArgs = {java.security.Permission.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "implies",
+        args = {java.security.Permission.class}
+    )
     public void test_impliesLjava_security_Permission() {
         // Test for method boolean
         // java.net.SocketPermission.implies(java.security.Permission)
@@ -232,15 +235,12 @@ public class SocketPermissionTest extends junit.framework.TestCase {
     /**
      * @tests java.net.SocketPermission#newPermissionCollection()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "newPermissionCollection",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "newPermissionCollection",
+        args = {}
+    )
     public void test_newPermissionCollection() {
         // Test for method java.security.PermissionCollection
         // java.net.SocketPermission.newPermissionCollection()

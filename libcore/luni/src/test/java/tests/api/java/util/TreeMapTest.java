@@ -17,10 +17,12 @@
 
 package tests.api.java.util;
 
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.KnownFailure;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.AndroidOnly;
 
 import java.io.Serializable;
 import java.text.CollationKey;
@@ -31,6 +33,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -91,15 +94,12 @@ public class TreeMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TreeMap#TreeMap()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "TreeMap",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "TreeMap",
+        args = {}
+    )
     public void test_Constructor() {
         // Test for method java.util.TreeMap()
         new Support_MapTest2(new TreeMap()).runTest();
@@ -110,15 +110,12 @@ public class TreeMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TreeMap#TreeMap(java.util.Comparator)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "TreeMap",
-          methodArgs = {java.util.Comparator.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "TreeMap",
+        args = {java.util.Comparator.class}
+    )
     public void test_ConstructorLjava_util_Comparator() {
         // Test for method java.util.TreeMap(java.util.Comparator)
         Comparator comp = new ReversedComparator();
@@ -137,15 +134,12 @@ public class TreeMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TreeMap#TreeMap(java.util.Map)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check exceptions.",
-      targets = {
-        @TestTarget(
-          methodName = "TreeMap",
-          methodArgs = {java.util.Map.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "TreeMap",
+        args = {java.util.Map.class}
+    )
     public void test_ConstructorLjava_util_Map() {
         // Test for method java.util.TreeMap(java.util.Map)
         TreeMap myTreeMap = new TreeMap(new HashMap(tm));
@@ -154,20 +148,35 @@ public class TreeMapTest extends junit.framework.TestCase {
             assertTrue("Map has incorrect mappings", myTreeMap.get(
                     element.toString()).equals(element));
         }
+        
+        HashMap hm = new HashMap();
+        hm.put(new Integer(1), "one");
+        hm.put("one", new Integer(1));
+        
+        try {
+            new TreeMap(hm);
+            fail("ClassCastException expected");
+        } catch (ClassCastException e) {
+            //expected
+        }
+        
+        try {
+            new TreeMap((Map)null);
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.TreeMap#TreeMap(java.util.SortedMap)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "NullPointerException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "TreeMap",
-          methodArgs = {java.util.SortedMap.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "TreeMap",
+        args = {java.util.SortedMap.class}
+    )
     public void test_ConstructorLjava_util_SortedMap() {
         // Test for method java.util.TreeMap(java.util.SortedMap)
         Comparator comp = new ReversedComparator();
@@ -181,21 +190,24 @@ public class TreeMapTest extends junit.framework.TestCase {
                 anotherTreeMap.firstKey().equals(new Integer(2).toString()));
         assertTrue("TreeMap does not use comparator (lastKey was incorrect)",
                 anotherTreeMap.lastKey().equals(new Integer(1).toString()));
-
+        
+        try {
+            new TreeMap((SortedMap)null);
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.TreeMap#clear()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "clear",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "clear",
+        args = {}
+    )
     public void test_clear() {
         // Test for method void java.util.TreeMap.clear()
         tm.clear();
@@ -205,15 +217,12 @@ public class TreeMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TreeMap#clone()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "clone",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "clone",
+        args = {}
+    )
     public void test_clone() {
         // Test for method java.lang.Object java.util.TreeMap.clone()
         TreeMap clonedMap = (TreeMap) tm.clone();
@@ -251,15 +260,12 @@ public class TreeMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TreeMap#comparator()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "comparator",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "comparator",
+        args = {}
+    )
     public void test_comparator() {
         // Test for method java.util.Comparator java.util.TreeMap.comparator()\
         Comparator comp = new ReversedComparator();
@@ -277,35 +283,42 @@ public class TreeMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TreeMap#containsKey(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "[Doesn't check exceptions and Objects (not only String) as " +
-              "a parameter.]",
-      targets = {
-        @TestTarget(
-          methodName = "containsKey",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "containsKey",
+        args = {java.lang.Object.class}
+    )
     public void test_containsKeyLjava_lang_Object() {
         // Test for method boolean
         // java.util.TreeMap.containsKey(java.lang.Object)
         assertTrue("Returned false for valid key", tm.containsKey("95"));
         assertTrue("Returned true for invalid key", !tm.containsKey("XXXXX"));
+        
+        try {
+            tm.containsKey(new Double(3.14));
+            fail("ClassCastException expected");
+        } catch (ClassCastException e) {
+            //expected
+        }
+        
+        try {
+            tm.containsKey(null);
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.TreeMap#containsValue(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "containsValue",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "containsValue",
+        args = {java.lang.Object.class}
+    )
     public void test_containsValueLjava_lang_Object() {
         // Test for method boolean
         // java.util.TreeMap.containsValue(java.lang.Object)
@@ -318,15 +331,12 @@ public class TreeMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TreeMap#entrySet()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "entrySet",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "entrySet",
+        args = {}
+    )
     public void test_entrySet() {
         // Test for method java.util.Set java.util.TreeMap.entrySet()
         Set anEntrySet = tm.entrySet();
@@ -344,53 +354,64 @@ public class TreeMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TreeMap#firstKey()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "NoSuchElementException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "firstKey",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "firstKey",
+        args = {}
+    )
     public void test_firstKey() {
         // Test for method java.lang.Object java.util.TreeMap.firstKey()
         assertEquals("Returned incorrect first key", "0", tm.firstKey());
+        tm = new TreeMap();
+        try {
+            tm.firstKey();
+            fail("NoSuchElementException expected");
+        } catch (NoSuchElementException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.TreeMap#get(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Exceptions checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "get",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "get",
+        args = {java.lang.Object.class}
+    )
     public void test_getLjava_lang_Object() {
         // Test for method java.lang.Object
         // java.util.TreeMap.get(java.lang.Object)
         Object o = new Object();
         tm.put("Hello", o);
         assertTrue("Failed to get mapping", tm.get("Hello") == o);
-
+        
+        try {
+            tm.get(new Double(3.14));
+            fail("ClassCastException expected");
+        } catch (ClassCastException e) {
+            //expected
+        }
+        
+        try {
+            tm.get(null);
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.TreeMap#headMap(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Exceptions checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "headMap",
-          methodArgs = {Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "headMap",
+        args = {java.lang.Object.class}
+    )
     public void test_headMapLjava_lang_Object() {
         // Test for method java.util.SortedMap
         // java.util.TreeMap.headMap(java.lang.Object)
@@ -399,6 +420,27 @@ public class TreeMapTest extends junit.framework.TestCase {
         assertTrue("Returned incorrect elements", head.containsKey("0")
                 && head.containsValue(new Integer("1"))
                 && head.containsKey("10"));
+        SortedMap sort = tm.headMap("100");
+        try {
+            sort.headMap("50");
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            //expected
+        }
+        
+        try {
+            tm.headMap(this);
+            fail("ClassCastException expected");
+        } catch (ClassCastException e) {
+            //expected
+        }
+        
+        try {
+            tm.headMap(null);
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
+            //expected
+        }
 
         // Regression for Harmony-1026
         TreeMap<Integer, Double> map = new TreeMap<Integer, Double>(
@@ -447,24 +489,17 @@ public class TreeMapTest extends junit.framework.TestCase {
 
         TreeMap<String, String> treemap = new TreeMap<String, String>(c);
         assertEquals(0, treemap.headMap(null).size());
-        
-        treemap = new TreeMap();
-        SortedMap<String, String> headMap =  treemap.headMap("100");
-        headMap.headMap("100");
     }
 
     /**
      * @tests java.util.TreeMap#keySet()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "keySet",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "keySet",
+        args = {}
+    )
     public void test_keySet() {
         // Test for method java.util.Set java.util.TreeMap.keySet()
         Set ks = tm.keySet();
@@ -479,39 +514,47 @@ public class TreeMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TreeMap#lastKey()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "NoSuchElementException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "lastKey",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "lastKey",
+        args = {}
+    )
     public void test_lastKey() {
         // Test for method java.lang.Object java.util.TreeMap.lastKey()
         assertTrue("Returned incorrect last key", tm.lastKey().equals(
                 objArray[objArray.length - 1].toString()));
+        tm = new TreeMap();
+        try {
+            tm.lastKey();
+            fail("NoSuchElementException expected");
+        } catch (NoSuchElementException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.TreeMap#put(java.lang.Object, java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "NullPointerException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "put",
-          methodArgs = {Object.class, Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "put",
+        args = {java.lang.Object.class, java.lang.Object.class}
+    )
     public void test_putLjava_lang_ObjectLjava_lang_Object() {
         // Test for method java.lang.Object
         // java.util.TreeMap.put(java.lang.Object, java.lang.Object)
         Object o = new Object();
         tm.put("Hello", o);
         assertTrue("Failed to put mapping", tm.get("Hello") == o);
+        
+        try {
+            tm.put(null, "null");
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
+            //expected
+        }
 
         // regression for Harmony-780
         tm = new TreeMap();
@@ -534,15 +577,12 @@ public class TreeMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TreeMap#putAll(java.util.Map)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "ClassCastException & NullPointerException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "putAll",
-          methodArgs = {java.util.Map.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "putAll",
+        args = {java.util.Map.class}
+    )
     public void test_putAllLjava_util_Map() {
         // Test for method void java.util.TreeMap.putAll(java.util.Map)
         TreeMap x = new TreeMap();
@@ -552,40 +592,64 @@ public class TreeMapTest extends junit.framework.TestCase {
             assertTrue("Failed to put all elements", x.get(element.toString())
                     .equals(element));
         }
+        x = new TreeMap();
+        x.put(new Integer(1), "one");
+        x.put(new Integer(2), "two");
+        
+        try {
+            tm.putAll(x);
+            fail("ClassCastException expected");
+        } catch (ClassCastException e) {
+            //expected
+        }
+        
+        try {
+            tm.putAll(null);
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.TreeMap#remove(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "ClassCastException & NullPointerException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "remove",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "remove",
+        args = {java.lang.Object.class}
+    )
     public void test_removeLjava_lang_Object() {
         // Test for method java.lang.Object
         // java.util.TreeMap.remove(java.lang.Object)
         tm.remove("990");
         assertTrue("Failed to remove mapping", !tm.containsKey("990"));
-
+        
+        try {
+            tm.remove(new Double(3.14));
+            fail("ClassCastException expected");
+        } catch (ClassCastException e) {
+            //expected
+        }
+        
+        try {
+            tm.remove(null);
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.TreeMap#size()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "size",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "size",
+        args = {}
+    )
     public void test_size() {
         // Test for method int java.util.TreeMap.size()
         assertEquals("Returned incorrect size", 1000, tm.size());
@@ -594,15 +658,12 @@ public class TreeMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TreeMap#subMap(java.lang.Object, java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "ClassCastException and NullPointerException are not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "subMap",
-          methodArgs = {Object.class, Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "subMap",
+        args = {java.lang.Object.class, java.lang.Object.class}
+    )
     public void test_subMapLjava_lang_ObjectLjava_lang_Object() {
         // Test for method java.util.SortedMap
         // java.util.TreeMap.subMap(java.lang.Object, java.lang.Object)
@@ -638,20 +699,38 @@ public class TreeMapTest extends junit.framework.TestCase {
         assertEquals("3", map.lastKey());
         SortedMap<String, String> sub = map.subMap("1", "3"); //$NON-NLS-1$ //$NON-NLS-2$
         assertEquals("2", sub.lastKey()); //$NON-NLS-1$
+        
+        try {
+            tm.subMap(this, this);
+            fail("ClassCastException expected");
+        } catch (ClassCastException e) {
+            //expected
+        }
+        
+        try {
+            tm.subMap(objArray[9].toString(), null);
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
+            //expected
+        }
+        
+        try {
+            tm.subMap(null, objArray[9].toString());
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.TreeMap#tailMap(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Exceptions are not tested.",
-      targets = {
-        @TestTarget(
-          methodName = "tailMap",
-          methodArgs = {Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "tailMap",
+        args = {java.lang.Object.class}
+    )
     public void test_tailMapLjava_lang_Object() {
         // Test for method java.util.SortedMap
         // java.util.TreeMap.tailMap(java.lang.Object)
@@ -662,6 +741,29 @@ public class TreeMapTest extends junit.framework.TestCase {
             assertTrue("Map contains incorrect entries", tail
                     .containsValue(objArray[i]));
         }
+        
+        SortedMap sort = tm.tailMap("99");
+
+        try {
+            sort.tailMap("101");
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            //expected
+        }
+        
+        try {
+            tm.tailMap(this);
+            fail("ClassCastException expected");
+        } catch (ClassCastException e) {
+            //expected
+        }
+        
+        try {
+            tm.tailMap(null);
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
+            //expected
+        }
 
         // Regression for Harmony-1066
         assertTrue(tail instanceof Serializable);
@@ -670,15 +772,12 @@ public class TreeMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TreeMap#values()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "values",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "values",
+        args = {}
+    )
     public void test_values() {
         // Test for method java.util.Collection java.util.TreeMap.values()
         Collection vals = tm.values();
@@ -707,15 +806,13 @@ public class TreeMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.TreeMap#SerializationTest()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Verifies serialization/deserialization.",
-      targets = {
-        @TestTarget(
-          methodName = "!SerializationSelf",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization/deserialization.",
+        method = "!SerializationSelf",
+        args = {}
+    )
+    @AndroidOnly("fail on RI. See comment below")
     // Regression for Harmony-1066
     public void test_SubMap_Serializable() throws Exception {
         TreeMap<Integer, Double> map = new TreeMap<Integer, Double>();
@@ -741,16 +838,15 @@ public class TreeMapTest extends junit.framework.TestCase {
      * Tests that no ClassCastException will be thrown in all cases.
      * Regression test for HARMONY-1639.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {Object.class}
-        )
-    })
-    public void _test_equals() throws Exception {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "equals",
+        args = {java.lang.Object.class}
+    )
+    @KnownFailure("equals(Onject o) method throws java.lang.ClassCastException " +
+            "for TreeMap objects with different key objects.")
+    public void test_equals() throws Exception {
         // comparing TreeMaps with different object types
         Map m1 = new TreeMap();
         Map m2 = new TreeMap();

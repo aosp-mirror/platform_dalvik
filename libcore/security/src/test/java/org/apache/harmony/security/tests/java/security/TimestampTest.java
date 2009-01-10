@@ -23,8 +23,8 @@
 package org.apache.harmony.security.tests.java.security;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 
 import java.security.Timestamp;
@@ -52,15 +52,12 @@ public class TimestampTest extends TestCase {
 
     private CertPath cpath = new MyCertPath(encoding);
 
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Non null parameters checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "Timestamp",
-          methodArgs = {Date.class, CertPath.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Timestamp",
+        args = {java.util.Date.class, java.security.cert.CertPath.class}
+    )
     public void testTimestamp() {
         try {
             new Timestamp(null, cpath);
@@ -74,20 +71,21 @@ public class TimestampTest extends TestCase {
             return;
         } catch (NullPointerException ex) { /* ok */
         }
+        
+        Timestamp timestamp = new Timestamp(now, cpath);
+        assertEquals("not expected value", now, timestamp.getTimestamp());
+        assertEquals("not expected cert path", cpath, timestamp.getSignerCertPath());
     }
 
     /*
      * Class under test for boolean equals(Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "equals",
+        args = {java.lang.Object.class}
+    )
     public void testEqualsObject() {
         Timestamp one = new Timestamp(now, cpath);
         Timestamp two = new Timestamp(now, cpath);
@@ -103,28 +101,22 @@ public class TimestampTest extends TestCase {
         assertTrue(two1.equals(two1));
     }
 
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getSignerCertPath",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getSignerCertPath",
+        args = {}
+    )
     public void testGetSignerCertPath() {
         assertSame(new Timestamp(now, cpath).getSignerCertPath(), cpath);
     }
 
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getTimestamp",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getTimestamp",
+        args = {}
+    )
     public void testGetTimestamp() {
         Timestamp t = new Timestamp(now, cpath);
         assertEquals(now, t.getTimestamp());
@@ -134,31 +126,29 @@ public class TimestampTest extends TestCase {
     /*
      * Class under test for String toString()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Test result is not verivied",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public void testToString() {
-        new Timestamp(now, cpath).toString();
+        try {
+            String tt = new Timestamp(now, cpath).toString();
+        } catch (Exception e) {
+            fail("Unexpected exception");
+        }
     }
 
     /*
      * Class under test for String hashCode()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "hashCode",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hashCode",
+        args = {}
+    )
     public void testHashCode() {
         Timestamp one = new Timestamp(now, cpath);
         Timestamp two = new Timestamp(now, cpath);

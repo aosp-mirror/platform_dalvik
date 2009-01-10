@@ -15,9 +15,8 @@
  */
 package org.apache.harmony.nio.tests.java.nio;
 
-import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import java.nio.ByteBuffer;
@@ -26,6 +25,7 @@ import java.nio.ByteOrder;
 @TestTargetClass(java.nio.FloatBuffer.class)
 public class DirectFloatBufferTest extends FloatBufferTest {
     public void setUp(){
+        capacity = BUFFER_LENGTH;
         buf = ByteBuffer.allocateDirect(BUFFER_LENGTH*4).asFloatBuffer();
         loadTestData1(buf);
         baseBuf = buf;
@@ -35,27 +35,23 @@ public class DirectFloatBufferTest extends FloatBufferTest {
         buf = null;
         baseBuf = null;
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies hasArray method for direct FloatBuffer.",
-      targets = {
-        @TestTarget(
-          methodName = "hasArray",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies hasArray method for direct FloatBuffer.",
+        method = "hasArray",
+        args = {}
+    )
     public void testHasArray() {
         assertFalse(buf.hasArray());
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies array method for direct FloatBuffer.",
-      targets = {
-        @TestTarget(
-          methodName = "array",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies array method for direct FloatBuffer.",
+        method = "array",
+        args = {}
+    )
     public void testArray() {
         try {
             buf.array();
@@ -63,15 +59,13 @@ public class DirectFloatBufferTest extends FloatBufferTest {
         } catch (UnsupportedOperationException e) {
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies arrayOffset method for direct FloatBuffer.",
-      targets = {
-        @TestTarget(
-          methodName = "arrayOffset",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies arrayOffset method for direct FloatBuffer.",
+        method = "arrayOffset",
+        args = {}
+    )
     public void testArrayOffset() {
         try {
             buf.arrayOffset();
@@ -80,27 +74,23 @@ public class DirectFloatBufferTest extends FloatBufferTest {
             //expected
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies isDirect method for direct FloatBuffer.",
-      targets = {
-        @TestTarget(
-          methodName = "isDirect",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies isDirect method for direct FloatBuffer.",
+        method = "isDirect",
+        args = {}
+    )
     public void testIsDirect() {
         assertTrue(buf.isDirect());
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies order method for direct FloatBuffer.",
-      targets = {
-        @TestTarget(
-          methodName = "order",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies order method for direct FloatBuffer.",
+        method = "order",
+        args = {}
+    )
     public void testOrder() {
         assertEquals(ByteOrder.BIG_ENDIAN, buf.order());
     }

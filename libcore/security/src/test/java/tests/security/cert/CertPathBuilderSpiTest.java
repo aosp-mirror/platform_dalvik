@@ -22,9 +22,9 @@
 
 package tests.security.cert;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -57,17 +57,18 @@ public class CertPathBuilderSpiTest extends TestCase {
      * Test for <code>CertPathBuilderSpi</code> constructor Assertion:
      * constructs CertPathBuilderSpi
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "CertPathBuilderSpi",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "CertPathBuilderSpi",
+            args = {}
         ),
-        @TestTarget(
-          methodName = "engineBuild",
-          methodArgs = {java.security.cert.CertPathParameters.class}
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "engineBuild",
+            args = {java.security.cert.CertPathParameters.class}
         )
     })
     public void testCertPathBuilderSpi01() throws CertPathBuilderException,

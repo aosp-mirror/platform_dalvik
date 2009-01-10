@@ -17,8 +17,8 @@
 
 package tests.api.java.util;
 
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass; 
 
@@ -33,19 +33,19 @@ public class MissingResourceExceptionTest extends junit.framework.TestCase {
      * @tests java.util.MissingResourceException#MissingResourceException(java.lang.String,
      *        java.lang.String, java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't call constructor with different parameters.",
-      targets = {
-        @TestTarget(
-          methodName = "MissingResourceException",
-          methodArgs = {java.lang.String.class, java.lang.String.class, 
-                  java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "MissingResourceException",
+        args = {java.lang.String.class, java.lang.String.class, java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_StringLjava_lang_StringLjava_lang_String() {
         // Test for method java.util.MissingResourceException(java.lang.String,
         // java.lang.String, java.lang.String)
+        assertNotNull(new MissingResourceException("Detail string", "Class name string", "Key string"));
+        assertNotNull(new MissingResourceException(null, "Class name string", "Key string"));
+        assertNotNull(new MissingResourceException("Detail string", null, "Key string"));
+        assertNotNull(new MissingResourceException("Detail string", "Class name string", null));
         try {
             ResourceBundle.getBundle("Non-ExistentBundle");
         } catch (MissingResourceException e) {
@@ -57,15 +57,12 @@ public class MissingResourceExceptionTest extends junit.framework.TestCase {
     /**
      * @tests java.util.MissingResourceException#getClassName()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getClassName",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getClassName",
+        args = {}
+    )
     public void test_getClassName() {
         // Test for method java.lang.String
         // java.util.MissingResourceException.getClassName()
@@ -80,15 +77,12 @@ public class MissingResourceExceptionTest extends junit.framework.TestCase {
     /**
      * @tests java.util.MissingResourceException#getKey()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getKey",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getKey",
+        args = {}
+    )
     public void test_getKey() {
         // Test for method java.lang.String
         // java.util.MissingResourceException.getKey()

@@ -13,28 +13,93 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /*
  * Dalvik bytecode verifier.
  */
 #ifndef _DALVIK_CODEVERIFY
 #define _DALVIK_CODEVERIFY
 
+#include "analysis/VerifySubs.h"
+
 
 /*
- * InsnFlags is a 32-bit integer with the following layout:
- *  0-15  instruction length (or 0 if this address doesn't hold an opcode)
- *  16    opcode flag (indicating this address holds an opcode)
- *  17    try block (indicating exceptions thrown here may be caught locally)
- *  30    visited (verifier has examined this instruction at least once)
- *  31    changed (set/cleared as bytecode verifier runs)
+ * Enumeration for register type values.  The "hi" piece of a 64-bit value
+ * MUST immediately follow the "lo" piece in the enumeration, so we can check
+ * that hi==lo+1.
+ *
+ * Assignment of constants:
+ *   [-MAXINT,-32768)   : integer
+ *   [-32768,-128)      : short
+ *   [-128,0)           : byte
+ *   0                  : zero
+ *   1                  : one
+ *   [2,128)            : posbyte
+ *   [128,32768)        : posshort
+ *   [32768,65536)      : char
+ *   [65536,MAXINT]     : integer
+ *
+ * Allowed "implicit" widening conversions:
+ *   zero -> boolean, posbyte, byte, posshort, short, char, integer, ref (null)
+ *   one -> boolean, posbyte, byte, posshort, short, char, integer
+ *   boolean -> posbyte, byte, posshort, short, char, integer
+ *   posbyte -> posshort, short, integer, char
+ *   byte -> short, integer
+ *   posshort -> integer, char
+ *   short -> integer
+ *   char -> integer
+ *
+ * In addition, all of the above can convert to "float".
+ *
+ * We're more careful with integer values than the spec requires.  The
+ * motivation is to restrict byte/char/short to the correct range of values.
+ * For example, if a method takes a byte argument, we don't want to allow
+ * the code to load the constant "1024" and pass it in.
  */
-typedef u4 InsnFlags;
+enum {
+    kRegTypeUnknown = 0,    /* initial state; use value=0 so calloc works */
+    kRegTypeUninit = 1,     /* MUST be odd to distinguish from pointer */
+    kRegTypeConflict,       /* merge clash makes this reg's type unknowable */
 
-#define kInsnFlagWidthMask      0x0000ffff
-#define kInsnFlagInTry          (1 << 16)
-#define kInsnFlagBranchTarget   (1 << 17)
-#define kInsnFlagVisited        (1 << 30)
-#define kInsnFlagChanged        (1 << 31)
+    /*
+     * Category-1nr types.  The order of these is chiseled into a couple
+     * of tables, so don't add, remove, or reorder if you can avoid it.
+     */
+#define kRegType1nrSTART    kRegTypeFloat
+    kRegTypeFloat,
+    kRegTypeZero,           /* 32-bit 0, could be Boolean, Int, Float, or Ref */
+    kRegTypeOne,            /* 32-bit 1, could be Boolean, Int, Float */
+    kRegTypeBoolean,        /* must be 0 or 1 */
+    kRegTypePosByte,        /* byte, known positive (can become char) */
+    kRegTypeByte,
+    kRegTypePosShort,       /* short, known positive (can become char) */
+    kRegTypeShort,
+    kRegTypeChar,
+    kRegTypeInteger,
+#define kRegType1nrEND      kRegTypeInteger
+
+    kRegTypeLongLo,         /* lower-numbered register; endian-independent */
+    kRegTypeLongHi,
+    kRegTypeDoubleLo,
+    kRegTypeDoubleHi,
+
+    /*
+     * Enumeration max; this is used with "full" (32-bit) RegType values.
+     *
+     * Anything larger than this is a ClassObject or uninit ref.  Mask off
+     * all but the low 8 bits; if you're left with kRegTypeUninit, pull
+     * the uninit index out of the high 24.  Because kRegTypeUninit has an
+     * odd value, there is no risk of a particular ClassObject pointer bit
+     * pattern being confused for it (assuming our class object allocator
+     * uses word alignment).
+     */
+    kRegTypeMAX
+};
+#define kRegTypeUninitMask  0xff
+#define kRegTypeUninitShift 8
+
+extern const char gDvmMergeTab[kRegTypeMAX][kRegTypeMAX];
+
 
 /*
  * Returns "true" if the flags indicate that this address holds the start
@@ -117,6 +182,22 @@ INLINE void dvmInsnSetBranchTarget(InsnFlags* insnFlags, int addr,
     //    insnFlags[addr] &= ~kInsnFlagBranchTarget;
 }
 
+/*
+ * Instruction is a GC point?
+ */
+INLINE bool dvmInsnIsGcPoint(const InsnFlags* insnFlags, int addr) {
+    return (insnFlags[addr] & kInsnFlagGcPoint) != 0;
+}
+INLINE void dvmInsnSetGcPoint(InsnFlags* insnFlags, int addr,
+    bool isBranch)
+{
+    assert(isBranch);
+    //if (isBranch)
+        insnFlags[addr] |= kInsnFlagGcPoint;
+    //else
+    //    insnFlags[addr] &= ~kInsnFlagGcPoint;
+}
+
 
 /*
  * Table that maps uninitialized instances to classes, based on the
@@ -149,14 +230,14 @@ void dvmFreeUninitInstanceMap(UninitInstanceMap* uninitMap);
  * different class is already associated with the address (shouldn't
  * happen either).
  */
-int dvmSetUninitInstance(UninitInstanceMap* uninitMap, int addr, 
-    ClassObject* clazz);
+//int dvmSetUninitInstance(UninitInstanceMap* uninitMap, int addr, 
+//    ClassObject* clazz);
 
 /*
  * Return the class associated with an uninitialized reference.  Pass in
  * the map index.
  */
-ClassObject* dvmGetUninitInstance(const UninitInstanceMap* uninitMap, int idx);
+//ClassObject* dvmGetUninitInstance(const UninitInstanceMap* uninitMap, int idx);
 
 /*
  * Clear the class associated with an uninitialized reference.  Pass in
@@ -171,16 +252,5 @@ ClassObject* dvmGetUninitInstance(const UninitInstanceMap* uninitMap, int idx);
  */
 bool dvmVerifyCodeFlow(const Method* meth, InsnFlags* insnFlags,
     UninitInstanceMap* uninitMap);
-
-/*
- * Log standard method info for rejection message.
- */
-void dvmLogVerifyFailure(const Method* meth, const char* format, ...);
-
-/*
- * Extract the relative branch target from a branch instruction.
- */
-bool dvmGetBranchTarget(const Method* meth, InsnFlags* insnFlags,
-    int curOffset, int* pOffset, bool* pConditional);
 
 #endif /*_DALVIK_CODEVERIFY*/

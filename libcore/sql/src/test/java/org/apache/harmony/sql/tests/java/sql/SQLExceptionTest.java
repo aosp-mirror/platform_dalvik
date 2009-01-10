@@ -18,9 +18,9 @@
 package org.apache.harmony.sql.tests.java.sql;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
@@ -40,15 +40,12 @@ public class SQLExceptionTest extends TestCase {
     /*
      * SUID test
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Field testing",
-      targets = {
-        @TestTarget(
-          methodName = "!Constants",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Field testing",
+        method = "!Constants",
+        args = {}
+    )
     public void testSUID() {
 
         try {
@@ -67,15 +64,12 @@ public class SQLExceptionTest extends TestCase {
     /*
      * ConstructorTest
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "SQLException",
-          methodArgs = {String.class, String.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "SQLException",
+        args = {java.lang.String.class, java.lang.String.class, int.class}
+    )
     public void testSQLExceptionStringStringint() {
 
         String[] init1 = { "a", "1", "valid1", "----", "&valid*", "1", "a",
@@ -128,15 +122,12 @@ public class SQLExceptionTest extends TestCase {
     /*
      * ConstructorTest
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "SQLException",
-          methodArgs = {String.class, String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "SQLException",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void testSQLExceptionStringString() {
 
         String[] init1 = { "a", "1", "valid1", "----", "&valid*", null, "",
@@ -187,15 +178,12 @@ public class SQLExceptionTest extends TestCase {
     /*
      * ConstructorTest
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "SQLException",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "SQLException",
+        args = {java.lang.String.class}
+    )
     public void testSQLExceptionString() {
 
         String[] init1 = { "a", "1", "valid1", "----", "&valid*", null, 
@@ -245,15 +233,12 @@ public class SQLExceptionTest extends TestCase {
     /*
      * ConstructorTest
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "SQLException",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "SQLException",
+        args = {}
+    )
     public void testSQLException() {
 
         String[] theFinalStates1 = { null };
@@ -296,15 +281,12 @@ public class SQLExceptionTest extends TestCase {
     /*
      * Method test for getErrorCode
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getErrorCode",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getErrorCode",
+        args = {}
+    )
     public void testGetErrorCode() {
 
         SQLException aSQLException;
@@ -358,15 +340,12 @@ public class SQLExceptionTest extends TestCase {
     /*
      * Method test for getNextException
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getNextException",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getNextException",
+        args = {}
+    )
     public void testGetNextException() {
 
         SQLException aSQLException;
@@ -423,15 +402,12 @@ public class SQLExceptionTest extends TestCase {
     /*
      * Method test for getSQLState
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getSQLState",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getSQLState",
+        args = {}
+    )
     public void testGetSQLState() {
 
         SQLException aSQLException;
@@ -485,15 +461,12 @@ public class SQLExceptionTest extends TestCase {
     /*
      * Method test for setNextException
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setNextException",
-          methodArgs = {SQLException.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "setNextException",
+        args = {java.sql.SQLException.class}
+    )
     public void testSetNextExceptionSQLException() {
 
         SQLException[] parm1 = { new SQLException(), null, new SQLException(),
@@ -548,15 +521,12 @@ public class SQLExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Serialization test",
-      targets = {
-        @TestTarget(
-          methodName = "!SerializationSelf",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Serialization test",
+        method = "!SerializationSelf",
+        args = {}
+    )
     public void testSerializationSelf() throws Exception {
         SQLException object = new SQLException();
         SerializationTest.verifySelf(object, SQLEXCEPTION_COMPARATOR);
@@ -565,15 +535,12 @@ public class SQLExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Serialization test",
-      targets = {
-        @TestTarget(
-          methodName = "!SerializationGolden",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Serialization test",
+        method = "!SerializationGolden",
+        args = {}
+    )
     public void testSerializationCompatibility() throws Exception {
 
         SQLException nextSQLException = new SQLException("nextReason",
@@ -621,15 +588,12 @@ public class SQLExceptionTest extends TestCase {
     /**
      * @tests java.sql.SQLException#setNextException(java.sql.SQLException)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setNextException",
-          methodArgs = {SQLException.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "setNextException",
+        args = {java.sql.SQLException.class}
+    )
     public void test_setNextException_LSQLException() {
         SQLException se1 = new SQLException("reason" , "SQLState" , 1);
         SQLException se2 = new SQLException("reason" , "SQLState" , 2);

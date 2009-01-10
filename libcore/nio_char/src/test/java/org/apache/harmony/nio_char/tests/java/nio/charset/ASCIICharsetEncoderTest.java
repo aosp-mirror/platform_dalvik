@@ -17,8 +17,8 @@
 package org.apache.harmony.nio_char.tests.java.nio.charset;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargets;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestLevel;
 
 import java.nio.ByteBuffer;
@@ -51,15 +51,12 @@ public class ASCIICharsetEncoderTest extends TestCase {
     protected void tearDown() throws Exception {
     }
 
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "canEncode",
-          methodArgs = {java.lang.CharSequence.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "IllegalStateException checking missed.",
+        method = "canEncode",
+        args = {java.lang.CharSequence.class}
+    )
     public void testCanEncodeCharSequence() {
         // normal case for ascCS
         assertTrue(encoder.canEncode("\u0077"));
@@ -72,16 +69,18 @@ public class ASCIICharsetEncoderTest extends TestCase {
         assertTrue(encoder.canEncode(""));
     }
 
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "canEncode",
-          methodArgs = {java.lang.CharSequence.class}
-        ),@TestTarget(
-          methodName = "canEncode",
-          methodArgs = {char.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "IllegalStateException checking missed.",
+            method = "canEncode",
+            args = {java.lang.CharSequence.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "IllegalStateException checking missed.",
+            method = "canEncode",
+            args = {char.class}
         )
     })
     public void testCanEncodeSurrogate () {
@@ -89,30 +88,29 @@ public class ASCIICharsetEncoderTest extends TestCase {
         assertFalse(encoder.canEncode("\udc00"));
     }
 
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "canEncode",
-          methodArgs = {char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "IllegalStateException checking missed.",
+        method = "canEncode",
+        args = {char.class}
+    )
     public void testCanEncodechar() throws CharacterCodingException {
         assertTrue(encoder.canEncode('\u0077'));
         assertFalse(encoder.canEncode('\uc2a3'));
     }
 
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "averageBytesPerChar",
-          methodArgs = {}
-        ),@TestTarget(
-          methodName = "maxBytesPerChar",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "averageBytesPerChar",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "maxBytesPerChar",
+            args = {}
         )
     })
     public void testSpecificDefaultValue() {
@@ -120,16 +118,18 @@ public class ASCIICharsetEncoderTest extends TestCase {
         assertEquals(1.0, encoder.maxBytesPerChar(), 0.0);
     }
 
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Exceptions checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "encode",
-          methodArgs = {java.nio.CharBuffer.class, java.nio.ByteBuffer.class, boolean.class}
-        ),@TestTarget(
-          methodName = "encode",
-          methodArgs = {java.nio.CharBuffer.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Exceptions checking missed.",
+            method = "encode",
+            args = {java.nio.CharBuffer.class, java.nio.ByteBuffer.class, boolean.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Exceptions checking missed.",
+            method = "encode",
+            args = {java.nio.CharBuffer.class}
         )
     })
     public void testMultiStepEncode() throws CharacterCodingException {
@@ -153,15 +153,12 @@ public class ASCIICharsetEncoderTest extends TestCase {
                 .isMalformed());
     }
 
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "encode",
-          methodArgs = {java.nio.CharBuffer.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "encode",
+        args = {java.nio.CharBuffer.class}
+    )
     public void testEncodeMapping() throws CharacterCodingException {
         encoder.reset();
         
@@ -197,19 +194,24 @@ public class ASCIICharsetEncoderTest extends TestCase {
         }
     }
     
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Checks functionality. Exceptions checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "encode",
-          methodArgs = {java.nio.CharBuffer.class, java.nio.ByteBuffer.class, boolean.class}
-        ), @TestTarget(
-          methodName = "flush",
-          methodArgs = {java.nio.ByteBuffer.class}
-        ), @TestTarget(
-          methodName = "reset",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Checks functionality. Exceptions checking missed.",
+            method = "encode",
+            args = {java.nio.CharBuffer.class, java.nio.ByteBuffer.class, boolean.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Checks functionality. Exceptions checking missed.",
+            method = "flush",
+            args = {java.nio.ByteBuffer.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Checks functionality. Exceptions checking missed.",
+            method = "reset",
+            args = {}
         )
     })
     public void testInternalState() {
@@ -225,19 +227,24 @@ public class ASCIICharsetEncoderTest extends TestCase {
     }
     
     //reset could be called at any time
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Checks functionality. Exceptions checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "reset",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "encode",
-          methodArgs = {java.nio.CharBuffer.class, java.nio.ByteBuffer.class, boolean.class}
-        ), @TestTarget(
-          methodName = "flush",
-          methodArgs = {java.nio.ByteBuffer.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Checks functionality. Exceptions checking missed.",
+            method = "reset",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Checks functionality. Exceptions checking missed.",
+            method = "encode",
+            args = {java.nio.CharBuffer.class, java.nio.ByteBuffer.class, boolean.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Checks functionality. Exceptions checking missed.",
+            method = "flush",
+            args = {java.nio.ByteBuffer.class}
         )
     })
     public void testInternalState_Reset() {
@@ -273,15 +280,12 @@ public class ASCIICharsetEncoderTest extends TestCase {
         }
     }
     
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "CoderMalfunctionError checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "encode",
-          methodArgs = {java.nio.CharBuffer.class, java.nio.ByteBuffer.class, boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "CoderMalfunctionError checking missed.",
+        method = "encode",
+        args = {java.nio.CharBuffer.class, java.nio.ByteBuffer.class, boolean.class}
+    )
     public void testInternalState_Encoding() {
         CharsetEncoder newEncoder = cs.newEncoder();
         //Init - > encoding
@@ -339,15 +343,12 @@ public class ASCIICharsetEncoderTest extends TestCase {
         }
     }
     
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "CoderMalfunctionError checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "encode",
-          methodArgs = {java.nio.CharBuffer.class, java.nio.ByteBuffer.class, boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "CoderMalfunctionError checking missed.",
+        method = "encode",
+        args = {java.nio.CharBuffer.class, java.nio.ByteBuffer.class, boolean.class}
+    )
     public void testInternalState_Encoding_END() {
         CharsetEncoder newEncoder = cs.newEncoder();
 
@@ -403,15 +404,12 @@ public class ASCIICharsetEncoderTest extends TestCase {
         }
     }
     
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "CoderMalfunctionError checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "encode",
-          methodArgs = {java.nio.CharBuffer.class, java.nio.ByteBuffer.class, boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "CoderMalfunctionError checking missed.",
+        method = "encode",
+        args = {java.nio.CharBuffer.class, java.nio.ByteBuffer.class, boolean.class}
+    )
     public void testInternalState_Flushed() {
         CharsetEncoder newEncoder = cs.newEncoder();
         
@@ -471,19 +469,24 @@ public class ASCIICharsetEncoderTest extends TestCase {
         }
     }
     
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Functional test.",
-      targets = {
-        @TestTarget(
-          methodName = "encode",
-          methodArgs = {java.nio.CharBuffer.class}
-        ), @TestTarget(
-          methodName = "flush",
-          methodArgs = {java.nio.ByteBuffer.class}
-        ), @TestTarget(
-          methodName = "reset",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Functional test.",
+            method = "encode",
+            args = {java.nio.CharBuffer.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Functional test.",
+            method = "flush",
+            args = {java.nio.ByteBuffer.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Functional test.",
+            method = "reset",
+            args = {}
         )
     })
     public void testInternalState_Encode() throws CharacterCodingException {
@@ -533,22 +536,30 @@ public class ASCIICharsetEncoderTest extends TestCase {
         }
     }
     
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "CoderMalfunctionError checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "encode",
-          methodArgs = {java.nio.CharBuffer.class}
-        ), @TestTarget(
-          methodName = "encode",
-          methodArgs = {java.nio.CharBuffer.class, java.nio.ByteBuffer.class, boolean.class}
-        ), @TestTarget(
-          methodName = "flush",
-          methodArgs = {java.nio.ByteBuffer.class}
-        ), @TestTarget(
-          methodName = "reset",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "CoderMalfunctionError checking missed.",
+            method = "encode",
+            args = {java.nio.CharBuffer.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "CoderMalfunctionError checking missed.",
+            method = "encode",
+            args = {java.nio.CharBuffer.class, java.nio.ByteBuffer.class, boolean.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "CoderMalfunctionError checking missed.",
+            method = "flush",
+            args = {java.nio.ByteBuffer.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "CoderMalfunctionError checking missed.",
+            method = "reset",
+            args = {}
         )
     })
     public void testInternalState_from_Encode() throws CharacterCodingException {

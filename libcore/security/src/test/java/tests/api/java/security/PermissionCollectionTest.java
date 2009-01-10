@@ -17,10 +17,11 @@
 
 package tests.api.java.security;
 
+import dalvik.annotation.BrokenTest;
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -59,15 +60,13 @@ public class PermissionCollectionTest extends junit.framework.TestCase {
     /**
      * @tests java.security.PermissionCollection#implies(java.security.Permission)
      */
-    @TestInfo(
-      level = TestLevel.TODO,
-      purpose = "Method implies is not call in this test",
-      targets = {
-        @TestTarget(
-          methodName = "implies",
-          methodArgs = {java.security.Permission.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "",
+        method = "implies",
+        args = {java.security.Permission.class}
+    )
+    @BrokenTest("Method implies is not called in this test")
     public void _test_impliesLjava_security_Permission() throws Exception{
 
         // Look for the tests classpath
@@ -189,15 +188,12 @@ public class PermissionCollectionTest extends junit.framework.TestCase {
     /**
      * @tests java.security.PermissionCollection#PermissionCollection()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "PermissionCollection",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "PermissionCollection",
+        args = {}
+    )
     public void test_Constructor() {
         // test java.security.permissionCollection.PermissionCollection()
         SecurityPermission permi = new SecurityPermission(
@@ -210,15 +206,12 @@ public class PermissionCollectionTest extends junit.framework.TestCase {
     /**
      * @tests java.security.PermissionCollection#isReadOnly()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isReadOnly",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isReadOnly",
+        args = {}
+    )
     public void test_isReadOnly() {
         // test java.security.permissionCollection.isReadOnly()
         SecurityPermission permi = new SecurityPermission(
@@ -234,15 +227,12 @@ public class PermissionCollectionTest extends junit.framework.TestCase {
     /**
      * @tests java.security.PermissionCollection#setReadOnly()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setReadOnly",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setReadOnly",
+        args = {}
+    )
     public void test_setReadOnly() {
         // test java.security.permissionCollection.setReadOnly()
         SecurityPermission permi = new SecurityPermission(
@@ -258,22 +248,18 @@ public class PermissionCollectionTest extends junit.framework.TestCase {
     /**
      * @tests java.security.PermissionCollection#toString()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
-    public void _test_toString() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
+    public void test_toString() {
         // test java.security.permissionCollection.toString()
         SecurityPermission permi = new SecurityPermission(
                 "testing permissionCollection-isREadOnly");
         assertNotNull("toString should have returned a string of elements",
                 permi.newPermissionCollection().toString());
-        assertTrue(permi.newPermissionCollection().toString().endsWith("\n"));
     }
 
     // FIXME move me to Support_Resources

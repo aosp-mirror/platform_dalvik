@@ -17,15 +17,17 @@
 
 package org.apache.harmony.text.tests.java.text;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
 
+import java.text.AttributedCharacterIterator;
 import java.text.FieldPosition;
 import java.text.Format;
+import java.text.ParseException;
 import java.text.ParsePosition;
 
 
@@ -51,15 +53,12 @@ public class FormatTest extends TestCase {
      * @tests java.text.Format#format(Object) Test of method
      *        java.text.Format#format(Object).
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "Format",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Format",
+        args = {}
+    )
     public void test_Constructor() {
         try {
             new MockFormat();
@@ -72,15 +71,12 @@ public class FormatTest extends TestCase {
      * @tests java.text.Format#clone() Test of method java.text.Format#clone().
      *        Compare of internal variables of cloned objects.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "clone",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "clone",
+        args = {}
+    )
     public void test_clone() {
         try {
             // Compare of internal variables of cloned objects
@@ -96,16 +92,16 @@ public class FormatTest extends TestCase {
      * @tests java.text.Format#format(java.lang.Object) Test of method
      *        java.text.Format#format(java.lang.Object).
      */
-    @TestInfo(
-      level = TestLevel.TODO,
-      purpose = "Verifies nothing.",
-      targets = {
-        @TestTarget(
-          methodName = "format",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies that format(Object) calls format(Object, StringBuffer, FieldPosition) method.",
+        method = "format",
+        args = {java.lang.Object.class}
+    )
     public void test_formatLjava_lang_Object() {
+     
+        MockFormat mf = new MockFormat();
+        assertEquals("", mf.format(""));
         assertTrue("It calls an abstract metod format", true);
     }
 
@@ -114,33 +110,51 @@ public class FormatTest extends TestCase {
      *        of method
      *        java.text.Format#formatToCharacterIterator(java.lang.Object).
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify anything.",
-      targets = {
-        @TestTarget(
-          methodName = "formatToCharacterIterator",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "formatToCharacterIterator",
+        args = {java.lang.Object.class}
+    )
     public void test_formatToCharacterIteratorLjava_lang_Object() {
-        assertTrue("It calls an abstract metod format", true);
+        
+        MockFormat mf = new MockFormat();
+        AttributedCharacterIterator aci = 
+                                  mf.formatToCharacterIterator("Test 123 Test");
+        
+        assertEquals(0, aci.getBeginIndex());
+        
+        try {
+            mf.formatToCharacterIterator(null);
+            fail("NullPointerException was not thrown.");
+        } catch(NullPointerException npe) {
+            //expected
+        }
+        
+        try {
+            mf.formatToCharacterIterator("");
+        } catch(IllegalArgumentException  iae) {
+            //expected
+        }
     }
 
     /**
      * @tests java.text.Format#parseObject(java.lang.String source) Test of
      *        method java.text.Format#parseObject(java.lang.String source).
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify anything.",
-      targets = {
-        @TestTarget(
-          methodName = "parseObject",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies that parseObject(String) method calls parseObject(String source, ParsePosition pos) method.",
+        method = "parseObject",
+        args = {java.lang.String.class}
+    )
     public void test_parseObjectLjava_lang_String() {
-        assertTrue("It calls an abstract metod parseObject", true);
+        MockFormat mf = new MockFormat();
+        try {
+            assertNull(mf.parseObject(""));
+            fail("ParseException was not thrown.");
+        } catch (ParseException e) {
+            //expected
+        }
     }
 }

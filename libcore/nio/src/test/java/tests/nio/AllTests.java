@@ -29,7 +29,7 @@ public class AllTests {
     }
 
     public static Test suite() {
-        TestSuite suite = new TestSuite("All Math test suites");
+        TestSuite suite = tests.TestSuiteFactory.createTestSuite("All Math test suites");
         // $JUnit-BEGIN$
         suite.addTest(org.apache.harmony.nio.tests.java.nio.AllTests.suite());
         suite.addTest(org.apache.harmony.nio.tests.java.nio.channels.AllTests.suite());

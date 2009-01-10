@@ -17,9 +17,9 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -30,15 +30,12 @@ public class IllegalThreadStateExceptionTest extends TestCase {
     /**
      * @tests java.lang.IllegalThreadStateException#IllegalThreadStateException()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "IllegalThreadStateException",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "IllegalThreadStateException",
+        args = {}
+    )
     public void test_Constructor() {
         IllegalThreadStateException e = new IllegalThreadStateException();
         assertNull(e.getMessage());
@@ -49,15 +46,12 @@ public class IllegalThreadStateExceptionTest extends TestCase {
     /**
      * @tests java.lang.IllegalThreadStateException#IllegalThreadStateException(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "IllegalThreadStateException",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "IllegalThreadStateException",
+        args = {java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_String() {
         IllegalThreadStateException e = new IllegalThreadStateException("fixture");
         assertEquals("fixture", e.getMessage());

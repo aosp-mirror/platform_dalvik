@@ -17,9 +17,9 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -30,15 +30,12 @@ public class UnknownErrorTest extends TestCase {
     /**
      * @tests java.lang.UnknownError#UnknownError()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "UnknownError",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "UnknownError",
+        args = {}
+    )
     public void test_Constructor() {
         UnknownError e = new UnknownError();
         assertNull(e.getMessage());
@@ -49,15 +46,12 @@ public class UnknownErrorTest extends TestCase {
     /**
      * @tests java.lang.UnknownError#UnknownError(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "UnknownError",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "UnknownError",
+        args = {java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_String() {
         UnknownError e = new UnknownError("fixture");
         assertEquals("fixture", e.getMessage());

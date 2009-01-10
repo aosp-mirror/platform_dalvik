@@ -21,9 +21,9 @@
 
 package tests.org.w3c.dom;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import org.w3c.dom.Node;
@@ -78,15 +78,12 @@ public final class NodeGetOwnerDocument extends DOMTestCase {
      * @throws Throwable
      *             Any uncaught exception causes test to fail
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that getOwnerDocument method returns null.",
-      targets = {
-        @TestTarget(
-          methodName = "getOwnerDocument",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies that getOwnerDocument method returns null.",
+        method = "getOwnerDocument",
+        args = {}
+    )
     public void testGetOwnerDocument1() throws Throwable {
         Document doc;
         Document ownerDoc;
@@ -100,15 +97,12 @@ public final class NodeGetOwnerDocument extends DOMTestCase {
         ownerDoc = docType.getOwnerDocument();
         assertNull("nodegetownerdocument01", ownerDoc);
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getOwnerDocument",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getOwnerDocument",
+        args = {}
+    )
     public void testGetOwnerDocument2() throws Throwable {
         Document doc;
         Document newDoc;

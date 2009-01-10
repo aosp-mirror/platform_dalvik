@@ -18,9 +18,9 @@
 package tests.api.javax.net.ssl;
 
 import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.net.Socket;
 import java.security.Principal;
@@ -37,6 +37,7 @@ import junit.framework.TestCase;
  */
 @TestTargetClass(X509ExtendedKeyManager.class) 
 public class X509ExtendedKeyManagerTest extends TestCase {
+    
     private class MockX509ExtendedKeyManager extends X509ExtendedKeyManager {
         public MockX509ExtendedKeyManager() {
             super();
@@ -94,15 +95,12 @@ public class X509ExtendedKeyManagerTest extends TestCase {
     /**
      * @tests javax.net.ssl.X509ExtendedKeyManager#X509ExtendedKeyManager() 
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "X509ExtendedKeyManager",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "X509ExtendedKeyManager",
+        args = {}
+    )
     public final void test_Constructor() {
         try {
             new MockX509ExtendedKeyManager();
@@ -116,15 +114,12 @@ public class X509ExtendedKeyManagerTest extends TestCase {
      *     #chooseEngineClientAlias(java.lang.String[],
      *     java.security.Principal[], javax.net.ssl.SSLEngine) 
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verification with not null parameters missed",
-      targets = {
-        @TestTarget(
-          methodName = "chooseEngineClientAlias",
-          methodArgs = {String[].class, Principal[].class, javax.net.ssl.SSLEngine.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "chooseEngineClientAlias",
+        args = {java.lang.String[].class, java.security.Principal[].class, javax.net.ssl.SSLEngine.class}
+    )
     public final void test_chooseEngineClientAlias() {
         X509ExtendedKeyManager km = new MyX509ExtendedKeyManager();
         if (km.chooseEngineClientAlias(null, null, null) != null) {
@@ -137,15 +132,12 @@ public class X509ExtendedKeyManagerTest extends TestCase {
      *     #chooseEngineServerAlias(java.lang.String,
      *     java.security.Principal[], javax.net.ssl.SSLEngine) 
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verification with not null parameters missed",
-      targets = {
-        @TestTarget(
-          methodName = "chooseEngineServerAlias",
-          methodArgs = {String.class, Principal[].class, javax.net.ssl.SSLEngine.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "chooseEngineServerAlias",
+        args = {java.lang.String.class, java.security.Principal[].class, javax.net.ssl.SSLEngine.class}
+    )
     public final void test_chooseEngineServerAlias() {
         X509ExtendedKeyManager km = new MyX509ExtendedKeyManager();
         if (km.chooseEngineServerAlias(null, null, null) != null) {

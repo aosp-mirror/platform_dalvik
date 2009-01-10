@@ -16,9 +16,9 @@
 
 package tests.api.java.lang.reflect;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import java.lang.reflect.Method;
@@ -40,19 +40,20 @@ public class GenericReflectionCornerCases extends GenericReflectionTestsBase {
     static class WildcardEquality<T> {
         void wildcardEquality(Pair<? extends T, ? extends T> param) {}
     }
-    @TestInfo(
+    @TestTargets({
+        @TestTargetNew(
             level = TestLevel.PARTIAL,
-            purpose = "Stress test.",
-            targets = {
-              @TestTarget(
-                methodName = "getTypeParameters",
-                methodArgs = {}
-              ),
-              @TestTarget(
-                methodName = "getGenericParameterTypes",
-                methodArgs = {}
-              )
-          })
+            notes = "Stress test.",
+            method = "getTypeParameters",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Stress test.",
+            method = "getGenericParameterTypes",
+            args = {}
+        )
+    })
     @SuppressWarnings("unchecked")
     public void testWildcardEquality() throws Exception {
         Class<? extends WildcardEquality> clazz = WildcardEquality.class;
@@ -96,19 +97,20 @@ public class GenericReflectionCornerCases extends GenericReflectionTestsBase {
     static class WildcardUnEquality<T> {
         void wildcardUnEquality(Pair<? extends T, ? super T> param) {}
     }
-    @TestInfo(
+    @TestTargets({
+        @TestTargetNew(
             level = TestLevel.PARTIAL,
-            purpose = "Stress test.",
-            targets = {
-              @TestTarget(
-                methodName = "getTypeParameters",
-                methodArgs = {}
-              ),
-              @TestTarget(
-                methodName = "getGenericParameterTypes",
-                methodArgs = {}
-              )
-          })
+            notes = "Stress test.",
+            method = "getTypeParameters",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Stress test.",
+            method = "getGenericParameterTypes",
+            args = {}
+        )
+    })
     @SuppressWarnings("unchecked")
     public void testWildcardUnEquality() throws Exception {
         Class<? extends WildcardUnEquality> clazz = WildcardUnEquality.class;
@@ -151,19 +153,20 @@ public class GenericReflectionCornerCases extends GenericReflectionTestsBase {
     static class MultipleBoundedWildcardUnEquality<T extends Object & Comparable<MultipleBoundedWildcardUnEquality<T>>> {
         void multipleBoundedWildcardUnEquality(Pair<? extends T, ? super T> param) {}
     }
-    @TestInfo(
+    @TestTargets({
+        @TestTargetNew(
             level = TestLevel.PARTIAL,
-            purpose = "Stress test.",
-            targets = {
-              @TestTarget(
-                methodName = "getTypeParameters",
-                methodArgs = {}
-              ),
-              @TestTarget(
-                methodName = "getGenericParameterTypes",
-                methodArgs = {}
-              )
-          })
+            notes = "Stress test.",
+            method = "getTypeParameters",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Stress test.",
+            method = "getGenericParameterTypes",
+            args = {}
+        )
+    })
     @SuppressWarnings("unchecked")
     public void testMultipleBoundedWildcardUnEquality() throws Exception {
         Class<? extends MultipleBoundedWildcardUnEquality> clazz = MultipleBoundedWildcardUnEquality.class;
@@ -219,19 +222,20 @@ public class GenericReflectionCornerCases extends GenericReflectionTestsBase {
     static class MultipleBoundedWildcardEquality<T extends Object & Comparable<MultipleBoundedWildcardEquality<T>>> {
         void multipleBoundedWildcardEquality(Pair<? extends T, ? extends T> param) {}
     }
-    @TestInfo(
+    @TestTargets({
+        @TestTargetNew(
             level = TestLevel.PARTIAL,
-            purpose = "Stress test.",
-            targets = {
-              @TestTarget(
-                methodName = "getTypeParameters",
-                methodArgs = {}
-              ),
-              @TestTarget(
-                methodName = "getGenericParameterTypes",
-                methodArgs = {}
-              )
-          })
+            notes = "Stress test.",
+            method = "getTypeParameters",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Stress test.",
+            method = "getGenericParameterTypes",
+            args = {}
+        )
+    })
     @SuppressWarnings("unchecked")
     public void testMultipleBoundedWildcard() throws Exception {
         Class<? extends MultipleBoundedWildcardEquality> clazz = MultipleBoundedWildcardEquality.class;

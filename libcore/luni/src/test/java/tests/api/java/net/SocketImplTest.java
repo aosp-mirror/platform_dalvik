@@ -18,9 +18,8 @@
 package tests.api.java.net;
 
 import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.io.FileDescriptor;
 import java.io.IOException;
@@ -30,65 +29,167 @@ import java.net.InetAddress;
 import java.net.SocketAddress;
 import java.net.SocketException;
 import java.net.SocketImpl;
+/*
+* SocketImpl functionality is untestable because of 
+* Socket.setSocketImplFactory method can be specified only once.
+*/
 
-@TestTargetClass(SocketImpl.class) 
+@TestTargetClass(value = SocketImpl.class, 
+                 untestedMethods = {
+                    @TestTargetNew(
+                        level = TestLevel.NOT_FEASIBLE,
+                        notes = "",
+                        method = "accept",
+                        args = {SocketImpl.class}
+                    ),
+                    @TestTargetNew(
+                        level = TestLevel.NOT_FEASIBLE,
+                        notes = "",
+                        method = "available",
+                        args = {}
+                    ),
+                    @TestTargetNew(
+                        level = TestLevel.NOT_FEASIBLE,
+                        notes = "",
+                        method = "bind",
+                        args = {InetAddress.class, int.class}
+                    ),
+                    @TestTargetNew(
+                        level = TestLevel.NOT_FEASIBLE,
+                        notes = "",
+                        method = "close",
+                        args = {}
+                    ),   
+                    @TestTargetNew(
+                        level = TestLevel.NOT_FEASIBLE,
+                        notes = "",
+                        method = "connect",
+                        args = {String.class, int.class}
+                    ),       
+                    @TestTargetNew(
+                        level = TestLevel.NOT_FEASIBLE,
+                        notes = "",
+                        method = "connect",
+                        args = {InetAddress.class, int.class}
+                    ),
+                    @TestTargetNew(
+                        level = TestLevel.NOT_FEASIBLE,
+                        notes = "",
+                        method = "connect",
+                        args = {SocketAddress.class, int.class}
+                    ),
+                    @TestTargetNew(
+                        level = TestLevel.NOT_FEASIBLE,
+                        notes = "",
+                        method = "create",
+                        args = {boolean.class}
+                    ),
+                    @TestTargetNew(
+                        level = TestLevel.NOT_FEASIBLE,
+                        notes = "",
+                        method = "getFileDescriptor",
+                        args = {}
+                    ),
+                    @TestTargetNew(
+                        level = TestLevel.NOT_FEASIBLE,
+                        notes = "",
+                        method = "getInetAddress",
+                        args = {}
+                    ),     
+                    @TestTargetNew(
+                        level = TestLevel.NOT_FEASIBLE,
+                        notes = "",
+                        method = "getInputStream",
+                        args = {}
+                    ),
+                    @TestTargetNew(
+                        level = TestLevel.NOT_FEASIBLE,
+                        notes = "",
+                        method = "getLocalPort",
+                        args = {}
+                    ),
+                    @TestTargetNew(
+                        level = TestLevel.NOT_FEASIBLE,
+                        notes = "",
+                        method = "getOption",
+                        args = {int.class}
+                    ),
+                    @TestTargetNew(
+                        level = TestLevel.NOT_FEASIBLE,
+                        notes = "",
+                        method = "getOutputStream",
+                        args = {}
+                    ),
+                    @TestTargetNew(
+                        level = TestLevel.NOT_FEASIBLE,
+                        notes = "",
+                        method = "getPort",
+                        args = {}
+                    ),
+                    @TestTargetNew(
+                        level = TestLevel.NOT_FEASIBLE,
+                        notes = "",
+                        method = "listen",
+                        args = {int.class}
+                    ),
+                    @TestTargetNew(
+                        level = TestLevel.NOT_FEASIBLE,
+                        notes = "",
+                        method = "sendUrgentData",
+                        args = {int.class}
+                    ),
+                    @TestTargetNew(
+                        level = TestLevel.NOT_FEASIBLE,
+                        notes = "",
+                        method = "setOption",
+                        args = {int.class, Object.class}
+                    ),
+                    @TestTargetNew(
+                        level = TestLevel.NOT_FEASIBLE,
+                        notes = "",
+                        method = "setPerformancePreferences",
+                        args = {int.class, int.class, int.class}
+                    ),     
+                    @TestTargetNew(
+                        level = TestLevel.NOT_FEASIBLE,
+                        notes = "",
+                        method = "shutdownInput",
+                        args = {}
+                    ),
+                    @TestTargetNew(
+                        level = TestLevel.NOT_FEASIBLE,
+                        notes = "",
+                        method = "shutdownOutput",
+                        args = {}
+                    ),
+                    @TestTargetNew(
+                        level = TestLevel.NOT_FEASIBLE,
+                        notes = "",
+                        method = "supportsUrgentData",
+                        args = {}
+                    ),                    
+                    @TestTargetNew(
+                        level = TestLevel.NOT_FEASIBLE,
+                        notes = "",
+                        method = "toString",
+                        args = {}
+                    )                    
+                }) 
 public class SocketImplTest extends junit.framework.TestCase {
 
     
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Regression test.",
-      targets = {
-        @TestTarget(
-          methodName = "SocketImpl",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Regression test.",
+        method = "SocketImpl",
+        args = {}
+    )
     public void test_Constructor_fd() throws Exception {
         // regression test for Harmony-1117
         MockSocketImpl mockSocketImpl = new MockSocketImpl();
         assertNull(mockSocketImpl.getFileDescriptor());
     }
     
-    /*
-    * @tests java.net.SocketImpl#setPerformancePreference()
-    */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setPerformancePreference",
-          methodArgs = {int.class, int.class, int.class}
-        )
-    })
-    public void test_setPerformancePreference_Int_Int_Int() throws Exception {
-        MockSocketImpl theSocket = new MockSocketImpl();
-        theSocket.setPerformancePreference(1,1,1);
-    }
-
-    /*
-     * @tests java.net.SocketImpl#shutdownOutput()
-     */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checked only.",
-      targets = {
-        @TestTarget(
-          methodName = "shutdownOutput",
-          methodArgs = {}
-        )
-    })
-    public void test_shutdownOutput() {
-        MockSocketImpl s = new MockSocketImpl();
-        try {
-            s.shutdownOutput();
-            fail("This method is still not implemented yet,It should throw IOException.");
-        } catch (IOException e) {
-            // expected
-        }
-    }
-
     // the mock class for test, leave all method empty
     class MockSocketImpl extends SocketImpl{
         

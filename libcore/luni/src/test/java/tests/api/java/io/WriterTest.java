@@ -15,15 +15,14 @@
  */
 package tests.api.java.io;
 
-import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestLevel;
-
 import java.io.IOException;
 import java.io.Writer;
 
 import junit.framework.TestCase;
+import tests.support.Support_ASimpleWriter;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
 @TestTargetClass(Writer.class) 
 public class WriterTest extends TestCase {
@@ -31,15 +30,12 @@ public class WriterTest extends TestCase {
     /**
      * @tests java.io.Writer#append(char)
      */
-    @TestInfo(
-              level = TestLevel.PARTIAL,
-              purpose = "IOException checking missed.",
-              targets = {
-                @TestTarget(
-                  methodName = "append",
-                  methodArgs = {char.class}
-                )
-            })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "append",
+        args = {char.class}
+    )
     public void test_appendChar() throws IOException {
         char testChar = ' ';
         MockWriter writer = new MockWriter(20);
@@ -47,20 +43,28 @@ public class WriterTest extends TestCase {
         assertEquals(String.valueOf(testChar), String.valueOf(writer
                 .getContents()));
         writer.close();
+
+        Writer tobj = new Support_ASimpleWriter(2);
+        tobj.append('a');
+        tobj.append('b');
+        assertEquals("Wrong stuff written!", "ab", tobj.toString());
+        try {
+            tobj.append('c');
+            fail("IOException not thrown!");
+        } catch (IOException e) {
+            // expected
+        }
     }
 
     /**
      * @tests java.io.Writer#append(CharSequence)
      */
-    @TestInfo(
-              level = TestLevel.PARTIAL,
-              purpose = "IOException checking missed.",
-              targets = {
-                @TestTarget(
-                  methodName = "append",
-                  methodArgs = {java.lang.CharSequence.class}
-                )
-            })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "append",
+        args = {java.lang.CharSequence.class}
+    )
     public void test_appendCharSequence() throws IOException {
         String testString = "My Test String";
         MockWriter writer = new MockWriter(20);
@@ -68,20 +72,26 @@ public class WriterTest extends TestCase {
         assertEquals(testString, String.valueOf(writer.getContents()));
         writer.close();
 
+        Writer tobj = new Support_ASimpleWriter(20);
+        tobj.append(testString);
+        assertEquals("Wrong stuff written!", testString, tobj.toString());
+        try {
+            tobj.append(testString);
+            fail("IOException not thrown!");
+        } catch (IOException e) {
+            // expected
+        }
     }
 
     /**
      * @tests java.io.Writer#append(CharSequence, int, int)
      */
-    @TestInfo(
-              level = TestLevel.PARTIAL,
-              purpose = "IndexOutOfBoundsException & IOException checking missed.",
-              targets = {
-                @TestTarget(
-                  methodName = "append",
-                  methodArgs = {java.lang.CharSequence.class, int.class, int.class}
-                )
-            })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "append",
+        args = {java.lang.CharSequence.class, int.class, int.class}
+    )
     public void test_appendCharSequenceIntInt() throws IOException {
         String testString = "My Test String";
         MockWriter writer = new MockWriter(20);
@@ -90,7 +100,129 @@ public class WriterTest extends TestCase {
                 .getContents()));
         writer.close();
 
+        Writer tobj = new Support_ASimpleWriter(21);
+        testString = "0123456789abcdefghijABCDEFGHIJ";
+        tobj.append(testString, 0, 5);
+        assertEquals("Wrong stuff written!", "01234", tobj.toString());
+        tobj.append(testString, 10, 15);
+        assertEquals("Wrong stuff written!", "01234abcde", tobj.toString());
+        tobj.append(testString, 20, 30);
+        assertEquals("Wrong stuff written!", "01234abcdeABCDEFGHIJ", tobj.toString());
+        try {
+            tobj.append(testString, 30, 31);
+            fail("IndexOutOfBoundsException not thrown!");
+        } catch (IndexOutOfBoundsException e) {
+            // expected
+        }
+        tobj.append(testString, 20, 21); // Just fill the writer to its limit!
+        try {
+            tobj.append(testString, 29, 30);
+            fail("IOException not thrown!");
+        } catch (IOException e) {
+            // expected
+        }
     }
+
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "write",
+        args = {char[].class}
+    )
+    public void test_write$C() throws IOException {
+        Writer tobj = new Support_ASimpleWriter(21);
+        tobj.write("01234".toCharArray());
+        assertEquals("Wrong stuff written!", "01234", tobj.toString());
+        tobj.write("abcde".toCharArray());
+        assertEquals("Wrong stuff written!", "01234abcde", tobj.toString());
+        tobj.write("ABCDEFGHIJ".toCharArray());
+        assertEquals("Wrong stuff written!", "01234abcdeABCDEFGHIJ", tobj.toString());
+        tobj.write("z".toCharArray()); // Just fill the writer to its limit!
+        try {
+            tobj.write("LES JEUX SONT FAITS".toCharArray());
+            fail("IOException not thrown!");
+        } catch (IOException e) {
+            // expected
+        }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "write",
+        args = {int.class}
+    )
+    public void test_writeI() throws IOException {
+        Writer tobj = new Support_ASimpleWriter(2);
+        tobj.write('a');
+        tobj.write('b');
+        assertEquals("Wrong stuff written!", "ab", tobj.toString());
+        try {
+            tobj.write('c');
+            fail("IOException not thrown!");
+        } catch (IOException e) {
+            // expected
+        }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "write",
+        args = {java.lang.String.class}
+    )
+    public void test_writeLjava_lang_String() throws IOException {
+        Writer tobj = new Support_ASimpleWriter(21);
+        tobj.write("01234");
+        assertEquals("Wrong stuff written!", "01234", tobj.toString());
+        tobj.write("abcde");
+        assertEquals("Wrong stuff written!", "01234abcde", tobj.toString());
+        tobj.write("ABCDEFGHIJ");
+        assertEquals("Wrong stuff written!", "01234abcdeABCDEFGHIJ", tobj.toString());
+        tobj.write("z"); // Just fill the writer to its limit!
+        try {
+            tobj.write("LES JEUX SONT FAITS");
+            fail("IOException not thrown!");
+        } catch (IOException e) {
+            // expected
+        }
+    }
+
+    /**
+     * @tests java.io.PrintWriter#write(java.lang.String, int, int)
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "write",
+        args = {java.lang.String.class, int.class, int.class}
+    )
+    public void test_writeLjava_lang_StringII() throws IOException {
+        String testString;
+        Writer tobj = new Support_ASimpleWriter(21);
+        testString = "0123456789abcdefghijABCDEFGHIJ";
+        tobj.write(testString, 0, 5);
+        assertEquals("Wrong stuff written!", "01234", tobj.toString());
+        tobj.write(testString, 10, 5);
+        assertEquals("Wrong stuff written!", "01234abcde", tobj.toString());
+        tobj.write(testString, 20, 10);
+        assertEquals("Wrong stuff written!", "01234abcdeABCDEFGHIJ", tobj.toString());
+        try {
+            tobj.write(testString, 30, 1);
+            fail("IndexOutOfBoundsException not thrown!");
+        } catch (IndexOutOfBoundsException e) {
+            // expected
+        }
+        tobj.write(testString, 20, 1); // Just fill the writer to its limit!
+        try {
+            tobj.write(testString, 29, 1);
+            fail("IOException not thrown!");
+        } catch (IOException e) {
+            // expected
+        }
+    }
+    
 
     class MockWriter extends Writer {
         private char[] contents;

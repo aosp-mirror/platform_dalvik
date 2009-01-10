@@ -14,13 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.harmony.archive.tests.java.util.zip;
 
-import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.AndroidOnly;
+import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
-
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 import tests.support.Support_PlatformFile;
 import tests.support.resource.Support_Resources;
 
@@ -30,44 +31,57 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.security.Permission;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
-@TestTargetClass(ZipFile.class) 
+@TestTargetClass(ZipFile.class)
 public class ZipFileTest extends junit.framework.TestCase {
 
-// BEGIN android-added
+    // BEGIN android-added
     public byte[] getAllBytesFromStream(InputStream is) throws IOException {
         ByteArrayOutputStream bs = new ByteArrayOutputStream();
         byte[] buf = new byte[666];
-        int iRead; int off;
+        int iRead;
+        int off;
         while (is.available() > 0) {
             iRead = is.read(buf, 0, buf.length);
-            if (iRead > 0)
-                bs.write(buf, 0, iRead);
+            if (iRead > 0) bs.write(buf, 0, iRead);
         }
         return bs.toByteArray();
     }
-// END android-added
+
+    // END android-added
 
     // the file hyts_zipFile.zip in setup must be included as a resource
     private String tempFileName;
 
     private ZipFile zfile;
 
+    // custom security manager
+    SecurityManager sm = new SecurityManager() {
+        final String forbidenPermissionAction = "read";
+
+
+
+        public void checkPermission(Permission perm) {
+            if (perm.getActions().equals(forbidenPermissionAction)) {
+                throw new SecurityException();
+            }
+        }
+    };
+
     /**
      * @tests java.util.zip.ZipFile#ZipFile(java.io.File)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "setUp procedure checks this type of constructor.",
-      targets = {
-        @TestTarget(
-          methodName = "ZipFile",
-          methodArgs = {java.io.File.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "setUp procedure checks this type of constructor.",
+        method = "ZipFile",
+        args = {java.io.File.class}
+    )
     public void test_ConstructorLjava_io_File() {
         // Test for method java.util.zip.ZipFile(java.io.File)
         assertTrue("Used to test", true);
@@ -76,43 +90,85 @@ public class ZipFileTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipFile#ZipFile(java.io.File, int)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "ZipFile",
-          methodArgs = {java.io.File.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "ZipFile",
+        args = {java.io.File.class, int.class}
+    )
     public void test_ConstructorLjava_io_FileI() throws IOException {
-                zfile.close(); // about to reopen the same temp file
-                File file = new File(tempFileName);
-                ZipFile zip = new ZipFile(file, ZipFile.OPEN_DELETE
-                                          | ZipFile.OPEN_READ);
-                zip.close();
-                assertTrue("Zip should not exist", !file.exists());
+        zfile.close(); // about to reopen the same temp file
+        File file = new File(tempFileName);
+        ZipFile zip = new ZipFile(file, ZipFile.OPEN_DELETE | ZipFile.OPEN_READ);
+        zip.close();
+        assertTrue("Zip should not exist", !file.exists());
+        file = new File(tempFileName);
+        file.delete();
+        try {
+            zip = new ZipFile(file, ZipFile.OPEN_READ);
+            fail("IOException expected");
+        } catch (IOException ee) {
+            // expected
+        }
+        // IOException can not be checked throws ZipException in case of IO
+        // problems.
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            file = new File(tempFileName);
+            zip = new ZipFile(file, ZipFile.OPEN_READ);
+            fail("SecurityException expected");
+        } catch (SecurityException e) {
+            // expected
+        } finally {
+            System.setSecurityManager(oldSm);
+        }
+        file = new File(tempFileName);
+        try {
+            zip = new ZipFile(file, -1);
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException ee) {
+            // expected
+        }
     }
 
     /**
+     * @throws IOException
      * @tests java.util.zip.ZipFile#ZipFile(java.lang.String)
      */
-@TestInfo(
-      level = TestLevel.TODO,
-      purpose = "Test contains empty brackets.",
-      targets = {
-        @TestTarget(
-          methodName = "ZipFile",
-          methodArgs = {java.lang.String.class}
-        )
-    })
-    public void test_ConstructorLjava_lang_String() {
-        // Test for method java.util.zip.ZipFile(java.lang.String)
-        /*
-         * try { zfile = new java.util.zip.ZipFile(zipName); zfile.close(); }
-         * catch (java.io.IOException e) {fail( "Failed to construct
-         * ZipFile" );}
-         */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Test contains empty brackets.",
+        method = "ZipFile",
+        args = {java.lang.String.class}
+    )
+    public void test_ConstructorLjava_lang_String() throws IOException {
+        String oldUserDir = System.getProperty("user.dir");
+        System.setProperty("user.dir", System.getProperty("java.io.tmpdir"));
+        
+        zfile.close(); // about to reopen the same temp file
+        ZipFile zip = new ZipFile(tempFileName);
+        zip.close();
+        File file = File.createTempFile("zip", "tmp");
+        try {
+            zip = new ZipFile(file.getName());
+            fail("ZipException expected");
+        } catch (ZipException ee) {
+            // expected
+        }
+        file.delete();
+        // IOException can not be checked throws ZipException in case of IO
+        // problems.
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            zip = new ZipFile(tempFileName);
+            fail("SecurityException expected");
+        } catch (SecurityException e) {
+            // expected
+        } finally {
+            System.setSecurityManager(oldSm);
+            System.setProperty("user.dir", oldUserDir);
+        }
     }
 
     protected ZipEntry test_finalize1(ZipFile zip) {
@@ -120,82 +176,89 @@ public class ZipFileTest extends junit.framework.TestCase {
     }
 
     protected ZipFile test_finalize2(File file) throws IOException {
-                return new ZipFile(file);
+        return new ZipFile(file);
     }
 
     /**
      * @tests java.util.zip.ZipFile#finalize()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "finalize",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "finalize",
+        args = {}
+    )
     public void test_finalize() throws IOException {
-            InputStream in = Support_Resources.getStream("hyts_ZipFile.zip");
-            File file = Support_Resources.createTempFile(".jar");
-            OutputStream out = new FileOutputStream(file);
-            int result;
-            byte[] buf = new byte[4096];
-            while ((result = in.read(buf)) != -1) {
-                out.write(buf, 0, result);
-            }
-            in.close();
-            out.close();
-            /*
-             * ZipFile zip = new ZipFile(file); ZipEntry entry1 =
-             * zip.getEntry("File1.txt"); assertNotNull("Did not find entry",
-             * entry1); entry1 = null; zip = null;
-             */
+        InputStream in = Support_Resources.getStream("hyts_ZipFile.zip");
+        File file = Support_Resources.createTempFile(".jar");
+        OutputStream out = new FileOutputStream(file);
+        int result;
+        byte[] buf = new byte[4096];
+        while ((result = in.read(buf)) != -1) {
+            out.write(buf, 0, result);
+        }
+        in.close();
+        out.close();
+        /*
+         * ZipFile zip = new ZipFile(file); ZipEntry entry1 =
+         * zip.getEntry("File1.txt"); assertNotNull("Did not find entry",
+         * entry1); entry1 = null; zip = null;
+         */
 
-            assertNotNull("Did not find entry",
-                          test_finalize1(test_finalize2(file)));
-            System.gc();
-            System.gc();
-            System.runFinalization();
-            file.delete();
-            assertTrue("Zip should not exist", !file.exists());
+        assertNotNull("Did not find entry",
+                test_finalize1(test_finalize2(file)));
+        System.gc();
+        System.gc();
+        System.runFinalization();
+        file.delete();
+        assertTrue("Zip should not exist", !file.exists());
     }
 
     /**
+     * @throws IOException
      * @tests java.util.zip.ZipFile#close()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "close",
-          methodArgs = {}
-        )
-    })
-    public void _test_close() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "close",
+        args = {}
+    )
+    public void test_close() throws IOException {
         // Test for method void java.util.zip.ZipFile.close()
+        File fl = new File(tempFileName);
+        ZipFile zf = new ZipFile(fl);
+        InputStream is1 = zf.getInputStream(zf.getEntry("File1.txt"));
+        InputStream is2 = zf.getInputStream(zf.getEntry("File2.txt"));
+
+        is1.read();
+        is2.read();
+
+        zf.close();
+
         try {
-            zfile.close();
-            zfile.getInputStream(zfile.getEntry("ztest/file1.txt"));
-        } catch (IOException e) {
-            return;
+            is1.read();
+            fail("IOException expected");
+        } catch (IOException ee) {
+            // expected
         }
-        fail("Close test failed");
+
+        try {
+            is2.read();
+            fail("IOException expected");
+        } catch (IOException ee) {
+            // expected
+        }
     }
 
     /**
      * @tests java.util.zip.ZipFile#entries()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "entries",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "entries",
+        args = {}
+    )
     public void test_entries() {
         // Test for method java.util.Enumeration java.util.zip.ZipFile.entries()
         Enumeration<? extends ZipEntry> enumer = zfile.entries();
@@ -225,78 +288,106 @@ public class ZipFileTest extends junit.framework.TestCase {
     /**
      * @tests java.util.zip.ZipFile#getEntry(java.lang.String)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "getEntry",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "getEntry",
+        args = {java.lang.String.class}
+    )
     public void test_getEntryLjava_lang_String() throws IOException {
         // Test for method java.util.zip.ZipEntry
         // java.util.zip.ZipFile.getEntry(java.lang.String)
         java.util.zip.ZipEntry zentry = zfile.getEntry("File1.txt");
         assertNotNull("Could not obtain ZipEntry", zentry);
+        int r;
+        InputStream in;
 
         zentry = zfile.getEntry("testdir1/File1.txt");
-        assertNotNull("Could not obtain ZipEntry: testdir1/File1.txt",
-                zentry);
-                int r;
-                InputStream in;
-                zentry = zfile.getEntry("testdir1/");
-                assertNotNull("Could not obtain ZipEntry: testdir1/", zentry);
-                in = zfile.getInputStream(zentry);
-                assertNotNull("testdir1/ should not have null input stream",
-                              in);
-                r = in.read();
-                in.close();
-                assertEquals("testdir1/ should not contain data", -1, r);
-                
-                zentry = zfile.getEntry("testdir1");
-                assertNotNull("Could not obtain ZipEntry: testdir1", zentry);
-                in = zfile.getInputStream(zentry);
-                assertNotNull("testdir1 should not have null input stream", in);
-                r = in.read();
-                in.close();
-                assertEquals("testdir1 should not contain data", -1, r);
+        assertNotNull("Could not obtain ZipEntry: testdir1/File1.txt", zentry);
+        zentry = zfile.getEntry("testdir1/");
+        assertNotNull("Could not obtain ZipEntry: testdir1/", zentry);
+        in = zfile.getInputStream(zentry);
+        assertNotNull("testdir1/ should not have null input stream", in);
+        r = in.read();
+        in.close();
+        assertEquals("testdir1/ should not contain data", -1, r);
 
-                zentry = zfile.getEntry("testdir1/testdir1");
-                assertNotNull("Could not obtain ZipEntry: testdir1/testdir1",
-                              zentry);
-                in = zfile.getInputStream(zentry);
-                byte[] buf = new byte[256];
-                r = in.read(buf);
-                in.close();
-                assertEquals("incorrect contents",
-                             "This is also text", new String(buf, 0, r));
+        zentry = zfile.getEntry("testdir1/testdir1");
+        assertNotNull("Could not obtain ZipEntry: testdir1/testdir1", zentry);
+        in = zfile.getInputStream(zentry);
+        byte[] buf = new byte[256];
+        r = in.read(buf);
+        in.close();
+        assertEquals("incorrect contents", "This is also text", new String(buf,
+                0, r));
+    }
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Strange test that succeeds in Android but not against RI.",
+        method = "getEntry",
+        args = {java.lang.String.class}
+    )
+    @AndroidOnly("God knows why!")
+    public void test_getEntryLjava_lang_String_AndroidOnly() throws IOException {
+        java.util.zip.ZipEntry zentry = zfile.getEntry("File1.txt");
+        assertNotNull("Could not obtain ZipEntry", zentry);
+        int r;
+        InputStream in;
+
+        zentry = zfile.getEntry("testdir1");
+        assertNotNull("Could not obtain ZipEntry: testdir1", zentry);
+        in = zfile.getInputStream(zentry);
+        assertNotNull("testdir1 should not have null input stream", in);
+        r = in.read();
+        in.close();
+        assertEquals("testdir1 should not contain data", -1, r);
+    }
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "IllegalStateException checking.",
+        method = "getEntry",
+        args = {java.lang.String.class}
+    )
+    @KnownFailure("Android does not throw IllegalStateException when using getEntry() after close().")
+    public void test_getEntryLjava_lang_String_Ex() throws IOException {
+        java.util.zip.ZipEntry zentry = zfile.getEntry("File1.txt");
+        assertNotNull("Could not obtain ZipEntry", zentry);
+        int r;
+        InputStream in;
+
+        zfile.close();
+        try {
+            zentry = zfile.getEntry("File2.txt");
+            fail("IllegalStateException expected"); // Android fails here!
+        } catch (IllegalStateException ee) {
+            // expected
+        }
     }
 
     /**
+     * @throws IOException
      * @tests java.util.zip.ZipFile#getInputStream(java.util.zip.ZipEntry)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException & ZipException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "getInputStream",
-          methodArgs = {java.util.zip.ZipEntry.class}
-        )
-    })
-    public void test_getInputStreamLjava_util_zip_ZipEntry() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getInputStream",
+        args = {java.util.zip.ZipEntry.class}
+    )
+    public void test_getInputStreamLjava_util_zip_ZipEntry() throws IOException {
         // Test for method java.io.InputStream
         // java.util.zip.ZipFile.getInputStream(java.util.zip.ZipEntry)
-        java.io.InputStream is = null;
+        ZipEntry zentry = null;
+        InputStream is = null;
         try {
-            java.util.zip.ZipEntry zentry = zfile.getEntry("File1.txt");
+            zentry = zfile.getEntry("File1.txt");
             is = zfile.getInputStream(zentry);
             byte[] rbuf = new byte[1000];
             int r;
             is.read(rbuf, 0, r = (int) zentry.getSize());
-            assertEquals("getInputStream read incorrect data", "This is text", new String(rbuf,
-                    0, r));
+            assertEquals("getInputStream read incorrect data", "This is text",
+                    new String(rbuf, 0, r));
         } catch (java.io.IOException e) {
             fail("IOException during getInputStream");
         } finally {
@@ -306,40 +397,53 @@ public class ZipFileTest extends junit.framework.TestCase {
                 fail("Failed to close input stream");
             }
         }
+
+        zentry = zfile.getEntry("File2.txt");
+        zfile.close();
+        try {
+            is = zfile.getInputStream(zentry);
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException ee) {
+            // expected
+        }
+
+        // ZipException can not be checked. Stream object returned or null.
     }
 
     /**
      * @tests java.util.zip.ZipFile#getName()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getName",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getName",
+        args = {}
+    )
     public void test_getName() {
         // Test for method java.lang.String java.util.zip.ZipFile.getName()
         assertTrue("Returned incorrect name: " + zfile.getName(), zfile
                 .getName().equals(tempFileName));
     }
-    
+
     /**
+     * @throws IOException
      * @tests java.util.zip.ZipFile#size()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException  checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "size",
-          methodArgs = {}
-        )
-    })
-    public void test_size() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "size",
+        args = {}
+    )
+    @KnownFailure("IllegalStateException not thrown when using ZipFile.size() after close().")
+    public void test_size() throws IOException {
         assertEquals(6, zfile.size());
+        zfile.close();
+        try {
+            zfile.size();
+            fail("IllegalStateException expected"); // Android fails here!
+        } catch (IllegalStateException ee) {
+            // expected
+        }
     }
 
     /**
@@ -352,7 +456,7 @@ public class ZipFileTest extends junit.framework.TestCase {
             // BEGIN android-changed
             // Create a local copy of the file since some tests want to alter
             // information.
-            tempFileName = System.getProperty("user.dir");
+            tempFileName = System.getProperty("java.io.tmpdir");
             String separator = System.getProperty("file.separator");
             if (tempFileName.charAt(tempFileName.length() - 1) == separator
                     .charAt(0)) {
@@ -390,7 +494,7 @@ public class ZipFileTest extends junit.framework.TestCase {
                 // Note zfile is a user-defined zip file used by other tests and
                 // should not be deleted
                 zfile.close();
-                tempFileName = System.getProperty("user.dir");
+                tempFileName = System.getProperty("java.io.tmpdir");
                 String separator = System.getProperty("file.separator");
                 if (tempFileName.charAt(tempFileName.length() - 1) == separator
                         .charAt(0)) {

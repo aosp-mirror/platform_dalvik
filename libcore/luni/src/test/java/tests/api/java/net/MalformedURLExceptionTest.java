@@ -18,9 +18,9 @@
 package tests.api.java.net;
 
 import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -31,15 +31,12 @@ public class MalformedURLExceptionTest extends junit.framework.TestCase {
     /**
      * @tests java.net.MalformedURLException#MalformedURLException()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "MalformedURLException",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "MalformedURLException",
+        args = {}
+    )
     public void test_Constructor() {
         // Test for method java.net.MalformedURLException()
         boolean passed;
@@ -58,15 +55,12 @@ public class MalformedURLExceptionTest extends junit.framework.TestCase {
     /**
      * @tests java.net.MalformedURLException#MalformedURLException(java.lang.String)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "MalformedURLException",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "MalformedURLException",
+        args = {java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_String() {
         // Test for method java.net.MalformedURLException(java.lang.String)
         final String myString = "Gawsh!";

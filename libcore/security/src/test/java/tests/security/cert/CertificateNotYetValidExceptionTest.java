@@ -22,9 +22,9 @@
 
 package tests.security.cert;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -63,15 +63,12 @@ public class CertificateNotYetValidExceptionTest extends TestCase {
      * Assertion: constructs CertificateNotYetValidException with no detail
      * message
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "CertificateNotYetValidException",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "CertificateNotYetValidException",
+        args = {}
+    )
     public void testCertificateNotYetValidException01() {
         CertificateNotYetValidException tE = new CertificateNotYetValidException();
         assertNull("getMessage() must return null.", tE.getMessage());
@@ -83,15 +80,12 @@ public class CertificateNotYetValidExceptionTest extends TestCase {
      * constructor Assertion: constructs CertificateNotYetValidException with
      * detail message msg. Parameter <code>msg</code> is not null.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "CertificateNotYetValidException",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "CertificateNotYetValidException",
+        args = {java.lang.String.class}
+    )
     public void testCertificateNotYetValidException02() {
         CertificateNotYetValidException tE;
         for (int i = 0; i < msgs.length; i++) {
@@ -107,15 +101,12 @@ public class CertificateNotYetValidExceptionTest extends TestCase {
      * constructor Assertion: constructs CertificateNotYetValidException when
      * <code>msg</code> is null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies null as a parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "CertificateNotYetValidException",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies null as a parameter.",
+        method = "CertificateNotYetValidException",
+        args = {java.lang.String.class}
+    )
     public void testCertificateNotYetValidException03() {
         String msg = null;
         CertificateNotYetValidException tE = new CertificateNotYetValidException(

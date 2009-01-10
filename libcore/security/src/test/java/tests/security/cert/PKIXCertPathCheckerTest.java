@@ -22,9 +22,9 @@
 
 package tests.security.cert;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -57,15 +57,12 @@ public class PKIXCertPathCheckerTest extends TestCase {
     //
     // Tests
     //
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "PKIXCertPathChecker",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "PKIXCertPathChecker",
+        args = {}
+    )
     public final void testConstructor() {
         try {
             new MyPKIXCertPathChecker();
@@ -73,15 +70,12 @@ public class PKIXCertPathCheckerTest extends TestCase {
             fail("Unexpected exception " + e.getMessage());
         }
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "clone",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "clone",
+        args = {}
+    )
     public final void testClone() {
         PKIXCertPathChecker pc1 = TestUtils.getTestCertPathChecker();
         PKIXCertPathChecker pc2 = (PKIXCertPathChecker) pc1.clone();
@@ -93,55 +87,43 @@ public class PKIXCertPathCheckerTest extends TestCase {
     // that are abstract in <code>PKIXCertPathChecker</code>
     // (So they just like signature tests)
     //
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isForwardCheckingSupported",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isForwardCheckingSupported",
+        args = {}
+    )
     public final void testIsForwardCheckingSupported() {
         PKIXCertPathChecker pc = TestUtils.getTestCertPathChecker();
         pc.isForwardCheckingSupported();
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "init",
-          methodArgs = {boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "init",
+        args = {boolean.class}
+    )
     public final void testInit()
         throws CertPathValidatorException {
         PKIXCertPathChecker pc = TestUtils.getTestCertPathChecker();
         pc.init(true);
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getSupportedExtensions",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getSupportedExtensions",
+        args = {}
+    )
     public final void testGetSupportedExtensions() {
         PKIXCertPathChecker pc = TestUtils.getTestCertPathChecker();
         pc.getSupportedExtensions();
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "check",
-          methodArgs = {java.security.cert.Certificate.class, java.util.Collection.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "check",
+        args = {java.security.cert.Certificate.class, java.util.Collection.class}
+    )
     public final void testCheck() throws CertPathValidatorException {
         PKIXCertPathChecker pc = TestUtils.getTestCertPathChecker();
         pc.check(new MyCertificate("", null), new HashSet<String>());

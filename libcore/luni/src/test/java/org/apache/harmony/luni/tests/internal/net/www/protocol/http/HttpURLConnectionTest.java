@@ -18,9 +18,9 @@
 package org.apache.harmony.luni.tests.internal.net.www.protocol.http;
 
 import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.io.IOException;
 import java.net.Authenticator;
@@ -164,16 +164,13 @@ public class HttpURLConnectionTest extends TestCase {
     /**
      * @tests org.apache.harmony.luni.internal.net.www.http.getOutputStream()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Regression test.",
-      targets = {
-        @TestTarget(
-          methodName = "getOutputStream",
-          methodArgs = {}
-        )
-    })
-    public void _testGetOutputStream() throws Exception {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Regression test.",
+        method = "getOutputStream",
+        args = {}
+    )
+    public void testGetOutputStream() throws Exception {
         // Regression for HARMONY-482
         MockServer httpServer =
             new MockServer("ServerSocket for HttpURLConnectionTest");
@@ -198,16 +195,12 @@ public class HttpURLConnectionTest extends TestCase {
      * Test checks if the proxy specified in openConnection
      * method will be used for connection to the server
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies if the proxy specified in openConnection " + 
-            "method will be used for connection to the server.",
-      targets = {
-        @TestTarget(
-          methodName = "usingProxy",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies if the proxy specified in openConnection method will be used for connection to the server.",
+        method = "usingProxy",
+        args = {}
+    )
     public void testUsingProxy() throws Exception {
         // Regression for HARMONY-570
         MockServer server = new MockServer("server");
@@ -248,16 +241,12 @@ public class HttpURLConnectionTest extends TestCase {
      * Test checks if the proxy provided by proxy selector
      * will be used for connection to the server
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies if the proxy provided by proxy selector " + 
-            "will be used for connection to the server.",
-      targets = {
-        @TestTarget(
-          methodName = "usingProxy",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies if the proxy provided by proxy selector will be used for connection to the server.",
+        method = "usingProxy",
+        args = {}
+    )
     public void testUsingProxySelector() throws Exception {
         // Regression for HARMONY-570
         MockServer server = new MockServer("server");
@@ -299,17 +288,18 @@ public class HttpURLConnectionTest extends TestCase {
             ProxySelector.setDefault(defPS);
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Regression test.",
-      targets = {
-        @TestTarget(
-          methodName = "getResponseCode",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Regression test.",
+            method = "getResponseCode",
+            args = {}
         ),
-        @TestTarget(
-          methodName = "connect",
-          methodArgs = {}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Regression test.",
+            method = "connect",
+            args = {}
         )
     })
     public void testProxyAuthorization() throws Exception {

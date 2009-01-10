@@ -30,7 +30,7 @@ public class AllTests {
     }
 
     public static Test suite() {
-        TestSuite suite = new TestSuite("All tests for package tests.api.java.security.acl;");
+        TestSuite suite = tests.TestSuiteFactory.createTestSuite("All tests for package tests.api.java.security.acl;");
         // $JUnit-BEGIN$
 
         suite.addTestSuite(AclNotFoundException2Test.class);
@@ -39,6 +39,11 @@ public class AllTests {
         suite.addTestSuite(LastOwnerExceptionTest.class);
         suite.addTestSuite(NotOwnerException2Test.class);
         suite.addTestSuite(NotOwnerExceptionTest.class);
+        suite.addTestSuite(IPermissionTest.class);
+        suite.addTestSuite(IGroupTest.class);
+        suite.addTestSuite(IOwnerTest.class);        
+        suite.addTestSuite(IAclEntryTest.class);
+        suite.addTestSuite(IAclTest.class);
 
         // $JUnit-END$
         return suite;

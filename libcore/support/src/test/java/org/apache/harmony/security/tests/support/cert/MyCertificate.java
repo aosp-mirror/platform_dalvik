@@ -31,11 +31,13 @@ import java.security.SignatureException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
+import java.security.cert.X509Extension;
+import java.util.Set;
 
 /**
  * Stub class for <code>java.security.cert.Certificate</code> tests
  */
-public class MyCertificate extends Certificate {
+public class MyCertificate extends Certificate implements X509Extension {
 
     private static final long serialVersionUID = -1835303280727190066L;
     // MyCertificate encoding
@@ -139,5 +141,20 @@ public class MyCertificate extends Certificate {
         public byte[] getData() {
             return data;
         }
+    }
+    public Set<String> getNonCriticalExtensionOIDs() {
+        return null;
+    }
+
+    public Set<String> getCriticalExtensionOIDs() {
+        return null;
+    }
+
+    public byte[] getExtensionValue(String oid) {
+        return null;
+    }
+
+    public boolean hasUnsupportedCriticalExtension() {
+        return false;
     }
 }

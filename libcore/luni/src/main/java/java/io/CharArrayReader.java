@@ -217,7 +217,7 @@ public class CharArrayReader extends Reader {
      *            the maximum number of characters to read.
      * @return number of characters read or -1 if the end of the reader has been
      *         reached.
-     * @throws ArrayIndexOutOfBoundsException
+     * @throws IndexOutOfBoundsException
      *             if {@code offset < 0} or {@code len < 0}, or if
      *             {@code offset + len} is bigger than the size of
      *             {@code buffer}.

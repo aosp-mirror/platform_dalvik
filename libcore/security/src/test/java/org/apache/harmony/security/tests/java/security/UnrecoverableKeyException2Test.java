@@ -18,8 +18,8 @@
 package org.apache.harmony.security.tests.java.security;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 
 import java.security.UnrecoverableKeyException;
@@ -30,15 +30,12 @@ public class UnrecoverableKeyException2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.UnrecoverableKeyException#UnrecoverableKeyException()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "UnrecoverableKeyException",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "UnrecoverableKeyException",
+        args = {}
+    )
     public void test_Constructor() {
         // Test for method java.security.UnrecoverableKeyException()
         UnrecoverableKeyException e = new UnrecoverableKeyException();
@@ -49,15 +46,12 @@ public class UnrecoverableKeyException2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.UnrecoverableKeyException#UnrecoverableKeyException(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verification with null string parameter missed",
-      targets = {
-        @TestTarget(
-          methodName = "UnrecoverableKeyException",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verification with null string parameter missed",
+        method = "UnrecoverableKeyException",
+        args = {java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_String() {
         // Test for method
         // java.security.UnrecoverableKeyException(java.lang.String)

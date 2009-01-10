@@ -17,9 +17,9 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import java.io.IOException;
@@ -45,15 +45,12 @@ public class ClassTest2 extends junit.framework.TestCase {
     /**
      *  Tests loading a resource with a relative name.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Checks positive functionality.",
-      targets = {
-        @TestTarget(
-          methodName = "getResourceAsStream",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getResourceAsStream",
+        args = {java.lang.String.class}
+    )
     public void testGetResourceAsStream1() throws IOException {
         Class clazz = getClass();
         
@@ -71,15 +68,12 @@ public class ClassTest2 extends junit.framework.TestCase {
     /**
      *  Tests loading a resource with a global name.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Checks positive functionality.",
-      targets = {
-        @TestTarget(
-          methodName = "getResourceAsStream",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getResourceAsStream",
+        args = {java.lang.String.class}
+    )
     public void testGetResourceAsStream2() throws IOException {
         Class clazz = getClass();
         
@@ -92,5 +86,14 @@ public class ClassTest2 extends junit.framework.TestCase {
         assert("Hello, World.".equals(s));
 
         stream.close();
+        
+        try {
+            clazz.getResourceAsStream(null);
+            fail("NullPointerException is not thrown.");
+        } catch(NullPointerException npe) {
+            //expected
+        }
+        assertNull(clazz.getResourceAsStream("/NonExistentResource"));
+        assertNull(clazz.getResourceAsStream("org/apache/harmony/luni/tests/java/lang/HelloWorld.txt"));
     }
 }

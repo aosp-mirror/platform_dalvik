@@ -4434,6 +4434,10 @@ void dvmDumpLoaderStats(const char* msg)
         msg, gDvm.numLoadedClasses, dvmHashTableNumEntries(gDvm.loadedClasses),
         gDvm.numDeclaredMethods, gDvm.numDeclaredInstFields,
         gDvm.numDeclaredStaticFields, gDvm.pBootLoaderAlloc->curOffset);
+#ifdef COUNT_PRECISE_METHODS
+    LOGI("GC precise methods: %d\n",
+        dvmPointerSetGetCount(gDvm.preciseMethods));
+#endif
 }
 
 #ifdef PROFILE_FIELD_ACCESS

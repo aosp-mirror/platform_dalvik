@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -30,17 +30,20 @@ public class AllTests {
     }
 
     public static final Test suite() {
-        TestSuite suite = new TestSuite("Tests for java.util");
+        TestSuite suite = tests.TestSuiteFactory.createTestSuite("Tests for java.util");
 
         suite.addTestSuite(AbstractCollectionTest.class);
         suite.addTestSuite(AbstractMapTest.class);
-        suite.addTestSuite(ArrayListTest.class);
+        suite.addTestSuite(AbstractSetTest.class);
         suite.addTestSuite(ArraysTest.class);
         suite.addTestSuite(BitSetTest.class);
         suite.addTestSuite(CollectionsTest.class);
         suite.addTestSuite(DateTest.class);
+        suite.addTestSuite(DictionaryTest.class);
         suite.addTestSuite(DuplicateFormatFlagsExceptionTest.class);
+        suite.addTestSuite(EventListenerProxyTest.class);
         suite.addTestSuite(FormatFlagsConversionMismatchExceptionTest.class);
+        suite.addTestSuite(FormattableTest.class);
         suite.addTestSuite(FormatterClosedExceptionTest.class);
         suite.addTestSuite(FormatterTest.class);
         suite.addTestSuite(HashMapTest.class);
@@ -51,10 +54,14 @@ public class AllTests {
         suite.addTestSuite(IllegalFormatPrecisionExceptionTest.class);
         suite.addTestSuite(IllegalFormatWidthExceptionTest.class);
         suite.addTestSuite(InputMismatchExceptionTest.class);
+        suite.addTestSuite(InvalidPropertiesFormatExceptionTest.class);
         suite.addTestSuite(LinkedHashMapTest.class);
-        suite.addTestSuite(LocaleTest.class); // F1 E0 ticket #200
+        suite.addTestSuite(ListIteratorTest.class);
+        suite.addTestSuite(LocaleTest.class);
+        suite.addTestSuite(MapEntryTest.class);
         suite.addTestSuite(MissingFormatArgumentExceptionTest.class);
         suite.addTestSuite(MissingFormatWidthExceptionTest.class);
+        suite.addTestSuite(ObserverTest.class);
         suite.addTestSuite(UnknownFormatConversionExceptionTest.class);
         suite.addTestSuite(UnknownFormatFlagsExceptionTest.class);
         suite.addTestSuite(UUIDTest.class);

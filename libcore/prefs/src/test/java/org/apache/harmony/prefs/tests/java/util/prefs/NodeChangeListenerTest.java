@@ -17,9 +17,9 @@
 package org.apache.harmony.prefs.tests.java.util.prefs;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.util.prefs.NodeChangeEvent;
 import java.util.prefs.NodeChangeListener;
@@ -50,29 +50,23 @@ public class NodeChangeListenerTest extends TestCase {
         super.tearDown();
     }
 
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Testing Interface",
-      targets = {
-        @TestTarget(
-          methodName = "childAdded",
-          methodArgs = {java.util.prefs.NodeChangeEvent.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Testing Interface",
+        method = "childAdded",
+        args = {java.util.prefs.NodeChangeEvent.class}
+    )
     public void testChildAdded() {
         l.childAdded(new NodeChangeEvent(Preferences.userRoot(), Preferences
                 .userRoot()));
     }
 
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Testing Interface",
-      targets = {
-        @TestTarget(
-          methodName = "childRemoved",
-          methodArgs = {java.util.prefs.NodeChangeEvent.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Testing Interface",
+        method = "childRemoved",
+        args = {java.util.prefs.NodeChangeEvent.class}
+    )
     public void testChildRemoved() {
         l.childRemoved(new NodeChangeEvent(Preferences.userRoot(), Preferences
                 .userRoot()));

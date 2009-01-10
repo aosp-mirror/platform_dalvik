@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,19 +16,24 @@
 
 package tests.java.sql;
 
+import dalvik.annotation.BrokenTest;
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Properties;
 import java.util.Vector;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import tests.support.DatabaseCreator;
 import tests.support.Support_SQL;
@@ -38,7 +43,7 @@ import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
-@TestTargetClass(Connection.class)
+@TestTargetClass(Statement.class)
 public class StressTest extends TestCase {
     Vector<Connection> vc = new Vector<Connection>();
 
@@ -115,15 +120,12 @@ public class StressTest extends TestCase {
      * @tests StressTest#testManyConnectionsUsingOneThread(). Create many
      *        connections to the DataBase using one thread.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Stress test: Create many connections to the DataBase using one thread",
-      targets = {
-        @TestTarget(
-          methodName = "getMetaData",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "connect",
+        clazz = Driver.class,
+        args = {String.class, Properties.class}
+    )
     public void testManyConnectionsUsingOneThread() {
         try {
             int maxConnections = getConnectionNum();
@@ -139,15 +141,13 @@ public class StressTest extends TestCase {
      * @tests StressTest#testManyConnectionsUsingManyThreads(). Create many
      *        connections to the DataBase using some threads.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Stress test: Create many connections to the DataBase using some threads",
-      targets = {
-        @TestTarget(
-          methodName = "DriverManager.getConnection",
-          methodArgs = {String.class, String.class, String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Stress test: Create many connections to the DataBase using some threads",
+        method = "connect",
+        clazz = Driver.class,
+        args = {String.class, Properties.class}
+    )
     public void testManyConnectionsUsingManyThreads() {
         int numTasks = getConnectionNum();
 
@@ -175,66 +175,95 @@ public class StressTest extends TestCase {
 
     /**
      * @tests StressTest#testInsertOfManyRowsUsingOneThread(). Insert a lot of
-     *        records to the DataBase using a maximum number of connections.
+     *        records to the Database using a maximum number of connections.
      */
-    @TestInfo(
-      level = TestLevel.TODO,
-      purpose = "Empty test",
-      targets = {
-        @TestTarget(
-          methodName = "",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "connect",
+        clazz = Driver.class,
+        args = {String.class, Properties.class}
+    )
     public void testInsertOfManyRowsUsingOneThread() {
-        // TODO Crashes VM. Fix later.
-        /*
-         * int maxConnections = getConnectionNum();
-         * openConnections(maxConnections); int tasksPerConnection =
-         * Support_SQL.sqlMaxTasks / maxConnections; int pk = 1; for (int i = 0;
-         * i < vc.size(); ++i) { Connection c = vc.elementAt(i); for (int j = 0;
-         * j < tasksPerConnection; ++j) { insertNewRecord(c, pk++); } } try {
-         * ResultSet rs = statement.executeQuery("SELECT COUNT(*) as counter
-         * FROM " + DatabaseCreator.TEST_TABLE2); assertTrue("RecordSet is
-         * empty", rs.next()); assertEquals("Incorrect number of records",
-         * tasksPerConnection * maxConnections, rs.getInt("counter"));
-         * rs.close(); } catch (SQLException sql) { fail("Unexpected
-         * SQLException " + sql.toString()); }
-         */
+
+        Logger.global
+                .info("java.sql stress test: single thread and many operations.");
+        int maxConnections = getConnectionNum();
+        Logger.global.info("Opening " + maxConnections + " to database "
+                + Support_SQL.getFilename());
+        openConnections(maxConnections);
+
+        int tasksPerConnection = Support_SQL.sqlMaxTasks / maxConnections;
+        Logger.global.info("TasksPerConnection =  " + Support_SQL.sqlMaxTasks
+                + " by (maxConnections) " + maxConnections + " = "
+                + tasksPerConnection);
+        int pk = 1;
+        for (int i = 0; i < vc.size(); ++i) {
+            Logger.global.info(" creating " + tasksPerConnection
+                    + "tasks for Connection " + i);
+            Connection c = vc.elementAt(i);
+            for (int j = 0; j < tasksPerConnection; ++j) {
+                insertNewRecord(c, pk++);
+            }
+        }
+        try {
+            ResultSet rs = statement
+                    .executeQuery("SELECT COUNT(*) as counter FROM "
+                            + DatabaseCreator.TEST_TABLE2);
+            assertTrue("RecordSet is empty", rs.next());
+            assertEquals("Incorrect number of records", tasksPerConnection
+                    * maxConnections, rs.getInt("counter"));
+            rs.close();
+        } catch (SQLException sql) {
+            fail("Unexpected SQLException " + sql.toString());
+        }
+
     }
 
     /**
      * @tests
      */
-    @TestInfo(
-      level = TestLevel.TODO,
-      purpose = "Empty test",
-      targets = {
-        @TestTarget(
-          methodName = "",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            method = "connect",
+            clazz = Driver.class,
+            args = {String.class, Properties.class}
+    )
+    @BrokenTest("Error in ThreadPool implementation threads do not get"
+            +" more tasks (only one): there seems to be a deadlock or something."
+    )
     public void testInsertOfManyRowsUsingManyThreads() {
-        // TODO Crashes VM. Fix later.
-        /*
-         * int numConnections = getConnectionNum();
-         * 
-         * ThreadPool threadPool = new ThreadPool(numConnections);
-         * 
-         * for (int i = 0; i < numConnections; ++i) {
-         * threadPool.runTask(insertTask(numConnections, i)); }
-         *  // close the pool and wait for all tasks to finish.
-         * threadPool.join(); assertEquals("Unable to create a connection",
-         * numConnections, vc.size()); try { ResultSet rs =
-         * statement.executeQuery("SELECT COUNT(*) as counter FROM " +
-         * DatabaseCreator.TEST_TABLE2); assertTrue("RecordSet is empty",
-         * rs.next()); int tasksPerConnection = Support_SQL.sqlMaxTasks /
-         * numConnections; assertEquals("Incorrect number of records",
-         * tasksPerConnection * numConnections, rs.getInt("counter"));
-         * rs.close(); } catch (SQLException sql) { fail("Unexpected
-         * SQLException " + sql.toString()); }
-         */
+        Logger.global.info("java.sql stress test: multiple threads and many operations.");
+
+        int numConnections = getConnectionNum();
+        int tasksPerConnection = Support_SQL.sqlMaxTasks / numConnections;
+        
+        Logger.global.info("Opening "+numConnections+" to database "+Support_SQL.getFilename());
+
+        ThreadPool threadPool = new ThreadPool(numConnections);
+
+        for (int i = 0; i < numConnections; ++i) {
+            Logger.global.info(" creating "+tasksPerConnection+ " tasks for Connection "+i);
+            threadPool.runTask(insertTask(numConnections, i));
+        }
+        // close the pool and wait for all tasks to finish.
+        threadPool.join();
+        assertEquals("Unable to create a connection", numConnections, vc.size());
+
+        try {
+            ResultSet rs = statement
+                    .executeQuery("SELECT COUNT(*) as counter FROM "
+                            + DatabaseCreator.TEST_TABLE2);
+            assertTrue("RecordSet is empty", rs.next());
+
+
+            assertEquals("Incorrect number of records", tasksPerConnection
+                    * numConnections, rs.getInt("counter"));
+            rs.close();
+        } catch (SQLException sql) {
+            fail("Unexpected SQLException " + sql.toString());
+
+        }
+
     }
 
     private int getConnectionNum() {

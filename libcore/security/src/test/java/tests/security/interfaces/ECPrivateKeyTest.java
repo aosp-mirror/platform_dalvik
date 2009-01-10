@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 package tests.security.interfaces;
-import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.AndroidOnly;
 
 import junit.framework.TestCase;
 
@@ -32,16 +32,15 @@ public class ECPrivateKeyTest extends TestCase {
      * @tests java.security.interfaces.ECPrivateKey
      * #getS()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getS",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getS",
+        args = {}
+    )
     @SuppressWarnings("serial")
+    @AndroidOnly("EC is not supported for android. " + 
+                 "EC is not define in RI.")
     public void test_getS() throws Exception {
         KeyPairGenerator gen = KeyPairGenerator.getInstance("EC", Util.prov);
         gen.initialize(Util.ecParam, new SecureRandom(new MySecureRandomSpi(),

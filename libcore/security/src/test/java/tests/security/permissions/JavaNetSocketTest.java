@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,21 +16,22 @@
 
 package tests.security.permissions;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.Socket;
 /*
- * This class tests the secrity permissions which are documented in
+ * This class tests the security permissions which are documented in
  * http://java.sun.com/j2se/1.5.0/docs/guide/security/permissions.html#PermsAndMethods
  * for class java.net.Socket
  */
-@TestTargetClass(SecurityManager.class)
+@TestTargetClass(java.net.Socket.class)
 public class JavaNetSocketTest extends TestCase {
     
     SecurityManager old;
@@ -46,25 +47,54 @@ public class JavaNetSocketTest extends TestCase {
         System.setSecurityManager(old);
         super.tearDown();
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that java.net.ServerSocket constructor calls " +
-            "checkConnect of security permissions.",
-      targets = {
-        @TestTarget(
-          methodName = "checkConnect",
-          methodArgs = {java.lang.String.class, int.class}
+    
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Verifies that java.net.Socket constructor calls checkConnect on security manager.",
+            method = "Socket",
+            args = {java.lang.String.class, int.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Verifies that java.net.Socket constructor calls checkConnect on security manager.",
+            method = "Socket",
+            args = {java.lang.String.class, int.class, boolean.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Verifies that java.net.Socket constructor calls checkConnect on security manager.",
+            method = "Socket",
+            args = {java.lang.String.class, int.class, java.net.InetAddress.class, int.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Verifies that java.net.Socket constructor calls checkConnect on security manager.",
+            method = "Socket",
+            args = {java.net.InetAddress.class, int.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Verifies that java.net.Socket constructor calls checkConnect on security manager.",
+            method = "Socket",
+            args = {java.net.InetAddress.class, int.class, boolean.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Verifies that java.net.Socket constructor calls checkConnect on security manager.",
+            method = "Socket",
+            args = {java.net.InetAddress.class, int.class, java.net.InetAddress.class, int.class}
         )
     })
     public void test_ctor() throws IOException {
         class TestSecurityManager extends SecurityManager {
             boolean called = false;
             String host = null;
-            int port = 0;
+            int port = -1;
             void reset(){
                 called = false;
                 host = null;
-                port = 0;
+                port = -1;
             }
             @Override
             public void checkConnect(String host, int port) {
@@ -75,16 +105,49 @@ public class JavaNetSocketTest extends TestCase {
             }
         }
         
+        String host = "www.google.ch";
+        int port = 80;
+
         TestSecurityManager s = new TestSecurityManager();
         System.setSecurityManager(s);
         
         s.reset();
-        String host = "www.google.ch";
-        int port = 80;
         new Socket(host, port);
         assertTrue("java.net.ServerSocket ctor must call checkConnect on security permissions", s.called);
         assertEquals("Argument of checkConnect is not correct", host, s.host);
         assertEquals("Argument of checkConnect is not correct", port, s.port);
+        
+        s.reset();
+        new Socket(host, port, true);
+        assertTrue("java.net.ServerSocket ctor must call checkConnect on security permissions", s.called);
+        assertEquals("Argument of checkConnect is not correct", host, s.host);
+        assertEquals("Argument of checkConnect is not correct", port, s.port);
+
+// TODO returns error message "the socket level is invalid", see ticket 66
+//        s.reset();
+//        new Socket(host, port, InetAddress.getLocalHost(), 0);
+//        assertTrue("java.net.ServerSocket ctor must call checkConnect on security permissions", s.called);
+//        assertEquals("Argument of checkConnect is not correct", host, s.host);
+//        assertEquals("Argument of checkConnect is not correct", port, s.port);
+        
+        s.reset();
+        new Socket(InetAddress.getByName(host), port);
+        assertTrue("java.net.ServerSocket ctor must call checkConnect on security permissions", s.called);
+        assertEquals("Argument of checkConnect is not correct", host, s.host);
+        assertEquals("Argument of checkConnect is not correct", port, s.port);
+        
+        s.reset();
+        new Socket(InetAddress.getByName(host), port, true);
+        assertTrue("java.net.ServerSocket ctor must call checkConnect on security permissions", s.called);
+        assertEquals("Argument of checkConnect is not correct", host, s.host);
+        assertEquals("Argument of checkConnect is not correct", port, s.port);
+        
+// TODO returns error message "the socket level is invalid", see ticket 66
+//        s.reset();
+//        new Socket(InetAddress.getByName(host), port,  InetAddress.getLocalHost(), 0);
+//        assertTrue("java.net.ServerSocket ctor must call checkConnect on security permissions", s.called);
+//        assertEquals("Argument of checkConnect is not correct", host, s.host);
+//        assertEquals("Argument of checkConnect is not correct", port, s.port);
     }
     
 }

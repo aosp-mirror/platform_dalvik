@@ -392,18 +392,19 @@ public class JCESecretKeyFactory
            super("PBEwithSHAandDES2Key-CBC", PKCSObjectIdentifiers.pbeWithSHAAnd2_KeyTripleDES_CBC, true, PKCS12, SHA1, 128, 64);
        }
    }
-
-   /**
-    * PBEWithSHAAnd128BitRC2-CBC
-    */
-   static public class PBEWithSHAAnd128BitRC2
-       extends PBEKeyFactory
-   {
-       public PBEWithSHAAnd128BitRC2()
-       {
-           super("PBEwithSHAand128BitRC2-CBC", PKCSObjectIdentifiers.pbeWithSHAAnd128BitRC2_CBC, true, PKCS12, SHA1, 128, 64);
-       }
-   }
+// BEGIN android-removed
+//   /**
+//    * PBEWithSHAAnd128BitRC2-CBC
+//    */
+//   static public class PBEWithSHAAnd128BitRC2
+//       extends PBEKeyFactory
+//   {
+//       public PBEWithSHAAnd128BitRC2()
+//       {
+//           super("PBEwithSHAand128BitRC2-CBC", PKCSObjectIdentifiers.pbeWithSHAAnd128BitRC2_CBC, true, PKCS12, SHA1, 128, 64);
+//       }
+//   }
+// END android-removed
 
    /**
     * PBEWithSHAAnd40BitRC2-CBC
@@ -417,65 +418,67 @@ public class JCESecretKeyFactory
        }
    }
 
-   /**
-    * PBEWithSHAAndTwofish-CBC
-    */
-   static public class PBEWithSHAAndTwofish
-       extends PBEKeyFactory
-   {
-       public PBEWithSHAAndTwofish()
-       {
-           super("PBEwithSHAandTwofish-CBC", null, true, PKCS12, SHA1, 256, 128);
-       }
-   }
-
-   /**
-    * PBEWithSHAAndIDEA-CBC
-    */
-   static public class PBEWithSHAAndIDEA
-       extends PBEKeyFactory
-   {
-       public PBEWithSHAAndIDEA()
-       {
-           super("PBEwithSHAandIDEA-CBC", null, true, PKCS12, SHA1, 128, 64);
-       }
-   }
-   
-   /**
-    * PBEWithSHAAnd128BitRC4
-    */
-   static public class PBEWithSHAAnd128BitRC4
-       extends PBEKeyFactory
-   {
-       public PBEWithSHAAnd128BitRC4()
-       {
-           super("PBEWithSHAAnd128BitRC4", PKCSObjectIdentifiers.pbeWithSHAAnd128BitRC4, true, PKCS12, SHA1, 128, 0);
-       }
-   }
-
-   /**
-    * PBEWithSHAAnd40BitRC4
-    */
-   static public class PBEWithSHAAnd40BitRC4
-       extends PBEKeyFactory
-   {
-       public PBEWithSHAAnd40BitRC4()
-       {
-           super("PBEWithSHAAnd128BitRC4", PKCSObjectIdentifiers.pbeWithSHAAnd128BitRC4, true, PKCS12, SHA1, 40, 0);
-       }
-   }
-   
-   /**
-    * PBEWithHmacRIPEMD160
-    */
-   public static class PBEWithRIPEMD160
-       extends PBEKeyFactory
-   {
-       public PBEWithRIPEMD160()
-       {
-           super("PBEwithHmacRIPEMD160", null, false, PKCS12, RIPEMD160, 160, 0);
-       }
-   }
+// BEGIN android-removed
+//   /**
+//    * PBEWithSHAAndTwofish-CBC
+//    */
+//   static public class PBEWithSHAAndTwofish
+//       extends PBEKeyFactory
+//   {
+//       public PBEWithSHAAndTwofish()
+//       {
+//           super("PBEwithSHAandTwofish-CBC", null, true, PKCS12, SHA1, 256, 128);
+//       }
+//   }
+//
+//   /**
+//    * PBEWithSHAAndIDEA-CBC
+//    */
+//   static public class PBEWithSHAAndIDEA
+//       extends PBEKeyFactory
+//   {
+//       public PBEWithSHAAndIDEA()
+//       {
+//           super("PBEwithSHAandIDEA-CBC", null, true, PKCS12, SHA1, 128, 64);
+//       }
+//   }
+//
+//   /**
+//    * PBEWithSHAAnd128BitRC4
+//    */
+//   static public class PBEWithSHAAnd128BitRC4
+//       extends PBEKeyFactory
+//   {
+//       public PBEWithSHAAnd128BitRC4()
+//       {
+//           super("PBEWithSHAAnd128BitRC4", PKCSObjectIdentifiers.pbeWithSHAAnd128BitRC4, true, PKCS12, SHA1, 128, 0);
+//       }
+//   }
+//
+//   /**
+//    * PBEWithSHAAnd40BitRC4
+//    */
+//   static public class PBEWithSHAAnd40BitRC4
+//       extends PBEKeyFactory
+//   {
+//       public PBEWithSHAAnd40BitRC4()
+//       {
+//           super("PBEWithSHAAnd128BitRC4", PKCSObjectIdentifiers.pbeWithSHAAnd128BitRC4, true, PKCS12, SHA1, 40, 0);
+//       }
+//   }
+//   
+//   /**
+//    * PBEWithHmacRIPEMD160
+//    */
+//   public static class PBEWithRIPEMD160
+//       extends PBEKeyFactory
+//   {
+//       public PBEWithRIPEMD160()
+//       {
+//           super("PBEwithHmacRIPEMD160", null, false, PKCS12, RIPEMD160, 160, 0);
+//       }
+//   }
+// END android-removed
 
    /**
     * PBEWithHmacSHA
@@ -489,17 +492,19 @@ public class JCESecretKeyFactory
        }
    }
 
-   /**
-    * PBEWithHmacTiger
-    */
-   public static class PBEWithTiger
-       extends PBEKeyFactory
-   {
-       public PBEWithTiger()
-       {
-           super("PBEwithHmacTiger", null, false, PKCS12, TIGER, 192, 0);
-       }
-   }
+// BEGIN android-removed
+//   /**
+//    * PBEWithHmacTiger
+//    */
+//   public static class PBEWithTiger
+//       extends PBEKeyFactory
+//   {
+//       public PBEWithTiger()
+//       {
+//           super("PBEwithHmacTiger", null, false, PKCS12, TIGER, 192, 0);
+//       }
+//   }
+// END android-removed
    
    /**
     * PBEWithSHA1And128BitAES-BC

@@ -17,16 +17,19 @@
 
 package org.apache.harmony.nio.tests.java.nio.channels;
 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.KnownFailure;
+import dalvik.annotation.TestTargets;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 import dalvik.annotation.TestLevel;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.annotation.Target;
 import java.net.BindException;
 import java.net.ConnectException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -39,6 +42,9 @@ import java.nio.channels.ConnectionPendingException;
 import java.nio.channels.IllegalBlockingModeException;
 import java.nio.channels.NoConnectionPendingException;
 import java.nio.channels.NotYetConnectedException;
+import java.nio.channels.SelectableChannel;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.UnresolvedAddressException;
@@ -56,6 +62,8 @@ public class SocketChannelTest extends TestCase {
 
     private static final int CAPACITY_NORMAL = 200;
 
+    private static final int CAPACITY_HUGE = 512 * 1024;
+
     private InetSocketAddress localAddr1;
 
     private InetSocketAddress localAddr2;
@@ -67,9 +75,9 @@ public class SocketChannelTest extends TestCase {
     private ServerSocket server1;
 
     private ServerSocket server2;
-    
+
     private final static int TIMEOUT = 60000;
-    
+
     private final static int EOF = -1;
 
     protected void setUp() throws Exception {
@@ -89,28 +97,28 @@ public class SocketChannelTest extends TestCase {
             try {
                 this.channel1.close();
             } catch (Exception e) {
-                //ignore
+                // ignore
             }
         }
         if (null != this.channel2) {
             try {
                 this.channel2.close();
             } catch (Exception e) {
-                //ignore
+                // ignore
             }
         }
         if (null != this.server1) {
             try {
                 this.server1.close();
             } catch (Exception e) {
-                //ignore
+                // ignore
             }
         }
         if (null != this.server2) {
             try {
                 this.server2.close();
             } catch (Exception e) {
-                //ignore
+                // ignore
             }
         }
     }
@@ -119,17 +127,57 @@ public class SocketChannelTest extends TestCase {
     // Test for methods in abstract class.
     // -------------------------------------------------------------------
     /*
-     * Test method for 'java.nio.channels.SocketChannel.validOps()'
+     * Test method for 'java.nio.channels.SocketChannel()'
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "validOps",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "SocketChannel",
+            args = {SelectorProvider.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "provider",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "open",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            clazz = SelectorProvider.class,
+            method = "openSocketChannel",
+            args = {}
         )
     })
+    public void testConstructor() throws IOException {
+        SocketChannel channel = 
+                SelectorProvider.provider().openSocketChannel();
+        assertNotNull(channel);
+        assertSame(SelectorProvider.provider(), channel.provider());
+        channel = SocketChannel.open();
+        assertNotNull(channel);
+        assertSame(SelectorProvider.provider(), channel.provider());
+        MockSocketChannel chan = new MockSocketChannel(
+                SelectorProvider.provider());
+        assertTrue(chan.isConstructorCalled);
+    }
+
+    /*
+     * Test method for 'java.nio.channels.SocketChannel.validOps()'
+     */
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "validOps",
+        args = {}
+    )
     public void testValidOps() {
         MockSocketChannel testMSChannel = new MockSocketChannel(null);
         assertEquals(13, this.channel1.validOps());
@@ -139,13 +187,18 @@ public class SocketChannelTest extends TestCase {
     /*
      * Test method for 'java.nio.channels.SocketChannel.open()'
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "open",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "open",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "SocketChannel",
+            args = {SelectorProvider.class}
         )
     })
     public void testOpen() throws IOException {
@@ -154,9 +207,12 @@ public class SocketChannelTest extends TestCase {
         MockSocketChannel testMSChannel = new MockSocketChannel(null);
         MockSocketChannel testMSChannelnotnull = new MockSocketChannel(
                 SelectorProvider.provider());
+        SocketChannel testSChannel = MockSocketChannel.open();
+        assertTrue(testSChannel.isOpen());
         assertNull(testMSChannel.provider());
+        assertNotNull(testSChannel.provider());
+        assertEquals(SelectorProvider.provider(), testSChannel.provider());
         assertNotNull(testMSChannelnotnull.provider());
-        assertNotNull(this.channel1);
         assertEquals(this.channel1.provider(), testMSChannelnotnull.provider());
         try {
             this.channel1.write(buf);
@@ -166,19 +222,139 @@ public class SocketChannelTest extends TestCase {
         }
     }
 
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "isOpen",
+        args = {}
+    )
+    public void testIsOpen() throws Exception {
+        assertTrue(this.channel1.isOpen());
+        this.channel1.close();
+        assertFalse(this.channel1.isOpen());
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isConnected",
+        args = {}
+    )
+    public void testIsConnected() throws Exception {
+        assertFalse(this.channel1.isConnected());// not connected
+        this.channel1.configureBlocking(false);
+        assertFalse(this.channel1.connect(localAddr1));
+        assertFalse(this.channel1.isConnected());
+        assertTrue(this.channel1.isConnectionPending());
+        assertTrue(tryFinish());
+        assertTrue(this.channel1.isConnected());
+        this.channel1.close();
+        assertFalse(this.channel1.isConnected());
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isConnectionPending",
+        args = {}
+    )
+    public void testIsConnectionPending() throws Exception {
+        // ensure
+        ensureServerClosed();
+        this.channel1.configureBlocking(false);
+        assertFalse(this.channel1.isConnectionPending());
+        // finish
+        try {
+            this.channel1.finishConnect();
+            fail("Should throw NoConnectionPendingException");
+        } catch (NoConnectionPendingException e) {
+            // OK.
+        }
+        assertFalse(this.channel1.isConnectionPending());
+        // connect
+        assertFalse(this.channel1.connect(localAddr1));
+        assertTrue(this.channel1.isConnectionPending());
+        this.channel1.close();
+
+        assertFalse(this.channel1.isConnectionPending());
+    }
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies default status of SocketChannel.",
+            method = "validOps",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies default status of SocketChannel.",
+            method = "provider",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies default status of SocketChannel.",
+            method = "isRegistered",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies default status of SocketChannel.",
+            method = "isBlocking",
+            args = {}
+        )
+    })
+    public void testChannelBasicStatus() {
+        Socket gotSocket = this.channel1.socket();
+        assertFalse(gotSocket.isClosed());
+        assertTrue(this.channel1.isBlocking());
+        assertFalse(this.channel1.isRegistered());
+        assertEquals((SelectionKey.OP_CONNECT | SelectionKey.OP_READ |
+                SelectionKey.OP_WRITE), this.channel1.validOps());
+        assertEquals(SelectorProvider.provider(), this.channel1.provider());
+    }
+
     /*
      * Test method for 'java.nio.channels.SocketChannel.open(SocketAddress)'
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies IllegalArgumentException.",
-      targets = {
-        @TestTarget(
-          methodName = "open",
-          methodArgs = {java.net.SocketAddress.class}
-        )
-    })
-    public void testOpenSocketAddress_Null() throws IOException {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "open",
+        args = {java.net.SocketAddress.class}
+    )
+    public void testOpenSocketAddress() throws IOException {
+        this.channel1 = SocketChannel.open(localAddr1);
+        assertTrue(this.channel1.isConnected());
+        
+        SecurityManager smngr = System.getSecurityManager();
+        System.setSecurityManager(new MockSecurityManager("blargh"));
+        try {
+            this.channel1 = SocketChannel.open(localAddr2);
+            fail("Should throw SecurityException");
+        } catch (SecurityException e) {
+            // expected
+        }
+        System.setSecurityManager(smngr);
+
+        SocketAddress newTypeAddress = new SubSocketAddress();
+        try {
+            this.channel1 = SocketChannel.open(newTypeAddress);
+            fail("Should throw UnexpectedAddressTypeException");
+        } catch (UnsupportedAddressTypeException e) {
+            // expected
+        }
+
+        SocketAddress unresolvedAddress = 
+                InetSocketAddress.createUnresolved("127.0.0.1", 8080);
+        try {
+            this.channel1 = SocketChannel.open(unresolvedAddress);
+            fail("Should throw UnresolvedAddressException");
+        } catch (UnresolvedAddressException e) {
+            // expected
+        }
+        
         SocketChannel channel1IP = null;
         try {
             channel1IP = SocketChannel.open(null);
@@ -192,15 +368,12 @@ public class SocketChannelTest extends TestCase {
     /*
      * Test method for 'java.nio.channels.SocketChannel.read(ByteBuffer[])'
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {java.nio.ByteBuffer[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {java.nio.ByteBuffer[].class}
+    )
     public void testReadByteBufferArray() throws IOException {
         java.nio.ByteBuffer[] byteBuf = null;
         MockSocketChannel testMSChannelnull = new MockSocketChannel(null);
@@ -236,15 +409,12 @@ public class SocketChannelTest extends TestCase {
     /*
      * Test method for 'java.nio.channels.SocketChannel.read(ByteBuffer[])'
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {java.nio.ByteBuffer[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {java.nio.ByteBuffer[].class}
+    )
     public void testReadByteBufferArray_BufNull() throws IOException {
         java.nio.ByteBuffer[] byteBuf = null;
         MockSocketChannel testMSChannelnull = new MockSocketChannel(null);
@@ -273,16 +443,13 @@ public class SocketChannelTest extends TestCase {
     /*
      * Test method for 'java.nio.channels.SocketChannel.write(ByteBuffer[])'
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify AsynchronousCloseException, " +
-            "ClosedByInterruptException, ClosedChannelException.",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {java.nio.ByteBuffer[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify AsynchronousCloseException," +
+                "ClosedByInterruptException.",
+        method = "write",
+        args = {java.nio.ByteBuffer[].class}
+    )
     public void testWriteByteBufferArray() throws IOException {
         java.nio.ByteBuffer[] byteBuf = null;
         MockSocketChannel testMSChannelnull = new MockSocketChannel(null);
@@ -294,7 +461,8 @@ public class SocketChannelTest extends TestCase {
         } catch (NullPointerException e) {
             // correct
         }
-        byteBuf = new java.nio.ByteBuffer[CAPACITY_NORMAL];
+        byteBuf = new java.nio.ByteBuffer[1];
+        byteBuf[0] = java.nio.ByteBuffer.allocate(CAPACITY_NORMAL);
         try {
             this.channel1.write(byteBuf);
             fail("Should throw NotYetConnectedException");
@@ -303,53 +471,52 @@ public class SocketChannelTest extends TestCase {
         }
         testMSChannel.write(byteBuf);
         testMSChannelnull.write(byteBuf);
+        
+        this.channel1.close();
+        try {
+            this.channel1.write(byteBuf);
+            fail("Should throw ClosedChannelException");
+        } catch (ClosedChannelException e) {
+            // correct
+        }
     }
 
     /*
      * Test method for 'java.nio.channels.SocketChannel.write(ByteBuffer[])'
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "write",
-                methodArgs = {java.nio.ByteBuffer[].class}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "write",
+        args = {java.nio.ByteBuffer[].class}
+    )
     public void testWriteByteBufferArray_BufNull() throws IOException {
         java.nio.ByteBuffer[] byteBuf = null;
         MockSocketChannel testMSChannelnull = new MockSocketChannel(null);
         MockSocketChannel testMSChannel = new MockSocketChannel(
                 SelectorProvider.provider());
+        this.channel1.connect(localAddr1);
         try {
             this.channel1.write(byteBuf);
             fail("Should throw NPE");
         } catch (NullPointerException e) {
             // correct
         }
+        byteBuf = new java.nio.ByteBuffer[1];
         try {
-            testMSChannel.write(byteBuf);
-            fail("Should throw NPE");
-        } catch (NullPointerException e) {
-            // correct
-        }
-        try {
-            testMSChannelnull.write(byteBuf);
+            this.channel1.write(byteBuf);
             fail("Should throw NPE");
         } catch (NullPointerException e) {
             // correct
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "socket",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "socket",
+        args = {}
+    )
     public void testSocket_BasicStatusBeforeConnect() throws IOException {
         assertFalse(this.channel1.isConnected());// not connected
         Socket s1 = this.channel1.socket();
@@ -358,15 +525,13 @@ public class SocketChannelTest extends TestCase {
         // same
         assertSame(s1, s2);
     }
-    @TestInfo(
-            level = TestLevel.PARTIAL_OK,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "socket",
-                methodArgs = {}
-              )
-          })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "socket",
+        args = {}
+    )
     public void testSocket_Block_BasicStatusAfterConnect() throws IOException {
         assertFalse(this.channel1.isConnected());// not connected
         assertTrue(this.channel1.connect(localAddr1));
@@ -379,15 +544,13 @@ public class SocketChannelTest extends TestCase {
         // same
         assertSame(s1, s2);
     }
-    @TestInfo(
-            level = TestLevel.PARTIAL_OK,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "socket",
-                methodArgs = {}
-              )
-          })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "socket",
+        args = {}
+    )
     public void testSocket_NonBlock_BasicStatusAfterConnect() throws Exception {
         assertFalse(this.channel1.isConnected());// not connected
         this.channel1.configureBlocking(false);
@@ -401,38 +564,33 @@ public class SocketChannelTest extends TestCase {
         // same
         assertSame(s1, s2);
 
-        if (tryFinish()) {
-            assertTrue(this.channel1.isConnected());
-            s1 = this.channel1.socket();
-            assertSocketAfterConnect(s1, localAddr1);
-            s2 = this.channel1.socket();
-            // same
-            assertSame(s1, s2);
-        }
+        assertTrue(tryFinish());
+        assertTrue(this.channel1.isConnected());
+        s1 = this.channel1.socket();
+        assertSocketAfterConnect(s1, localAddr1);
+        s2 = this.channel1.socket();
+        // same
+        assertSame(s1, s2);
     }
-    @TestInfo(
-            level = TestLevel.PARTIAL_OK,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "socket",
-                methodArgs = {}
-              )
-          })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "socket",
+        args = {}
+    )
     public void testSocket_Block_ActionsBeforeConnect() throws IOException {
         assertFalse(this.channel1.isConnected());// not connected
         Socket s = this.channel1.socket();
         assertSocketAction_Block_BeforeConnect(s);
     }
-    @TestInfo(
-            level = TestLevel.PARTIAL_OK,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "socket",
-                methodArgs = {}
-              )
-          })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "socket",
+        args = {}
+    )
     public void testSocket_Block_ActionsAfterConnect() throws IOException {
         assertFalse(this.channel1.isConnected());// not connected
         assertTrue(this.channel1.connect(localAddr1));
@@ -441,15 +599,13 @@ public class SocketChannelTest extends TestCase {
         assertSocketAction_Block_AfterConnect(s);
 
     }
-    @TestInfo(
-            level = TestLevel.PARTIAL_OK,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "socket",
-                methodArgs = {}
-              )
-          })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "socket",
+        args = {}
+    )
     public void testSocket_NonBlock_ActionsAfterConnectBeforeFinish()
             throws IOException {
         assertFalse(this.channel1.isConnected());// not connected
@@ -464,27 +620,24 @@ public class SocketChannelTest extends TestCase {
         // same
         assertSame(s1, s2);
     }
-    @TestInfo(
-            level = TestLevel.PARTIAL_OK,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "socket",
-                methodArgs = {}
-              )
-          })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "socket",
+        args = {}
+    )
     public void testSocket_NonBlock_ActionsAfterConnectAfterFinish()
             throws Exception {
         assertFalse(this.channel1.isConnected());// not connected
         this.channel1.configureBlocking(false);
         assertFalse(this.channel1.connect(localAddr1));
-        if (tryFinish()) {
-            Socket s1 = this.channel1.socket();
-            assertSocketAction_NonBlock_AfterConnect(s1);
-            Socket s2 = this.channel1.socket();
-            // same
-            assertSame(s1, s2);
-        }
+        assertTrue(tryFinish());
+        Socket s1 = this.channel1.socket();
+        assertSocketAction_NonBlock_AfterConnect(s1);
+        Socket s2 = this.channel1.socket();
+        // same
+        assertSame(s1, s2);
     }
 
     private void assertSocketBeforeConnect(Socket s) throws IOException {
@@ -513,20 +666,20 @@ public class SocketChannelTest extends TestCase {
 
         assertNull(s.getInetAddress());
         assertEquals(s.getLocalAddress().getHostAddress(), "0.0.0.0");
-        // RI fails here. RI returns 0 while spec says unbound socket should
-        // return -1.
-        assertEquals(s.getLocalPort(), -1);
         assertFalse(s.getReuseAddress());
         assertNull(s.getLocalSocketAddress());
 
         // not connected
-        assertEquals(s.getPort(), 0);
+        assertEquals(0, s.getPort());
         assertTrue(s.getReceiveBufferSize() >= 8192);
         assertNull(s.getRemoteSocketAddress());
         assertTrue(s.getSendBufferSize() >= 8192);
-        assertEquals(s.getSoTimeout(), 0);
-        assertEquals(s.getTrafficClass(), 0);
+        assertEquals(0, s.getSoTimeout());
+        assertEquals(0, s.getTrafficClass());
 
+        // RI fails here. RI returns 0 while spec says unbound socket should
+        // return -1.
+        assertEquals(-1, s.getLocalPort());
     }
 
     private void assertSocketAfterConnect(Socket s, InetSocketAddress address)
@@ -548,17 +701,17 @@ public class SocketChannelTest extends TestCase {
 
         assertSame(s.getInetAddress(), address.getAddress());
 
-        assertEquals(s.getLocalAddress(), this.localAddr1.getAddress());
-        assertEquals(s.getPort(), address.getPort());
+        assertEquals(this.localAddr1.getAddress(), s.getLocalAddress());
+        assertEquals(address.getPort(), s.getPort());
         assertNotNull(s.getLocalSocketAddress());
         assertTrue(s.getReceiveBufferSize() >= 8192);
         // equal , not same
-        assertNotSame(s.getRemoteSocketAddress(), (SocketAddress) address);
-        assertEquals(s.getRemoteSocketAddress(), (SocketAddress) address);
+        assertNotSame(address, s.getRemoteSocketAddress());
+        assertEquals(address, s.getRemoteSocketAddress());
         // assertFalse(s.getReuseAddress());
         assertTrue(s.getSendBufferSize() >= 8192);
-        assertEquals(s.getSoTimeout(), 0);
-        assertEquals(s.getTrafficClass(), 0);
+        assertEquals(0, s.getSoTimeout());
+        assertEquals(0, s.getTrafficClass());
     }
 
     private void assertSocketAction_Block_BeforeConnect(Socket s)
@@ -620,7 +773,7 @@ public class SocketChannelTest extends TestCase {
 
     private void assertSocketAction_Block_AfterConnect(Socket s)
             throws IOException {
-        assertEquals(s.getPort(), localAddr1.getPort());
+        assertEquals(localAddr1.getPort(), s.getPort());
         assertTrue(this.channel1.isConnected());
         assertTrue(s.isConnected());
         try {
@@ -644,7 +797,7 @@ public class SocketChannelTest extends TestCase {
 
     private void assertSocketAction_NonBlock_AfterConnect(Socket s)
             throws IOException {
-        assertEquals(s.getPort(), localAddr1.getPort());
+        assertEquals(localAddr1.getPort(), s.getPort());
         assertTrue(this.channel1.isConnected());
         assertTrue(s.isConnected());
 
@@ -683,18 +836,19 @@ public class SocketChannelTest extends TestCase {
     /**
      * connect-->finish-->close
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "connect",
-                methodArgs = {java.net.SocketAddress.class}
-              ),
-              @TestTarget(
-                methodName = "finishConnect",
-                methodArgs = {}
-              )
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "connect",
+            args = {java.net.SocketAddress.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "finishConnect",
+            args = {}
+        )
     })
     public void testCFII_Norml_NoServer_Block() throws Exception {
         // ensure
@@ -720,18 +874,19 @@ public class SocketChannelTest extends TestCase {
     /**
      * connect-->finish-->close
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "connect",
-                methodArgs = {java.net.SocketAddress.class}
-              ),
-              @TestTarget(
-                methodName = "finishConnect",
-                methodArgs = {}
-              )
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "connect",
+            args = {java.net.SocketAddress.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "finishConnect",
+            args = {}
+        )
     })
     public void testCFII_Norml_NoServer_NonBlock() throws Exception {
         connectNoServerNonBlock();
@@ -743,18 +898,19 @@ public class SocketChannelTest extends TestCase {
     /**
      * connect-->finish-->close
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "connect",
-                methodArgs = {java.net.SocketAddress.class}
-              ),
-              @TestTarget(
-                methodName = "finishConnect",
-                methodArgs = {}
-              )
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "connect",
+            args = {java.net.SocketAddress.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "finishConnect",
+            args = {}
+        )
     })
     public void testCFII_Norml_Server_Block() throws Exception {
         connectServerBlock();
@@ -767,18 +923,19 @@ public class SocketChannelTest extends TestCase {
     /**
      * connect-->finish-->close
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "connect",
-                methodArgs = {java.net.SocketAddress.class}
-              ),
-              @TestTarget(
-                methodName = "finishConnect",
-                methodArgs = {}
-              )
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "connect",
+            args = {java.net.SocketAddress.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "finishConnect",
+            args = {}
+        )
     })
     public void testCFII_Norml_Server_NonBlock() throws Exception {
         connectServerNonBlock();
@@ -790,18 +947,19 @@ public class SocketChannelTest extends TestCase {
     /**
      * connect-->server closed-->finish-->close
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "connect",
-                methodArgs = {java.net.SocketAddress.class}
-              ),
-              @TestTarget(
-                methodName = "finishConnect",
-                methodArgs = {}
-              )
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "connect",
+            args = {java.net.SocketAddress.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "finishConnect",
+            args = {}
+        )
     })
     public void testCFII_ServerClosed_Block() throws Exception {
         // ensure
@@ -824,18 +982,19 @@ public class SocketChannelTest extends TestCase {
     /**
      * connect-->server closed-->finish-->close
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "connect",
-                methodArgs = {java.net.SocketAddress.class}
-              ),
-              @TestTarget(
-                methodName = "finishConnect",
-                methodArgs = {}
-              )
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "connect",
+            args = {java.net.SocketAddress.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "finishConnect",
+            args = {}
+        )
     })
     public void testCFII_ServerClosed_NonBlock() throws Exception {
         // ensure
@@ -857,18 +1016,19 @@ public class SocketChannelTest extends TestCase {
     /**
      * connect-->finish-->server closed-->close
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "connect",
-                methodArgs = {java.net.SocketAddress.class}
-              ),
-              @TestTarget(
-                methodName = "finishConnect",
-                methodArgs = {}
-              )
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "connect",
+            args = {java.net.SocketAddress.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "finishConnect",
+            args = {}
+        )
     })
     public void testCFII_ServerClosedAfterFinish_Block() throws Exception {
         connectServerBlock();
@@ -883,18 +1043,19 @@ public class SocketChannelTest extends TestCase {
     /**
      * connect-->finish-->server closed-->close
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "connect",
-                methodArgs = {java.net.SocketAddress.class}
-              ),
-              @TestTarget(
-                methodName = "finishConnect",
-                methodArgs = {}
-              )
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "connect",
+            args = {java.net.SocketAddress.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "finishConnect",
+            args = {}
+        )
     })
     public void testCFII_ServerClosedAfterFinish_NonBlock() throws Exception {
         connectServerNonBlock();
@@ -908,18 +1069,19 @@ public class SocketChannelTest extends TestCase {
     /**
      * no server-->connect-->server open-->finish-->close
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "connect",
-                methodArgs = {java.net.SocketAddress.class}
-              ),
-              @TestTarget(
-                methodName = "finishConnect",
-                methodArgs = {}
-              )
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "connect",
+            args = {java.net.SocketAddress.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "finishConnect",
+            args = {}
+        )
     })
     public void testCFII_ServerStartLater_Block() throws Exception {
         // ensure
@@ -946,18 +1108,19 @@ public class SocketChannelTest extends TestCase {
     /**
      * no server-->connect-->server open-->finish-->close
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "connect",
-                methodArgs = {java.net.SocketAddress.class}
-              ),
-              @TestTarget(
-                methodName = "finishConnect",
-                methodArgs = {}
-              )
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "connect",
+            args = {java.net.SocketAddress.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "finishConnect",
+            args = {}
+        )
     })
     public void testCFII_ServerStartLater_NonBlock() throws Exception {
         // ensure
@@ -975,25 +1138,26 @@ public class SocketChannelTest extends TestCase {
             statusNotConnected_Pending();
             this.channel1.close();
         } catch (ConnectException e) {
-            // FIXME: assertEquals(e.getMessage(), "Connection refused");
+            // OK
         }
     }
 
     /**
      * connect-->finish-->finish-->close
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "connect",
-                methodArgs = {java.net.SocketAddress.class}
-              ),
-              @TestTarget(
-                methodName = "finishConnect",
-                methodArgs = {}
-              )
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "connect",
+            args = {java.net.SocketAddress.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "finishConnect",
+            args = {}
+        )
     })
     public void testCFII_FinishTwice_NoServer_NonBlock() throws Exception {
         // ensure
@@ -1005,31 +1169,37 @@ public class SocketChannelTest extends TestCase {
         statusNotConnected_Pending();
         try {
             assertFalse(this.channel1.finishConnect());
-            statusNotConnected_Pending();
-            assertFalse(this.channel1.finishConnect());
-            statusNotConnected_Pending();
-            this.channel1.close();
         } catch (ConnectException e) {
-          // FIXME: assertEquals(e.getMessage(), "Connection refused");
+            // OK
         }
+        statusChannelClosed();
+        try {
+            assertFalse(this.channel1.finishConnect());
+        } catch (ClosedChannelException e) {
+            // OK
+        }
+        statusChannelClosed();
+        
+        this.channel1.close();
         statusChannelClosed();
     }
 
     /**
      * connect-->finish-->finish-->close
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "connect",
-                methodArgs = {java.net.SocketAddress.class}
-              ),
-              @TestTarget(
-                methodName = "finishConnect",
-                methodArgs = {}
-              )
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "connect",
+            args = {java.net.SocketAddress.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "finishConnect",
+            args = {}
+        )
     })
     public void testCFII_FinishTwice_Server_Block() throws Exception {
         connectServerBlock();
@@ -1042,18 +1212,19 @@ public class SocketChannelTest extends TestCase {
     /**
      * connect-->finish-->finish-->close
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "connect",
-                methodArgs = {java.net.SocketAddress.class}
-              ),
-              @TestTarget(
-                methodName = "finishConnect",
-                methodArgs = {}
-              )
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "connect",
+            args = {java.net.SocketAddress.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "finishConnect",
+            args = {}
+        )
     })
     public void testCFII_FinishTwice_Server_NonBlock() throws Exception {
         connectServerNonBlock();
@@ -1065,24 +1236,20 @@ public class SocketChannelTest extends TestCase {
     /**
      * connect-->finish-->connect-->close
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "Verifies case:  connect-->finish-->connect-->close. " +
-                    "Verifies ClosedChannelException, ConnectException.",
-            targets = {
-              @TestTarget(
-                methodName = "connect",
-                methodArgs = {java.net.SocketAddress.class}
-              ),
-              @TestTarget(
-                methodName = "finishConnect",
-                methodArgs = {}
-              ),
-              @TestTarget(
-                methodName = "configureBlocking",
-                methodArgs = {boolean.class}
-              )
-          })   
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies case:  connect-->finish-->connect-->close. Verifies ClosedChannelException, ConnectException.",
+            method = "connect",
+            args = {java.net.SocketAddress.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies case:  connect-->finish-->connect-->close. Verifies ClosedChannelException, ConnectException.",
+            method = "finishConnect",
+            args = {}
+        )
+    })   
     public void testCFII_ConnectAfterFinish_NoServer_Block() throws Exception {
         // ensure
         ensureServerClosed();
@@ -1115,20 +1282,20 @@ public class SocketChannelTest extends TestCase {
     /**
      * connect-->finish-->connect-->close
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "Verifies case: connect-->finish-->connect-->close. " +
-                    "Verifies ConnectionPendingException, ConnectException.",
-            targets = {
-              @TestTarget(
-                methodName = "connect",
-                methodArgs = {java.net.SocketAddress.class}
-              ),
-              @TestTarget(
-                methodName = "finishConnect",
-                methodArgs = {}
-              )
-          })    
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies case: connect-->finish-->connect-->close. Verifies ConnectionPendingException, ConnectException.",
+            method = "connect",
+            args = {java.net.SocketAddress.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies case: connect-->finish-->connect-->close. Verifies ConnectionPendingException, ConnectException.",
+            method = "finishConnect",
+            args = {}
+        )
+    })    
     public void testCFII_ConnectAfterFinish_NoServer_NonBlock()
             throws Exception {
         // ensure
@@ -1138,67 +1305,55 @@ public class SocketChannelTest extends TestCase {
         // connect
         assertFalse(this.channel1.connect(localAddr1));
         statusNotConnected_Pending();
+
         try {
-            assertFalse(this.channel1.finishConnect());
-            statusNotConnected_Pending();
-        } catch (ConnectException e) {
-            // FIXME: assertEquals(e.getMessage(), "Connection refused");
+            this.channel1.connect(localAddr1);
+            fail("Should throw a ConnectionPendingException here.");
+        } catch (ConnectionPendingException e) {
+            // OK.
         }
+        statusNotConnected_Pending();
 
-        if (this.channel1.isOpen()) {
-
-            try {
-                this.channel1.connect(localAddr1);
-                fail("Should throw a ConnectionPendingException here.");
-            } catch (ConnectionPendingException e) {
-                // OK.
-            }
-            statusNotConnected_Pending();
-
-            // connect another addr
-            try {
-                this.channel1.connect(localAddr2);
-                fail("Should throw a ConnectionPendingException here.");
-            } catch (ConnectionPendingException e) {
-                // OK.
-            }
-            statusNotConnected_Pending();
-
-            // connect if server closed
-            ensureServerClosed();
-
-            try {
-                this.channel1.connect(localAddr1);
-                fail("Should throw a ConnectionPendingException here.");
-            } catch (ConnectionPendingException e) {
-                // OK.
-            }
-            statusNotConnected_Pending();
-
-            this.channel1.close();
+        // connect another addr
+        try {
+            this.channel1.connect(localAddr2);
+            fail("Should throw a ConnectionPendingException here.");
+        } catch (ConnectionPendingException e) {
+            // OK.
         }
+        statusNotConnected_Pending();
+
+        // connect if server closed
+        ensureServerClosed();
+
+        try {
+            this.channel1.connect(localAddr1);
+            fail("Should throw a ConnectionPendingException here.");
+        } catch (ConnectionPendingException e) {
+            // OK.
+        }
+        statusNotConnected_Pending();
+
+        this.channel1.close();
+
         statusChannelClosed();
     }
 
     /**
      * connect-->finish-->connect-->close
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "Verifies AlreadyConnectedException.",
-            targets = {
-              @TestTarget(
-                methodName = "connect",
-                methodArgs = {java.net.SocketAddress.class}
-              )
-          })        
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies AlreadyConnectedException.",
+        method = "connect",
+        args = {java.net.SocketAddress.class}
+    )        
     public void testCFII_ConnectAfterFinish_Server_Block() throws Exception {
         connectServerBlock();
 
         if (!this.channel1.isConnected()) {
-            System.err
-                    .println("Connection fail, testCFII_ConnectAfterFinish_Server_Block is not finished.");
-            return;
+            fail("Connection failed," +
+                    "testCFII_ConnectAfterFinish_Server_Block not finished.");
         }
 
         try {
@@ -1237,22 +1392,18 @@ public class SocketChannelTest extends TestCase {
     /**
      * connect-->finish-->connect-->close
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "Verifies AlreadyConnectedException.",
-            targets = {
-              @TestTarget(
-                methodName = "connect",
-                methodArgs = {java.net.SocketAddress.class}
-              )
-          })    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies AlreadyConnectedException.",
+        method = "connect",
+        args = {java.net.SocketAddress.class}
+    )    
     public void testCFII_ConnectAfterFinish_Server_NonBlock() throws Exception {
         connectServerNonBlock();
 
         if (!this.channel1.isConnected()) {
-            System.err
-                    .println("Connection fail, testCFII_ConnectAfterFinish_Server_Block is not finished.");
-            return;
+            fail("Connection failed," +
+                    "testCFII_ConnectAfterFinish_Server_Block not finished.");
         }
         try {
             this.channel1.connect(localAddr1);
@@ -1290,20 +1441,20 @@ public class SocketChannelTest extends TestCase {
     /**
      * connect-->connect-->finish-->close
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "Verifies case: connect-->connect-->finish-->close. " +
-                    "Verifies ConnectionPendingException, ConnectException.",
-            targets = {
-              @TestTarget(
-                methodName = "connect",
-                methodArgs = {java.net.SocketAddress.class}
-              ),
-              @TestTarget(
-                methodName = "finishConnect",
-                methodArgs = {}
-              )
-          }) 
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies case: connect-->connect-->finish-->close. Verifies ConnectionPendingException, ConnectException.",
+            method = "connect",
+            args = {java.net.SocketAddress.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies case: connect-->connect-->finish-->close. Verifies ConnectionPendingException, ConnectException.",
+            method = "finishConnect",
+            args = {}
+        )
+    }) 
     public void testCFII_ConnectTwice_NoServer_NonBlock() throws Exception {
         // ensure
         ensureServerClosed();
@@ -1340,14 +1491,7 @@ public class SocketChannelTest extends TestCase {
             // OK.
         }
         statusNotConnected_Pending();
-
-        try {
-            assertFalse(this.channel1.finishConnect());
-            statusNotConnected_Pending();
-            this.channel1.close();
-        } catch (ConnectException e) {
-            // FIXME: assertEquals(e.getMessage(), "Connection refused");
-        }
+        this.channel1.close();
 
         statusChannelClosed();
     }
@@ -1355,20 +1499,20 @@ public class SocketChannelTest extends TestCase {
     /**
      * connect-->connect-->finish-->close
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "Verifies case connect-->connect-->finish-->close. " +
-                    "Verifies AlreadyConnectedException.",
-            targets = {
-              @TestTarget(
-                methodName = "connect",
-                methodArgs = {java.net.SocketAddress.class}
-              ),
-              @TestTarget(
-                methodName = "finishConnect",
-                methodArgs = {}
-              )
-          }) 
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies case connect-->connect-->finish-->close. Verifies AlreadyConnectedException.",
+            method = "connect",
+            args = {java.net.SocketAddress.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies case connect-->connect-->finish-->close. Verifies AlreadyConnectedException.",
+            method = "finishConnect",
+            args = {}
+        )
+    }) 
     public void testCFII_ConnectTwice_Server_Block() throws Exception {
         // ensure
         ensureServerOpen();
@@ -1416,20 +1560,20 @@ public class SocketChannelTest extends TestCase {
     /**
      * connect-->connect-->finish-->close
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "Verifies case connect-->connect-->finish-->close. " +
-                    "Verifies ConnectionPendingException.",
-            targets = {
-              @TestTarget(
-                methodName = "connect",
-                methodArgs = {java.net.SocketAddress.class}
-              ),
-              @TestTarget(
-                methodName = "finishConnect",
-                methodArgs = {}
-              )
-          }) 
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies case connect-->connect-->finish-->close. Verifies ConnectionPendingException.",
+            method = "connect",
+            args = {java.net.SocketAddress.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies case connect-->connect-->finish-->close. Verifies ConnectionPendingException.",
+            method = "finishConnect",
+            args = {}
+        )
+    }) 
     public void testCFII_ConnectTwice_Server_NonBlock() throws Exception {
         // ensure
         ensureServerOpen();
@@ -1476,17 +1620,18 @@ public class SocketChannelTest extends TestCase {
     /**
      * finish-->connect-->finish-->close
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "connect",
-          methodArgs = {java.net.SocketAddress.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "connect",
+            args = {java.net.SocketAddress.class}
         ),
-        @TestTarget(
-          methodName = "finishConnect",
-          methodArgs = {}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "finishConnect",
+            args = {}
         )
     })
     public void testCFII_FinishFirst_NoServer_Block() throws Exception {
@@ -1522,18 +1667,19 @@ public class SocketChannelTest extends TestCase {
     /**
      * finish-->connect-->finish-->close
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "connect",
-                methodArgs = {java.net.SocketAddress.class}
-              ),
-              @TestTarget(
-                methodName = "finishConnect",
-                methodArgs = {}
-              )
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "connect",
+            args = {java.net.SocketAddress.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "finishConnect",
+            args = {}
+        )
     })
     public void testCFII_FinishFirst_NoServer_NonBlock() throws Exception {
         // ensure
@@ -1551,14 +1697,7 @@ public class SocketChannelTest extends TestCase {
         // connect
         assertFalse(this.channel1.connect(localAddr1));
         statusNotConnected_Pending();
-
-        try {
-            assertFalse(this.channel1.finishConnect());
-            statusNotConnected_Pending();
-            this.channel1.close();
-        } catch (ConnectException e) {
-            // FIXME: assertEquals(e.getMessage(), "Connection refused");
-        }
+        this.channel1.close();
 
         statusChannelClosed();
     }
@@ -1566,18 +1705,19 @@ public class SocketChannelTest extends TestCase {
     /**
      * finish-->connect-->finish-->close
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "connect",
-                methodArgs = {java.net.SocketAddress.class}
-              ),
-              @TestTarget(
-                methodName = "finishConnect",
-                methodArgs = {}
-              )
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "connect",
+            args = {java.net.SocketAddress.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "finishConnect",
+            args = {}
+        )
     })    
     public void testCFII_FinishFirst_Server_Block() throws Exception {
         // ensure
@@ -1606,18 +1746,19 @@ public class SocketChannelTest extends TestCase {
     /**
      * finish-->connect-->finish-->close
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "connect",
-                methodArgs = {java.net.SocketAddress.class}
-              ),
-              @TestTarget(
-                methodName = "finishConnect",
-                methodArgs = {}
-              )
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "connect",
+            args = {java.net.SocketAddress.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "finishConnect",
+            args = {}
+        )
     })    
     public void testCFII_FinishFirst_Server_NonBlock() throws Exception {
         // ensure
@@ -1641,15 +1782,13 @@ public class SocketChannelTest extends TestCase {
         this.channel1.close();
         statusChannelClosed();
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "connect",
-          methodArgs = {java.net.SocketAddress.class}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "connect",
+        args = {java.net.SocketAddress.class}
+    )
     public void testCFII_Null() throws Exception {
         statusNotConnected_NotPending();
         try {
@@ -1659,24 +1798,14 @@ public class SocketChannelTest extends TestCase {
             // OK.
         }
     }
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "connect",
-                methodArgs = {java.net.SocketAddress.class}
-              )
-    })
-    public void testCFII_UnsupportedType() throws Exception {
-        class SubSocketAddress extends SocketAddress {
-            private static final long serialVersionUID = 1L;
 
-            //empty
-            public SubSocketAddress() {
-                super();
-            }
-        }
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "connect",
+        args = {java.net.SocketAddress.class}
+    )
+    public void testCFII_UnsupportedType() throws Exception {
         statusNotConnected_NotPending();
         SocketAddress newTypeAddress = new SubSocketAddress();
         try {
@@ -1686,15 +1815,13 @@ public class SocketChannelTest extends TestCase {
             // OK.
         }
     }
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "connect",
-                methodArgs = {java.net.SocketAddress.class}
-              )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "connect",
+        args = {java.net.SocketAddress.class}
+    )
     public void testCFII_Unresolved() throws IOException {
         statusNotConnected_NotPending();
         InetSocketAddress unresolved = new InetSocketAddress(
@@ -1706,15 +1833,13 @@ public class SocketChannelTest extends TestCase {
             // OK.
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "connect",
-          methodArgs = {java.net.SocketAddress.class}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "connect",
+        args = {java.net.SocketAddress.class}
+    )
     public void testCFII_EmptyHost() throws Exception {
         statusNotConnected_NotPending();
         ServerSocket server = new ServerSocket(0);
@@ -1727,21 +1852,19 @@ public class SocketChannelTest extends TestCase {
             // correct
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies ClosedChannelException.",
-      targets = {
-        @TestTarget(
-          methodName = "connect",
-          methodArgs = {java.net.SocketAddress.class}
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies ClosedChannelException.",
+            method = "connect",
+            args = {java.net.SocketAddress.class}
         ),
-        @TestTarget(
-          methodName = "finishConnect",
-          methodArgs = {}
-        ),
-        @TestTarget(
-          methodName = "configureBlocking",
-          methodArgs = {boolean.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies ClosedChannelException.",
+            method = "finishConnect",
+            args = {}
         )
     })
     public void testCFII_CloseFirst() throws Exception {
@@ -1770,18 +1893,20 @@ public class SocketChannelTest extends TestCase {
         }
         statusChannelClosed();
     }
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "connect",
-                methodArgs = {java.net.SocketAddress.class}
-              ),
-              @TestTarget(
-                methodName = "finishConnect",
-                methodArgs = {}
-              )
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "connect",
+            args = {java.net.SocketAddress.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "finishConnect",
+            args = {}
+        )
     })
     public void testCFII_StatusAfterFinish() throws Exception {
         // 1. close server, finish must return false, check the status
@@ -1795,7 +1920,6 @@ public class SocketChannelTest extends TestCase {
         } catch (ConnectException e) {
             // OK.
         }
-        assertFalse(this.channel1.isOpen());
 
         assertFalse(this.channel1.isOpen());
         assertTrue(this.channel1.isBlocking());
@@ -1807,11 +1931,11 @@ public class SocketChannelTest extends TestCase {
         assertFalse(this.channel1.connect(localAddr1));
         try {
             assertFalse(this.channel1.finishConnect());
-            statusNotConnected_Pending();
-            this.channel1.close();
+            fail("Should throw IOException: Connection refused");
         } catch (ConnectException e) {
-            System.out.println(e.getMessage());
+            // OK
         }
+        statusChannelClosed();
 
         // 2. start server, finish usually return true, check the status
         ensureServerOpen();
@@ -1861,10 +1985,10 @@ public class SocketChannelTest extends TestCase {
         statusNotConnected_Pending();
         try {
             assertFalse(this.channel1.finishConnect());
-            statusNotConnected_Pending();
         } catch (ConnectException e) {
-            // FIXME: assertEquals(e.getMessage(), "Connection refused");
+            // OK
         }
+        ensureServerClosed();
     }
 
     private void connectServerNonBlock() throws Exception {
@@ -1887,6 +2011,7 @@ public class SocketChannelTest extends TestCase {
         // connect
         assertTrue(this.channel1.connect(localAddr1));
         statusConnected_NotPending();
+
         tryFinish();
     }
 
@@ -1939,15 +2064,12 @@ public class SocketChannelTest extends TestCase {
      * 
      * 'SocketChannelImpl.connect(SocketAddress)'
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "connect",
-          methodArgs = {java.net.SocketAddress.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "connect",
+        args = {java.net.SocketAddress.class}
+    )
     public void testCFII_Data_ConnectWithServer() throws Exception {
         ensureServerOpen();
         java.nio.ByteBuffer writeBuf = java.nio.ByteBuffer
@@ -1981,23 +2103,20 @@ public class SocketChannelTest extends TestCase {
     /*
      * Test method for 'SocketChannelImpl.connect(SocketAddress)'
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "connect",
-                methodArgs = {java.net.SocketAddress.class}
-              ),
-              @TestTarget(
-                methodName = "finishConnect",
-                methodArgs = {}
-              ),
-              @TestTarget(
-                methodName = "configureBlocking",
-                methodArgs = {boolean.class}
-              )
-      }) 
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "connect",
+            args = {java.net.SocketAddress.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "finishConnect",
+            args = {}
+        )
+    }) 
     public void testCFII_Data_ConnectWithServer_nonBlocking() throws Exception {
         ensureServerOpen();
         java.nio.ByteBuffer writeBuf = java.nio.ByteBuffer
@@ -2013,17 +2132,17 @@ public class SocketChannelTest extends TestCase {
         assertFalse(this.channel1.isConnected());
         assertTrue(this.channel1.isConnectionPending());
         assertTrue(this.channel1.isOpen());
-        if (tryFinish()) {
-            assertEquals(CAPACITY_NORMAL, this.channel1.write(writeBuf));
-            assertEquals(CAPACITY_NORMAL, this.channel1.write(writeBufArr, 0, 1));
+        assertTrue(tryFinish());
+        assertEquals(CAPACITY_NORMAL, this.channel1.write(writeBuf));
+        assertEquals(CAPACITY_NORMAL, this.channel1
+                .write(writeBufArr, 0, 1));
 
-            this.channel1.configureBlocking(false);
-            try {
-                this.channel1.connect(localAddr1);
-                fail("Should throw AlreadyConnectedException");
-            } catch (AlreadyConnectedException e) {
-                // correct
-            }
+        this.channel1.configureBlocking(false);
+        try {
+            this.channel1.connect(localAddr1);
+            fail("Should throw AlreadyConnectedException");
+        } catch (AlreadyConnectedException e) {
+            // correct
         }
 
         assertFalse(this.channel1.isRegistered());
@@ -2033,19 +2152,12 @@ public class SocketChannelTest extends TestCase {
     /*
      * Test method for 'SocketChannelImpl.finishConnect()'
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "finishConnect",
-                methodArgs = {}
-              ),
-              @TestTarget(
-                methodName = "configureBlocking",
-                methodArgs = {boolean.class}
-              )
-      }) 
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "finishConnect",
+        args = {}
+    )
     public void testCFII_Data_FinishConnect_nonBlocking() throws IOException {
         ensureServerOpen();
 
@@ -2067,38 +2179,43 @@ public class SocketChannelTest extends TestCase {
         assertTrue(this.channel1.isConnectionPending());
         assertTrue(this.channel1.isOpen());
         this.server1.accept();
-        if (tryFinish()) {
-            assertEquals(CAPACITY_NORMAL, this.channel1.write(writeBuf));
-            assertEquals(CAPACITY_NORMAL, this.channel1.write(writeBufArr, 0, 1));
-            try {
-                this.channel1.connect(localAddr1);
-                fail("Should throw AlreadyConnectedException");
-            } catch (AlreadyConnectedException e) {
-                // correct
-            }
+        assertTrue(tryFinish());
+        assertEquals(CAPACITY_NORMAL, this.channel1.write(writeBuf));
+        assertEquals(CAPACITY_NORMAL, this.channel1
+                .write(writeBufArr, 0, 1));
+        try {
+            this.channel1.connect(localAddr1);
+            fail("Should throw AlreadyConnectedException");
+        } catch (AlreadyConnectedException e) {
+            // correct
         }
+
         assertFalse(this.channel1.isRegistered());
         tryFinish();
     }
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "connect",
-                methodArgs = {java.net.SocketAddress.class}
-              ),
-              @TestTarget(
-                methodName = "finishConnect",
-                methodArgs = {}
-              ),
-              @TestTarget(
-                methodName = "open",
-                methodArgs = {}
-              )
-      }) 
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "connect",
+            args = {java.net.SocketAddress.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "finishConnect",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies IOException",
+            method = "open",
+            args = {SocketAddress.class}
+        )
+    }) 
     public void testCFII_Data_FinishConnect_AddrSetServerStartLater()
-            throws IOException, InterruptedException {
+            throws IOException {
         ensureServerClosed();
         java.nio.ByteBuffer[] writeBufArr = new java.nio.ByteBuffer[1];
         writeBufArr[0] = java.nio.ByteBuffer.allocate(CAPACITY_NORMAL);
@@ -2142,39 +2259,32 @@ public class SocketChannelTest extends TestCase {
         assertFalse(this.channel1.isConnected());
         ensureServerOpen();
         // cannot connect?
-        try {
-            assertFalse(this.channel1.finishConnect());
             assertFalse(this.channel1.isBlocking());
-            assertFalse(this.channel1.isConnected());
-            assertTrue(this.channel1.isConnectionPending());
-            assertTrue(this.channel1.isOpen());
-            try {
-                this.channel1.connect(localAddr1);
-                fail("Should throw ConnectionPendingException");
-            } catch (ConnectionPendingException e) {
-                // correct
-            }
-            this.channel1.configureBlocking(true);
-            try {
-                this.channel1.connect(localAddr1);
-                fail("Should throw ConnectionPendingException");
-            } catch (ConnectionPendingException e) {
-                // correct
-            }
-            tryFinish();
-        } catch (ConnectException e) {
-            // FIXME: assertEquals(e.getMessage(), "Connection refused");
+        assertFalse(this.channel1.isConnected());
+        assertTrue(this.channel1.isConnectionPending());
+        assertTrue(this.channel1.isOpen());
+        try {
+            this.channel1.connect(localAddr1);
+            fail("Should throw ConnectionPendingException");
+        } catch (ConnectionPendingException e) {
+            // correct
         }
+        this.channel1.configureBlocking(true);
+        try {
+            this.channel1.connect(localAddr1);
+            fail("Should throw ConnectionPendingException");
+        } catch (ConnectionPendingException e) {
+            // correct
+        }
+        tryFinish();
     }
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "finishConnect",
-                methodArgs = {}
-              )
-      }) 
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "finishConnect",
+        args = {}
+    ) 
     public void testCFII_Data_FinishConnect_ServerStartLater()
             throws IOException {
         ensureServerClosed();
@@ -2209,43 +2319,32 @@ public class SocketChannelTest extends TestCase {
         assertFalse(this.channel1.isConnected());
         ensureServerOpen();
         // cannot connect?
+        assertFalse(this.channel1.isBlocking());
+        assertFalse(this.channel1.isConnected());
+        assertTrue(this.channel1.isConnectionPending());
+        assertTrue(this.channel1.isOpen());
         try {
-            assertFalse(this.channel1.finishConnect());
-            assertFalse(this.channel1.isBlocking());
-            assertFalse(this.channel1.isConnected());
-            assertTrue(this.channel1.isConnectionPending());
-            assertTrue(this.channel1.isOpen());
-            try {
-                this.channel1.connect(localAddr1);
-                fail("Should throw ConnectionPendingException");
-            } catch (ConnectionPendingException e) {
-                // correct
-            }
-            this.channel1.configureBlocking(true);
-            try {
-                this.channel1.connect(localAddr1);
-                fail("Should throw ConnectionPendingException");
-            } catch (ConnectionPendingException e) {
-                // correct
-            }
-            tryFinish();
-        } catch (ConnectException e) {
-            // FIXME: assertEquals(e.getMessage(), "Connection refused");
+            this.channel1.connect(localAddr1);
+            fail("Should throw ConnectionPendingException");
+        } catch (ConnectionPendingException e) {
+            // correct
         }
+        this.channel1.configureBlocking(true);
+        try {
+            this.channel1.connect(localAddr1);
+            fail("Should throw ConnectionPendingException");
+        } catch (ConnectionPendingException e) {
+            // correct
+        }
+        tryFinish();
     }
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "finishConnect",
-                methodArgs = {}
-              ),
-              @TestTarget(
-                methodName = "configureBlocking",
-                methodArgs = {boolean.class}
-              )
-      }) 
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "finishConnect",
+        args = {}
+    )
     public void testCFII_Data_FinishConnect_Blocking() throws IOException {
         ensureServerOpen();
         java.nio.ByteBuffer writeBuf = java.nio.ByteBuffer
@@ -2265,17 +2364,18 @@ public class SocketChannelTest extends TestCase {
         assertTrue(this.channel1.isConnected());
         assertFalse(this.channel1.isConnectionPending());
         assertTrue(this.channel1.isOpen());
-        if (tryFinish()) {
-            assertEquals(CAPACITY_NORMAL, this.channel1.write(writeBuf));
-            assertEquals(CAPACITY_NORMAL, this.channel1.write(writeBufArr, 0, 1));
+        assertTrue(tryFinish());
+        assertEquals(CAPACITY_NORMAL, this.channel1.write(writeBuf));
+        assertEquals(CAPACITY_NORMAL, this.channel1
+                .write(writeBufArr, 0, 1));
 
-            try {
-                this.channel1.connect(localAddr1);
-                fail("Should throw AlreadyConnectedException");
-            } catch (AlreadyConnectedException e) {
-                // correct
-            }
+        try {
+            this.channel1.connect(localAddr1);
+            fail("Should throw AlreadyConnectedException");
+        } catch (AlreadyConnectedException e) {
+            // correct
         }
+
         assertFalse(this.channel1.isRegistered());
         tryFinish();
     }
@@ -2283,15 +2383,12 @@ public class SocketChannelTest extends TestCase {
     /**
      * Regression test for Harmony-1947.
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "Doesn't verify exceptions.",
-            targets = {
-              @TestTarget(
-                methodName = "finishConnect",                        
-                methodArgs = {}
-              )
-          })  
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify exceptions.",
+        method = "finishConnect",
+        args = {}
+    )  
     public void test_finishConnect() throws Exception {
         SocketAddress address = new InetSocketAddress("localhost", 2046);
 
@@ -2315,9 +2412,14 @@ public class SocketChannelTest extends TestCase {
                 // finishConnect() blocks.
                 channel1.configureBlocking(true);
                 doneNonBlockingConnect = channel1.finishConnect();
+            } else {
+                fail("Non blocking connect was connected too fast." +
+                        "Could not test finishConnect().");
             }
             if (doneNonBlockingConnect) {
                 tryFinish();
+            } else {
+                fail("finishConnect() did not finish the connection.");
             }
             channel1.close();
         }
@@ -2325,7 +2427,7 @@ public class SocketChannelTest extends TestCase {
             serversocket.close();
         }
     }
-    
+
     // -------------------------------------------------------------------
     // End of original tests. Test method for CFII with real data.
     // -------------------------------------------------------------------
@@ -2333,16 +2435,13 @@ public class SocketChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.SocketChannel#read(ByteBuffer)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "read",                        
-                methodArgs = {ByteBuffer[].class}
-              )
-          }) 
-    public void test_readLjava_nio_ByteBuffer_Blocking() throws IOException {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {java.nio.ByteBuffer[].class}
+    ) 
+    public void test_readLByteBuffer_Blocking() throws IOException {
         // initialize write content
         byte[] writeContent = new byte[CAPACITY_NORMAL];
         for (int i = 0; i < writeContent.length; i++) {
@@ -2375,7 +2474,10 @@ public class SocketChannelTest extends TestCase {
             // blocking read, it possibly returns 0 in some cases.
             assertTimeout(startTime, TIMEOUT);
         }
+
+        // assert read content
         assertEquals(CAPACITY_NORMAL, totalCount);
+        assertEquals(CAPACITY_NORMAL, readContent.position());
         readContent.flip();
         for (int i = 0; i < CAPACITY_NORMAL; i++) {
             assertEquals(writeContent[i], readContent.get());
@@ -2385,16 +2487,13 @@ public class SocketChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.SocketChannel#read(ByteBuffer)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "read",                        
-                methodArgs = {ByteBuffer[].class}
-              )
-          }) 
-    public void test_readLjava_nio_ByteBuffer_Nonblocking() throws IOException {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {java.nio.ByteBuffer[].class}
+    ) 
+    public void test_readLByteBuffer_Nonblocking() throws IOException {
         // initialize write content
         byte[] writeContent = new byte[CAPACITY_NORMAL];
         for (int i = 0; i < writeContent.length; i++) {
@@ -2440,16 +2539,13 @@ public class SocketChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.SocketChannel#write(ByteBuffer)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {java.nio.ByteBuffer.class}
-        )
-    })
-    public void test_wrtieLjava_nio_ByteBuffer_Blocking() throws IOException {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "write",
+        args = {java.nio.ByteBuffer.class}
+    )
+    public void test_writeLjava_nio_ByteBuffer_Blocking() throws IOException {
         // initialize write content
         ByteBuffer writeContent = ByteBuffer.allocate(CAPACITY_NORMAL);
         for (int i = 0; i < CAPACITY_NORMAL; i++) {
@@ -2499,16 +2595,13 @@ public class SocketChannelTest extends TestCase {
     /**
      * @tests java.nio.channels.SocketChannel#write(ByteBuffer)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {java.nio.ByteBuffer.class}
-        )
-    })
-    public void test_wrtieLjava_nio_ByteBuffer_NonBlocking() throws Exception {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "write",
+        args = {java.nio.ByteBuffer.class}
+    )
+    public void test_writeLjava_nio_ByteBuffer_NonBlocking() throws Exception {
         // initialize write content
         ByteBuffer writeContent = ByteBuffer.allocate(CAPACITY_NORMAL);
         for (int i = 0; i < CAPACITY_NORMAL; i++) {
@@ -2564,6 +2657,47 @@ public class SocketChannelTest extends TestCase {
         }
     }
 
+    /**
+     * @tests java.nio.channels.SocketChannel#read(ByteBuffer)
+     */
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "write",
+        args = {java.nio.ByteBuffer.class}
+    )
+    @KnownFailure("Fxed on ToT")
+    public void test_writeLjava_nio_ByteBuffer_Nonblocking_HugeData() throws IOException {
+        // initialize write content
+        ByteBuffer writeContent = ByteBuffer.allocate(CAPACITY_HUGE);
+        for (int i = 0; i < CAPACITY_HUGE; i++) {
+            writeContent.put((byte) i);
+        }
+        writeContent.flip();
+
+        // establish connection
+        channel1.connect(localAddr1);
+        Socket acceptedSocket = server1.accept();
+
+        channel1.configureBlocking(false);
+        int writtenTotalCount = 0;
+        int writtenCount = 1;
+        long startTime = System.currentTimeMillis();
+        // use SocketChannel.write(ByteBuffer) to try to write CAPACITY_HUGE bytes
+        while (writtenTotalCount < CAPACITY_HUGE && writtenCount > 0) {
+            writtenCount = channel1.write(writeContent);
+            if (writtenCount == 0 && writtenTotalCount < CAPACITY_HUGE) {
+                assertEquals(0, channel1.write(writeContent));
+                break;
+            }
+            writtenTotalCount += writtenCount;
+            // if the channel could not finish writing in TIMEOUT ms, the
+            // test fails. It is used to guarantee the test never hangs even
+            // if there are bugs of SocketChannel implementation.
+            assertTimeout(startTime, TIMEOUT);
+        }
+    }
+
     /*
      * Fails if the difference between current time and start time is greater
      * than timeout.
@@ -2578,15 +2712,12 @@ public class SocketChannelTest extends TestCase {
     // -------------------------------------------------
     // Test for read/write but no real data expressed
     // -------------------------------------------------
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify all exceptions according to specification.",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {java.nio.ByteBuffer.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies ClosedChannelException",
+        method = "read",
+        args = {java.nio.ByteBuffer.class}
+    )
     public void testReadByteBuffer() throws Exception {
         assertTrue(this.server1.isBound());
         java.nio.ByteBuffer readBuf = java.nio.ByteBuffer
@@ -2608,9 +2739,8 @@ public class SocketChannelTest extends TestCase {
         assertFalse(this.channel1.isBlocking());
         assertTrue(this.channel1.isConnectionPending());
         assertFalse(this.channel1.isConnected());
-        if (tryFinish()) {
-            assertEquals(0, this.channel1.read(readBuf));
-        }
+        assertTrue(tryFinish());
+        assertEquals(0, this.channel1.read(readBuf));
 
         this.channel1.close();
         try {
@@ -2620,15 +2750,13 @@ public class SocketChannelTest extends TestCase {
             // correct
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {java.nio.ByteBuffer.class}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies ClosedChannelException",
+        method = "read",
+        args = {java.nio.ByteBuffer.class}
+    )
     public void testReadByteBuffer_Direct() throws Exception {
         assertTrue(this.server1.isBound());
         java.nio.ByteBuffer readBuf = java.nio.ByteBuffer
@@ -2650,9 +2778,8 @@ public class SocketChannelTest extends TestCase {
         assertFalse(this.channel1.isBlocking());
         assertTrue(this.channel1.isConnectionPending());
         assertFalse(this.channel1.isConnected());
-        if (tryFinish()) {
-            assertEquals(0, this.channel1.read(readBuf));
-        }
+        assertTrue(tryFinish());
+        assertEquals(0, this.channel1.read(readBuf));
 
         this.channel1.close();
         try {
@@ -2662,15 +2789,13 @@ public class SocketChannelTest extends TestCase {
             // correct
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {java.nio.ByteBuffer.class}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {java.nio.ByteBuffer.class}
+    )
     public void testReadByteBuffer_BufNull() throws Exception {
         assertTrue(this.server1.isBound());
         java.nio.ByteBuffer readBuf = java.nio.ByteBuffer.allocate(0);
@@ -2683,36 +2808,25 @@ public class SocketChannelTest extends TestCase {
             // correct
         }
         this.channel1.connect(localAddr1);
-        if (tryFinish()) {
-            try {
-                this.channel1.read((java.nio.ByteBuffer) null);
-                fail("Should throw NPE");
-            } catch (NullPointerException e) {
-                // correct
-            }
-            assertEquals(0, this.channel1.read(readBuf));
-        }
-        this.server1.close();
+        assertTrue(tryFinish());
         try {
-            channel1.read((java.nio.ByteBuffer) null);
+            this.channel1.read((java.nio.ByteBuffer) null);
             fail("Should throw NPE");
         } catch (NullPointerException e) {
             // correct
         }
+        assertEquals(0, this.channel1.read(readBuf));
     }
 
     /*
      * SocketChannelImpl.read(ByteBuffer[], int, int)'
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {java.nio.ByteBuffer[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {java.nio.ByteBuffer[].class, int.class, int.class}
+    )
     public void testReadByteBufferArrayIntInt() throws Exception {
         assertTrue(this.server1.isBound());
         java.nio.ByteBuffer[] readBuf = new java.nio.ByteBuffer[2];
@@ -2735,10 +2849,9 @@ public class SocketChannelTest extends TestCase {
         assertFalse(this.channel1.isBlocking());
         assertTrue(this.channel1.isConnectionPending());
         assertFalse(this.channel1.isConnected());
-        if (tryFinish()) {
-            assertEquals(0, this.channel1.read(readBuf, 0, 1));
-            assertEquals(0, this.channel1.read(readBuf, 0, 2));
-        }
+        assertTrue(tryFinish());
+        assertEquals(0, this.channel1.read(readBuf, 0, 1));
+        assertEquals(0, this.channel1.read(readBuf, 0, 2));
 
         this.channel1.close();
         try {
@@ -2748,19 +2861,16 @@ public class SocketChannelTest extends TestCase {
             // correct
         }
     }
-    
+
     /*
      * SocketChannelImpl.read(ByteBuffer[], int, int)'
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "write",
-                methodArgs = {java.nio.ByteBuffer[].class, int.class, int.class}
-              )
-          })    
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {java.nio.ByteBuffer[].class, int.class, int.class}
+    )    
     public void testReadByteBufferArrayIntInt_Direct() throws Exception {
         assertTrue(this.server1.isBound());
         java.nio.ByteBuffer[] readBuf = new java.nio.ByteBuffer[2];
@@ -2783,10 +2893,9 @@ public class SocketChannelTest extends TestCase {
         assertFalse(this.channel1.isBlocking());
         assertTrue(this.channel1.isConnectionPending());
         assertFalse(this.channel1.isConnected());
-        if (tryFinish()) {
-            assertEquals(0, this.channel1.read(readBuf, 0, 1));
-            assertEquals(0, this.channel1.read(readBuf, 0, 2));
-        }
+        assertTrue(tryFinish());
+        assertEquals(0, this.channel1.read(readBuf, 0, 1));
+        assertEquals(0, this.channel1.read(readBuf, 0, 2));
 
         this.channel1.close();
         try {
@@ -2796,15 +2905,13 @@ public class SocketChannelTest extends TestCase {
             // correct
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {java.nio.ByteBuffer[].class, int.class, int.class}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {java.nio.ByteBuffer[].class, int.class, int.class}
+    )
     public void testReadByteBufferArrayIntInt_BufNull() throws Exception {
         assertTrue(this.server1.isBound());
         java.nio.ByteBuffer[] readBuf = new java.nio.ByteBuffer[2];
@@ -2823,23 +2930,23 @@ public class SocketChannelTest extends TestCase {
             // correct
         }
         this.channel1.connect(localAddr1);
-        if (tryFinish()) {
+        assertTrue(tryFinish());
 
-            try {
-                channel1.read(null, 0, 0);
-                fail("Should throw NPE");
-            } catch (NullPointerException e) {
-                // correct
-            }
-            try {
-                channel1.read(readBuf, 0, 2);
-                fail("Should throw NPE");
-            } catch (NullPointerException e) {
-                // correct
-            }
-
-            assertEquals(0, this.channel1.read(readBuf, 0, 1));
+        try {
+            channel1.read(null, 0, 0);
+            fail("Should throw NPE");
+        } catch (NullPointerException e) {
+            // correct
         }
+        try {
+            channel1.read(readBuf, 0, 2);
+            fail("Should throw NPE");
+        } catch (NullPointerException e) {
+            // correct
+        }
+
+        assertEquals(0, this.channel1.read(readBuf, 0, 1));
+
         this.channel1.close();
         try {
             channel1.read(null, 0, 1);
@@ -2848,15 +2955,13 @@ public class SocketChannelTest extends TestCase {
             // correct
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {java.nio.ByteBuffer.class}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "write",
+        args = {java.nio.ByteBuffer.class}
+    )
     public void testWriteByteBuffer() throws IOException {
         assertTrue(this.server1.isBound());
         java.nio.ByteBuffer writeBuf = java.nio.ByteBuffer
@@ -2887,16 +2992,13 @@ public class SocketChannelTest extends TestCase {
             // correct
         }
     }
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "Doesn't verify AsynchronousCloseException, " +
-                    "ClosedByInterruptException.",
-            targets = {
-              @TestTarget(
-                methodName = "write",
-                methodArgs = {java.nio.ByteBuffer.class}
-              )
-          })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify AsynchronousCloseException, ClosedByInterruptException.",
+        method = "write",
+        args = {java.nio.ByteBuffer.class}
+    )
     public void testWriteByteBuffer_Direct() throws IOException {
         assertTrue(this.server1.isBound());
         java.nio.ByteBuffer writeBuf = java.nio.ByteBuffer
@@ -2927,15 +3029,13 @@ public class SocketChannelTest extends TestCase {
             // correct
         }
     }
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "write",
-                methodArgs = {java.nio.ByteBuffer.class}
-              )
-          })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "write",
+        args = {java.nio.ByteBuffer.class}
+    )
     public void testWriteByteBuffer_BufNull() throws IOException {
         assertTrue(this.server1.isBound());
         java.nio.ByteBuffer writeBuf = java.nio.ByteBuffer.allocate(0);
@@ -2952,16 +3052,13 @@ public class SocketChannelTest extends TestCase {
     /*
      * SocketChannelImpl.write(ByteBuffer[], int, int)'
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify AsynchronousCloseException, " +
-            "ClosedByInterruptException.",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {java.nio.ByteBuffer[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify AsynchronousCloseException," +
+                "ClosedByInterruptException.",
+        method = "write",
+        args = {java.nio.ByteBuffer[].class, int.class, int.class}
+    )
     public void testWriteByteBufferArrayIntInt() throws IOException {
         java.nio.ByteBuffer[] writeBuf = new java.nio.ByteBuffer[2];
         writeBuf[0] = java.nio.ByteBuffer.allocate(CAPACITY_NORMAL);
@@ -2990,7 +3087,7 @@ public class SocketChannelTest extends TestCase {
         assertEquals(CAPACITY_NORMAL * 2, this.channel1.write(writeBuf, 0, 2));
         this.channel1.close();
         try {
-            channel1.write(writeBuf);
+            channel1.write(writeBuf, 0, 1);
             fail("Should throw ClosedChannelException");
         } catch (ClosedChannelException e) {
             // correct
@@ -3000,15 +3097,12 @@ public class SocketChannelTest extends TestCase {
     /*
      * SocketChannelImpl.write(ByteBuffer[], int, int)'
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "read",
-                methodArgs = {java.nio.ByteBuffer[].class, int.class, int.class}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "write",
+        args = {java.nio.ByteBuffer[].class, int.class, int.class}
+    )
     public void testWriteByteBufferArrayIntInt_Direct() throws IOException {
         java.nio.ByteBuffer[] writeBuf = new java.nio.ByteBuffer[2];
         writeBuf[0] = java.nio.ByteBuffer.allocateDirect(CAPACITY_NORMAL);
@@ -3037,21 +3131,19 @@ public class SocketChannelTest extends TestCase {
         assertEquals(CAPACITY_NORMAL * 2, this.channel1.write(writeBuf, 0, 2));
         this.channel1.close();
         try {
-            channel1.write(writeBuf);
+            channel1.write(writeBuf, 0 ,1);
             fail("Should throw ClosedChannelException");
         } catch (ClosedChannelException e) {
             // correct
         }
     }
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "read",
-                methodArgs = {java.nio.ByteBuffer[].class, int.class, int.class}
-              )
-          })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "write",
+        args = {java.nio.ByteBuffer[].class, int.class, int.class}
+    )
     public void testWriteByteBufferArrayIntInt_BufNull() throws IOException {
         java.nio.ByteBuffer[] writeBuf = new java.nio.ByteBuffer[0];
 
@@ -3076,6 +3168,7 @@ public class SocketChannelTest extends TestCase {
         } catch (NullPointerException e) {
             // correct
         }
+        writeBuf[0] = java.nio.ByteBuffer.allocate(CAPACITY_NORMAL);
         try {
             this.channel1.write(writeBuf, 0, 2);
             fail("Should throw IndexOutOfBoundsException");
@@ -3090,21 +3183,20 @@ public class SocketChannelTest extends TestCase {
             // correct
         }
     }
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "Verifies IndexOutOfBoundsException.",
-            targets = {
-              @TestTarget(
-                methodName = "read",
-                methodArgs = {java.nio.ByteBuffer[].class, int.class, int.class}
-              )
-          })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies IndexOutOfBoundsException.",
+        method = "write",
+        args = {java.nio.ByteBuffer[].class, int.class, int.class}
+    )
     public void testWriteByteBufferArrayIntInt_SizeError() throws IOException {
-        java.nio.ByteBuffer[] writeBuf = new java.nio.ByteBuffer[0];
+        java.nio.ByteBuffer[] writeBuf = 
+                {java.nio.ByteBuffer.allocate(CAPACITY_NORMAL)};
 
         this.channel1.connect(localAddr1);
         try {
-            this.channel1.write(null, -1, 1);
+            this.channel1.write(writeBuf, -1, 1);
             fail("Should throw IndexOutOfBoundsException");
         } catch (IndexOutOfBoundsException e) {
             // correct
@@ -3116,36 +3208,26 @@ public class SocketChannelTest extends TestCase {
         } catch (IndexOutOfBoundsException e) {
             // correct
         }
-        writeBuf = new java.nio.ByteBuffer[1];
         try {
-            this.channel1.write(writeBuf, 2, 1);
+            this.channel1.write(writeBuf, 1, 1);
             fail("Should throw IndexOutOfBoundsException");
         } catch (IndexOutOfBoundsException e) {
             // correct
         }
         try {
-            this.channel1.write(writeBuf, 2, -1);
-            fail("Should throw IndexOutOfBoundsException");
-        } catch (IndexOutOfBoundsException e) {
-            // correct
-        }
-        this.server1.close();
-        try {
-            channel1.read(null, -1, -1);
+            this.channel1.write(writeBuf, 0, 2);
             fail("Should throw IndexOutOfBoundsException");
         } catch (IndexOutOfBoundsException e) {
             // correct
         }
     }
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "write",
-                methodArgs = {java.nio.ByteBuffer[].class, int.class, int.class}
-              )
-          })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {java.nio.ByteBuffer[].class, int.class, int.class}
+    )
     public void testReadByteBufferArrayIntInt_SizeError() throws IOException {
         java.nio.ByteBuffer[] readBuf = new java.nio.ByteBuffer[0];
 
@@ -3184,68 +3266,121 @@ public class SocketChannelTest extends TestCase {
             // correct
         }
     }
-    
-    /* 
+
+    /*
      * ==========================================================================
      * Tests for read/write real data
      * ==========================================================================
-     */ 
-        
+     */
 
     /**
-     * @tests java.nio.channels.SocketChannel#read(ByteBuffer[])
-     */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "read",                        
-                methodArgs = {ByteBuffer[].class}
-              )
-          }) 
-    public void test_read$LByteBuffer() throws IOException {
-        MockSocketChannel sc = new MockSocketChannel(null);
-        ByteBuffer [] byteBufferArray = { ByteBuffer.allocate(1), ByteBuffer.allocate(1)};
-        // Verify that calling read(ByteBuffer[]) leads to the method
-        // read(ByteBuffer[], int, int) being called with a 0 for the
-        // second parameter and targets.length as the third parameter.
-        sc.read(byteBufferArray);
-        assertTrue(sc.isReadCalled);
-    }
-    /**
      * @tests java.nio.channels.SocketChannel#read(ByteBuffer[],int,int)
-     */  
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "read",                        
-                methodArgs = {ByteBuffer[].class, int.class, int.class}
-              )
-          }) 
-    public void test_read$LByteBufferII_blocking() throws Exception {
+     */
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {java.nio.ByteBuffer[].class}
+    ) 
+    public void test_read$LByteBuffer_blocking() throws Exception {
         assert_read$LByteBuffer(true);
     }
- 
+
     /**
      * @tests java.nio.channels.SocketChannel#read(ByteBuffer[],int,int)
-     */  
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "read",                        
-                methodArgs = {ByteBuffer[].class, int.class, int.class}
-              )
-          }) 
-    public void test_read$LByteBufferII_nonblocking() throws Exception {
+     */
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {java.nio.ByteBuffer[].class}
+    ) 
+    public void test_read$LByteBuffer_nonblocking() throws Exception {
         assert_read$LByteBuffer(false);
     }
 
     private void assert_read$LByteBuffer(boolean isBlocking) throws IOException {
+        // initialize write content
+        byte[] writeContent = new byte[CAPACITY_NORMAL * 2];
+        for (int i = 0; i < CAPACITY_NORMAL * 2; i++) {
+            writeContent[i] = (byte) i;
+        }
+        ByteBuffer[] readContents = new ByteBuffer[2];
+        readContents[0] = ByteBuffer.allocate(CAPACITY_NORMAL);
+        readContents[1] = ByteBuffer.allocate(CAPACITY_NORMAL + 1);
+        // establish connection
+        channel1.connect(localAddr1);
+        Socket acceptedSocket = server1.accept();
+        // use OutputStream.write to send CAPACITY_NORMAL * 2 bytes data
+        OutputStream out = acceptedSocket.getOutputStream();
+        out.write(writeContent);
+        // use close to guarantee all data is sent
+        acceptedSocket.close();
+        // configure block/nonblock mode
+        channel1.configureBlocking(isBlocking);
+        long startTime = System.currentTimeMillis();
+        long totalRead = 0;
+        long countRead = 0;
+
+        while (totalRead <= CAPACITY_NORMAL * 2) {
+            countRead = channel1.read(readContents);
+            if (0 == countRead && !readContents[1].hasRemaining()) {
+                // read returns 0 because readContents is full
+                break;
+            }
+            if (EOF == countRead) {
+                break;
+            }
+            totalRead += countRead;
+            // if the channel could not finish reading in TIMEOUT ms, the
+            // test fails. It is used to guarantee the test never hangs even
+            // if there are bugs of SocketChannel implementation. For
+            // blocking read, it possibly returns 0 in some cases.
+            assertTimeout(startTime, TIMEOUT);
+        }
+
+        // assert total bytes read and the position of ByteBuffers
+        assertEquals(CAPACITY_NORMAL * 2, totalRead);
+        assertEquals(CAPACITY_NORMAL, readContents[0].position());
+        assertEquals(CAPACITY_NORMAL, readContents[1].position());
+        // assert read content
+        readContents[0].flip();
+        readContents[1].flip();
+        for (int i = 0; i < CAPACITY_NORMAL; i++) {
+            assertEquals(writeContent[i], readContents[0].get());
+        }
+        for (int i = CAPACITY_NORMAL; i < CAPACITY_NORMAL * 2; i++) {
+            assertEquals(writeContent[i], readContents[1].get());
+        }
+    }
+
+    /**
+     * @tests java.nio.channels.SocketChannel#read(ByteBuffer[],int,int)
+     */
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {java.nio.ByteBuffer[].class, int.class, int.class}
+    ) 
+    public void test_read$LByteBufferII_blocking() throws Exception {
+        assert_read$LByteBufferII(true);
+    }
+
+    /**
+     * @tests java.nio.channels.SocketChannel#read(ByteBuffer[],int,int)
+     */
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {java.nio.ByteBuffer[].class, int.class, int.class}
+    ) 
+    public void test_read$LByteBufferII_nonblocking() throws Exception {
+        assert_read$LByteBufferII(false);
+    }
+
+    private void assert_read$LByteBufferII(boolean isBlocking) throws IOException {
         // initialize write content
         byte[] writeContent = new byte[CAPACITY_NORMAL * 2];
         for (int i = 0; i < CAPACITY_NORMAL * 2; i++) {
@@ -3284,7 +3419,7 @@ public class SocketChannelTest extends TestCase {
             // blocking read, it possibly returns 0 in some cases.
             assertTimeout(startTime, TIMEOUT);
         }
-        
+
         // assert total bytes read and the position of ByteBuffers
         assertEquals(CAPACITY_NORMAL * 2, totalRead);
         assertEquals(CAPACITY_NORMAL, readContents[0].position());
@@ -3298,42 +3433,117 @@ public class SocketChannelTest extends TestCase {
         for (int i = CAPACITY_NORMAL; i < CAPACITY_NORMAL * 2; i++) {
             assertEquals(writeContent[i], readContents[1].get());
         }
-    } 
- 
-    /**
-     * @tests java.nio.channels.SocketChannel#write(ByteBuffer[],int,int)
-     */ 
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {java.nio.ByteBuffer[].class, int.class, int.class}
-        )
-    })
-    public void test_write$LByteBufferII_blocking() throws Exception {
-        assert_write$LByteBuffer(true);
     }
- 
+
     /**
      * @tests java.nio.channels.SocketChannel#write(ByteBuffer[],int,int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {java.nio.ByteBuffer[].class, int.class, int.class}
-        )
-    })
-    public void test_write$LByteBufferII_nonblocking()
-            throws Exception {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "write",
+        args = {java.nio.ByteBuffer[].class}
+    )
+    public void test_write$LByteBuffer_blocking() throws Exception {
+        assert_write$LByteBuffer(true);
+    }
+
+    /**
+     * @tests java.nio.channels.SocketChannel#write(ByteBuffer[],int,int)
+     */
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "write",
+        args = {java.nio.ByteBuffer[].class}
+    )
+    public void test_write$LByteBuffer_nonblocking() throws Exception {
         assert_write$LByteBuffer(false);
     }
 
     private void assert_write$LByteBuffer(boolean isBlocking)
+            throws IOException {
+        // initialize write contents
+        ByteBuffer writeContents[] = new ByteBuffer[2];
+        writeContents[0] = ByteBuffer.allocate(CAPACITY_NORMAL);
+        writeContents[1] = ByteBuffer.allocate(CAPACITY_NORMAL);
+        for (int i = 0; i < CAPACITY_NORMAL; i++) {
+            writeContents[0].put((byte) i);
+        }
+        for (int i = CAPACITY_NORMAL; i < CAPACITY_NORMAL * 2; i++) {
+            writeContents[1].put((byte) i);
+        }
+        writeContents[0].flip();
+        writeContents[1].flip();
+        // establish connection
+        channel1.connect(localAddr1);
+        Socket acceptedSocket = server1.accept();
+        // set blocking/nonblocking mode
+        channel1.configureBlocking(isBlocking);
+
+        assertEquals(2 * CAPACITY_NORMAL, channel1.write(writeContents));
+
+        // assert written count and ByteBuffer position
+        assertEquals(CAPACITY_NORMAL, writeContents[0].position());
+        assertEquals(CAPACITY_NORMAL, writeContents[1].position());
+        // use close to guarantee all data is sent
+        channel1.close();
+        InputStream in = acceptedSocket.getInputStream();
+        byte[] readContent = new byte[CAPACITY_NORMAL * 2 + 1];
+        int totalCount = 0;
+        int count = 0;
+        // if the channel could not finish reading in TIMEOUT ms, the test
+        // fails. It is used to guarantee the test never hangs even if there
+        // are bugs of SocketChannel implementation.
+        acceptedSocket.setSoTimeout(TIMEOUT);
+        // use InputStream.read to read data.
+        while (totalCount <= CAPACITY_NORMAL) {
+            count = in.read(readContent, totalCount, readContent.length
+                    - totalCount);
+            if (EOF == count) {
+                break;
+            }
+            totalCount += count;
+        }
+        // assert read content
+        assertEquals(CAPACITY_NORMAL * 2, totalCount);
+        writeContents[0].flip();
+        writeContents[1].flip();
+        for (int i = 0; i < CAPACITY_NORMAL; i++) {
+            assertEquals(writeContents[0].get(), readContent[i]);
+        }
+        for (int i = CAPACITY_NORMAL; i < CAPACITY_NORMAL * 2; i++) {
+            assertEquals(writeContents[1].get(), readContent[i]);
+        }
+    }
+
+    /**
+     * @tests java.nio.channels.SocketChannel#write(ByteBuffer[],int,int)
+     */
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "write",
+        args = {java.nio.ByteBuffer[].class, int.class, int.class}
+    )
+    public void test_write$LByteBufferII_blocking() throws Exception {
+        assert_write$LByteBufferII(true);
+    }
+
+    /**
+     * @tests java.nio.channels.SocketChannel#write(ByteBuffer[],int,int)
+     */
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "write",
+        args = {java.nio.ByteBuffer[].class, int.class, int.class}
+    )
+    public void test_write$LByteBufferII_nonblocking() throws Exception {
+        assert_write$LByteBufferII(false);
+    }
+
+    private void assert_write$LByteBufferII(boolean isBlocking)
             throws IOException {
         // initialize write contents
         ByteBuffer writeContents[] = new ByteBuffer[2];
@@ -3388,38 +3598,23 @@ public class SocketChannelTest extends TestCase {
         for (int i = CAPACITY_NORMAL; i < CAPACITY_NORMAL * 2; i++) {
             assertEquals(writeContents[1].get(), readContent[i]);
         }
-    } 
-    
-    /**
-     * @tests java.nio.channels.SocketChannel#write(ByteBuffer[])
-     */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {java.nio.ByteBuffer[].class}
+    }
+
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "socket",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            clazz = SelectableChannel.class,
+            method = "configureBlocking",
+            args = {boolean.class}
         )
     })
-    public void test_write$LByteBuffer() throws IOException {
-        MockSocketChannel sc = new MockSocketChannel(null);
-        ByteBuffer [] byteBufferArray = { ByteBuffer.allocate(1), ByteBuffer.allocate(1)};
-        // Verify that calling write(ByteBuffer[]) leads to the method
-        // write(ByteBuffer[], int, int) being called with a 0 for the
-        // second parameter and sources.length as the third parameter.
-        sc.write(byteBufferArray);
-        assertTrue(sc.isWriteCalled);
-    }
-    @TestInfo(
-            level = TestLevel.PARTIAL_OK,
-            purpose = "Verifies IllegalBlockingModeException.",
-            targets = {
-              @TestTarget(
-                methodName = "socket",
-                methodArgs = {}
-              )
-          })
     public void testSocket_configureblocking() throws IOException {
         byte[] serverWBuf = new byte[CAPACITY_NORMAL];
         for (int i = 0; i < serverWBuf.length; i++) {
@@ -3450,15 +3645,12 @@ public class SocketChannelTest extends TestCase {
      * @tests SocketChannel#read(ByteBuffer[], int, int) when remote server
      *        closed
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {java.nio.ByteBuffer[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {java.nio.ByteBuffer[].class, int.class, int.class}
+    )
     public void test_socketChannel_read_ByteBufferII_remoteClosed()
             throws Exception {
         // regression 1 for HARMONY-549
@@ -3467,7 +3659,7 @@ public class SocketChannelTest extends TestCase {
         SocketChannel sc = SocketChannel.open();
         sc.connect(localAddr2);
         ssc.accept().close();
-        ByteBuffer[] buf = { ByteBuffer.allocate(10) };
+        ByteBuffer[] buf = {ByteBuffer.allocate(10)};
         assertEquals(-1, sc.read(buf, 0, 1));
         ssc.close();
         sc.close();
@@ -3476,15 +3668,12 @@ public class SocketChannelTest extends TestCase {
     /**
      * @tests SocketChannel#write(ByteBuffer[], int, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {java.nio.ByteBuffer[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "write",
+        args = {java.nio.ByteBuffer[].class, int.class, int.class}
+    )
     public void test_socketChannel_write_ByteBufferII() throws Exception {
         // regression 2 for HARMONY-549
         ServerSocketChannel ssc = ServerSocketChannel.open();
@@ -3492,7 +3681,7 @@ public class SocketChannelTest extends TestCase {
         SocketChannel sc = SocketChannel.open();
         sc.connect(localAddr2);
         SocketChannel sock = ssc.accept();
-        ByteBuffer[] buf = { ByteBuffer.allocate(10), null };
+        ByteBuffer[] buf = {ByteBuffer.allocate(10), null};
         try {
             sc.write(buf, 0, 2);
             fail("should throw NPE");
@@ -3508,15 +3697,12 @@ public class SocketChannelTest extends TestCase {
     /**
      * @tests SocketChannel#read(ByteBuffer[], int, int) with a null ByteBuffer
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {java.nio.ByteBuffer[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "read",
+        args = {java.nio.ByteBuffer[].class, int.class, int.class}
+    )
     public void test_socketChannel_read_ByteBufferII_bufNULL() throws Exception {
         // regression 3 for HARMONY-549
         ServerSocketChannel ssc = ServerSocketChannel.open();
@@ -3540,19 +3726,12 @@ public class SocketChannelTest extends TestCase {
     /**
      * @tests SocketChannel#write(ByteBuffer) after close
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {java.nio.ByteBuffer.class}
-        ),
-        @TestTarget(
-          methodName = "close",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "write",
+        args = {java.nio.ByteBuffer.class}
+    )
     public void test_socketChannel_write_close() throws Exception {
         // regression 4 for HARMONY-549
         ServerSocketChannel ssc = ServerSocketChannel.open();
@@ -3575,15 +3754,12 @@ public class SocketChannelTest extends TestCase {
     /**
      * @tests SocketChannel#write(ByteBuffer) if position is not zero
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {java.nio.ByteBuffer.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "write",
+        args = {java.nio.ByteBuffer.class}
+    )
     public void test_socketChannel_write_ByteBuffer_posNotZero()
             throws Exception {
         // regression 5 for HARMONY-549
@@ -3607,20 +3783,17 @@ public class SocketChannelTest extends TestCase {
             assertEquals(read[i], write[i + 2]);
         }
     }
-    
+
     /**
      * @tests SocketChannelImpl#read(ByteBuffer[])
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "Doesn't verify exceptions.",
-            targets = {
-              @TestTarget(
-                methodName = "read",                        
-                methodArgs = {ByteBuffer[].class}
-              )
-          }) 
-    public void test_read_$ByteBuffer_Blocking() throws IOException {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify exceptions.",
+        method = "read",
+        args = {java.nio.ByteBuffer[].class}
+    ) 
+    public void test_read$LByteBuffer_Blocking() throws IOException {
         // regression test for Harmony-728
         byte[] data = new byte[CAPACITY_NORMAL];
         for (int i = 0; i < CAPACITY_NORMAL; i++) {
@@ -3640,6 +3813,8 @@ public class SocketChannelTest extends TestCase {
         } finally {
             if (null != socket) {
                 socket.close();
+            } else {
+                fail();
             }
         }
     }
@@ -3647,16 +3822,12 @@ public class SocketChannelTest extends TestCase {
     /**
      * @tests SocketChannelImpl#socket().getOutputStream().read
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL_OK,
-            purpose = "Verifies IllegalBlockingModeException, " +
-                    "NullPointerException.",
-            targets = {
-              @TestTarget(
-                methodName = "socket",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies IllegalBlockingModeException, NullPointerException.",
+        method = "socket",
+        args = {}
+    )
     public void test_socket_getOutputStream_nonBlocking_read_Exception()
             throws IOException {
         channel1.connect(this.localAddr1);
@@ -3711,16 +3882,12 @@ public class SocketChannelTest extends TestCase {
     /**
      * @tests SocketChannelImpl#socket().getOutputStream().read
      */
-    @TestInfo(
-          level = TestLevel.PARTIAL_OK,
-          purpose = "Verifies NullPointerException, ClosedChannelException, " +
-                "IndexOutOfBoundsException.",
-          targets = {
-            @TestTarget(
-              methodName = "socket",
-              methodArgs = {}
-            )
-        })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies NullPointerException, ClosedChannelException, IndexOutOfBoundsException.",
+        method = "socket",
+        args = {}
+    )
     public void test_socket_getOutputStream_blocking_read_Exception()
             throws IOException {
         channel1.connect(this.localAddr1);
@@ -3774,16 +3941,12 @@ public class SocketChannelTest extends TestCase {
     /**
      * @tests SocketChannelImpl#socket().getOutputStream().write
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL_OK,
-            purpose = "Verifies NullPointerException, " +
-                    "IllegalBlockingModeException.",
-            targets = {
-              @TestTarget(
-                methodName = "socket",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies NullPointerException, IllegalBlockingModeException.",
+        method = "socket",
+        args = {}
+    )
     public void test_socket_getOutputStream_nonBlocking_write_Exception()
             throws IOException {
         channel1.connect(this.localAddr1);
@@ -3850,16 +4013,12 @@ public class SocketChannelTest extends TestCase {
     /**
      * @tests SocketChannelImpl#socket().getOutputStream().write
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL_OK,
-            purpose = "Verifies NullPointerException, " +
-                    "IndexOutOfBoundsException, ClosedChannelException.",
-            targets = {
-              @TestTarget(
-                methodName = "socket",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies NullPointerException, IndexOutOfBoundsException, ClosedChannelException.",
+        method = "socket",
+        args = {}
+    )
     public void test_socket_getOutputStream_blocking_write_Exception()
             throws IOException {
         channel1.connect(this.localAddr1);
@@ -3913,15 +4072,12 @@ public class SocketChannelTest extends TestCase {
     /**
      * @tests SocketChannelImpl#socket().getOutputStream().write(int)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL_OK,
-            purpose = "",
-            targets = {
-              @TestTarget(
-                methodName = "socket",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "socket",
+        args = {}
+    )
     public void test_socket_getOutputStream_write_oneByte()
             throws IOException {
 
@@ -3940,12 +4096,12 @@ public class SocketChannelTest extends TestCase {
         os.write(MAGIC);
         channel1.close();
 
-        int lastByte =  in.read();
+        int lastByte = in.read();
         if (lastByte == -1) {
             fail("Server received nothing. Expected 1 byte.");
         } else if (lastByte != MAGIC) {
-            fail("Server received wrong single byte: " + lastByte +
-                 ", expected: " + MAGIC);
+            fail("Server received wrong single byte: " + lastByte
+                    + ", expected: " + MAGIC);
         }
 
         lastByte = in.read();
@@ -3954,14 +4110,17 @@ public class SocketChannelTest extends TestCase {
         }
     }
 
-    class MockSocketChannel extends SocketChannel{
-        
+    class MockSocketChannel extends SocketChannel {
+
         private boolean isWriteCalled = false;
-        
+
         private boolean isReadCalled = false;
-        
-        public MockSocketChannel(SelectorProvider provider){
+
+        private boolean isConstructorCalled = false;
+
+        public MockSocketChannel(SelectorProvider provider) {
             super(provider);
+            isConstructorCalled = true;
         }
 
         public Socket socket() {
@@ -3988,11 +4147,12 @@ public class SocketChannelTest extends TestCase {
             return 0;
         }
 
-        public long read(ByteBuffer[] targets, int offset, int length) throws IOException {
+        public long read(ByteBuffer[] targets, int offset, int length)
+                throws IOException {
             // Verify that calling read(ByteBuffer[]) leads to the method
             // read(ByteBuffer[], int, int) being called with a 0 for the
             // second parameter and targets.length as the third parameter.
-            if(0 == offset && length == targets.length){
+            if (0 == offset && length == targets.length) {
                 isReadCalled = true;
             }
             return 0;
@@ -4002,11 +4162,12 @@ public class SocketChannelTest extends TestCase {
             return 0;
         }
 
-        public long write(ByteBuffer[] sources, int offset, int length) throws IOException {
+        public long write(ByteBuffer[] sources, int offset, int length)
+                throws IOException {
             // Verify that calling write(ByteBuffer[]) leads to the method
             // write(ByteBuffer[], int, int) being called with a 0 for the
             // second parameter and sources.length as the third parameter.
-            if(0 == offset && length == sources.length){
+            if (0 == offset && length == sources.length) {
                 isWriteCalled = true;
             }
             return 0;
@@ -4016,9 +4177,18 @@ public class SocketChannelTest extends TestCase {
             // empty
         }
 
-        protected void implConfigureBlocking(boolean blockingMode) throws IOException {
-            // empty            
+        protected void implConfigureBlocking(boolean blockingMode)
+                throws IOException {
+            // empty
         }
-        
-    }   
+    }
+
+    class SubSocketAddress extends SocketAddress {
+        private static final long serialVersionUID = 1L;
+
+        // empty
+        public SubSocketAddress() {
+            super();
+        }
+    }
 }

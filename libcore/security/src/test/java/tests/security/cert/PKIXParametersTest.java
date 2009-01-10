@@ -16,19 +16,22 @@
  */
 
 /**
-* @author Vladimir N. Molotkov
-* @version $Revision$
-*/
+ * @author Vladimir N. Molotkov
+ * @version $Revision$
+ */
 
 package tests.security.cert;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.BrokenTest;
+import dalvik.annotation.KnownFailure;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyStore;
@@ -37,6 +40,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertPathParameters;
 import java.security.cert.CertPathValidatorException;
 import java.security.cert.CertStore;
+import java.security.cert.CertificateFactory;
 import java.security.cert.CollectionCertStoreParameters;
 import java.security.cert.PKIXCertPathChecker;
 import java.security.cert.PKIXParameters;
@@ -44,6 +48,7 @@ import java.security.cert.TrustAnchor;
 import java.security.cert.X509CertSelector;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -51,9 +56,10 @@ import java.util.Set;
 
 import org.apache.harmony.security.tests.support.cert.TestUtils;
 
+import tests.targets.security.KeyStoreTestPKCS12;
+
 /**
  * Tests for <code>PKIXParameters</code> fields and methods
- * 
  */
 @TestTargetClass(PKIXParameters.class)
 public class PKIXParametersTest extends TestCase {
@@ -65,6 +71,7 @@ public class PKIXParametersTest extends TestCase {
 
     /**
      * Constructor for PKIXParametersTest.
+     * 
      * @param name
      */
     public PKIXParametersTest(String name) {
@@ -80,22 +87,21 @@ public class PKIXParametersTest extends TestCase {
      * Assertion: Creates an instance of <code>PKIXParameters</code> with the
      * specified <code>Set</code> of most-trusted CAs. Each element of the set
      * is a <code>TrustAnchor</code>
+     * 
      * @throws InvalidAlgorithmParameterException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies positive case.",
-      targets = {
-        @TestTarget(
-          methodName = "PKIXParameters",
-          methodArgs = {java.util.Set.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies positive case.",
+        method = "PKIXParameters",
+        args = {java.util.Set.class}
+    )
     public final void testPKIXParametersSet01()
-        throws InvalidAlgorithmParameterException {
+            throws InvalidAlgorithmParameterException {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
         // use valid parameter
         CertPathParameters cpp = new PKIXParameters(taSet);
@@ -106,27 +112,27 @@ public class PKIXParametersTest extends TestCase {
      * Test #2 for <code>PKIXParameters(Set)</code> constructor<br>
      * Assertion: ... the <code>Set</code> is copied to protect against
      * subsequent modifications
+     * 
      * @throws InvalidAlgorithmParameterException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Doesn't verify exceptions.",
-      targets = {
-        @TestTarget(
-          methodName = "PKIXParameters",
-          methodArgs = {java.util.Set.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify exceptions.",
+        method = "PKIXParameters",
+        args = {java.util.Set.class}
+    )
     @SuppressWarnings("unchecked")
     public final void testPKIXParametersSet02()
-        throws InvalidAlgorithmParameterException {
+            throws InvalidAlgorithmParameterException {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
-        HashSet<TrustAnchor> originalSet = (HashSet<TrustAnchor>)taSet;
-        HashSet<TrustAnchor> originalSetCopy = (HashSet<TrustAnchor>) originalSet.clone();
-        // create test object using originalSet 
+        HashSet<TrustAnchor> originalSet = (HashSet<TrustAnchor>) taSet;
+        HashSet<TrustAnchor> originalSetCopy = (HashSet<TrustAnchor>) originalSet
+                .clone();
+        // create test object using originalSet
         PKIXParameters pp = new PKIXParameters(originalSetCopy);
         // modify originalSet
         originalSetCopy.clear();
@@ -138,22 +144,19 @@ public class PKIXParametersTest extends TestCase {
 
     /**
      * Test #3 for <code>PKIXParameters(Set)</code> constructor<br>
-     * Assertion: <code>NullPointerException</code> -
-     * if the specified <code>Set</code> is null
+     * Assertion: <code>NullPointerException</code> - if the specified
+     * <code>Set</code> is null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies NullPointerException.",
-      targets = {
-        @TestTarget(
-          methodName = "PKIXParameters",
-          methodArgs = {java.util.Set.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies NullPointerException.",
+        method = "PKIXParameters",
+        args = {java.util.Set.class}
+    )
     public final void testPKIXParametersSet03() throws Exception {
         try {
             // pass null
-            new PKIXParameters((Set<TrustAnchor>)null);
+            new PKIXParameters((Set<TrustAnchor>) null);
             fail("NPE expected");
         } catch (NullPointerException e) {
         }
@@ -161,19 +164,16 @@ public class PKIXParametersTest extends TestCase {
 
     /**
      * Test #4 for <code>PKIXParameters(Set)</code> constructor<br>
-     * Assertion: <code>InvalidAlgorithmParameterException</code> -
-     * if the specified <code>Set</code> is empty
-     * (<code>trustAnchors.isEmpty() == true</code>)
+     * Assertion: <code>InvalidAlgorithmParameterException</code> - if the
+     * specified <code>Set</code> is empty (
+     * <code>trustAnchors.isEmpty() == true</code>)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies InvalidAlgorithmParameterException.",
-      targets = {
-        @TestTarget(
-          methodName = "PKIXParameters",
-          methodArgs = {java.util.Set.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies InvalidAlgorithmParameterException.",
+        method = "PKIXParameters",
+        args = {java.util.Set.class}
+    )
     public final void testPKIXParametersSet04() {
         try {
             // use empty set
@@ -185,24 +185,22 @@ public class PKIXParametersTest extends TestCase {
 
     /**
      * Test #5 for <code>PKIXParameters(Set)</code> constructor<br>
-     * Assertion: <code>ClassCastException</code> -
-     * if any of the elements in the <code>Set</code> are not of type
+     * Assertion: <code>ClassCastException</code> - if any of the elements in
+     * the <code>Set</code> are not of type
      * <code>java.security.cert.TrustAnchor</code>
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies ClassCastException.",
-      targets = {
-        @TestTarget(
-          methodName = "PKIXParameters",
-          methodArgs = {java.util.Set.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies ClassCastException.",
+        method = "PKIXParameters",
+        args = {java.util.Set.class}
+    )
     @SuppressWarnings("unchecked")
     public final void testPKIXParametersSet05() throws Exception {
         Set taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         // add wrong object to valid set
@@ -213,27 +211,25 @@ public class PKIXParametersTest extends TestCase {
         } catch (ClassCastException e) {
         }
     }
-    
+
     /**
      * Test #3 for <code>PKIXParameters(KeyStore)</code> constructor<br>
-     * Assertion: <code>NullPointerException</code> -
-     * if the <code>keystore</code> is <code>null</code>
+     * Assertion: <code>NullPointerException</code> - if the
+     * <code>keystore</code> is <code>null</code>
+     * 
      * @throws InvalidAlgorithmParameterException
      * @throws KeyStoreException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies NullPointerException.",
-      targets = {
-        @TestTarget(
-          methodName = "PKIXParameters",
-          methodArgs = {java.security.KeyStore.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies NullPointerException.",
+        method = "PKIXParameters",
+        args = {java.security.KeyStore.class}
+    )
     public final void testPKIXParametersKeyStore03() throws Exception {
         try {
             // pass null
-            new PKIXParameters((KeyStore)null);
+            new PKIXParameters((KeyStore) null);
             fail("NPE expected");
         } catch (NullPointerException e) {
         }
@@ -242,77 +238,80 @@ public class PKIXParametersTest extends TestCase {
     /**
      * Test for <code>clone()</code> method<br>
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "clone",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "clone",
+        args = {}
+    )
     public final void testClone() throws InvalidAlgorithmParameterException {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
-        
+
         PKIXParameters cpp = new PKIXParameters(taSet);
-        PKIXParameters cppc = (PKIXParameters)cpp.clone();
-        
-        assertEquals(cpp.getPolicyQualifiersRejected(), cppc.getPolicyQualifiersRejected());
+        PKIXParameters cppc = (PKIXParameters) cpp.clone();
+
+        assertEquals(cpp.getPolicyQualifiersRejected(), cppc
+                .getPolicyQualifiersRejected());
         assertEquals(cpp.getCertPathCheckers(), cppc.getCertPathCheckers());
         assertEquals(cpp.getCertStores(), cppc.getCertStores());
         assertEquals(cpp.getDate(), cppc.getDate());
         assertEquals(cpp.getInitialPolicies(), cppc.getInitialPolicies());
         assertEquals(cpp.getSigProvider(), cppc.getSigProvider());
-        assertEquals(cpp.getTargetCertConstraints(), cppc.getTargetCertConstraints());
+        assertEquals(cpp.getTargetCertConstraints(), cppc
+                .getTargetCertConstraints());
         assertEquals(cpp.getTrustAnchors(), cppc.getTrustAnchors());
-        
+
         assertEquals(cpp.isAnyPolicyInhibited(), cppc.isAnyPolicyInhibited());
-        assertEquals(cpp.isExplicitPolicyRequired(), cppc.isExplicitPolicyRequired());
-        assertEquals(cpp.isPolicyMappingInhibited(), cppc.isPolicyMappingInhibited());
+        assertEquals(cpp.isExplicitPolicyRequired(), cppc
+                .isExplicitPolicyRequired());
+        assertEquals(cpp.isPolicyMappingInhibited(), cppc
+                .isPolicyMappingInhibited());
         assertEquals(cpp.isRevocationEnabled(), cppc.isRevocationEnabled());
-        
+
         cpp.setDate(Calendar.getInstance().getTime());
         cpp.setPolicyQualifiersRejected(!cppc.getPolicyQualifiersRejected());
         assertFalse(cpp.getDate().equals(cppc.getDate()));
-        assertFalse(cpp.getPolicyQualifiersRejected() == cppc.getPolicyQualifiersRejected());
+        assertFalse(cpp.getPolicyQualifiersRejected() == cppc
+                .getPolicyQualifiersRejected());
 
         cppc.setExplicitPolicyRequired(!cpp.isExplicitPolicyRequired());
         cppc.setRevocationEnabled(!cpp.isRevocationEnabled());
-        
-        assertFalse(cpp.isExplicitPolicyRequired() == cppc.isExplicitPolicyRequired());
+
+        assertFalse(cpp.isExplicitPolicyRequired() == cppc
+                .isExplicitPolicyRequired());
         assertFalse(cpp.isRevocationEnabled() == cppc.isRevocationEnabled());
-        
+
         PKIXParameters cpp1 = null;
         try {
             cpp1.clone();
-        } catch (NullPointerException e){
-            // expected    
+        } catch (NullPointerException e) {
+            // expected
         }
     }
-    
+
     /**
      * Test #1 for <code>getPolicyQualifiersRejected()</code> method<br>
-     * Assertion: When a <code>PKIXParameters</code> object is created,
-     * this flag is set to <code>true</code><br>
+     * Assertion: When a <code>PKIXParameters</code> object is created, this
+     * flag is set to <code>true</code><br>
      * Assertion: returns the current value of the PolicyQualifiersRejected flag
+     * 
      * @throws InvalidAlgorithmParameterException
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getPolicyQualifiersRejected",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getPolicyQualifiersRejected",
+        args = {}
+    )
     public final void testGetPolicyQualifiersRejected() throws Exception {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         PKIXParameters p = new PKIXParameters(taSet);
@@ -321,53 +320,51 @@ public class PKIXParametersTest extends TestCase {
 
     /**
      * Test for <code>setPolicyQualifiersRejected()</code> method<br>
-     * Assertion: set the new value of the
-     * <code>PolicyQualifiersRejected</code> flag
+     * Assertion: set the new value of the <code>PolicyQualifiersRejected</code>
+     * flag
+     * 
      * @throws InvalidAlgorithmParameterException
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setPolicyQualifiersRejected",
-          methodArgs = {boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setPolicyQualifiersRejected",
+        args = {boolean.class}
+    )
     public final void testSetPolicyQualifiersRejected() throws Exception {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         PKIXParameters p = new PKIXParameters(taSet);
         p.setPolicyQualifiersRejected(false);
-        assertFalse("setFalse",p.getPolicyQualifiersRejected());
+        assertFalse("setFalse", p.getPolicyQualifiersRejected());
         p.setPolicyQualifiersRejected(true);
-        assertTrue("setTrue",p.getPolicyQualifiersRejected());
+        assertTrue("setTrue", p.getPolicyQualifiersRejected());
     }
 
     /**
      * Test for <code>isAnyPolicyInhibited()</code> method<br>
-     * Assertion: returns <code>true</code> if the any policy
-     * OID is inhibited, <code>false</code> otherwise<br>
-     * Assertion: By default, the any policy OID is not inhibited
-     * (<code>isAnyPolicyInhibited()</code> returns false).
+     * Assertion: returns <code>true</code> if the any policy OID is inhibited,
+     * <code>false</code> otherwise<br>
+     * Assertion: By default, the any policy OID is not inhibited (
+     * <code>isAnyPolicyInhibited()</code> returns false).
+     * 
      * @throws InvalidAlgorithmParameterException
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isAnyPolicyInhibited",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isAnyPolicyInhibited",
+        args = {}
+    )
     public final void testIsAnyPolicyInhibited() throws Exception {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         PKIXParameters p = new PKIXParameters(taSet);
@@ -376,23 +373,22 @@ public class PKIXParametersTest extends TestCase {
 
     /**
      * Test for <code>setAnyPolicyInhibited()</code> method<br>
-     * Assertion: sets state to determine if the any policy OID
-     * should be processed if it is included in a certificate
+     * Assertion: sets state to determine if the any policy OID should be
+     * processed if it is included in a certificate
+     * 
      * @throws InvalidAlgorithmParameterException
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setAnyPolicyInhibited",
-          methodArgs = {boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setAnyPolicyInhibited",
+        args = {boolean.class}
+    )
     public final void testSetAnyPolicyInhibited() throws Exception {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         PKIXParameters p = new PKIXParameters(taSet);
@@ -407,21 +403,20 @@ public class PKIXParametersTest extends TestCase {
      * Assertion: returns <code>true</code> if explicit policy is required,
      * <code>false</code> otherwise<br>
      * Assertion: by default, the ExplicitPolicyRequired flag is false
+     * 
      * @throws InvalidAlgorithmParameterException
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isExplicitPolicyRequired",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isExplicitPolicyRequired",
+        args = {}
+    )
     public final void testIsExplicitPolicyRequired() throws Exception {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         PKIXParameters p = new PKIXParameters(taSet);
@@ -431,21 +426,20 @@ public class PKIXParametersTest extends TestCase {
     /**
      * Test for <code>setExplicitPolicyRequired()</code> method<br>
      * Assertion: sets the ExplicitPolicyRequired flag
+     * 
      * @throws InvalidAlgorithmParameterException
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setExplicitPolicyRequired",
-          methodArgs = {boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setExplicitPolicyRequired",
+        args = {boolean.class}
+    )
     public final void testSetExplicitPolicyRequired() throws Exception { 
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         PKIXParameters p = new PKIXParameters(taSet);
@@ -458,19 +452,17 @@ public class PKIXParametersTest extends TestCase {
     /**
      * Test for <code>isPolicyMappingInhibited()</code> method<br>
      * Assertion: returns true if policy mapping is inhibited, false otherwise
-     * Assertion: by default, policy mapping is not inhibited (the flag is false)
+     * Assertion: by default, policy mapping is not inhibited (the flag is
+     * false)
+     * 
      * @throws InvalidAlgorithmParameterException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that isPolicyMappingInhibited returns false " +
-            "if policy mapping is not inhibited.",
-      targets = {
-        @TestTarget(
-          methodName = "isPolicyMappingInhibited",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isPolicyMappingInhibited",
+        args = {}
+    )
     public final void testIsPolicyMappingInhibited() throws Exception {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
@@ -479,26 +471,35 @@ public class PKIXParametersTest extends TestCase {
 
         PKIXParameters p = new PKIXParameters(taSet);
         assertFalse(p.isPolicyMappingInhibited());
+        
+        CertificateFactory cf = CertificateFactory.getInstance("X.509");
+        TestUtils.initCertPathSSCertChain();
+        Set<TrustAnchor> taSet2 = Collections.singleton(new TrustAnchor(
+               TestUtils.rootCertificateSS, null));
+        p = new PKIXParameters(taSet2);
+        
+        assertFalse(p.isPolicyMappingInhibited());
+        p.setPolicyMappingInhibited(true);
+        assertTrue(p.isRevocationEnabled());
     }
 
     /**
      * Test for <code>setPolicyMappingInhibited()</code> method<br>
      * Assertion: sets the PolicyMappingInhibited flag
+     * 
      * @throws InvalidAlgorithmParameterException
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setPolicyMappingInhibited",
-          methodArgs = {boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setPolicyMappingInhibited",
+        args = {boolean.class}
+    )
     public final void testSetPolicyMappingInhibited() throws Exception {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         PKIXParameters p = new PKIXParameters(taSet);
@@ -511,47 +512,55 @@ public class PKIXParametersTest extends TestCase {
     /**
      * Test for <code>isPolicyMappingInhibited()</code> method<br>
      * Assertion: returns the current value of the RevocationEnabled flag
-     * Assertion: when a <code>PKIXParameters</code> object is created,
-     * this flag is set to true
+     * Assertion: when a <code>PKIXParameters</code> object is created, this
+     * flag is set to true
+     * 
      * @throws InvalidAlgorithmParameterException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that isRevocationEnabled method returns true.",
-      targets = {
-        @TestTarget(
-          methodName = "isRevocationEnabled",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isRevocationEnabled",
+        args = {}
+    )
     public final void testIsRevocationEnabled() throws Exception {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         PKIXParameters p = new PKIXParameters(taSet);
         assertTrue(p.isRevocationEnabled());
+        
+        CertificateFactory cf = CertificateFactory.getInstance("X.509");
+       TestUtils.initCertPathSSCertChain();
+       Set<TrustAnchor> taSet2 = Collections.singleton(new TrustAnchor(
+              TestUtils.rootCertificateSS, null));
+       p = new PKIXParameters(taSet2);
+       
+       assertTrue(p.isRevocationEnabled());
+       p.setRevocationEnabled(false);
+       assertFalse(p.isRevocationEnabled());
     }
 
     /**
      * Test for <code>isPolicyMappingInhibited()</code> method<br>
      * Assertion: sets the RevocationEnabled flag
+     * 
      * @throws InvalidAlgorithmParameterException
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setRevocationEnabled",
-          methodArgs = {boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setRevocationEnabled",
+        args = {boolean.class}
+    )
     public final void testSetRevocationEnabled() throws Exception {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         PKIXParameters p = new PKIXParameters(taSet);
@@ -563,23 +572,21 @@ public class PKIXParametersTest extends TestCase {
 
     /**
      * Test for <code>getSigProvider()</code> method<br>
-     * Assertion: returns the signature provider's name,
-     * or null if not set
+     * Assertion: returns the signature provider's name, or null if not set
+     * 
      * @throws InvalidAlgorithmParameterException
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getSigProvider",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getSigProvider",
+        args = {}
+    )
     public final void testGetSigProvider() throws Exception {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         PKIXParameters p = new PKIXParameters(taSet);
@@ -592,19 +599,17 @@ public class PKIXParametersTest extends TestCase {
      * Test for <code>setSigProvider(String)</code> method<br>
      * Assertion: sets the signature provider's name
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setSigProvider",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setSigProvider",
+        args = {java.lang.String.class}
+    )
     public final void testSetSigProvider() throws Exception {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         PKIXParameters p = new PKIXParameters(taSet);
@@ -617,24 +622,22 @@ public class PKIXParametersTest extends TestCase {
 
     /**
      * Test #1 for <code>getTargetCertConstraints()</code> method<br>
-     * Assertion: returns a <code>CertSelector</code> specifying
-     * the constraints on the target certificate (or <code>null</code>)
+     * Assertion: returns a <code>CertSelector</code> specifying the constraints
+     * on the target certificate (or <code>null</code>)
+     * 
      * @throws InvalidAlgorithmParameterException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies that getTargetCertConstraints method returns null, " +
-            "if no constraints are defined.",
-      targets = {
-        @TestTarget(
-          methodName = "getTargetCertConstraints",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies that getTargetCertConstraints method returns null, if no constraints are defined.",
+        method = "getTargetCertConstraints",
+        args = {}
+    )
     public final void testGetTargetCertConstraints01() throws Exception {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         PKIXParameters p = new PKIXParameters(taSet);
@@ -643,25 +646,31 @@ public class PKIXParametersTest extends TestCase {
 
     /**
      * Test #2 for <code>getTargetCertConstraints()</code> method<br>
-     * Assertion: note that the <code>CertSelector</code> returned
-     * is cloned to protect against subsequent modifications
+     * Assertion: note that the <code>CertSelector</code> returned is cloned to
+     * protect against subsequent modifications
+     * 
      * @throws InvalidAlgorithmParameterException
      * @throws IOException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies that returned CertSelector is cloned to protect " +
-            "against subsequent modifications.",
-      targets = {
-        @TestTarget(
-          methodName = "setTargetCertConstraints",
-          methodArgs = {java.security.cert.CertSelector.class}
+    @TestTargets({
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies that returned CertSelector is cloned to protect against subsequent modifications.",
+        method = "setTargetCertConstraints",
+        args = {java.security.cert.CertSelector.class}
+    ),
+    @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "getTargetCertConstraints",
+            args = {}
         )
     })
     public final void testGetTargetCertConstraints02() throws Exception {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         X509CertSelector x509cs = new X509CertSelector();
@@ -669,6 +678,8 @@ public class PKIXParametersTest extends TestCase {
         p.setTargetCertConstraints(x509cs);
         // get cert selector
         X509CertSelector cs1 = (X509CertSelector)p.getTargetCertConstraints();
+        X509CertSelector cs3 = (X509CertSelector)p.getTargetCertConstraints();
+        assertNotNull(cs1);
         // modify returned selector
         cs1.setIssuer(testIssuer);
         // get cert selector again
@@ -677,39 +688,37 @@ public class PKIXParametersTest extends TestCase {
         assertNotSame("notTheSame", cs1, cs2);
         // check that selector's internal state has
         // not been changed by above modification
-        assertFalse("stateNotChanged", testIssuer.equals(cs2.getIssuerAsString()));
+        assertFalse("internal stateNotChanged", testIssuer.equals(cs2.getIssuerAsString()));
     }
 
     /**
      * Test for <code>setTargetCertConstraints(CertSelector)</code> method<br>
-     * Assertion: sets the required constraints on the target certificate.
-     * The constraints are specified as an instance of CertSelector<br>
+     * Assertion: sets the required constraints on the target certificate. The
+     * constraints are specified as an instance of CertSelector<br>
      * Assertion: ... If <code>null</code>, no constraints are defined
+     * 
      * @throws IOException
      * @throws InvalidAlgorithmParameterException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setTargetCertConstraints",
-          methodArgs = {java.security.cert.CertSelector.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "setTargetCertConstraints",
+        args = {java.security.cert.CertSelector.class}
+    )
     public final void testSetTargetCertConstraints01() throws Exception {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         X509CertSelector x509cs = new X509CertSelector();
         x509cs.setIssuer(testIssuer);
         PKIXParameters p = new PKIXParameters(taSet);
         p.setTargetCertConstraints(x509cs);
-        assertEquals("set",
-          testIssuer,
-          ((X509CertSelector)p.getTargetCertConstraints()).getIssuerAsString());
+        assertEquals("set", testIssuer, ((X509CertSelector) p
+                .getTargetCertConstraints()).getIssuerAsString());
         p.setTargetCertConstraints(null);
         assertNull("unset", p.getTargetCertConstraints());
     }
@@ -718,22 +727,21 @@ public class PKIXParametersTest extends TestCase {
      * Test #2 for <code>setTargetCertConstraints(CertSelector)</code> method<br>
      * Assertion: ... the CertSelector specified is cloned to protect against
      * subsequent modifications
+     * 
      * @throws IOException
      * @throws InvalidAlgorithmParameterException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Additional test.",
-      targets = {
-        @TestTarget(
-          methodName = "setTargetCertConstraints",
-          methodArgs = {java.security.cert.CertSelector.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Additional test.",
+        method = "setTargetCertConstraints",
+        args = {java.security.cert.CertSelector.class}
+    )
     public final void testSetTargetCertConstraints02() throws Exception {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         X509CertSelector x509cs = new X509CertSelector();
@@ -742,7 +750,8 @@ public class PKIXParametersTest extends TestCase {
         // modify selector
         x509cs.setIssuer(testIssuer);
         // get selector
-        X509CertSelector x509cs1 = (X509CertSelector)p.getTargetCertConstraints();
+        X509CertSelector x509cs1 = (X509CertSelector) p
+                .getTargetCertConstraints();
         // check that selector's internal state has
         // not been changed by above modification
         assertFalse(testIssuer.equals(x509cs1.getIssuerAsString()));
@@ -751,22 +760,20 @@ public class PKIXParametersTest extends TestCase {
     /**
      * Test #1 for <code>getCertStores()</code> method<br>
      * Assertion: list ... (may be empty, but never <code>null</code>)
+     * 
      * @throws InvalidAlgorithmParameterException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies that getCertStores method returns empty list, " +
-            "but not null.",
-      targets = {
-        @TestTarget(
-          methodName = "getCertStores",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies that getCertStores method returns empty list, but not null.",
+        method = "getCertStores",
+        args = {}
+    )
     public final void testGetCertStores01() throws Exception {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         PKIXParameters p = new PKIXParameters(taSet);
@@ -776,24 +783,22 @@ public class PKIXParametersTest extends TestCase {
 
     /**
      * Test #2 for <code>getCertStores()</code> method<br>
-     * Assertion: returns an immutable <code>List</code>
-     * of <code>CertStores</code>
+     * Assertion: returns an immutable <code>List</code> of
+     * <code>CertStores</code>
+     * 
      * @throws InvalidAlgorithmParameterException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies that getCertStores method returns an immutable List " +
-            "of CertStores.",
-      targets = {
-        @TestTarget(
-          methodName = "getCertStores",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies that getCertStores method returns an immutable List of CertStores.",
+        method = "getCertStores",
+        args = {}
+    )
     public final void testGetCertStores02() throws Exception {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         PKIXParameters p = new PKIXParameters(taSet);
@@ -801,7 +806,7 @@ public class PKIXParametersTest extends TestCase {
 
         try {
             // try to modify returned list
-            cs.add((CertStore)(new Object()));
+            cs.add((CertStore) (new Object()));
             fail("must be immutable");
         } catch (Exception e) {
         }
@@ -810,22 +815,21 @@ public class PKIXParametersTest extends TestCase {
     /**
      * Test #1 for <code>setCertStores(List)</code> method<br>
      * Assertion: Sets the list of CertStores ...
+     * 
      * @throws NoSuchAlgorithmException
      * @throws InvalidAlgorithmParameterException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Doesn't verify ClassCastException.",
-      targets = {
-        @TestTarget(
-          methodName = "setCertStores",
-          methodArgs = {java.util.List.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify ClassCastException.",
+        method = "setCertStores",
+        args = {java.util.List.class}
+    )
     public final void testSetCertStores01() throws Exception {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         PKIXParameters p = new PKIXParameters(taSet);
@@ -837,21 +841,20 @@ public class PKIXParametersTest extends TestCase {
     /**
      * Test #2 for <code>setCertStores(List)</code> method<br>
      * Assertion: list ... may be <code>null</code>
+     * 
      * @throws InvalidAlgorithmParameterException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Doesn't verify ClassCastException.",
-      targets = {
-        @TestTarget(
-          methodName = "setCertStores",
-          methodArgs = {java.util.List.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify ClassCastException.",
+        method = "setCertStores",
+        args = {java.util.List.class}
+    )
     public final void testSetCertStores02() throws Exception {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         PKIXParameters p = new PKIXParameters(taSet);
@@ -869,23 +872,21 @@ public class PKIXParametersTest extends TestCase {
     /**
      * Test #3 for <code>setCertStores(List)</code> method<br>
      * Assertion: list is copied to protect against subsequent modifications
+     * 
      * @throws NoSuchAlgorithmException
      * @throws InvalidAlgorithmParameterException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies that the list is copied to protect against subsequent " +
-            "modifications.",
-      targets = {
-        @TestTarget(
-          methodName = "setCertStores",
-          methodArgs = {java.util.List.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies that the list is copied to protect against subsequent modifications.",
+        method = "setCertStores",
+        args = {java.util.List.class}
+    )
     public final void testSetCertStores03() throws Exception {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         PKIXParameters p = new PKIXParameters(taSet);
@@ -900,26 +901,24 @@ public class PKIXParametersTest extends TestCase {
 
     /**
      * Test #4 for <code>setCertStores(List)</code> method<br>
-     * Assertion: <code>ClassCastException</code> -
-     * if any of the elements in the list are not of type
-     * <code>java.security.cert.CertStore</code>
+     * Assertion: <code>ClassCastException</code> - if any of the elements in
+     * the list are not of type <code>java.security.cert.CertStore</code>
+     * 
      * @throws InvalidAlgorithmParameterException
      * @throws NoSuchAlgorithmException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies ClassCastException.",
-      targets = {
-        @TestTarget(
-          methodName = "setCertStores",
-          methodArgs = {java.util.List.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies ClassCastException.",
+        method = "setCertStores",
+        args = {java.util.List.class}
+    )
     @SuppressWarnings("unchecked")
     public final void testSetCertStores04() throws Exception {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         PKIXParameters p = new PKIXParameters(taSet);
@@ -936,24 +935,23 @@ public class PKIXParametersTest extends TestCase {
 
     /**
      * Test #1 for <code>addCertStore(CertStore)</code> method<br>
-     * Assertion: adds a <code>CertStore</code> to the end of the
-     * list of <code>CertStores</code> 
+     * Assertion: adds a <code>CertStore</code> to the end of the list of
+     * <code>CertStores</code>
+     * 
      * @throws InvalidAlgorithmParameterException
      * @throws NoSuchAlgorithmException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Doesn't verify ClassCastException.",
-      targets = {
-        @TestTarget(
-          methodName = "addCertStore",
-          methodArgs = {java.security.cert.CertStore.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify ClassCastException.",
+        method = "addCertStore",
+        args = {java.security.cert.CertStore.class}
+    )
     public final void testAddCertStore01() throws Exception {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         PKIXParameters p = new PKIXParameters(taSet);
@@ -964,22 +962,21 @@ public class PKIXParametersTest extends TestCase {
 
     /**
      * Test #2 for <code>addCertStore(CertStore)</code> method<br>
-     * Assertion: if <code>null</code>, the store is ignored (not added to list) 
+     * Assertion: if <code>null</code>, the store is ignored (not added to list)
+     * 
      * @throws InvalidAlgorithmParameterException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies null as a parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "addCertStore",
-          methodArgs = {java.security.cert.CertStore.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies null as a parameter.",
+        method = "addCertStore",
+        args = {java.security.cert.CertStore.class}
+    )
     public final void testAddCertStore02() throws Exception {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         PKIXParameters p = new PKIXParameters(taSet);
@@ -990,50 +987,46 @@ public class PKIXParametersTest extends TestCase {
     /**
      * Test #1 for <code>getCertPathCheckers()</code> method<br>
      * Assertion: list ... may be empty, but not <code>null</code>
+     * 
      * @throws InvalidAlgorithmParameterException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies that getCertPathCheckers method returns not empty " +
-            "list.",
-      targets = {
-        @TestTarget(
-          methodName = "getCertPathCheckers",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies that getCertPathCheckers method returns not empty list.",
+        method = "getCertPathCheckers",
+        args = {}
+    )
     public final void testGetCertPathCheckers01() throws Exception {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         PKIXParameters p = new PKIXParameters(taSet);
         List l = p.getCertPathCheckers();
         assertNotNull("notNull", l);
-        assertTrue("isEmpty",l.isEmpty());
+        assertTrue("isEmpty", l.isEmpty());
     }
 
     /**
      * Test #2 for <code>getCertPathCheckers()</code> method<br>
-     * Assertion: returns an immutable <code>List</code>
-     * of <code>PKIXCertPathChecker</code>s
+     * Assertion: returns an immutable <code>List</code> of
+     * <code>PKIXCertPathChecker</code>s
+     * 
      * @throws InvalidAlgorithmParameterException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies that getCertPathCheckers method returns an immutable " +
-            "List of PKIXCertPathChecker objects.",
-      targets = {
-        @TestTarget(
-          methodName = "getCertPathCheckers",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies that getCertPathCheckers method returns an immutable List of PKIXCertPathChecker objects.",
+        method = "getCertPathCheckers",
+        args = {}
+    )
     public final void testGetCertPathCheckers02() throws Exception {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         PKIXParameters p = new PKIXParameters(taSet);
@@ -1041,7 +1034,7 @@ public class PKIXParametersTest extends TestCase {
 
         try {
             // try to modify returned list
-            l.add((PKIXCertPathChecker)new Object());
+            l.add((PKIXCertPathChecker) new Object());
             fail("must be immutable");
         } catch (Exception e) {
         }
@@ -1050,26 +1043,23 @@ public class PKIXParametersTest extends TestCase {
     /**
      * Test #3 for <code>getCertPathCheckers()</code> method<br>
      * Assertion: The returned List is immutable, and each
-     * <code>PKIXCertPathChecker</code> in the <code>List</code>
-     * is cloned to protect against subsequent modifications
+     * <code>PKIXCertPathChecker</code> in the <code>List</code> is cloned to
+     * protect against subsequent modifications
+     * 
      * @throws InvalidAlgorithmParameterException
      * @throws CertPathValidatorException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies that the returned List is immutable, and each " + 
-            "PKIXCertPathChecker in the List " + 
-            "is cloned to protect against subsequent modifications.",
-      targets = {
-        @TestTarget(
-          methodName = "getCertPathCheckers",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies that the returned List is immutable, and each PKIXCertPathChecker in the List is cloned to protect against subsequent modifications.",
+        method = "getCertPathCheckers",
+        args = {}
+    )
     public final void testGetCertPathCheckers03() throws Exception {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         PKIXParameters p = new PKIXParameters(taSet);
@@ -1090,23 +1080,22 @@ public class PKIXParametersTest extends TestCase {
 
     /**
      * Test #1 for <code>setCertPathCheckers(List)</code> method<br>
-     * Assertion: sets a <code>List</code> of additional
-     * certification path checkers
+     * Assertion: sets a <code>List</code> of additional certification path
+     * checkers
+     * 
      * @throws InvalidAlgorithmParameterException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Doesn't verify exceptions.",
-      targets = {
-        @TestTarget(
-          methodName = "setCertPathCheckers",
-          methodArgs = {java.util.List.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify exceptions.",
+        method = "setCertPathCheckers",
+        args = {java.util.List.class}
+    )
     public final void testSetCertPathCheckers01() throws Exception {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         PKIXParameters p = new PKIXParameters(taSet);
@@ -1122,21 +1111,20 @@ public class PKIXParametersTest extends TestCase {
     /**
      * Test #2 for <code>setCertPathCheckers(List)</code> method<br>
      * Assertion: <code>List</code> ... may be null
+     * 
      * @throws InvalidAlgorithmParameterException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Doesn't verify exceptions.",
-      targets = {
-        @TestTarget(
-          methodName = "setCertPathCheckers",
-          methodArgs = {java.util.List.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify exceptions.",
+        method = "setCertPathCheckers",
+        args = {java.util.List.class}
+    )
     public final void testSetCertPathCheckers02() throws Exception {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         PKIXParameters p = new PKIXParameters(taSet);
@@ -1153,24 +1141,23 @@ public class PKIXParametersTest extends TestCase {
     /**
      * Test #3 for <code>setCertPathCheckers(List)</code> method<br>
      * Assertion: <code>List</code> supplied here is copied and each
-     * <code>PKIXCertPathChecker</code> in the list is cloned to protect
-     * against subsequent modifications
+     * <code>PKIXCertPathChecker</code> in the list is cloned to protect against
+     * subsequent modifications
+     * 
      * @throws InvalidAlgorithmParameterException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Doesn't verify exceptions.",
-      targets = {
-        @TestTarget(
-          methodName = "setCertPathCheckers",
-          methodArgs = {java.util.List.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify exceptions.",
+        method = "setCertPathCheckers",
+        args = {java.util.List.class}
+    )
     public final void testSetCertPathCheckers03() throws Exception {
         // checks that list copied
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         PKIXParameters p = new PKIXParameters(taSet);
@@ -1189,26 +1176,25 @@ public class PKIXParametersTest extends TestCase {
     /**
      * Test #4 for <code>setCertPathCheckers(List)</code> method<br>
      * Assertion: <code>List</code> supplied here is copied and each
-     * <code>PKIXCertPathChecker</code> in the list is cloned to protect
-     * against subsequent modifications
+     * <code>PKIXCertPathChecker</code> in the list is cloned to protect against
+     * subsequent modifications
+     * 
      * @throws InvalidAlgorithmParameterException
      * @throws InvalidAlgorithmParameterException
      * @throws CertPathValidatorException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Doesn't verify exceptions.",
-      targets = {
-        @TestTarget(
-          methodName = "setCertPathCheckers",
-          methodArgs = {java.util.List.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify exceptions.",
+        method = "setCertPathCheckers",
+        args = {java.util.List.class}
+    )
     public final void testSetCertPathCheckers04() throws Exception {
         // checks that checkers cloned
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         PKIXParameters p = new PKIXParameters(taSet);
@@ -1227,25 +1213,24 @@ public class PKIXParametersTest extends TestCase {
 
     /**
      * Test #5 for <code>setCertPathCheckers(List)</code> method<br>
-     * Assertion: <code>ClassCastException</code> -
-     * if any of the elements in the list are not of type
+     * Assertion: <code>ClassCastException</code> - if any of the elements in
+     * the list are not of type
      * <code>java.security.cert.PKIXCertPathChecker</code>
+     * 
      * @throws InvalidAlgorithmParameterException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verify exception.",
-      targets = {
-        @TestTarget(
-          methodName = "setCertPathCheckers",
-          methodArgs = {java.util.List.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verify exception.",
+        method = "setCertPathCheckers",
+        args = {java.util.List.class}
+    )
     @SuppressWarnings("unchecked")
     public final void testSetCertPathCheckers05() throws Exception {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         PKIXParameters p = new PKIXParameters(taSet);
@@ -1264,23 +1249,22 @@ public class PKIXParametersTest extends TestCase {
 
     /**
      * Test #1 for <code>addCertPathChecker(PKIXCertPathChecker)</code> method<br>
-     * Assertion: adds a <code>CertPathChecker</code> to the end of the
-     * list of <code>CertPathChecker</code>s 
+     * Assertion: adds a <code>CertPathChecker</code> to the end of the list of
+     * <code>CertPathChecker</code>s
+     * 
      * @throws CertPathValidatorException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "addCertPathChecker",
-          methodArgs = {java.security.cert.PKIXCertPathChecker.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "addCertPathChecker",
+        args = {java.security.cert.PKIXCertPathChecker.class}
+    )
     public final void testAddCertPathChecker01() throws Exception {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         PKIXParameters p = new PKIXParameters(taSet);
@@ -1296,31 +1280,29 @@ public class PKIXParametersTest extends TestCase {
         // they are in right order
         List l1 = p.getCertPathCheckers();
         assertEquals("listSize", 2, l1.size());
-        assertFalse("order1",
-                ((PKIXCertPathChecker)l1.get(0)).isForwardCheckingSupported());
-        assertTrue("order2",
-                ((PKIXCertPathChecker)l1.get(1)).isForwardCheckingSupported());
+        assertFalse("order1", ((PKIXCertPathChecker) l1.get(0))
+                .isForwardCheckingSupported());
+        assertTrue("order2", ((PKIXCertPathChecker) l1.get(1))
+                .isForwardCheckingSupported());
     }
 
     /**
      * Test #2 for <code>addCertPathChecker(PKIXCertPathChecker)</code> method<br>
      * Assertion: if null, the checker is ignored (not added to list).
+     * 
      * @throws InvalidAlgorithmParameterException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies that if PKIXCertPathChecker parameter is null, " +
-            "the checker is ignored (not added to list).",
-      targets = {
-        @TestTarget(
-          methodName = "addCertPathChecker",
-          methodArgs = {java.security.cert.PKIXCertPathChecker.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies that if PKIXCertPathChecker parameter is null, the checker is ignored (not added to list).",
+        method = "addCertPathChecker",
+        args = {java.security.cert.PKIXCertPathChecker.class}
+    )
     public final void testAddCertPathChecker02() throws Exception {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         PKIXParameters p = new PKIXParameters(taSet);
@@ -1337,25 +1319,23 @@ public class PKIXParametersTest extends TestCase {
 
     /**
      * Test #3 for <code>addCertPathChecker(PKIXCertPathChecker)</code> method<br>
-     * Assertion: <code>PKIXCertPathChecker</code> is cloned to protect
-     * against subsequent modifications
+     * Assertion: <code>PKIXCertPathChecker</code> is cloned to protect against
+     * subsequent modifications
+     * 
      * @throws InvalidAlgorithmParameterException
      * @throws CertPathValidatorException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies that PKIXCertPathChecker is cloned to protect " + 
-            "against subsequent modifications.",
-      targets = {
-        @TestTarget(
-          methodName = "addCertPathChecker",
-          methodArgs = {java.security.cert.PKIXCertPathChecker.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies that PKIXCertPathChecker is cloned to protect against subsequent modifications.",
+        method = "addCertPathChecker",
+        args = {java.security.cert.PKIXCertPathChecker.class}
+    )
     public final void testAddCertPathChecker03() throws Exception {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         // checks that checkers cloned
@@ -1369,29 +1349,28 @@ public class PKIXParametersTest extends TestCase {
         // state it contains has not been changed by the
         // above modification
         List l = p.getCertPathCheckers();
-        PKIXCertPathChecker cpc1 = (PKIXCertPathChecker)l.get(0);
+        PKIXCertPathChecker cpc1 = (PKIXCertPathChecker) l.get(0);
         assertEquals("listSize", 1, l.size());
         assertFalse("isCopied", cpc1.isForwardCheckingSupported());
     }
 
     /**
      * Test #1 for <code>getDate()</code> method<br>
-     * Assertion: the <code>Date</code>, or <code>null</code> if not set 
+     * Assertion: the <code>Date</code>, or <code>null</code> if not set
+     * 
      * @throws InvalidAlgorithmParameterException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getDate",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getDate",
+        args = {}
+    )
     public final void testGetDate01() throws Exception {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         PKIXParameters p = new PKIXParameters(taSet);
@@ -1406,29 +1385,27 @@ public class PKIXParametersTest extends TestCase {
 
     /**
      * Test #2 for <code>getDate()</code> method<br>
-     * Assertion: <code>Date</code> returned is copied to protect
-     * against subsequent modifications 
+     * Assertion: <code>Date</code> returned is copied to protect against
+     * subsequent modifications
+     * 
      * @throws InvalidAlgorithmParameterException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies that returned Date is copied to protect" + 
-            " against subsequent modifications.",
-      targets = {
-        @TestTarget(
-          methodName = "getDate",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies that returned Date is copied to protect against subsequent modifications.",
+        method = "getDate",
+        args = {}
+    )
     public final void testGetDate02() throws Exception {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         PKIXParameters p = new PKIXParameters(taSet);
         Date currentDate = new Date();
-        p.setDate((Date)currentDate.clone());
+        p.setDate((Date) currentDate.clone());
         Date ret1 = p.getDate();
         // modify Date returned
         ret1.setTime(0L);
@@ -1440,25 +1417,25 @@ public class PKIXParametersTest extends TestCase {
     /**
      * @tests java.security.cert.PKIXParameters#setDate(Date)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setDate",
-          methodArgs = {java.util.Date.class}
-        )
-    })
-    public final void _test_setDateLjava_util_Date() throws Exception {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setDate",
+        args = {java.util.Date.class}
+    )
+    @KnownFailure("p.setDate(null) does not reset to current"+
+            " time. RI fails at last assertion (time reset to 2007). Our" +
+            " fails at assertNotNull(p.getDate)")
+    public final void test_setDateLjava_util_Date() throws Exception {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         assertNotNull("could not create test TrustAnchor set", taSet);
 
-        // test: 'date' is unset and param is null 
+        // test: 'date' is unset and param is null
         PKIXParameters p = new PKIXParameters(taSet);
         p.setDate(null);
         assertNull(p.getDate());
 
-        // test: 'date' is not null 
+        // test: 'date' is not null
         p = new PKIXParameters(taSet);
         Date toBeSet = new Date(555L);
         p.setDate(toBeSet);
@@ -1471,7 +1448,7 @@ public class PKIXParametersTest extends TestCase {
         // set another 'date'
         p.setDate(new Date(333L));
         assertEquals(333L, p.getDate().getTime());
-        
+
         // Regression for HARMONY-2882 (non-bug difference from RI)
         p = new PKIXParameters(taSet);
         p.setDate(new Date(555L));
@@ -1484,22 +1461,20 @@ public class PKIXParametersTest extends TestCase {
      * Test #1 for <code>getInitialPolicies()</code> method<br>
      * Assertion: The default return value is an empty <code>Set</code>
      * Assertion: Never returns <code>null</code>
+     * 
      * @throws InvalidAlgorithmParameterException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies that getInitialPolicies method returns an empty Set " +
-            "and never null.",
-      targets = {
-        @TestTarget(
-          methodName = "getInitialPolicies",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies that getInitialPolicies method returns an empty Set and never null.",
+        method = "getInitialPolicies",
+        args = {}
+    )
     public final void testGetInitialPolicies01() throws Exception {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         PKIXParameters p = new PKIXParameters(taSet);
@@ -1509,31 +1484,29 @@ public class PKIXParametersTest extends TestCase {
 
     /**
      * Test #2 for <code>getInitialPolicies()</code> method<br>
-     * Assertion: returns an immutable <code>Set</code> of initial
-     * policy OIDs in <code>String</code> format<br>
+     * Assertion: returns an immutable <code>Set</code> of initial policy OIDs
+     * in <code>String</code> format<br>
+     * 
      * @throws InvalidAlgorithmParameterException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies that getInitialPolicies method returns an immutable " +
-            "Set of initial policy in String format.",
-      targets = {
-        @TestTarget(
-          methodName = "getInitialPolicies",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies that getInitialPolicies method returns an immutable Set of initial policy in String format.",
+        method = "getInitialPolicies",
+        args = {}
+    )
     public final void testGetInitialPolicies02() throws Exception {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         PKIXParameters p = new PKIXParameters(taSet);
         Set<String> s = p.getInitialPolicies();
         try {
             // try to modify returned set
-            s.add((String)new Object());
+            s.add((String) new Object());
             fail("must be immutable");
         } catch (Exception e) {
         }
@@ -1541,23 +1514,22 @@ public class PKIXParametersTest extends TestCase {
 
     /**
      * Test #1 for <code>setInitialPolicies(Set)</code> method<br>
-     * Assertion: sets the <code>Set</code> of initial policy
-     * identifiers (OID strings)
+     * Assertion: sets the <code>Set</code> of initial policy identifiers (OID
+     * strings)
+     * 
      * @throws InvalidAlgorithmParameterException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Doesn't verify ClassCastException.",
-      targets = {
-        @TestTarget(
-          methodName = "setInitialPolicies",
-          methodArgs = {java.util.Set.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify ClassCastException.",
+        method = "setInitialPolicies",
+        args = {java.util.Set.class}
+    )
     public final void testSetInitialPolicies01() throws Exception {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         Set<String> s = new HashSet<String>();
@@ -1570,21 +1542,20 @@ public class PKIXParametersTest extends TestCase {
     /**
      * Test #2 for <code>setInitialPolicies(Set)</code> method<br>
      * Assertion: <code>Set</code> may be <code>null</code>
+     * 
      * @throws InvalidAlgorithmParameterException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies null as a parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "setInitialPolicies",
-          methodArgs = {java.util.Set.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies null as a parameter.",
+        method = "setInitialPolicies",
+        args = {java.util.Set.class}
+    )
     public final void testSetInitialPolicies02() throws Exception {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         PKIXParameters p = new PKIXParameters(taSet);
@@ -1596,19 +1567,12 @@ public class PKIXParametersTest extends TestCase {
      * Test #3 for <code>setInitialPolicies(Set)</code> method<br>
      * Assertion: <code>Set</code> may be empty
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Doesn't verify ClassCastException.",
-      targets = {
-        @TestTarget(
-          methodName = "setInitialPolicies",
-          methodArgs = {java.util.Set.class}
-        )
-    })
+    @TestTargetNew(level = TestLevel.PARTIAL_COMPLETE, notes = "Doesn't verify ClassCastException.", method = "setInitialPolicies", args = {java.util.Set.class})
     public final void testSetInitialPolicies03() throws Exception {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         PKIXParameters p = new PKIXParameters(taSet);
@@ -1618,23 +1582,15 @@ public class PKIXParametersTest extends TestCase {
 
     /**
      * Test #4 for <code>setInitialPolicies(Set)</code> method<br>
-     * Assertion: <code>Set</code> is copied to protect against
-     * subsequent modifications
+     * Assertion: <code>Set</code> is copied to protect against subsequent
+     * modifications
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies that Set is copied to protect against " + 
-            "subsequent modifications.",
-      targets = {
-        @TestTarget(
-          methodName = "setInitialPolicies",
-          methodArgs = {java.util.Set.class}
-        )
-    })
+    @TestTargetNew(level = TestLevel.PARTIAL_COMPLETE, notes = "Verifies that Set is copied to protect against subsequent modifications.", method = "setInitialPolicies", args = {java.util.Set.class})
     public final void testSetInitialPolicies04() throws Exception {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         Set<String> s = new HashSet<String>();
@@ -1651,24 +1607,18 @@ public class PKIXParametersTest extends TestCase {
 
     /**
      * Test #5 for <code>setInitialPolicies(Set)</code> method<br>
-     * Assertion: <code>ClassCastException</code> -
-     * if any of the elements in the set are not of type <code>String</code>
+     * Assertion: <code>ClassCastException</code> - if any of the elements in
+     * the set are not of type <code>String</code>
+     * 
      * @throws InvalidAlgorithmParameterException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies ClassCastException.",
-      targets = {
-        @TestTarget(
-          methodName = "setInitialPolicies",
-          methodArgs = {java.util.Set.class}
-        )
-    })
+    @TestTargetNew(level = TestLevel.PARTIAL_COMPLETE, notes = "Verifies ClassCastException.", method = "setInitialPolicies", args = {java.util.Set.class})
     @SuppressWarnings("unchecked")
     public final void testSetInitialPolicies05() throws Exception {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         Set s = new HashSet();
@@ -1685,23 +1635,21 @@ public class PKIXParametersTest extends TestCase {
     /**
      * Test #1 for <code>getTrustAnchors()</code> method<br>
      * Assertion: an immutable <code>Set</code> of <code>TrustAnchors</code>
-     * (never <code>null</code>) 
+     * (never <code>null</code>)
+     * 
      * @throws InvalidAlgorithmParameterException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies that getTrustAnchors returns an immutable Set of " +
-            "TrustAnchors, and never null.",
-      targets = {
-        @TestTarget(
-          methodName = "getTrustAnchors",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies that getTrustAnchors returns an immutable Set of TrustAnchors, and never null.",
+        method = "getTrustAnchors",
+        args = {}
+    )
     public final void testGetTrustAnchors01() throws Exception {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         PKIXParameters p = new PKIXParameters(taSet);
@@ -1711,30 +1659,28 @@ public class PKIXParametersTest extends TestCase {
     /**
      * Test #2 for <code>getTrustAnchors()</code> method<br>
      * Assertion: an immutable <code>Set</code> of <code>TrustAnchors</code>
-     * (never <code>null</code>) 
+     * (never <code>null</code>)
+     * 
      * @throws InvalidAlgorithmParameterException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies that getTrustAnchors returns an immutable set of " +
-            "TrustAnchors, and never null.",
-      targets = {
-        @TestTarget(
-          methodName = "getTrustAnchors",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies that getTrustAnchors returns an immutable set of TrustAnchors, and never null.",
+        method = "getTrustAnchors",
+        args = {}
+    )
     public final void testGetTrustAnchors02() throws Exception {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         PKIXParameters p = new PKIXParameters(taSet);
         Set<TrustAnchor> s = p.getTrustAnchors();
         try {
             // try to modify returned set
-            s.add((TrustAnchor)new Object());
+            s.add((TrustAnchor) new Object());
             fail("must be immutable");
         } catch (Exception e) {
         }
@@ -1742,22 +1688,21 @@ public class PKIXParametersTest extends TestCase {
 
     /**
      * Test #1 for <code>setTrustAnchors(Set)</code> method<br>
-     * Assertion: Sets the <code>Set</code> of most-trusted CAs 
+     * Assertion: Sets the <code>Set</code> of most-trusted CAs
+     * 
      * @throws InvalidAlgorithmParameterException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Doesn't verify exceptions.",
-      targets = {
-        @TestTarget(
-          methodName = "setTrustAnchors",
-          methodArgs = {java.util.Set.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify exceptions.",
+        method = "setTrustAnchors",
+        args = {java.util.Set.class}
+    )
     public final void testSetTrustAnchors01() throws Exception {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         Set<TrustAnchor> taSet1 = TestUtils.getTrustAnchorSet();
@@ -1768,24 +1713,23 @@ public class PKIXParametersTest extends TestCase {
 
     /**
      * Test #2 for <code>setTrustAnchors(Set)</code> method<br>
-     * Assertion: <code>InvalidAlgorithmParameterException</code> -
-     * if the specified <code>Set</code> is empty
-     * (<code>trustAnchors.isEmpty() == true</code>)
+     * Assertion: <code>InvalidAlgorithmParameterException</code> - if the
+     * specified <code>Set</code> is empty (
+     * <code>trustAnchors.isEmpty() == true</code>)
+     * 
      * @throws InvalidAlgorithmParameterException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies InvalidAlgorithmParameterException.",
-      targets = {
-        @TestTarget(
-          methodName = "setTrustAnchors",
-          methodArgs = {java.util.Set.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies InvalidAlgorithmParameterException.",
+        method = "setTrustAnchors",
+        args = {java.util.Set.class}
+    )
     public final void testSetTrustAnchors02() throws Exception {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         PKIXParameters p = new PKIXParameters(taSet);
@@ -1799,22 +1743,20 @@ public class PKIXParametersTest extends TestCase {
 
     /**
      * Test #3 for <code>setTrustAnchors(Set)</code> method<br>
-     * Assertion: <code>NullPointerException</code> -
-     * if the specified <code>Set</code> is <code>null</code>)
+     * Assertion: <code>NullPointerException</code> - if the specified
+     * <code>Set</code> is <code>null</code>)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies NullPointerException.",
-      targets = {
-        @TestTarget(
-          methodName = "setTrustAnchors",
-          methodArgs = {java.util.Set.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies NullPointerException.",
+        method = "setTrustAnchors",
+        args = {java.util.Set.class}
+    )
     public final void testSetTrustAnchors03() throws Exception {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         PKIXParameters p = new PKIXParameters(taSet);
@@ -1828,25 +1770,23 @@ public class PKIXParametersTest extends TestCase {
 
     /**
      * Test #4 for <code>setTrustAnchors(Set)</code> method<br>
-     * Assertion: <code>ClassCastException</code> -
-     * if any of the elements in the set are not of type
-     * <code>java.security.cert.TrustAnchor</code>
+     * Assertion: <code>ClassCastException</code> - if any of the elements in
+     * the set are not of type <code>java.security.cert.TrustAnchor</code>
+     * 
      * @throws InvalidAlgorithmParameterException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies ClassCastException.",
-      targets = {
-        @TestTarget(
-          methodName = "setTrustAnchors",
-          methodArgs = {java.util.Set.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies ClassCastException.",
+        method = "setTrustAnchors",
+        args = {java.util.Set.class}
+    )
     @SuppressWarnings("unchecked")
     public final void testSetTrustAnchors04() throws Exception {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         PKIXParameters p = new PKIXParameters(taSet);
@@ -1858,28 +1798,26 @@ public class PKIXParametersTest extends TestCase {
         } catch (ClassCastException e) {
         }
     }
-    
+
     /**
      * Test for <code>toString</code> method<br>
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public final void testToString() throws Exception {
         Set<TrustAnchor> taSet = TestUtils.getTrustAnchorSet();
         if (taSet == null) {
-            fail(getName() + ": not performed (could not create test TrustAnchor set)");
+            fail(getName()
+                    + ": not performed (could not create test TrustAnchor set)");
         }
 
         PKIXParameters p = new PKIXParameters(taSet);
         assertNotNull(p.toString());
-        
+
         PKIXParameters p1 = null;
         try {
             p1.toString();
@@ -1887,5 +1825,53 @@ public class PKIXParametersTest extends TestCase {
         } catch (NullPointerException e) {
             // expected
         }
+    }
+    
+    /**
+     * Test #4 for <code>PKIXParameters(KeyStore)</code> constructor<br>
+     * 
+     * @throws InvalidAlgorithmParameterException
+     * @throws KeyStoreException
+     */
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies everything except null argument",
+        method = "PKIXParameters",
+        args = {java.security.KeyStore.class}
+    )
+    public final void testPKIXParametersKeyStore04() throws Exception {
+
+
+        KeyStore store = KeyStore.getInstance("PKCS12");
+        KeyStoreTestPKCS12 k = new KeyStoreTestPKCS12();
+        ByteArrayInputStream stream = new ByteArrayInputStream(k.keyStoreData);
+
+        try {
+            PKIXParameters p = new PKIXParameters(store);
+        } catch (KeyStoreException e) {
+            // ok
+        }
+        
+        store = KeyStore.getInstance("PKCS12");
+        store.load(stream, new String(KeyStoreTestPKCS12.keyStorePassword)
+                .toCharArray());
+        stream.close();
+        
+        try {
+              PKIXParameters p = new PKIXParameters(store);
+        } catch (InvalidAlgorithmParameterException e) {
+            // ok
+        }
+        
+        
+        KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
+        keystore.load(null,null);
+        keystore.setCertificateEntry("test", TestUtils.rootCertificateSS);
+        
+        
+        PKIXParameters p = new PKIXParameters(keystore);
+        
+        
+
     }
 }

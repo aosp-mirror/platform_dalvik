@@ -16,15 +16,15 @@
 
 package tests.api.java.lang;
 
-import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -32,16 +32,17 @@ import java.io.OutputStream;
 
 @TestTargetClass(Process.class) 
 public class ProcessManagerTest extends TestCase {
+    
+    Thread thread = null;
+    Process process = null;
+    boolean isThrown = false;
 
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getOutputStream",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getOutputStream",
+        args = {}
+    )
     public void testCat() throws IOException, InterruptedException {
         String[] commands = { "cat" };
         Process process = Runtime.getRuntime().exec(commands, null, null);
@@ -54,29 +55,82 @@ public class ProcessManagerTest extends TestCase {
 
         assertEquals(greeting, readLine(process));
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "InterruptedException  is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "waitFor",
-          methodArgs = {}
-        )
-    })
-    public void testSleep() throws IOException, InterruptedException {
+   
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "waitFor",
+        args = {}
+    )
+    public void testSleep() throws IOException {
         String[] commands = { "sleep", "1" };
-        Process process = Runtime.getRuntime().exec(commands, null, null);
-        assertEquals(0, process.waitFor());
+        process = Runtime.getRuntime().exec(commands, null, null);
+        try { 
+            assertEquals(0, process.waitFor());
+            
+        } catch(InterruptedException ie) {
+            fail("InterruptedException was thrown.");
+        }
+
+        isThrown = false;
+        thread = new Thread() {
+            public void run() {
+                String[] commands = { "sleep", "1000"};
+                try {
+                    process = Runtime.getRuntime().exec(commands, null, null);
+                } catch (IOException e1) {
+                    fail("IOException was thrown.");
+                }
+                try {
+                    process.waitFor();
+                    fail("InterruptedException was not thrown.");
+                } catch(InterruptedException ie) {
+                    isThrown = true;
+                }
+            }
+        };
+        
+        Thread interruptThread = new Thread() { 
+            public void run() {
+                try {
+                    sleep(10);
+                } catch(InterruptedException ie) {
+                    fail("InterruptedException was thrown in " +
+                            "the interruptThread.");
+                }
+                thread.interrupt();
+            }
+        };
+        thread.start();
+        interruptThread.start();
+        try {
+            interruptThread.join();
+        } catch (InterruptedException e) {
+            fail("InterruptedException was thrown.");
+        }
+        try {
+            Thread.sleep(100);
+        } catch(InterruptedException ie) {
+            
+        }
+        
+        thread.interrupt();
+        //process.destroy();
+        try {
+            Thread.sleep(100);
+        } catch(InterruptedException ie) {
+            
+        }
+        
+        assertTrue(isThrown);
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getInputStream",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getInputStream",
+        args = {}
+    )
     public void testPwd() throws IOException, InterruptedException {
         String[] commands = { "sh", "-c", "pwd" };
         Process process = Runtime.getRuntime().exec(
@@ -84,15 +138,13 @@ public class ProcessManagerTest extends TestCase {
         logErrors(process);
         assertEquals("/", readLine(process));
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getInputStream",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getInputStream",
+        args = {}
+    )
     public void testEnvironment() throws IOException, InterruptedException {
         String[] commands = { "sh", "-c", "echo $FOO" };
 
@@ -130,17 +182,23 @@ public class ProcessManagerTest extends TestCase {
         thread.start();
     }
 
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Stress test.",
+        method = "waitFor",
+        args = {}
+    )
     public void testHeavyLoad() {
         int i;
         for (i = 0; i < 2000; i++)
-            stuff(i);
+            stuff();
     }
 
-    private static void stuff(int iteration) {
+    private static void stuff() {
         Runtime rt = Runtime.getRuntime();
         try {
             Process proc = rt.exec("ls");
-            int code = proc.waitFor();
+            proc.waitFor();
             proc = null;
         } catch (Exception ex) {
             System.err.println("Failure: " + ex);
@@ -149,4 +207,49 @@ public class ProcessManagerTest extends TestCase {
         rt.gc();
         rt = null;
     }
+
+    InputStream in;
+
+    public void testCloseNonStandardFds()
+            throws IOException, InterruptedException {
+        String[] commands = { "ls", "/proc/self/fd" };
+
+        Process process = Runtime.getRuntime().exec(commands, null, null);
+        int before = countLines(process);
+
+        // Open a new fd.
+        this.in = new FileInputStream("/proc/version");
+
+        try {
+            process = Runtime.getRuntime().exec(commands, null, null);
+            int after = countLines(process);
+
+            // Assert that the new fd wasn't open in the second run.
+            assertEquals(before, after);
+        } finally {
+            this.in = null;
+        }
+    }
+
+    /**
+     * Counts lines of input from the given process. Equivalent to "wc -l".
+     */
+    private int countLines(Process process) throws IOException {
+        logErrors(process);
+        InputStream in = process.getInputStream();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+        int count = 0;
+        while (reader.readLine() != null) {
+            count++;
+        }
+        return count;
+    }
+
+    public void testInvalidCommand()
+            throws IOException, InterruptedException {
+        try {
+            String[] commands = { "doesnotexist" };
+            Runtime.getRuntime().exec(commands, null, null);
+        } catch (IOException e) { /* expected */ }
+    }    
 }

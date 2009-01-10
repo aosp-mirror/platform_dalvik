@@ -22,9 +22,9 @@
 
 package tests.security.cert;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -61,15 +61,12 @@ public class CRLExceptionTest extends TestCase {
      * Test for <code>CRLException()</code> constructor Assertion: constructs
      * CRLException with no detail message
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "CRLException",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "CRLException",
+        args = {}
+    )
     public void testCRLException01() {
         CRLException tE = new CRLException();
         assertNull("getMessage() must return null.", tE.getMessage());
@@ -81,15 +78,12 @@ public class CRLExceptionTest extends TestCase {
      * constructs CRLException with detail message msg. Parameter
      * <code>msg</code> is not null.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "CRLException",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "CRLException",
+        args = {java.lang.String.class}
+    )
     public void testCRLException02() {
         CRLException tE;
         for (int i = 0; i < msgs.length; i++) {
@@ -104,15 +98,12 @@ public class CRLExceptionTest extends TestCase {
      * Test for <code>CRLException(String)</code> constructor Assertion:
      * constructs CRLException when <code>msg</code> is null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies null as a parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "CRLException",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies null as a parameter.",
+        method = "CRLException",
+        args = {java.lang.String.class}
+    )
     public void testCRLException03() {
         String msg = null;
         CRLException tE = new CRLException(msg);
@@ -124,15 +115,12 @@ public class CRLExceptionTest extends TestCase {
      * Test for <code>CRLException(Throwable)</code> constructor Assertion:
      * constructs CRLException when <code>cause</code> is null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies null as a parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "CRLException",
-          methodArgs = {java.lang.Throwable.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies null as a parameter.",
+        method = "CRLException",
+        args = {java.lang.Throwable.class}
+    )
     public void testCRLException04() {
         Throwable cause = null;
         CRLException tE = new CRLException(cause);
@@ -144,15 +132,12 @@ public class CRLExceptionTest extends TestCase {
      * Test for <code>CRLException(Throwable)</code> constructor Assertion:
      * constructs CRLException when <code>cause</code> is not null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "CRLException",
-          methodArgs = {java.lang.Throwable.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "CRLException",
+        args = {java.lang.Throwable.class}
+    )
     public void testCRLException05() {
         CRLException tE = new CRLException(tCause);
         if (tE.getMessage() != null) {
@@ -171,15 +156,12 @@ public class CRLExceptionTest extends TestCase {
      * Assertion: constructs CRLException when <code>cause</code> is null
      * <code>msg</code> is null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies null as parameters.",
-      targets = {
-        @TestTarget(
-          methodName = "CRLException",
-          methodArgs = {java.lang.String.class, java.lang.Throwable.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies null as parameters.",
+        method = "CRLException",
+        args = {java.lang.String.class, java.lang.Throwable.class}
+    )
     public void testCRLException06() {
         CRLException tE = new CRLException(null, null);
         assertNull("getMessage() must return null", tE.getMessage());
@@ -191,15 +173,12 @@ public class CRLExceptionTest extends TestCase {
      * Assertion: constructs CRLException when <code>cause</code> is null
      * <code>msg</code> is not null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies null as the second parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "CRLException",
-          methodArgs = {java.lang.String.class, java.lang.Throwable.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies null as the second parameter.",
+        method = "CRLException",
+        args = {java.lang.String.class, java.lang.Throwable.class}
+    )
     public void testCRLException07() {
         CRLException tE;
         for (int i = 0; i < msgs.length; i++) {
@@ -215,15 +194,12 @@ public class CRLExceptionTest extends TestCase {
      * Assertion: constructs CRLException when <code>cause</code> is not null
      * <code>msg</code> is null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies null as the first parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "CRLException",
-          methodArgs = {java.lang.String.class, java.lang.Throwable.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies null as the first parameter.",
+        method = "CRLException",
+        args = {java.lang.String.class, java.lang.Throwable.class}
+    )
     public void testCRLException08() {
         CRLException tE = new CRLException(null, tCause);
         if (tE.getMessage() != null) {
@@ -242,15 +218,12 @@ public class CRLExceptionTest extends TestCase {
      * Assertion: constructs CRLException when <code>cause</code> is not null
      * <code>msg</code> is not null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "CRLException",
-          methodArgs = {java.lang.String.class, java.lang.Throwable.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "CRLException",
+        args = {java.lang.String.class, java.lang.Throwable.class}
+    )
     public void testCRLException09() {
         CRLException tE;
         for (int i = 0; i < msgs.length; i++) {

@@ -16,9 +16,6 @@
 
 package org.apache.harmony.nio.tests.java.nio;
 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
 import dalvik.annotation.TestTargetClass;
 
 import java.nio.CharBuffer;
@@ -28,6 +25,7 @@ public class ReadOnlyWrappedCharBufferTest1 extends ReadOnlyCharBufferTest {
 
     protected void setUp() throws Exception {
         super.setUp();
+        capacity = BUFFER_LENGTH;
         buf = CharBuffer.wrap(new char[BUFFER_LENGTH]);
         super.loadTestData1(buf);
         buf = buf.asReadOnlyBuffer();

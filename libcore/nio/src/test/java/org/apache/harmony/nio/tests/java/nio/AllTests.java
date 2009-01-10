@@ -31,7 +31,7 @@ public class AllTests {
     }
 
     public static Test suite() {
-        TestSuite suite = new TestSuite("Tests for java.nio");
+        TestSuite suite = tests.TestSuiteFactory.createTestSuite("Tests for java.nio");
         //$JUnit-BEGIN$
         suite.addTestSuite(ReadOnlyHeapShortBufferTest.class);
         suite.addTestSuite(ReadOnlyLongBufferTest.class);
@@ -70,7 +70,6 @@ public class AllTests {
         suite.addTestSuite(DoubleBufferTest.class);
         suite.addTestSuite(ReadOnlyWrappedFloatBufferTest.class);
         suite.addTestSuite(ShortBufferTest.class);
-        suite.addTestSuite(BufferTest.class);
         suite.addTestSuite(DirectFloatBufferTest.class);
         suite.addTestSuite(SliceWrappedByteBufferTest.class);
         suite.addTestSuite(DirectCharBufferTest.class);

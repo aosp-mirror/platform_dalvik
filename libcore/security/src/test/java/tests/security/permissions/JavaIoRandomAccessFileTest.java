@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,9 +16,9 @@
 
 package tests.security.permissions;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -27,11 +27,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 /*
- * This class tests the secrity permissions which are documented in
+ * This class tests the security permissions which are documented in
  * http://java.sun.com/j2se/1.5.0/docs/guide/security/permissions.html#PermsAndMethods
  * for class java.io.RandomAccessFile
  */
-@TestTargetClass(SecurityManager.class)
+@TestTargetClass(java.io.RandomAccessFile.class)
 public class JavaIoRandomAccessFileTest extends TestCase {
     
     SecurityManager old;
@@ -48,14 +48,18 @@ public class JavaIoRandomAccessFileTest extends TestCase {
         super.tearDown();
     }
     
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that RandomAccessFile constructor calls checkRead " +
-            "method of security manager.",
-      targets = {
-        @TestTarget(
-          methodName = "checkRead",
-          methodArgs = {java.lang.String.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies that RandomAccessFile constructor calls checkRead method of security manager.",
+            method = "RandomAccessFile",
+            args = {java.lang.String.class, java.lang.String.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies that RandomAccessFile constructor calls checkRead method of security manager.",
+            method = "RandomAccessFile",
+            args = {java.io.File.class, java.lang.String.class}
         )
     })
     public void test_RandomAccessFile1() throws IOException {
@@ -94,20 +98,12 @@ public class JavaIoRandomAccessFileTest extends TestCase {
         assertEquals("Argument of checkRead is not correct", filename, s.file);
     }
     
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that RandomAccessFile constructor calls " +
-            "checkReadFile, checkWriteFile methods of security manager.",
-      targets = {
-        @TestTarget(
-          methodName = "checkRead",
-          methodArgs = {java.lang.String.class}
-        ),
-        @TestTarget(
-          methodName = "checkWrite",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies that RandomAccessFile constructor calls checkRead and checkWrite on security manager.",
+        method = "RandomAccessFile",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void test_RandomAccessFile2() throws IOException {
         class TestSecurityManager extends SecurityManager {
             boolean checkReadCalled;

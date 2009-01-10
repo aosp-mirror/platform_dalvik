@@ -21,9 +21,9 @@
 
 package tests.org.w3c.dom;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import java.util.ArrayList;
@@ -83,16 +83,12 @@ public final class CreateElementNS extends DOMTestCase {
      * @throws Throwable
      *             Any uncaught exception causes test to fail
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Doesn't verify null as a parameters, and other types of " +
-            "DOMException.",
-      targets = {
-        @TestTarget(
-          methodName = "createElementNS",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify null as a parameters, and other types of DOMException.",
+        method = "createElementNS",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void testCreateElementNS1() throws Throwable {
         String namespaceURI = "http://www.ecommerce.org/";
         String malformedName = "prefix::local";
@@ -110,16 +106,12 @@ public final class CreateElementNS extends DOMTestCase {
             assertTrue("throw_NAMESPACE_ERR", success);
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Doesn't verify null as a parameters, and other types of " +
-            "DOMException.",
-      targets = {
-        @TestTarget(
-          methodName = "createElementNS",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify null as a parameters, and other types of DOMException.",
+        method = "createElementNS",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void testCreateElementNS2() throws Throwable {
         String namespaceURI = null;
 
@@ -138,16 +130,12 @@ public final class CreateElementNS extends DOMTestCase {
             assertTrue("throw_NAMESPACE_ERR", success);
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Doesn't verify null as a parameters, and other types of " + 
-            "DOMException.",
-      targets = {
-        @TestTarget(
-          methodName = "createElementNS",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify null as a parameters, and other types of DOMException.",
+        method = "createElementNS",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void testCreateElementNS3() throws Throwable {
         String namespaceURI = "http://www.wedding.com/";
         String qualifiedName;
@@ -197,16 +185,12 @@ public final class CreateElementNS extends DOMTestCase {
             }
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Doesn't verify null as a parameters, and other types of " + 
-            "DOMException.",
-      targets = {
-        @TestTarget(
-          methodName = "createElementNS",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify null as a parameters, and other types of DOMException.",
+        method = "createElementNS",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void testCreateElementNS4() throws Throwable {
         String namespaceURI = "http://www.w3.org/XML/1998/namespaces";
         String qualifiedName = "xml:element1";
@@ -224,16 +208,12 @@ public final class CreateElementNS extends DOMTestCase {
             assertTrue("throw_NAMESPACE_ERR", success);
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Doesn't verify null as a parameters, and other types of " + 
-            "DOMException.",
-      targets = {
-        @TestTarget(
-          methodName = "createElementNS",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify null as a parameters, and other types of DOMException.",
+        method = "createElementNS",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void testCreateElementNS5() throws Throwable {
         String namespaceURI = "http://www.nist.gov";
         String qualifiedName = "gov:faculty";
@@ -245,16 +225,12 @@ public final class CreateElementNS extends DOMTestCase {
         elementName = newElement.getTagName();
         assertEquals("throw_Equals", qualifiedName, elementName);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Doesn't verify null as a parameters, and other types of " + 
-           "DOMException.",
-      targets = {
-        @TestTarget(
-          methodName = "createElementNS",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify null as a parameters, and other types of DOMException.",
+        method = "createElementNS",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void testCreateElementNS6() throws Throwable {
         String namespaceURI = "http://www.example.com/";
 

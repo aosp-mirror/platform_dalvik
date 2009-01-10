@@ -51,6 +51,13 @@
 
 static bool gDebugVerbose = false;      // TODO: remove this
 
+#if 0
+int gDvm__totalInstr = 0;
+int gDvm__gcInstr = 0;
+int gDvm__gcData = 0;
+int gDvm__gcSimpleData = 0;
+#endif
+
 /*
  * Selectively enable verbose debug logging -- use this to activate
  * dumpRegTypes() calls for all instructions in the specified method.
@@ -66,10 +73,6 @@ static inline bool doVerboseLogging(const Method* meth) {
 }
 
 #define SHOW_REG_DETAILS    (0 /*| DRT_SHOW_REF_TYPES | DRT_SHOW_LOCALS*/)
-
-/* verification failure reporting */
-#define LOG_VFY(...)                dvmLogVerifyFailure(NULL, __VA_ARGS__)
-#define LOG_VFY_METH(_meth, ...)    dvmLogVerifyFailure(_meth, __VA_ARGS__)
 
 /*
  * We need an extra "pseudo register" to hold the return type briefly.  It
@@ -87,85 +90,13 @@ static inline bool doVerboseLogging(const Method* meth) {
 typedef u4 RegType;
 
 /*
- * Enumeration for RegType values.  The "hi" piece of a 64-bit value MUST
- * immediately follow the "lo" piece in the enumeration, so we can check
- * that hi==lo+1.
- *
- * Assignment of constants:
- *   [-MAXINT,-32768)   : integer
- *   [-32768,-128)      : short
- *   [-128,0)           : byte
- *   0                  : zero
- *   1                  : one
- *   [2,128)            : posbyte
- *   [128,32768)        : posshort
- *   [32768,65536)      : char
- *   [65536,MAXINT]     : integer
- *
- * Allowed "implicit" widening conversions:
- *   zero -> boolean, posbyte, byte, posshort, short, char, integer, ref (null)
- *   one -> boolean, posbyte, byte, posshort, short, char, integer
- *   boolean -> posbyte, byte, posshort, short, char, integer
- *   posbyte -> posshort, short, integer, char
- *   byte -> short, integer
- *   posshort -> integer, char
- *   short -> integer
- *   char -> integer
- *
- * In addition, all of the above can convert to "float".
- *
- * We're more careful with integer values than the spec requires.  The
- * motivation is to restrict byte/char/short to the correct range of values.
- * For example, if a method takes a byte argument, we don't want to allow
- * the code to load the constant "1024" and pass it in.
- */
-enum {
-    kRegTypeUnknown = 0,    /* initial state; use value=0 so calloc works */
-    kRegTypeUninit = 1,     /* MUST be odd to distinguish from pointer */
-    kRegTypeConflict,       /* merge clash makes this reg's type unknowable */
-
-    /*
-     * Category-1nr types.  The order of these is chiseled into a couple
-     * of tables, so don't add, remove, or reorder if you can avoid it.
-     */
-#define kRegType1nrSTART    kRegTypeFloat
-    kRegTypeFloat,
-    kRegTypeZero,           /* 32-bit 0, could be Boolean, Int, Float, or Ref */
-    kRegTypeOne,            /* 32-bit 1, could be Boolean, Int, Float */
-    kRegTypeBoolean,        /* must be 0 or 1 */
-    kRegTypePosByte,        /* byte, known positive (can become char) */
-    kRegTypeByte,
-    kRegTypePosShort,       /* short, known positive (can become char) */
-    kRegTypeShort,
-    kRegTypeChar,
-    kRegTypeInteger,
-#define kRegType1nrEND      kRegTypeInteger
-
-    kRegTypeLongLo,         /* lower-numbered register; endian-independent */
-    kRegTypeLongHi,
-    kRegTypeDoubleLo,
-    kRegTypeDoubleHi,
-
-    /*
-     * Anything larger than this is a ClassObject or uninit ref.  Mask off
-     * all but the low 8 bits; if you're left with kRegTypeUninit, pull
-     * the uninit index out of the high 24.  Because kRegTypeUninit has an
-     * odd value, there is no risk of a particular ClassObject pointer bit
-     * pattern being confused for it (assuming our class object allocator
-     * uses word alignment).
-     */
-    kRegTypeMAX
-};
-#define kRegTypeUninitMask  0xff
-#define kRegTypeUninitShift 8
-
-/*
  * Big fat collection of registers.
  */
 typedef struct RegisterTable {
     /*
-     * Array of RegType pointers, one per address in the method.  We only
-     * set the pointers for addresses that are branch targets.
+     * Array of RegType arrays, one per address in the method.  We only
+     * set the pointers for addresses that are branch targets unless
+     * USE_FULL_TABLE is true.
      */
     RegType**   addrRegs;
 
@@ -176,7 +107,7 @@ typedef struct RegisterTable {
     int         insnRegCount;
 
     /*
-     * A single large alloc, with all of the storage needed for insnRegs.
+     * A single large alloc, with all of the storage needed for addrRegs.
      */
     RegType*    regAlloc;
 } RegisterTable;
@@ -185,8 +116,6 @@ typedef struct RegisterTable {
 /* fwd */
 static void checkMergeTab(void);
 static bool isInitMethod(const Method* meth);
-static void logUnableToResolveClass(const char* missingClassDescr,\
-    const Method* meth);
 static RegType getInvocationThis(const RegType* insnRegs,\
     const int insnRegCount, const DecodedInstruction* pDecInsn, bool* pOkay);
 static void verifyRegisterType(const RegType* insnRegs, const int insnRegCount,\
@@ -234,7 +163,8 @@ enum {
 #define _d  kRegTypeDoubleHi
 
 /*
- * Merge result table.  The table is symmetric along the diagonal.
+ * Merge result table for primitive values.  The table is symmetric along
+ * the diagonal.
  *
  * Note that 32-bit int/float do not merge into 64-bit long/double.  This
  * is a register merge, not a widening conversion.  Only the "implicit"
@@ -252,7 +182,7 @@ enum {
  * transitions from "unknown" to "known" is when we're executing code
  * for the first time, and we handle that with a simple copy.
  */
-static const /*RegType*/ char gMergeTab[kRegTypeMAX][kRegTypeMAX] =
+const char gDvmMergeTab[kRegTypeMAX][kRegTypeMAX] =
 {
     /* chk:  _  U  X  F  0  1  Z  b  B  s  S  C  I  J  j  D  d */
     { /*_*/ __,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X,_X },
@@ -302,7 +232,7 @@ static void checkMergeTab(void)
 
     for (i = 0; i < kRegTypeMAX; i++) {
         for (j = i; j < kRegTypeMAX; j++) {
-            if (gMergeTab[i][j] != gMergeTab[j][i]) {
+            if (gDvmMergeTab[i][j] != gDvmMergeTab[j][i]) {
                 LOGE("Symmetry violation: %d,%d vs %d,%d\n", i, j, j, i);
                 dvmAbort();
             }
@@ -1787,7 +1717,8 @@ static void markUninitRefsAsInvalid(RegType* insnRegs, int insnRegCount,
  * Find the start of the register set for the specified instruction in
  * the current method.
  */
-static RegType* getRegisterLine(const RegisterTable* regTable, int insnIdx)
+static inline RegType* getRegisterLine(const RegisterTable* regTable,
+    int insnIdx)
 {
     return regTable->addrRegs[insnIdx];
 }
@@ -1803,6 +1734,9 @@ static inline void copyRegisters(RegType* dst, const RegType* src,
 
 /*
  * Compare a bunch of registers.
+ *
+ * Returns 0 if they match.  Using this for a sort is unwise, since the
+ * value can change based on machine endianness.
  */
 static inline int compareRegisters(const RegType* src1, const RegType* src2,
     int numRegs)
@@ -2279,7 +2213,7 @@ static ClassObject* findCommonSuperclass(ClassObject* c1, ClassObject* c2)
 /*
  * Merge two RegType values.
  *
- * Sets "pChanged" to "true" if the result doesn't match "type1".
+ * Sets "*pChanged" to "true" if the result doesn't match "type1".
  */
 static RegType mergeTypes(RegType type1, RegType type2, bool* pChanged)
 {
@@ -2301,7 +2235,7 @@ static RegType mergeTypes(RegType type1, RegType type2, bool* pChanged)
      */
     if (type1 < kRegTypeMAX) {
         if (type2 < kRegTypeMAX) {
-            result = gMergeTab[type1][type2];
+            result = gDvmMergeTab[type1][type2];
         } else {
             /* simple + reference == conflict, usually */
             if (type1 == kRegTypeZero)
@@ -2344,7 +2278,7 @@ static RegType mergeTypes(RegType type1, RegType type2, bool* pChanged)
  * Control can transfer to "nextInsn".
  *
  * Merge the registers from "workRegs" into "regTypes" at "nextInsn", and
- * set the "changed" flag if the registers have changed.
+ * set the "changed" flag on the target address if the registers have changed.
  */
 static void updateRegisters(const Method* meth, InsnFlags* insnFlags,
     RegisterTable* regTable, int nextInsn, const RegType* workRegs)
@@ -2402,103 +2336,6 @@ static void updateRegisters(const Method* meth, InsnFlags* insnFlags,
  *      Utility functions
  * ===========================================================================
  */
-
-/*
- * Output a code verifier warning message.  For the pre-verifier it's not
- * a big deal if something fails (and it may even be expected), but if
- * we're doing just-in-time verification it's significant.
- */
-void dvmLogVerifyFailure(const Method* meth, const char* format, ...)
-{
-    va_list ap;
-    int logLevel;
-
-    if (gDvm.optimizing) {
-        return;
-        //logLevel = ANDROID_LOG_DEBUG;
-    } else {
-        logLevel = ANDROID_LOG_WARN;
-    }
-
-    va_start(ap, format);
-    LOG_PRI_VA(logLevel, LOG_TAG, format, ap);
-    if (meth != NULL) {
-        char* desc = dexProtoCopyMethodDescriptor(&meth->prototype);
-        LOG_PRI(logLevel, LOG_TAG, "VFY:  rejected %s.%s %s\n",
-            meth->clazz->descriptor, meth->name, desc);
-        free(desc);
-    }
-}
-
-/*
- * Show a relatively human-readable message describing the failure to
- * resolve a class.
- */
-static void logUnableToResolveClass(const char* missingClassDescr,
-    const Method* meth)
-{
-    if (gDvm.optimizing)
-        return;
-
-    char* dotMissingClass = dvmDescriptorToDot(missingClassDescr);
-    char* dotFromClass = dvmDescriptorToDot(meth->clazz->descriptor);
-    //char* methodDescr = dexProtoCopyMethodDescriptor(&meth->prototype);
-
-    LOGE("Could not find class '%s', referenced from method %s.%s\n",
-        dotMissingClass, dotFromClass, meth->name/*, methodDescr*/);
-
-    free(dotMissingClass);
-    free(dotFromClass);
-    //free(methodDescr);
-}
-
-/*
- * Extract the relative offset from a branch instruction.
- *
- * Returns "false" on failure (e.g. this isn't a branch instruction).
- */
-bool dvmGetBranchTarget(const Method* meth, InsnFlags* insnFlags,
-    int curOffset, int* pOffset, bool* pConditional)
-{
-    const u2* insns = meth->insns + curOffset;
-    int tmp;
-
-    switch (*insns & 0xff) {
-    case OP_GOTO:
-        *pOffset = ((s2) *insns) >> 8;
-        *pConditional = false;
-        break;
-    case OP_GOTO_32:
-        *pOffset = insns[1] | (((u4) insns[2]) << 16);
-        *pConditional = false;
-        break;
-    case OP_GOTO_16:
-        *pOffset = (s2) insns[1];
-        *pConditional = false;
-        break;
-    case OP_IF_EQ:
-    case OP_IF_NE:
-    case OP_IF_LT:
-    case OP_IF_GE:
-    case OP_IF_GT:
-    case OP_IF_LE:
-    case OP_IF_EQZ:
-    case OP_IF_NEZ:
-    case OP_IF_LTZ:
-    case OP_IF_GEZ:
-    case OP_IF_GTZ:
-    case OP_IF_LEZ:
-        *pOffset = (s2) insns[1];
-        *pConditional = true;
-        break;
-    default:
-        return false;
-        break;
-    }
-
-    return true;
-}
-
 
 /*
  * Look up an instance field, specified by "fieldIdx", that is going to be
@@ -2626,7 +2463,18 @@ static void checkFinalFieldAccess(const Method* meth, const Field* field,
 
     /* make sure we're in the right kind of constructor */
     if (dvmIsStaticField(field)) {
-        if (!isClassInitMethod(meth)) {
+        /*
+         * The EMMA code coverage tool generates a static method that
+         * modifies a private static final field.  The method is only
+         * called by <clinit>, so the code is reasonable if not quite
+         * kosher.  (Attempting to *compile* code that does something
+         * like that will earn you a quick thumbs-down from javac.)
+         *
+         * The verifier in another popular VM doesn't complain about this,
+         * so we're going to allow classes to modify their own static
+         * final fields outside of class initializers.
+         */
+        if (false && !isClassInitMethod(meth)) {
             LOG_VFY_METH(meth,
                 "VFY: can't modify final static field outside <clinit>\n");
             *pOkay = false;
@@ -2793,9 +2641,6 @@ static ClassObject* getCaughtExceptionType(const Method* meth, int insnIdx)
  * what's in which register, but for verification purposes we only need to
  * store it at branch target addresses (because we merge into that).
  *
- * If we need to generate tables describing reference type usage for
- * "exact gc", we will need to save the complete set.
- *
  * By zeroing out the storage we are effectively initializing the register
  * information to kRegTypeUnknown.
  */
@@ -2940,14 +2785,8 @@ bool dvmVerifyCodeFlow(const Method* meth, InsnFlags* insnFlags,
         goto bail;
 
     /*
-     * Success.  Reduce regTypes to a compact bitmap representation for the
-     * benefit of exact GC.
-     *
-     * (copy to LinearAlloc area? after verify, DexOpt gathers up all the
-     * successful ones and generates a new section in the DEX file so we
-     * can see who got verified)
+     * Success.
      */
-
     result = true;
 
 bail:
@@ -3100,7 +2939,6 @@ static bool doCodeVerification(const Method* meth, InsnFlags* insnFlags,
                 compareRegisters(workRegs, insnRegs,
                     meth->registersSize + kExtraRegs) != 0)
             {
-                int ii;
                 char* desc = dexProtoCopyMethodDescriptor(&meth->prototype);
                 LOG_VFY("HUH? workRegs diverged in %s.%s %s\n",
                         meth->clazz->descriptor, meth->name, desc);
@@ -3121,6 +2959,43 @@ static bool doCodeVerification(const Method* meth, InsnFlags* insnFlags,
             //LOGD("+++ %s bailing at %d\n", meth->name, insnIdx);
             goto bail;
         }
+
+#if 0
+        {
+            static const int gcMask = kInstrCanBranch | kInstrCanSwitch |
+                                      kInstrCanThrow | kInstrCanReturn;
+            OpCode opCode = *(meth->insns + insnIdx) & 0xff;
+            int flags = dexGetInstrFlags(gDvm.instrFlags, opCode);
+
+            /* 8, 16, 32, or 32*n -bit regs */
+            int regWidth = (meth->registersSize + 7) / 8;
+            if (regWidth == 3)
+                regWidth = 4;
+            if (regWidth > 4) {
+                regWidth = ((regWidth + 3) / 4) * 4;
+                if (false) {
+                    LOGW("WOW: %d regs -> %d  %s.%s\n",
+                        meth->registersSize, regWidth,
+                        meth->clazz->descriptor, meth->name);
+                    //x = true;
+                }
+            }
+
+            if ((flags & gcMask) != 0) {
+                /* this is a potential GC point */
+                gDvm__gcInstr++;
+
+                if (insnsSize < 256)
+                    gDvm__gcData += 1;
+                else
+                    gDvm__gcData += 2;
+                gDvm__gcData += regWidth;
+            }
+            gDvm__gcSimpleData += regWidth;
+
+            gDvm__totalInstr++;
+        }
+#endif
 
         /*
          * Clear "changed" and mark as visited.
@@ -3224,7 +3099,7 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
      * We can also return, in which case there is no successor instruction
      * from this point.
      *
-     * The behavior is determined by the InstrFlags.
+     * The behavior can be determined from the InstrFlags.
      */
 
     const DexFile* pDexFile = meth->clazz->pDvmDex->pDexFile;
@@ -3482,7 +3357,7 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
         resClass = dvmOptResolveClass(meth->clazz, decInsn.vB);
         if (resClass == NULL) {
             const char* badClassDesc = dexStringByTypeIdx(pDexFile, decInsn.vB);
-            logUnableToResolveClass(badClassDesc, meth);
+            dvmLogUnableToResolveClass(badClassDesc, meth);
             LOG_VFY("VFY: unable to resolve check-cast %d (%s) in %s\n",
                 decInsn.vB, badClassDesc, meth->clazz->descriptor);
             okay = false;
@@ -3540,7 +3415,7 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
         resClass = dvmOptResolveClass(meth->clazz, decInsn.vB);
         if (resClass == NULL) {
             const char* badClassDesc = dexStringByTypeIdx(pDexFile, decInsn.vB);
-            logUnableToResolveClass(badClassDesc, meth);
+            dvmLogUnableToResolveClass(badClassDesc, meth);
             LOG_VFY("VFY: unable to resolve new-instance %d (%s) in %s\n",
                 decInsn.vB, badClassDesc, meth->clazz->descriptor);
             okay = false;
@@ -3568,7 +3443,7 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
         resClass = dvmOptResolveClass(meth->clazz, decInsn.vC);
         if (resClass == NULL) {
             const char* badClassDesc = dexStringByTypeIdx(pDexFile, decInsn.vB);
-            logUnableToResolveClass(badClassDesc, meth);
+            dvmLogUnableToResolveClass(badClassDesc, meth);
             LOG_VFY("VFY: unable to resolve new-array %d (%s) in %s\n",
                 decInsn.vC, badClassDesc, meth->clazz->descriptor);
             okay = false;
@@ -3587,7 +3462,7 @@ static bool verifyInstruction(const Method* meth, InsnFlags* insnFlags,
         resClass = dvmOptResolveClass(meth->clazz, decInsn.vB);
         if (resClass == NULL) {
             const char* badClassDesc = dexStringByTypeIdx(pDexFile, decInsn.vB);
-            logUnableToResolveClass(badClassDesc, meth);
+            dvmLogUnableToResolveClass(badClassDesc, meth);
             LOG_VFY("VFY: unable to resolve filled-array %d (%s) in %s\n",
                 decInsn.vB, badClassDesc, meth->clazz->descriptor);
             okay = false;
@@ -5271,7 +5146,7 @@ sput_1nr_common:
     if ((nextFlags & kInstrCanContinue) != 0) {
         *pStartGuess = insnIdx + dvmInsnGetWidth(insnFlags, insnIdx);
     } else if ((nextFlags & kInstrCanBranch) != 0) {
-        /* okay if branchTarget is zero */
+        /* we're still okay if branchTarget is zero */
         *pStartGuess = insnIdx + branchTarget;
     }
 

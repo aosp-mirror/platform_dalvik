@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -31,18 +31,15 @@ public class AllTests {
     }
 
     public static Test suite() {
-        TestSuite suite = new TestSuite("All tests for package tests.api.javax.xml.parsers;");
+        TestSuite suite = tests.TestSuiteFactory.createTestSuite("All tests for package tests.api.javax.xml.parsers;");
         // $JUnit-BEGIN$
 
-// Has one failing test due to coalescing not being supported.
         suite.addTestSuite(DocumentBuilderFactoryTest.class);
-// Has one failing test due to limitation (input must be file or stream).
         suite.addTestSuite(DocumentBuilderTest.class);
         suite.addTestSuite(FactoryConfigurationErrorTest.class);
         suite.addTestSuite(ParserConfigurationExceptionTest.class);
-        suite.addTestSuite(SAXParserFactoryTest.class);
-// Has a couple of failures due to limitations of the XmlPull SAX wrapper.          
-//        suite.addTestSuite(SAXParserTest.class);
+        suite.addTestSuite(SAXParserFactoryTest.class);       
+        suite.addTestSuite(SAXParserTest.class);
         suite.addTestSuite(ExpatParserTest.class);
 
         // $JUnit-END$

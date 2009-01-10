@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package tests.java.sql;
 
+import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -126,15 +126,12 @@ public class DeleteFunctionalityTest extends TestCase {
      * @tests DeleteFunctionalityTest#testDelete1(). Deletes row with no
      *        referencing ones and RESTRICT action
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Functionality test: Deletes row with no referencing ones and RESTRICT action",
-      targets = {
-        @TestTarget(
-          methodName = "execute",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Functionality test: Deletes row with no referencing ones and RESTRICT action",
+        method = "execute",
+        args = {java.lang.String.class}
+    )
     public void testDelete1() throws SQLException {
         DatabaseCreator.fillFKStrictTable(conn);
         statement.execute("DELETE FROM " + DatabaseCreator.PARENT_TABLE
@@ -161,15 +158,12 @@ public class DeleteFunctionalityTest extends TestCase {
      * @tests DeleteFunctionalityTest#testDelete3(). Deletes all referencing
      *        rows and then deletes referenced one
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Functionality test: Deletes all referencing rows and then deletes referenced one",
-      targets = {
-        @TestTarget(
-          methodName = "execute",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Functionality test: Deletes all referencing rows and then deletes referenced one",
+        method = "execute",
+        args = {java.lang.String.class}
+    )
     public void testDelete3() throws SQLException {
         statement.execute("DELETE FROM " + DatabaseCreator.FKSTRICT_TABLE
                 + " WHERE name_id = 1;");
@@ -181,15 +175,12 @@ public class DeleteFunctionalityTest extends TestCase {
      * @tests DeleteFunctionalityTest#testDelete4(). Deletes row with no
      *        referencing ones and CASCADE action
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Functionality test: Deletes row with no referencing ones and CASCADE action",
-      targets = {
-        @TestTarget(
-          methodName = "execute",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Functionality test: Deletes row with no referencing ones and CASCADE action",
+        method = "execute",
+        args = {java.lang.String.class}
+    )
     public void testDelete4() throws SQLException {
         DatabaseCreator.fillFKCascadeTable(conn);
         statement.execute("DELETE FROM " + DatabaseCreator.PARENT_TABLE
@@ -201,19 +192,18 @@ public class DeleteFunctionalityTest extends TestCase {
      *        referencing ones and CASCADE action - expecting all referencing
      *        rows will also be deleted
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Functionality test: Attempts to delete row with referencing " +
-                "ones and CASCADE action - expecting all referencing rows " +
-                "will also be deleted",
-      targets = {
-        @TestTarget(
-          methodName = "execute",
-          methodArgs = {String.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Functionality test: Attempts to delete row with referencing ones and CASCADE action - expecting all referencing rows will also be deleted",
+            method = "execute",
+            args = {java.lang.String.class}
         ),
-        @TestTarget(
-          methodName = "executeQuery",
-          methodArgs = {String.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Functionality test: Attempts to delete row with referencing ones and CASCADE action - expecting all referencing rows will also be deleted",
+            method = "executeQuery",
+            args = {java.lang.String.class}
         )
     })
     public void testDelete5() throws SQLException {
@@ -228,11 +218,17 @@ public class DeleteFunctionalityTest extends TestCase {
     }
 
     /**
-     * @tests DeleteFunctionalityTest#testDelete6(). Deletes rows using subquery
-     *        in WHERE clause
+     * @tests DeleteFunctionalityTest#testDelete6(). 
      *  TODO Foreign key functionality is not supported      
      */
-/*    public void testDelete6() throws SQLException {
+    @TestTargetNew(
+      level = TestLevel.PARTIAL_COMPLETE,
+      notes = "Deletes rows using subquery in WHERE clause with foreign keys. Foreign keys not supported.",
+      method = "execute",
+      args = {String.class}
+    )
+    @KnownFailure("not supported")
+    public void testDelete6() throws SQLException {
         DatabaseCreator.fillFKStrictTable(conn);
         statement.execute("DELETE FROM " + DatabaseCreator.FKSTRICT_TABLE
                 + " WHERE name_id = ANY (SELECT id FROM "
@@ -243,20 +239,17 @@ public class DeleteFunctionalityTest extends TestCase {
         assertEquals("Should be 2 rows", 2, r.getInt(1));
         r.close();
     }
-*/
+
     /**
      * @tests DeleteFunctionalityTest#testDelete7(). Deletes rows using
      *        PreparedStatement
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Functionality test: Deletes rows using PreparedStatement",
-      targets = {
-        @TestTarget(
-          methodName = "executeQuery",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Functionality test: Deletes rows using PreparedStatement",
+        method = "executeQuery",
+        args = {java.lang.String.class}
+    )
     public void testDelete7() throws SQLException {
         DatabaseCreator.fillTestTable5(conn);
         PreparedStatement stat = conn.prepareStatement("DELETE FROM "

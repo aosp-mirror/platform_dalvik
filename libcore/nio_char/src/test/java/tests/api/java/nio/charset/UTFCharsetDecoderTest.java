@@ -26,10 +26,11 @@ import java.nio.charset.Charset;
  * test utf-8 decoder
  */
 @TestTargetClass(java.nio.charset.CharsetDecoder.class)
-public class UTFCharsetDecoderTest extends CharsetDecoderTest {
+public class UTFCharsetDecoderTest extends AbstractCharsetDecoderTestCase {
 
     protected void setUp() throws Exception {
         cs = Charset.forName("utf-8");
+        unibytes = new byte[] { 32, 98, 117, 102, 102, 101, 114 };
         super.setUp();
     }
 

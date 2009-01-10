@@ -108,7 +108,7 @@ public class JSR166TestCase extends TestCase {
      * Collects all JSR166 unit tests as one suite
      */ 
     public static Test suite ( ) {
-        TestSuite suite = new TestSuite("JSR166 Unit Tests");
+        TestSuite suite = tests.TestSuiteFactory.createTestSuite("JSR166 Unit Tests");
         // BEGIN android-changed
         suite.addTest(AbstractExecutorServiceTest.suite());
         suite.addTest(AbstractQueueTest.suite());

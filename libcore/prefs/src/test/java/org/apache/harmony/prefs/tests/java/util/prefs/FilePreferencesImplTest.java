@@ -16,10 +16,11 @@
 
 package org.apache.harmony.prefs.tests.java.util.prefs;
 
+import dalvik.annotation.BrokenTest;
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.io.FilePermission;
 import java.io.IOException;
@@ -51,26 +52,30 @@ public class FilePreferencesImplTest extends TestCase {
     }
     
     protected void tearDown() throws Exception {
-        if (prevFactory != null)
-            System.setProperty("java.util.prefs.PreferencesFactory", prevFactory);
-        
+      //  if (prevFactory != null)
+      //      System.setProperty("java.util.prefs.PreferencesFactory", prevFactory);
         uroot = null;
         sroot = null;
     }
 
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Exceptions checking missed, but method is abstract, probably it is OK",
-      targets = {
-        @TestTarget(
-          methodName = "put",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        ), @TestTarget(
-          methodName = "get",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        ), @TestTarget(
-          methodName = "keys",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Exceptions checking missed, but method is abstract, probably it is OK",
+            method = "put",
+            args = {java.lang.String.class, java.lang.String.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Exceptions checking missed, but method is abstract, probably it is OK",
+            method = "get",
+            args = {java.lang.String.class, java.lang.String.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "Exceptions checking missed, but method is abstract, probably it is OK",
+            method = "keys",
+            args = {}
         )
     })
     public void testPutGet() throws IOException, BackingStoreException {
@@ -96,26 +101,26 @@ public class FilePreferencesImplTest extends TestCase {
         assertEquals("\u4e2d value1", sroot.get("\u4e2d key1", null));
     }
 
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Exceptions checking missed, but method is abstract, probably it is OK",
-      targets = {
-        @TestTarget(
-          methodName = "childrenNames",
-          methodArgs = {}
-        )
-    })
-    public void _testChildNodes() throws Exception {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Exceptions checking missed, but method is abstract, probably it is OK",
+        method = "childrenNames",
+        args = {}
+    )
+    @BrokenTest("Checking of childNames.length is not valid because of " +
+            "it depends on .userPrefs")
+    public void testChildNodes() throws Exception {
+        
         Preferences child1 = uroot.node("child1");
         Preferences child2 = uroot.node("\u4e2d child2");
         Preferences grandchild = child1.node("grand");
         assertNotNull(grandchild);
 
         String[] childNames = uroot.childrenNames();
-        assertEquals(4, childNames.length);
         for (int i = 0; i < childNames.length; i++) {
-            System.out.println(childNames[i]);
-        }
+            System.out.println("test:" + childNames[i]);
+        }        
+        assertEquals(4, childNames.length);
 
         childNames = child1.childrenNames();
         assertEquals(1, childNames.length);
@@ -163,25 +168,36 @@ public class FilePreferencesImplTest extends TestCase {
         }
     }
 
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "SecurityException checking only, but methods are abstract, probably it is OK",
-      targets = {
-        @TestTarget(
-          methodName = "node",
-          methodArgs = {java.lang.String.class}
-        ), @TestTarget(
-          methodName = "removeNode",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "childrenNames",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "flush",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "sync",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "SecurityException checking only, but methods are abstract, probably it is OK",
+            method = "node",
+            args = {java.lang.String.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "SecurityException checking only, but methods are abstract, probably it is OK",
+            method = "removeNode",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "SecurityException checking only, but methods are abstract, probably it is OK",
+            method = "childrenNames",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "SecurityException checking only, but methods are abstract, probably it is OK",
+            method = "flush",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL,
+            notes = "SecurityException checking only, but methods are abstract, probably it is OK",
+            method = "sync",
+            args = {}
         )
     })
     public void testSecurityException() throws BackingStoreException {

@@ -17,10 +17,12 @@
 
 package org.apache.harmony.text.tests.java.text;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.AndroidOnly;
+import dalvik.annotation.BrokenTest;
+import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
 import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
 import junit.framework.TestCase;
 
@@ -45,15 +47,12 @@ public class DecimalFormatSymbolsTest extends TestCase {
      * @tests java.text.DecimalFormatSymbols#DecimalFormatSymbols() Test of
      *        method java.text.DecimalFormatSymbols#DecimalFormatSymbols().
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "DecimalFormatSymbols",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "DecimalFormatSymbols",
+        args = {}
+    )
     public void test_Constructor() {
         // Test for method java.text.DecimalFormatSymbols()
         try {
@@ -66,19 +65,23 @@ public class DecimalFormatSymbolsTest extends TestCase {
     /**
      * @tests java.text.DecimalFormatSymbols#DecimalFormatSymbols(java.util.Locale)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "NullPointerException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "DecimalFormatSymbols",
-          methodArgs = {java.util.Locale.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "DecimalFormatSymbols",
+        args = {java.util.Locale.class}
+    )
     public void test_ConstructorLjava_util_Locale() {
         DecimalFormatSymbols dfs = new DecimalFormatSymbols(new Locale("en",
                 "us"));
         assertEquals("Returned incorrect symbols", '%', dfs.getPercent());
+        
+        try {
+            new DecimalFormatSymbols(null);
+            fail("NullPointerException was not thrown.");
+        } catch(NullPointerException npe) {
+            //expected  
+        }
     }
 
     /**
@@ -87,15 +90,12 @@ public class DecimalFormatSymbolsTest extends TestCase {
      *        internal variables of cloned objects. Case 2: Compare of clones.
      *        Case 3: Change the content of the clone.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "clone",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "clone",
+        args = {}
+    )
     public void test_clone() {
         try {
             // case 1: Compare of internal variables of cloned objects
@@ -124,15 +124,12 @@ public class DecimalFormatSymbolsTest extends TestCase {
     /**
      * @tests java.text.DecimalFormatSymbols#equals(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "equals",
+        args = {java.lang.Object.class}
+    )
     public void test_equalsLjava_lang_Object() {
         assertTrue("Equal objects returned false", dfs.equals(dfs.clone()));
         dfs.setDigit('B');
@@ -144,15 +141,12 @@ public class DecimalFormatSymbolsTest extends TestCase {
     /**
      * @tests java.text.DecimalFormatSymbols#getCurrency()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getCurrency",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getCurrency",
+        args = {}
+    )
     public void test_getCurrency() {
         Currency currency = Currency.getInstance("USD");
         assertTrue("Returned incorrect currency",
@@ -213,15 +207,12 @@ public class DecimalFormatSymbolsTest extends TestCase {
     /**
      * @tests java.text.DecimalFormatSymbols#getCurrencySymbol()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getCurrencySymbol",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getCurrencySymbol",
+        args = {}
+    )
     public void test_getCurrencySymbol() {
         assertEquals("Returned incorrect currencySymbol", "$", dfsUS
                 .getCurrencySymbol());
@@ -230,15 +221,12 @@ public class DecimalFormatSymbolsTest extends TestCase {
     /**
      * @tests java.text.DecimalFormatSymbols#getDecimalSeparator()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getDecimalSeparator",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getDecimalSeparator",
+        args = {}
+    )
     public void test_getDecimalSeparator() {
         dfs.setDecimalSeparator('*');
         assertEquals("Returned incorrect DecimalSeparator symbol", '*', dfs
@@ -248,15 +236,12 @@ public class DecimalFormatSymbolsTest extends TestCase {
     /**
      * @tests java.text.DecimalFormatSymbols#getDigit()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getDigit",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getDigit",
+        args = {}
+    )
     public void test_getDigit() {
         dfs.setDigit('*');
         assertEquals("Returned incorrect Digit symbol", '*', dfs.getDigit());
@@ -265,15 +250,12 @@ public class DecimalFormatSymbolsTest extends TestCase {
     /**
      * @tests java.text.DecimalFormatSymbols#getGroupingSeparator()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getGroupingSeparator",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getGroupingSeparator",
+        args = {}
+    )
     public void test_getGroupingSeparator() {
         dfs.setGroupingSeparator('*');
         assertEquals("Returned incorrect GroupingSeparator symbol", '*', dfs
@@ -283,15 +265,12 @@ public class DecimalFormatSymbolsTest extends TestCase {
     /**
      * @tests java.text.DecimalFormatSymbols#getInfinity()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getInfinity",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getInfinity",
+        args = {}
+    )
     public void test_getInfinity() {
         dfs.setInfinity("&");
         assertTrue("Returned incorrect Infinity symbol",
@@ -301,15 +280,12 @@ public class DecimalFormatSymbolsTest extends TestCase {
     /**
      * @tests java.text.DecimalFormatSymbols#getInternationalCurrencySymbol()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getInternationalCurrencySymbol",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getInternationalCurrencySymbol",
+        args = {}
+    )
     public void test_getInternationalCurrencySymbol() {
         assertEquals("Returned incorrect InternationalCurrencySymbol", "USD",
                 dfsUS.getInternationalCurrencySymbol());
@@ -318,15 +294,12 @@ public class DecimalFormatSymbolsTest extends TestCase {
     /**
      * @tests java.text.DecimalFormatSymbols#getMinusSign()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getMinusSign",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getMinusSign",
+        args = {}
+    )
     public void test_getMinusSign() {
         dfs.setMinusSign('&');
         assertEquals("Returned incorrect MinusSign symbol", '&', dfs
@@ -338,15 +311,12 @@ public class DecimalFormatSymbolsTest extends TestCase {
      *        of method
      *        java.text.DecimalFormatSymbols#getMonetaryDecimalSeparator().
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getMonetaryDecimalSeparator",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getMonetaryDecimalSeparator",
+        args = {}
+    )
     public void test_getMonetaryDecimalSeparator() {
         try {
             dfs.setMonetaryDecimalSeparator(',');
@@ -360,15 +330,12 @@ public class DecimalFormatSymbolsTest extends TestCase {
     /**
      * @tests java.text.DecimalFormatSymbols#getNaN()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getNaN",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getNaN",
+        args = {}
+    )
     public void test_getNaN() {
         dfs.setNaN("NAN!!");
         assertEquals("Returned incorrect nan symbol", "NAN!!", dfs.getNaN());
@@ -377,15 +344,12 @@ public class DecimalFormatSymbolsTest extends TestCase {
     /**
      * @tests java.text.DecimalFormatSymbols#getPatternSeparator()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getPatternSeparator",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getPatternSeparator",
+        args = {}
+    )
     public void test_getPatternSeparator() {
         dfs.setPatternSeparator('X');
         assertEquals("Returned incorrect PatternSeparator symbol", 'X', dfs
@@ -395,15 +359,12 @@ public class DecimalFormatSymbolsTest extends TestCase {
     /**
      * @tests java.text.DecimalFormatSymbols#getPercent()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getPercent",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getPercent",
+        args = {}
+    )
     public void test_getPercent() {
         dfs.setPercent('*');
         assertEquals("Returned incorrect Percent symbol", '*', dfs.getPercent());
@@ -412,15 +373,12 @@ public class DecimalFormatSymbolsTest extends TestCase {
     /**
      * @tests java.text.DecimalFormatSymbols#getPerMill()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getPerMill",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getPerMill",
+        args = {}
+    )
     public void test_getPerMill() {
         dfs.setPerMill('#');
         assertEquals("Returned incorrect PerMill symbol", '#', dfs.getPerMill());
@@ -429,15 +387,12 @@ public class DecimalFormatSymbolsTest extends TestCase {
     /**
      * @tests java.text.DecimalFormatSymbols#getZeroDigit()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getZeroDigit",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getZeroDigit",
+        args = {}
+    )
     public void test_getZeroDigit() {
         dfs.setZeroDigit('*');
         assertEquals("Returned incorrect ZeroDigit symbol", '*', dfs
@@ -448,15 +403,13 @@ public class DecimalFormatSymbolsTest extends TestCase {
      * @tests java.text.DecimalFormatSymbols#hashCode() Test of method
      *        java.text.DecimalFormatSymbols#hashCode().
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "hashCode",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hashCode",
+        args = {}
+    )
+    @AndroidOnly("Succeeds against Android.")
     public void test_hashCode() {
         try {
             DecimalFormatSymbols dfs1 = new DecimalFormatSymbols();
@@ -476,15 +429,12 @@ public class DecimalFormatSymbolsTest extends TestCase {
     /**
      * @tests java.text.DecimalFormatSymbols#setCurrency(java.util.Currency)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setCurrency",
-          methodArgs = {java.util.Currency.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setCurrency",
+        args = {java.util.Currency.class}
+    )
     public void test_setCurrencyLjava_util_Currency() {
         Locale locale = Locale.CANADA;
         DecimalFormatSymbols dfs = ((DecimalFormat) NumberFormat
@@ -511,15 +461,12 @@ public class DecimalFormatSymbolsTest extends TestCase {
      *        Test of method
      *        java.text.DecimalFormatSymbols#setCurrencySymbol(java.lang.String).
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setCurrencySymbol",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setCurrencySymbol",
+        args = {java.lang.String.class}
+    )
     public void test_setCurrencySymbolLjava_lang_String() {
         try {
             dfs.setCurrencySymbol("$");
@@ -533,15 +480,12 @@ public class DecimalFormatSymbolsTest extends TestCase {
     /**
      * @tests java.text.DecimalFormatSymbols#setDecimalSeparator(char)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setDecimalSeparator",
-          methodArgs = {char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setDecimalSeparator",
+        args = {char.class}
+    )
     public void test_setDecimalSeparatorC() {
         dfs.setDecimalSeparator('*');
         assertEquals("Returned incorrect DecimalSeparator symbol", '*', dfs
@@ -551,15 +495,12 @@ public class DecimalFormatSymbolsTest extends TestCase {
     /**
      * @tests java.text.DecimalFormatSymbols#setDigit(char)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setDigit",
-          methodArgs = {char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setDigit",
+        args = {char.class}
+    )
     public void test_setDigitC() {
         dfs.setDigit('*');
         assertEquals("Returned incorrect Digit symbol", '*', dfs.getDigit());
@@ -568,15 +509,12 @@ public class DecimalFormatSymbolsTest extends TestCase {
     /**
      * @tests java.text.DecimalFormatSymbols#setGroupingSeparator(char)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setGroupingSeparator",
-          methodArgs = {char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setGroupingSeparator",
+        args = {char.class}
+    )
     public void test_setGroupingSeparatorC() {
         dfs.setGroupingSeparator('*');
         assertEquals("Returned incorrect GroupingSeparator symbol", '*', dfs
@@ -586,15 +524,12 @@ public class DecimalFormatSymbolsTest extends TestCase {
     /**
      * @tests java.text.DecimalFormatSymbols#setInfinity(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setInfinity",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setInfinity",
+        args = {java.lang.String.class}
+    )
     public void test_setInfinityLjava_lang_String() {
         dfs.setInfinity("&");
         assertTrue("Returned incorrect Infinity symbol",
@@ -604,16 +539,14 @@ public class DecimalFormatSymbolsTest extends TestCase {
     /**
      * @tests java.text.DecimalFormatSymbols#setInternationalCurrencySymbol(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setInternationalCurrencySymbol",
-          methodArgs = {java.lang.String.class}
-        )
-    })
-    public void _test_setInternationalCurrencySymbolLjava_lang_String() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setInternationalCurrencySymbol",
+        args = {java.lang.String.class}
+    )
+    @KnownFailure("getCurrency() doesn't return null. Test passes on RI.")
+    public void test_setInternationalCurrencySymbolLjava_lang_String() {
         Locale locale = Locale.CANADA;
         DecimalFormatSymbols dfs = ((DecimalFormat) NumberFormat
                 .getCurrencyInstance(locale)).getDecimalFormatSymbols();
@@ -640,15 +573,12 @@ public class DecimalFormatSymbolsTest extends TestCase {
     /**
      * @tests java.text.DecimalFormatSymbols#setMinusSign(char)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setMinusSign",
-          methodArgs = {char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setMinusSign",
+        args = {char.class}
+    )
     public void test_setMinusSignC() {
         dfs.setMinusSign('&');
         assertEquals("Returned incorrect MinusSign symbol", '&', dfs
@@ -660,15 +590,12 @@ public class DecimalFormatSymbolsTest extends TestCase {
      *        Test of method
      *        java.text.DecimalFormatSymbols#setMonetaryDecimalSeparator(char).
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setMonetaryDecimalSeparator",
-          methodArgs = {char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setMonetaryDecimalSeparator",
+        args = {char.class}
+    )
     public void test_setMonetaryDecimalSeparatorC() {
         try {
             dfs.setMonetaryDecimalSeparator('#');
@@ -682,15 +609,12 @@ public class DecimalFormatSymbolsTest extends TestCase {
     /**
      * @tests java.text.DecimalFormatSymbols#setNaN(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setNaN",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setNaN",
+        args = {java.lang.String.class}
+    )
     public void test_setNaNLjava_lang_String() {
         dfs.setNaN("NAN!!");
         assertEquals("Returned incorrect nan symbol", "NAN!!", dfs.getNaN());
@@ -699,15 +623,12 @@ public class DecimalFormatSymbolsTest extends TestCase {
     /**
      * @tests java.text.DecimalFormatSymbols#setPatternSeparator(char)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setPatternSeparator",
-          methodArgs = {char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setPatternSeparator",
+        args = {char.class}
+    )
     public void test_setPatternSeparatorC() {
         dfs.setPatternSeparator('X');
         assertEquals("Returned incorrect PatternSeparator symbol", 'X', dfs
@@ -717,15 +638,12 @@ public class DecimalFormatSymbolsTest extends TestCase {
     /**
      * @tests java.text.DecimalFormatSymbols#setPercent(char)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setPercent",
-          methodArgs = {char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setPercent",
+        args = {char.class}
+    )
     public void test_setPercentC() {
         dfs.setPercent('*');
         assertEquals("Returned incorrect Percent symbol", '*', dfs.getPercent());
@@ -734,15 +652,12 @@ public class DecimalFormatSymbolsTest extends TestCase {
     /**
      * @tests java.text.DecimalFormatSymbols#setPerMill(char)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setPerMill",
-          methodArgs = {char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setPerMill",
+        args = {char.class}
+    )
     public void test_setPerMillC() {
         dfs.setPerMill('#');
         assertEquals("Returned incorrect PerMill symbol", '#', dfs.getPerMill());
@@ -751,15 +666,12 @@ public class DecimalFormatSymbolsTest extends TestCase {
     /**
      * @tests java.text.DecimalFormatSymbols#setZeroDigit(char)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setZeroDigit",
-          methodArgs = {char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setZeroDigit",
+        args = {char.class}
+    )
     public void test_setZeroDigitC() {
         dfs.setZeroDigit('*');
         assertEquals("Set incorrect ZeroDigit symbol", '*', dfs.getZeroDigit());
@@ -782,15 +694,12 @@ public class DecimalFormatSymbolsTest extends TestCase {
     }
 
     // Test serialization mechanism of DecimalFormatSymbols
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Checks serialization mechanism.",
-      targets = {
-        @TestTarget(
-          methodName = "!SerializationSelf",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Checks serialization mechanism.",
+        method = "!SerializationSelf",
+        args = {}
+    )
     public void test_serialization() throws Exception {
         DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.FRANCE);
         Currency currency = symbols.getCurrency();
@@ -819,16 +728,15 @@ public class DecimalFormatSymbolsTest extends TestCase {
     // This assertion will not come into existence the other way around. This is
     // probably caused by different serialization mechanism used by RI and
     // Harmony.
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Make sure all fields have non default values.",
-      targets = {
-        @TestTarget(
-          methodName = "!SerializationGolden",
-          methodArgs = {}
-        )
-    })
-    public void _test_RIHarmony_compatible() throws Exception {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Make sure all fields have non default values.",
+        method = "!SerializationGolden",
+        args = {}
+    )
+    @BrokenTest("Deserialized object is not equal to the original object." +
+            "Test passes on RI.")
+    public void test_RIHarmony_compatible() throws Exception {
         ObjectInputStream i = null;
         try {
             DecimalFormatSymbols symbols = new DecimalFormatSymbols(
@@ -837,12 +745,13 @@ public class DecimalFormatSymbolsTest extends TestCase {
                     getClass()
                             .getClassLoader()
                             .getResourceAsStream(
-                    "/serialization/java/text/DecimalFormatSymbols.ser"));
+                    "serialization/java/text/DecimalFormatSymbols.ser"));
             DecimalFormatSymbols symbolsD = (DecimalFormatSymbols) i
                     .readObject();
             assertEquals(symbols, symbolsD);
         } catch(NullPointerException e) {
-            assertNotNull("Failed to load /serialization/java/text/DecimalFormatSymbols.ser", i);
+            assertNotNull("Failed to load /serialization/java/text/" +
+                    "DecimalFormatSymbols.ser", i);
         } finally {
             try {
                 if (i != null) {

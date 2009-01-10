@@ -22,10 +22,15 @@
 
 package org.apache.harmony.security.tests.java.security;
 
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
+
+import junit.framework.TestCase;
+
+import org.apache.harmony.security.tests.support.SecurityChecker;
+import org.apache.harmony.security.tests.support.TestUtils;
 
 import java.io.File;
 import java.io.FilePermission;
@@ -39,14 +44,10 @@ import java.security.Policy;
 import java.security.ProtectionDomain;
 import java.security.Security;
 import java.security.SecurityPermission;
+import java.security.cert.Certificate;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashSet;
-
-import org.apache.harmony.security.tests.support.SecurityChecker;
-import org.apache.harmony.security.tests.support.TestUtils;
-
-import junit.framework.TestCase;
 @TestTargetClass(Policy.class)
 /**
  * Tests for <code>Policy</code>
@@ -62,37 +63,62 @@ public class PolicyTest extends TestCase {
     /**
      * @tests constructor Policy()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "Policy",
-          methodArgs = {}
+    @SuppressWarnings("cast")
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "Policy",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getPermissions",
+            args = {java.security.CodeSource.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "refresh",
+            args = {}
         )
     })
     public void test_constructor() {
+        TestProvider tp;
+        CodeSource cs = new CodeSource(null, (Certificate[]) null);
         try {
-            new TestProvider();
+            tp = new TestProvider();
+            assertTrue(tp instanceof Policy);
         } catch (Exception e) {
             fail("Unexpected exception " + e.getMessage());
+        }
+        
+        try {
+            tp = new TestProvider();
+            
+            tp.getPermissions(cs);
+            tp.refresh();
+        } catch (Exception e) {
+            fail("Unexpected exception was thrown for abstract methods");
         }
     }
 
     /**
      * @tests java.security.Policy#setPolicy(java.security.Policy)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setPolicy",
-          methodArgs = {Policy.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "setPolicy",
+            args = {java.security.Policy.class}
         ),
-        @TestTarget(
-          methodName = "getPolicy",
-          methodArgs = {}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "getPolicy",
+            args = {}
         )
     })
     public void test_setPolicyLjava_security_Policy() {
@@ -123,17 +149,18 @@ public class PolicyTest extends TestCase {
     /**
      * @tests java.security.Policy#getPolicy()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getPolicy",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "getPolicy",
+            args = {}
         ),
-        @TestTarget(
-          methodName = "setPolicy",
-          methodArgs = {Policy.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "setPolicy",
+            args = {java.security.Policy.class}
         )
     })
     public void test_getPolicy() {
@@ -175,15 +202,12 @@ public class PolicyTest extends TestCase {
     /**
      * Tests that getPermissions() does proper permission evaluation.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getPermissions",
-          methodArgs = {ProtectionDomain.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getPermissions",
+        args = {java.security.ProtectionDomain.class}
+    )
     public void testGetPermissions() {
         SecurityPermission sp = new SecurityPermission("abc");
         SecurityPermission sp2 = new SecurityPermission("fbdf");
@@ -232,17 +256,18 @@ public class PolicyTest extends TestCase {
      * @tests java.security.Policy#getPolicy()
      * @tests java.security.Policy#setPolicy()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setPolicy",
-          methodArgs = {Policy.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "setPolicy",
+            args = {java.security.Policy.class}
         ),
-        @TestTarget(
-          methodName = "getPolicy",
-          methodArgs = {}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "getPolicy",
+            args = {}
         )
     })
     public void testResetingPolicyToDefault() {
@@ -269,16 +294,13 @@ public class PolicyTest extends TestCase {
     /**
      * @tests java.security.Policy#implies(ProtectionDomain, Permission)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "implies",
-          methodArgs = {ProtectionDomain.class, Permission.class}
-        )
-    })
-    public void _test_implies() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "implies",
+        args = {java.security.ProtectionDomain.class, java.security.Permission.class}
+    )
+    public void test_implies() {
         Policy policy = Policy.getPolicy();
         char s = File.separatorChar;
 
@@ -332,8 +354,7 @@ public class PolicyTest extends TestCase {
                 "execute")));
 
         try {
-            policy.implies(pd, null);
-            fail("NullPointerException expected");
+            assertFalse(policy.implies(pd, null));
         } catch (NullPointerException e) {
             // expected
         }
@@ -345,36 +366,34 @@ public class PolicyTest extends TestCase {
         }
         
         try {
-            policy.implies(null, null);
-            fail("NullPointerException expected");
+            assertFalse(policy.implies(null, null));
         } catch (NullPointerException e) {
-            // expected
+            // ok
         }
     }
 
     /**
      * Test property expansion in policy files
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setPolicy",
-          methodArgs = {Policy.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "setPolicy",
+            args = {java.security.Policy.class}
         ),
-        @TestTarget(
-          methodName = "getPolicy",
-          methodArgs = {}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "getPolicy",
+            args = {}
         )
     })
-    public void _testPropertyExpansion() throws Exception {
+    public void testPropertyExpansion() throws Exception {
 
         // Regression for HARMONY-1963 and HARMONY-2910
-        String policyFile = new File(ClassLoader.getSystemClassLoader()
-                .getResource("PolicyTest.txt").getFile()).getAbsolutePath();
-//        String policyFile = Support_Resources
-//                .getAbsoluteResourcePath("PolicyTest.txt");
+        
+        String policyFile = ClassLoader.getSystemClassLoader().getResource("PolicyTest.txt").toString();
         String oldSysProp = System.getProperty(JAVA_SECURITY_POLICY);
         Policy oldPolicy = Policy.getPolicy();
 
@@ -384,14 +403,10 @@ public class PolicyTest extends TestCase {
             // test: absolute paths
             assertCodeBasePropertyExpansion("/11111/*", "/11111/-");
             assertCodeBasePropertyExpansion("/22222/../22222/*", "/22222/-");
-            // FIXME assertCodeBasePropertyExpansion("/33333/*",
-            // "/33333/../33333/-");
 
             // test: relative paths
             assertCodeBasePropertyExpansion("44444/*", "44444/-");
             assertCodeBasePropertyExpansion("55555/../55555/*", "55555/-");
-            // FIXME assertCodeBasePropertyExpansion("66666/*",
-            // "66666/../66666/-");
         } finally {
             TestUtils.setSystemProperty(JAVA_SECURITY_POLICY, oldSysProp);
             Policy.setPolicy(oldPolicy);

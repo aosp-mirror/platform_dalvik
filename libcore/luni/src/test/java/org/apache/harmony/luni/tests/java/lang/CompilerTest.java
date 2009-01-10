@@ -17,9 +17,8 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -30,35 +29,36 @@ public class CompilerTest extends TestCase {
     /**
      * @tests java.lang.Compiler#command(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "NullPointerException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "command",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "command",
+        args = {java.lang.Object.class}
+    )
     public void test_commandLjava_lang_Object() {
-        try {
-            assertNull("Incorrect behavior.", Compiler.command(new Object()));
-        } catch (Exception e) {
-            fail("Exception during test : " + e.getMessage());
+       
+        if(System.getProperty("java.compiler") != null) {
+            try {
+                assertNull("Incorrect behavior.", Compiler.command(new Object()));
+            } catch (Exception e) {
+                fail("Exception during test : " + e.getMessage());
+            }
+            // NullPointerException is not specified.
+            Compiler.command(null);
+        } else {
+            Compiler.command("");
         }
     }
 
     /**
      * @tests java.lang.Compiler#compileClass(java.lang.Class)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "NullPointerException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "compileClass",
-          methodArgs = {java.lang.Class.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "compileClass",
+        args = {java.lang.Class.class}
+    )
     public void test_compileClassLjava_lang_Class() {
         try {
             // Do not test return value, may return true or false depending on
@@ -67,20 +67,20 @@ public class CompilerTest extends TestCase {
         } catch (Exception e) {
             fail("Exception during test.");
         }
+        
+        // NullPointerException is not specified.
+        Compiler.compileClass((Class) null);
     }
 
     /**
      * @tests java.lang.Compiler#compileClasses(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "NullPointerException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "compileClasses",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "compileClasses",
+        args = {java.lang.String.class}
+    )
     public void test_compileClassesLjava_lang_String() {
         try {
             // Do not test return value, may return true or false depending on
@@ -89,21 +89,20 @@ public class CompilerTest extends TestCase {
         } catch (Exception e) {
             fail("Exception during test.");
         }
+        
+        // NullPointerException is not specified.
+        Compiler.compileClasses((String) null);
     }
 
     /**
      * @tests java.lang.Compiler#disable()
      */
-    @TestInfo(
-      level = TestLevel.TODO,
-      purpose = "Doesn't verify that disable() method causes the Compiler " +
-            "to cease operation.",
-      targets = {
-        @TestTarget(
-          methodName = "disable",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.NOT_NECESSARY,
+        notes = "Doesn't verify that disable() method causes the Compiler to cease operation.",
+        method = "disable",
+        args = {}
+    )
     public void test_disable() {
         try {
             Compiler.disable();
@@ -116,16 +115,12 @@ public class CompilerTest extends TestCase {
     /**
      * @tests java.lang.Compiler#enable()
      */
-    @TestInfo(
-      level = TestLevel.TODO,
-      purpose = "Doesn't verify that enable() method causes the Compiler " +
-            "to resume operation.",
-      targets = {
-        @TestTarget(
-          methodName = "enable",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.NOT_NECESSARY,
+        notes = "Doesn't verify that enable() method causes the Compiler to resume operation.",
+        method = "enable",
+        args = {}
+    )
     public void test_enable() {
         try {
             Compiler.disable();

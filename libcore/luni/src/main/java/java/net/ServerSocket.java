@@ -80,7 +80,7 @@ public class ServerSocket {
     /**
      * Constructs a new {@code ServerSocket} instance bound to the nominated
      * port on the localhost. The default number of pending connections may be
-     * backlogged.
+     * backlogged. If {@code aport} is 0 a free port is assigned to the socket.
      * 
      * @param aport
      *            the port number to listen for connection requests on.
@@ -95,7 +95,8 @@ public class ServerSocket {
     /**
      * Constructs a new {@code ServerSocket} instance bound to the nominated
      * port on the localhost. The number of pending connections that may be
-     * backlogged is specified by {@code backlog}.
+     * backlogged is specified by {@code backlog}. If {@code aport} is 0 a free
+     * port is assigned to the socket.
      * 
      * @param aport
      *            the port number to listen for connection requests on.
@@ -113,7 +114,8 @@ public class ServerSocket {
     /**
      * Constructs a new {@code ServerSocket} instance bound to the nominated
      * local host address and port. The number of pending connections that may
-     * be backlogged is specified by {@code backlog}.
+     * be backlogged is specified by {@code backlog}. If {@code aport} is 0 a
+     * free port is assigned to the socket.
      * 
      * @param aport
      *            the port number to listen for connection requests on.

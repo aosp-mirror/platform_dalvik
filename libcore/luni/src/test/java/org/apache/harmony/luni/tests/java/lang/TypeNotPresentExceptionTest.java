@@ -16,9 +16,9 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -29,15 +29,12 @@ public class TypeNotPresentExceptionTest extends TestCase {
     /**
      * @tests java.lang.TypeNotPresentException.TypeNotPresentException(String, Throwable)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "TypeNotPresentException",
-          methodArgs = {java.lang.String.class, java.lang.Throwable.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "TypeNotPresentException",
+        args = {java.lang.String.class, java.lang.Throwable.class}
+    )
     public void test_constructorLjava_lang_StringLjava_lang_Throwable() {
         TypeNotPresentException e = new TypeNotPresentException(null, null);
         assertNotNull(e);
@@ -58,15 +55,12 @@ public class TypeNotPresentExceptionTest extends TestCase {
     /**
      * @tests java.lang.TypeNotPresentException.typeName()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "typeName",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "typeName",
+        args = {}
+    )
     public void test_typeName() {
         TypeNotPresentException e = new TypeNotPresentException(null, null);
         assertNull(e.typeName());

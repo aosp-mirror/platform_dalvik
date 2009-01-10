@@ -21,9 +21,9 @@
 
 package tests.security.cert;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -53,15 +53,12 @@ public class PolicyQualifierInfoTest extends TestCase {
      * parameter does not represent a valid and parsable policy
      * qualifier info
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies NullPointerException and IOException.",
-      targets = {
-        @TestTarget(
-          methodName = "PolicyQualifierInfo",
-          methodArgs = {byte[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies NullPointerException and IOException.",
+        method = "PolicyQualifierInfo",
+        args = {byte[].class}
+    )
     public final void test_Ctor() throws IOException {
         try {
             // pass null
@@ -94,15 +91,12 @@ public class PolicyQualifierInfoTest extends TestCase {
      * parameter does not represent a valid and parsable policy
      * qualifier info
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies IOException.",
-      targets = {
-        @TestTarget(
-          methodName = "PolicyQualifierInfo",
-          methodArgs = {byte[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies IOException.",
+        method = "PolicyQualifierInfo",
+        args = {byte[].class}
+    )
     public final void testPolicyQualifierInfo02() {
         // get valid encoding
         byte[] encoding = getDerEncoding();
@@ -137,15 +131,12 @@ public class PolicyQualifierInfoTest extends TestCase {
      * 
      * @throws IOException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "PolicyQualifierInfo",
-          methodArgs = {byte[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "PolicyQualifierInfo",
+        args = {byte[].class}
+    )
     public final void testPolicyQualifierInfo03() throws IOException {
         // get valid encoding
         byte[] encoding = getDerEncoding();
@@ -159,16 +150,12 @@ public class PolicyQualifierInfoTest extends TestCase {
      * 
      * @throws IOException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies constructor with encoded byte array copied " +
-            "on construction.",
-      targets = {
-        @TestTarget(
-          methodName = "PolicyQualifierInfo",
-          methodArgs = {byte[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies constructor with encoded byte array copied on construction.",
+        method = "PolicyQualifierInfo",
+        args = {byte[].class}
+    )
     public final void testPolicyQualifierInfo04() throws IOException  {
         // get valid encoding
         byte[] encoding = getDerEncoding();
@@ -195,15 +182,12 @@ public class PolicyQualifierInfoTest extends TestCase {
      * 
      * @throws IOException
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getEncoded",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getEncoded",
+        args = {}
+    )
     public final void testGetEncoded01() throws IOException {
         // get valid encoding
         byte[] encoding = getDerEncoding();
@@ -221,15 +205,12 @@ public class PolicyQualifierInfoTest extends TestCase {
      * 
      * @throws IOException
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getEncoded",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getEncoded",
+        args = {}
+    )
     public final void testGetEncoded02() throws IOException {
         // get valid encoding
         byte[] encoding = getDerEncoding();
@@ -254,15 +235,12 @@ public class PolicyQualifierInfoTest extends TestCase {
      * 
      * @throws IOException
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getPolicyQualifier",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getPolicyQualifier",
+        args = {}
+    )
     public final void testGetPolicyQualifier01() throws IOException {
         // get valid encoding
         byte[] encoding = getDerEncoding();
@@ -283,15 +261,12 @@ public class PolicyQualifierInfoTest extends TestCase {
      * 
      * @throws IOException
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getPolicyQualifier",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getPolicyQualifier",
+        args = {}
+    )
     public final void testGetPolicyQualifier02() throws IOException {
         // get valid encoding
         byte[] encoding = getDerEncoding();
@@ -322,15 +297,12 @@ public class PolicyQualifierInfoTest extends TestCase {
      * 
      * @throws IOException
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getPolicyQualifierId",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getPolicyQualifierId",
+        args = {}
+    )
     public final void testGetPolicyQualifierId() throws IOException {
         // get valid encoding
         byte[] encoding = getDerEncoding();
@@ -359,15 +331,12 @@ public class PolicyQualifierInfoTest extends TestCase {
      * 
      * @throws IOException
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public final void testToString() throws IOException {
         // get valid encoding
         byte[] encoding = getDerEncoding();

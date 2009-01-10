@@ -17,8 +17,8 @@
 package tests.api.java.nio.charset;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargets;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestLevel;
 
 import java.nio.BufferOverflowException;
@@ -51,34 +51,54 @@ public class CoderResultTest extends TestCase {
     /*
      * Test the constant OVERFLOW and UNDERFLOW.
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isError",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "isMalformed",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "isOverflow",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "isUnderflow",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "isUnmappable",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "length",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "throwException",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "isError",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "isMalformed",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "isOverflow",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "isUnderflow",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "isUnmappable",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "length",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "throwException",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "toString",
+            args = {}
         )
     })
     public void testConstants() throws Exception {
@@ -129,19 +149,24 @@ public class CoderResultTest extends TestCase {
      * Test method isError().
      * 
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isError",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "malformedForLength",
-          methodArgs = {int.class}
-        ), @TestTarget(
-          methodName = "unmappableForLength",
-          methodArgs = {int.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "isError",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "malformedForLength",
+            args = {int.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "unmappableForLength",
+            args = {int.class}
         )
     })
     public void testIsError() {
@@ -155,21 +180,26 @@ public class CoderResultTest extends TestCase {
      * Test method isMalformed().
      * 
      */
-@TestInfo(
-          level = TestLevel.COMPLETE,
-          purpose = "",
-          targets = {
-            @TestTarget(
-              methodName = "isMalformed",
-              methodArgs = {}
-            ), @TestTarget(
-              methodName = "malformedForLength",
-              methodArgs = {int.class}
-            ),  @TestTarget(
-              methodName = "unmappableForLength",
-              methodArgs = {int.class}
-            )
-        })
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "isMalformed",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "malformedForLength",
+            args = {int.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "unmappableForLength",
+            args = {int.class}
+        )
+    })
     public void testIsMalformed() {
         assertFalse(CoderResult.UNDERFLOW.isMalformed());
         assertFalse(CoderResult.OVERFLOW.isMalformed());
@@ -181,21 +211,26 @@ public class CoderResultTest extends TestCase {
      * Test method isMalformed().
      * 
      */
-@TestInfo(
-          level = TestLevel.COMPLETE,
-          purpose = "",
-          targets = {
-            @TestTarget(
-              methodName = "isUnmappable",
-              methodArgs = {}
-            ), @TestTarget(
-              methodName = "malformedForLength",
-              methodArgs = {int.class}
-            ),  @TestTarget(
-              methodName = "unmappableForLength",
-              methodArgs = {int.class}
-            )
-        })
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "isUnmappable",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "malformedForLength",
+            args = {int.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "unmappableForLength",
+            args = {int.class}
+        )
+    })
     public void testIsUnmappable() {
         assertFalse(CoderResult.UNDERFLOW.isUnmappable());
         assertFalse(CoderResult.OVERFLOW.isUnmappable());
@@ -207,19 +242,24 @@ public class CoderResultTest extends TestCase {
      * Test method isOverflow().
      * 
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isOverflow",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "malformedForLength",
-          methodArgs = {int.class}
-        ),  @TestTarget(
-          methodName = "unmappableForLength",
-          methodArgs = {int.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "isOverflow",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "malformedForLength",
+            args = {int.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "unmappableForLength",
+            args = {int.class}
         )
     })
     public void testIsOverflow() {
@@ -233,19 +273,24 @@ public class CoderResultTest extends TestCase {
      * Test method isUnderflow().
      * 
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isUnderflow",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "malformedForLength",
-          methodArgs = {int.class}
-        ),  @TestTarget(
-          methodName = "unmappableForLength",
-          methodArgs = {int.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "isUnderflow",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "malformedForLength",
+            args = {int.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "unmappableForLength",
+            args = {int.class}
         )
     })
     public void testIsUnderflow() {
@@ -259,19 +304,24 @@ public class CoderResultTest extends TestCase {
      * Test method length().
      * 
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "length",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "malformedForLength",
-          methodArgs = {int.class}
-        ),  @TestTarget(
-          methodName = "unmappableForLength",
-          methodArgs = {int.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "length",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "malformedForLength",
+            args = {int.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "unmappableForLength",
+            args = {int.class}
         )
     })
     public void testLength() {
@@ -296,15 +346,12 @@ public class CoderResultTest extends TestCase {
      * Test method malformedForLength(int).
      * 
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "malformedForLength",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "malformedForLength",
+        args = {int.class}
+    )
     public void testMalformedForLength() {
         assertNotNull(CoderResult.malformedForLength(Integer.MAX_VALUE));
         assertNotNull(CoderResult.malformedForLength(1));
@@ -332,15 +379,12 @@ public class CoderResultTest extends TestCase {
      * Test method unmappableForLength(int).
      * 
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "unmappableForLength",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "unmappableForLength",
+        args = {int.class}
+    )
     public void testUnmappableForLength() {
         assertNotNull(CoderResult.unmappableForLength(Integer.MAX_VALUE));
         assertNotNull(CoderResult.unmappableForLength(1));
@@ -366,19 +410,24 @@ public class CoderResultTest extends TestCase {
      * Test method throwException().
      * 
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "throwException",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "malformedForLength",
-          methodArgs = {int.class}
-        ),  @TestTarget(
-          methodName = "unmappableForLength",
-          methodArgs = {int.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "throwException",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "malformedForLength",
+            args = {int.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "unmappableForLength",
+            args = {int.class}
         )
     })
     public void testThrowException() throws Exception {
@@ -412,19 +461,24 @@ public class CoderResultTest extends TestCase {
      * Test method toString().
      * 
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        ), @TestTarget(
-          methodName = "malformedForLength",
-          methodArgs = {int.class}
-        ),  @TestTarget(
-          methodName = "unmappableForLength",
-          methodArgs = {int.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "toString",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "malformedForLength",
+            args = {int.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "unmappableForLength",
+            args = {int.class}
         )
     })
     public void testToString() throws Exception {

@@ -22,9 +22,9 @@
 
 package tests.security.cert;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -81,15 +81,12 @@ public class PKIXCertPathValidatorResultTest extends TestCase {
      * @throws NoSuchAlgorithmException
      * @throws InvalidKeySpecException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Doesn't verify NullPointerException.",
-      targets = {
-        @TestTarget(
-          methodName = "PKIXCertPathValidatorResult",
-          methodArgs = {java.security.cert.TrustAnchor.class, java.security.cert.PolicyNode.class, java.security.PublicKey.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify NullPointerException.",
+        method = "PKIXCertPathValidatorResult",
+        args = {java.security.cert.TrustAnchor.class, java.security.cert.PolicyNode.class, java.security.PublicKey.class}
+    )
     public final void testPKIXCertPathValidatorResult01()
         throws InvalidKeySpecException,
                NoSuchAlgorithmException {
@@ -109,15 +106,12 @@ public class PKIXCertPathValidatorResultTest extends TestCase {
      * Assertion: <code>NullPointerException</code> if
      * <code>TrustAnchor</code> parameter is <code>null</code>
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies NullPointerException.",
-      targets = {
-        @TestTarget(
-          methodName = "PKIXCertPathValidatorResult",
-          methodArgs = {java.security.cert.TrustAnchor.class, java.security.cert.PolicyNode.class, java.security.PublicKey.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies NullPointerException.",
+        method = "PKIXCertPathValidatorResult",
+        args = {java.security.cert.TrustAnchor.class, java.security.cert.PolicyNode.class, java.security.PublicKey.class}
+    )
     public final void testPKIXCertPathValidatorResult02() {
         try {
             // pass null
@@ -136,15 +130,12 @@ public class PKIXCertPathValidatorResultTest extends TestCase {
      * Assertion: <code>NullPointerException</code> if
      * <code>PublicKey</code> parameter is <code>null</code>
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies NullPointerException.",
-      targets = {
-        @TestTarget(
-          methodName = "PKIXCertPathValidatorResult",
-          methodArgs = {java.security.cert.TrustAnchor.class, java.security.cert.PolicyNode.class, java.security.PublicKey.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies NullPointerException.",
+        method = "PKIXCertPathValidatorResult",
+        args = {java.security.cert.TrustAnchor.class, java.security.cert.PolicyNode.class, java.security.PublicKey.class}
+    )
     public final void testPKIXCertPathValidatorResult03() {
         TrustAnchor ta = TestUtils.getTrustAnchor();
         if (ta == null) {
@@ -166,15 +157,12 @@ public class PKIXCertPathValidatorResultTest extends TestCase {
      * PolicyNode, PublicKey)</code> constructor<br>
      * Assertion: <code>PolicyNode</code>can be <code>null</code>
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies null as a parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "PKIXCertPathValidatorResult",
-          methodArgs = {java.security.cert.TrustAnchor.class, java.security.cert.PolicyNode.class, java.security.PublicKey.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies null as a parameter.",
+        method = "PKIXCertPathValidatorResult",
+        args = {java.security.cert.TrustAnchor.class, java.security.cert.PolicyNode.class, java.security.PublicKey.class}
+    )
     public final void testPKIXCertPathValidatorResult04() throws Exception {
         TrustAnchor ta = TestUtils.getTrustAnchor();
         if (ta == null) {
@@ -193,15 +181,12 @@ public class PKIXCertPathValidatorResultTest extends TestCase {
      * @throws NoSuchAlgorithmException
      * @throws InvalidKeySpecException
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getTrustAnchor",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getTrustAnchor",
+        args = {}
+    )
     public final void testGetTrustAnchor() throws Exception {
         TrustAnchor ta = TestUtils.getTrustAnchor();
         if (ta == null) {
@@ -225,15 +210,12 @@ public class PKIXCertPathValidatorResultTest extends TestCase {
      * @throws NoSuchAlgorithmException
      * @throws InvalidKeySpecException
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getPublicKey",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getPublicKey",
+        args = {}
+    )
     public final void testGetPublicKey() throws Exception {
         TrustAnchor ta = TestUtils.getTrustAnchor();
         if (ta == null) {
@@ -260,16 +242,12 @@ public class PKIXCertPathValidatorResultTest extends TestCase {
      * @throws NoSuchAlgorithmException
      * @throws InvalidKeySpecException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies that getPolicyTree method returns the root node of " +
-            "the valid policy tree.",
-      targets = {
-        @TestTarget(
-          methodName = "getPolicyTree",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies that getPolicyTree method returns the root node of the valid policy tree.",
+        method = "getPolicyTree",
+        args = {}
+    )
     public final void testGetPolicyTree01() throws Exception {
         TrustAnchor ta = TestUtils.getTrustAnchor();
         if (ta == null) {
@@ -297,16 +275,12 @@ public class PKIXCertPathValidatorResultTest extends TestCase {
      * @throws NoSuchAlgorithmException
      * @throws InvalidKeySpecException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies that getPolicyTree method returns null if there are " + 
-            "no valid policies.",
-      targets = {
-        @TestTarget(
-          methodName = "getPolicyTree",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies that getPolicyTree method returns null if there are no valid policies.",
+        method = "getPolicyTree",
+        args = {}
+    )
     public final void testGetPolicyTree02() throws Exception {
         TrustAnchor ta = TestUtils.getTrustAnchor();
         if (ta == null) {
@@ -331,15 +305,12 @@ public class PKIXCertPathValidatorResultTest extends TestCase {
      * @throws NoSuchAlgorithmException
      * @throws InvalidKeySpecException
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "clone",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "clone",
+        args = {}
+    )
     public final void testClone() throws Exception {
         TrustAnchor ta = TestUtils.getTrustAnchor();
         if (ta == null) {
@@ -391,15 +362,12 @@ public class PKIXCertPathValidatorResultTest extends TestCase {
      * @throws NoSuchAlgorithmException
      * @throws InvalidKeySpecException
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public final void testToString01() throws Exception {
         TrustAnchor ta = TestUtils.getTrustAnchor();
         if (ta == null) {
@@ -421,15 +389,12 @@ public class PKIXCertPathValidatorResultTest extends TestCase {
      * @throws NoSuchAlgorithmException
      * @throws InvalidKeySpecException
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public final void testToString02() throws Exception {
         TrustAnchor ta = TestUtils.getTrustAnchor();
         if (ta == null) {

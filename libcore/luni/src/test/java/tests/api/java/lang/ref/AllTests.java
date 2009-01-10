@@ -30,7 +30,7 @@ public class AllTests {
     }
 
     public static Test suite() {
-        TestSuite suite = new TestSuite("Test for java.lang.ref");
+        TestSuite suite = tests.TestSuiteFactory.createTestSuite("Test for java.lang.ref");
 
         // $JUnit-BEGIN$
         

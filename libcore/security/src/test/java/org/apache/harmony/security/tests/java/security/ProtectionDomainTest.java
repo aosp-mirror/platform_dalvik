@@ -23,9 +23,9 @@
 package org.apache.harmony.security.tests.java.security;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.net.URL;
 import java.net.MalformedURLException;
@@ -91,15 +91,12 @@ public class ProtectionDomainTest extends TestCase {
      * Class under test for void ProtectionDomain(CodeSource,
      * PermissionCollection)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "ProtectionDomain",
-          methodArgs = {CodeSource.class, PermissionCollection.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "ProtectionDomain",
+        args = {java.security.CodeSource.class, java.security.PermissionCollection.class}
+    )
     public void testProtectionDomainCodeSourcePermissionCollection_00() {
         new ProtectionDomain(null, null);
         new ProtectionDomain(cs, null);
@@ -110,15 +107,12 @@ public class ProtectionDomainTest extends TestCase {
     /**
      * the ctor must set the PermissionCollection read-only
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "ProtectionDomain",
-          methodArgs = {CodeSource.class, PermissionCollection.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "ProtectionDomain",
+        args = {java.security.CodeSource.class, java.security.PermissionCollection.class}
+    )
     public void testProtectionDomainCodeSourcePermissionCollection_01() {
         assertFalse(perms.isReadOnly());
         new ProtectionDomain(null, perms);
@@ -128,15 +122,12 @@ public class ProtectionDomainTest extends TestCase {
     /**
      * Test for ProtectionDomain(CodeSource, PermissionCollection, ClassLoader, Principal[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "ProtectionDomain",
-          methodArgs = {CodeSource.class, PermissionCollection.class, ClassLoader.class, Principal[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "ProtectionDomain",
+        args = {java.security.CodeSource.class, java.security.PermissionCollection.class, java.lang.ClassLoader.class, java.security.Principal[].class}
+    )
     public void testProtectionDomainCodeSourcePermissionCollectionClassLoaderPrincipalArray() {
         new ProtectionDomain(null, null, null, null);
 
@@ -151,15 +142,12 @@ public class ProtectionDomainTest extends TestCase {
     /**
      * Tests for ProtectionDomain.getClassLoader()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getClassLoader",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getClassLoader",
+        args = {}
+    )
     public void testGetClassLoader() {
         assertNull(new ProtectionDomain(null, null).getClassLoader());
         assertSame(new ProtectionDomain(null, null, classldr, null)
@@ -169,15 +157,12 @@ public class ProtectionDomainTest extends TestCase {
     /**
      * Tests for ProtectionDomain.getCodeSource()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getCodeSource",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getCodeSource",
+        args = {}
+    )
     public void testGetCodeSource() {
         assertNull(new ProtectionDomain(null, null).getCodeSource());
         assertSame(new ProtectionDomain(cs, null).getCodeSource(), cs);
@@ -186,15 +171,12 @@ public class ProtectionDomainTest extends TestCase {
     /**
      * Tests for ProtectionDomain.getPermissions()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getPermissions",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getPermissions",
+        args = {}
+    )
     public void testGetPermissions() {
         assertNull(new ProtectionDomain(null, null).getPermissions());
         assertSame(new ProtectionDomain(null, perms).getPermissions(), perms);
@@ -203,15 +185,12 @@ public class ProtectionDomainTest extends TestCase {
     /**
      * getPrincipals() always returns non null array
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getPrincipals",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getPrincipals",
+        args = {}
+    )
     public void testGetPrincipals_00() {
         assertNotNull(new ProtectionDomain(null, null).getPrincipals());
     }
@@ -219,15 +198,12 @@ public class ProtectionDomainTest extends TestCase {
     /**
      * getPrincipals() returns new array each time it's called
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getPrincipals",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getPrincipals",
+        args = {}
+    )
     public void testGetPrincipals_01() {
         ProtectionDomain pd = new ProtectionDomain(null, null, null, principals);
         Principal[] got = pd.getPrincipals();
@@ -240,15 +216,12 @@ public class ProtectionDomainTest extends TestCase {
     /**
      * ProtectionDomain with null Permissions must not imply() permissions.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "implies",
-          methodArgs = {Permission.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "implies",
+        args = {java.security.Permission.class}
+    )
     public void testImplies_00() {
         assertFalse(new ProtectionDomain(null, null).implies(allperm));
     }
@@ -257,15 +230,12 @@ public class ProtectionDomainTest extends TestCase {
      * ProtectionDomain with PermissionCollection which contains AllPermission
      * must imply() AllPermission.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "implies",
-          methodArgs = {Permission.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "implies",
+        args = {java.security.Permission.class}
+    )
     public void testImplies_01() {
         assertTrue(new ProtectionDomain(null, perms).implies(allperm));
     }
@@ -274,15 +244,12 @@ public class ProtectionDomainTest extends TestCase {
      * ProtectionDomain created with a static set of permissions must not query 
      * policy. 
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "implies",
-          methodArgs = {Permission.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "implies",
+        args = {java.security.Permission.class}
+    )
     public void testImplies_02() {
         TestPolicy policy = new TestPolicy();
         // null set of permissions [must] force the PD to use Policy - for 
@@ -302,15 +269,12 @@ public class ProtectionDomainTest extends TestCase {
      * ProtectionDomain created with dynamic set of permissions must query 
      * policy. 
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "implies",
-          methodArgs = {Permission.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "implies",
+        args = {java.security.Permission.class}
+    )
     public void testImplies_03() {
         TestPolicy policy = new TestPolicy();
         ProtectionDomain pd = new ProtectionDomain(cs, null, ClassLoader
@@ -328,20 +292,22 @@ public class ProtectionDomainTest extends TestCase {
     /**
      * Simply checks that it's working somehow
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Receiving of test result is missed",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public void testToString() {
-        new ProtectionDomain(null, null).toString();
-        new ProtectionDomain(cs, perms).toString();
-        new ProtectionDomain(null, null, null, null).toString();
-        new ProtectionDomain(cs, perms, classldr, principals).toString();
+        String res;
+        res = new ProtectionDomain(null, null).toString();
+        assertTrue(res.contains("ProtectionDomain"));
+        res = new ProtectionDomain(cs, perms).toString();
+        assertTrue(res.contains("ProtectionDomain"));
+        res = new ProtectionDomain(null, null, null, null).toString();
+        assertTrue(res.contains("ProtectionDomain"));
+        res = new ProtectionDomain(cs, perms, classldr, principals).toString();
+        assertTrue(res.contains("ProtectionDomain"));
     }
 
     /**

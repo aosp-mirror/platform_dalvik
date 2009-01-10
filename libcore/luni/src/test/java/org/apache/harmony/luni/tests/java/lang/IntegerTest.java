@@ -16,9 +16,9 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -42,15 +42,12 @@ public class IntegerTest extends TestCase {
     /**
      * @tests java.lang.Integer#byteValue()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "byteValue",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "byteValue",
+        args = {}
+    )
     public void test_byteValue() {
         // Test for method byte java.lang.Integer.byteValue()
         assertEquals("Returned incorrect byte value", -1, new Integer(65535)
@@ -62,15 +59,12 @@ public class IntegerTest extends TestCase {
     /**
      * @tests java.lang.Integer#compareTo(java.lang.Integer)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "compareTo",
-          methodArgs = {java.lang.Integer.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "compareTo",
+        args = {java.lang.Integer.class}
+    )
     public void test_compareToLjava_lang_Integer() {
         // Test for method int java.lang.Integer.compareTo(java.lang.Integer)
         assertTrue("-2 compared to 1 gave non-negative answer", new Integer(-2)
@@ -90,15 +84,12 @@ public class IntegerTest extends TestCase {
     /**
      * @tests java.lang.Integer#decode(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "decode",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "decode",
+        args = {java.lang.String.class}
+    )
     public void test_decodeLjava_lang_String2() {
         // Test for method java.lang.Integer
         // java.lang.Integer.decode(java.lang.String)
@@ -183,15 +174,12 @@ public class IntegerTest extends TestCase {
     /**
      * @tests java.lang.Integer#doubleValue()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Checks integer's boundary values.",
-      targets = {
-        @TestTarget(
-          methodName = "doubleValue",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Checks integer's boundary values.",
+        method = "doubleValue",
+        args = {}
+    )
     public void test_doubleValue2() {
         // Test for method double java.lang.Integer.doubleValue()
         assertEquals("Returned incorrect double value", 2147483647.0, new Integer(2147483647)
@@ -203,15 +191,12 @@ public class IntegerTest extends TestCase {
     /**
      * @tests java.lang.Integer#equals(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "equals",
+        args = {java.lang.Object.class}
+    )
     public void test_equalsLjava_lang_Object2() {
         // Test for method boolean java.lang.Integer.equals(java.lang.Object)
         Integer i1 = new Integer(1000);
@@ -223,15 +208,12 @@ public class IntegerTest extends TestCase {
     /**
      * @tests java.lang.Integer#floatValue()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "floatValue",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "floatValue",
+        args = {}
+    )
     public void test_floatValue2() {
         // Test for method float java.lang.Integer.floatValue()
         assertTrue("Returned incorrect float value", new Integer(65535)
@@ -243,15 +225,12 @@ public class IntegerTest extends TestCase {
     /**
      * @tests java.lang.Integer#getInteger(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getInteger",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getInteger",
+        args = {java.lang.String.class}
+    )
     public void test_getIntegerLjava_lang_String() {
         // Test for method java.lang.Integer
         // java.lang.Integer.getInteger(java.lang.String)
@@ -267,65 +246,60 @@ public class IntegerTest extends TestCase {
     /**
      * @tests java.lang.Integer#getInteger(java.lang.String, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify case when property contains illegal numeric " +
-            "format.",
-      targets = {
-        @TestTarget(
-          methodName = "getInteger",
-          methodArgs = {java.lang.String.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getInteger",
+        args = {java.lang.String.class, int.class}
+    )
     public void test_getIntegerLjava_lang_StringI() {
         // Test for method java.lang.Integer
         // java.lang.Integer.getInteger(java.lang.String, int)
         Properties tProps = new Properties();
         tProps.put("testInt", "99");
+        tProps.put("testIncInt", "notInt");
         System.setProperties(tProps);
         assertTrue("returned incorrect Integer", Integer.getInteger("testInt",
                 4).equals(new Integer(99)));
         assertTrue("returned incorrect default Integer", Integer.getInteger(
                 "ff", 4).equals(new Integer(4)));
+        assertTrue("returned incorrect default Integer", Integer.getInteger(
+                "testIncInt", 4).equals(new Integer(4)));
     }
 
     /**
      * @tests java.lang.Integer#getInteger(java.lang.String, java.lang.Integer)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify case when property contains illegal numeric " +
-            "format.",
-      targets = {
-        @TestTarget(
-          methodName = "getInteger",
-          methodArgs = {java.lang.String.class, java.lang.Integer.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getInteger",
+        args = {java.lang.String.class, java.lang.Integer.class}
+    )
     public void test_getIntegerLjava_lang_StringLjava_lang_Integer() {
         // Test for method java.lang.Integer
         // java.lang.Integer.getInteger(java.lang.String, java.lang.Integer)
         Properties tProps = new Properties();
         tProps.put("testInt", "99");
+        tProps.put("testIncInt", "notInt");        
         System.setProperties(tProps);
         assertTrue("returned incorrect Integer", Integer.getInteger("testInt",
                 new Integer(4)).equals(new Integer(99)));
         assertTrue("returned incorrect default Integer", Integer.getInteger(
                 "ff", new Integer(4)).equals(new Integer(4)));
+        assertTrue("returned incorrect default Integer", Integer.getInteger(
+                "testIncInt", new Integer(4)).equals(new Integer(4)));        
     }
 
     /**
      * @tests java.lang.Integer#hashCode()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "hashCode",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hashCode",
+        args = {}
+    )
     public void test_hashCode2() {
         // Test for method int java.lang.Integer.hashCode()
 
@@ -338,15 +312,12 @@ public class IntegerTest extends TestCase {
     /**
      * @tests java.lang.Integer#intValue()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Checks one value.",
-      targets = {
-        @TestTarget(
-          methodName = "intValue",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Checks one value.",
+        method = "intValue",
+        args = {}
+    )
     public void test_intValue2() {
         // Test for method int java.lang.Integer.intValue()
 
@@ -357,15 +328,12 @@ public class IntegerTest extends TestCase {
     /**
      * @tests java.lang.Integer#longValue()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Checks one value.",
-      targets = {
-        @TestTarget(
-          methodName = "longValue",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Checks one value.",
+        method = "longValue",
+        args = {}
+    )
     public void test_longValue2() {
         // Test for method long java.lang.Integer.longValue()
         Integer i = new Integer(8900);
@@ -375,15 +343,12 @@ public class IntegerTest extends TestCase {
     /**
      * @tests java.lang.Integer#parseInt(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "parseInt",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "parseInt",
+        args = {java.lang.String.class}
+    )
     public void test_parseIntLjava_lang_String2() {
         // Test for method int java.lang.Integer.parseInt(java.lang.String)
 
@@ -426,15 +391,12 @@ public class IntegerTest extends TestCase {
     /**
      * @tests java.lang.Integer#parseInt(java.lang.String, int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "parseInt",
-          methodArgs = {java.lang.String.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "parseInt",
+        args = {java.lang.String.class, int.class}
+    )
     public void test_parseIntLjava_lang_StringI2() {
         // Test for method int java.lang.Integer.parseInt(java.lang.String, int)
         assertEquals("Parsed dec val incorrectly",
@@ -516,15 +478,12 @@ public class IntegerTest extends TestCase {
     /**
      * @tests java.lang.Integer#shortValue()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Checks one value.",
-      targets = {
-        @TestTarget(
-          methodName = "shortValue",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Checks one value.",
+        method = "shortValue",
+        args = {}
+    )
     public void test_shortValue2() {
         // Test for method short java.lang.Integer.shortValue()
         Integer i = new Integer(2147450880);
@@ -534,15 +493,12 @@ public class IntegerTest extends TestCase {
     /**
      * @tests java.lang.Integer#toBinaryString(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toBinaryString",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toBinaryString",
+        args = {int.class}
+    )
     public void test_toBinaryStringI() {
         // Test for method java.lang.String
         // java.lang.Integer.toBinaryString(int)
@@ -555,15 +511,12 @@ public class IntegerTest extends TestCase {
     /**
      * @tests java.lang.Integer#toHexString(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toHexString",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toHexString",
+        args = {int.class}
+    )
     public void test_toHexStringI() {
         // Test for method java.lang.String java.lang.Integer.toHexString(int)
 
@@ -586,15 +539,12 @@ public class IntegerTest extends TestCase {
     /**
      * @tests java.lang.Integer#toOctalString(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toOctalString",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toOctalString",
+        args = {int.class}
+    )
     public void test_toOctalStringI() {
         // Test for method java.lang.String java.lang.Integer.toOctalString(int)
         // Spec states that the int arg is treated as unsigned
@@ -607,15 +557,12 @@ public class IntegerTest extends TestCase {
     /**
      * @tests java.lang.Integer#toString()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Checks one value.",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Checks one value.",
+        method = "toString",
+        args = {}
+    )
     public void test_toString2() {
         // Test for method java.lang.String java.lang.Integer.toString()
 
@@ -627,15 +574,12 @@ public class IntegerTest extends TestCase {
     /**
      * @tests java.lang.Integer#toString(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {int.class}
+    )
     public void test_toStringI2() {
         // Test for method java.lang.String java.lang.Integer.toString(int)
 
@@ -652,15 +596,12 @@ public class IntegerTest extends TestCase {
     /**
      * @tests java.lang.Integer#toString(int, int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {int.class, int.class}
+    )
     public void test_toStringII() {
         // Test for method java.lang.String java.lang.Integer.toString(int, int)
         assertEquals("Returned incorrect octal string", "17777777777", Integer.toString(
@@ -699,15 +640,12 @@ public class IntegerTest extends TestCase {
     /**
      * @tests java.lang.Integer#valueOf(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies boundary values.",
-      targets = {
-        @TestTarget(
-          methodName = "valueOf",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies boundary values.",
+        method = "valueOf",
+        args = {java.lang.String.class}
+    )
     public void test_valueOfLjava_lang_String2() {
         // Test for method java.lang.Integer
         // java.lang.Integer.valueOf(java.lang.String)
@@ -740,15 +678,12 @@ public class IntegerTest extends TestCase {
     /**
      * @tests java.lang.Integer#valueOf(java.lang.String, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Checks boundary values.",
-      targets = {
-        @TestTarget(
-          methodName = "valueOf",
-          methodArgs = {java.lang.String.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Checks boundary values.",
+        method = "valueOf",
+        args = {java.lang.String.class, int.class}
+    )
     public void test_valueOfLjava_lang_StringI2() {
         // Test for method java.lang.Integer
         // java.lang.Integer.valueOf(java.lang.String, int)
@@ -827,15 +762,12 @@ public class IntegerTest extends TestCase {
     /**
      * @tests java.lang.Integer#valueOf(byte)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "valueOf",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "valueOf",
+        args = {int.class}
+    )
     public void test_valueOfI() {
         assertEquals(new Integer(Integer.MIN_VALUE), Integer.valueOf(Integer.MIN_VALUE));
         assertEquals(new Integer(Integer.MAX_VALUE), Integer.valueOf(Integer.MAX_VALUE));
@@ -852,15 +784,12 @@ public class IntegerTest extends TestCase {
     /**
      * @tests java.lang.Integer#hashCode()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "hashCode",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hashCode",
+        args = {}
+    )
     public void test_hashCode() {
         assertEquals(1, new Integer(1).hashCode());
         assertEquals(2, new Integer(2).hashCode());
@@ -871,15 +800,12 @@ public class IntegerTest extends TestCase {
     /**
      * @tests java.lang.Integer#Integer(String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "Integer",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Integer",
+        args = {java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_String() {
         assertEquals(new Integer(0), new Integer("0"));
         assertEquals(new Integer(1), new Integer("1"));
@@ -909,15 +835,12 @@ public class IntegerTest extends TestCase {
     /**
      * @tests java.lang.Integer#Integer
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "Integer",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Integer",
+        args = {int.class}
+    )
     public void test_ConstructorI() {
         assertEquals(1, new Integer(1).intValue());
         assertEquals(2, new Integer(2).intValue());
@@ -931,15 +854,12 @@ public class IntegerTest extends TestCase {
     /**
      * @tests java.lang.Integer#byteValue()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "byteValue",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "byteValue",
+        args = {}
+    )
     public void test_booleanValue() {
         assertEquals(1, new Integer(1).byteValue());    
         assertEquals(2, new Integer(2).byteValue());
@@ -950,15 +870,12 @@ public class IntegerTest extends TestCase {
     /**
      * @tests java.lang.Integer#equals(Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "equals",
+        args = {java.lang.Object.class}
+    )
     public void test_equalsLjava_lang_Object() {
         assertEquals(new Integer(0), Integer.valueOf(0));
         assertEquals(new Integer(1), Integer.valueOf(1));
@@ -973,15 +890,12 @@ public class IntegerTest extends TestCase {
     /**
      * @tests java.lang.Integer#toString()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public void test_toString() {
         assertEquals("-1", new Integer(-1).toString());
         assertEquals("0", new Integer(0).toString());
@@ -992,15 +906,12 @@ public class IntegerTest extends TestCase {
     /**
      * @tests java.lang.Integer#toString
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {int.class}
+    )
     public void test_toStringI() {
         assertEquals("-1", Integer.toString(-1));
         assertEquals("0", Integer.toString(0));
@@ -1011,15 +922,12 @@ public class IntegerTest extends TestCase {
     /**
      * @tests java.lang.Integer#valueOf(String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Doesn't check boundary values.",
-      targets = {
-        @TestTarget(
-          methodName = "valueOf",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't check boundary values.",
+        method = "valueOf",
+        args = {java.lang.String.class}
+    )
     public void test_valueOfLjava_lang_String() {
         assertEquals(new Integer(0), Integer.valueOf("0"));
         assertEquals(new Integer(1), Integer.valueOf("1"));
@@ -1049,15 +957,12 @@ public class IntegerTest extends TestCase {
     /**
      * @tests java.lang.Integer#valueOf(String,int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Doesn't check boundary values.",
-      targets = {
-        @TestTarget(
-          methodName = "valueOf",
-          methodArgs = {java.lang.String.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't check boundary values.",
+        method = "valueOf",
+        args = {java.lang.String.class, int.class}
+    )
     public void test_valueOfLjava_lang_StringI() {
         assertEquals(new Integer(0), Integer.valueOf("0", 10));
         assertEquals(new Integer(1), Integer.valueOf("1", 10));
@@ -1091,15 +996,12 @@ public class IntegerTest extends TestCase {
     /**
      * @tests java.lang.Integer#parseInt(String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Doesn't check boundary values.",
-      targets = {
-        @TestTarget(
-          methodName = "parseInt",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't check boundary values.",
+        method = "parseInt",
+        args = {java.lang.String.class}
+    )
     public void test_parseIntLjava_lang_String() {
         assertEquals(0, Integer.parseInt("0"));
         assertEquals(1, Integer.parseInt("1"));
@@ -1129,15 +1031,12 @@ public class IntegerTest extends TestCase {
     /**
      * @tests java.lang.Integer#parseInt(String,int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "parseInt",
-          methodArgs = {java.lang.String.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "parseInt",
+        args = {java.lang.String.class, int.class}
+    )
     public void test_parseIntLjava_lang_StringI() {
         assertEquals(0, Integer.parseInt("0", 10));
         assertEquals(1, Integer.parseInt("1", 10));
@@ -1171,15 +1070,12 @@ public class IntegerTest extends TestCase {
     /**
      * @tests java.lang.Integer#decode(String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "decode",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "decode",
+        args = {java.lang.String.class}
+    )
     public void test_decodeLjava_lang_String() {
         assertEquals(new Integer(0), Integer.decode("0"));
         assertEquals(new Integer(1), Integer.decode("1"));
@@ -1209,15 +1105,12 @@ public class IntegerTest extends TestCase {
     /**
      * @tests java.lang.Integer#doubleValue()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Doesn't check boundaries.",
-      targets = {
-        @TestTarget(
-          methodName = "doubleValue",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't check boundaries.",
+        method = "doubleValue",
+        args = {}
+    )
     public void test_doubleValue() {
         assertEquals(-1D, new Integer(-1).doubleValue(), 0D);
         assertEquals(0D, new Integer(0).doubleValue(), 0D);
@@ -1227,15 +1120,12 @@ public class IntegerTest extends TestCase {
     /**
      * @tests java.lang.Integer#floatValue()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "floatValue",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "floatValue",
+        args = {}
+    )
     public void test_floatValue() {
         assertEquals(-1F, new Integer(-1).floatValue(), 0F);
         assertEquals(0F, new Integer(0).floatValue(), 0F);
@@ -1245,68 +1135,62 @@ public class IntegerTest extends TestCase {
     /**
      * @tests java.lang.Integer#intValue()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check boundery values.",
-      targets = {
-        @TestTarget(
-          methodName = "intValue",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "intValue",
+        args = {}
+    )
     public void test_intValue() {
         assertEquals(-1, new Integer(-1).intValue());
         assertEquals(0, new Integer(0).intValue());
         assertEquals(1, new Integer(1).intValue());
+        assertEquals(Integer.MAX_VALUE, new Integer(Integer.MAX_VALUE).intValue());
+        assertEquals(Integer.MIN_VALUE, new Integer(Integer.MIN_VALUE).intValue());        
     }
     
     /**
      * @tests java.lang.Integer#longValue()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check boundary values.",
-      targets = {
-        @TestTarget(
-          methodName = "longValue",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "longValue",
+        args = {}
+    )
     public void test_longValue() {
         assertEquals(-1L, new Integer(-1).longValue());
         assertEquals(0L, new Integer(0).longValue());
         assertEquals(1L, new Integer(1).longValue());
+        assertEquals(Integer.MAX_VALUE, new Integer(Integer.MAX_VALUE).longValue());
+        assertEquals(Integer.MIN_VALUE, new Integer(Integer.MIN_VALUE).longValue());          
     }
     
     /**
      * @tests java.lang.Integer#shortValue()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check boundary value.",
-      targets = {
-        @TestTarget(
-          methodName = "shortValue",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "shortValue",
+        args = {}
+    )
     public void test_shortValue() {
         assertEquals(-1, new Integer(-1).shortValue());
         assertEquals(0, new Integer(0).shortValue());
         assertEquals(1, new Integer(1).shortValue());
+        assertEquals(-1, new Integer(Integer.MAX_VALUE).shortValue());
+        assertEquals(0, new Integer(Integer.MIN_VALUE).shortValue());          
     }
     /**
      * @tests java.lang.Integer#highestOneBit(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "highestOneBit",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "highestOneBit",
+        args = {int.class}
+    )
     public void test_highestOneBitI() {
         assertEquals(0x08, Integer.highestOneBit(0x0A));
         assertEquals(0x08, Integer.highestOneBit(0x0B));
@@ -1327,15 +1211,12 @@ public class IntegerTest extends TestCase {
     /**
      * @tests java.lang.Integer#lowestOneBit(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "lowestOneBit",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "lowestOneBit",
+        args = {int.class}
+    )
     public void test_lowestOneBitI() {
         assertEquals(0x10, Integer.lowestOneBit(0xF0));
         
@@ -1364,15 +1245,12 @@ public class IntegerTest extends TestCase {
     /**
      * @tests java.lang.Integer#numberOfLeadingZeros(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "numberOfLeadingZeros",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "numberOfLeadingZeros",
+        args = {int.class}
+    )
     public void test_numberOfLeadingZerosI() {
         assertEquals(32, Integer.numberOfLeadingZeros(0x0));
         assertEquals(31, Integer.numberOfLeadingZeros(0x1));
@@ -1420,15 +1298,12 @@ public class IntegerTest extends TestCase {
      * @tests 
      * java.lang.Integer#numberOfTrailingZeros(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "numberOfTrailingZeros",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "numberOfTrailingZeros",
+        args = {int.class}
+    )
     public void test_numberOfTrailingZerosI() {
         assertEquals(32, Integer.numberOfTrailingZeros(0x0));
         assertEquals(31, Integer.numberOfTrailingZeros(Integer.MIN_VALUE));
@@ -1470,15 +1345,12 @@ public class IntegerTest extends TestCase {
     /**
      * @tests java.lang.Integer#bitCount(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "bitCount",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "bitCount",
+        args = {int.class}
+    )
     public void test_bitCountI() {
         assertEquals(0, Integer.bitCount(0x0));
         assertEquals(1, Integer.bitCount(0x1));
@@ -1509,15 +1381,12 @@ public class IntegerTest extends TestCase {
     /**
      * @tests java.lang.Integer#rotateLeft(int,int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "rotateLeft",
-          methodArgs = {int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "rotateLeft",
+        args = {int.class, int.class}
+    )
     public void test_rotateLeftII() {
         assertEquals(0xF, Integer.rotateLeft(0xF, 0));
         assertEquals(0xF0, Integer.rotateLeft(0xF, 4));
@@ -1533,15 +1402,12 @@ public class IntegerTest extends TestCase {
     /**
      * @tests java.lang.Integer#rotateRight(int,int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "rotateRight",
-          methodArgs = {int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "rotateRight",
+        args = {int.class, int.class}
+    )
     public void test_rotateRightII() {
         assertEquals(0xF, Integer.rotateRight(0xF0, 4));
         assertEquals(0xF, Integer.rotateRight(0xF00, 8));
@@ -1558,15 +1424,12 @@ public class IntegerTest extends TestCase {
     /**
      * @tests java.lang.Integer#reverseBytes(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "reverseBytes",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "reverseBytes",
+        args = {int.class}
+    )
     public void test_reverseBytesI() {
         assertEquals(0xAABBCCDD, Integer.reverseBytes(0xDDCCBBAA));
         assertEquals(0x11223344, Integer.reverseBytes(0x44332211));
@@ -1577,15 +1440,12 @@ public class IntegerTest extends TestCase {
     /**
      * @tests java.lang.Integer#reverse(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "reverse",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "reverse",
+        args = {int.class}
+    )
     public void test_reverseI() {
         assertEquals(-1, Integer.reverse(-1));
         assertEquals(0x80000000,Integer.reverse(1));
@@ -1594,15 +1454,12 @@ public class IntegerTest extends TestCase {
     /**
      * @tests java.lang.Integer#signum(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "signum",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "signum",
+        args = {int.class}
+    )
     public void test_signumI() {
         for (int i = -128; i<0; i++) {
             assertEquals(-1, Integer.signum(i));

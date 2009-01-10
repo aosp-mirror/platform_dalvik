@@ -18,9 +18,9 @@
 package org.apache.harmony.logging.tests.java.util.logging;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -65,11 +65,14 @@ public class FileHandlerTest extends TestCase {
 
     final static SecurityManager securityManager = new MockLogSecurityManager();
 
-    final static String HOMEPATH = System.getProperty("user.home");
+    final static String SEP = File.separator;
+
+    private String oldHomePath = System.getProperty("user.home");
+    
+    // The HOMEPATH can't be used in android.
+    final static String HOMEPATH = System.getProperty("java.io.tmpdir") + SEP + "home";
 
     final static String TEMPPATH = System.getProperty("java.io.tmpdir");
-
-    final static String SEP = File.separator;
 
     private final PrintStream err = System.err;
 
@@ -103,6 +106,17 @@ public class FileHandlerTest extends TestCase {
         props.put("java.util.logging.FileHandler.pattern",
                         "%t/log/java%u.test");
         
+        File home = new File(HOMEPATH);
+        if (!home.exists()) {
+            home.mkdirs();
+        } else if (!home.isDirectory()) {
+            home.delete();
+            home.mkdirs();
+        }
+        if(!home.isDirectory()) {
+            fail("unable to create temp path");
+        }
+        System.setProperty("user.home", HOMEPATH);
         
         File file = new File(TEMPPATH + SEP + "log");
         file.mkdir();
@@ -125,39 +139,20 @@ public class FileHandlerTest extends TestCase {
         }
         reset(TEMPPATH + SEP + "log", "");
         System.setErr(err);
+        System.setProperty("user.home", oldHomePath);
+        new File(HOMEPATH).delete();
         super.tearDown();
-    }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Verifies getFormatter() method after close.",
-      targets = {
-        @TestTarget(
-          methodName = "getFormatter",
-          methodArgs = {}
-        )
-    })
-    public void _testLock() throws Exception {
-        FileOutputStream output = new FileOutputStream(TEMPPATH + SEP + "log"
-                + SEP + "java1.test.Lock");
-        FileHandler h = new FileHandler();
-        h.publish(r);
-        h.close();
-        assertFileContent(TEMPPATH + SEP + "log", "java1.test.Lock", h.getFormatter());
-        output.close();
     }
 
     /*
      * test for constructor void FileHandler()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Doesn't verify exceptions.",
-      targets = {
-        @TestTarget(
-          methodName = "FileHandler",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify exceptions.",
+        method = "FileHandler",
+        args = {}
+    )
     public void testFileHandler() throws Exception {
         assertEquals("character encoding is non equal to actual value",
                 "iso-8859-1", handler.getEncoding());
@@ -183,15 +178,12 @@ public class FileHandlerTest extends TestCase {
     /*
      * test for constructor void FileHandler(String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify exceptions.",
-      targets = {
-        @TestTarget(
-          methodName = "FileHandler",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify security exception.",
+        method = "FileHandler",
+        args = {java.lang.String.class}
+    )
     public void testFileHandler_1params() throws Exception {
 
         handler = new FileHandler("%t/log/string");
@@ -263,20 +255,24 @@ public class FileHandlerTest extends TestCase {
                 .getFormatter());
         file = new File(TEMPPATH + SEP + "log");
         assertTrue("length list of file is incorrect", file.list().length <= 2);
+        
+        try {
+            new FileHandler("");
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            //expected
+        }
     }
 
     /*
      * test for constructor void FileHandler(String pattern, boolean append)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify exceptions.",
-      targets = {
-        @TestTarget(
-          methodName = "FileHandler",
-          methodArgs = {java.lang.String.class, boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify security exception.",
+        method = "FileHandler",
+        args = {java.lang.String.class, boolean.class}
+    )
     public void testFileHandler_2params() throws Exception {
         boolean append = false;
         do {
@@ -307,21 +303,25 @@ public class FileHandlerTest extends TestCase {
                         new LogRecord[] { r }, new MockFormatter());
             }
         } while (append);
+        
+        try {
+            new FileHandler("", true);
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            //expected
+        }
     }
 
     /*
      * test for constructor void FileHandler(String pattern, int limit, int
      * count)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify exceptions.",
-      targets = {
-        @TestTarget(
-          methodName = "FileHandler",
-          methodArgs = {java.lang.String.class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verifysecurity exception.",
+        method = "FileHandler",
+        args = {java.lang.String.class, int.class, int.class}
+    )
     public void testFileHandler_3params() throws Exception {
         int limit = 120;
         int count = 1;
@@ -344,21 +344,39 @@ public class FileHandlerTest extends TestCase {
         }
         assertFileContent(TEMPPATH + SEP + "log", "/string", new LogRecord[] {
                 r, null, r, null, r, null, r }, new MockFormatter());
+        
+        try {
+            new FileHandler("", limit, count);
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            //expected
+        }
+        
+        try {
+            new FileHandler("%t/log/string", -1, count);
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            //expected
+        }
+        
+        try {
+            new FileHandler("%t/log/string", limit, 0);
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            //expected
+        }
     }
 
     /*
      * test for constructor public FileHandler(String pattern, int limit, int
      * count, boolean append)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify exceptions.",
-      targets = {
-        @TestTarget(
-          methodName = "FileHandler",
-          methodArgs = {java.lang.String.class, int.class, int.class, boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify security exception.",
+        method = "FileHandler",
+        args = {java.lang.String.class, int.class, int.class, boolean.class}
+    )
     public void testFileHandler_4params() throws Exception {
         int limit = 120;
         int count = 1;
@@ -391,30 +409,58 @@ public class FileHandlerTest extends TestCase {
                         new LogRecord[] { r }, new MockFormatter());
             }
         } while (append);
+        
+        try {
+            new FileHandler("", limit, count, true);
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            //expected
+        }
+        
+        try {
+            new FileHandler("%t/log/string", -1, count, false);
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            //expected
+        }
+        
+        try {
+            new FileHandler("%t/log/string", limit, 0, true);
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            //expected
+        }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getEncoding",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "getEncoding",
+            args = {}
         ),
-        @TestTarget(
-          methodName = "getFilter",
-          methodArgs = {}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "getFilter",
+            args = {}
         ),
-        @TestTarget(
-          methodName = "getFormatter",
-          methodArgs = {}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "getFormatter",
+            args = {}
         ),
-        @TestTarget(
-          methodName = "getLevel",
-          methodArgs = {}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "getLevel",
+            args = {}
         ),
-        @TestTarget(
-          methodName = "getErrorManager",
-          methodArgs = {}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "getErrorManager",
+            args = {}
         )
     })
     public void testDefaultValue() throws Exception {
@@ -521,15 +567,12 @@ public class FileHandlerTest extends TestCase {
             e.printStackTrace();
         }
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "FileHandler",
-          methodArgs = {java.lang.String.class, int.class, int.class, boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "FileHandler",
+        args = {java.lang.String.class, int.class, int.class, boolean.class}
+    )
     public void testLimitAndCount() throws Exception {
         handler.close();
         // very small limit value, count=2
@@ -590,6 +633,8 @@ public class FileHandlerTest extends TestCase {
         assertFileContent(TEMPPATH, "testLimitCount0.0",
                 new LogRecord[] { rs[9] }, handler.getFormatter());
 
+        String oldUserDir = System.getProperty("user.dir");
+        System.setProperty("user.dir", System.getProperty("java.io.tmpdir"));
         FileHandler h1 = null;
         FileHandler h2 = null;
         try {
@@ -610,31 +655,45 @@ public class FileHandlerTest extends TestCase {
             } catch (Exception e) {
             }
             reset("log", "");
+            System.setProperty("user.dir", oldUserDir);
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "FileHandler",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "close",
+            args = {}
         ),
-        @TestTarget(
-          methodName = "FileHandler",
-          methodArgs = {java.lang.String.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "FileHandler",
+            args = {}
         ),
-        @TestTarget(
-          methodName = "FileHandler",
-          methodArgs = {java.lang.String.class, boolean.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "FileHandler",
+            args = {java.lang.String.class}
         ),
-        @TestTarget(
-          methodName = "FileHandler",
-          methodArgs = {java.lang.String.class, int.class, int.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "FileHandler",
+            args = {java.lang.String.class, boolean.class}
         ),
-        @TestTarget(
-          methodName = "FileHandler",
-          methodArgs = {java.lang.String.class, int.class, int.class, boolean.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "FileHandler",
+            args = {java.lang.String.class, int.class, int.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "FileHandler",
+            args = {java.lang.String.class, int.class, int.class, boolean.class}
         )
     })
     public void testSecurity() throws IOException {
@@ -647,8 +706,8 @@ public class FileHandlerTest extends TestCase {
                 fail("should throw security exception");
             } catch (SecurityException e) {
             }
-
             handler.publish(new LogRecord(Level.SEVERE, "msg"));
+
             try {
                 handler = new FileHandler();
                 fail("should throw security exception");
@@ -680,33 +739,42 @@ public class FileHandlerTest extends TestCase {
         }
 
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies SecurityException.",
-      targets = {
-        @TestTarget(
-          methodName = "close",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies SecurityException.",
+            method = "close",
+            args = {}
         ),
-        @TestTarget(
-          methodName = "FileHandler",
-          methodArgs = {}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies SecurityException.",
+            method = "FileHandler",
+            args = {}
         ),
-        @TestTarget(
-          methodName = "FileHandler",
-          methodArgs = {java.lang.String.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies SecurityException.",
+            method = "FileHandler",
+            args = {java.lang.String.class}
         ),
-        @TestTarget(
-          methodName = "FileHandler",
-          methodArgs = {java.lang.String.class, boolean.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies SecurityException.",
+            method = "FileHandler",
+            args = {java.lang.String.class, boolean.class}
         ),
-        @TestTarget(
-          methodName = "FileHandler",
-          methodArgs = {java.lang.String.class, int.class, int.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies SecurityException.",
+            method = "FileHandler",
+            args = {java.lang.String.class, int.class, int.class}
         ),
-        @TestTarget(
-          methodName = "FileHandler",
-          methodArgs = {java.lang.String.class, int.class, int.class, boolean.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies SecurityException.",
+            method = "FileHandler",
+            args = {java.lang.String.class, int.class, int.class, boolean.class}
         )
     })
     public void testFileSecurity() throws IOException {
@@ -751,15 +819,12 @@ public class FileHandlerTest extends TestCase {
             System.setSecurityManager(currentManager);
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies FileHandler when configuration file is invalid.",
-      targets = {
-        @TestTarget(
-          methodName = "FileHandler",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies FileHandler when configuration file is invalid.",
+        method = "FileHandler",
+        args = {}
+    )
     public void testInvalidProperty() throws Exception {
         props.put("java.util.logging.FileHandler.level", "null");
         props.put("java.util.logging.FileHandler.filter", className
@@ -794,29 +859,33 @@ public class FileHandlerTest extends TestCase {
         } catch (NullPointerException e) {
         }
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Verifies illegal parameters and exceptions: " +
-            "IOException, NullPointerException, IllegalArgumentException.",
-      targets = {
-        @TestTarget(
-          methodName = "FileHandler",
-          methodArgs = {java.lang.String.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies illegal parameters and exceptions: IOException, NullPointerException, IllegalArgumentException.",
+            method = "FileHandler",
+            args = {java.lang.String.class}
         ),
-        @TestTarget(
-          methodName = "FileHandler",
-          methodArgs = {java.lang.String.class, boolean.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies illegal parameters and exceptions: IOException, NullPointerException, IllegalArgumentException.",
+            method = "FileHandler",
+            args = {java.lang.String.class, boolean.class}
         ),
-        @TestTarget(
-          methodName = "FileHandler",
-          methodArgs = {java.lang.String.class, int.class, int.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies illegal parameters and exceptions: IOException, NullPointerException, IllegalArgumentException.",
+            method = "FileHandler",
+            args = {java.lang.String.class, int.class, int.class}
         ),
-        @TestTarget(
-          methodName = "publish",
-          methodArgs = {java.util.logging.LogRecord.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies illegal parameters and exceptions: IOException, NullPointerException, IllegalArgumentException.",
+            method = "publish",
+            args = {java.util.logging.LogRecord.class}
         )
     })
-    public void _testInvalidParams() throws IOException {
+    public void testInvalidParams() throws IOException {
 
         // %t and %p parsing can add file separator automatically
         FileHandler h1 = new FileHandler("%taaa");
@@ -825,12 +894,6 @@ public class FileHandlerTest extends TestCase {
         assertTrue(file.exists());
         reset(TEMPPATH, "aaa");
 
-        // always parse special pattern
-        try {
-            h1 = new FileHandler("%t/%h");
-        } catch (Exception e) {
-            fail("Unexpected exception " + e.toString());
-        }
         h1 = new FileHandler("%t%g");
         h1.close();
         file = new File(TEMPPATH + SEP + "0");
@@ -865,7 +928,7 @@ public class FileHandlerTest extends TestCase {
         file = new File(TEMPPATH + SEP + "baddir" + SEP + "multi0");
         assertFalse(file.exists());
         
-     // bad directory, IOException, append
+        // bad directory, IOException, append
         try {
             h1 = new FileHandler("%t/baddir/multi%g", true);
             fail("should throw IO exception");
@@ -935,20 +998,25 @@ public class FileHandlerTest extends TestCase {
             fail("should throw IllegalArgumentException");
         } catch (IllegalArgumentException e) {
         }
+        
+        // always parse special pattern
+        System.setProperty("user.home", "home");
+        try {
+            h1 = new FileHandler("%t/%h.txt");
+        } catch (Exception e) {
+            fail("Unexpected exception " + e.toString());
+        }
     }
 
     /*
      * test for method public void publish(LogRecord record)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "publish",
-          methodArgs = {java.util.logging.LogRecord.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "publish",
+        args = {java.util.logging.LogRecord.class}
+    )
     public void testPublish() throws Exception {
         LogRecord[] r = new LogRecord[] { new LogRecord(Level.CONFIG, "msg__"),
                 new LogRecord(Level.WARNING, "message"),
@@ -966,15 +1034,12 @@ public class FileHandlerTest extends TestCase {
     /*
      * test for method public void close()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "close",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "close",
+        args = {}
+    )
     public void testClose() throws Exception {
         FileHandler h = new FileHandler("%t/log/stringPublish");
         h.publish(r);
@@ -982,15 +1047,12 @@ public class FileHandlerTest extends TestCase {
         assertFileContent(TEMPPATH + SEP + "log", "stringPublish", h
                 .getFormatter());
     }
-    @TestInfo(
-          level = TestLevel.PARTIAL,
-          purpose = "Doesn't verify SecurityException.",
-          targets = {
-            @TestTarget(
-              methodName = "setOutputStream",
-              methodArgs = {java.io.OutputStream.class}
-            )
-        })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Doesn't verify SecurityException.",
+        method = "setOutputStream",
+        args = {java.io.OutputStream.class}
+    )
     // set output stream still works, just like super StreamHandler
     public void testSetOutputStream() throws Exception {
         MockFileHandler handler = new MockFileHandler("%h/setoutput.log");
@@ -1007,15 +1069,12 @@ public class FileHandlerTest extends TestCase {
         assertFileContent(HOMEPATH, "setoutput.log", handler.getFormatter());
     }
     
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies IllegalArgumentException.",
-      targets = {
-        @TestTarget(
-          methodName = "FileHandler",
-          methodArgs = {java.lang.String.class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies IllegalArgumentException.",
+        method = "FileHandler",
+        args = {java.lang.String.class, int.class, int.class}
+    )
     public void testEmptyPattern_3params() throws SecurityException,
             IOException {
         try {
@@ -1025,15 +1084,12 @@ public class FileHandlerTest extends TestCase {
             // Expected
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies IllegalArgumentException.",
-      targets = {
-        @TestTarget(
-          methodName = "FileHandler",
-          methodArgs = {java.lang.String.class, boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies IllegalArgumentException.",
+        method = "FileHandler",
+        args = {java.lang.String.class, boolean.class}
+    )
     public void testEmptyPattern_2params() throws SecurityException,
             IOException {
         try {
@@ -1043,15 +1099,12 @@ public class FileHandlerTest extends TestCase {
             // Expected
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies IllegalArgumentException.",
-      targets = {
-        @TestTarget(
-          methodName = "FileHandler",
-          methodArgs = {java.lang.String.class, int.class, int.class, boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies IllegalArgumentException.",
+        method = "FileHandler",
+        args = {java.lang.String.class, int.class, int.class, boolean.class}
+    )
     public void testEmptyPattern_4params() throws SecurityException,
             IOException {
         try {

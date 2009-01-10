@@ -26,10 +26,11 @@ import java.nio.charset.Charset;
  * test ISO-8859-1 decoder
  */
 @TestTargetClass(java.nio.charset.CharsetDecoder.class)
-public class ISOCharsetDecoderTest extends CharsetDecoderTest {
+public class ISOCharsetDecoderTest extends AbstractCharsetDecoderTestCase {
 
     protected void setUp() throws Exception {
         cs = Charset.forName("iso-8859-1");
+        unibytes = new byte[] { 32, 98, 117, 102, 102, 101, 114 };
         super.setUp();
     }
 

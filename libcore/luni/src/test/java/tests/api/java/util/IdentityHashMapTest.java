@@ -17,8 +17,8 @@
 
 package tests.api.java.util;
 
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass; 
 
@@ -74,15 +74,12 @@ public class IdentityHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.IdentityHashMap#IdentityHashMap()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "IdentityHashMap",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "IdentityHashMap",
+        args = {}
+    )
     public void test_Constructor() {
         // Test for method java.util.IdentityHashMap()
         new Support_MapTest2(new IdentityHashMap()).runTest();
@@ -94,26 +91,22 @@ public class IdentityHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.IdentityHashMap#IdentityHashMap(int)
      */
-    @TestInfo(
-      level = TestLevel.TODO,
-      purpose = "Need to improve code.",
-      targets = {
-        @TestTarget(
-          methodName = "IdentityHashMap",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "IdentityHashMap",
+        args = {int.class}
+    )
     public void test_ConstructorI() {
         // Test for method java.util.IdentityHashMap(int)
         IdentityHashMap hm2 = new IdentityHashMap(5);
         assertEquals("Created incorrect IdentityHashMap", 0, hm2.size());
         try {
             new IdentityHashMap(-1);
+            fail("Failed to throw IllegalArgumentException for initial capacity < 0");
         } catch (IllegalArgumentException e) {
-            return;
+            //expected
         }
-        fail(
-                "Failed to throw IllegalArgumentException for initial capacity < 0");
 
         IdentityHashMap empty = new IdentityHashMap(0);
         assertNull("Empty IdentityHashMap access", empty.get("nothing"));
@@ -124,15 +117,12 @@ public class IdentityHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.IdentityHashMap#IdentityHashMap(java.util.Map)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify NullPointerException.",
-      targets = {
-        @TestTarget(
-          methodName = "IdentityHashMap",
-          methodArgs = {java.util.Map.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "IdentityHashMap",
+        args = {java.util.Map.class}
+    )
     public void test_ConstructorLjava_util_Map() {
         // Test for method java.util.IdentityHashMap(java.util.Map)
         Map myMap = new TreeMap();
@@ -146,20 +136,24 @@ public class IdentityHashMapTest extends junit.framework.TestCase {
         Map mockMap = new MockMap();
         hm2 = new IdentityHashMap(mockMap);
         assertEquals("Size should be 0", 0, hm2.size());
+        
+        try {
+            new IdentityHashMap(null);
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.IdentityHashMap#clear()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "clear",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "clear",
+        args = {}
+    )
     public void test_clear() {
         // Test for method void java.util.IdentityHashMap.clear()
         hm.clear();
@@ -173,15 +167,12 @@ public class IdentityHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.IdentityHashMap#clone()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "clone",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "clone",
+        args = {}
+    )
     public void test_clone() {
         // Test for method java.lang.Object java.util.IdentityHashMap.clone()
         IdentityHashMap hm2 = (IdentityHashMap) hm.clone();
@@ -217,15 +208,12 @@ public class IdentityHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.IdentityHashMap#containsKey(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "containsKey",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "containsKey",
+        args = {java.lang.Object.class}
+    )
     public void test_containsKeyLjava_lang_Object() {
         // Test for method boolean
         // java.util.IdentityHashMap.containsKey(java.lang.Object)
@@ -245,15 +233,12 @@ public class IdentityHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.IdentityHashMap#containsValue(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "containsValue",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "containsValue",
+        args = {java.lang.Object.class}
+    )
     public void test_containsValueLjava_lang_Object() {
         // Test for method boolean
         // java.util.IdentityHashMap.containsValue(java.lang.Object)
@@ -266,15 +251,12 @@ public class IdentityHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.IdentityHashMap#entrySet()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "entrySet",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "entrySet",
+        args = {}
+    )
     public void test_entrySet() {
         // Test for method java.util.Set java.util.IdentityHashMap.entrySet()
         Set s = hm.entrySet();
@@ -291,15 +273,12 @@ public class IdentityHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.IdentityHashMap#get(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "get",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "get",
+        args = {java.lang.Object.class}
+    )
     public void test_getLjava_lang_Object() {
         // Test for method java.lang.Object
         // java.util.IdentityHashMap.get(java.lang.Object)
@@ -319,15 +298,12 @@ public class IdentityHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.IdentityHashMap#isEmpty()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isEmpty",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isEmpty",
+        args = {}
+    )
     public void test_isEmpty() {
         // Test for method boolean java.util.IdentityHashMap.isEmpty()
         assertTrue("Returned false for new map", new IdentityHashMap()
@@ -338,15 +314,12 @@ public class IdentityHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.IdentityHashMap#keySet()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "keySet",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "keySet",
+        args = {}
+    )
     public void test_keySet() {
         // Test for method java.util.Set java.util.IdentityHashMap.keySet()
         Set s = hm.keySet();
@@ -401,15 +374,12 @@ public class IdentityHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.IdentityHashMap#put(java.lang.Object, java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "put",
-          methodArgs = {Object.class, Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "put",
+        args = {java.lang.Object.class, java.lang.Object.class}
+    )
     public void test_putLjava_lang_ObjectLjava_lang_Object() {
         // Test for method java.lang.Object
         // java.util.IdentityHashMap.put(java.lang.Object, java.lang.Object)
@@ -432,15 +402,12 @@ public class IdentityHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.IdentityHashMap#putAll(java.util.Map)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify NullPointerException.",
-      targets = {
-        @TestTarget(
-          methodName = "putAll",
-          methodArgs = {java.util.Map.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "putAll",
+        args = {java.util.Map.class}
+    )
     public void test_putAllLjava_util_Map() {
         // Test for method void java.util.IdentityHashMap.putAll(java.util.Map)
         IdentityHashMap hm2 = new IdentityHashMap();
@@ -453,20 +420,24 @@ public class IdentityHashMapTest extends junit.framework.TestCase {
         Map mockMap = new MockMap();
         hm2.putAll(mockMap);
         assertEquals("Size should be 0", 0, hm2.size());
+        
+        try {
+            hm2.putAll(null);
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.IdentityHashMap#remove(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "remove",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "remove",
+        args = {java.lang.Object.class}
+    )
     public void test_removeLjava_lang_Object() {
         // Test for method java.lang.Object
         // java.util.IdentityHashMap.remove(java.lang.Object)
@@ -488,15 +459,12 @@ public class IdentityHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.IdentityHashMap#size()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "size",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "size",
+        args = {}
+    )
     public void test_size() {
         // Test for method int java.util.IdentityHashMap.size()
         assertEquals("Returned incorrect size, ", (objArray.length + 2), hm
@@ -506,15 +474,12 @@ public class IdentityHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.IdentityHashMap#equals(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "equals",
+        args = {java.lang.Object.class}
+    )
     public void test_equalsLjava_lang_Object() {
         IdentityHashMap mapOne = new IdentityHashMap();
         IdentityHashMap mapTwo = new IdentityHashMap();
@@ -559,15 +524,12 @@ public class IdentityHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.IdentityHashMap#values()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "values",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "values",
+        args = {}
+    )
     public void test_values() {
         // Test for method java.util.Collection
         // java.util.IdentityHashMap.values()
@@ -592,17 +554,18 @@ public class IdentityHashMapTest extends junit.framework.TestCase {
     /**
      * @tests java.util.IdentityHashMap#Serialization()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Verifies serialization/deserialization compatibility.",
-      targets = {
-        @TestTarget(
-          methodName = "!SerializationSelf",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "Verifies serialization/deserialization compatibility.",
+            method = "!SerializationSelf",
+            args = {}
         ),
-        @TestTarget(
-          methodName = "!SerializationGolden",
-          methodArgs = {}
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "Verifies serialization/deserialization compatibility.",
+            method = "!SerializationGolden",
+            args = {}
         )
     })
     public void test_Serialization() throws Exception {

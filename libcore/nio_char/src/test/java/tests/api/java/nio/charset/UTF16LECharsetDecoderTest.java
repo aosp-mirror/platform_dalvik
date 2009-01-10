@@ -17,8 +17,8 @@
 package tests.api.java.nio.charset;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargets;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestLevel;
 
 import java.io.UnsupportedEncodingException;
@@ -29,7 +29,7 @@ import java.nio.charset.Charset;
  * TODO typedef
  */
 @TestTargetClass(java.nio.charset.CharsetDecoder.class)
-public class UTF16LECharsetDecoderTest extends CharsetDecoderTest {
+public class UTF16LECharsetDecoderTest extends AbstractCharsetDecoderTestCase {
 
     protected void setUp() throws Exception {
         cs = Charset.forName("utf-16le");

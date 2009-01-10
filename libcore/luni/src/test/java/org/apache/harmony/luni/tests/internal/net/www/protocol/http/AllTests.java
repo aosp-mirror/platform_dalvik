@@ -30,7 +30,7 @@ public class AllTests {
     }
 
     public static Test suite() {
-        TestSuite suite = new TestSuite("Tests for HttpURLConnecton, HttpsURLConnection.");
+        TestSuite suite = tests.TestSuiteFactory.createTestSuite("Tests for HttpURLConnecton, HttpsURLConnection.");
         // $JUnit-BEGIN$
 
         suite.addTestSuite(HttpURLConnectionTest.class);

@@ -23,13 +23,17 @@
 package tests.security.cert;
 
 
-import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
 import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
 import junit.framework.TestCase;
 
+import org.apache.harmony.security.tests.support.SpiEngUtils;
+import org.apache.harmony.security.tests.support.cert.MyCertPath;
+import org.apache.harmony.security.tests.support.cert.TestUtils;
+
+import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -37,11 +41,8 @@ import java.security.Provider;
 import java.security.cert.CertPathParameters;
 import java.security.cert.CertPathValidator;
 import java.security.cert.CertPathValidatorException;
+import java.security.cert.CertificateException;
 import java.security.cert.PKIXParameters;
-
-import org.apache.harmony.security.tests.support.cert.MyCertPath;
-import org.apache.harmony.security.tests.support.cert.TestUtils;
-import org.apache.harmony.security.tests.support.SpiEngUtils;
 /**
  * Tests for <code>CertPathValidator</code> class  methods.
  * 
@@ -96,20 +97,14 @@ public class CertPathValidator3Test extends TestCase {
      * when params is instance of PKIXParameters and
      * certpath is not X.509 type
      * 
-     * FIXME: jrockit-j2re1.4.2_04 throws NullPointerException when certPath is null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies exceptions.",
-      targets = {
-        @TestTarget(
-          methodName = "validate",
-          methodArgs = {java.security.cert.CertPath.class, java.security.cert.CertPathParameters.class}
-        )
-    })
-    public void testValidate01()
-            throws NoSuchAlgorithmException, NoSuchProviderException, 
-                    CertPathValidatorException, InvalidAlgorithmParameterException  {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies exceptions.",
+        method = "validate",
+        args = {java.security.cert.CertPath.class, java.security.cert.CertPathParameters.class}
+    )
+    public void testValidate01() throws InvalidAlgorithmParameterException, CertPathValidatorException  {
         if (!PKIXSupport) {
             fail(NotSupportMsg);
             return;
@@ -128,8 +123,7 @@ public class CertPathValidator3Test extends TestCase {
                 certPV[i].validate(null, params);
                 fail("NullPointerException must be thrown");
             } catch(NullPointerException e) {
-            }            
+            }
         }
     }
-
 }

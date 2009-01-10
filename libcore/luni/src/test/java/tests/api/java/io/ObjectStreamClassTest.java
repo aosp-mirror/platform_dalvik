@@ -17,9 +17,9 @@
 
 package tests.api.java.io;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import java.io.ObjectStreamClass;
@@ -44,13 +44,12 @@ public class ObjectStreamClassTest extends junit.framework.TestCase {
     /**
      * @tests java.io.ObjectStreamClass#forClass()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = { @TestTarget(methodName = "forClass", 
-                                    methodArgs = {})                                    
-            }
-        )      
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "forClass",
+        args = {}
+    )      
     public void test_forClass() {
         // Test for method java.lang.Class java.io.ObjectStreamClass.forClass()
         // Need to test during serialization to be sure an instance is
@@ -63,13 +62,12 @@ public class ObjectStreamClassTest extends junit.framework.TestCase {
     /**
      * @tests java.io.ObjectStreamClass#getField(java.lang.String)
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = { @TestTarget(methodName = "getField", 
-                                    methodArgs = {java.lang.String.class})                                    
-            }
-        )     
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getField",
+        args = {java.lang.String.class}
+    )     
     public void test_getFieldLjava_lang_String() {
         // Test for method java.io.ObjectStreamField
         // java.io.ObjectStreamClass.getField(java.lang.String)
@@ -83,13 +81,12 @@ public class ObjectStreamClassTest extends junit.framework.TestCase {
     /**
      * @tests java.io.ObjectStreamClass#getFields()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = { @TestTarget(methodName = "getFields", 
-                                    methodArgs = {})                                    
-            }
-        )     
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getFields",
+        args = {}
+    )     
     public void test_getFields() {
         // Test for method java.io.ObjectStreamField []
         // java.io.ObjectStreamClass.getFields()
@@ -103,13 +100,12 @@ public class ObjectStreamClassTest extends junit.framework.TestCase {
     /**
      * @tests java.io.ObjectStreamClass#getName()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = { @TestTarget(methodName = "getName", 
-                                    methodArgs = {})                                    
-            }
-        )    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getName",
+        args = {}
+    )    
     public void test_getName() {
         // Test for method java.lang.String java.io.ObjectStreamClass.getName()
         ObjectStreamClass osc = ObjectStreamClass.lookup(DummyClass.class);
@@ -121,13 +117,12 @@ public class ObjectStreamClassTest extends junit.framework.TestCase {
     /**
      * @tests java.io.ObjectStreamClass#getSerialVersionUID()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = { @TestTarget(methodName = "getSerialVersionUID", 
-                                    methodArgs = {})                                    
-            }
-        )    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getSerialVersionUID",
+        args = {}
+    )    
     public void test_getSerialVersionUID() {
         // Test for method long java.io.ObjectStreamClass.getSerialVersionUID()
         ObjectStreamClass osc = ObjectStreamClass.lookup(DummyClass.class);
@@ -140,13 +135,12 @@ public class ObjectStreamClassTest extends junit.framework.TestCase {
     /**
      * @tests java.io.ObjectStreamClass#lookup(java.lang.Class)
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = { @TestTarget(methodName = "lookup", 
-                                    methodArgs = {java.lang.Class.class})                                    
-            }
-        )        
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "lookup",
+        args = {java.lang.Class.class}
+    )        
     public void test_lookupLjava_lang_Class() {
         // Test for method java.io.ObjectStreamClass
         // java.io.ObjectStreamClass.lookup(java.lang.Class)
@@ -159,13 +153,12 @@ public class ObjectStreamClassTest extends junit.framework.TestCase {
     /**
      * @tests java.io.ObjectStreamClass#toString()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = { @TestTarget(methodName = "toString", 
-                                    methodArgs = {})                                    
-            }
-        )    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )    
     public void test_toString() {
         // Test for method java.lang.String java.io.ObjectStreamClass.toString()
         ObjectStreamClass osc = ObjectStreamClass.lookup(DummyClass.class);
@@ -177,13 +170,12 @@ public class ObjectStreamClassTest extends junit.framework.TestCase {
                         && oscString.indexOf("999999999999999L") >= 0);
         ;
     }
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = { @TestTarget(methodName = "lookup", 
-                                    methodArgs = {java.lang.Class.class})                                    
-            }
-        )    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "lookup",
+        args = {java.lang.Class.class}
+    )    
     public void testSerialization() {
         ObjectStreamClass osc = ObjectStreamClass.lookup(ObjectStreamClass.class);
         assertEquals(0, osc.getFields().length);
@@ -204,15 +196,12 @@ public class ObjectStreamClassTest extends junit.framework.TestCase {
     }
 
 // BEGIN android-added
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void testFooSerialVersionUid() {
         assertEquals(-5887964677443030867L, Foo.serialVersionUID());
     }

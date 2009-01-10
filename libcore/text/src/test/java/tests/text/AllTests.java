@@ -31,7 +31,7 @@ public class AllTests {
     }
 
     public static Test suite() {
-        TestSuite suite = new TestSuite("All Text test suites");
+        TestSuite suite = tests.TestSuiteFactory.createTestSuite("All Text test suites");
         // $JUnit-BEGIN$
         suite.addTest(org.apache.harmony.text.tests.java.text.AllTests.suite());
         // $JUnit-END$

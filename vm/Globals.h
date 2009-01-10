@@ -577,6 +577,11 @@ struct DvmGlobals {
      * crashes the Zygote process will be killed and restarted.
      */
     pid_t systemServerPid;
+
+//#define COUNT_PRECISE_METHODS
+#ifdef COUNT_PRECISE_METHODS
+    PointerSet* preciseMethods;
+#endif
 };
 
 extern struct DvmGlobals gDvm;

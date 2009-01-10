@@ -30,7 +30,7 @@ public class AllTests {
     }
 
     public static Test suite() {
-        TestSuite suite = new TestSuite("Test for java.util");
+        TestSuite suite = tests.TestSuiteFactory.createTestSuite("Test for java.util");
 
         // $JUnit-BEGIN$
         suite.addTestSuite(AbstractListTest.class);
@@ -61,8 +61,8 @@ public class AllTests {
         suite.addTestSuite(LinkedHashMapTest.class);
         suite.addTestSuite(LinkedHashSetTest.class);
         suite.addTestSuite(LinkedListTest.class);
-        suite.addTestSuite(ListResourceBundleTest.class); // F0 E1 ticket #204
-        suite.addTestSuite(LocaleTest.class);             // F1 E0 ticket #200
+        suite.addTestSuite(ListResourceBundleTest.class);
+        suite.addTestSuite(LocaleTest.class);
         suite.addTestSuite(MissingResourceExceptionTest.class);
         suite.addTestSuite(NoSuchElementExceptionTest.class);
         suite.addTestSuite(ObservableTest.class);
@@ -71,8 +71,8 @@ public class AllTests {
         suite.addTestSuite(PropertyPermissionTest.class);
         suite.addTestSuite(PropertyResourceBundleTest.class);
         suite.addTestSuite(RandomTest.class);
-        suite.addTestSuite(ResourceBundleTest.class);     // F1 E2 ticket #204
-        suite.addTestSuite(ScannerTest.class);            // F0 E67 ticket #201
+        suite.addTestSuite(ResourceBundleTest.class);
+        suite.addTestSuite(ScannerTest.class);
         suite.addTestSuite(SimpleTimeZoneTest.class);
         suite.addTestSuite(StackTest.class);
         suite.addTestSuite(StringTokenizerTest.class);

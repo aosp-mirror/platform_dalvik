@@ -17,11 +17,6 @@
 
 package tests.api.java.io;
 
-import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
-
 import java.io.CharArrayReader;
 import java.io.FilterReader;
 import java.io.IOException;
@@ -29,9 +24,15 @@ import java.io.PushbackReader;
 import java.io.Reader;
 import java.io.StringReader;
 
+import tests.support.Support_ASimpleReader;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
+
 @TestTargetClass(PushbackReader.class) 
 public class PushbackReaderTest extends junit.framework.TestCase {
 
+    Support_ASimpleReader underlying = new Support_ASimpleReader();
     PushbackReader pbr;
 
     String pbString = "Hello World";
@@ -39,15 +40,11 @@ public class PushbackReaderTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PushbackReader#PushbackReader(java.io.Reader)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "PushbackReader",
-          methodArgs = {java.io.Reader.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "PushbackReader",
+        args = {java.io.Reader.class}
+    )
     public void test_ConstructorLjava_io_Reader() {
         // Test for method java.io.PushbackReader(java.io.Reader)
         try {
@@ -69,35 +66,60 @@ public class PushbackReaderTest extends junit.framework.TestCase {
     }
 
     /**
+     * @throws IOException 
      * @tests java.io.PushbackReader#PushbackReader(java.io.Reader, int)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "See setUp. IllegalArgumentException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "PushbackReader",
-          methodArgs = {java.io.Reader.class, int.class}
-        )
-    })
-    public void test_ConstructorLjava_io_ReaderI() {
-        // Test for method java.io.PushbackReader(java.io.Reader, int)
-        assertTrue("Used to test", true);
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "PushbackReader",
+        args = {java.io.Reader.class, int.class}
+    )
+    public void test_ConstructorLjava_io_ReaderI() throws IOException {
+        PushbackReader tobj;
+
+        tobj = new PushbackReader(underlying, 10000);
+        tobj = new PushbackReader(underlying, 1);
+
+        try {
+            tobj = new PushbackReader(underlying, -1);
+            tobj.close();
+            fail("IOException not thrown.");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+        try {
+            tobj = new PushbackReader(underlying, 0);
+            tobj.close();
+            fail("IOException not thrown.");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
     }
 
     /**
+     * @throws IOException 
      * @tests java.io.PushbackReader#close()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "close",
-          methodArgs = {}
-        )
-    })
-    public void test_close() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "close",
+        args = {}
+    )
+    public void test_close() throws IOException {
+        PushbackReader tobj;
+
+        tobj = new PushbackReader(underlying);
+        tobj.close();
+        tobj.close();
+        tobj = new PushbackReader(underlying);
+        underlying.throwExceptionOnNextUse = true;
+        try {
+            tobj.close();
+            fail("IOException not thrown.");
+        } catch (IOException e) {
+            // expected
+        }
+
         // Test for method void java.io.PushbackReader.close()
         try {
             pbr.close();
@@ -106,60 +128,61 @@ public class PushbackReaderTest extends junit.framework.TestCase {
             return;
         }
         fail("Failed to throw exception reading from closed reader");
+
     }
 
     /**
      * @tests java.io.PushbackReader#mark(int)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Checks exceptions.",
-      targets = {
-        @TestTarget(
-          methodName = "mark",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "mark",
+        args = {int.class}
+    )
     public void test_markI() {
         try {
             pbr.mark(3);
+            fail("Test 1: IOException expected because marking is not supported.");
         } catch (IOException e) {
-            // correct
-            return;
+            // Expected.
         }
-        fail("mark failed to throw expected IOException");
     }
 
     /**
      * @tests java.io.PushbackReader#markSupported()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "markSupported",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "markSupported",
+        args = {}
+    )
     public void test_markSupported() {
-        // Test for method boolean java.io.PushbackReader.markSupported()
-        assertTrue("markSupported returned true", !pbr.markSupported());
+        assertFalse("Test 1: markSupported() must return false.", 
+                pbr.markSupported());
     }
 
     /**
+     * @throws IOException 
      * @tests java.io.PushbackReader#read()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {}
-        )
-    })
-    public void test_read() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "read",
+        args = {}
+    )
+    public void test_read() throws IOException {
+        PushbackReader tobj;
+
+        tobj = new PushbackReader(underlying);
+        assertEquals("Wrong value read!", 66, tobj.read());
+        underlying.throwExceptionOnNextUse = true;
+        try {
+            tobj.read();
+            fail("IOException not thrown.");
+        } catch (IOException e) {
+            // expected
+        }
+
         // Test for method int java.io.PushbackReader.read()
         try {
             char c;
@@ -175,18 +198,30 @@ public class PushbackReaderTest extends junit.framework.TestCase {
     }
 
     /**
+     * @throws IOException 
      * @tests java.io.PushbackReader#read(char[], int, int)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {char[].class, int.class, int.class}
-        )
-    })
-    public void test_read$CII() {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "read",
+        args = {char[].class, int.class, int.class}
+    )
+    public void test_read$CII() throws IOException {
+        PushbackReader tobj;
+        char[] buf = ("01234567890123456789").toCharArray();
+
+        tobj = new PushbackReader(underlying);
+        tobj.read(buf, 6, 5);
+        assertEquals("Wrong value read!", "BEGIN", new String(buf, 6, 5));
+        assertEquals("Too much read!", "012345BEGIN123456789", new String(buf));
+        underlying.throwExceptionOnNextUse = true;
+        try {
+            tobj.read(buf, 6, 5);
+            fail("IOException not thrown.");
+        } catch (IOException e) {
+            // expected
+        }
+
         // Test for method int java.io.PushbackReader.read(char [], int, int)
         try {
             char[] c = new char[5];
@@ -205,15 +240,12 @@ public class PushbackReaderTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PushbackReader#read(char[], int, int)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Checks exceptions.",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {char[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Checks exceptions.",
+        method = "read",
+        args = {char[].class, int.class, int.class}
+    )
     public void test_read_$CII_Exception() throws IOException {
         pbr = new PushbackReader(new StringReader(pbString), 10);
         
@@ -280,18 +312,28 @@ public class PushbackReaderTest extends junit.framework.TestCase {
     }
 
     /**
+     * @throws IOException 
      * @tests java.io.PushbackReader#ready()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "ready",
-          methodArgs = {}
-        )
-    })
-    public void test_ready() {
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "Could also add tests where underlying says no but push back buffer has contents.",
+        method = "ready",
+        args = {}
+    )
+    public void test_ready() throws IOException {
+        PushbackReader tobj;
+
+        tobj = new PushbackReader(underlying);
+        assertTrue("Should be ready!", tobj.ready());
+        underlying.throwExceptionOnNextUse = true;
+        try {
+            tobj.ready();
+            fail("IOException not thrown.");
+        } catch (IOException e) {
+            // expected
+        }
+
         // Test for method boolean java.io.PushbackReader.ready()
         try {
             char[] c = new char[11];
@@ -306,15 +348,11 @@ public class PushbackReaderTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PushbackReader#reset()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "reset",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "reset",
+        args = {}
+    )
     public void test_reset() {
         try {
             pbr.reset();
@@ -322,22 +360,42 @@ public class PushbackReaderTest extends junit.framework.TestCase {
             // correct
             return;
         }
-        fail("mark failed to throw expected IOException");
+        fail("reset failed to throw expected IOException");
     }
 
     /**
+     * @throws IOException 
      * @tests java.io.PushbackReader#unread(char[])
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "unread",
-          methodArgs = {char[].class}
-        )
-    })
-    public void test_unread$C() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "unread",
+        args = {char[].class}
+    )
+    public void test_unread$C() throws IOException {
+        PushbackReader tobj;
+        String str2 = "0123456789";
+        char[] buf2 = str2.toCharArray();
+        char[] readBuf = new char[10];
+
+        tobj = new PushbackReader(underlying, 10);
+        tobj.unread(buf2);
+        try {
+            tobj.unread(buf2);
+            fail("IOException not thrown.");
+        } catch (IOException e) {
+            // expected
+        }
+        tobj.read(readBuf);
+        assertEquals("Incorrect bytes read", str2, new String(readBuf));
+        underlying.throwExceptionOnNextUse = true;
+        try {
+            tobj.read(buf2);
+            fail("IOException not thrown.");
+        } catch (IOException e) {
+            // expected
+        }
+
         // Test for method void java.io.PushbackReader.unread(char [])
         try {
             char[] c = new char[5];
@@ -352,18 +410,29 @@ public class PushbackReaderTest extends junit.framework.TestCase {
     }
 
     /**
+     * @throws IOException 
      * @tests java.io.PushbackReader#skip(long)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "skip",
-          methodArgs = {long.class}
-        )
-    })
-    public void test_skip$J() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "skip",
+        args = {long.class}
+    )
+    public void test_skip$J() throws IOException {
+        PushbackReader tobj;
+
+        tobj = new PushbackReader(underlying);
+        tobj.skip(6);
+        tobj.skip(1000000);
+        tobj.skip(1000000);
+        underlying.throwExceptionOnNextUse = true;
+        try {
+            tobj.skip(1);
+            fail("IOException not thrown.");
+        } catch (IOException e) {
+            // expected
+        }
+
         char chars[] = new char[] { 'h', 'e', 'l', 'l', 'o' };
         for (int i = 0; i < 3; i++) {
             Reader reader, reader2;
@@ -426,18 +495,38 @@ public class PushbackReaderTest extends junit.framework.TestCase {
     }
 
     /**
+     * @throws IOException 
      * @tests java.io.PushbackReader#unread(char[], int, int)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "unread",
-          methodArgs = {char[].class, int.class, int.class}
-        )
-    })
-    public void test_unread$CII() {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "unread",
+        args = {char[].class, int.class, int.class}
+    )
+    public void test_unread$CII() throws IOException {
+        PushbackReader tobj;
+        String str2 = "0123456789";
+        char[] buf2 = (str2 + str2 + str2).toCharArray();
+        char[] readBuf = new char[10];
+
+        tobj = new PushbackReader(underlying, 10);
+        tobj.unread(buf2, 15, 10);
+        try {
+            tobj.unread(buf2, 15, 10);
+            fail("IOException not thrown.");
+        } catch (IOException e) {
+            // expected
+        }
+        tobj.read(readBuf);
+        assertEquals("Incorrect bytes read", "5678901234", new String(readBuf));
+        underlying.throwExceptionOnNextUse = true;
+        try {
+            tobj.read(buf2, 15, 10);
+            fail("IOException not thrown.");
+        } catch (IOException e) {
+            // expected
+        }
+
         // Test for method void java.io.PushbackReader.unread(char [], int, int)
         try {
             char[] c = new char[5];
@@ -455,15 +544,11 @@ public class PushbackReaderTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PushbackReader#unread(char[], int, int)
      */
-@TestInfo(
-        level = TestLevel.PARTIAL,
-        purpose = "IOException checking missed.",
-        targets = {
-          @TestTarget(
-            methodName = "unread",
-            methodArgs = {char[].class, int.class, int.class}
-          )
-      })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "unread",
+        args = {char[].class, int.class, int.class}
+    )
     public void test_unread_$CII_NullPointerException() throws IOException {
         //a pushback reader with one character buffer
         pbr = new PushbackReader(new StringReader(pbString));
@@ -479,15 +564,11 @@ public class PushbackReaderTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PushbackReader#unread(char[], int, int)
      */
-@TestInfo(
-        level = TestLevel.PARTIAL,
-        purpose = "IOException checking missed.",
-        targets = {
-          @TestTarget(
-            methodName = "unread",
-            methodArgs = {char[].class, int.class, int.class}
-          )
-      })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "unread",
+        args = {char[].class, int.class, int.class}
+    )
     public void test_unread_$CII_Exception_InsufficientBuffer() throws IOException {
         //a pushback reader with one character buffer
         pbr = new PushbackReader(new StringReader(pbString));
@@ -504,15 +585,11 @@ public class PushbackReaderTest extends junit.framework.TestCase {
     /**
      * @tests java.io.PushbackReader#unread(char[], int, int)
      */
-@TestInfo(
-        level = TestLevel.PARTIAL,
-        purpose = "IOException checking missed.",
-        targets = {
-          @TestTarget(
-            methodName = "unread",
-            methodArgs = {char[].class, int.class, int.class}
-          )
-      })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "unread",
+        args = {char[].class, int.class, int.class}
+    )
     public void test_unread_$CII_ArrayIndexOutOfBoundsException() throws IOException {
         //a pushback reader with one character buffer
         pbr = new PushbackReader(new StringReader(pbString));
@@ -526,20 +603,32 @@ public class PushbackReaderTest extends junit.framework.TestCase {
     }
     
     /**
+     * @throws IOException 
      * @tests java.io.PushbackReader#unread(int)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "unread",
-          methodArgs = {int.class}
-        )
-    })
-    public void test_unreadI() {
-        // Test for method void java.io.PushbackReader.unread(int)
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "unread",
+        args = {int.class}
+    )
+    public void test_unreadI() throws IOException {
+        PushbackReader tobj;
 
+        tobj = new PushbackReader(underlying);
+        tobj.unread(23); // Why does this work?!?
+        tobj.skip(2);
+        tobj.unread(23);
+        assertEquals("Wrong value read!", 23, tobj.read());
+        tobj.unread(13);
+        try {
+            tobj.unread(13);
+            fail("IOException not thrown (ACTUALLY NOT SURE WHETHER IT REALLY MUST BE THROWN!).");
+        } catch (IOException e) {
+            // expected
+        }
+
+        // Test for method void java.io.PushbackReader.unread(int)
         try {
             int c;
             pbr.read();

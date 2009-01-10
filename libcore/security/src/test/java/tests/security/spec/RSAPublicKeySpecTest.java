@@ -22,9 +22,9 @@
 
 package tests.security.spec;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -54,15 +54,12 @@ public class RSAPublicKeySpecTest extends TestCase {
      * Assertion: Constructs <code>RSAPublicKeySpec</code>
      * object using valid parameters
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies constructor with valid parameters.",
-      targets = {
-        @TestTarget(
-          methodName = "RSAPublicKeySpec",
-          methodArgs = {java.math.BigInteger.class, java.math.BigInteger.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies constructor with valid parameters.",
+        method = "RSAPublicKeySpec",
+        args = {java.math.BigInteger.class, java.math.BigInteger.class}
+    )
     public final void testRSAPublicKeySpec01() {
         KeySpec ks =
             new RSAPublicKeySpec(BigInteger.valueOf(1234567890L),
@@ -76,15 +73,12 @@ public class RSAPublicKeySpecTest extends TestCase {
      * Assertion: Constructs <code>RSAPublicKeySpec</code>
      * object using valid parameters
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies null as parameters.",
-      targets = {
-        @TestTarget(
-          methodName = "RSAPublicKeySpec",
-          methodArgs = {java.math.BigInteger.class, java.math.BigInteger.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies null as parameters.",
+        method = "RSAPublicKeySpec",
+        args = {java.math.BigInteger.class, java.math.BigInteger.class}
+    )
     public final void testRSAPublicKeySpec02() {
         KeySpec ks =
             new RSAPublicKeySpec(null, null);
@@ -96,15 +90,12 @@ public class RSAPublicKeySpecTest extends TestCase {
      * Test for <code>getModulus()</code> method<br>
      * Assertion: returns modulus
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getModulus",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getModulus",
+        args = {}
+    )
     public final void testGetModulus() {
         RSAPublicKeySpec rpks =
             new RSAPublicKeySpec(BigInteger.valueOf(1234567890L),
@@ -116,15 +107,12 @@ public class RSAPublicKeySpecTest extends TestCase {
      * Test for <code>getPublicExponent()</code> method<br>
      * Assertion: returns public exponent
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getPublicExponent",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getPublicExponent",
+        args = {}
+    )
     public final void testGetPublicExponent() {
         RSAPublicKeySpec rpks =
             new RSAPublicKeySpec(BigInteger.valueOf(3L),

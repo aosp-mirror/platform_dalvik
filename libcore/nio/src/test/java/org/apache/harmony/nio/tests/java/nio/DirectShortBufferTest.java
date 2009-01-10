@@ -15,9 +15,8 @@
  */
 package org.apache.harmony.nio.tests.java.nio;
 
-import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import java.nio.ByteBuffer;
@@ -26,6 +25,7 @@ import java.nio.ByteOrder;
 @TestTargetClass(java.nio.ShortBuffer.class)
 public class DirectShortBufferTest extends ShortBufferTest {
     public void setUp(){
+        capacity = BUFFER_LENGTH;
         buf = ByteBuffer.allocateDirect(BUFFER_LENGTH*2).asShortBuffer();
         loadTestData1(buf);
         baseBuf = buf;
@@ -35,27 +35,23 @@ public class DirectShortBufferTest extends ShortBufferTest {
         buf = null;
         baseBuf = null;
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies hasArray method for direct ShortBuffer.",
-      targets = {
-        @TestTarget(
-          methodName = "hasArray",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies hasArray method for direct ShortBuffer.",
+        method = "hasArray",
+        args = {}
+    )
     public void testHasArray() {
         assertFalse(buf.hasArray());
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies array method for direct ShortBuffer.",
-      targets = {
-        @TestTarget(
-          methodName = "array",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies array method for direct ShortBuffer.",
+        method = "array",
+        args = {}
+    )
     public void testArray() {
         try {
             buf.array();
@@ -63,15 +59,13 @@ public class DirectShortBufferTest extends ShortBufferTest {
         } catch (UnsupportedOperationException e) {
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies arrayOffset method for direct ShortBuffer.",
-      targets = {
-        @TestTarget(
-          methodName = "arrayOffset",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies arrayOffset method for direct ShortBuffer.",
+        method = "arrayOffset",
+        args = {}
+    )
     public void testArrayOffset() {
         try {
             buf.arrayOffset();
@@ -80,27 +74,23 @@ public class DirectShortBufferTest extends ShortBufferTest {
             //expected
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies isDirect method for direct ShortBuffer.",
-      targets = {
-        @TestTarget(
-          methodName = "isDirect",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies isDirect method for direct ShortBuffer.",
+        method = "isDirect",
+        args = {}
+    )
     public void testIsDirect() {
         assertTrue(buf.isDirect());
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies order method for direct ShortBuffer.",
-      targets = {
-        @TestTarget(
-          methodName = "order",
-          methodArgs = {}
-        )
-    })
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies order method for direct ShortBuffer.",
+        method = "order",
+        args = {}
+    )
     public void testOrder() {
         assertEquals(ByteOrder.BIG_ENDIAN, buf.order());
     }

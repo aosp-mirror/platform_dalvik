@@ -16,10 +16,11 @@
 
 package tests.api.java.util;
 
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.AndroidOnly;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -82,15 +83,12 @@ public class EnumMapTest extends TestCase {
     /**
      * @tests java.util.EnumMap#EnumMap(Class)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "EnumMap",
-          methodArgs = {java.lang.Class.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "EnumMap",
+        args = {java.lang.Class.class}
+    )
     @SuppressWarnings({ "unchecked", "boxing" })
     public void test_ConstructorLjava_lang_Class() {
         try {
@@ -157,15 +155,12 @@ public class EnumMapTest extends TestCase {
     /**
      * @tests java.util.EnumMap#EnumMap(EnumMap)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "EnumMap",
-          methodArgs = {java.util.EnumMap.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "EnumMap",
+        args = {java.util.EnumMap.class}
+    )
     @SuppressWarnings({ "unchecked", "boxing" })
     public void test_ConstructorLjava_util_EnumMap() {
         EnumMap enumMap;
@@ -200,15 +195,12 @@ public class EnumMapTest extends TestCase {
     /**
      * @tests java.util.EnumMap#EnumMap(Map)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "EnumMap",
-          methodArgs = {java.util.Map.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "EnumMap",
+        args = {java.util.Map.class}
+    )
     @SuppressWarnings({ "unchecked", "boxing" })
     public void test_ConstructorLjava_util_Map() {
         EnumMap enumMap;
@@ -267,15 +259,12 @@ public class EnumMapTest extends TestCase {
     /**
      * @tests java.util.EnumMap#clear()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "clear",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "clear",
+        args = {}
+    )
     @SuppressWarnings({ "unchecked", "boxing" })
     public void test_clear() {
         EnumMap enumSizeMap = new EnumMap(Size.class);
@@ -287,15 +276,12 @@ public class EnumMapTest extends TestCase {
     /**
      * @tests java.util.EnumMap#containsKey(Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "containsKey",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "containsKey",
+        args = {java.lang.Object.class}
+    )
     @SuppressWarnings( { "unchecked", "boxing" })
     public void test_containsKeyLjava_lang_Object() {
         EnumMap enumSizeMap = new EnumMap(Size.class);
@@ -320,15 +306,12 @@ public class EnumMapTest extends TestCase {
     /**
      * @tests java.util.EnumMap#clone()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "clone",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "clone",
+        args = {}
+    )
     @SuppressWarnings( { "unchecked", "boxing" })
     public void test_clone() {
         EnumMap enumSizeMap = new EnumMap(Size.class);
@@ -351,15 +334,12 @@ public class EnumMapTest extends TestCase {
     /**
      * @tests java.util.EnumMap#containsValue(Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "containsValue",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "containsValue",
+        args = {java.lang.Object.class}
+    )
     @SuppressWarnings( { "unchecked", "boxing" })
     public void test_containsValueLjava_lang_Object() {
         EnumMap enumSizeMap = new EnumMap(Size.class);
@@ -389,15 +369,13 @@ public class EnumMapTest extends TestCase {
     /**
      * @tests java.util.EnumMap#entrySet()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "entrySet",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "entrySet",
+        args = {}
+    )
+    @AndroidOnly("Map.Entry is indirectly modified on RI when Iterator.next() is invoked")
     @SuppressWarnings({ "unchecked", "boxing" })
     public void test_entrySet() {
         EnumMap enumSizeMap = new EnumMap(Size.class);
@@ -579,7 +557,6 @@ public class EnumMapTest extends TestCase {
                 .remove(new Integer(1)));
 
         iter.next();
-        //The following test case fails on RI.
         assertEquals("Wrong key", Size.Middle, entry.getKey()); //$NON-NLS-1$
         set.clear();
         assertEquals("Wrong size", 0, set.size()); //$NON-NLS-1$
@@ -628,15 +605,12 @@ public class EnumMapTest extends TestCase {
     /**
      * @tests java.util.EnumMap#equals(Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "equals",
+        args = {java.lang.Object.class}
+    )
     @SuppressWarnings( { "unchecked", "boxing" })
     public void test_equalsLjava_lang_Object() {
         EnumMap enumMap = new EnumMap(Size.class);
@@ -677,15 +651,12 @@ public class EnumMapTest extends TestCase {
     /**
      * @tests java.util.EnumMap#keySet()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "keySet",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "keySet",
+        args = {}
+    )
     @SuppressWarnings( { "unchecked", "boxing" })
     public void test_keySet() {
         EnumMap enumSizeMap = new EnumMap(Size.class);
@@ -843,15 +814,12 @@ public class EnumMapTest extends TestCase {
     /**
      * @tests java.util.EnumMap#get(Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "get",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "get",
+        args = {java.lang.Object.class}
+    )
     @SuppressWarnings({ "unchecked", "boxing" })
     public void test_getLjava_lang_Object() {
         EnumMap enumSizeMap = new EnumMap(Size.class);
@@ -896,16 +864,12 @@ public class EnumMapTest extends TestCase {
     /**
      * @tests java.util.EnumMap#put(Object,Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "put",
-          methodArgs = {java.lang.Object.class, java.lang.Object.class}
-        )
-    })
-    @SuppressWarnings( { "unchecked", "boxing" })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "put",
+        args = {Enum.class, java.lang.Object.class}
+    )
     public void test_putLjava_lang_ObjectLjava_lang_Object() {
         EnumMap enumSizeMap = new EnumMap(Size.class);
         try {
@@ -950,15 +914,12 @@ public class EnumMapTest extends TestCase {
     /**
      * @tests java.util.EnumMap#putAll(Map)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "putAll",
-          methodArgs = {java.util.Map.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "putAll",
+        args = {java.util.Map.class}
+    )
     @SuppressWarnings({ "unchecked", "boxing" })
     public void test_putAllLjava_util_Map() {
         EnumMap enumColorMap = new EnumMap<Color, Double>(Color.class);
@@ -1026,15 +987,12 @@ public class EnumMapTest extends TestCase {
     /**
      * @tests java.util.EnumMap#remove(Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "remove",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "remove",
+        args = {java.lang.Object.class}
+    )
     @SuppressWarnings({ "unchecked", "boxing" })
     public void test_removeLjava_lang_Object() {
         EnumMap enumSizeMap = new EnumMap(Size.class);
@@ -1076,15 +1034,12 @@ public class EnumMapTest extends TestCase {
     /**
      * @tests java.util.EnumMap#size()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "size",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "size",
+        args = {}
+    )
     @SuppressWarnings({ "unchecked", "boxing" })
     public void test_size() {
         EnumMap enumSizeMap = new EnumMap(Size.class);
@@ -1123,15 +1078,12 @@ public class EnumMapTest extends TestCase {
     /**
      * @tests java.util.EnumMap#values()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "values",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "values",
+        args = {}
+    )
     @SuppressWarnings( { "unchecked", "boxing" })
     public void test_values() {
         EnumMap enumColorMap = new EnumMap<Color, Double>(Color.class);
@@ -1288,15 +1240,12 @@ public class EnumMapTest extends TestCase {
     /**
      * @tests serialization/deserialization.
      */
-    @TestInfo(
-              level = TestLevel.COMPLETE,
-              purpose = "Verifies serialization/deserialization compatibility.",
-              targets = {
-                @TestTarget(
-                  methodName = "!SerializationSelf",
-                  methodArgs = {}
-                )
-            })    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization/deserialization compatibility.",
+        method = "!SerializationSelf",
+        args = {}
+    )    
     @SuppressWarnings({ "unchecked", "boxing" })
     public void testSerializationSelf() throws Exception {
         EnumMap enumColorMap = new EnumMap<Color, Double>(Color.class);
@@ -1307,15 +1256,12 @@ public class EnumMapTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Verifies serialization/deserialization compatibility.",
-      targets = {
-        @TestTarget(
-          methodName = "!SerializationGolden",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization/deserialization compatibility.",
+        method = "!SerializationGolden",
+        args = {}
+    )
     @SuppressWarnings({ "unchecked", "boxing" })
     public void testSerializationCompatibility() throws Exception {
         EnumMap enumColorMap = new EnumMap<Color, Double>(Color.class);

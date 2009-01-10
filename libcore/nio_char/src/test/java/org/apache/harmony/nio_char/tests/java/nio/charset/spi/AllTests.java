@@ -26,7 +26,7 @@ public class AllTests {
     }
 
     public static Test suite() {
-        TestSuite suite = new TestSuite(
+        TestSuite suite = tests.TestSuiteFactory.createTestSuite(
                 "Suite of tests for the java.nio.charset.spi package.");
         // $JUnit-BEGIN$
         suite.addTestSuite(CharsetProviderTest.class);

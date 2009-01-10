@@ -22,10 +22,11 @@
 
 package org.apache.harmony.security.tests.java.security;
 
+import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.io.IOException;
 import java.security.KeyStore;
@@ -111,15 +112,12 @@ public class KeyStoreTest extends TestCase {
      * methods 
      * Assertions: throw IllegalArgumentException if param is null;
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "NoSuchAlgorithmException, CertificateException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "load",
-          methodArgs = {java.security.KeyStore.LoadStoreParameter.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "NoSuchAlgorithmException, CertificateException checking missed",
+        method = "load",
+        args = {java.security.KeyStore.LoadStoreParameter.class}
+    )
     public void testLoadStore02() throws Exception {
         assertTrue(NotSupportMsg, KSSupported);
 
@@ -156,15 +154,12 @@ public class KeyStoreTest extends TestCase {
      * method 
      * Assertion: stores KeyEntry.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setKeyEntry",
-          methodArgs = {String.class, byte[].class, Certificate[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setKeyEntry",
+        args = {java.lang.String.class, byte[].class, java.security.cert.Certificate[].class}
+    )
     public void testSetKeyEntry() throws Exception {
         assertTrue(NotSupportMsg, KSSupported);
         
@@ -205,15 +200,12 @@ public class KeyStoreTest extends TestCase {
      * Test for <code>getDefaultType()</code> method Assertion: returns
      * default security key store type or "jks" string
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getDefaultType",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getDefaultType",
+        args = {}
+    )
     public void testKeyStore01() {
         String propName = "keystore.type";
         String defKSType = Security.getProperty(propName);
@@ -242,15 +234,12 @@ public class KeyStoreTest extends TestCase {
      * throws KeyStoreException when type is not available
      * 
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verification with valid parameter missed",
-      targets = {
-        @TestTarget(
-          methodName = "getInstance",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verification with valid parameter missed",
+        method = "getInstance",
+        args = {java.lang.String.class}
+    )
     public void testKeyStore02() throws KeyStoreException {
         String[] invalidValues =  SpiEngUtils.invalidValues;
         try {
@@ -271,16 +260,15 @@ public class KeyStoreTest extends TestCase {
     /**
      * @test java.security.KeyStore.PasswordProtection.getPassword()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "PasswordProtection.getPassword",
-          methodArgs = {}
-        )
-    })
-    public void _testKeyStorePPGetPassword() {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "IllegalStateException checking missed",
+        clazz = KeyStore.PasswordProtection.class, 
+        method = "getPassword",
+        args = {}
+    )
+    @KnownFailure("the password char[] is not cloned in the constructor of PasswordProtection")
+    public void testKeyStorePPGetPassword() {
         // Regression for HARMONY-1539
         // no exception expected
         assertNull(new KeyStore.PasswordProtection(null).getPassword());
@@ -294,15 +282,13 @@ public class KeyStoreTest extends TestCase {
     /**
      * @tests java.security.KeyStore.TrustedCertificateEntry.toString()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "IllegalStateException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "TrustedCertificateEntry.toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "IllegalStateException checking missed",
+        clazz = KeyStore.TrustedCertificateEntry.class,
+        method = "toString",
+        args = {}
+    )
     public void testKeyStoreTCToString() {
            // Regression for HARMONY-1542
            // no exception expected

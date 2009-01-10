@@ -17,11 +17,6 @@
 
 package tests.api.java.io;
 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestTargetClass; 
-
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.CharArrayReader;
@@ -30,7 +25,11 @@ import java.io.InputStreamReader;
 import java.io.PipedReader;
 import java.io.Reader;
 
+import tests.support.Support_ASimpleReader;
 import tests.support.Support_StringReader;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
 @TestTargetClass(BufferedReader.class) 
 public class BufferedReaderTest extends junit.framework.TestCase {
@@ -42,66 +41,75 @@ public class BufferedReaderTest extends junit.framework.TestCase {
     /**
      * @tests java.io.BufferedReader#BufferedReader(java.io.Reader)
      */
-    @TestInfo(
-            level = TestLevel.TODO,
-            purpose = "Test is dummy.",
-            targets = { @TestTarget(methodName = "BufferedReader", 
-                                    methodArgs = { java.io.Reader.class })                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "BufferedReader",
+        args = {java.io.Reader.class}
     )         
     public void test_ConstructorLjava_io_Reader() {
         // Test for method java.io.BufferedReader(java.io.Reader)
-        assertTrue("Used in tests", true);
+        br = new BufferedReader(new Support_StringReader(testString));
+        assertNotNull(br);
     }
 
     /**
      * @tests java.io.BufferedReader#BufferedReader(java.io.Reader, int)
      */
-    @TestInfo(
-            level = TestLevel.TODO,
-            purpose = "Test is dummy.",
-            targets = { @TestTarget(methodName = "BufferedReader", 
-                                    methodArgs = { java.io.Reader.class, int.class })                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "BufferedReader",
+        args = {java.io.Reader.class, int.class}
     )         
     public void test_ConstructorLjava_io_ReaderI() {
-        // Test for method java.io.BufferedReader(java.io.Reader, int)
-        assertTrue("Used in tests", true);
+        // Illegal negative size argument test.
+        try {
+            br = new BufferedReader(new Support_StringReader(testString), 0);
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException expected) {
+        }
+        br = new BufferedReader(new Support_StringReader(testString), 1024);
+        assertNotNull(br);
     }
 
     /**
      * @tests java.io.BufferedReader#close()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "close", 
-                                    methodArgs = {})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "close",
+        args = {}
     )         
     public void test_close() {
-        // Test for method void java.io.BufferedReader.close()
+        Support_ASimpleReader ssr = new Support_ASimpleReader(true);
         try {
             br = new BufferedReader(new Support_StringReader(testString));
             br.close();
             br.read();
-            fail("Read on closed stream");
+            fail("Test 1: Read on closed stream.");
         } catch (IOException x) {
-            return;
+            // Expected.
         } catch (Exception e) {
             fail("Exception during close test " + e.toString());
         }
+        
+        br = new BufferedReader(ssr);
+        try {
+            br.close();
+            fail("Test 2: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
+        // Avoid IOException in tearDown().
+        ssr.throwExceptionOnNextUse = false;
     }
 
     /**
      * @tests java.io.BufferedReader#mark(int)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IllegalArgumentException checking missed.",
-            targets = { @TestTarget(methodName = "mark", 
-                                    methodArgs = {int.class})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "mark",
+        args = {int.class}
     )    
     public void test_markI() {
         // Test for method void java.io.BufferedReader.mark(int)
@@ -161,31 +169,27 @@ public class BufferedReaderTest extends junit.framework.TestCase {
     /**
      * @tests java.io.BufferedReader#markSupported()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "The test verifies markSupported() method.",
-            targets = { @TestTarget(methodName = "markSupported", 
-                                    methodArgs = {})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "markSupported",
+        args = {}
     )    
     public void test_markSupported() {
         // Test for method boolean java.io.BufferedReader.markSupported()
         br = new BufferedReader(new Support_StringReader(testString));
-        assertTrue("markSupported returned false", br.markSupported());
+        assertTrue("markSupported returned false.", br.markSupported());
     }
 
     /**
      * @tests java.io.BufferedReader#read()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "read", 
-                                    methodArgs = {})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "read",
+        args = {}
     )         
     public void test_read() throws IOException {
-        // Test for method int java.io.BufferedReader.read()
+        Support_ASimpleReader ssr = new Support_ASimpleReader(true);
         try {
             br = new BufferedReader(new Support_StringReader(testString));
             int r = br.read();
@@ -216,19 +220,29 @@ public class BufferedReaderTest extends junit.framework.TestCase {
         
         // regression test for HARMONY-841
         assertTrue(new BufferedReader(new CharArrayReader(new char[5], 1, 0), 2).read() == -1);
+
+        br.close();
+        br = new BufferedReader(ssr);
+        try {
+            br.read();
+            fail("IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
+        // Avoid IOException in tearDown().
+        ssr.throwExceptionOnNextUse = false;
     }
 
     /**
      * @tests java.io.BufferedReader#read(char[], int, int)
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "The test verifies read(char[] cbuf, int off, int len) method.",
-            targets = { @TestTarget(methodName = "read", 
-                                    methodArgs = {char[].class, int.class, int.class})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "The test verifies read(char[] cbuf, int off, int len) method.",
+        method = "read",
+        args = {char[].class, int.class, int.class}
     )    
-    public void test_read$CII() throws Exception{
+    public void test_read$CII() throws Exception {
         char[] ca = new char[2];
         BufferedReader toRet = new BufferedReader(new InputStreamReader(
                 new ByteArrayInputStream(new byte[0])));
@@ -322,129 +336,73 @@ public class BufferedReaderTest extends junit.framework.TestCase {
     }
 
     /**
-     * @tests java.io.BufferedReader#read(char[], int, int)
-     */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "The test verifies that read(char[] cbuf, int off, int len) " +
-                    "method throws exceptions in appropriate cases.",
-            targets = { @TestTarget(methodName = "read", 
-                                    methodArgs = {char[].class, int.class, int.class})                         
-            }
-    )    
-    public void test_read_$CII_Exception() throws IOException {
-        br = new BufferedReader(new Support_StringReader(testString));
-        char[] nullCharArray = null;
-        char[] charArray = testString.toCharArray();
-        
-        try {
-            br.read(nullCharArray, 0, 0);
-            fail("should throw NullPointerException");
-        } catch (NullPointerException e) {
-            // expected
-        }
-
-        try {
-            br.read(charArray, 0, -1);
-            fail("should throw IndexOutOfBoundsException");
-        } catch (IndexOutOfBoundsException e) {
-            // expected
-        }
-
-        try {
-            br.read(charArray, -1, 0);
-            fail("should throw IndexOutOfBoundsException");
-        } catch (IndexOutOfBoundsException e) {
-            // expected
-        }
-        
-        try {
-            br.read(charArray, charArray.length + 1, 0);
-            fail("should throw IndexOutOfBoundsException");
-        } catch (IndexOutOfBoundsException e) {
-            //expected
-        }
-        
-        try {
-            br.read(charArray, charArray.length, 1);
-            fail("should throw IndexOutOfBoundsException");
-        } catch (IndexOutOfBoundsException e) {
-            //expected
-        }
-        
-        try {
-            br.read(charArray, 0, charArray.length + 1);
-            fail("should throw IndexOutOfBoundsException");
-        } catch (IndexOutOfBoundsException e) {
-            //expected
-        }
-        
-        try {
-            br.read(charArray, 1, charArray.length);
-            fail("should throw IndexOutOfBoundsException");
-        } catch (IndexOutOfBoundsException e) {
-            //expected
-        }
-
-        br.close();
-
-        try {
-            br.read(charArray, 0, 1);
-            fail("should throw IOException");
-        } catch (IOException e) {
-            // expected
-        }
-    }
-    /**
      * @tests java.io.BufferedReader#readLine()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "Checking for '\r' & IOException missed.",
-            targets = { @TestTarget(methodName = "readLine", 
-                                    methodArgs = {})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "readLine",
+        args = {}
     )    
-    public void test_readLine() {
-        // Test for method java.lang.String java.io.BufferedReader.readLine()
+    public void test_readLine() throws IOException {
+        String line;
+        br = new BufferedReader(new Support_StringReader("Lorem\nipsum\rdolor sit amet..."));
+        
+        line = br.readLine();
+        assertTrue("Test 1: Incorrect line written or read: " + line, 
+                line.equals("Lorem"));
+        line = br.readLine();
+        assertTrue("Test 2: Incorrect line written or read: " + line, 
+                line.equals("ipsum"));
+        line = br.readLine();
+        assertTrue("Test 3: Incorrect line written or read: " + line, 
+                line.equals("dolor sit amet..."));
+        
+        br.close();
         try {
-            br = new BufferedReader(new Support_StringReader(testString));
-            String r = br.readLine();
-            assertEquals("readLine returned incorrect string", "Test_All_Tests", r);
-        } catch (java.io.IOException e) {
-            fail("Exception during readLine test");
+            br.readLine();
+            fail("Test 4: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
         }
     }
 
     /**
      * @tests java.io.BufferedReader#ready()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "ready", 
-                                    methodArgs = {})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "ready",
+        args = {}
     )    
-    public void test_ready() {
-        // Test for method boolean java.io.BufferedReader.ready()
+    public void test_ready() throws IOException {
+        Support_ASimpleReader ssr = new Support_ASimpleReader(true);
         try {
             br = new BufferedReader(new Support_StringReader(testString));
-            assertTrue("ready returned false", br.ready());
+            assertTrue("Test 1: ready() returned false", br.ready());
         } catch (java.io.IOException e) {
             fail("Exception during ready test" + e.toString());
         }
+
+        br.close();
+        br = new BufferedReader(ssr);
+        try {
+            br.close();
+            fail("Test 2: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
+        // Avoid IOException in tearDown().
+        ssr.throwExceptionOnNextUse = false;
     }
 
     /**
      * @tests java.io.BufferedReader#reset()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "The test verifies reset() method.",
-            targets = { @TestTarget(methodName = "reset", 
-                                    methodArgs = {})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "The test verifies reset() method.",
+        method = "reset",
+        args = {}
     )
     public void test_reset() {
         // Test for method void java.io.BufferedReader.reset()
@@ -476,33 +434,39 @@ public class BufferedReaderTest extends junit.framework.TestCase {
     /**
      * @tests java.io.BufferedReader#skip(long)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "Exceptions checking missed.",
-            targets = { @TestTarget(methodName = "skip", 
-                                    methodArgs = {long.class})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "skip",
+        args = {long.class}
     )    
-    public void test_skipJ() {
-        // Test for method long java.io.BufferedReader.skip(long)
+    public void test_skipJ() throws IOException {
+        Support_ASimpleReader ssr = new Support_ASimpleReader(true);
+        br = new BufferedReader(new Support_StringReader(testString));
+        
         try {
-            br = new BufferedReader(new Support_StringReader(testString));
-            br.skip(500);
-            char[] buf = new char[testString.length()];
-            br.read(buf, 0, 500);
-            assertTrue("Failed to set skip properly", testString.substring(500,
-                    1000).equals(new String(buf, 0, 500)));
-        } catch (java.io.IOException e) {
-            fail("Exception during skip test");
+            br.skip(-1);
+            fail("Test 1: IllegalArgumentException expected.");
+        } catch (IllegalArgumentException e) {
+            // Expected.
         }
 
-    }
-
-    /**
-     * Sets up the fixture, for example, open a network connection. This method
-     * is called before a test is executed.
-     */
-    protected void setUp() {
+        br.skip(500);
+        char[] buf = new char[testString.length()];
+        br.read(buf, 0, 500);
+        assertTrue("Test 2: Failed to set skip properly.", 
+                testString.substring(500, 1000).equals(
+                        new String(buf, 0, 500)));
+        
+        br.close();
+        br = new BufferedReader(ssr);
+        try {
+            br.skip(1);
+            fail("Test 3: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
+        // Avoid IOException in tearDown().
+        ssr.throwExceptionOnNextUse = false;
     }
 
     /**

@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,9 +17,9 @@
 package tests.java.sql;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -133,16 +133,12 @@ public class MultiThreadAccessTest extends TestCase {
      * 
      * @throws SQLException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Functionality test: A few threads execute select operation " + 
-                "in the same time for one table in the database.",
-      targets = {
-        @TestTarget(
-          methodName = "executeQuery",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Functionality test: A few threads execute select operation in the same time for one table in the database.",
+        method = "executeQuery",
+        args = {java.lang.String.class}
+    )
     public void test_MultipleAccessToOneTable() throws SQLException {
         for (int i = 0; i < numThreads; i++) {
             threadPool.runTask(createTask1(i));
@@ -156,16 +152,12 @@ public class MultiThreadAccessTest extends TestCase {
      * 
      * @throws SQLException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Functionality test: A few threads execute select operation " +
-                  "in the same time for different tables in the database",
-      targets = {
-        @TestTarget(
-          methodName = "executeQuery",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Functionality test: A few threads execute select operation in the same time for different tables in the database",
+        method = "executeQuery",
+        args = {java.lang.String.class}
+    )
     public void test_MultipleAccessToSeveralTables() throws SQLException {
         threadPool.runTask(createTask1(1));
         threadPool.runTask(createTask2(2));
@@ -179,16 +171,12 @@ public class MultiThreadAccessTest extends TestCase {
      * 
      * @throws SQLException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Functionality test: A few threads execute update, insert " + 
-                "and delete operations in the same time for one table in the database",
-      targets = {
-        @TestTarget(
-          methodName = "executeQuery",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Functionality test: A few threads execute update, insert and delete operations in the same time for one table in the database",
+        method = "executeQuery",
+        args = {java.lang.String.class}
+    )
     public void test_MultipleOperationsInSeveralTables() throws SQLException {
         int id1 = numOfRecords - 1;
         threadPool.runTask(createTask4(id1));
@@ -214,11 +202,11 @@ public class MultiThreadAccessTest extends TestCase {
 
         assertEquals("Wrong value of field1", DatabaseCreator.defaultString
                 + id2, result.getString("field1"));
-        // TODO getBigDecimal is not supported
-//        assertEquals("Wrong value of field2", BigDecimal.valueOf(id2), result
-//                .getBigDecimal("field2"));
-//        assertEquals("Wrong value of field3", BigDecimal.valueOf(id2), result
-//                .getBigDecimal("field3"));
+//         TODO getBigDecimal is not supported
+        assertEquals("Wrong value of field2", Integer.valueOf(id2).intValue(), result
+                .getInt("field2"));
+        assertEquals("Wrong value of field3", Integer.valueOf(id2).intValue(), result
+                .getInt("field3"));
         result.close();
 
         result = statement.executeQuery(selectQuery + oldID);
@@ -231,10 +219,10 @@ public class MultiThreadAccessTest extends TestCase {
         assertEquals("Wrong value of field1", DatabaseCreator.defaultString
                 + newID, result.getString("field1"));
         // TODO getBigDecimal is not supported
-//        assertEquals("Wrong value of field2", BigDecimal.valueOf(newID), result
-//                .getBigDecimal("field2"));
-//        assertEquals("Wrong value of field3", BigDecimal.valueOf(newID), result
-//                .getBigDecimal("field3"));
+        assertEquals("Wrong value of field2", Integer.valueOf(newID).intValue(), result
+                .getInt("field2"));
+        assertEquals("Wrong value of field3", Integer.valueOf(newID).intValue(), result
+                .getInt("field3"));
         result.close();
     }
 
@@ -244,16 +232,12 @@ public class MultiThreadAccessTest extends TestCase {
      * 
      * @throws SQLException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Functional test: A few threads execute update operation " +
-                "in the same time for one tables in the database",
-      targets = {
-        @TestTarget(
-          methodName = "executeQuery",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Functional test: A few threads execute update operation in the same time for one tables in the database",
+        method = "executeQuery",
+        args = {java.lang.String.class}
+    )
     public void test_MultipleUpdatesInOneTables() throws SQLException {
         int id = 1;
         String field = "field3";
@@ -278,7 +262,7 @@ public class MultiThreadAccessTest extends TestCase {
         double expectedVal = id + numThreads;
         result = statement.executeQuery(selectQuery);
         assertTrue("There is no records with id = " + id, result.next());
-        // TODO getBigDecimal is not supported
+        // TODO getBigDecimal is not supported -> 
 //        assertEquals("Wrong value of field " + field, expectedVal, result
 //                .getBigDecimal(field).doubleValue());
         result.close();
@@ -304,16 +288,14 @@ public class MultiThreadAccessTest extends TestCase {
                                 DatabaseCreator.defaultString
                                         + result.getInt("id"), result
                                         .getString("field1"));
-                        assertEquals("Wrong value of field2 ", BigDecimal
-                                .valueOf(result.getInt("id")), result
-                                .getBigDecimal("field2"));
-                        assertEquals("Wrong value of field3 ", BigDecimal
-                                .valueOf(result.getInt("id")), result
-                                .getBigDecimal("field3"));
+                        assertEquals("Wrong value of field2 ", result.getInt("id"), result
+                                .getInt("field2"));
+                        assertEquals("Wrong value of field3 ",result.getInt("id"), result
+                                .getInt("field3"));
                     }
                     result.close();
                 } catch (Exception e) {
-                    System.err.println(e.getMessage());
+                    System.err.println("Task 1 "+e.getMessage());
                 }
             }
         };
@@ -364,7 +346,7 @@ public class MultiThreadAccessTest extends TestCase {
                     }
                     result.close();
                 } catch (Exception e) {
-                    System.err.println(e.getMessage());
+                    System.err.println("Task2 "+e.getMessage());
                 }
             }
         };
@@ -392,7 +374,7 @@ public class MultiThreadAccessTest extends TestCase {
                     }
                     result.close();
                 } catch (Exception e) {
-                    System.err.println(e.getMessage());
+                    System.err.println("Task 3 "+e.getMessage());
                 }
             }
         };
@@ -412,7 +394,7 @@ public class MultiThreadAccessTest extends TestCase {
                     statement.execute("DELETE FROM "
                             + DatabaseCreator.TEST_TABLE1 + " WHERE id=" + id);
                 } catch (Exception e) {
-                    System.err.println(e.getMessage());
+                    System.err.println("Task 4 "+e.getMessage());
                 }
             }
         };
@@ -437,7 +419,7 @@ public class MultiThreadAccessTest extends TestCase {
                             + ", '" + value + "', " + id + ", " + id + ")";
                     statement.execute(insertQuery);
                 } catch (Exception e) {
-                    System.err.println(e.getMessage());
+                    System.err.println("Task 5 "+e.getMessage());
                 }
             }
         };
@@ -461,7 +443,7 @@ public class MultiThreadAccessTest extends TestCase {
                             + ", field3=" + newID + " WHERE id=" + oldID;
                     statement.execute(updateQuery);
                 } catch (Exception e) {
-                    System.err.println(e.getMessage());
+                    System.err.println("Task 6 "+e.getMessage());
                 }
             }
         };
@@ -483,7 +465,7 @@ public class MultiThreadAccessTest extends TestCase {
                             + "= " + field + "+ 1 WHERE id=" + id;
                     statement.execute(updateQuery);
                 } catch (Exception e) {
-                    System.err.println(e.getMessage());
+                    System.err.println("Task 7 "+e.getMessage());
                 }
             }
         };

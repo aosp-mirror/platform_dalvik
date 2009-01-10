@@ -15,10 +15,11 @@
  */
 package tests.api.java.util;
 
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass; 
+import dalvik.annotation.KnownFailure;
 
 import java.io.Closeable;
 import java.io.EOFException;
@@ -56,6 +57,7 @@ import junit.framework.TestCase;
 
 @TestTargetClass(Scanner.class) 
 public class ScannerTest extends TestCase {
+    static final boolean disableRIBugs = true;
 
     private Scanner s;
 
@@ -84,15 +86,12 @@ public class ScannerTest extends TestCase {
     /**
      * @tests java.util.Scanner#Scanner(File)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "Scanner",
-          methodArgs = {java.io.File.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Scanner",
+        args = {java.io.File.class}
+    )
     public void test_ConstructorLjava_io_File() throws IOException {
         File tmpFile = File.createTempFile("TestFileForScanner", ".tmp");
         s = new Scanner(tmpFile);
@@ -128,15 +127,12 @@ public class ScannerTest extends TestCase {
     /**
      * @tests java.util.Scanner#Scanner(File, String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "Scanner",
-          methodArgs = {java.io.File.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Scanner",
+        args = {java.io.File.class, java.lang.String.class}
+    )
     public void test_ConstructorLjava_io_FileLjava_lang_String()
             throws IOException {
         File tmpFile = File.createTempFile("TestFileForScanner", ".tmp");
@@ -210,15 +206,12 @@ public class ScannerTest extends TestCase {
     /**
      * @tests java.util.Scanner#Scanner(InputStream)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "Scanner",
-          methodArgs = {java.io.InputStream.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Scanner",
+        args = {java.io.InputStream.class}
+    )
     public void test_ConstructorLjava_io_InputStream() {
         s = new Scanner(new PipedInputStream());
         assertNotNull(s);
@@ -238,15 +231,12 @@ public class ScannerTest extends TestCase {
     /**
      * @tests java.util.Scanner#Scanner(InputStream, String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "Scanner",
-          methodArgs = {java.io.InputStream.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Scanner",
+        args = {java.io.InputStream.class, java.lang.String.class}
+    )
     public void test_ConstructorLjava_io_InputStreamLjava_lang_String() {
         s = new Scanner(new PipedInputStream(), Charset.defaultCharset().name());
         assertNotNull(s);
@@ -279,20 +269,17 @@ public class ScannerTest extends TestCase {
     /**
      * @tests java.util.Scanner#Scanner(Readable)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "Scanner",
-          methodArgs = {java.lang.Readable.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Scanner",
+        args = {java.lang.Readable.class}
+    )
     public void test_ConstructorLjava_lang_Readable() {
         s = new Scanner(new StringReader("test string"));
         assertNotNull(s);
         s.close();
-
+        
         // Scanner(Readable)
         try {
             s = new Scanner((Readable) null);
@@ -305,15 +292,12 @@ public class ScannerTest extends TestCase {
     /**
      * @tests java.util.Scanner#Scanner(ReadableByteChannel)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "Scanner",
-          methodArgs = {java.nio.channels.ReadableByteChannel.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Scanner",
+        args = {java.nio.channels.ReadableByteChannel.class}
+    )
     public void test_ConstructorLjava_nio_channels_ReadableByteChannel()
             throws IOException {
         File tmpFile = File.createTempFile("TestFileForScanner", ".tmp");
@@ -337,15 +321,12 @@ public class ScannerTest extends TestCase {
     /**
      * @tests java.util.Scanner#Scanner(ReadableByteChannel, String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "Scanner",
-          methodArgs = {java.nio.channels.ReadableByteChannel.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Scanner",
+        args = {java.nio.channels.ReadableByteChannel.class, java.lang.String.class}
+    )
     public void test_ConstructorLjava_nio_channels_ReadableByteChannelLjava_lang_String()
             throws IOException {
         File tmpFile = File.createTempFile("TestFileForScanner", ".tmp");
@@ -393,15 +374,12 @@ public class ScannerTest extends TestCase {
     /**
      * @tests java.util.Scanner#Scanner(String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "Scanner",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Scanner",
+        args = {java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_String() {
         s = new Scanner("test string");
         assertNotNull(s);
@@ -419,15 +397,12 @@ public class ScannerTest extends TestCase {
     /**
      * @tests java.util.Scanner#close()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "close",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "close",
+        args = {}
+    )
     public void test_close() throws IOException {
         File tmpFile = File.createTempFile("TestFileForScanner", ".tmp");
         FileOutputStream fos = new FileOutputStream(tmpFile);
@@ -456,15 +431,12 @@ public class ScannerTest extends TestCase {
     /**
      * @tests java.util.Scanner#ioException()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "ioException",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "ioException",
+        args = {}
+    )
     public void test_ioException() throws IOException {
         MockCloseable mc = new MockCloseable();
         s = new Scanner(mc);
@@ -478,15 +450,12 @@ public class ScannerTest extends TestCase {
     /**
      * @tests java.util.Scanner#delimiter()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "delimiter",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "delimiter",
+        args = {}
+    )
     public void test_delimiter() {
         s = new Scanner("test");
         Pattern pattern = s.delimiter();
@@ -496,15 +465,12 @@ public class ScannerTest extends TestCase {
     /**
      * @tests java.util.Scanner#useDelimiter(Pattern)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "useDelimiter",
-          methodArgs = {java.util.regex.Pattern.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "useDelimiter",
+        args = {java.util.regex.Pattern.class}
+    )
     public void test_useDelimiter_LPattern() {
         s = new Scanner("test");
         s.useDelimiter(Pattern.compile("\\w+"));
@@ -518,15 +484,12 @@ public class ScannerTest extends TestCase {
     /**
      * @tests java.util.Scanner#useDelimiter(String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "useDelimiter",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "useDelimiter",
+        args = {java.lang.String.class}
+    )
     public void test_useDelimiter_String() {
         s = new Scanner("test");
         try {
@@ -544,15 +507,12 @@ public class ScannerTest extends TestCase {
     /**
      * @tests java.util.Scanner#locale()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "locale",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "locale",
+        args = {}
+    )
     public void test_locale() {
         s = new Scanner("test");
         assertEquals(Locale.getDefault(), s.locale());
@@ -561,15 +521,12 @@ public class ScannerTest extends TestCase {
     /**
      * @tests java.util.Scanner#useLocale(Locale)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "useLocale",
-          methodArgs = {java.util.Locale.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "useLocale",
+        args = {java.util.Locale.class}
+    )
     public void test_useLocale_LLocale() {
         s = new Scanner("test");
         try {
@@ -586,15 +543,12 @@ public class ScannerTest extends TestCase {
     /**
      * @tests java.util.Scanner#radix()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "radix",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "radix",
+        args = {}
+    )
     public void test_radix() {
         s = new Scanner("test");
         assertEquals(10, s.radix());
@@ -603,15 +557,12 @@ public class ScannerTest extends TestCase {
     /**
      * @tests java.util.Scanner#useRadix()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "useRadix",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "useRadix",
+        args = {int.class}
+    )
     public void test_useRadix_I() {
         s = new Scanner("test");
         try {
@@ -633,15 +584,12 @@ public class ScannerTest extends TestCase {
     /**
      * @tests java.util.Scanner#remove()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "remove",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "remove",
+        args = {}
+    )
     public void test_remove() {
         s = new Scanner("aab*b*").useDelimiter("\\*");
         try {
@@ -655,15 +603,12 @@ public class ScannerTest extends TestCase {
     /**
      * @tests java.util.Scanner#match()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "match",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "match",
+        args = {}
+    )
     public void test_match() {
         MatchResult result ;
         s = new Scanner("1 2 ");
@@ -793,15 +738,12 @@ public class ScannerTest extends TestCase {
      * @throws IOException
      * @tests java.util.Scanner#next()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "next",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "next",
+        args = {}
+    )
     public void test_next() throws IOException {
         // use special delimiter
         s = new Scanner("1**2").useDelimiter("\\*");
@@ -957,22 +899,26 @@ public class ScannerTest extends TestCase {
         } catch (NoSuchElementException e) {
             // Expected
         }
-
+        
+        s.close();
+        try {
+            s.next();
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            //expected
+        }
     }
     
     /**
      * @throws IOException
      * @tests java.util.Scanner#next(Pattern)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "next",
-          methodArgs = {java.util.regex.Pattern.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "next",
+        args = {java.util.regex.Pattern.class}
+    )
     public void test_nextLPattern() throws IOException {
         Pattern pattern;
         s = new Scanner("aab*2*").useDelimiter("\\*");
@@ -1021,21 +967,26 @@ public class ScannerTest extends TestCase {
         } catch (InputMismatchException e) {
             // Expected
         }
+        
+        s.close();
+        try {
+            s.next(pattern);
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            //expected
+        }
     }
 
     /**
      * @throws IOException
      * @tests java.util.Scanner#next(String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "next",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "next",
+        args = {java.lang.String.class}
+    )
     public void test_nextLString() throws IOException {
         s = new Scanner("b*a*").useDelimiter("\\*");
         assertEquals("b", s.next("a*b"));
@@ -1078,21 +1029,26 @@ public class ScannerTest extends TestCase {
         } catch (InputMismatchException e) {
             // Expected
         }
+        
+        s.close();
+        try {
+            s.next("a*b");
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            //expected
+        }
     }
     
     /**
      * @throws IOException
      * @tests java.util.Scanner#nextBoolean()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "nextBoolean",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "nextBoolean",
+        args = {}
+    )
     public void test_nextBoolean() throws IOException {
         // case insensitive
         s = new Scanner("TRue");
@@ -1144,23 +1100,27 @@ public class ScannerTest extends TestCase {
 
         s = new Scanner("false( )").useDelimiter("\\( \\)");
         assertFalse(s.nextBoolean());
-
+        
+        s.close();
+        try {
+            s.nextBoolean();
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            //expected
+        }
     }
     
     /**
      * @throws IOException
      * @tests java.util.Scanner#nextInt(int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "nextInt",
-          methodArgs = {int.class}
-        )
-    })
-    public void _test_nextIntI() throws IOException {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "nextInt",
+        args = {int.class}
+    )
+    public void test_nextIntI() throws IOException {
         s = new Scanner("123 456");
         assertEquals(123, s.nextInt(10));
         assertEquals(456, s.nextInt(10));
@@ -1218,7 +1178,7 @@ public class ScannerTest extends TestCase {
         } catch (InputMismatchException e) {
             // expected
         }
-        s.useLocale(new Locale("it", "CH"));
+        s.useLocale(new Locale("de", "CH"));
         // If exception is thrown out, input will not be advanced.
         assertEquals(23456, s.nextInt(10));
         assertEquals(23456, s.nextInt(10));
@@ -1274,9 +1234,11 @@ public class ScannerTest extends TestCase {
         assertEquals(930902, s.nextInt(16));
         // The following test case fails on RI, because RI does not support
         // letter as leading digit
-        s = new Scanner("E3,456");
-        s.useLocale(Locale.ENGLISH);
-        assertEquals(930902, s.nextInt(16));
+        if (!disableRIBugs) {
+            s = new Scanner("E3,456");
+            s.useLocale(Locale.ENGLISH);
+            assertEquals(930902, s.nextInt(16));
+        }
 
         /*
          * There are 3 types of zero digit in all locales, '0' '\u0966' '\u0e50'
@@ -1312,7 +1274,9 @@ public class ScannerTest extends TestCase {
         s.useLocale(new Locale("ar", "AE"));
         assertEquals(-123, s.nextInt(10));
         // The following test case fails on RI
-        assertEquals(-123, s.nextInt(10));
+        if (!disableRIBugs) {
+            assertEquals(-123, s.nextInt(10));
+        }
         try {
             s.nextInt(10);
             fail("Should throw InputMismatchException");
@@ -1332,21 +1296,31 @@ public class ScannerTest extends TestCase {
         // Skip the un-recognizable token 123-.
         assertEquals("123-", s.next());
         // The following test case fails on RI
-        assertEquals(-123, s.nextInt(10));
+        if (!disableRIBugs) {
+            assertEquals(-123, s.nextInt(10));
 
         // If the parameter radix is illegal, the following test cases fail on
         // RI
-        try {
-            s.nextInt(Character.MIN_RADIX - 1);
-            fail("Should throw IllegalArgumentException");
-        } catch (IllegalArgumentException e) {
-            // Expected
+            try {
+                s.nextInt(Character.MIN_RADIX - 1);
+                fail("Should throw IllegalArgumentException");
+            } catch (IllegalArgumentException e) {
+                // Expected
+            }
+            try {
+                s.nextInt(Character.MAX_RADIX + 1);
+                fail("Should throw IllegalArgumentException");
+            } catch (IllegalArgumentException e) {
+                // Expected
+            }
         }
+        
+        s.close();
         try {
-            s.nextInt(Character.MAX_RADIX + 1);
-            fail("Should throw IllegalArgumentException");
-        } catch (IllegalArgumentException e) {
-            // Expected
+            s.nextInt(10);
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            //expected
         }
     }
 
@@ -1354,16 +1328,13 @@ public class ScannerTest extends TestCase {
      * @throws IOException
      * @tests java.util.Scanner#nextInt()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "nextInt",
-          methodArgs = {}
-        )
-    })
-    public void _test_nextInt() throws IOException {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "nextInt",
+        args = {}
+    )
+    public void test_nextInt() throws IOException {
         s = new Scanner("123 456");
         assertEquals(123, s.nextInt());
         assertEquals(456, s.nextInt());
@@ -1422,7 +1393,7 @@ public class ScannerTest extends TestCase {
         } catch (InputMismatchException e) {
             // expected
         }
-        s.useLocale(new Locale("it", "CH"));
+        s.useLocale(new Locale("de", "CH"));
         // If exception is thrown out, input will not be advanced.
         assertEquals(23456, s.nextInt());
         assertEquals(23456, s.nextInt());
@@ -1485,7 +1456,9 @@ public class ScannerTest extends TestCase {
         s = new Scanner("E3,456");
         s.useLocale(Locale.ENGLISH);
         s.useRadix(16);
-        assertEquals(930902, s.nextInt());
+        if (!disableRIBugs) {
+            assertEquals(930902, s.nextInt());
+        }
 
         /*
          * There are 3 types of zero digit in all locales, '0' '\u0966' '\u0e50'
@@ -1521,7 +1494,9 @@ public class ScannerTest extends TestCase {
         s.useLocale(new Locale("ar", "AE"));
         assertEquals(-123, s.nextInt());
         // The following test case fails on RI
-        assertEquals(-123, s.nextInt());
+        if (!disableRIBugs) {
+            assertEquals(-123, s.nextInt());
+        }
         try {
             s.nextInt();
             fail("Should throw InputMismatchException");
@@ -1541,22 +1516,29 @@ public class ScannerTest extends TestCase {
         // Skip the un-recognizable token 123-.
         assertEquals("123-", s.next());
         // The following test case fails on RI
-        assertEquals(-123, s.nextInt());
+        if (!disableRIBugs) {
+            assertEquals(-123, s.nextInt());
+        }
+        
+        s.close();
+        try {
+            s.nextInt();
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            //expected
+        }
     }
     
     /**
      * @throws IOException
      * @tests java.util.Scanner#nextByte(int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "nextByte",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "nextByte",
+        args = {int.class}
+    )
     public void test_nextByteI() throws IOException {
         s = new Scanner("123 126");
         assertEquals(123, s.nextByte(10));
@@ -1630,21 +1612,26 @@ public class ScannerTest extends TestCase {
         s = new Scanner("-123");
         s.useLocale(new Locale("mk", "MK"));
         assertEquals(-123, s.nextByte(10));
+        
+        s.close();
+        try {
+            s.nextByte(10);
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            //expected
+        }
     }
 
     /**
      * @throws IOException
      * @tests java.util.Scanner#nextByte()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "nextByte",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "nextByte",
+        args = {}
+    )
     public void test_nextByte() throws IOException {
         s = new Scanner("123 126");
         assertEquals(123, s.nextByte());
@@ -1721,22 +1708,27 @@ public class ScannerTest extends TestCase {
         s = new Scanner("-123");
         s.useLocale(new Locale("mk", "MK"));
         assertEquals(-123, s.nextByte());
+        
+        s.close();
+        try {
+            s.nextByte();
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            //expected
+        }
     }
     
     /**
      * @throws IOException
      * @tests java.util.Scanner#nextFloat()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "nextFloat",
-          methodArgs = {}
-        )
-    })
-    public void _test_nextFloat() throws IOException {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "nextFloat",
+        args = {}
+    )
+    public void test_nextFloat() throws IOException {
         s = new Scanner("123 45\u0666. 123.4 .123 ");
         s.useLocale(Locale.ENGLISH);
         assertEquals((float)123.0, s.nextFloat());
@@ -1804,7 +1796,9 @@ public class ScannerTest extends TestCase {
         s.useLocale(new Locale("ar", "AE"));
         assertEquals((float)-123.4, s.nextFloat());
         //The following test case fails on RI
-        assertEquals((float)-123.4, s.nextFloat());
+        if (!disableRIBugs) {
+            assertEquals((float)-123.4, s.nextFloat());
+        }
         try {
             s.nextFloat();
             fail("Should throw InputMismatchException");
@@ -1814,7 +1808,9 @@ public class ScannerTest extends TestCase {
 
         s = new Scanner("(123) 123- -123");
         s.useLocale(new Locale("mk", "MK"));
-        assertEquals((float)-123.0, s.nextFloat());
+        if (!disableRIBugs) {
+            assertEquals((float)-123.0, s.nextFloat());
+        }
         try {
             s.nextFloat();
             fail("Should throw InputMismatchException");
@@ -1822,25 +1818,32 @@ public class ScannerTest extends TestCase {
             // Expected
         }
         // Skip the un-recognizable token 123-.
-        assertEquals("123-", s.next());
-        assertEquals((float)-123.0, s.nextFloat());
-
+        if (!disableRIBugs) {
+            assertEquals("123-", s.next());
+            assertEquals((float)-123.0, s.nextFloat());
+        }
+        
+        s.close();
+        try {
+            s.nextFloat();
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            //expected
+        }
     }
     
     /**
      * @throws IOException
      * @tests java.util.Scanner#nextBigInteger(int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "nextBigInteger",
-          methodArgs = {int.class}
-        )
-    })
-    public void _test_nextBigIntegerI() throws IOException {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "nextBigInteger",
+        args = {int.class}
+    )
+    @KnownFailure("nextBigInteger method doesn't work properly if input string has Arabic-Indic digits")
+    public void test_nextBigIntegerI() throws IOException {
         s = new Scanner("123 456");
         assertEquals(new BigInteger("123"), s.nextBigInteger(10));
         assertEquals(new BigInteger("456"), s.nextBigInteger(10));
@@ -1889,7 +1892,7 @@ public class ScannerTest extends TestCase {
         } catch (InputMismatchException e) {
             // Expected
         }
-        s.useLocale(new Locale("it", "CH"));
+        s.useLocale(new Locale("de", "CH"));
         // If exception is thrown out, input will not be advanced.
         assertEquals(new BigInteger("23456"), s.nextBigInteger(10));
         assertEquals(new BigInteger("23456"), s.nextBigInteger(10));
@@ -1968,22 +1971,28 @@ public class ScannerTest extends TestCase {
         s = new Scanner("-123");
         s.useLocale(new Locale("mk", "MK"));
         assertEquals(new BigInteger("-123"), s.nextBigInteger(10));
+        
+        s.close();
+        try {
+            s.nextBigInteger(10);
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            //expected
+        }
     }
 
     /**
      * @throws IOException
      * @tests java.util.Scanner#nextBigInteger()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "nextBigInteger",
-          methodArgs = {}
-        )
-    })
-    public void _test_nextBigInteger() throws IOException {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "nextBigInteger",
+        args = {}
+    )
+    @KnownFailure("nextBigInteger method doesn't work properly if input string has Arabic-Indic digits")
+    public void test_nextBigInteger() throws IOException {
         s = new Scanner("123 456");
         assertEquals(new BigInteger("123"), s.nextBigInteger());
         assertEquals(new BigInteger("456"), s.nextBigInteger());
@@ -2033,7 +2042,7 @@ public class ScannerTest extends TestCase {
         } catch (InputMismatchException e) {
             // Expected
         }
-        s.useLocale(new Locale("it", "CH"));
+        s.useLocale(new Locale("de", "CH"));
         // If exception is thrown out, input will not be advanced.
         assertEquals(new BigInteger("23456"), s.nextBigInteger());
         assertEquals(new BigInteger("23456"), s.nextBigInteger());
@@ -2114,22 +2123,27 @@ public class ScannerTest extends TestCase {
         s = new Scanner("-123");
         s.useLocale(new Locale("mk", "MK"));
         assertEquals(new BigInteger("-123"), s.nextBigInteger());
+        
+        s.close();
+        try {
+            s.nextBigInteger();
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            //expected
+        }
     }
     
     /**
      * @throws IOException
      * @tests java.util.Scanner#nextShort(int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "nextShort",
-          methodArgs = {int.class}
-        )
-    })
-    public void _test_nextShortI() throws IOException {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "nextShort",
+        args = {int.class}
+    )
+    public void test_nextShortI() throws IOException {
         s = new Scanner("123 456");
         assertEquals(123, s.nextShort(10));
         assertEquals(456, s.nextShort(10));
@@ -2187,7 +2201,7 @@ public class ScannerTest extends TestCase {
         } catch (InputMismatchException e) {
             // Expected
         }
-        s.useLocale(new Locale("it", "CH"));
+        s.useLocale(new Locale("de", "CH"));
         // If exception is thrown out, input will not be advanced.
         assertEquals(23456, s.nextShort(10));
         assertEquals(23456, s.nextShort(10));
@@ -2266,22 +2280,27 @@ public class ScannerTest extends TestCase {
         s = new Scanner("-123");
         s.useLocale(new Locale("mk", "MK"));
         assertEquals(-123, s.nextShort(10));
+        
+        s.close();
+        try {
+            s.nextShort(10);
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            //expected
+        }
     }
 
     /**
      * @throws IOException
      * @tests java.util.Scanner#nextShort()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "nextShort",
-          methodArgs = {}
-        )
-    })
-    public void _test_nextShort() throws IOException {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "nextShort",
+        args = {}
+    )
+    public void test_nextShort() throws IOException {
         s = new Scanner("123 456");
         assertEquals(123, s.nextShort());
         assertEquals(456, s.nextShort());
@@ -2340,7 +2359,7 @@ public class ScannerTest extends TestCase {
         } catch (InputMismatchException e) {
             // Expected
         }
-        s.useLocale(new Locale("it", "CH"));
+        s.useLocale(new Locale("de", "CH"));
         // If exception is thrown out, input will not be advanced.
         assertEquals(23456, s.nextShort());
         assertEquals(23456, s.nextShort());
@@ -2421,22 +2440,27 @@ public class ScannerTest extends TestCase {
         s = new Scanner("-123");
         s.useLocale(new Locale("mk", "MK"));
         assertEquals(-123, s.nextShort());
+        
+        s.close();
+        try {
+            s.nextShort();
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            //expected
+        }
     }
     
     /**
      * @throws IOException
      * @tests java.util.Scanner#nextLong(int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "nextLong",
-          methodArgs = {int.class}
-        )
-    })
-    public void _test_nextLongI() throws IOException {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "nextLong",
+        args = {int.class}
+    )
+    public void test_nextLongI() throws IOException {
         s = new Scanner("123 456");
         assertEquals(123, s.nextLong(10));
         assertEquals(456, s.nextLong(10));
@@ -2494,7 +2518,7 @@ public class ScannerTest extends TestCase {
         } catch (InputMismatchException e) {
             // Expected
         }
-        s.useLocale(new Locale("it", "CH"));
+        s.useLocale(new Locale("de", "CH"));
         // If exception is thrown out, input will not be advanced.
         assertEquals(23456, s.nextLong(10));
         assertEquals(23456, s.nextLong(10));
@@ -2573,22 +2597,27 @@ public class ScannerTest extends TestCase {
         s = new Scanner("-123");
         s.useLocale(new Locale("mk", "MK"));
         assertEquals(-123, s.nextLong(10));
+        
+        s.close();
+        try {
+            s.nextLong(10);
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            //expected
+        }
     }
     
     /**
      * @throws IOException
      * @tests java.util.Scanner#nextLong()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "nextLong",
-          methodArgs = {}
-        )
-    })
-    public void _test_nextLong() throws IOException {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "nextLong",
+        args = {}
+    )
+    public void test_nextLong() throws IOException {
         s = new Scanner("123 456");
         assertEquals(123, s.nextLong());
         assertEquals(456, s.nextLong());
@@ -2647,7 +2676,7 @@ public class ScannerTest extends TestCase {
         } catch (InputMismatchException e) {
             // Expected
         }
-        s.useLocale(new Locale("it", "CH"));
+        s.useLocale(new Locale("de", "CH"));
         // If exception is thrown out, input will not be advanced.
         assertEquals(23456, s.nextLong());
         assertEquals(23456, s.nextLong());
@@ -2728,21 +2757,26 @@ public class ScannerTest extends TestCase {
         s = new Scanner("-123");
         s.useLocale(new Locale("mk", "MK"));
         assertEquals(-123, s.nextLong());
+        
+        s.close();
+        try {
+            s.nextLong();
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            //expected
+        }
     }
     
     /**
      * @throws IOException
      * @tests java.util.Scanner#hasNext()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "hasNext",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hasNext",
+        args = {}
+    )
     public void test_hasNext() throws IOException {
         s = new Scanner("1##2").useDelimiter("\\#");
         assertTrue(s.hasNext());
@@ -2821,15 +2855,12 @@ public class ScannerTest extends TestCase {
      * @throws IOException
      * @tests java.util.Scanner#hasNext(Pattern)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "hasNext",
-          methodArgs = {java.util.regex.Pattern.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hasNext",
+        args = {java.util.regex.Pattern.class}
+    )
     public void test_hasNextLPattern() throws IOException {
         Pattern pattern;
         s = new Scanner("aab@2@abb@").useDelimiter("\\@");
@@ -2907,15 +2938,12 @@ public class ScannerTest extends TestCase {
      * @throws IOException
      * @tests java.util.Scanner#hasNext(String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "hasNext",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hasNext",
+        args = {java.lang.String.class}
+    )
     public void test_hasNextLString() throws IOException {
         s = new Scanner("aab@2@abb@").useDelimiter("\\@");
         try {
@@ -2986,15 +3014,12 @@ public class ScannerTest extends TestCase {
      * @throws IOException
      * @tests java.util.Scanner#hasNextBoolean()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "hasNextBoolean",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hasNextBoolean",
+        args = {}
+    )
     public void test_hasNextBoolean() throws IOException {
 
         s = new Scanner("TRue");
@@ -3036,21 +3061,25 @@ public class ScannerTest extends TestCase {
         assertFalse(s.nextBoolean());
         assertFalse(s.hasNextBoolean());
 
+        s.close();
+        try {
+            s.hasNextBoolean();
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            //expected
+        }
     }
     
     /**
      * @throws IOException
      * @tests java.util.Scanner#hasNextByte(int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "IllegalStateException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "hasNextByte",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "IllegalStateException checking missed.",
+        method = "hasNextByte",
+        args = {int.class}
+    )
     public void test_hasNextByteI() throws IOException {
         s = new Scanner("123 126");
         assertTrue(s.hasNextByte(10));
@@ -3146,15 +3175,12 @@ public class ScannerTest extends TestCase {
      * @throws IOException
      * @tests java.util.Scanner#hasNextByte(int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Regression test.",
-      targets = {
-        @TestTarget(
-          methodName = "hasNextByte",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Regression test.",
+        method = "hasNextByte",
+        args = {int.class}
+    )
     public void test_hasNextByteI_cache() throws IOException{
         //regression for HARMONY-2063
         s = new Scanner("123 45");
@@ -3187,15 +3213,12 @@ public class ScannerTest extends TestCase {
      * @throws IOException
      * @tests java.util.Scanner#hasNextByte()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "hasNextByte",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hasNextByte",
+        args = {}
+    )
     public void test_hasNextByte() throws IOException {
         s = new Scanner("123 126");
         assertTrue(s.hasNextByte());
@@ -3287,22 +3310,28 @@ public class ScannerTest extends TestCase {
         s.useLocale(new Locale("mk", "MK"));
         assertTrue(s.hasNextByte());
         assertEquals(-123, s.nextByte());
+        
+        s.close();
+        try {
+            s.hasNextByte();
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            //expected
+        }
     }
     
     /**
      * @throws IOException
      * @tests java.util.Scanner#hasNextBigInteger(int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "IllegalStateException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "hasNextBigInteger",
-          methodArgs = {int.class}
-        )
-    })
-    public void _test_hasNextBigIntegerI() throws IOException {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "IllegalStateException checking missed.",
+        method = "hasNextBigInteger",
+        args = {int.class}
+    )
+    @KnownFailure("hasNextBigInteger method doesn't work properly if input string has Arabic-Indic digits")    
+    public void test_hasNextBigIntegerI() throws IOException {
         s = new Scanner("123 456");
         assertTrue(s.hasNextBigInteger(10));
         assertEquals(new BigInteger("123"), s.nextBigInteger(10));
@@ -3360,7 +3389,7 @@ public class ScannerTest extends TestCase {
         } catch (InputMismatchException e) {
             // Expected
         }
-        s.useLocale(new Locale("it", "CH"));
+        s.useLocale(new Locale("de", "CH"));
         // If exception is thrown out, input will not be advanced.
         assertTrue(s.hasNextBigInteger(10));
         assertEquals(new BigInteger("23456"), s.nextBigInteger(10));
@@ -3462,15 +3491,12 @@ public class ScannerTest extends TestCase {
      * @throws IOException
      * @tests java.util.Scanner#hasNextBigInteger(int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Regression test.",
-      targets = {
-        @TestTarget(
-          methodName = "hasNextBigInteger",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Regression test.",
+        method = "hasNextBigInteger",
+        args = {int.class}
+    )
     public void test_hasNextBigIntegerI_cache() throws IOException {
         //regression for HARMONY-2063
         s = new Scanner("123 123456789123456789");
@@ -3504,16 +3530,14 @@ public class ScannerTest extends TestCase {
      * @throws IOException
      * @tests java.util.Scanner#hasNextBigInteger()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "hasNextBigInteger",
-          methodArgs = {}
-        )
-    })
-    public void _test_hasNextBigInteger() throws IOException {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hasNextBigInteger",
+        args = {}
+    )
+    @KnownFailure("nextBigInteger method doesn't work properly if input string has Arabic-Indic digits")
+    public void test_hasNextBigInteger() throws IOException {
         s = new Scanner("123 456");
         assertTrue(s.hasNextBigInteger());
         assertEquals(new BigInteger("123"), s.nextBigInteger());
@@ -3572,7 +3596,7 @@ public class ScannerTest extends TestCase {
         } catch (InputMismatchException e) {
             // Expected
         }
-        s.useLocale(new Locale("it", "CH"));
+        s.useLocale(new Locale("de", "CH"));
         // If exception is thrown out, input will not be advanced.
         assertTrue(s.hasNextBigInteger());
         assertEquals(new BigInteger("23456"), s.nextBigInteger());
@@ -3669,22 +3693,27 @@ public class ScannerTest extends TestCase {
         s.useLocale(new Locale("mk", "MK"));
         assertTrue(s.hasNextBigInteger());
         assertEquals(new BigInteger("-123"), s.nextBigInteger());
+        
+        s.close();
+        try {
+            s.hasNextBigInteger();
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            //expected
+        }
     }
     
     /**
      * @throws IOException
      * @tests java.util.Scanner#hasNextInt(int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "IllegalStateException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "hasNextInt",
-          methodArgs = {int.class}
-        )
-    })
-    public void _test_hasNextIntI() throws IOException {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "IllegalStateException checking missed.",
+        method = "hasNextInt",
+        args = {int.class}
+    )
+    public void test_hasNextIntI() throws IOException {
         s = new Scanner("123 456");
         assertEquals(123, s.nextInt(10));
         assertTrue(s.hasNextInt(10));
@@ -3729,7 +3758,7 @@ public class ScannerTest extends TestCase {
         s = new Scanner("23'456");
         s.useLocale(Locale.GERMANY);
         assertFalse(s.hasNextInt(10));
-        s.useLocale(new Locale("it", "CH"));
+        s.useLocale(new Locale("de", "CH"));
         // If exception is thrown out, input will not be advanced.
         assertTrue(s.hasNextInt(10));
 
@@ -3783,15 +3812,17 @@ public class ScannerTest extends TestCase {
         // letter as leading digit
         s = new Scanner("E3,456");
         s.useLocale(Locale.ENGLISH);
-        assertTrue(s.hasNextInt(16));
-        assertEquals(930902, s.nextInt(16));
-
-        // If parameter radix is illegal, the following test case fails on RI
-        try {
-            s.hasNextInt(Character.MIN_RADIX - 1);
-            fail("Should throw IllegalArgumentException");
-        } catch (IllegalArgumentException e) {
-            // Expected
+        if (!disableRIBugs) {
+            assertTrue(s.hasNextInt(16));
+            assertEquals(930902, s.nextInt(16));
+    
+            // If parameter radix is illegal, the following test case fails on RI
+            try {
+                s.hasNextInt(Character.MIN_RADIX - 1);
+                fail("Should throw IllegalArgumentException");
+            } catch (IllegalArgumentException e) {
+                // Expected
+            }
         }
 
         /*
@@ -3832,8 +3863,10 @@ public class ScannerTest extends TestCase {
         assertTrue(s.hasNextInt(10));
         assertEquals(-123, s.nextInt(10));
         // The following test case fails on RI
-        assertTrue(s.hasNextInt(10));
-        assertEquals(-123, s.nextInt(10));
+        if (!disableRIBugs) {
+            assertTrue(s.hasNextInt(10));
+            assertEquals(-123, s.nextInt(10));
+        }
         assertFalse(s.hasNextInt(10));
         try {
             s.nextInt(10);
@@ -3856,23 +3889,22 @@ public class ScannerTest extends TestCase {
         // Skip the un-recognizable token 123-.
         assertEquals("123-", s.next());
         // The following test case fails on RI
-        assertTrue(s.hasNextInt(10));
-        assertEquals(-123, s.nextInt(10));
+        if (!disableRIBugs) {
+            assertTrue(s.hasNextInt(10));
+            assertEquals(-123, s.nextInt(10));
+        }
     }
 
     /**
      * @throws IOException
      * @tests java.util.Scanner#hasNextInt(int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Regression test",
-      targets = {
-        @TestTarget(
-          methodName = "hasNextInt",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Regression test",
+        method = "hasNextInt",
+        args = {int.class}
+    )
     public void test_hasNextIntI_cache() throws IOException {
         //regression for HARMONY-2063
         s = new Scanner("123 456");
@@ -3907,16 +3939,13 @@ public class ScannerTest extends TestCase {
      * @throws IOException
      * @tests java.util.Scanner#hasNextInt()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "hasNextInt",
-          methodArgs = {}
-        )
-    })
-    public void _test_hasNextInt() throws IOException {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hasNextInt",
+        args = {}
+    )
+    public void test_hasNextInt() throws IOException {
         s = new Scanner("123 456");
         assertTrue(s.hasNextInt());
         assertEquals(123, s.nextInt());
@@ -3962,7 +3991,7 @@ public class ScannerTest extends TestCase {
         s = new Scanner("23'456");
         s.useLocale(Locale.GERMANY);
         assertFalse(s.hasNextInt());
-        s.useLocale(new Locale("it", "CH"));
+        s.useLocale(new Locale("de", "CH"));
         assertTrue(s.hasNextInt());
 
         /*
@@ -4011,8 +4040,10 @@ public class ScannerTest extends TestCase {
         s = new Scanner("E3,456");
         s.useLocale(Locale.ENGLISH);
         s.useRadix(16);
-        assertTrue(s.hasNextInt());
-        assertEquals(930902, s.nextInt());
+        if (!disableRIBugs) {
+            assertTrue(s.hasNextInt());
+            assertEquals(930902, s.nextInt());
+        }
 
         /*
          * There are 3 types of zero digit in all locales, '0' '\u0966' '\u0e50'
@@ -4052,8 +4083,10 @@ public class ScannerTest extends TestCase {
         assertTrue(s.hasNextInt());
         assertEquals(-123, s.nextInt());
         // The following test case fails on RI
-        assertTrue(s.hasNextInt());
-        assertEquals(-123, s.nextInt());
+        if (!disableRIBugs) {
+            assertTrue(s.hasNextInt());
+            assertEquals(-123, s.nextInt());
+        }
         assertFalse(s.hasNextInt());
         try {
             s.nextInt();
@@ -4075,24 +4108,31 @@ public class ScannerTest extends TestCase {
         // Skip the un-recognizable token 123-.
         assertEquals("123-", s.next());
         // The following test case fails on RI
-        assertTrue(s.hasNextInt());
-        assertEquals(-123, s.nextInt());
+        if (!disableRIBugs) {
+            assertTrue(s.hasNextInt());
+            assertEquals(-123, s.nextInt());
+        }
+        
+        s.close();
+        try {
+            s.hasNextInt();
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            //expected
+        }
     }
     
     /**
      * @throws IOException
      * @tests java.util.Scanner#hasNextFloat()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "hasNextFloat",
-          methodArgs = {}
-        )
-    })
-    public void _test_hasNextFloat() throws IOException {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hasNextFloat",
+        args = {}
+    )
+    public void test_hasNextFloat() throws IOException {
         s = new Scanner("123 45\u0666. 123.4 .123 ");
         s.useLocale(Locale.ENGLISH);
         assertTrue(s.hasNextFloat());
@@ -4183,8 +4223,10 @@ public class ScannerTest extends TestCase {
         assertTrue(s.hasNextFloat());
         assertEquals((float)-123.4, s.nextFloat());
         //The following test case fails on RI
-        assertTrue(s.hasNextFloat());
-        assertEquals((float)-123.4, s.nextFloat());
+        if (!disableRIBugs) {
+            assertTrue(s.hasNextFloat());
+            assertEquals((float)-123.4, s.nextFloat());
+        }
         try {
             s.nextFloat();
             fail("Should throw InputMismatchException");
@@ -4194,8 +4236,10 @@ public class ScannerTest extends TestCase {
 
         s = new Scanner("(123) 123- -123");
         s.useLocale(new Locale("mk", "MK"));
-        assertTrue(s.hasNextFloat());
-        assertEquals((float)-123.0, s.nextFloat());
+        if (!disableRIBugs) {
+            assertTrue(s.hasNextFloat());
+            assertEquals((float)-123.0, s.nextFloat());
+        }
         assertFalse(s.hasNextFloat());
         try {
             s.nextFloat();
@@ -4204,9 +4248,11 @@ public class ScannerTest extends TestCase {
             // Expected
         }
         // Skip the un-recognizable token 123-.
-        assertEquals("123-", s.next());
-        assertTrue(s.hasNextFloat());
-        assertEquals((float)-123.0, s.nextFloat());
+        if (!disableRIBugs) {
+            assertEquals("123-", s.next());
+            assertTrue(s.hasNextFloat());
+            assertEquals((float)-123.0, s.nextFloat());
+        }
         
         s = new Scanner("+123.4 -456.7");
         s.useLocale(Locale.ENGLISH);
@@ -4225,16 +4271,13 @@ public class ScannerTest extends TestCase {
      * @throws IOException
      * @tests java.util.Scanner#hasNextShort(int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "IllegalStateException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "hasNextShort",
-          methodArgs = {int.class}
-        )
-    })
-    public void _test_hasNextShortI() throws IOException {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "IllegalStateException checking missed.",
+        method = "hasNextShort",
+        args = {int.class}
+    )
+    public void test_hasNextShortI() throws IOException {
         s = new Scanner("123 456");
         assertTrue(s.hasNextShort(10));
         assertEquals(123, s.nextShort(10));
@@ -4302,7 +4345,7 @@ public class ScannerTest extends TestCase {
         } catch (InputMismatchException e) {
             // Expected
         }
-        s.useLocale(new Locale("it", "CH"));
+        s.useLocale(new Locale("de", "CH"));
         // If exception is thrown out, input will not be advanced.
         assertTrue(s.hasNextShort(10));
         assertEquals(23456, s.nextShort(10));
@@ -4404,16 +4447,13 @@ public class ScannerTest extends TestCase {
      * @throws IOException
      * @tests java.util.Scanner#hasNextShort()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "hasNextShort",
-          methodArgs = {}
-        )
-    })
-    public void _test_hasNextShort() throws IOException {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hasNextShort",
+        args = {}
+    )
+    public void test_hasNextShort() throws IOException {
         s = new Scanner("123 456");
         assertTrue(s.hasNextShort());
         assertEquals(123, s.nextShort());
@@ -4482,7 +4522,7 @@ public class ScannerTest extends TestCase {
         } catch (InputMismatchException e) {
             // Expected
         }
-        s.useLocale(new Locale("it", "CH"));
+        s.useLocale(new Locale("de", "CH"));
         // If exception is thrown out, input will not be advanced.
         assertTrue(s.hasNextShort());
         assertEquals(23456, s.nextShort());
@@ -4579,21 +4619,26 @@ public class ScannerTest extends TestCase {
         s.useLocale(new Locale("mk", "MK"));
         assertTrue(s.hasNextShort());
         assertEquals(-123, s.nextShort());
+        
+        s.close();
+        try {
+            s.hasNextShort();
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            //expected
+        }
     }
     
     /**
      * @throws IOException
      * @tests java.util.Scanner#hasNextShort(int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Regression test.",
-      targets = {
-        @TestTarget(
-          methodName = "hasNextShort",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Regression test.",
+        method = "hasNextShort",
+        args = {int.class}
+    )
     public void test_hasNextShortI_cache() throws IOException {
         //regression for HARMONY-2063
         s = new Scanner("123 456");
@@ -4629,16 +4674,13 @@ public class ScannerTest extends TestCase {
      * @throws IOException
      * @tests java.util.Scanner#hasNextLong(int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "IllegalStateException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "hasNextLong",
-          methodArgs = {int.class}
-        )
-    })
-    public void _test_hasNextLongI() throws IOException {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "IllegalStateException checking missed.",
+        method = "hasNextLong",
+        args = {int.class}
+    )
+    public void test_hasNextLongI() throws IOException {
         s = new Scanner("123 456");
         assertTrue(s.hasNextLong(10));
         assertEquals(123, s.nextLong(10));
@@ -4706,7 +4748,7 @@ public class ScannerTest extends TestCase {
         } catch (InputMismatchException e) {
             // Expected
         }
-        s.useLocale(new Locale("it", "CH"));
+        s.useLocale(new Locale("de", "CH"));
         // If exception is thrown out, input will not be advanced.
         assertTrue(s.hasNextLong(10));
         assertEquals(23456, s.nextLong(10));
@@ -4808,15 +4850,12 @@ public class ScannerTest extends TestCase {
      * @throws IOException
      * @tests java.util.Scanner#hasNextLong(int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Regression test.",
-      targets = {
-        @TestTarget(
-          methodName = "hasNextLong",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Regression test.",
+        method = "hasNextLong",
+        args = {int.class}
+    )
     public void test_hasNextLongI_cache() throws IOException {
         //regression for HARMONY-2063
         s = new Scanner("123 456");
@@ -4852,16 +4891,13 @@ public class ScannerTest extends TestCase {
      * @throws IOException
      * @tests java.util.Scanner#hasNextLong()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "hasNextLong",
-          methodArgs = {}
-        )
-    })
-    public void _test_hasNextLong() throws IOException {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hasNextLong",
+        args = {}
+    )
+    public void test_hasNextLong() throws IOException {
         s = new Scanner("123 456");
         assertTrue(s.hasNextLong());
         assertEquals(123, s.nextLong());
@@ -4930,7 +4966,7 @@ public class ScannerTest extends TestCase {
         } catch (InputMismatchException e) {
             // Expected
         }
-        s.useLocale(new Locale("it", "CH"));
+        s.useLocale(new Locale("de", "CH"));
         // If exception is thrown out, input will not be advanced.
         assertTrue(s.hasNextLong());
         assertEquals(23456, s.nextLong());
@@ -5027,21 +5063,26 @@ public class ScannerTest extends TestCase {
         s.useLocale(new Locale("mk", "MK"));
         assertTrue(s.hasNextLong());
         assertEquals(-123, s.nextLong());
+        
+        s.close();
+        try {
+            s.hasNextLong();
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            //expected
+        }
     }
     
     /**
      * @throws IOException
      * @tests java.util.Scanner#nextDouble()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "hasNextDouble",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hasNextDouble",
+        args = {}
+    )
     public void test_hasNextDouble() throws IOException {
         s = new Scanner("123 45\u0666. 123.4 .123 ");
         s.useLocale(Locale.ENGLISH);
@@ -5149,15 +5190,12 @@ public class ScannerTest extends TestCase {
      * @throws IOException
      * @tests java.util.Scanner#hasNextBigDecimal()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "hasNextBigDecimal",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hasNextBigDecimal",
+        args = {}
+    )
     public void test_hasNextBigDecimal() throws IOException {
         s = new Scanner("123 45\u0666. 123.4 .123 ");
         s.useLocale(Locale.ENGLISH);
@@ -5241,6 +5279,14 @@ public class ScannerTest extends TestCase {
         s.useLocale(Locale.ENGLISH);
         assertTrue(s.hasNextBigDecimal());
         assertEquals(new BigDecimal("-123.4"), s.nextBigDecimal());
+        
+        s.close();
+        try {
+            s.hasNextBigDecimal();
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            //expected
+        }
     }
     
     private static class MockStringReader extends StringReader {
@@ -5287,16 +5333,14 @@ public class ScannerTest extends TestCase {
     /**
      * @tests java.util.Scanner#findWithinHorizon(Pattern, int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "findWithinHorizon",
-          methodArgs = {java.util.regex.Pattern.class, int.class}
-        )
-    })
-    public void _test_findWithinHorizon_LPatternI(){
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "findWithinHorizon",
+        args = {java.util.regex.Pattern.class, int.class}
+    )
+    @KnownFailure("findWithinHorizon method doesn't work properly")
+    public void test_findWithinHorizon_LPatternI(){
 
         // This method searches through the input up to the specified search
         // horizon(exclusive).
@@ -5530,19 +5574,258 @@ public class ScannerTest extends TestCase {
         result = s.findWithinHorizon(Pattern.compile("a*"), 0);
         assertEquals("aaaa", result);
     }
+
+    /**
+     * @tests java.util.Scanner#findWithinHorizon(String, int) Copy of Pattern
+     *        test for String
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "findWithinHorizon",
+        args = {java.lang.String.class, int.class}
+    )
+    public void test_findWithinHorizon_Ljava_lang_StringI() {
+
+        // This method searches through the input up to the specified search
+        // horizon(exclusive).
+        s = new Scanner("123test");
+        String result = s.findWithinHorizon("\\p{Lower}", 5);
+        assertEquals("t", result);
+        MatchResult mresult = s.match();
+        assertEquals(3, mresult.start());
+        assertEquals(4, mresult.end());
+
+        s = new Scanner("12345test1234test next");
+        /*
+         * If the pattern is found the scanner advances past the input that
+         * matched and returns the string that matched the pattern.
+         */
+        result = s.findWithinHorizon("\\p{Digit}+", 2);
+        assertEquals("12", result);
+        mresult = s.match();
+        assertEquals(0, mresult.start());
+        assertEquals(2, mresult.end());
+        // Postion is now pointing at the bar. "12|345test1234test next"
+
+        result = s.findWithinHorizon("\\p{Digit}+", 6);
+        assertEquals("345", result);
+
+        mresult = s.match();
+        assertEquals(2, mresult.start());
+        assertEquals(5, mresult.end());
+        // Postion is now pointing at the bar. "12345|test1234test next"
+
+        // If no such pattern is detected then the null is returned and the
+        // scanner's position remains unchanged.
+        result = s.findWithinHorizon("\\p{Digit}+", 3);
+        assertNull(result);
+
+        try {
+            s.match();
+            fail("Should throw IllegalStateException");
+        } catch (IllegalStateException e) {
+            // expected
+        }
+        assertEquals("345", mresult.group());
+        assertEquals(2, mresult.start());
+        assertEquals(5, mresult.end());
+        // Postion is now still pointing at the bar. "12345|test1234test next"
+
+        // If horizon is 0, then the horizon is ignored and this method
+        // continues to search through the input looking for the specified
+        // pattern without bound.
+        result = s.findWithinHorizon("\\p{Digit}+", 0);
+        mresult = s.match();
+        assertEquals(9, mresult.start());
+        assertEquals(13, mresult.end());
+        // Postion is now pointing at the bar. "12345test1234|test next"
+
+        assertEquals("test", s.next());
+        mresult = s.match();
+        assertEquals(13, mresult.start());
+        assertEquals(17, mresult.end());
+
+        assertEquals("next", s.next());
+        mresult = s.match();
+        assertEquals(18, mresult.start());
+        assertEquals(22, mresult.end());
+
+        try {
+            s.findWithinHorizon((String)null, 1);
+            fail("Should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+
+        try {
+            s.findWithinHorizon("\\p{Digit}+", -1);
+            fail("Should throw IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // expected
+        }
+
+        s.close();
+        // on RI throws NullPointerException
+        /*
+         * try { System.out.println("fsdfs"); s.findWithinHorizon((String) null,
+         * -1); System.out.println("fsdfs"); fail("Should throw
+         * IllegalStateException"); } catch (IllegalStateException e) { //
+         * expected }
+         */
+        s = new Scanner("test");
+        result = s.findWithinHorizon("\\w+", 10);
+        assertEquals("test", result);
+
+        s = new Scanner("aa\n\rb");
+        String patternStr = "^(a)$";
+        result = s.findWithinHorizon("a", 5);
+        assertEquals("a", result);
+        mresult = s.match();
+        assertEquals(0, mresult.start());
+        assertEquals(1, mresult.end());
+
+        result = s.findWithinHorizon(patternStr, 5);
+        assertNull(result);
+
+        try {
+            mresult = s.match();
+            fail("Should throw IllegalStateException");
+        } catch (IllegalStateException e) {
+            // expected
+        }
+
+        s = new Scanner("");
+        result = s.findWithinHorizon("^", 0);
+        assertEquals("", result);
+        MatchResult matchResult = s.match();
+        assertEquals(0, matchResult.start());
+        assertEquals(0, matchResult.end());
+
+        result = s.findWithinHorizon("$", 0);
+        assertEquals("", result);
+        matchResult = s.match();
+        assertEquals(0, matchResult.start());
+        assertEquals(0, matchResult.end());
+
+        s = new Scanner("1 fish 2 fish red fish blue fish");
+        result = s.findWithinHorizon("(\\d+) fish (\\d+) fish (\\w+) fish (\\w+)", 10);
+        assertNull(result);
+
+        try {
+            mresult = s.match();
+            fail("Should throw IllegalStateException");
+        } catch (IllegalStateException e) {
+            // expected
+        }
+        assertEquals(0, mresult.groupCount());
+
+        result = s.findWithinHorizon("(\\d+) fish (\\d+) fish (\\w+) fish (\\w+)", 100);
+        assertEquals("1 fish 2 fish red fish blue", result);
+        mresult = s.match();
+        assertEquals(4, mresult.groupCount());
+        assertEquals("1", mresult.group(1));
+        assertEquals("2", mresult.group(2));
+        assertEquals("red", mresult.group(3));
+        assertEquals("blue", mresult.group(4));
+
+        s = new Scanner("test");
+        s.close();
+        try {
+            s.findWithinHorizon("test", 1);
+            fail("Should throw IllegalStateException");
+        } catch (IllegalStateException e) {
+            // expected
+        }
+
+        s = new Scanner("word1 WorD2  ");
+        s.close();
+        try {
+            s.findWithinHorizon("\\d+", 10);
+            fail("should throw IllegalStateException");
+        } catch (IllegalStateException e) {
+            // expected
+        }
+
+        s = new Scanner("word1 WorD2 wOrd3 ");
+        patternStr = "\\d+";
+        assertEquals("1", s.findWithinHorizon(patternStr, 10));
+        assertEquals("WorD2", s.next());
+        assertEquals("3", s.findWithinHorizon(patternStr, 15));
+
+        // Regression test
+        s = new Scanner(new MockStringReader("MockStringReader"));
+        patternStr = "test";
+        result = s.findWithinHorizon(patternStr, 10);
+        assertEquals("test", result);
+
+        // Test the situation when input length is longer than buffer size.
+        StringBuilder stringBuilder = new StringBuilder();
+        for (int i = 0; i < 1026; i++) {
+            stringBuilder.append('a');
+        }
+        s = new Scanner(stringBuilder.toString());
+        patternStr = "\\p{Lower}+";
+        result = s.findWithinHorizon(patternStr, 1026);
+        assertEquals(stringBuilder.toString(), result);
+
+        // Test the situation when input length is longer than buffer size and
+        // set horizon to buffer size.
+        stringBuilder = new StringBuilder();
+        for (int i = 0; i < 1026; i++) {
+            stringBuilder.append('a');
+        }
+        s = new Scanner(stringBuilder.toString());
+        patternStr = "\\p{Lower}+";
+        result = s.findWithinHorizon(patternStr, 1022);
+        assertEquals(1022, result.length());
+        assertEquals(stringBuilder.subSequence(0, 1022), result);
+
+        // Test the situation, under which pattern is clipped by buffer.
+        stringBuilder = new StringBuilder();
+        for (int i = 0; i < 1022; i++) {
+            stringBuilder.append(' ');
+        }
+        stringBuilder.append("bbc");
+        assertEquals(1025, stringBuilder.length());
+        s = new Scanner(stringBuilder.toString());
+        patternStr = "bbc";
+        result = s.findWithinHorizon(patternStr, 1025);
+        assertEquals(3, result.length());
+        assertEquals(stringBuilder.subSequence(1022, 1025), result);
+
+        stringBuilder = new StringBuilder();
+        for (int i = 0; i < 1026; i++) {
+            stringBuilder.append('a');
+        }
+        s = new Scanner(stringBuilder.toString());
+        patternStr = "\\p{Lower}+";
+        result = s.findWithinHorizon(patternStr, 0);
+        assertEquals(stringBuilder.toString(), result);
+
+        stringBuilder = new StringBuilder();
+        for (int i = 0; i < 10240; i++) {
+            stringBuilder.append('-');
+        }
+        stringBuilder.replace(0, 2, "aa");
+        s = new Scanner(stringBuilder.toString());
+        result = s.findWithinHorizon("aa", 0);
+        assertEquals("aa", result);
+
+        s = new Scanner("aaaa");
+        result = s.findWithinHorizon("a*", 0);
+        assertEquals("aaaa", result);
+    }
     
     /**
      * @tests java.util.Scanner#findInLine(Pattern)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "findInLine",
-          methodArgs = {java.util.regex.Pattern.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "findInLine",
+        args = {java.util.regex.Pattern.class}
+    )
     public void test_findInLine_LPattern() {
 
         Scanner s = new Scanner("");
@@ -5663,21 +5946,20 @@ public class ScannerTest extends TestCase {
         assertEquals("est", result);
         result = s.findInLine("est");
         // RI fails. It is a RI's bug.
-        assertNull(result);
+        if (!disableRIBugs) {
+            assertNull(result);
+        }
     }
 
     /**
      * @tests java.util.Scanner#findInLine(String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Checks exceptions only.",
-      targets = {
-        @TestTarget(
-          methodName = "findInLine",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "findInLine",
+        args = {java.lang.String.class}
+    )
     public void test_findInLine_LString() {
         s = new Scanner("test");
         try {
@@ -5700,20 +5982,127 @@ public class ScannerTest extends TestCase {
         } catch (IllegalStateException e) {
             // exptected
         }
+
+        s = new Scanner("");
+
+        String result = s.findInLine("^");
+        assertEquals("", result);
+        MatchResult matchResult = s.match();
+        assertEquals(0, matchResult.start());
+        assertEquals(0, matchResult.end());
+
+        result = s.findInLine("$");
+        assertEquals("", result);
+        matchResult = s.match();
+        assertEquals(0, matchResult.start());
+        assertEquals(0, matchResult.end());
+
+        /*
+         * When we use the operation of findInLine(Pattern), the match region
+         * should not span the line separator.
+         */
+        s = new Scanner("aa\nb.b");
+        result = s.findInLine("a\nb*");
+        assertNull(result);
+
+        s = new Scanner("aa\nbb.b");
+        result = s.findInLine("\\.");
+        assertNull(result);
+
+        s = new Scanner("abcd1234test\n");
+        result = s.findInLine("\\p{Lower}+");
+        assertEquals("abcd", result);
+        matchResult = s.match();
+        assertEquals(0, matchResult.start());
+        assertEquals(4, matchResult.end());
+
+        result = s.findInLine("\\p{Digit}{5}");
+        assertNull(result);
+        try {
+            matchResult = s.match();
+            fail("Should throw IllegalStateException");
+        } catch (IllegalStateException e) {
+            // expected
+        }
+        assertEquals(0, matchResult.start());
+        assertEquals(4, matchResult.end());
+
+        result = s.findInLine("\\p{Lower}+");
+        assertEquals("test", result);
+        matchResult = s.match();
+        assertEquals(8, matchResult.start());
+        assertEquals(12, matchResult.end());
+
+        char[] chars = new char[2048];
+        Arrays.fill(chars, 'a');
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append(chars);
+        stringBuilder.append("1234");
+        s = new Scanner(stringBuilder.toString());
+        result = s.findInLine("\\p{Digit}+");
+        assertEquals("1234", result);
+        matchResult = s.match();
+        assertEquals(2048, matchResult.start());
+        assertEquals(2052, matchResult.end());
+
+        s = new Scanner("test1234\n1234 test");
+        result = s.findInLine("test");
+        assertEquals("test", result);
+        matchResult = s.match();
+        assertEquals(0, matchResult.start());
+        assertEquals(4, matchResult.end());
+
+        int number = s.nextInt();
+        assertEquals(1234, number);
+        matchResult = s.match();
+        assertEquals(4, matchResult.start());
+        assertEquals(8, matchResult.end());
+
+        result = s.next();
+        assertEquals("1234", result);
+        matchResult = s.match();
+        assertEquals(9, matchResult.start());
+        assertEquals(13, matchResult.end());
+
+        result = s.findInLine("test");
+        assertEquals("test", result);
+        matchResult = s.match();
+        assertEquals(14, matchResult.start());
+        assertEquals(18, matchResult.end());
+        
+        s = new Scanner("test\u0085\ntest");
+        result = s.findInLine("est");
+        assertEquals("est", result);
+        result = s.findInLine("est");
+        assertEquals("est", result);
+        
+        s = new Scanner("test\ntest");
+        result = s.findInLine("est");
+        assertEquals("est", result);
+        result = s.findInLine("est");
+        assertEquals("est", result);
+
+        s = new Scanner("test\n123\ntest");
+        result = s.findInLine("est");
+        assertEquals("est", result);
+        result = s.findInLine("est");
+        // RI fails. It is a RI's bug.
+        if (!disableRIBugs) {
+            assertNull(result);
+        }
+
+    
     }
     
     /**
      * @tests java.util.Scanner#skip(Pattern)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "skip",
-          methodArgs = {java.util.regex.Pattern.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "skip",
+        args = {java.util.regex.Pattern.class}
+    )
     public void test_skip_LPattern() {
         s = new Scanner("test");
         try {
@@ -5816,16 +6205,110 @@ public class ScannerTest extends TestCase {
     /**
      * @tests java.util.Scanner#skip(String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Checks NullPointerException.",
-      targets = {
-        @TestTarget(
-          methodName = "skip",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "skip",
+        args = {java.lang.String.class}
+    )
     public void test_skip_LString() {
+        s = new Scanner("test");
+        try {
+            s.skip((String) null);
+            fail("Should throw NullPointerException");
+        } catch (NullPointerException e) {
+            // expected
+        }
+        
+        // If pattern does not match, NoSuchElementException will be thrown out.
+        s = new Scanner("1234");
+        try {
+            s.skip("\\p{Lower}");
+            fail("Should throw NoSuchElementException");
+        } catch (NoSuchElementException e) {
+            // expected
+        }
+        // Then, no matchResult will be thrown out.
+        try {
+            s.match();
+            fail("Should throw IllegalStateException");
+        } catch (IllegalStateException e) {
+            // expected
+        }
+
+        s.skip("\\p{Digit}");
+        MatchResult matchResult = s.match();
+        assertEquals(0, matchResult.start());
+        assertEquals(1, matchResult.end());
+
+        s.skip("\\p{Digit}+");
+        matchResult = s.match();
+        assertEquals(1, matchResult.start());
+        assertEquals(4, matchResult.end());
+
+        s.close();
+        try {
+            s.skip("test");
+            fail("Should throw IllegalStateException");
+        } catch (IllegalStateException e) {
+            // expected
+        }
+
+        MockStringReader2Read reader = new MockStringReader2Read("test");
+        s = new Scanner(reader);
+        try {
+            s.skip("\\p{Digit}{4}");
+            fail("Should throw NoSuchElementException");
+        } catch (NoSuchElementException e) {
+            // expected
+        }
+        try {
+            s.match();
+            fail("Should throw IllegalStateException");
+        } catch (IllegalStateException e) {
+            // expected
+        }
+        s.skip("\\p{Digit}{3}\\p{Lower}");
+        matchResult = s.match();
+        assertEquals(0, matchResult.start());
+        assertEquals(4, matchResult.end());
+
+        s.close();
+        try {
+            s.skip("");
+            fail("Should throw IllegalStateException");
+        } catch (IllegalStateException e) {
+            // expected
+        }
+        
+        StringBuilder stringBuilder = new StringBuilder();
+        char [] chars = new char[1024];
+        Arrays.fill(chars, 'a');
+        stringBuilder.append(chars);
+        stringBuilder.append('3');
+        s = new Scanner(stringBuilder.toString());
+        s.skip("\\p{Lower}+\\p{Digit}");
+        matchResult = s.match();
+        assertEquals(0, matchResult.start());
+        assertEquals(1025, matchResult.end());
+        
+        // Large amount of input may be cached
+        chars = new char[102400];
+        Arrays.fill(chars, 'a');
+        stringBuilder = new StringBuilder();
+        stringBuilder.append(chars);
+        s = new Scanner(stringBuilder.toString());
+        s.skip(".*");
+        matchResult = s.match();
+        assertEquals(0, matchResult.start());
+        assertEquals(102400, matchResult.end());
+        
+        // skip something without risking a NoSuchElementException
+        s.skip("[ \t]*");
+        matchResult = s.match();
+        assertEquals(102400, matchResult.start());
+        assertEquals(102400, matchResult.end());
+
         s = new Scanner("test");
         try {
             s.skip((String) null);
@@ -5839,15 +6322,12 @@ public class ScannerTest extends TestCase {
      * @throws IOException
      * @tests java.util.Scanner#nextDouble()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "nextDouble",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "nextDouble",
+        args = {}
+    )
     public void test_nextDouble() throws IOException {
         s = new Scanner("123 45\u0666. 123.4 .123 ");
         s.useLocale(Locale.ENGLISH);
@@ -5889,7 +6369,7 @@ public class ScannerTest extends TestCase {
         //The following test case fails on RI
         s=new Scanner("\u221e");
         s.useLocale(Locale.ENGLISH);
-        assertEquals(Double.POSITIVE_INFINITY, s.nextDouble());
+//        assertEquals(Double.POSITIVE_INFINITY, s.nextDouble());
 
         String str=String.valueOf(Double.MAX_VALUE*2);
         s=new Scanner(str);
@@ -5920,21 +6400,26 @@ public class ScannerTest extends TestCase {
         s = new Scanner("-123.4");
         s.useLocale(Locale.ENGLISH);
         assertEquals(-123.4, s.nextDouble());
+        
+        s.close();
+        try {
+            s.nextDouble();
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            //expected
+        }
     }
     
     /**
      * @throws IOException
      * @tests java.util.Scanner#nextBigDecimal()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalStateException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "nextBigDecimal",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "nextBigDecimal",
+        args = {}
+    )
     public void test_nextBigDecimal() throws IOException {
         s = new Scanner("123 45\u0666. 123.4 .123 ");
         s.useLocale(Locale.ENGLISH);
@@ -5999,20 +6484,25 @@ public class ScannerTest extends TestCase {
         s = new Scanner("-123.4");
         s.useLocale(Locale.ENGLISH);
         assertEquals(new BigDecimal("-123.4"), s.nextBigDecimal());
+        
+        s.close();
+        try {
+            s.nextBigDecimal();
+            fail("IllegalStateException expected");
+        } catch (IllegalStateException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.Scanner#toString()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public void test_toString() {
         s = new Scanner("test");
         assertNotNull(s.toString());
@@ -6021,15 +6511,12 @@ public class ScannerTest extends TestCase {
     /**
      * @tests java.util.Scanner#nextLine()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "nextLine",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "nextLine",
+        args = {}
+    )
     public void test_nextLine() {
         s = new Scanner("");
         s.close();
@@ -6165,15 +6652,12 @@ public class ScannerTest extends TestCase {
     /**
      * @tests java.util.Scanner#hasNextLine()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "hasNextLine",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hasNextLine",
+        args = {}
+    )
     public void test_hasNextLine() {
         
         s = new Scanner("");
@@ -6280,15 +6764,12 @@ public class ScannerTest extends TestCase {
     /**
      * @tests java.util.Scanner#Scanner(ReadableByteChannel)
      */   
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "Scanner",
-          methodArgs = {java.nio.channels.ReadableByteChannel.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Scanner",
+        args = {java.nio.channels.ReadableByteChannel.class}
+    )
     public void test_Constructor_LReadableByteChannel()
             throws IOException {
         InetSocketAddress localAddr = new InetSocketAddress("127.0.0.1",

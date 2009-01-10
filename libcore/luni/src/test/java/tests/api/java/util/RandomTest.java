@@ -17,8 +17,8 @@
 
 package tests.api.java.util;
 
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass; 
 
@@ -32,15 +32,12 @@ public class RandomTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Random#Random()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "Random",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Random",
+        args = {}
+    )
     public void test_Constructor() {
         // Test for method java.util.Random()
         assertTrue("Used to test", true);
@@ -49,15 +46,12 @@ public class RandomTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Random#Random(long)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "Random",
-          methodArgs = {long.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Random",
+        args = {long.class}
+    )
     public void test_ConstructorJ() {
         Random r = new Random(8409238L);
         Random r2 = new Random(8409238L);
@@ -69,15 +63,12 @@ public class RandomTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Random#nextBoolean()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "nextBoolean",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "nextBoolean",
+        args = {}
+    )
     public void test_nextBoolean() {
         // Test for method boolean java.util.Random.nextBoolean()
         boolean falseAppeared = false, trueAppeared = false;
@@ -95,15 +86,12 @@ public class RandomTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Random#nextBytes(byte[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "nextBytes",
-          methodArgs = {byte[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "nextBytes",
+        args = {byte[].class}
+    )
     public void test_nextBytes$B() {
         // Test for method void java.util.Random.nextBytes(byte [])
         boolean someDifferent = false;
@@ -121,15 +109,12 @@ public class RandomTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Random#nextDouble()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "nextDouble",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "nextDouble",
+        args = {}
+    )
     public void test_nextDouble() {
         // Test for method double java.util.Random.nextDouble()
         double lastNum = r.nextDouble();
@@ -154,15 +139,12 @@ public class RandomTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Random#nextFloat()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "nextFloat",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "nextFloat",
+        args = {}
+    )
     public void test_nextFloat() {
         // Test for method float java.util.Random.nextFloat()
         float lastNum = r.nextFloat();
@@ -186,15 +168,12 @@ public class RandomTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Random#nextGaussian()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "nextGaussian",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "nextGaussian",
+        args = {}
+    )
     public void test_nextGaussian() {
         // Test for method double java.util.Random.nextGaussian()
         double lastNum = r.nextGaussian();
@@ -219,15 +198,12 @@ public class RandomTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Random#nextInt()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "nextInt",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "nextInt",
+        args = {}
+    )
     public void test_nextInt() {
         // Test for method int java.util.Random.nextInt()
         int lastNum = r.nextInt();
@@ -246,15 +222,12 @@ public class RandomTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Random#nextInt(int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "nextInt",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "nextInt",
+        args = {int.class}
+    )
     public void test_nextIntI() {
         // Test for method int java.util.Random.nextInt(int)
         final int range = 10;
@@ -281,15 +254,12 @@ public class RandomTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Random#nextLong()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "nextLong",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "nextLong",
+        args = {}
+    )
     public void test_nextLong() {
         // Test for method long java.util.Random.nextLong()
         long lastNum = r.nextLong();
@@ -308,15 +278,12 @@ public class RandomTest extends junit.framework.TestCase {
     /**
      * @tests java.util.Random#setSeed(long)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setSeed",
-          methodArgs = {long.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setSeed",
+        args = {long.class}
+    )
     public void test_setSeedJ() {
         // Test for method void java.util.Random.setSeed(long)
         long[] randomArray = new long[100];
@@ -347,6 +314,49 @@ public class RandomTest extends junit.framework.TestCase {
             assertTrue(
                     "Reseting a random to its old seed did not result in the same chain of values as it gave before",
                     aRandom.nextLong() == randomArray[counter]);
+    }
+    
+    class Mock_Random extends Random {
+        boolean nextCalled = false;
+        
+        public boolean getFlag () {
+            boolean retVal = nextCalled;
+            nextCalled = false;
+            return retVal;
+        }
+        
+        @Override
+        protected int next(int bits) {
+            nextCalled = true;
+            return super.next(bits);
+        }
+    }
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "next",
+        args = {int.class}
+    )
+    public void test_next() {
+        Mock_Random mr = new Mock_Random();
+        assertFalse(mr.getFlag());
+        mr.nextBoolean();
+        assertTrue(mr.getFlag());
+        mr.nextBytes(new byte[10]);
+        assertTrue(mr.getFlag());
+        mr.nextDouble();
+        assertTrue(mr.getFlag());
+        mr.nextFloat();
+        assertTrue(mr.getFlag());
+        mr.nextGaussian();
+        assertTrue(mr.getFlag());
+        mr.nextInt();
+        assertTrue(mr.getFlag());
+        mr.nextInt(10);
+        assertTrue(mr.getFlag());
+        mr.nextLong();
+        assertTrue(mr.getFlag());
     }
 
     /**

@@ -17,9 +17,9 @@
 package tests.api.java.net;
 
 import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.net.URISyntaxException;
 import java.util.Locale;
@@ -31,13 +31,30 @@ public class URISyntaxExceptionTest extends junit.framework.TestCase {
      * @tests java.net.URISyntaxException#URISyntaxException(java.lang.String,
      *        java.lang.String, int)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "URISyntaxException",
-          methodArgs = {java.lang.String.class, java.lang.String.class, int.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "URISyntaxException",
+            args = {java.lang.String.class, java.lang.String.class, int.class}
+        ),
+        @TestTargetNew(
+                level = TestLevel.COMPLETE,
+                notes = "",
+                method = "getIndex",
+                args = {}
+        ),
+        @TestTargetNew(
+                level = TestLevel.COMPLETE,
+                notes = "",
+                method = "getInput",
+                args = {}
+        ), 
+        @TestTargetNew(
+                level = TestLevel.COMPLETE,
+                notes = "",
+                method = "getReason",
+                args = {}
         )
     })
     public void test_ConstructorLjava_lang_StringLjava_lang_StringI() {
@@ -70,13 +87,30 @@ public class URISyntaxExceptionTest extends junit.framework.TestCase {
      * @tests java.net.URISyntaxException#URISyntaxException(java.lang.String,
      *        java.lang.String)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "URISyntaxException",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
+    @TestTargets({
+        @TestTargetNew(
+                level = TestLevel.COMPLETE,
+                notes = "",
+                method = "URISyntaxException",
+                args = {java.lang.String.class, java.lang.String.class}
+        ),
+        @TestTargetNew(
+                level = TestLevel.COMPLETE,
+                notes = "",
+                method = "getIndex",
+                args = {}
+        ),
+        @TestTargetNew(
+                level = TestLevel.COMPLETE,
+                notes = "",
+                method = "getInput",
+                args = {}
+        ), 
+        @TestTargetNew(
+                level = TestLevel.COMPLETE,
+                notes = "",
+                method = "getReason",
+                args = {}
         )
     })
     public void test_ConstructorLjava_lang_StringLjava_lang_String() {
@@ -100,65 +134,14 @@ public class URISyntaxExceptionTest extends junit.framework.TestCase {
     }
 
     /**
-     * @tests java.net.URISyntaxException#getIndex()
-     */
-@TestInfo(
-      level = TestLevel.TODO,
-      purpose = "Test is empty",
-      targets = {
-        @TestTarget(
-          methodName = "getIndex",
-          methodArgs = {}
-        )
-    })
-    public void test_getIndex() {
-        // see constructor tests
-    }
-
-    /**
-     * @tests java.net.URISyntaxException#getReason()
-     */
-@TestInfo(
-      level = TestLevel.TODO,
-      purpose = "Test is empty",
-      targets = {
-        @TestTarget(
-          methodName = "getReason",
-          methodArgs = {}
-        )
-    })
-    public void test_getReason() {
-        // see constructor tests
-    }
-
-    /**
-     * @tests java.net.URISyntaxException#getInput()
-     */
-@TestInfo(
-      level = TestLevel.TODO,
-      purpose = "Test is empty",
-      targets = {
-        @TestTarget(
-          methodName = "getInput",
-          methodArgs = {}
-        )
-    })
-    public void test_getInput() {
-        // see constructor tests
-    }
-
-    /**
      * @tests java.net.URISyntaxException#getMessage()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getMessage",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getMessage",
+        args = {}
+    )
     public void test_getMessage() {
     
         // tests for java.lang.String getMessage()

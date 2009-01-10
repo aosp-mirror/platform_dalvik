@@ -17,11 +17,11 @@
 
 package tests.api.java.io;
 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestTargetClass; 
 import java.io.InterruptedIOException;
+
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
 @TestTargetClass(InterruptedIOException.class) 
 public class InterruptedIOExceptionTest extends junit.framework.TestCase {
@@ -29,13 +29,12 @@ public class InterruptedIOExceptionTest extends junit.framework.TestCase {
     /**
      * @tests java.io.InterruptedIOException#InterruptedIOException()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = { @TestTarget(methodName = "InterruptedIOException", 
-                                    methodArgs = {})                                    
-            }
-        )    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "InterruptedIOException",
+        args = {}
+    )    
     public void test_Constructor() {
         // Test for method java.io.InterruptedIOException()
         try {
@@ -52,13 +51,12 @@ public class InterruptedIOExceptionTest extends junit.framework.TestCase {
     /**
      * @tests java.io.InterruptedIOException#InterruptedIOException(java.lang.String)
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = { @TestTarget(methodName = "InterruptedIOException", 
-                                    methodArgs = {java.lang.String.class})                                    
-            }
-        )    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "InterruptedIOException",
+        args = {java.lang.String.class}
+    )    
     public void test_ConstructorLjava_lang_String() {
         // Test for method java.io.InterruptedIOException(java.lang.String)
         try {

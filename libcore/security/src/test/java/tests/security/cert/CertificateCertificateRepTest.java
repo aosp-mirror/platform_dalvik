@@ -1,21 +1,18 @@
 package tests.security.cert;
 
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
-import java.io.ObjectStreamException;
-import java.security.acl.AclNotFoundException;
-import java.security.acl.NotOwnerException;
-import java.security.cert.Certificate;
-import java.util.Arrays;
+import junit.framework.TestCase;
 
 import org.apache.harmony.security.tests.support.cert.MyCertificate;
 import org.apache.harmony.security.tests.support.cert.TestUtils;
 import org.apache.harmony.security.tests.support.cert.MyCertificate.MyCertificateRep;
 
-import junit.framework.TestCase;
+import java.io.ObjectStreamException;
+import java.security.cert.Certificate;
+import java.util.Arrays;
 
 @TestTargetClass(java.security.cert.Certificate.class)
 public class CertificateCertificateRepTest extends TestCase {
@@ -36,15 +33,12 @@ public class CertificateCertificateRepTest extends TestCase {
      * <code>Certificate.CertificateRep(String type, byte[] data)</code>
      * method<br>
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "!CertificateRep",
-          methodArgs = {String.class, byte.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Certificate.CertificateRep.CertificateRep", 
+        args = { String.class, byte[].class}
+    )
     public final void testCertificateCertificateRep() {
         MyCertificate c1 = new MyCertificate("TEST_TYPE", testEncoding);
         MyCertificateRep rep = c1.new MyCertificateRep("TEST_TYPE", new byte[] {
@@ -73,15 +67,12 @@ public class CertificateCertificateRepTest extends TestCase {
     /**
      * Test for <code>readResolve()</code> method<br>
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "CertificateRep.readResolve",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Certificate.CertificateRep.readResolve",
+        args = {}
+    )
     public final void testReadResolve() {
         MyCertificate c1 = new MyCertificate("TEST_TYPE", testEncoding);
         MyCertificateRep rep = c1.new MyCertificateRep("TEST_TYPE", new byte[] {

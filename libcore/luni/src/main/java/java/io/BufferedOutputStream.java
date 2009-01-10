@@ -136,7 +136,7 @@ public class BufferedOutputStream extends FilterOutputStream {
      * @param length
      *            the number of bytes from {@code buffer} to write to this
      *            stream.
-     * @throws ArrayIndexOutOfBoundsException
+     * @throws IndexOutOfBoundsException
      *             if {@code offset < 0} or {@code length < 0}, or if
      *             {@code offset + length} is greater than the size of
      *             {@code buffer}.

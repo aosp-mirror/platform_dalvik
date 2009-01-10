@@ -39,7 +39,9 @@ import javax.net.ssl.TrustManager;
  */
 
 public class MySSLContextSpi extends SSLContextSpi {
+    
     private boolean init = false;
+    
     protected void engineInit(KeyManager[] km, TrustManager[] tm,
             SecureRandom sr) throws KeyManagementException {
         if (sr == null) {
@@ -52,7 +54,7 @@ public class MySSLContextSpi extends SSLContextSpi {
     protected SSLSocketFactory engineGetSocketFactory() {
         if (!init) {
             throw new RuntimeException("Not initialiazed");
-        };   
+        }   
         return null;
     }
 
@@ -118,7 +120,7 @@ public class MySSLContextSpi extends SSLContextSpi {
         public String[] getEnabledCipherSuites() { return null; }
         public String[] getEnabledProtocols() {return null; }
         public boolean getEnableSessionCreation() { return true; }
-        public SSLEngineResult.HandshakeStatus getHandshakeStatus() { return null; };
+        public SSLEngineResult.HandshakeStatus getHandshakeStatus() { return null; }
         public boolean getNeedClientAuth() { return true; }
         public SSLSession getSession() { return null; }
         public String[] getSupportedCipherSuites()  { return null; }

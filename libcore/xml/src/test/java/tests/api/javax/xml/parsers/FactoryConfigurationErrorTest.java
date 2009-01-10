@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,33 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package tests.api.javax.xml.parsers;
 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestTargetClass;
+import javax.xml.parsers.FactoryConfigurationError;
 
 import junit.framework.TestCase;
-
-import javax.xml.parsers.FactoryConfigurationError;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
 @TestTargetClass(FactoryConfigurationError.class) 
 public class FactoryConfigurationErrorTest extends TestCase {
 
-    /**
-     * @tests javax.xml.parsers.FactoryConfigurationError#FactoryConfigurationError()
-     */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "FactoryConfigurationError",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "FactoryConfigurationError",
+        args = {}
+    )
     public void test_Constructor() {
         FactoryConfigurationError fce = new FactoryConfigurationError();
         assertNull(fce.getMessage());
@@ -47,23 +38,12 @@ public class FactoryConfigurationErrorTest extends TestCase {
         assertNull(fce.getCause());
     }
 
-    /**
-     * @tests javax.xml.parsers.FactoryConfigurationError
-     *     #FactoryConfigurationError(java.lang.Exception)
-     * Case 1: Try to create FactoryConfigurationError
-     * which is based on Exception without parameters.
-     * Case 2: Try to create FactoryConfigurationError
-     * which is based on Exception with String parameter.
-     */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "FactoryConfigurationError",
-          methodArgs = {java.lang.Exception.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "FactoryConfigurationError",
+        args = {java.lang.Exception.class}
+    )
     public void test_ConstructorLjava_lang_Exception() {
         Exception e = new Exception();
         // case 1: Try to create FactoryConfigurationError
@@ -82,23 +62,12 @@ public class FactoryConfigurationErrorTest extends TestCase {
         assertEquals(e.getCause(), fce.getCause());
     }
 
-    /**
-     * @tests javax.xml.parsers.FactoryConfigurationError
-     *     #FactoryConfigurationError(java.lang.Exception, java.lang.String)
-     * Case 1: Try to create FactoryConfigurationError
-     * which is based on Exception without parameters.
-     * Case 2: Try to create FactoryConfigurationError
-     * which is based on Exception with String parameter.
-     */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "FactoryConfigurationError",
-          methodArgs = {java.lang.Exception.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "FactoryConfigurationError",
+        args = {java.lang.Exception.class, java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_ExceptionLjava_lang_String() {
         Exception e = new Exception();
         // case 1: Try to create FactoryConfigurationError
@@ -117,38 +86,25 @@ public class FactoryConfigurationErrorTest extends TestCase {
         assertEquals(e.getCause(), fce.getCause());
     }
 
-    /**
-     * @tests javax.xml.parsers.FactoryConfigurationError
-     *     #FactoryConfigurationError(java.lang.String)
-     */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "FactoryConfigurationError",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "FactoryConfigurationError",
+        args = {java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_String() {
-        FactoryConfigurationError fce = new FactoryConfigurationError("fixture");
-        assertEquals("fixture", fce.getMessage());
-        assertEquals("fixture", fce.getLocalizedMessage());
+        FactoryConfigurationError fce = new FactoryConfigurationError("Oops!");
+        assertEquals("Oops!", fce.getMessage());
+        assertEquals("Oops!", fce.getLocalizedMessage());
         assertNull(fce.getCause());
     }
 
-    /**
-     * @tests avax.xml.parsers.FactoryConfigurationError#getException().
-     */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getException",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getException",
+        args = {}
+    )
     public void test_getException() {
         FactoryConfigurationError fce = new FactoryConfigurationError();
         assertNull(fce.getException());
@@ -162,18 +118,12 @@ public class FactoryConfigurationErrorTest extends TestCase {
         assertEquals(npe, fce.getException());
     }
 
-    /**
-     * @tests avax.xml.parsers.FactoryConfigurationError#getMessage().
-     */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getMessage",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getMessage",
+        args = {}
+    )
     public void test_getMessage() {
         assertNull(new FactoryConfigurationError().getMessage());
         assertEquals("msg1",
@@ -185,4 +135,5 @@ public class FactoryConfigurationErrorTest extends TestCase {
                 new FactoryConfigurationError(
                         new NullPointerException()).getMessage());
     }
+
 }

@@ -18,22 +18,22 @@
 package tests.api.javax.net.ssl;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
-import java.io.IOException;
-import java.net.ServerSocket;
-import java.security.Principal;
+import java.io.ByteArrayInputStream;
 import java.security.cert.Certificate;
 
 import javax.net.ssl.HandshakeCompletedEvent;
 import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
+import javax.security.cert.X509Certificate;
 
 import junit.framework.TestCase;
+
+import org.apache.harmony.xnet.tests.support.mySSLSession;
+import org.apache.harmony.xnet.tests.support.mySSLSocket;
 
 
 /**
@@ -42,259 +42,238 @@ import junit.framework.TestCase;
  */
 @TestTargetClass(HandshakeCompletedEvent.class) 
 public class HandshakeCompletedEventTest extends TestCase {
+    
+    String certificate = "-----BEGIN CERTIFICATE-----\n"
+        + "MIICZTCCAdICBQL3AAC2MA0GCSqGSIb3DQEBAgUAMF8xCzAJBgNVBAYTAlVTMSAw\n"
+        + "HgYDVQQKExdSU0EgRGF0YSBTZWN1cml0eSwgSW5jLjEuMCwGA1UECxMlU2VjdXJl\n"
+        + "IFNlcnZlciBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0eTAeFw05NzAyMjAwMDAwMDBa\n"
+        + "Fw05ODAyMjAyMzU5NTlaMIGWMQswCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZv\n"
+        + "cm5pYTESMBAGA1UEBxMJUGFsbyBBbHRvMR8wHQYDVQQKExZTdW4gTWljcm9zeXN0\n"
+        + "ZW1zLCBJbmMuMSEwHwYDVQQLExhUZXN0IGFuZCBFdmFsdWF0aW9uIE9ubHkxGjAY\n"
+        + "BgNVBAMTEWFyZ29uLmVuZy5zdW4uY29tMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCB\n"
+        + "iQKBgQCofmdY+PiUWN01FOzEewf+GaG+lFf132UpzATmYJkA4AEA/juW7jSi+LJk\n"
+        + "wJKi5GO4RyZoyimAL/5yIWDV6l1KlvxyKslr0REhMBaD/3Z3EsLTTEf5gVrQS6sT\n"
+        + "WMoSZAyzB39kFfsB6oUXNtV8+UKKxSxKbxvhQn267PeCz5VX2QIDAQABMA0GCSqG\n"
+        + "SIb3DQEBAgUAA34AXl3at6luiV/7I9MN5CXYoPJYI8Bcdc1hBagJvTMcmlqL2uOZ\n"
+        + "H9T5hNMEL9Tk6aI7yZPXcw/xI2K6pOR/FrMp0UwJmdxX7ljV6ZtUZf7pY492UqwC\n"
+        + "1777XQ9UEZyrKJvF5ntleeO0ayBqLGVKCWzWZX9YsXCpv47FNLZbupE=\n"
+        + "-----END CERTIFICATE-----\n";
 
-    int port;
-
-    ServerSocket ss;
-
-    SSLSocket soc;
-
-    boolean noFreePort = false;
-    boolean noSocket = false;
-
-    /*
-     * @see TestCase#setUp()
-     */
-    protected void setUp() throws Exception {
-        super.setUp();
-        SSLSocketFactory sf = (SSLSocketFactory) SSLSocketFactory.getDefault();
-        try {
-            ss = new ServerSocket(0);
-            port = ss.getLocalPort();
-        } catch (Exception e) {
-            e.printStackTrace();
-            noFreePort = true;
-            return;
-        }
-        try {
-            soc = (SSLSocket) sf.createSocket("localhost", port);
-        } catch (IOException e) {
-            noSocket = true;
-        }
-
-    }
-
-    /*
-     * @see TestCase#tearDown()
-     */
-    protected void tearDown() throws Exception {
-        super.tearDown();
-        if (ss != null) {
-            ss.close();
-        }
-        if (soc != null) {
-            soc.close();
-        }
-    }
-
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verification with null/incorrect parameters missed",
-      targets = {
-        @TestTarget(
-          methodName = "HandshakeCompletedEvent",
-          methodArgs = {SSLSocket.class, SSLSession.class}
-        )
-    })
-    public final void _test_Constructor() {
-        if (noFreePort || noSocket) {
-            return;
-        }
-        SSLSession ses = new MySSLSession();
-        HandshakeCompletedEvent event = new HandshakeCompletedEvent(soc, ses);
-        if (!ses.equals(event.getSession())) {
-            fail("incorrect session");
-        }
-        if (!soc.equals(event.getSocket())) {
-            fail("incorrect socket");
-        }
-    }
-
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getCipherSuite",
-          methodArgs = {}
-        )
-    })
-    public final void _test_getCipherSuite() {
-        if (noFreePort || noSocket) {
-            return;
-        }
-        SSLSession ses = new MySSLSession();
-
-        HandshakeCompletedEvent event = new HandshakeCompletedEvent(soc, ses);
-        String name = event.getCipherSuite();
-        String name_ses = ses.getCipherSuite();
-        if (name == null && name_ses != null) {
-            fail("incorrect null CipherCuite");
-        }
-        if (!name.equals(name_ses)) {
-            fail("incorrect CipherCuite");
-        }
-    }
 
     /**
-     * @tests javax.net.ssl.HandshakeCompletedEvent#getLocalPrincipal()
+     * @tests javax.net.ssl.HandshakeCompletedEvent#HandshakeCompletedEvent(SSLSocket sock, SSLSession s) 
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getLocalPrincipal",
-          methodArgs = {}
-        )
-    })
-    public void _test_getLocalPrincipal() {
-        if (noFreePort || noSocket) return;
-        SSLSession ses = new MySSLSession();
-        HandshakeCompletedEvent event = new HandshakeCompletedEvent(soc, ses);
-        Principal lp     = event.getLocalPrincipal();
-        Principal ses_lp = ses.getLocalPrincipal(); 
-        assertEquals("Incorrect value of local principal",
-                lp, ses_lp);
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "Exceptions for null/incorrect parameters are not provided",
+        method = "HandshakeCompletedEvent",
+        args = {javax.net.ssl.SSLSocket.class, javax.net.ssl.SSLSession.class}
+    )
+    public final void test_Constructor() {
+        mySSLSession session = new mySSLSession("localhost", 1080, null);
+        mySSLSocket socket = new mySSLSocket();
+        try {
+            HandshakeCompletedEvent event = new HandshakeCompletedEvent(socket, session);
+            assertNotNull(event);
+        } catch (Exception e) {
+            fail("Unexpected exception: " + e);
+        }
+        try {
+            HandshakeCompletedEvent event = new HandshakeCompletedEvent(null, null);
+            fail("Any exception wasn't thrown for null parameters");
+        } catch (Exception e) {
+            //expected
+        }
     }
     
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getLocalCertificates",
-          methodArgs = {}
-        )
-    })
-    public final void _test_getLocalCertificates() {
-        if (noFreePort || noSocket) {
-            return;
-        }
-        SSLSession ses = new MySSLSession();
-        HandshakeCompletedEvent event = new HandshakeCompletedEvent(soc, ses);
-
-        Certificate[] certs = event.getLocalCertificates();
-        Certificate[] ses_certs = ses.getLocalCertificates();
-        if (certs == null && ses_certs == null) {
-            return;
-        }
-        if (certs == null || ses_certs == null) {
-            fail("incorrect LocalCertificates");
-        }
-        for (int i = 0; i < certs.length; i++) {
-            if (certs[i] != ses_certs[i]) {
-                fail("incorrect LocalCertificates");
-            }
-        }
-    }
-
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Just SSLPeerUnverifiedException case was tested",
-      targets = {
-        @TestTarget(
-          methodName = "getPeerCertificateChain",
-          methodArgs = {}
-        )
-    })
-    public final void _test_getPeerCertificateChain() {
-        if (noFreePort || noSocket) {
-            return;
-        }
-        SSLSession ses = new MySSLSession();
-        HandshakeCompletedEvent event = new HandshakeCompletedEvent(soc, ses);
+    /**
+     * @tests javax.net.ssl.HandshakeCompletedEvent#getCipherSuite() 
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getCipherSuite",
+        args = {}
+    )
+    public final void test_getCipherSuite() {
+        mySSLSession session = new mySSLSession("localhost", 1080, null);
+        mySSLSocket socket = new mySSLSocket();
+        HandshakeCompletedEvent event = new HandshakeCompletedEvent(socket, session);
         try {
-            event.getPeerCertificateChain();
-            fail("No excpected SSLPeerUnverifiedException");
-        } catch (SSLPeerUnverifiedException e) {
+            String name = event.getCipherSuite();
+        } catch (Exception e) {
+            fail("Unexpected exception: " + e);
         }
     }
-
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Just SSLPeerUnverifiedException case was tested",
-      targets = {
-        @TestTarget(
-          methodName = "getPeerCertificates",
-          methodArgs = {}
-        )
-    })
-    public final void _test_getPeerCertificates() {
-        if (noFreePort || noSocket) {
-            return;
-        }
-        SSLSession ses = new MySSLSession();
-        HandshakeCompletedEvent event = new HandshakeCompletedEvent(soc, ses);
+    
+    /**
+     * @tests javax.net.ssl.HandshakeCompletedEvent#getLocalCertificates() 
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getLocalCertificates",
+        args = {}
+    )
+    public final void test_getLocalCertificates() {
+        mySSLSession session = new mySSLSession("localhost", 1080, null);
+        mySSLSocket socket = new mySSLSocket();
+        HandshakeCompletedEvent event = new HandshakeCompletedEvent(socket, session);
         try {
-            event.getPeerCertificates();
-            fail("No excpected SSLPeerUnverifiedException");
-        } catch (SSLPeerUnverifiedException e) {
+            assertNull(event.getLocalCertificates());
+        } catch (Exception e) {
+            fail("Unexpected exception: " + e);
         }
     }
-
+    
     /**
-     * @tests javax.net.ssl.HandshakeCompletedEvent#getPeerPrincipal()
+     * @tests javax.net.ssl.HandshakeCompletedEvent#getLocalPrincipal() 
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Just SSLPeerUnverifiedException case was tested",
-      targets = {
-        @TestTarget(
-          methodName = "getPeerPrincipal",
-          methodArgs = {}
-        )
-    })
-    public void _test_getPeerPrincipal()
-        throws SSLPeerUnverifiedException {
-        if (noFreePort || noSocket) return;
-        SSLSession ses = new MySSLSession();
-        HandshakeCompletedEvent event = new HandshakeCompletedEvent(soc, ses);
-        Principal pp     = event.getPeerPrincipal();
-        Principal ses_pp = ses.getPeerPrincipal(); 
-        assertEquals("Incorrect value of peer principal",
-                pp, ses_pp);
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getLocalPrincipal",
+        args = {}
+    )
+    public final void test_getLocalPrincipal() {
+        mySSLSession session = new mySSLSession("localhost", 1080, null);
+        mySSLSocket socket = new mySSLSocket();
+        HandshakeCompletedEvent event = new HandshakeCompletedEvent(socket, session);
+        try {
+            assertNull(event.getLocalPrincipal());
+        } catch (Exception e) {
+            fail("Unexpected exception: " + e);
+        }
     }
-
+    
     /**
-     * @tests javax.net.ssl.HandshakeCompletedEvent#getSession()
+     * @tests javax.net.ssl.HandshakeCompletedEvent#getPeerCertificateChain() 
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getSession",
-          methodArgs = {}
-        )
-    })
-    public void _test_getSession() {
-        if (noFreePort || noSocket) return;
-        SSLSession ses = new MySSLSession();
-        HandshakeCompletedEvent event = new HandshakeCompletedEvent(soc, ses);
-        SSLSession s = event.getSession();
-        assertEquals("Incorrect value of session", s, ses);
-        assertNull("Session value is not null",
-                new HandshakeCompletedEvent(soc, null).getSession());
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getPeerCertificateChain",
+        args = {}
+    )
+    public final void test_getPeerCertificateChain() {
+        ByteArrayInputStream bis = new ByteArrayInputStream(certificate.getBytes());
+        mySSLSession session = new mySSLSession(null);
+        mySSLSocket socket = new mySSLSocket();
+        HandshakeCompletedEvent event = new HandshakeCompletedEvent(socket, session);
+        try {
+            X509Certificate[] res = event.getPeerCertificateChain();
+            fail("SSLPeerUnverifiedException wasn't thrown");
+        } catch (SSLPeerUnverifiedException spue) {
+            //expected
+        }
+        
+        try {
+            X509Certificate xc = X509Certificate.getInstance(bis);
+            X509Certificate[] xcs = {xc};
+            session = new mySSLSession(xcs);
+            event = new HandshakeCompletedEvent(socket, session);
+        } catch (Exception e) {
+            fail(e + " was thrown for configuration");
+        }
+        try {
+            X509Certificate[] res = event.getPeerCertificateChain();
+            assertEquals(res.length, 1);
+        } catch (Exception e) {
+            fail("Unexpected exception: " + e);
+        }
     }
-
+    
     /**
-     * @tests javax.net.ssl.HandshakeCompletedEvent#getSocket()
+     * @tests javax.net.ssl.HandshakeCompletedEvent#getPeerCertificates() 
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getSocket",
-          methodArgs = {}
-        )
-    })
-    public void _test_getSocket() {
-        if (noFreePort || noSocket) return;
-        SSLSession ses = new MySSLSession();
-        HandshakeCompletedEvent event = new HandshakeCompletedEvent(soc, ses);
-        SSLSocket socket = event.getSocket();
-        assertEquals("Incorrect value of socket", socket, soc);
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getPeerCertificates",
+        args = {}
+    )
+    public final void test_getPeerCertificates() {
+        mySSLSession session = new mySSLSession("localhost", 1080, null);
+        mySSLSocket socket = new mySSLSocket();
+        HandshakeCompletedEvent event = new HandshakeCompletedEvent(socket, session);
+        try {
+            Certificate[] res = event.getPeerCertificates();
+            fail("SSLPeerUnverifiedException wasn't thrown");
+        } catch (SSLPeerUnverifiedException spue) {
+            //expected
+        }
+        
+        session = new mySSLSession(null);
+        event = new HandshakeCompletedEvent(socket, session);
+        try {
+            Certificate[] res = event.getPeerCertificates();
+            assertEquals(res.length, 3);
+        } catch (Exception e) {
+            fail("Unexpected exception: " + e);
+        }
+    }
+    
+    /**
+     * @tests javax.net.ssl.HandshakeCompletedEvent#getPeerPrincipal() 
+     */
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "",
+        method = "getPeerPrincipal",
+        args = {}
+    )
+    public final void test_getPeerPrincipal() {
+        mySSLSession session = new mySSLSession("localhost", 1080, null);
+        mySSLSocket socket = new mySSLSocket();
+        HandshakeCompletedEvent event = new HandshakeCompletedEvent(socket, session);
+        try {
+            assertNull(event.getPeerPrincipal());
+        } catch (Exception e) {
+            fail("Unexpected exception: " + e);
+        }
+    }
+    
+    /**
+     * @tests javax.net.ssl.HandshakeCompletedEvent#getSession() 
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getSession",
+        args = {}
+    )
+    public final void test_getSession() {
+        mySSLSession session = new mySSLSession("localhost", 1080, null);
+        mySSLSocket socket = new mySSLSocket();
+        HandshakeCompletedEvent event = new HandshakeCompletedEvent(socket, session);
+        try {
+            SSLSession ss = event.getSession();
+            assertNotNull(ss);
+            assertEquals(session, ss);
+        } catch (Exception e) {
+            fail("Unexpected exception: " + e);
+        }
+    }
+    
+    /**
+     * @tests javax.net.ssl.HandshakeCompletedEvent#getSocket() 
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getSocket",
+        args = {}
+    )
+    public final void test_getSocket() {
+        mySSLSession session = new mySSLSession("localhost", 1080, null);
+        mySSLSocket socket = new mySSLSocket();
+        HandshakeCompletedEvent event = new HandshakeCompletedEvent(socket, session);
+        try {
+            SSLSocket ss = event.getSocket();
+            assertNotNull(ss);
+            assertEquals(socket, ss);
+        } catch (Exception e) {
+            fail("Unexpected exception: " + e);
+        }
     }
 }

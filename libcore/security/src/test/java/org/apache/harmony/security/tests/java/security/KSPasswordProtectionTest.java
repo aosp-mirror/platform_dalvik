@@ -23,9 +23,9 @@
 package org.apache.harmony.security.tests.java.security;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.security.KeyStore;
 
@@ -58,26 +58,30 @@ public class KSPasswordProtectionTest extends TestCase {
      * getPassword() returns password or throws IllegalArgumentException
      * if PasswordProtection is destroyed
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "1. PasswordProtection - verification with null parameter missed" +
-                  "2. destroy - DestroyFailedException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "PasswordProtection",
-          methodArgs = {char[].class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "PasswordProtection",
+            args = {char[].class}
         ),
-        @TestTarget(
-          methodName = "getPassword",
-          methodArgs = {}
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getPassword",
+            args = {}
         ),
-        @TestTarget(
-          methodName = "isDestroyed",
-          methodArgs = {}
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "isDestroyed",
+            args = {}
         ),
-        @TestTarget(
-          methodName = "destroy",
-          methodArgs = {}
+        @TestTargetNew(
+            level = TestLevel.SUFFICIENT,
+            notes = "",
+            method = "destroy",
+            args = {}
         )
     })
     public void testGetPassword() throws DestroyFailedException {
@@ -96,6 +100,12 @@ public class KSPasswordProtectionTest extends TestCase {
             ksPWP.getPassword();
             fail("IllegalStateException must be thrown because PasswordProtection is destroyed");
         } catch (IllegalStateException e) {
+        }
+        
+        try {
+            ksPWP = new KeyStore.PasswordProtection(null);
+        } catch (Exception e) {
+            fail("Unexpected exception for NULL parameter");
         }
     }
 }

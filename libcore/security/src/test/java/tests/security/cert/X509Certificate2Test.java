@@ -17,89 +17,42 @@
 
 package tests.security.cert;
 
-import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
 import dalvik.annotation.TestTargetClass;
-
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.math.BigInteger;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.Principal;
-import java.security.PublicKey;
-import java.security.SignatureException;
-import java.security.cert.CertificateEncodingException;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateExpiredException;
-import java.security.cert.CertificateFactory;
-import java.security.cert.CertificateNotYetValidException;
-import java.security.cert.CertificateParsingException;
-import java.security.cert.X509Certificate;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.Vector;
-
-import javax.security.auth.x500.X500Principal;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 
 import org.apache.harmony.security.tests.support.cert.TestUtils;
-import tests.support.resource.Support_Resources;
+
+import java.io.ByteArrayInputStream;
+import java.math.BigInteger;
+import java.security.Principal;
+import java.security.PublicKey;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.CertificateParsingException;
+import java.security.cert.X509Certificate;
+import java.security.cert.X509Extension;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
+
+import javax.security.auth.x500.X500Principal;
 
 @TestTargetClass(X509Certificate.class)
 public class X509Certificate2Test extends junit.framework.TestCase {
 
     /**
-     * @tests java.security.cert.X509Certificate#getExtensionValue(java.lang.String)
-     */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getExtensionValue",
-          methodArgs = {String.class}
-        )
-    })
-    public void _test_getExtensionValueLjava_lang_String() throws Exception {
-
-        InputStream is = Support_Resources
-                .getResourceStream("hyts_certificate_PEM.txt");
-
-        CertificateFactory certFact = CertificateFactory.getInstance("X509");
-        X509Certificate pemCert = (X509Certificate) certFact
-                .generateCertificate(is);
-
-        Vector<String> extensionOids = new Vector<String>();
-        extensionOids.addAll(pemCert.getCriticalExtensionOIDs());
-        extensionOids.addAll(pemCert.getNonCriticalExtensionOIDs());
-        Iterator i = extensionOids.iterator();
-        while (i.hasNext()) {
-            String oid = (String) i.next();
-            byte[] value = pemCert.getExtensionValue(oid);
-            if (value != null && value.length > 0) {
-                // check that it is an encoded as a OCTET STRING
-                assertEquals("The extension value for the oid " + oid
-                        + " was not encoded as an OCTET STRING", 0x04, value[0]);
-            }
-        }
-    }
-
-    /**
      * Test for X.509 Certificate provider
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public void test_toString() throws Exception {
 
         // Regression for HARMONY-3384
@@ -110,8 +63,8 @@ public class X509Certificate2Test extends junit.framework.TestCase {
 
         // extension value is empty sequence
         byte[] extnValue = pemCert.getExtensionValue("2.5.29.35");
-        assertTrue(Arrays.equals(new byte[] { 0x04, 0x02, 0x30, 0x00 },
-                extnValue));
+        assertTrue(Arrays
+                .equals(new byte[] {0x04, 0x02, 0x30, 0x00}, extnValue));
         assertNotNull(pemCert.toString());
         // End regression for HARMONY-3384
     }
@@ -119,15 +72,12 @@ public class X509Certificate2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.cert.X509Certificate#X509Certificate()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "X509Certificate",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "X509Certificate",
+        args = {}
+    )
     public void test_X509Certificate() {
         MyX509Certificate s = null;
         try {
@@ -137,12 +87,142 @@ public class X509Certificate2Test extends junit.framework.TestCase {
         }
         assertEquals("X.509", s.getType());
     }
+    
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "checkValidity",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "checkValidity",
+            args = {java.util.Date.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getBasicConstraints",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getIssuerDN",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getIssuerUniqueID",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getKeyUsage",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getNotAfter",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getNotBefore",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getSerialNumber",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getSigAlgName",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getSigAlgOID",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getSigAlgParams",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getSignature",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getSubjectDN",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getSubjectUniqueID",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getTBSCertificate",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getVersion",
+            args = {}
+        )
+    })
+    public void testAbstractMethods() {
+        MyX509Certificate s = new MyX509Certificate();
+        try {
+            s.checkValidity();
+            s.checkValidity(new Date());
+            s.getBasicConstraints();
+            s.getIssuerDN();
+            s.getIssuerUniqueID();
+            s.getKeyUsage();
+            s.getNotAfter();
+            s.getNotBefore();
+            s.getSerialNumber();
+            s.getSigAlgName();
+            s.getSigAlgOID();
+            s.getSigAlgParams();
+            s.getSignature();
+            s.getSubjectDN();
+            s.getSubjectUniqueID();
+            s.getTBSCertificate();
+            s.getVersion();
+        } catch (Exception e) {
+            fail("Unexpected exception " + e.getMessage());
+        }
+    }
 
     // Base64 encoded form of ASN.1 DER encoded X.509 Certificate
     // (see RFC 3280 at http://www.ietf.org/rfc/rfc3280.txt)
     // (generated by using of classes from
     // org.apache.harmony.security.x509 package)
-    static String base64cert = "MIIByzCCATagAwIBAgICAiswCwYJKoZIhvcNAQEFMB0xGzAZBgNVBAoT"
+    static String base64cert = 
+        "MIIByzCCATagAwIBAgICAiswCwYJKoZIhvcNAQEFMB0xGzAZBgNVBAoT"
             + "EkNlcnRpZmljYXRlIElzc3VlcjAeFw0wNjA0MjYwNjI4MjJaFw0zMzAz"
             + "MDExNjQ0MDlaMB0xGzAZBgNVBAoTEkNlcnRpZmljYXRlIElzc3VlcjCB"
             + "nzANBgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEAkLGLsPdSPDMyP1OUOKu"
@@ -154,12 +234,53 @@ public class X509Certificate2Test extends junit.framework.TestCase {
             + "XEa7ONzcHQTYTG10poHfOK/a0BaULF3GlctDESilwQYbW5BdfpAlZpbH"
             + "AFLcUDh6Eq50kc0A/anh/j3mgBNuvbIMo7hHNnZB6k/prswm2BszyLD"
             + "yw==";
+    static String base64certCorrect = 
+        "-----BEGIN CERTIFICATE-----\n"
+        + "MIIC+jCCAragAwIBAgICAiswDAYHKoZIzjgEAwEBADAdMRswGQYDVQQKExJDZXJ0a"
+        + "WZpY2F0ZSBJc3N1ZXIwIhgPMTk3MDAxMTIxMzQ2NDBaGA8xOTcwMDEyNDAzMzMyMF"
+        + "owHzEdMBsGA1UEChMUU3ViamVjdCBPcmdhbml6YXRpb24wGTAMBgcqhkjOOAQDAQE"
+        + "AAwkAAQIDBAUGBwiBAgCqggIAVaOCAhQwggIQMA8GA1UdDwEB/wQFAwMBqoAwEgYD"
+        + "VR0TAQH/BAgwBgEB/wIBBTAUBgNVHSABAf8ECjAIMAYGBFUdIAAwZwYDVR0RAQH/B"
+        + "F0wW4EMcmZjQDgyMi5OYW1lggdkTlNOYW1lpBcxFTATBgNVBAoTDE9yZ2FuaXphdG"
+        + "lvboYaaHR0cDovL3VuaWZvcm0uUmVzb3VyY2UuSWSHBP///wCIByoDolyDsgMwDAY"
+        + "DVR0eAQH/BAIwADAMBgNVHSQBAf8EAjAAMIGZBgNVHSUBAf8EgY4wgYsGBFUdJQAG"
+        + "CCsGAQUFBwMBBggrBgEFBQcDAQYIKwYBBQUHAwIGCCsGAQUFBwMDBggrBgEFBQcDB"
+        + "AYIKwYBBQUHAwUGCCsGAQUFBwMGBggrBgEFBQcDBwYIKwYBBQUHAwgGCCsGAQUFBw"
+        + "MJBggrBgEFBQgCAgYKKwYBBAGCNwoDAwYJYIZIAYb4QgQBMA0GA1UdNgEB/wQDAgE"
+        + "BMA4GBCpNhgkBAf8EAwEBATBkBgNVHRIEXTBbgQxyZmNAODIyLk5hbWWCB2ROU05h"
+        + "bWWkFzEVMBMGA1UEChMMT3JnYW5pemF0aW9uhhpodHRwOi8vdW5pZm9ybS5SZXNvd"
+        + "XJjZS5JZIcE////AIgHKgOiXIOyAzAJBgNVHR8EAjAAMAoGA1UdIwQDAQEBMAoGA1"
+        + "UdDgQDAQEBMAoGA1UdIQQDAQEBMAwGByqGSM44BAMBAQADMAAwLQIUAL4QvoazNWP"
+        + "7jrj84/GZlhm09DsCFQCBKGKCGbrP64VtUt4JPmLjW1VxQA==\n"
+        + "-----END CERTIFICATE-----";
+    
+    private X509Certificate cert;
+    
+    static String base64certTampered = "-----BEGIN CERTIFICATE-----\n"
+        + "MIIC+jCCAragAwIBAgICAiswDAYHKoZIzjgEAwEBADAdMRswGQYDVQQKExJDZXJ0a"
+        + "WZpY2F0ZSBJc3N1ZXIwIhgPMTk3MDAxMTIxMzQ2NDBaGA8xOTcwMDEyNDAzMzMyMF"
+        + "owHzEdMBsGA1UEChMUU3ViamVjdCBPcmdhbml6YXRpb24wGTAMBgcqhkjOOAQDAQE"
+        + "AAwkAAQIDBAUGBwiBAgCqggIAVaOCAhQwggIQMA8GA1UdDwEB/wQFAwMBqoAwEgYD"
+        + "VR0TAQH/BAgwBgEB/wIBBTAUBgNVHSABAf8ECjAIMAyGBFUdIAAwZwYDVR0RAQH/B"
+        + "F0wW4EMcmZjQDgyMi5OYW1lggdkTlNOYW1lpBcxFTATBgNVBAoTDE9yZ2FuaXphdG"
+        + "lvboYaaHR0cDovL3VuaWZvcm0uUmVzb3VyY2UuSWSHBP///wCIByoDolyDsgMwDAY"
+        + "DVR0eAQH/BAIwADAMBgNVHSQBAf8EAjAAMIGZBgNVHSUBAf8EgY4wgYsGBFUdJQAG"
+        + "CCsGAQUFBwMBBggrBgEFBQcDAQYIKxYBBQUHAwIGCCsGAQUFBwMDBggrBgEFBQcDB"
+        + "AYIKwYBBQUHAwUGCCsGAQUFBwMGBggrBgEFBQcDBwYIKwYBBQUHAwgGCCsGAQUFBw"
+        + "MJBggrBgEFBQgCAgYKKwYBBAGCNwoDAwYJYIZIAYb4QgQBMA0GA1UdNgEB/wQDAgE"
+        + "BMA4GBCpNhgkBAf8EAwEBATBkBgNVHRIEXTBbgQxyZmNAODIyLk5hbWWCB2ROU05h"
+        + "bWWkFzEVMBMGA1UEChMMT3JnYW5pemF0aW9uhhpodHRwOi8vdW5pZm9ybS5SZXNvd"
+        + "XJjZS5JZIcE////AIgHKgOiXIOyAzAJBgNVHR8EAjAAMAoGA1UdIwQDAQEBMAoGA1"
+        + "UdDgQDAQEBMAoGA1UdIQQDAQEBMAwHByqGSM44BAMBAQADMAAwLQIUAL4QvoazNWP"
+        + "7jrj84/GZlhm09DsCFQCBKGKCGbrP64VtUt4JPmLjW1VxQA==\n"
+        + "-----END CERTIFICATE-----";
 
     // Base64 encoded form of ASN.1 DER encoded X.509 CRL
     // (see RFC 3280 at http://www.ietf.org/rfc/rfc3280.txt)
     // (generated by using of classes from
     // org.apache.harmony.security.x509 package)
-    static String base64crl = "MIHXMIGXAgEBMAkGByqGSM44BAMwFTETMBEGA1UEChMKQ1JMIElzc3Vl"
+    static String base64crl = 
+        "MIHXMIGXAgEBMAkGByqGSM44BAMwFTETMBEGA1UEChMKQ1JMIElzc3Vl"
             + "chcNMDYwNDI3MDYxMzQ1WhcNMDYwNDI3MDYxNTI1WjBBMD8CAgIrFw0w"
             + "NjA0MjcwNjEzNDZaMCowCgYDVR0VBAMKAQEwHAYDVR0YBBUYEzIwMDYw"
             + "NDI3MDYxMzQ1LjQ2OFqgDzANMAsGA1UdFAQEBAQEBDAJBgcqhkjOOAQD"
@@ -167,17 +288,15 @@ public class X509Certificate2Test extends junit.framework.TestCase {
             + "9AkjBhjF0Es=";
 
     // has stub implementation for abstract methods
-    private static class MyX509Certificate extends X509Certificate {
+    private static class MyX509Certificate extends X509Certificate implements
+            X509Extension {
 
         private static final long serialVersionUID = -7196694072296607007L;
 
-        public void checkValidity() throws CertificateExpiredException,
-                CertificateNotYetValidException {
+        public void checkValidity() {
         }
 
-        public void checkValidity(Date date)
-                throws CertificateExpiredException,
-                CertificateNotYetValidException {
+        public void checkValidity(Date date) {
         }
 
         public int getVersion() {
@@ -204,7 +323,7 @@ public class X509Certificate2Test extends junit.framework.TestCase {
             return null;
         }
 
-        public byte[] getTBSCertificate() throws CertificateEncodingException {
+        public byte[] getTBSCertificate() {
             return null;
         }
 
@@ -240,15 +359,10 @@ public class X509Certificate2Test extends junit.framework.TestCase {
             return 0;
         }
 
-        public void verify(PublicKey key) throws CertificateException,
-                NoSuchAlgorithmException, InvalidKeyException,
-                NoSuchProviderException, SignatureException {
+        public void verify(PublicKey key) {
         }
 
-        public void verify(PublicKey key, String sigProvider)
-                throws CertificateException, NoSuchAlgorithmException,
-                InvalidKeyException, NoSuchProviderException,
-                SignatureException {
+        public void verify(PublicKey key, String sigProvider) {
         }
 
         public String toString() {
@@ -259,7 +373,7 @@ public class X509Certificate2Test extends junit.framework.TestCase {
             return null;
         }
 
-        public byte[] getEncoded() throws CertificateEncodingException {
+        public byte[] getEncoded() {
             return null;
         }
 
@@ -283,15 +397,12 @@ public class X509Certificate2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.cert.X509Certificate#getType()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getType",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getType",
+        args = {}
+    )
     public void testGetType() {
         assertEquals("X.509", new MyX509Certificate().getType());
     }
@@ -299,15 +410,12 @@ public class X509Certificate2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.cert.X509Certificate#getIssuerX500Principal()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getIssuerX500Principal",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getIssuerX500Principal",
+        args = {}
+    )
     public void testGetIssuerX500Principal() {
         // return valid encoding
         MyX509Certificate cert = new MyX509Certificate() {
@@ -315,7 +423,7 @@ public class X509Certificate2Test extends junit.framework.TestCase {
 
             public byte[] getEncoded() {
                 return TestUtils.getX509Certificate_v1();
-            };
+            }
         };
 
         assertEquals(new X500Principal("CN=Z"), cert.getIssuerX500Principal());
@@ -324,15 +432,12 @@ public class X509Certificate2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.cert.X509Certificate#getSubjectX500Principal()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getSubjectX500Principal",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getSubjectX500Principal",
+        args = {}
+    )
     public void testGetSubjectX500Principal() {
         // return valid encoding
         MyX509Certificate cert = new MyX509Certificate() {
@@ -340,62 +445,154 @@ public class X509Certificate2Test extends junit.framework.TestCase {
 
             public byte[] getEncoded() {
                 return TestUtils.getX509Certificate_v1();
-            };
+            }
         };
 
         assertEquals(new X500Principal("CN=Y"), cert.getSubjectX500Principal());
     }
 
     /**
+     * @throws CertificateException 
      * @tests java.security.cert.X509Certificate#getExtendedKeyUsage()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify CertificateParsingException.",
-      targets = {
-        @TestTarget(
-          methodName = "getExtendedKeyUsage",
-          methodArgs = {}
-        )
-    })
-    public void testGetExtendedKeyUsage() throws CertificateParsingException {
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "Doesn't verify CertificateParsingException.",
+        method = "getExtendedKeyUsage",
+        args = {}
+    )
+    public void testGetExtendedKeyUsage() throws CertificateException {
         assertNull(new MyX509Certificate().getExtendedKeyUsage());
+
+        List<String> l = cert.getExtendedKeyUsage();
+        assertNotNull(l);
+
+        try {
+            l.clear();
+        } catch (Exception e) {
+            // ok
+        }
+
+        try {
+            l.add("Test");
+        } catch (Exception e) {
+            // ok
+        }
+
+        try {
+            if (l.size() > 0) {
+                l.remove(0);
+            }
+        } catch (Exception e) {
+            // ok
+        }
+
     }
 
     /**
      * @tests java.security.cert.X509Certificate#getSubjectAlternativeNames()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getSubjectAlternativeNames",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "",
+        method = "getSubjectAlternativeNames",
+        args = {}
+    )
     public void testGetSubjectAlternativeNames()
             throws CertificateParsingException {
 
         assertNull(new MyX509Certificate().getSubjectAlternativeNames());
+
+        Collection<List<?>> coll = cert.getSubjectAlternativeNames();
+
+        assertNotNull(coll);
+
+        try {
+            coll.clear();
+        } catch (Exception e) {
+            // ok
+        }
+
+        try {
+            if (coll.size() > 0) {
+                coll.remove(0);
+            }
+        } catch (Exception e) {
+            // ok
+        }
+
+        assertTrue(coll.size() < 10);
+
     }
 
     /**
      * @tests java.security.cert.X509Certificate#getIssuerAlternativeNames()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify CertificateParsingException.",
-      targets = {
-        @TestTarget(
-          methodName = "getIssuerAlternativeNames",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "Doesn't verify CertificateParsingException.",
+        method = "getIssuerAlternativeNames",
+        args = {}
+    )
     public void testGetIssuerAlternativeNames()
             throws CertificateParsingException {
 
         assertNull(new MyX509Certificate().getIssuerAlternativeNames());
-    }
 
+        Collection<List<?>> coll = cert.getIssuerAlternativeNames();
+
+        assertNotNull(coll);
+
+        try {
+            coll.clear();
+        } catch (Exception e) {
+            // ok
+        }
+
+        try {
+            if (coll.size() > 0) {
+                coll.remove(0);
+            }
+        } catch (Exception e) {
+            // ok
+        }
+
+        assertTrue(coll.size() < 10);
+    }
+    
+    @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            clazz = CertificateException.class,
+            method = "CertificateException",
+            args = {}
+        )
+    public void testCerficateException() {
+        try {
+            CertificateFactory cf = CertificateFactory.getInstance("X.509");
+            ByteArrayInputStream bais = new ByteArrayInputStream(
+                    base64certTampered.getBytes());
+            cert = (X509Certificate) cf.generateCertificate(bais);
+        } catch (CertificateException e) {
+            // ok
+        }
+
+        try {
+            CertificateFactory cf = CertificateFactory.getInstance("X.509");
+            ByteArrayInputStream bais = new ByteArrayInputStream(base64cert
+                    .getBytes());
+            cert = (X509Certificate) cf.generateCertificate(bais);
+        } catch (CertificateException e) {
+            // ok
+        }
+    }
+    
+    public void setUp() throws Exception {
+        super.setUp();
+        CertificateFactory cf = CertificateFactory.getInstance("X.509");
+        ByteArrayInputStream bais = new ByteArrayInputStream(base64certCorrect
+                .getBytes());
+        cert = (X509Certificate) cf.generateCertificate(bais);
+        assertNotNull(cert);
+    }
 }

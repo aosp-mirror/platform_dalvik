@@ -22,9 +22,9 @@ See W3C License http://www.w3.org/Consortium/Legal/ for more details.
 
 package tests.org.w3c.dom;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import org.w3c.dom.Document;
@@ -70,15 +70,12 @@ public final class OwnerDocument extends DOMTestCase {
     * Runs the test case.
     * @throws Throwable Any uncaught exception causes test to fail
     */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Dosn't verify that getOwnerDocument can return not null value.",
-      targets = {
-        @TestTarget(
-          methodName = "getOwnerDocument",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Dosn't verify that getOwnerDocument can return not null value.",
+        method = "getOwnerDocument",
+        args = {}
+    )
    public void testGetOwnerDocument() throws Throwable {
       Document doc;
       DocumentType ownerDocument;

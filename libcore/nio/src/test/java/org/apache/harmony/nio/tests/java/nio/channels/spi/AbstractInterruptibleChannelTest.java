@@ -16,9 +16,9 @@
 
 package org.apache.harmony.nio.tests.java.nio.channels.spi;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import java.io.IOException;
@@ -26,19 +26,34 @@ import java.nio.channels.AsynchronousCloseException;
 import java.nio.channels.spi.AbstractInterruptibleChannel;
 
 import junit.framework.TestCase;
-@TestTargetClass(AbstractInterruptibleChannel.class)
+@TestTargetClass(
+    value = AbstractInterruptibleChannel.class,
+    untestedMethods = {
+        @TestTargetNew(
+            level = TestLevel.NOT_NECESSARY,
+            notes = "empty protected constructor",
+            method = "AbstractInterruptibleChannel",
+            args = {}
+        )
+    }
+)
 public class AbstractInterruptibleChannelTest extends TestCase {
     
     /**
      * @tests AbstractInterruptibleChannel#close()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "close",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "close",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "isOpen",
+            args = {}
         )
     })
     public void test_close() throws IOException {
@@ -53,17 +68,18 @@ public class AbstractInterruptibleChannelTest extends TestCase {
     /**
      * @tests AbstractInterruptibleChannel#begin/end()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "begin",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "begin",
+            args = {}
         ),
-        @TestTarget(
-          methodName = "end",
-          methodArgs = {boolean.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "end",
+            args = {boolean.class}
         )
     })
     public void test_begin_end() throws IOException {
@@ -105,21 +121,24 @@ public class AbstractInterruptibleChannelTest extends TestCase {
     /**
      * @tests AbstractInterruptibleChannel#close/begin/end()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "begin",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "begin",
+            args = {}
         ),
-        @TestTarget(
-          methodName = "end",
-          methodArgs = {boolean.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "end",
+            args = {boolean.class}
         ),
-        @TestTarget(
-          methodName = "close",
-          methodArgs = {}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "close",
+            args = {}
         )
     })
     public void test_close_begin_end() throws IOException {

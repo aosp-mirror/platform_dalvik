@@ -21,9 +21,9 @@
 
 package tests.org.w3c.dom;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import org.w3c.dom.NamedNodeMap;
@@ -78,15 +78,12 @@ public final class NamedNodeMapRemoveNamedItemNS extends DOMTestCase {
      * @throws Throwable
      *             Any uncaught exception causes test to fail
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Doesn't verify DOMException.",
-      targets = {
-        @TestTarget(
-          methodName = "removeNamedItemNS",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify DOMException.",
+        method = "removeNamedItemNS",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void testRemoveNamedItemNS1() throws Throwable {
         Document doc;
         NamedNodeMap attributes;
@@ -127,15 +124,12 @@ public final class NamedNodeMapRemoveNamedItemNS extends DOMTestCase {
 //        assertEquals("namednodemapremovenameditemns02_attrValue", "defaultVal",
 //                attrValue);
 //    }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Doesn't verify DOMException.",
-      targets = {
-        @TestTarget(
-          methodName = "removeNamedItemNS",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify DOMException.",
+        method = "removeNamedItemNS",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void testRemoveNamedItemNS3() throws Throwable {
         Document doc;
         NamedNodeMap attributes;
@@ -161,15 +155,12 @@ public final class NamedNodeMapRemoveNamedItemNS extends DOMTestCase {
         nodeName = attribute.getNodeName();
         assertEquals("namednodemapremovenameditemns02", "L2:att", nodeName);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Doesn't verify DOMException.",
-      targets = {
-        @TestTarget(
-          methodName = "removeNamedItemNS",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify DOMException.",
+        method = "removeNamedItemNS",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void _testRemoveNamedItemNS4() throws Throwable {
         Document doc;
         NamedNodeMap attributes;
@@ -237,16 +228,12 @@ public final class NamedNodeMapRemoveNamedItemNS extends DOMTestCase {
 //            }
 //        }
 //    }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies that removeNamedItemNS method throws DOMException " +
-            "with NOT_FOUND_ERR code.",
-      targets = {
-        @TestTarget(
-          methodName = "removeNamedItemNS",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies that removeNamedItemNS method throws DOMException with NOT_FOUND_ERR code.",
+        method = "removeNamedItemNS",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void testRemoveNamedItemNS6() throws Throwable {
         Document doc;
         NamedNodeMap attributes;
@@ -269,16 +256,12 @@ public final class NamedNodeMapRemoveNamedItemNS extends DOMTestCase {
             assertTrue("throw_NOT_FOUND_ERR", success);
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies that removeNamedItemNS method throws DOMException " +
-            "with NOT_FOUND_ERR code.",
-      targets = {
-        @TestTarget(
-          methodName = "removeNamedItemNS",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies that removeNamedItemNS method throws DOMException with NOT_FOUND_ERR code.",
+        method = "removeNamedItemNS",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void testRemoveNamedItemNS7() throws Throwable {
         Document doc;
         NamedNodeMap attributes;
@@ -301,16 +284,12 @@ public final class NamedNodeMapRemoveNamedItemNS extends DOMTestCase {
             assertTrue("throw_NOT_FOUND_ERR", success);
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies that removeNamedItemNS method throws DOMException " +
-            "with NOT_FOUND_ERR code.",
-      targets = {
-        @TestTarget(
-          methodName = "removeNamedItemNS",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies that removeNamedItemNS method throws DOMException with NOT_FOUND_ERR code.",
+        method = "removeNamedItemNS",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void testRemoveNamedItemNS8() throws Throwable {
         Document doc;
         NamedNodeMap attributes;
@@ -334,15 +313,12 @@ public final class NamedNodeMapRemoveNamedItemNS extends DOMTestCase {
             assertTrue("throw_NOT_FOUND_ERR", success);
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Doesn't verify DOMException.",
-      targets = {
-        @TestTarget(
-          methodName = "removeNamedItemNS",
-          methodArgs = {java.lang.String.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify DOMException.",
+        method = "removeNamedItemNS",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void testRemoveNamedItemNS9() throws Throwable {
         Document doc;
         NamedNodeMap attributes;

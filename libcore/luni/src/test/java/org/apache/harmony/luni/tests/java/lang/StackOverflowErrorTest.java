@@ -17,9 +17,9 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -30,15 +30,12 @@ public class StackOverflowErrorTest extends TestCase {
     /**
      * @tests java.lang.StackOverflowError#StackOverflowError()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "StackOverflowError",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "StackOverflowError",
+        args = {}
+    )
     public void test_Constructor() {
         StackOverflowError e = new StackOverflowError();
         assertNull(e.getMessage());
@@ -49,15 +46,12 @@ public class StackOverflowErrorTest extends TestCase {
     /**
      * @tests java.lang.StackOverflowError#StackOverflowError(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "StackOverflowError",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "StackOverflowError",
+        args = {java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_String() {
         StackOverflowError e = new StackOverflowError("fixture");
         assertEquals("fixture", e.getMessage());

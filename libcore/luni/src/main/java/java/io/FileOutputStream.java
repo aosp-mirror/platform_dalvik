@@ -60,7 +60,7 @@ public class FileOutputStream extends OutputStream implements Closeable {
      *            the file to which this stream writes.
      * @throws FileNotFoundException
      *             if {@code file} cannot be opened for writing.
-     * @throws java.lang.SecurityException
+     * @throws SecurityException
      *             if a {@code SecurityManager} is installed and it denies the
      *             write request.
      * @since Android 1.0            
@@ -80,7 +80,7 @@ public class FileOutputStream extends OutputStream implements Closeable {
      *            indicates whether or not to append to an existing file.
      * @throws FileNotFoundException
      *             if the {@code file} cannot be opened for writing.
-     * @throws java.lang.SecurityException
+     * @throws SecurityException
      *             if a {@code SecurityManager} is installed and it denies the
      *             write request.
      * @since Android 1.0
@@ -109,7 +109,7 @@ public class FileOutputStream extends OutputStream implements Closeable {
      *            the FileDescriptor to which this stream writes.
      * @throws NullPointerException
      *             if {@code fd} is {@code null}.
-     * @throws java.lang.SecurityException
+     * @throws SecurityException
      *             if a {@code SecurityManager} is installed and it denies the
      *             write request.
      * @since Android 1.0
@@ -138,7 +138,7 @@ public class FileOutputStream extends OutputStream implements Closeable {
      *            the name of the file to which this stream writes.
      * @throws FileNotFoundException
      *             if the file cannot be opened for writing.
-     * @throws java.lang.SecurityException
+     * @throws SecurityException
      *             if a {@code SecurityManager} is installed and it denies the
      *             write request.
      * @since Android 1.0
@@ -159,7 +159,7 @@ public class FileOutputStream extends OutputStream implements Closeable {
      *            the name of the file to which this stream writes.
      * @throws FileNotFoundException
      *             if the file cannot be opened for writing.
-     * @throws java.lang.SecurityException
+     * @throws SecurityException
      *             if a {@code SecurityManager} is installed and it denies the
      *             write request.
      * @since Android 1.0

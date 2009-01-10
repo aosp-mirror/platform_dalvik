@@ -16,9 +16,9 @@
 package tests.api.java.net;
 
 import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.net.InetSocketAddress;
 import java.net.Proxy;
@@ -34,15 +34,12 @@ public class ProxyTest extends TestCase {
     /**
      * @tests java.net.Proxy#Proxy(java.net.Proxy.Type, SocketAddress)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "This is a complete subset of tests for Proxy constructor.",
-      targets = {
-        @TestTarget(
-          methodName = "Proxy",
-          methodArgs = {Proxy.Type.class, SocketAddress.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "This is a complete subset of tests for Proxy constructor.",
+        method = "Proxy",
+        args = {java.net.Proxy.Type.class, java.net.SocketAddress.class}
+    )
     public void test_ConstructorLjava_net_ProxyLjava_net_SocketAddress_Normal() {
         // test HTTP type proxy
         Proxy proxy = new Proxy(Proxy.Type.HTTP, address);
@@ -63,15 +60,12 @@ public class ProxyTest extends TestCase {
     /**
      * @tests java.net.Proxy#Proxy(java.net.Proxy.Type, SocketAddress)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "This is a complete subset of tests for Proxy constructor.",
-      targets = {
-        @TestTarget(
-          methodName = "Proxy",
-          methodArgs = {Proxy.Type.class, SocketAddress.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "This is a complete subset of tests for Proxy constructor.",
+        method = "Proxy",
+        args = {java.net.Proxy.Type.class, java.net.SocketAddress.class}
+    )
     public void test_ConstructorLjava_net_ProxyLjava_net_SocketAddress_IllegalAddress() {
         Proxy proxy = null;
         // test HTTP type proxy
@@ -107,66 +101,86 @@ public class ProxyTest extends TestCase {
 
     /**
      * @tests java.net.Proxy#hashCode()
-     * @see also see test_equalsLjava_lang_Object_Equals
+     * @see test_equalsLjava_lang_Object_Equals
      */
-@TestInfo(
-      level = TestLevel.TODO,
-      purpose = "Empty test.",
-      targets = {
-        @TestTarget(
-          methodName = "hashCode",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hashCode",
+        args = {}
+    )
     public void test_hashCode() {
-        // This method has been tested in test_equalsLjava_lang_Object_Equals.
+        SocketAddress address1 = new InetSocketAddress("127.0.0.1", 1234);
+        
+        Proxy proxy1 = new Proxy(Proxy.Type.HTTP, address1);
+        Proxy proxy2 = new Proxy(Proxy.Type.HTTP, address1);
+        assertTrue(proxy1.hashCode() == proxy2.hashCode());
+
+        Proxy proxy3 = new Proxy(Proxy.Type.SOCKS, address1);
+        Proxy proxy4 = new Proxy(Proxy.Type.SOCKS, address1);
+        assertTrue(proxy1.hashCode() == proxy2.hashCode());
+        
+        assertTrue(proxy1.hashCode() != proxy4.hashCode());
+        
+        SocketAddress address2 = new InetSocketAddress("127.0.0.1", 1235);
+        
+        Proxy proxy5 = new Proxy(Proxy.Type.SOCKS, address1);
+        Proxy proxy6 = new Proxy(Proxy.Type.SOCKS, address2);
+        assertTrue(proxy5.hashCode() != proxy6.hashCode());
     }
 
     /**
      * @tests java.net.Proxy#type()
      */
-@TestInfo(
-      level = TestLevel.TODO,
-      purpose = "Empty test.",
-      targets = {
-        @TestTarget(
-          methodName = "type",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "type",
+        args = {}
+    )
     public void test_type() {
-        // This method has been tested in test_ConstructorLjava_net_ProxyLjava_net_SocketAddress_Normal. 
+        
+        Proxy proxy = new Proxy(Proxy.Type.HTTP, address);
+        assertEquals(Proxy.Type.HTTP, proxy.type());
+
+        proxy = new Proxy(Proxy.Type.SOCKS, address);
+        assertEquals(Proxy.Type.SOCKS, proxy.type());
+
+        proxy = Proxy.NO_PROXY;
+        assertEquals(Proxy.Type.DIRECT, proxy.type());
     }
 
     /**
      * @tests java.net.Proxy#address() This method has been tested in
      *        Constructor test case.
      */
-@TestInfo(
-      level = TestLevel.TODO,
-      purpose = "Empty test.",
-      targets = {
-        @TestTarget(
-          methodName = "address",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "address",
+        args = {}
+    )
     public void test_address() {
-        // This method has been tested in test_ConstructorLjava_net_ProxyLjava_net_SocketAddress_Normal.
+        Proxy proxy = new Proxy(Proxy.Type.SOCKS, address);
+        assertEquals(address, proxy.address());
+        
+        try {
+            new Proxy(Proxy.Type.SOCKS, null);
+            fail("IllegalArgumentException was thrown.");
+        } catch(IllegalArgumentException iae) {
+            //expected
+        }
     }
 
     /**
      * @tests java.net.Proxy#toString()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public void test_toString() {
         Proxy proxy = new Proxy(Proxy.Type.HTTP, address);
         // include type String
@@ -193,15 +207,12 @@ public class ProxyTest extends TestCase {
     /**
      * @tests java.net.Proxy#equals(Object)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "This is a complete subset of tests for equals method.",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "This is a complete subset of tests for equals method.",
+        method = "equals",
+        args = {java.lang.Object.class}
+    )
     public void test_equalsLjava_lang_Object_Equals() {
         SocketAddress address1 = new InetSocketAddress("127.0.0.1", 1234);
         SocketAddress address2 = new InetSocketAddress("127.0.0.1", 1234);
@@ -228,15 +239,12 @@ public class ProxyTest extends TestCase {
     /**
      * @tests java.net.Proxy#equals(Object)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "This is a complete subset of tests for equals method.",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "This is a complete subset of tests for equals method.",
+        method = "equals",
+        args = {java.lang.Object.class}
+    )
     public void test_equalsLjava_lang_Object_NotEquals() {
         SocketAddress address1 = new InetSocketAddress("127.0.0.1", 1234);
         SocketAddress address2 = new InetSocketAddress("127.0.0.1", 1235);
@@ -258,15 +266,12 @@ public class ProxyTest extends TestCase {
     /**
      * @tests java.net.Proxy.Type#valueOf(String)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "!Constants",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Proxy.Type.DIRECT, Proxy.Type.HTTP, Proxy.Type.SOCKS",
+        method = "!Constants",
+        args = {}
+    )
     public void test_Type_valueOfLjava_lang_String_Normal() {
         assertEquals(Proxy.Type.DIRECT, Proxy.Type.valueOf("DIRECT"));
         assertEquals(Proxy.Type.HTTP, Proxy.Type.valueOf("HTTP"));
@@ -276,15 +281,12 @@ public class ProxyTest extends TestCase {
     /**
      * @tests java.net.Proxy.Type#valueOf(String)
      */
-@TestInfo(
+    @TestTargetNew(
         level = TestLevel.COMPLETE,
-        purpose = "",
-        targets = {
-          @TestTarget(
-            methodName = "!Constants",
-            methodArgs = {}
-          )
-      })
+        notes = "",
+        method = "!Constants",
+        args = {}
+    )
     public void test_Type_valueOfLjava_lang_String_IllegalName() {
         String[] illegalName = { "Direct", "direct", "http", "socks",
                 "illegalName", "" };
@@ -302,15 +304,12 @@ public class ProxyTest extends TestCase {
     /**
      * @tests java.net.Proxy.Type#valueOf(String)
      */
-@TestInfo(
+    @TestTargetNew(
         level = TestLevel.COMPLETE,
-        purpose = "",
-        targets = {
-          @TestTarget(
-            methodName = "!Constants",
-            methodArgs = {}
-          )
-      })
+        notes = "",
+        method = "!Constants",
+        args = {}
+    )
     public void test_Type_valueOfLjava_lang_String_NullPointerException() {
         // Some old RIs,which throw IllegalArgumentException.
         // Latest RIs throw NullPointerException.
@@ -327,15 +326,12 @@ public class ProxyTest extends TestCase {
     /**
      * @tests java.net.Proxy.Type#values()
      */
-@TestInfo(
+    @TestTargetNew(
         level = TestLevel.COMPLETE,
-        purpose = "",
-        targets = {
-          @TestTarget(
-            methodName = "!Constants",
-            methodArgs = {}
-          )
-      })
+        notes = "",
+        method = "!Constants",
+        args = {}
+    )
     public void test_Type_values() {
         Proxy.Type types[] = Proxy.Type.values();
         assertEquals(3, types.length);

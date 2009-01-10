@@ -22,9 +22,9 @@
 
 package tests.security.spec;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -63,15 +63,12 @@ public class InvalidParameterSpecExceptionTest extends TestCase {
      * Assertion: constructs InvalidParameterSpecException with no detail
      * message
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "InvalidParameterSpecException",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "InvalidParameterSpecException",
+        args = {}
+    )
     public void testInvalidParameterSpecException01() {
         InvalidParameterSpecException tE = new InvalidParameterSpecException();
         assertNull("getMessage() must return null.", tE.getMessage());
@@ -83,15 +80,12 @@ public class InvalidParameterSpecExceptionTest extends TestCase {
      * Assertion: constructs InvalidParameterSpecException with detail message
      * msg. Parameter <code>msg</code> is not null.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "InvalidParameterSpecException",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "InvalidParameterSpecException",
+        args = {java.lang.String.class}
+    )
     public void testInvalidParameterSpecException02() {
         InvalidParameterSpecException tE;
         for (int i = 0; i < msgs.length; i++) {
@@ -107,15 +101,12 @@ public class InvalidParameterSpecExceptionTest extends TestCase {
      * Assertion: constructs InvalidParameterSpecException when <code>msg</code>
      * is null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies null as a parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "InvalidParameterSpecException",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies null as a parameter.",
+        method = "InvalidParameterSpecException",
+        args = {java.lang.String.class}
+    )
     public void testInvalidParameterSpecException03() {
         String msg = null;
         InvalidParameterSpecException tE = new InvalidParameterSpecException(

@@ -23,9 +23,9 @@
 package org.apache.harmony.security.tests.java.security;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.security.AlgorithmParameterGenerator;
 import java.security.AlgorithmParameterGeneratorSpi;
@@ -106,15 +106,12 @@ public class AlgorithmParameterGenerator1Test extends TestCase {
      * throws NoSuchAlgorithmException must be thrown if algorithm is not available
      * 
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getInstance",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getInstance",
+        args = {java.lang.String.class}
+    )
     public void testAlgorithmParameterGenerator01()
             throws NoSuchAlgorithmException {
         try {
@@ -137,15 +134,12 @@ public class AlgorithmParameterGenerator1Test extends TestCase {
      * Assertion: returns AlgorithmParameterGenerator instance 
      * when algorithm is DSA
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getInstance",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getInstance",
+        args = {java.lang.String.class}
+    )
     public void testAlgorithmParameterGenerator02()
             throws NoSuchAlgorithmException {
         if (!DSASupported) {
@@ -165,15 +159,12 @@ public class AlgorithmParameterGenerator1Test extends TestCase {
      * Assertion: 
      * throws IllegalArgumentException if provider is null or empty
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getInstance",
-          methodArgs = {String.class, String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getInstance",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void testAlgorithmParameterGenerator03()
             throws NoSuchAlgorithmException, NoSuchProviderException {
         if (!DSASupported) {
@@ -201,15 +192,12 @@ public class AlgorithmParameterGenerator1Test extends TestCase {
      * Assertion: throws NoSuchProviderException if provider is not
      * available
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getInstance",
-          methodArgs = {String.class, String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getInstance",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void testAlgorithmParameterGenerator04()
             throws NoSuchAlgorithmException {
         if (!DSASupported) {
@@ -236,15 +224,12 @@ public class AlgorithmParameterGenerator1Test extends TestCase {
      * throws NullPointerException must be thrown is null
      * throws NoSuchAlgorithmException must be thrown if algorithm is not available
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getInstance",
-          methodArgs = {String.class, String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getInstance",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void testAlgorithmParameterGenerator05()
             throws NoSuchProviderException {
         if (!DSASupported) {
@@ -273,15 +258,12 @@ public class AlgorithmParameterGenerator1Test extends TestCase {
      * method 
      * Assertion: return AlgorithmParameterGenerator
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getInstance",
-          methodArgs = {String.class, String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getInstance",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void testAlgorithmParameterGenerator06()
             throws NoSuchAlgorithmException, NoSuchProviderException {
         if (!DSASupported) {
@@ -303,15 +285,12 @@ public class AlgorithmParameterGenerator1Test extends TestCase {
      * method 
      * Assertion: throws IllegalArgumentException when provider is null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getInstance",
-          methodArgs = {String.class, Provider.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getInstance",
+        args = {java.lang.String.class, java.security.Provider.class}
+    )
     public void testAlgorithmParameterGenerator07()
             throws NoSuchAlgorithmException {
         if (!DSASupported) {
@@ -335,15 +314,12 @@ public class AlgorithmParameterGenerator1Test extends TestCase {
      * throws NullPointerException must be thrown is null
      * throws NoSuchAlgorithmException must be thrown if algorithm is not available
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getInstance",
-          methodArgs = {String.class, Provider.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getInstance",
+        args = {java.lang.String.class, java.security.Provider.class}
+    )
     public void testAlgorithmParameterGenerator08() {
         if (!DSASupported) {
             fail(validAlgName + " algorithm is not supported");
@@ -371,15 +347,12 @@ public class AlgorithmParameterGenerator1Test extends TestCase {
      * method 
      * Assertion: returns AlgorithmParameterGenerator object
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getInstance",
-          methodArgs = {String.class, Provider.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "getInstance",
+        args = {java.lang.String.class, java.security.Provider.class}
+    )
     public void testAlgorithmParameterGenerator09()
             throws NoSuchAlgorithmException {
         if (!DSASupported) {
@@ -399,15 +372,12 @@ public class AlgorithmParameterGenerator1Test extends TestCase {
      * Test for <code>generateParameters()</code> method
      * Assertion: returns AlgorithmParameters object
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "generateParameters",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "generateParameters",
+        args = {}
+    )
     public void testAlgorithmParameterGenerator10()
             throws NoSuchAlgorithmException {
         if (!DSASupported) {
@@ -428,17 +398,22 @@ public class AlgorithmParameterGenerator1Test extends TestCase {
      * methods
      * Assertion: throws InvalidAlgorithmParameterException when param is null
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Exception case was verified only",
-      targets = {
-        @TestTarget(
-          methodName = "init",
-          methodArgs = {AlgorithmParameterSpec.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "Only invalid argument cases are verified. This is " +
+            "sufficient since the effects of calling init with valid " +
+            "parameters can not be observed.",
+            method = "init",
+            args = {java.security.spec.AlgorithmParameterSpec.class}
         ),
-        @TestTarget(
-          methodName = "init",
-          methodArgs = {AlgorithmParameterSpec.class, SecureRandom.class}
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "Only invalid argument cases are verified. This is " +
+            "sufficient since the effects of calling init with valid " +
+            "parameters can not be observed.",
+            method = "init",
+            args = {java.security.spec.AlgorithmParameterSpec.class, java.security.SecureRandom.class}
         )
     })
     public void testAlgorithmParameterGenerator12() {
@@ -454,14 +429,14 @@ public class AlgorithmParameterGenerator1Test extends TestCase {
         for (int i = 0; i < apgs.length; i++) {
             try {
                 apgs[i].init(aps);
-                fail("InvalidAlgorithmParameterException must be throws when param is null");
+                fail("InvalidAlgorithmParameterException expected for null argument.");
             } catch (InvalidAlgorithmParameterException e) {      
                 //expected
             }
             
             try {
                 apgs[i].init(aps, random);
-                fail("InvalidAlgorithmParameterException must be throws when param is null");
+                fail("InvalidAlgorithmParameterException expected for null argument.");
             } catch (InvalidAlgorithmParameterException e) {    
                 //expected
             }
@@ -472,16 +447,21 @@ public class AlgorithmParameterGenerator1Test extends TestCase {
      * Test for <code>AlgorithmParameterGenerator</code> constructor 
      * Assertion: returns AlgorithmParameterGenerator object
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Constructor was used without invalid parameters",
-      targets = {
-        @TestTarget(
-          methodName = "AlgorithmParameterGenerator",
-          methodArgs = {AlgorithmParameterGeneratorSpi.class, Provider.class, String.class}
+    @TestTargets ({
+        @TestTargetNew(
+                level = TestLevel.COMPLETE,
+                notes = "Validity of arguments is not checked in the constructor; " +
+                "this is done during init.",
+                method = "AlgorithmParameterGenerator",
+                args = {java.security.AlgorithmParameterGeneratorSpi.class, java.security.Provider.class, java.lang.String.class}
+        ),
+        @TestTargetNew(
+                level = TestLevel.PARTIAL_COMPLETE,
+                method = "init",
+                args = {int.class, SecureRandom.class}
         )
     })
-    public void testAlgorithmParameterGeneratorConstr() throws NoSuchAlgorithmException {
+    public void testConstructor() throws NoSuchAlgorithmException {
         if (!DSASupported) {
             fail(validAlgName + " algorithm is not supported");
             return;

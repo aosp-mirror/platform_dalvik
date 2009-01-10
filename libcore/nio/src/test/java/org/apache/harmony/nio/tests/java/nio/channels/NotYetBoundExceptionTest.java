@@ -15,8 +15,8 @@
  */
 package org.apache.harmony.nio.tests.java.nio.channels;
 
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass;
 
@@ -35,15 +35,20 @@ public class NotYetBoundExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility.
      */
-    @TestInfo(
+    @TestTargets({
+        @TestTargetNew(
             level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization/deserialization compatibility.",
-            targets = {
-              @TestTarget(
-                methodName = "!SerializationSelf",
-                methodArgs = {}
-              )
-          })
+            notes = "Verifies serialization/deserialization compatibility.",
+            method = "!SerializationSelf",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies serialization/deserialization compatibility.",
+            method = "NotYetBoundException",
+            args = {}
+        )
+    })
     public void testSerializationSelf() throws Exception {
 
         SerializationTest.verifySelf(new NotYetBoundException());
@@ -52,15 +57,20 @@ public class NotYetBoundExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
-    @TestInfo(
+    @TestTargets({
+        @TestTargetNew(
             level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization/deserialization compatibility.",
-            targets = {
-              @TestTarget(
-                methodName = "!SerializationGolden",
-                methodArgs = {}
-              )
-          })
+            notes = "Verifies serialization/deserialization compatibility.",
+            method = "!SerializationGolden",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies serialization/deserialization compatibility.",
+            method = "NotYetBoundException",
+            args = {}
+        )
+    })
     public void testSerializationCompatibility() throws Exception {
 
         SerializationTest.verifyGolden(this, new NotYetBoundException());

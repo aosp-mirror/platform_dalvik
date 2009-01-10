@@ -620,6 +620,16 @@ public class KeyStore {
             throwNotInitialized();
             // END android-changed
         }
+        // BEGIN android-removed
+        // copied from a newer version of harmony
+        // Just delegate stream and password to implSpi
+        // if (stream == null) {
+        //     throw new IOException(Messages.getString("security.51")); //$NON-NLS-1$
+        // }
+        // if (password == null) {
+        //     throw new IOException(Messages.getString("security.50")); //$NON-NLS-1$
+        // }
+        // END android-removed
         implSpi.engineStore(stream, password);
     }
 
@@ -1263,7 +1273,10 @@ public class KeyStore {
          */
         public PasswordProtection(char[] password) {
             // BEGIN android-changed
-            this.password = (password != null) ? password.clone() : null;
+            // copied from a newer version of harmony
+            if (password != null) {
+                this.password = password.clone();
+            }
             // END android-changed
         }
 
@@ -1401,7 +1414,8 @@ public class KeyStore {
          */
         public Certificate[] getCertificateChain() {
             // BEGIN android-changed
-            return chain;
+            // copied from a newer version of harmony
+            return chain.clone();
             // END android-changed
         }
 

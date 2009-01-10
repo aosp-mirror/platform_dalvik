@@ -23,9 +23,9 @@
 package org.apache.harmony.security.tests.java.security;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.security.AllPermission;
 import java.security.BasicPermission;
@@ -57,15 +57,12 @@ public class PermissionsTest extends TestCase {
     /**
      * Can add any type of permissions. Cannot add if collection is read-only.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "add",
-          methodArgs = {Permission.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "add",
+        args = {java.security.Permission.class}
+    )
     public void testAdd() {
         Permissions ps = new Permissions();
         Permission ap = new AllPermission();
@@ -101,15 +98,12 @@ public class PermissionsTest extends TestCase {
      * non-empty collection, should always return enumeration over unique
      * elements.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "elements",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "elements",
+        args = {}
+    )
     public void testElements() {
         Permissions ps = new Permissions();
         Permission ap = new AllPermission();
@@ -158,21 +152,12 @@ public class PermissionsTest extends TestCase {
     /**
      * input parameter is null 
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "implies - non null checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "implies",
-          methodArgs = {Permission.class}
-        ),
-        @TestTarget(
-          methodName = "add",
-          methodArgs = {Permission.class}
-        ),
-        @TestTarget(
-          methodName = "elements",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "implies",
+            args = {java.security.Permission.class}
         )
     })
     public void testNull(){

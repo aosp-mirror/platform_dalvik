@@ -18,9 +18,9 @@
 package org.apache.harmony.sql.tests.java.sql;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.sql.Timestamp;
 import java.util.Date;
@@ -115,15 +115,12 @@ public class TimestampTest extends TestCase {
     /*
      * Constructor test
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Incorrect parameter checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "Timestamp",
-          methodArgs = {long.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Incorrect parameter checking missed",
+        method = "Timestamp",
+        args = {long.class}
+    )
     public void testTimestamplong() {
         Timestamp theTimestamp = new Timestamp(TIME_TEST1);
 
@@ -134,15 +131,12 @@ public class TimestampTest extends TestCase {
     /*
      * Constructor test
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "Timestamp",
-          methodArgs = {int.class, int.class, int.class, int.class, int.class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Timestamp",
+        args = {int.class, int.class, int.class, int.class, int.class, int.class, int.class}
+    )
     @SuppressWarnings("deprecation")
     public void testTimestampintintintintintintint() {
         int[][] valid = { { 99, 2, 14, 17, 52, 3, 213577212 }, // 0 valid
@@ -195,15 +189,12 @@ public class TimestampTest extends TestCase {
     /*
      * Method test for setTime
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setTime",
-          methodArgs = {long.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setTime",
+        args = {long.class}
+    )
     public void testSetTimelong() {
         // First set the timezone to GMT
         TimeZone.setDefault(TimeZone.getTimeZone("GMT"));
@@ -222,15 +213,12 @@ public class TimestampTest extends TestCase {
     /*
      * Method test for getTime
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getTime",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getTime",
+        args = {}
+    )
     public void testGetTime() {
         // First set the timezone to GMT
         TimeZone.setDefault(TimeZone.getTimeZone("GMT"));
@@ -245,15 +233,12 @@ public class TimestampTest extends TestCase {
     /*
      * Method test for getYear
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Deprecation",
-      targets = {
-        @TestTarget(
-          methodName = "getYear",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Deprecation",
+        method = "getYear",
+        args = {}
+    )
     @SuppressWarnings("deprecation")
     public void testGetYear() {
         for (int i = 0; i < TIME_ARRAY.length; i++) {
@@ -266,15 +251,12 @@ public class TimestampTest extends TestCase {
     /*
      * Method test for getMonth
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Deprecation",
-      targets = {
-        @TestTarget(
-          methodName = "getMonth",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Deprecation",
+        method = "getMonth",
+        args = {}
+    )
     @SuppressWarnings("deprecation")
     public void testGetMonth() {
         for (int i = 0; i < TIME_ARRAY.length; i++) {
@@ -287,15 +269,12 @@ public class TimestampTest extends TestCase {
     /*
      * Method test for getDate
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Deprecation",
-      targets = {
-        @TestTarget(
-          methodName = "getDate",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Deprecation",
+        method = "getDate",
+        args = {}
+    )
     @SuppressWarnings("deprecation")
     public void testGetDate() {
         for (int i = 0; i < TIME_ARRAY.length; i++) {
@@ -308,15 +287,12 @@ public class TimestampTest extends TestCase {
     /*
      * Method test for getHours
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Deprecation",
-      targets = {
-        @TestTarget(
-          methodName = "getHours",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Deprecation",
+        method = "getHours",
+        args = {}
+    )
     @SuppressWarnings("deprecation")
     public void testGetHours() {
         for (int i = 0; i < TIME_ARRAY.length; i++) {
@@ -329,15 +305,12 @@ public class TimestampTest extends TestCase {
     /*
      * Method test for getMinutes
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Deprecation",
-      targets = {
-        @TestTarget(
-          methodName = "getMinutes",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Deprecation",
+        method = "getMinutes",
+        args = {}
+    )
     @SuppressWarnings("deprecation")
     public void testGetMinutes() {
         for (int i = 0; i < TIME_ARRAY.length; i++) {
@@ -350,15 +323,12 @@ public class TimestampTest extends TestCase {
     /*
      * Method test for getSeconds
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Deprecation",
-      targets = {
-        @TestTarget(
-          methodName = "getSeconds",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Deprecation",
+        method = "getSeconds",
+        args = {}
+    )
     @SuppressWarnings("deprecation")
     public void testGetSeconds() {
         for (int i = 0; i < TIME_ARRAY.length; i++) {
@@ -373,15 +343,12 @@ public class TimestampTest extends TestCase {
      */
     static String theExceptionMessage = "Timestamp format must be yyyy-mm-dd hh:mm:ss.fffffffff";
 
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "valueOf",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "valueOf",
+        args = {java.lang.String.class}
+    )
     public void testValueOfString() {
         for (int i = 0; i < TIME_ARRAY.length; i++) {
             Timestamp theTimestamp = new Timestamp(TIME_ARRAY[i]);
@@ -413,15 +380,12 @@ public class TimestampTest extends TestCase {
     /*
      * Method test for valueOf
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "valueOf",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "valueOf",
+        args = {java.lang.String.class}
+    )
     public void testValueOfString1() {
 
         Timestamp theReturn;
@@ -467,15 +431,12 @@ public class TimestampTest extends TestCase {
     /*
      * Method test for toString
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public void testToString() {
         for (int i = 0; i < TIME_ARRAY.length; i++) {
             Timestamp theTimestamp = new Timestamp(TIME_ARRAY[i]);
@@ -487,15 +448,12 @@ public class TimestampTest extends TestCase {
     /*
      * Method test for getNanos
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getNanos",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getNanos",
+        args = {}
+    )
     public void testGetNanos() {
         for (int i = 0; i < TIME_ARRAY.length; i++) {
             Timestamp theTimestamp = new Timestamp(TIME_ARRAY[i]);
@@ -507,15 +465,12 @@ public class TimestampTest extends TestCase {
     /*
      * Method test for setNanos
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setNanos",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setNanos",
+        args = {int.class}
+    )
     public void testSetNanosint() {
         int[] NANOS_INVALID = { -137891990, 1635665198, -1 };
         for (int i = 0; i < TIME_ARRAY.length; i++) {
@@ -548,15 +503,12 @@ public class TimestampTest extends TestCase {
     /*
      * Method test for equals
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {Timestamp.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "equals",
+        args = {java.sql.Timestamp.class}
+    )
     public void testEqualsTimestamp() {
         for (long element : TIME_ARRAY) {
             Timestamp theTimestamp = new Timestamp(element);
@@ -579,15 +531,12 @@ public class TimestampTest extends TestCase {
     /*
      * Method test for equals
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "equals",
+        args = {java.lang.Object.class}
+    )
     public void testEqualsObject() {
         for (long element : TIME_ARRAY) {
             Timestamp theTimestamp = new Timestamp(element);
@@ -616,15 +565,12 @@ public class TimestampTest extends TestCase {
     /*
      * Method test for before
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "before",
-          methodArgs = {Timestamp.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "before",
+        args = {java.sql.Timestamp.class}
+    )
     public void testBeforeTimestamp() {
         Timestamp theTest = new Timestamp(TIME_LATE);
 
@@ -656,15 +602,12 @@ public class TimestampTest extends TestCase {
     /*
      * Method test for after
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "after",
-          methodArgs = {Timestamp.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "after",
+        args = {java.sql.Timestamp.class}
+    )
     public void testAfterTimestamp() {
         Timestamp theTest = new Timestamp(TIME_LATE);
 
@@ -696,15 +639,12 @@ public class TimestampTest extends TestCase {
     /*
      * Method test for compareTo
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "compareTo",
-          methodArgs = {Timestamp.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "compareTo",
+        args = {java.sql.Timestamp.class}
+    )
     @SuppressWarnings("deprecation")
     public void testCompareToTimestamp() {
         Timestamp theTest = new Timestamp(TIME_EARLY);
@@ -742,15 +682,12 @@ public class TimestampTest extends TestCase {
     /**
      * @tests java.sql.Timestamp#compareTo(java.util.Date)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "compareTo",
-          methodArgs = {Date.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "compareTo",
+        args = {java.util.Date.class}
+    )
     public void testCompareToDate() {
         Date theTest = new Timestamp(TIME_EARLY);
         Date theTest2 = new Timestamp(TIME_LATE);
@@ -785,15 +722,12 @@ public class TimestampTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Serialization test",
-      targets = {
-        @TestTarget(
-          methodName = "!SerializationSelf",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Serialization test",
+        method = "!SerializationSelf",
+        args = {}
+    )
     public void testSerializationSelf() throws Exception {
         Timestamp object = new Timestamp(100L);
         SerializationTest.verifySelf(object);
@@ -802,15 +736,12 @@ public class TimestampTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Serialization test",
-      targets = {
-        @TestTarget(
-          methodName = "!SerializationGolden",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Serialization test",
+        method = "!SerializationGolden",
+        args = {}
+    )
     public void testSerializationCompatibility() throws Exception {
         Timestamp object = new Timestamp(100L);
         SerializationTest.verifyGolden(this, object);
@@ -819,15 +750,12 @@ public class TimestampTest extends TestCase {
     /**
      * @tests java.sql.Timestamp#toString()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public void test_toString() {
 
         Timestamp t1 = new Timestamp(Long.MIN_VALUE);

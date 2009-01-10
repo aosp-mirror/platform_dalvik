@@ -23,9 +23,9 @@
 package org.apache.harmony.security.tests.java.security;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.security.Key;
 
@@ -50,15 +50,12 @@ public class KeyTest extends TestCase {
     /**
      * Test for <code>serialVersionUID</code> field
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Field testing",
-      targets = {
-        @TestTarget(
-          methodName = "serialVersionUID",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Field testing",
+        method = "!serialVersionUID",
+        args = {}
+    )
     public void testField() {
         checkKey mk = new checkKey();
         assertEquals("Incorrect serialVersionUID", mk.getSerVerUID(), //Key.serialVersionUID,

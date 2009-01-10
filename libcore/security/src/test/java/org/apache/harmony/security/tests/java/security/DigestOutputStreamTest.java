@@ -22,12 +22,9 @@
 
 package org.apache.harmony.security.tests.java.security;
 
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
-
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.security.DigestOutputStream;
@@ -35,10 +32,17 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
+import junit.framework.TestCase;
+
 import org.apache.harmony.security.tests.support.MDGoldenData;
 import org.apache.harmony.security.tests.support.MyMessageDigest1;
 
-import junit.framework.TestCase;
+import tests.support.Support_OutputStream;
+
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
+
 @TestTargetClass(DigestOutputStream.class)
 /**
  * Tests for fields and methods of class <code>DigestInputStream</code>
@@ -87,16 +91,12 @@ public class DigestOutputStreamTest extends TestCase {
      * @tests java.security.DigestOutputStream#DigestOutputStream(java.io.OutputStream,
      *        java.security.MessageDigest)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies both null and non null parameters. " +
-                "Need cases where just one parameter null",
-      targets = {
-        @TestTarget(
-          methodName = "DigestOutputStream",
-          methodArgs = {OutputStream.class, MessageDigest.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "DigestOutputStream",
+        args = {java.io.OutputStream.class, java.security.MessageDigest.class}
+    )
     public void test_CtorLjava_io_OutputStreamLjava_security_MessageDigest() {
 
         // non-null parameters
@@ -111,20 +111,25 @@ public class DigestOutputStreamTest extends TestCase {
         dos = new MyDigestOutputStream(null, null);
         assertNull(dos.myOutputStream());
         assertNull(dos.myMessageDigest());
+        
+        dos = new MyDigestOutputStream(null, md);
+        assertNull(dos.myOutputStream());
+        assertNotNull(dos.myMessageDigest());
+        
+        dos = new MyDigestOutputStream(out, null);
+        assertNotNull(dos.myOutputStream());
+        assertNull(dos.myMessageDigest());
     }
 
     /**
      * @tests java.security.DigestOutputStream#getMessageDigest()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getMessageDigest",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getMessageDigest",
+        args = {}
+    )
     public void test_getMessageDigest() {
 
         MessageDigest digest = new MyMessageDigest1();
@@ -143,15 +148,12 @@ public class DigestOutputStreamTest extends TestCase {
     /**
      * @tests java.security.DigestOutputStream#setMessageDigest(MessageDigest)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setMessageDigest",
-          methodArgs = {MessageDigest.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setMessageDigest",
+        args = {java.security.MessageDigest.class}
+    )
     public void test_setMessageDigestLjava_security_MessageDigest() {
 
         MessageDigest digest = new MyMessageDigest1();
@@ -176,15 +178,12 @@ public class DigestOutputStreamTest extends TestCase {
      * Assertion: writes the byte to the output stream<br>
      * Assertion: updates associated digest<br>
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "write",
+        args = {int.class}
+    )
     public final void testWriteint01()
         throws IOException {
         for (int k=0; k<algorithmName.length; k++) {
@@ -218,15 +217,12 @@ public class DigestOutputStreamTest extends TestCase {
      * if <code>true</code> passed as a parameter or off if <code>false</code>
      * passed
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "write",
+        args = {int.class}
+    )
     public final void testWriteint02()
         throws IOException {
         for (int k=0; k<algorithmName.length; k++) {
@@ -263,15 +259,12 @@ public class DigestOutputStreamTest extends TestCase {
      * <code>OutputStream</code> not set. <code>write(int)</code> must
      * not work
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException isn't tested",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "IOException isn't tested",
+        method = "write",
+        args = {int.class}
+    )
     public final void testWriteint03() throws IOException {
         for (int k=0; k<algorithmName.length; k++) {
             try {
@@ -301,15 +294,12 @@ public class DigestOutputStreamTest extends TestCase {
      * <code>write(int)</code> must not work when digest
      * functionality is on
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException isn't tested",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "IOException isn't tested",
+        method = "write",
+        args = {int.class}
+    )
     public final void testWriteint04() throws IOException {
         OutputStream os = new ByteArrayOutputStream(MY_MESSAGE_LEN);
         DigestOutputStream dos = new DigestOutputStream(os, null);
@@ -334,15 +324,12 @@ public class DigestOutputStreamTest extends TestCase {
      * <code>write(int)</code> must work when digest
      * functionality is off
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "write",
+        args = {int.class}
+    )
     public final void testWriteint05() throws IOException {
         ByteArrayOutputStream bos = new ByteArrayOutputStream(MY_MESSAGE_LEN);
         DigestOutputStream dos = new DigestOutputStream(bos, null);
@@ -364,17 +351,12 @@ public class DigestOutputStreamTest extends TestCase {
      * 
      * Assertion: updates associated digest<br>
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException isn't tested",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {byte[].class, int.class, int.class}
-        )
-    })
-    public final void testWritebyteArrayintint01()
-        throws IOException {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "write",
+        args = {byte[].class, int.class, int.class}
+    )
+    public final void test_write$BII_1() throws IOException {
         for (int k=0; k<algorithmName.length; k++) {
             try {
                 ByteArrayOutputStream bos = new ByteArrayOutputStream(MY_MESSAGE_LEN);
@@ -404,17 +386,12 @@ public class DigestOutputStreamTest extends TestCase {
      * 
      * Assertion: updates associated digest<br>
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException isn't tested",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {byte[].class, int.class, int.class}
-        )
-    })
-    public final void testWritebyteArrayintint02()
-        throws IOException {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "write",
+        args = {byte[].class, int.class, int.class}
+    )
+    public final void test_write$BII_2() throws IOException {
         // check precondition
         assertEquals(0, MY_MESSAGE_LEN % CHUNK_SIZE);
         for (int k=0; k<algorithmName.length; k++) {
@@ -449,16 +426,12 @@ public class DigestOutputStreamTest extends TestCase {
      * 
      * Assertion: updates associated digest<br>
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException isn't tested",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {byte[].class, int.class, int.class}
-        )
-    })
-    public final void testWritebyteArrayintint03()
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "write",
+        args = {byte[].class, int.class, int.class}
+    )
+    public final void test_write$BII_3()
         throws NoSuchAlgorithmException,
                IOException {
         // check precondition
@@ -499,16 +472,12 @@ public class DigestOutputStreamTest extends TestCase {
      * Assertion: does not update associated digest if digest
      * functionality is off<br>
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException isn't tested",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {byte[].class, int.class, int.class}
-        )
-    })
-    public final void testWritebyteArrayintint04()
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "write",
+        args = {byte[].class, int.class, int.class}
+    )
+    public final void test_write$BII_4()
         throws NoSuchAlgorithmException,
                IOException {
         // check precondition
@@ -544,16 +513,13 @@ public class DigestOutputStreamTest extends TestCase {
     /**
      * @tests java.security.DigestOutputStream#write(byte[], int, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException isn't tested",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {byte[].class, int.class, int.class}
-        )
-    })
-    public void test_writeLB$LILI() throws Exception {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Illegal argument checks.",
+        method = "write",
+        args = {byte[].class, int.class, int.class}
+    )
+    public void test_write$BII_6() throws Exception {
 
         // Regression form HARMONY-1091.
         MessageDigest md = new MyMessageDigest1();
@@ -587,18 +553,42 @@ public class DigestOutputStreamTest extends TestCase {
     }
 
     /**
+     * @tests java.io.DigestOutputStream#write(byte[], int, int)
+     */
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "IOException check.",
+        method = "write",
+        args = {byte[].class, int.class, int.class}
+    )    
+    public void test_write$BII_7() 
+        throws IOException, NoSuchAlgorithmException {
+        Support_OutputStream sos = new Support_OutputStream(MY_MESSAGE_LEN);
+        MessageDigest md = MessageDigest.getInstance(algorithmName[0]);
+        DigestOutputStream dos = new DigestOutputStream(sos, md);
+
+        dos.write(myMessage, 0, MY_MESSAGE_LEN);
+        
+        try {
+            // Support_OutputStream throws an IOException if the internal
+            // buffer is full, which it should be now.
+            dos.write(myMessage, 0, MY_MESSAGE_LEN);
+            fail("Test 1: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
+    }
+
+    /**
      * Test for <code>on()</code> method<br>
      * Assertion: turns digest functionality on or off
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "on",
-          methodArgs = {boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "on",
+        args = {boolean.class}
+    )
     public final void testOn() throws IOException {
         for (int k=0; k<algorithmName.length; k++) {
             try {
@@ -638,15 +628,12 @@ public class DigestOutputStreamTest extends TestCase {
      * Test for <code>toString()</code> method<br>
      * Assertion: returns <code>String</code> representation of this object
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
     public final void testToString() throws NoSuchAlgorithmException {
         for (int k=0; k<algorithmName.length; k++) {
             try {
@@ -666,15 +653,12 @@ public class DigestOutputStreamTest extends TestCase {
     /**
      * @tests java.security.DigestOutputStream#on(boolean)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "on",
-          methodArgs = {boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "on",
+        args = {boolean.class}
+    )
     public void test_onZ() {
         // Test for method void java.security.DigestOutputStream.on(boolean)
         try {
@@ -706,16 +690,12 @@ public class DigestOutputStreamTest extends TestCase {
     /**
      * @tests java.security.DigestOutputStream#write(byte[], int, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException isn't tested",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {byte[].class, int.class, int.class}
-        )
-    })
-    public void test_write$BII() throws Exception {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "write",
+        args = {byte[].class, int.class, int.class}
+    )
+    public void test_write$BII_5() throws Exception {
         // Test for method void java.security.DigestOutputStream.write(byte [],
         // int, int)
             DigestOutputStream dos = new DigestOutputStream(
@@ -733,15 +713,12 @@ public class DigestOutputStreamTest extends TestCase {
     /**
      * @tests java.security.DigestOutputStream#write(int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "write",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "write",
+        args = {int.class}
+    )
     public void test_writeI() throws Exception {
         // Test for method void java.security.DigestOutputStream.write(int)
             DigestOutputStream dos = new DigestOutputStream(

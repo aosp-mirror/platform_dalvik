@@ -17,16 +17,15 @@
 
 package tests.api.java.io;
 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestTargetClass; 
-
 import java.io.ByteArrayOutputStream;
-import java.io.FileOutputStream;
-import java.io.FileDescriptor;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 
 import junit.framework.TestCase;
+import tests.support.Support_OutputStream;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
 /**
  * Automated Test Suite for class java.io.ByteArrayOutputStream
@@ -41,42 +40,32 @@ public class ByteArrayOutputStreamTest extends TestCase {
     public String fileString = "Test_All_Tests\nTest_java_io_BufferedInputStream\nTest_java_io_BufferedOutputStream\nTest_java_io_ByteArrayInputStream\nTest_ByteArrayOutputStream\nTest_java_io_DataInputStream\n";
 
     /**
-     * Tears down the fixture, for example, close a network connection. This
-     * method is called after a test is executed.
-     */
-    protected void tearDown() throws Exception {
-        try {
-            bos.close();
-        } catch (Exception ignore) {
-        }
-        super.tearDown();
-    }
-
-    /**
      * @tests java.io.ByteArrayOutputStream#ByteArrayOutputStream(int)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IllegalArgumentException checking missed.",
-            targets = { @TestTarget(methodName = "ByteArrayOutputStream", 
-                                    methodArgs = {int.class})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "ByteArrayOutputStream",
+        args = {int.class}
     )    
     public void test_ConstructorI() {
-        // Test for method java.io.ByteArrayOutputStream(int)
         bos = new java.io.ByteArrayOutputStream(100);
-        assertEquals("Failed to create stream", 0, bos.size());
+        assertEquals("Test 1: Failed to create stream;", 0, bos.size());
+        
+        try {
+            bos = new ByteArrayOutputStream(-1);
+            fail("Test 2: IllegalArgumentException expected.");
+        } catch (IllegalArgumentException e) {
+            // Expected.
+        }
     }
 
     /**
      * @tests java.io.ByteArrayOutputStream#ByteArrayOutputStream()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies ByteArrayOutputStream() constructor.",
-            targets = { @TestTarget(methodName = "ByteArrayOutputStream", 
-                                    methodArgs = {})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "ByteArrayOutputStream",
+        args = {}
     )           
     public void test_Constructor() {
         // Test for method java.io.ByteArrayOutputStream()
@@ -87,12 +76,11 @@ public class ByteArrayOutputStreamTest extends TestCase {
     /**
      * @tests java.io.ByteArrayOutputStream#close()
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed, see tearDown for info.",
-            targets = { @TestTarget(methodName = "close", 
-                                    methodArgs = {})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "No IOException check since it is never thrown.",
+        method = "close",
+        args = {}
     )           
     public void test_close() {
         // Test for method void java.io.ByteArrayOutputStream.close()
@@ -120,30 +108,27 @@ public class ByteArrayOutputStreamTest extends TestCase {
     /**
      * @tests java.io.ByteArrayOutputStream#reset()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies reset() methid.",
-            targets = { @TestTarget(methodName = "reset", 
-                                    methodArgs = {})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "reset",
+        args = {}
     )        
     public void test_reset() {
         // Test for method void java.io.ByteArrayOutputStream.reset()
         bos = new java.io.ByteArrayOutputStream();
         bos.write(fileString.getBytes(), 0, 100);
         bos.reset();
-        assertEquals("reset failed", 0, bos.size());
+        assertEquals("Test 1: Reset failed;", 0, bos.size());
     }
 
     /**
      * @tests java.io.ByteArrayOutputStream#size()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies size() method.",
-            targets = { @TestTarget(methodName = "size", 
-                                    methodArgs = {})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies size() method.",
+        method = "size",
+        args = {}
     )        
     public void test_size() {
         // Test for method int java.io.ByteArrayOutputStream.size()
@@ -157,12 +142,11 @@ public class ByteArrayOutputStreamTest extends TestCase {
     /**
      * @tests java.io.ByteArrayOutputStream#toByteArray()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies toByteArray() method.",
-            targets = { @TestTarget(methodName = "toByteArray", 
-                                    methodArgs = {})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies toByteArray() method.",
+        method = "toByteArray",
+        args = {}
     )        
     public void test_toByteArray() {
         // Test for method byte [] java.io.ByteArrayOutputStream.toByteArray()
@@ -179,38 +163,36 @@ public class ByteArrayOutputStreamTest extends TestCase {
     /**
      * @tests java.io.ByteArrayOutputStream#toString(java.lang.String)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "UnsupportedEncodingException checking missed.",
-            targets = { @TestTarget(methodName = "toString", 
-                                    methodArgs = { java.lang.String.class })                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "toString",
+        args = {java.lang.String.class}
     )     
     public void test_toStringLjava_lang_String() throws Exception {
-        // Test for method java.lang.String
-        // java.io.ByteArrayOutputStream.toString(java.lang.String)
-        java.io.ByteArrayOutputStream bos;
-        bos = new java.io.ByteArrayOutputStream();
+        bos = new ByteArrayOutputStream();
 
         bos.write(fileString.getBytes(), 0, fileString.length());
-        assertTrue("Returned incorrect 8859-1 String", bos.toString("8859_1")
-                .equals(fileString));
-
-        bos = new java.io.ByteArrayOutputStream();
-        bos.write(fileString.getBytes(), 0, fileString.length());
-        assertTrue("Returned incorrect 8859-2 String", bos.toString("8859_2")
-                .equals(fileString));
+        assertTrue("Test 1: Returned incorrect 8859-1 String", 
+                bos.toString("8859_1").equals(fileString));
+        assertTrue("Test 2: Returned incorrect 8859-2 String", 
+                bos.toString("8859_2").equals(fileString));
+        
+        try {
+            bos.toString("NotAnEcoding");
+            fail("Test 3: UnsupportedEncodingException expected.");
+        } catch (UnsupportedEncodingException e) {
+            // Expected.
+        }
     }
 
     /**
      * @tests java.io.ByteArrayOutputStream#toString()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies toString() method.",
-            targets = { @TestTarget(methodName = "toString", 
-                                    methodArgs = {})                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies toString() method.",
+        method = "toString",
+        args = {}
     )        
     public void test_toString() {
         // Test for method java.lang.String
@@ -225,12 +207,12 @@ public class ByteArrayOutputStreamTest extends TestCase {
     /**
      * @tests java.io.ByteArrayOutputStream#toString(int)
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies toString(int hibyte) method.",
-            targets = { @TestTarget(methodName = "toString", 
-                                    methodArgs = { int.class })                         
-            }
+    @SuppressWarnings("deprecation")
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies toString(int hibyte) method.",
+        method = "toString",
+        args = {int.class}
     )    
     public void test_toStringI() {
         // Test for method java.lang.String
@@ -245,12 +227,11 @@ public class ByteArrayOutputStreamTest extends TestCase {
     /**
      * @tests java.io.ByteArrayOutputStream#write(int)
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "",
-            targets = { @TestTarget(methodName = "write", 
-                                    methodArgs = { int.class })                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "write",
+        args = {int.class}
     )     
     public void test_writeI() {
         // Test for method void java.io.ByteArrayOutputStream.write(int)
@@ -264,13 +245,10 @@ public class ByteArrayOutputStreamTest extends TestCase {
     /**
      * @tests java.io.ByteArrayOutputStream#write(byte[], int, int)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL_OK,
-            purpose = "Verifies write(byte[] b, int off, int len) method. " +
-                    "[Need verifications with different parameters.]",
-            targets = { @TestTarget(methodName = "write", 
-                                    methodArgs = { byte[].class, int.class, int.class })                         
-            }
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        method = "write",
+        args = {byte[].class, int.class, int.class}
     )        
     public void test_write$BII() {
         // Test for method void java.io.ByteArrayOutputStream.write(byte [],
@@ -286,48 +264,70 @@ public class ByteArrayOutputStreamTest extends TestCase {
     /**
      * @tests java.io.ByteArrayOutputStream#write(byte[], int, int)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL_OK,
-            purpose = "Regression for write(byte[] b, int off, int len) method.",
-            targets = { @TestTarget(methodName = "write", 
-                                    methodArgs = { byte[].class, int.class, int.class })                         
-            }
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Illegal argument checks.",
+        method = "write",
+        args = {byte[].class, int.class, int.class}
     )     
-    public void test_write$BII_2() {
-        //Regression for HARMONY-387
-        ByteArrayOutputStream obj = new ByteArrayOutputStream();
+    public void test_write$BII_Exception() {
+        byte[] target = new byte[10];
+        bos = new ByteArrayOutputStream();
         try {
-            obj.write(new byte [] {(byte)0x00}, -1, 0);
-            fail("IndexOutOfBoundsException expected");
+            bos.write(target, -1, 1);
+            fail("Test 1: IndexOutOfBoundsException expected.");
         } catch (IndexOutOfBoundsException t) {
             assertEquals(
-                    "IndexOutOfBoundsException rather than a subclass expected",
+                    "IndexOutOfBoundsException rather than a subclass expected;",
                     IndexOutOfBoundsException.class, t.getClass());
+        }
+        try {
+            bos.write(target, 0, -1);
+            fail("Test 2: IndexOutOfBoundsException expected.");
+        } catch (IndexOutOfBoundsException t) {
+            assertEquals(
+                    "IndexOutOfBoundsException rather than a subclass expected;",
+                    IndexOutOfBoundsException.class, t.getClass());
+        }
+        try {
+            bos.write(target, 1, target.length);
+            fail("Test 3: IndexOutOfBoundsException expected.");
+        } catch (IndexOutOfBoundsException t) {
+            assertEquals(
+                    "IndexOutOfBoundsException rather than a subclass expected;",
+                    IndexOutOfBoundsException.class, t.getClass());
+        }
+        try {
+            bos.write(null, 1, 1);
+            fail("Test 4: NullPointerException expected.");
+        } catch (NullPointerException t) {
+            // Expected.
         }
     }
 
     /**
      * @tests java.io.ByteArrayOutputStream#writeTo(java.io.OutputStream)
      */
-    @TestInfo(
-            level = TestLevel.PARTIAL,
-            purpose = "IOException checking missed.",
-            targets = { @TestTarget(methodName = "writeTo", 
-                                    methodArgs = { java.io.OutputStream.class })                         
-            }
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        method = "writeTo",
+        args = {java.io.OutputStream.class}
     )       
     public void test_writeToLjava_io_OutputStream() throws Exception {
-        // Test for method void
-        // java.io.ByteArrayOutputStream.writeTo(java.io.OutputStream)
-        java.io.ByteArrayOutputStream bos = new java.io.ByteArrayOutputStream();
-        java.io.ByteArrayOutputStream bos2 = new java.io.ByteArrayOutputStream();
-        bos.write(fileString.getBytes(), 0, 100);
-        bos.writeTo(bos2);
-        assertTrue("Returned incorrect String", bos2.toString().equals(
-                fileString.substring(0, 100)));
+        Support_OutputStream sos = new Support_OutputStream();
+        bos = new java.io.ByteArrayOutputStream();
+        bos.write(fileString.getBytes(), 0, 10);
+        bos.writeTo(sos);
+        assertTrue("Test 1: Incorrect string written.", 
+                sos.toString().equals(
+                        fileString.substring(0, 10)));
 
-        //Regression test for HARMONY-834
-        //no exception expected
-        new ByteArrayOutputStream().writeTo(new FileOutputStream(new FileDescriptor()));
+        sos.setThrowsException(true);
+        try {
+            bos.writeTo(sos);
+            fail("Test 2: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
     }
 }

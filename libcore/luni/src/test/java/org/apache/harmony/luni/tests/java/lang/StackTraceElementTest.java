@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,9 +16,9 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -42,15 +42,12 @@ public class StackTraceElementTest extends TestCase {
      * @tests java.lang.StackTraceElement#StackTraceElement(java.lang.String,
      *     java.lang.String, java.lang.String, int)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "StackTraceElement",
-          methodArgs = {java.lang.String.class, java.lang.String.class, java.lang.String.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "StackTraceElement",
+        args = {java.lang.String.class, java.lang.String.class, java.lang.String.class, int.class}
+    )
     public void
     test_ConstructorLjava_lang_StringLjava_lang_StringLjava_lang_StringI() {
         StackTraceElement ste2 = null;
@@ -103,15 +100,12 @@ public class StackTraceElementTest extends TestCase {
     /**
      * @tests java.lang.StackTraceElement#equals(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "equals",
+        args = {java.lang.Object.class}
+    )
     public void test_equalsLjava_lang_Object() {
         try {
             original.pureJavaMethod(new Object());
@@ -129,15 +123,12 @@ public class StackTraceElementTest extends TestCase {
     /**
      * @tests java.lang.StackTraceElement#getClassName()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getClassName",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getClassName",
+        args = {}
+    )
     public void test_getClassName() {
         try {
             original.pureJavaMethod(new Object());
@@ -156,15 +147,12 @@ public class StackTraceElementTest extends TestCase {
     /**
      * @tests java.lang.StackTraceElement#getFileName()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getFileName",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getFileName",
+        args = {}
+    )
     public void test_getFileName() {
         try {
             original.pureJavaMethod(new Object());
@@ -181,36 +169,30 @@ public class StackTraceElementTest extends TestCase {
     /**
      * @tests java.lang.StackTraceElement#getLineNumber()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getLineNumber",
-          methodArgs = {}
-        )
-    })
-    public void _test_getLineNumber() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getLineNumber",
+        args = {}
+    )
+    public void test_getLineNumber() {
         try {
             original.pureJavaMethod(new Object());
         } catch (Exception e) {
             assertEquals("Incorrect line number",
-                    24, e.getStackTrace()[0].getLineNumber());
+                    26, e.getStackTrace()[0].getLineNumber());
         }
     }
 
     /**
      * @tests java.lang.StackTraceElement#getMethodName()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getMethodName",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getMethodName",
+        args = {}
+    )
     public void test_getMethodName() {
         try {
             original.pureJavaMethod(new Object());
@@ -227,15 +209,12 @@ public class StackTraceElementTest extends TestCase {
     /**
      * @tests java.lang.StackTraceElement#hashCode()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "hashCode",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hashCode",
+        args = {}
+    )
     public void test_hashCode() {
         try {
             original.pureJavaMethod(new Object());
@@ -256,15 +235,12 @@ public class StackTraceElementTest extends TestCase {
     /**
      * @tests java.lang.StackTraceElement#isNativeMethod()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isNativeMethod",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isNativeMethod",
+        args = {}
+    )
     public void test_isNativeMethod() {
         try {
             original.pureJavaMethod(new Object());
@@ -283,16 +259,13 @@ public class StackTraceElementTest extends TestCase {
     /**
      * @tests java.lang.StackTraceElement#toString()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toString",
-          methodArgs = {}
-        )
-    })
-    public void _test_toString() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toString",
+        args = {}
+    )
+    public void test_toString() {
         try {
             original.pureJavaMethod(new Object());
         } catch (Exception e) {
@@ -304,7 +277,7 @@ public class StackTraceElementTest extends TestCase {
             assertTrue("String representation doesn't contain a file name",
                     ste.toString().contains("StackTraceElementOriginal.java"));
             assertTrue("String representation doesn't contain a line number",
-                    ste.toString().contains("24"));
+                    ste.toString().contains("26"));
             assertTrue("String representation doesn't contain a method name",
                     ste.toString().contains("pureJavaMethod"));
         }

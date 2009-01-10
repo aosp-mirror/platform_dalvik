@@ -17,16 +17,16 @@
 
 package org.apache.harmony.security.tests.java.security;
 
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+
+import tests.support.Support_ASimpleInputStream;
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
 @TestTargetClass(DigestInputStream.class)
 public class DigestInputStream2Test extends junit.framework.TestCase {
@@ -41,15 +41,12 @@ public class DigestInputStream2Test extends junit.framework.TestCase {
      * @tests java.security.DigestInputStream#DigestInputStream(java.io.InputStream,
      *        java.security.MessageDigest)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "Verifies case with non null parameters only",
-      targets = {
-        @TestTarget(
-          methodName = "DigestInputStream",
-          methodArgs = {java.io.InputStream.class, MessageDigest.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies case with non null parameters only",
+        method = "DigestInputStream",
+        args = {java.io.InputStream.class, java.security.MessageDigest.class}
+    )
     public void test_ConstructorLjava_io_InputStreamLjava_security_MessageDigest() {
         // Test for method java.security.DigestInputStream(java.io.InputStream,
         // java.security.MessageDigest)
@@ -60,15 +57,12 @@ public class DigestInputStream2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.DigestInputStream#getMessageDigest()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getMessageDigest",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getMessageDigest",
+        args = {}
+    )
     public void test_getMessageDigest() {
         // Test for method java.security.MessageDigest
         // java.security.DigestInputStream.getMessageDigest()
@@ -80,15 +74,12 @@ public class DigestInputStream2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.DigestInputStream#on(boolean)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "on",
-          methodArgs = {boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "on",
+        args = {boolean.class}
+    )
     public void test_onZ() throws Exception {
         // Test for method void java.security.DigestInputStream.on(boolean)
         MessageDigest originalDigest = (MessageDigest) (digest.clone());
@@ -121,15 +112,12 @@ public class DigestInputStream2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.DigestInputStream#read()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies just one positive case for method read()",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies just one positive case for method read()",
+        method = "read",
+        args = {}
+    )
     public void test_read() throws IOException {
         // Test for method int java.security.DigestInputStream.read()
         DigestInputStream dis = new DigestInputStream(inStream, digest);
@@ -145,15 +133,12 @@ public class DigestInputStream2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.DigestInputStream#read(byte[], int, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies just one positive case for method read(byte[], int, int)",
-      targets = {
-        @TestTarget(
-          methodName = "read",
-          methodArgs = {byte[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies one positive case for method read(byte[], int, int)",
+        method = "read",
+        args = {byte[].class, int.class, int.class}
+    )
     public void test_read$BII() throws IOException {
         // Test for method int java.security.DigestInputStream.read(byte [],
         // int, int)
@@ -181,17 +166,90 @@ public class DigestInputStream2Test extends junit.framework.TestCase {
     }
 
     /**
+     * @tests java.security.DigestInputStream#read(byte[], int, int)
+     */
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Illegal argument checks.",
+        method = "read",
+        args = {byte[].class, int.class, int.class}
+    )      
+    public void test_read$BII_Exception() throws IOException {
+        DigestInputStream is = new DigestInputStream(inStream, digest);
+        byte[] buf = null;
+        try {
+            is.read(buf, -1, 0);
+            fail("Test 1: NullPointerException expected.");
+        } catch (NullPointerException e) {
+            // Expected.
+        } 
+
+        buf = new byte[1000];        
+        try {
+            is.read(buf, -1, 0);
+            fail("Test 2: IndexOutOfBoundsException expected.");
+        } catch (IndexOutOfBoundsException e) {
+            // Expected.
+        }
+
+        try {
+            is.read(buf, 0, -1);
+            fail("Test 3: IndexOutOfBoundsException expected.");
+        } catch (IndexOutOfBoundsException e) {
+            // Expected.
+        } 
+        
+        try {
+            is.read(buf, -1, -1);
+            fail("Test 4: IndexOutOfBoundsException expected.");
+        } catch (IndexOutOfBoundsException e) {
+            // Expected.
+        } 
+
+        try {
+            is.read(buf, 0, 1001);
+            fail("Test 5: IndexOutOfBoundsException expected.");
+        } catch (IndexOutOfBoundsException e) {
+            // Expected.
+        } 
+
+        try {
+            is.read(buf, 1001, 0);
+            fail("Test 6: IndexOutOfBoundsException expected.");
+        } catch (IndexOutOfBoundsException e) {
+            // Expected.
+        } 
+
+        try {
+            is.read(buf, 500, 501);
+            fail("Test 7: IndexOutOfBoundsException expected.");
+        } catch (IndexOutOfBoundsException e) {
+            // Expected.
+        } 
+        
+        is.close();
+        
+        Support_ASimpleInputStream sis = new Support_ASimpleInputStream(true);
+        is = new DigestInputStream(sis, digest);
+        try {
+            is.read(buf, 0, 100);
+            fail("Test 9: IOException expected.");
+        } catch (IOException e) {
+            // Expected.
+        }
+        sis.throwExceptionOnNextUse = false;
+        is.close();
+    }
+    
+    /**
      * @tests java.security.DigestInputStream#setMessageDigest(java.security.MessageDigest)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setMessageDigest",
-          methodArgs = {MessageDigest.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setMessageDigest",
+        args = {java.security.MessageDigest.class}
+    )
     public void test_setMessageDigestLjava_security_MessageDigest() {
         // Test for method void
         // java.security.DigestInputStream.setMessageDigest(java.security.MessageDigest)

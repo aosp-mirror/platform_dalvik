@@ -17,26 +17,37 @@
 
 package tests.api.java.net;
 
+import dalvik.annotation.BrokenTest; 
 import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.io.File;
+import java.io.FilePermission;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.DatagramSocket;
 import java.net.MalformedURLException;
+import java.net.SocketException;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLStreamHandler;
 import java.net.URLStreamHandlerFactory;
+import java.security.CodeSource;
+import java.security.Permission;
+import java.security.PermissionCollection;
+import java.security.Permissions;
+import java.security.cert.Certificate;
 import java.util.Enumeration;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import java.util.Vector;
+import java.util.jar.Manifest;
 
 import org.apache.harmony.luni.util.InvalidJarIndexException;
+import org.apache.harmony.security.tests.support.TestCertUtils;
 
 import tests.support.Support_Configuration;
 import tests.support.resource.Support_Resources;
@@ -66,32 +77,61 @@ public class URLClassLoaderTest extends junit.framework.TestCase {
     }
     
     URLClassLoader ucl;
+    SecurityManager sm = new SecurityManager() {
+
+        public void checkPermission(Permission perm) {
+        }
+        
+        public void checkCreateClassLoader() {
+            throw new SecurityException();
+        }
+    };
 
     /**
      * @tests java.net.URLClassLoader#URLClassLoader(java.net.URL[])
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "SecurityException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "URLClassLoader",
-          methodArgs = {java.net.URL[].class}
-        )
-    })
-    public void test_Constructor$Ljava_net_URL() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "URLClassLoader",
+        args = {java.net.URL[].class}
+    )
+    public void test_Constructor$Ljava_net_URL() throws MalformedURLException {
         URL[] u = new URL[0];
         ucl = new URLClassLoader(u);
         assertTrue("Failed to set parent", ucl != null
                 && ucl.getParent() == URLClassLoader.getSystemClassLoader());
 
-        URLClassLoader loader = new URLClassLoader(new URL[] { null });
-        boolean exception = false;
+        
+        URL [] urls = {new URL("http://foo.com/foo"), 
+                       new URL("jar:file://foo.jar!/foo.c"), 
+                       new URL("ftp://foo1/foo2/foo.c")};
+        
+        URLClassLoader ucl1 = new URLClassLoader(urls);
+        assertTrue(urls.length == ucl1.getURLs().length);
+        
         try {
-            Class.forName("test", false, loader);
+            Class.forName("test", false, ucl);
             fail("Should throw ClassNotFoundException");
         } catch (ClassNotFoundException e) {
             // expected
+        }
+       
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            new URLClassLoader(u);
+            fail("SecurityException should be thrown.");
+        } catch (SecurityException e) {
+            // expected
+        } finally {
+            System.setSecurityManager(oldSm);
+        }
+        
+        try {
+            new URLClassLoader(new URL[] { null });
+        } catch(Exception e) {
+            fail("Unexpected exception was thrown: " + e.getMessage());
         }
     }
 
@@ -99,15 +139,12 @@ public class URLClassLoaderTest extends junit.framework.TestCase {
      * @tests java.net.URLClassLoader#URLClassLoader(java.net.URL[],
      *        java.lang.ClassLoader)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "SecurityException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "URLClassLoader",
-          methodArgs = {java.net.URL[].class, java.lang.ClassLoader.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "URLClassLoader",
+        args = {java.net.URL[].class, java.lang.ClassLoader.class}
+    )
     public void test_Constructor$Ljava_net_URLLjava_lang_ClassLoader() {
         ClassLoader cl = new BogusClassLoader();
         URL[] u = new URL[0];
@@ -115,21 +152,30 @@ public class URLClassLoaderTest extends junit.framework.TestCase {
         URL res = ucl.getResource("J");
         assertNotNull(res);
         assertEquals("Failed to set parent", "/BogusClassLoader", res.getFile());
+        
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            new URLClassLoader(u, cl);
+            fail("SecurityException should be thrown.");
+        } catch (SecurityException e) {
+            // expected
+        } finally {
+            System.setSecurityManager(oldSm);
+        }
     }
 
     /**
      * @tests java.net.URLClassLoader#findResources(java.lang.String)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "findResources",
-          methodArgs = {java.lang.String.class}
-        )
-    })
-    public void _test_findResourcesLjava_lang_String() throws IOException {
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "IOException checking missed.",
+        method = "findResources",
+        args = {java.lang.String.class}
+    )
+    @BrokenTest("web address used from support doesn't work anymore")
+    public void test_findResourcesLjava_lang_String() throws IOException {
         Enumeration res = null;
         String[] resValues = { "This is a test resource file.",
                 "This is a resource from a subdir" };
@@ -158,15 +204,12 @@ public class URLClassLoaderTest extends junit.framework.TestCase {
     /**
      * @tests java.net.URLClassLoader#getURLs()
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getURLs",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getURLs",
+        args = {}
+    )
     public void test_getURLs() throws MalformedURLException {
         URL[] urls = new URL[4];
         urls[0] = new URL("http://" + Support_Configuration.HomeAddress);
@@ -184,16 +227,14 @@ public class URLClassLoaderTest extends junit.framework.TestCase {
     /**
      * @tests java.net.URLClassLoader#newInstance(java.net.URL[])
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "newInstance",
-          methodArgs = {java.net.URL[].class}
-        )
-    })
-    public void _test_newInstance$Ljava_net_URL() throws MalformedURLException,
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "newInstance",
+        args = {java.net.URL[].class}
+    )
+    @BrokenTest("web address used from support doesn't work anymore")
+    public void test_newInstance$Ljava_net_URL() throws MalformedURLException,
             ClassNotFoundException {
         // Verify that loaded class' have correct permissions
         Class cl = null;
@@ -221,15 +262,12 @@ public class URLClassLoaderTest extends junit.framework.TestCase {
      * @tests java.net.URLClassLoader#newInstance(java.net.URL[],
      *        java.lang.ClassLoader)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "newInstance",
-          methodArgs = {java.net.URL[].class, java.lang.ClassLoader.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "newInstance",
+        args = {java.net.URL[].class, java.lang.ClassLoader.class}
+    )
     public void test_newInstance$Ljava_net_URLLjava_lang_ClassLoader() {
         ClassLoader cl = new BogusClassLoader();
         URL[] u = new URL[0];
@@ -243,15 +281,13 @@ public class URLClassLoaderTest extends junit.framework.TestCase {
      * @tests java.net.URLClassLoader#URLClassLoader(java.net.URL[],
      *        java.lang.ClassLoader, java.net.URLStreamHandlerFactory)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "SecurityException checking missed.",
-      targets = {
-        @TestTarget(
-          methodName = "URLClassLoader",
-          methodArgs = {java.net.URL[].class, java.lang.ClassLoader.class, java.net.URLStreamHandlerFactory.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "URLClassLoader",
+        args = {java.net.URL[].class, java.lang.ClassLoader.class, 
+                java.net.URLStreamHandlerFactory.class}
+    )
     public void test_Constructor$Ljava_net_URLLjava_lang_ClassLoaderLjava_net_URLStreamHandlerFactory() {
         class TestFactory implements URLStreamHandlerFactory {
             public URLStreamHandler createURLStreamHandler(String protocol) {
@@ -264,23 +300,146 @@ public class URLClassLoaderTest extends junit.framework.TestCase {
         URL res = ucl.getResource("J");
         assertNotNull(res);
         assertEquals("Failed to set parent", "/BogusClassLoader", res.getFile());
+        
+        SecurityManager oldSm = System.getSecurityManager();
+        System.setSecurityManager(sm);
+        try {
+            new URLClassLoader(u, cl, new TestFactory());
+            fail("SecurityException should be thrown.");
+        } catch (SecurityException e) {
+            // expected
+        } finally {
+            System.setSecurityManager(oldSm);
+        }
     }
 
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "addURL",
+        args = { URL.class }
+    )
+    public void test_addURLLjava_net_URL() throws MalformedURLException {
+        URL[] u = new URL[0];
+        
+        URL [] urls = {new URL("http://foo.com/foo"), 
+                       new URL("jar:file://foo.jar!/foo.c"), 
+                       new URL("ftp://foo1/foo2/foo.c"), null};
+        
+        TestURLClassLoader tucl = new TestURLClassLoader(u);
+        
+        for(int i = 0; i < urls.length;) {
+            tucl.addURL(urls[i]);
+            i++;
+            URL [] result = tucl.getURLs();
+            assertEquals("Result array length is incorrect: " + i, 
+                                                            i, result.length);
+            for(int j = 0; j < result.length; j++) {
+                assertEquals("Result array item is incorrect: " + j, 
+                                                            urls[j], result[j]);
+            }
+        }
+    }
+    
+    @TestTargetNew(
+        level = TestLevel.SUFFICIENT,
+        notes = "",
+        method = "getPermissions",
+        args = { CodeSource.class }
+    )    
+    public void test_getPermissions() throws MalformedURLException {
+        URL url = new URL("http://" + Support_Configuration.SpecialInetTestAddress);
+        Certificate[] chain = TestCertUtils.getCertChain();
+        CodeSource cs = new CodeSource(url, chain);
+        TestURLClassLoader cl = new TestURLClassLoader(new URL[] {url});
+        PermissionCollection permCol = cl.getPermissions(cs);
+        assertNotNull(permCol);
+        
+        URL url1 = new URL("file://foo/foo.c");
+        TestURLClassLoader cl1 = new TestURLClassLoader(new URL[] {url});
+        CodeSource cs1 = new CodeSource(url1, chain);
+        PermissionCollection permCol1 = cl1.getPermissions(cs1);
+        assertNotNull(permCol1);
+    }
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "definePackage",
+        args = { java.lang.String.class, java.util.jar.Manifest.class, 
+                 java.net.URL.class }
+    )
+    public void test_definePackage() throws MalformedURLException {
+        Manifest manifest = new Manifest();
+        URL[] u = new URL[0];
+        TestURLClassLoader tucl = new TestURLClassLoader(u);
+        
+        URL [] urls = {new URL("http://foo.com/foo"), 
+                new URL("jar:file://foo.jar!/foo.c"), 
+                new URL("ftp://foo1/foo2/foo.c"),
+                new URL("file://new/package/name/"),
+                null};
+        
+        String packageName = "new.package.name";
+        
+        for(int i = 0; i < urls.length; i++) {
+            Package pack = tucl.definePackage(packageName + i, manifest, urls[i]);
+            assertEquals(packageName + i, pack.getName());
+            assertNull("Implementation Title is not null", 
+                    pack.getImplementationTitle());
+            assertNull("Implementation Vendor is not null", 
+                    pack.getImplementationVendor());
+            assertNull("Implementation Version is not null.", 
+                    pack.getImplementationVersion());
+        }
+        
+        try {
+            tucl.definePackage(packageName + "0", manifest, null);
+            fail("IllegalArgumentException was not thrown.");
+        } catch(IllegalArgumentException iae) {
+            //expected
+        }
+    }
+    
+    class TestURLClassLoader extends URLClassLoader {
+        public TestURLClassLoader(URL[] urls) {
+            super(urls);
+        }
+        
+        public void addURL(URL url) {
+            super.addURL(url);
+        }
+        
+        public Package definePackage(String name,
+                                     Manifest man,
+                                     URL url)
+                                     throws IllegalArgumentException {
+            return super.definePackage(name, man, url);
+        }
+        
+        public Class<?> findClass(String name)
+                                        throws ClassNotFoundException {
+            return super.findClass(name);
+        }
+        
+        protected PermissionCollection getPermissions(CodeSource codesource) {
+            return super.getPermissions(codesource);
+        }
+    }
+    
     /**
      * @throws ClassNotFoundException
      * @throws IOException
      * @tests java.net.URLClassLoader#findClass(java.lang.String)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "findClass",
-          methodArgs = {java.lang.String.class}
-        )
-    })
-    public void _test_findClassLjava_lang_String()
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "findClass",
+        args = {java.lang.String.class}
+    )
+    @BrokenTest("")
+    public void test_findClassLjava_lang_String()
             throws ClassNotFoundException, IOException {
         File resources = Support_Resources.createTempFolder();
         String resPath = resources.toString();
@@ -413,16 +572,14 @@ public class URLClassLoaderTest extends junit.framework.TestCase {
     /**
      * @tests java.net.URLClassLoader#findResource(java.lang.String)
      */
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "findResource",
-          methodArgs = {java.lang.String.class}
-        )
-    })
-    public void _test_findResourceLjava_lang_String()
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "findResource",
+        args = {java.lang.String.class}
+    )
+    @BrokenTest("web address used from support doesn't work anymore")
+    public void test_findResourceLjava_lang_String()
             throws MalformedURLException {
         URL res = null;
 
@@ -448,22 +605,23 @@ public class URLClassLoaderTest extends junit.framework.TestCase {
                 "This is a test resource file"));
     }
     
-@TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Checks getResource, indirectly checks findResource",
-      targets = {
-        @TestTarget(
-          methodName = "getResource",
-          methodArgs = {java.lang.String.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "Checks getResource, indirectly checks findResource",
+            method = "getResource",
+            args = {java.lang.String.class}
         ),
-        @TestTarget(
-                methodName = "findResource",
-                methodArgs = {java.lang.String.class}
-              )
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "Checks getResource, indirectly checks findResource",
+            method = "findResource",
+            args = {java.lang.String.class}
+        )
     })
     public void testFindResource_H3461() throws Exception {
-        File userDir = new File(System.getProperty("user.dir"));
-        File dir = new File(userDir, "encode#me");
+        File tmpDir = new File(System.getProperty("java.io.tmpdir"));
+        File dir = new File(tmpDir, "encode#me");
         File f, f2;
         URLClassLoader loader;
         URL dirUrl;
@@ -490,6 +648,12 @@ public class URLClassLoaderTest extends junit.framework.TestCase {
     /**
      * @tests java.net.URLClassLoader#getResource(java.lang.String)
      */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getResource",
+        args = {java.lang.String.class}
+    )    
     public void test_getResourceLjava_lang_String()
             throws MalformedURLException {
         URL url1 = new URL("file:///");
@@ -515,15 +679,12 @@ public class URLClassLoaderTest extends junit.framework.TestCase {
     /**
      * Regression for Harmony-2237 
      */
-@TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Regression test",
-      targets = {
-        @TestTarget(
-          methodName = "findResource",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Regression test",
+        method = "findResource",
+        args = {java.lang.String.class}
+    )
     public void test_getResource() throws Exception {        
         URLClassLoader urlLoader = getURLClassLoader();
         assertNull(urlLoader.findResource("XXX")); //$NON-NLS-1$

@@ -21,9 +21,9 @@
 
 package tests.org.w3c.dom;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import org.w3c.dom.Node;
@@ -79,15 +79,12 @@ public final class Prefix extends DOMTestCase {
      * @throws Throwable
      *             Any uncaught exception causes test to fail
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that getPrefix method can return null.",
-      targets = {
-        @TestTarget(
-          methodName = "getPrefix",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies that getPrefix method can return null.",
+        method = "getPrefix",
+        args = {}
+    )
     public void testGetPrefix1() throws Throwable {
         Document doc;
         Node createdNode;
@@ -97,15 +94,12 @@ public final class Prefix extends DOMTestCase {
         prefix = createdNode.getPrefix();
         assertNull("throw_Null", prefix);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies positive functionality of getPrefix method.",
-      targets = {
-        @TestTarget(
-          methodName = "getPrefix",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies positive functionality of getPrefix method.",
+        method = "getPrefix",
+        args = {}
+    )
     public void testGetPrefix2() throws Throwable {
         Document doc;
         NodeList elementList;
@@ -120,15 +114,12 @@ public final class Prefix extends DOMTestCase {
         prefix = textNode.getPrefix();
         assertNull("textNodePrefix", prefix);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies positive functionality of getPrefix method.",
-      targets = {
-        @TestTarget(
-          methodName = "getPrefix",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies positive functionality of getPrefix method.",
+        method = "getPrefix",
+        args = {}
+    )
     public void testGetPrefix3() throws Throwable {
         Document doc;
         NodeList elementList;
@@ -141,15 +132,12 @@ public final class Prefix extends DOMTestCase {
         prefix = testEmployee.getPrefix();
         assertEquals("prefix", "emp", prefix);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that getPrefix method returns null.",
-      targets = {
-        @TestTarget(
-          methodName = "getPrefix",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies that getPrefix method returns null.",
+        method = "getPrefix",
+        args = {}
+    )
     public void testGetPrefix4() throws Throwable {
         Document doc;
         NodeList elementList;
@@ -161,16 +149,12 @@ public final class Prefix extends DOMTestCase {
         prefix = testEmployee.getPrefix();
         assertNull("throw_Null", prefix);
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that getPrefix method throws DOMException with " +
-            "NAMESPACE_ERR code.",
-      targets = {
-        @TestTarget(
-          methodName = "getPrefix",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies that getPrefix method throws DOMException with NAMESPACE_ERR code.",
+        method = "getPrefix",
+        args = {}
+    )
     public void testGetPrefix5() throws Throwable {
         Document doc;
         NodeList elementList;
@@ -192,16 +176,12 @@ public final class Prefix extends DOMTestCase {
             assertTrue("throw_NAMESPACE_ERR", success);
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that getPrefix method throws DOMException with " +
-            "INVALID_CHARACTER_ERR code.",
-      targets = {
-        @TestTarget(
-          methodName = "getPrefix",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies that getPrefix method throws DOMException with INVALID_CHARACTER_ERR code.",
+        method = "getPrefix",
+        args = {}
+    )
     public void _testGetPrefix6() throws Throwable {
         Document doc;
         NodeList elementList;
@@ -220,16 +200,12 @@ public final class Prefix extends DOMTestCase {
             assertTrue("throw_INVALID_CHARACTER_ERR", success);
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that getPrefix method throws DOMException with " +
-            "NAMESPACE_ERR code.",
-      targets = {
-        @TestTarget(
-          methodName = "getPrefix",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies that getPrefix method throws DOMException with NAMESPACE_ERR code.",
+        method = "getPrefix",
+        args = {}
+    )
     public void testGetPrefix7() throws Throwable {
         Document doc;
         NodeList elementList;
@@ -282,16 +258,12 @@ public final class Prefix extends DOMTestCase {
 //            assertTrue("throw_NO_MODIFICATION_ALLOWED_ERR", success);
 //        }
 //    }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that getPrefix method throws DOMException with " +
-            "NAMESPACE_ERR code.",
-      targets = {
-        @TestTarget(
-          methodName = "getPrefix",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies that getPrefix method throws DOMException with NAMESPACE_ERR code.",
+        method = "getPrefix",
+        args = {}
+    )
     public void _testGetPrefix9() throws Throwable {
         Document doc;
         NodeList elementList;
@@ -312,16 +284,12 @@ public final class Prefix extends DOMTestCase {
             assertTrue("throw_NAMESPACE_ERR", success);
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that getPrefix method throws DOMException with " +
-            "NAMESPACE_ERR code.",
-      targets = {
-        @TestTarget(
-          methodName = "getPrefix",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies that getPrefix method throws DOMException with NAMESPACE_ERR code.",
+        method = "getPrefix",
+        args = {}
+    )
     public void testGetPrefix10() throws Throwable {
         Document doc;
         NodeList elementList;
@@ -340,16 +308,12 @@ public final class Prefix extends DOMTestCase {
             assertTrue("throw_NAMESPACE_ERR", success);
         }
     }
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that getPrefix method throws DOMException with " +
-            "NAMESPACE_ERR code.",
-      targets = {
-        @TestTarget(
-          methodName = "getPrefix",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies that getPrefix method throws DOMException with NAMESPACE_ERR code.",
+        method = "getPrefix",
+        args = {}
+    )
     public void testGetPrefix11() throws Throwable {
         Document doc;
         NodeList elementList;

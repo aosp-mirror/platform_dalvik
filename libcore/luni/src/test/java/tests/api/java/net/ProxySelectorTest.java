@@ -16,9 +16,9 @@
 package tests.api.java.net;
 
 import dalvik.annotation.TestTargetClass; 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -85,15 +85,12 @@ public class ProxySelectorTest extends TestCase {
     /**
      * @tests java.net.ProxySelector#getDefault()
      */
-@TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "This is a complete subset of tests for getDefault method.",
-      targets = {
-        @TestTarget(
-          methodName = "getDefault",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "This is a complete subset of tests for getDefault method.",
+        method = "getDefault",
+        args = {}
+    )
     public void test_getDefault() {
         ProxySelector selector1 = ProxySelector.getDefault();
         assertNotNull(selector1);
@@ -105,15 +102,12 @@ public class ProxySelectorTest extends TestCase {
     /**
      * @tests java.net.ProxySelector#getDefault()
      */
-@TestInfo(
-          level = TestLevel.PARTIAL_OK,
-          purpose = "This is a complete subset of tests for getDefault method.",
-          targets = {
-            @TestTarget(
-              methodName = "getDefault",
-              methodArgs = {}
-            )
-        })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "This is a complete subset of tests for getDefault method.",
+        method = "getDefault",
+        args = {}
+    )
     public void test_getDefault_Security() {
         SecurityManager orignalSecurityManager = System.getSecurityManager();
         try {
@@ -136,13 +130,18 @@ public class ProxySelectorTest extends TestCase {
     /**
      * @tests java.net.ProxySelector#setDefault(ProxySelector)}
      */
-@TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "This is a complete subset of tests for setDefault method.",
-      targets = {
-        @TestTarget(
-          methodName = "setDefault",
-          methodArgs = {ProxySelector.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "This is a complete subset of tests for setDefault method.",
+            method = "setDefault",
+            args = {java.net.ProxySelector.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "ProxySelector",
+            args = {}
         )
     })
     public void test_setDefaultLjava_net_ProxySelector() {
@@ -162,15 +161,12 @@ public class ProxySelectorTest extends TestCase {
     /**
      * @tests java.net.ProxySelector#setDefault(ProxySelector)}
      */
-@TestInfo(
-          level = TestLevel.PARTIAL_OK,
-          purpose = "This is a complete subset of tests for setDefault method.",
-          targets = {
-            @TestTarget(
-              methodName = "setDefault",
-              methodArgs = {ProxySelector.class}
-            )
-        })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "This is a complete subset of tests for setDefault method.",
+        method = "setDefault",
+        args = {java.net.ProxySelector.class}
+    )
     public void test_setDefaultLjava_net_ProxySelector_Security() {
         ProxySelector originalSelector = ProxySelector.getDefault();
         SecurityManager orignalSecurityManager = System.getSecurityManager();
@@ -196,15 +192,12 @@ public class ProxySelectorTest extends TestCase {
     /**
      * @tests java.net.ProxySelector#select(URI)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "This is a complete subset of tests for select method.",
-      targets = {
-        @TestTarget(
-          methodName = "select",
-          methodArgs = {URI.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "This is a complete subset of tests for select method.",
+        method = "select",
+        args = {java.net.URI.class}
+    )
     public void test_selectLjava_net_URI_SelectExact()
             throws URISyntaxException {
         // no proxy, return a proxyList only contains NO_PROXY
@@ -241,15 +234,12 @@ public class ProxySelectorTest extends TestCase {
     /**
      * @tests java.net.ProxySelector#select(URI)
      */
-@TestInfo(
-          level = TestLevel.PARTIAL_OK,
-          purpose = "This is a complete subset of tests for select method.",
-          targets = {
-            @TestTarget(
-              methodName = "select",
-              methodArgs = {URI.class}
-            )
-        })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "This is a complete subset of tests for select method.",
+        method = "select",
+        args = {java.net.URI.class}
+    )
     public void test_selectLjava_net_URI_SelectExact_NullHost()
             throws URISyntaxException {
         // regression test for Harmony-1063
@@ -295,15 +285,12 @@ public class ProxySelectorTest extends TestCase {
     /**
      * @tests java.net.ProxySelector#select(URI)
      */
-@TestInfo(
-          level = TestLevel.PARTIAL_OK,
-          purpose = "This is a complete subset of tests for select method.",
-          targets = {
-            @TestTarget(
-              methodName = "select",
-              methodArgs = {URI.class}
-            )
-        })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "This is a complete subset of tests for select method.",
+        method = "select",
+        args = {java.net.URI.class}
+    )
     public void test_selectLjava_net_URI_SelectExact_DefaultPort()
             throws URISyntaxException {
         // set http proxy
@@ -333,15 +320,12 @@ public class ProxySelectorTest extends TestCase {
     /**
      * @tests java.net.ProxySelector#select(URI)
      */
-@TestInfo(
-          level = TestLevel.PARTIAL_OK,
-          purpose = "This is a complete subset of tests for select method.",
-          targets = {
-            @TestTarget(
-              methodName = "select",
-              methodArgs = {URI.class}
-            )
-        })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "This is a complete subset of tests for select method.",
+        method = "select",
+        args = {java.net.URI.class}
+    )
     public void test_selectLjava_net_URI_SelectExact_InvalidPort()
             throws URISyntaxException {
         final String INVALID_PORT = "abc";
@@ -409,15 +393,12 @@ public class ProxySelectorTest extends TestCase {
     /**
      * @tests java.net.ProxySelector#select(URI)
      */
-@TestInfo(
-          level = TestLevel.PARTIAL_OK,
-          purpose = "This is a complete subset of tests for select method.",
-          targets = {
-            @TestTarget(
-              methodName = "select",
-              methodArgs = {URI.class}
-            )
-        })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "This is a complete subset of tests for select method.",
+        method = "select",
+        args = {java.net.URI.class}
+    )
     public void test_selectLjava_net_URI_SelectLikeHTTP()
             throws URISyntaxException {
         System.setProperty("http.proxyHost", "");
@@ -438,15 +419,12 @@ public class ProxySelectorTest extends TestCase {
     /**
      * @tests java.net.ProxySelector#select(URI)
      */
-@TestInfo(
-          level = TestLevel.PARTIAL_OK,
-          purpose = "This is a complete subset of tests for select method.",
-          targets = {
-            @TestTarget(
-              methodName = "select",
-              methodArgs = {URI.class}
-            )
-        })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "This is a complete subset of tests for select method.",
+        method = "select",
+        args = {java.net.URI.class}
+    )
     public void test_selectLjava_net_URI_SelectNoHTTP()
             throws URISyntaxException {
         // set https proxy
@@ -463,15 +441,12 @@ public class ProxySelectorTest extends TestCase {
     /**
      * @tests java.net.ProxySelector#select(URI)
      */
-@TestInfo(
-          level = TestLevel.PARTIAL_OK,
-          purpose = "This is a complete subset of tests for select method.",
-          targets = {
-            @TestTarget(
-              methodName = "select",
-              methodArgs = {URI.class}
-            )
-        })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "This is a complete subset of tests for select method.",
+        method = "select",
+        args = {java.net.URI.class}
+    )
     public void test_selectLjava_net_URI_SelectLikeHTTPS()
             throws URISyntaxException {
         // set http proxy
@@ -493,15 +468,12 @@ public class ProxySelectorTest extends TestCase {
     /**
      * @tests java.net.ProxySelector#select(URI)
      */
-@TestInfo(
-          level = TestLevel.PARTIAL_OK,
-          purpose = "This is a complete subset of tests for select method.",
-          targets = {
-            @TestTarget(
-              methodName = "select",
-              methodArgs = {URI.class}
-            )
-        })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "This is a complete subset of tests for select method.",
+        method = "select",
+        args = {java.net.URI.class}
+    )
     public void test_selectLjava_net_URI_SelectNoHTTPS()
             throws URISyntaxException {
         // set https proxy
@@ -518,15 +490,12 @@ public class ProxySelectorTest extends TestCase {
     /**
      * @tests java.net.ProxySelector#select(URI)
      */
-    @TestInfo(
-              level = TestLevel.PARTIAL_OK,
-              purpose = "This is a complete subset of tests for select method.",
-              targets = {
-                @TestTarget(
-                  methodName = "select",
-                  methodArgs = {URI.class}
-                )
-            })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "This is a complete subset of tests for select method.",
+        method = "select",
+        args = {java.net.URI.class}
+    )
     public void test_selectLjava_net_URI_SelectLikeFTP()
             throws URISyntaxException {
         // set http proxy
@@ -548,15 +517,12 @@ public class ProxySelectorTest extends TestCase {
     /**
      * @tests java.net.ProxySelector#select(URI)
      */
-    @TestInfo(
-              level = TestLevel.PARTIAL_OK,
-              purpose = "This is a complete subset of tests for select method.",
-              targets = {
-                @TestTarget(
-                  methodName = "select",
-                  methodArgs = {URI.class}
-                )
-            })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "This is a complete subset of tests for select method.",
+        method = "select",
+        args = {java.net.URI.class}
+    )
     public void test_selectLjava_net_URI_SelectNoFTP()
             throws URISyntaxException {
         // set http proxy
@@ -573,15 +539,12 @@ public class ProxySelectorTest extends TestCase {
     /**
      * @tests java.net.ProxySelector#select(URI)
      */
-    @TestInfo(
-              level = TestLevel.PARTIAL_OK,
-              purpose = "This is a complete subset of tests for select method.",
-              targets = {
-                @TestTarget(
-                  methodName = "select",
-                  methodArgs = {URI.class}
-                )
-            })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "This is a complete subset of tests for select method.",
+        method = "select",
+        args = {java.net.URI.class}
+    )
     public void test_selectLjava_net_URI_SelectNoSOCKS()
             throws URISyntaxException {
         // set http proxy
@@ -601,15 +564,12 @@ public class ProxySelectorTest extends TestCase {
     /**
      * @tests java.net.ProxySelector#select(URI)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "This is a complete subset of tests for connectFailed method.",
-      targets = {
-        @TestTarget(
-          methodName = "connectFailed",
-          methodArgs = {URI.class, SocketAddress.class, IOException.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "This is a complete subset of tests for connectFailed method.",
+        method = "connectFailed",
+        args = {java.net.URI.class, java.net.SocketAddress.class, java.io.IOException.class}
+    )
     public void test_connectionFailedLjava_net_URILjava_net_SocketAddressLjava_io_IOException()
             throws URISyntaxException {
         // set http proxy
@@ -643,15 +603,12 @@ public class ProxySelectorTest extends TestCase {
     /**
      * @tests java.net.ProxySelector#select(URI)
      */
-@TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "This is a complete subset of tests for connectFailed method.",
-      targets = {
-        @TestTarget(
-          methodName = "connectFailed",
-          methodArgs = {URI.class, SocketAddress.class, IOException.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "This is a complete subset of tests for connectFailed method.",
+        method = "connectFailed",
+        args = {java.net.URI.class, java.net.SocketAddress.class, java.io.IOException.class}
+    )
     public void test_connectionFailedLjava_net_URILjava_net_SocketAddressLjava_io_IOException_IllegalArguement()
             throws URISyntaxException {
         SocketAddress sa = InetSocketAddress.createUnresolved("127.0.0.1", 0);
@@ -679,15 +636,12 @@ public class ProxySelectorTest extends TestCase {
     /**
      * @tests java.net.ProxySelector#select(URI)
      */
-    @TestInfo(
-              level = TestLevel.PARTIAL_OK,
-              purpose = "This is a complete subset of tests for select method.",
-              targets = {
-                @TestTarget(
-                  methodName = "select",
-                  methodArgs = {URI.class}
-                )
-            })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "This is a complete subset of tests for select method.",
+        method = "select",
+        args = {java.net.URI.class}
+    )
     public void test_selectLjava_net_URI_IllegalArgument()
             throws URISyntaxException {
         URI[] illegalUris = { new URI("abc"), new URI("http"), null };

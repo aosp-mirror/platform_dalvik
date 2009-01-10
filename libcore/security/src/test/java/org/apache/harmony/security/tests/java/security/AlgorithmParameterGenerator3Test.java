@@ -17,10 +17,9 @@
 
 package org.apache.harmony.security.tests.java.security;
 
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
 import java.math.BigInteger;
 import java.security.AlgorithmParameterGenerator;
@@ -38,15 +37,12 @@ public class AlgorithmParameterGenerator3Test extends junit.framework.TestCase {
     /**
      * @tests java.security.AlgorithmParameterGenerator#generateParameters()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "generateParameters",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "generateParameters",
+        args = {}
+    )
     public void test_generateParameters() throws Exception {
 
         //fail("Takes ages. Problem with SecureRandom and stub math ?");
@@ -65,15 +61,12 @@ public class AlgorithmParameterGenerator3Test extends junit.framework.TestCase {
     /**
      * @tests java.security.AlgorithmParameterGenerator#getAlgorithm()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getAlgorithm",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getAlgorithm",
+        args = {}
+    )
     public void test_getAlgorithm() throws Exception {
         // Test for method java.lang.String
         // java.security.AlgorithmParameterGenerator.getAlgorithm()
@@ -85,15 +78,12 @@ public class AlgorithmParameterGenerator3Test extends junit.framework.TestCase {
     /**
      * @tests java.security.AlgorithmParameterGenerator#getInstance(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies getInstance with parameter",
-      targets = {
-        @TestTarget(
-          methodName = "getInstance",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies getInstance with parameter",
+        method = "getInstance",
+        args = {java.lang.String.class}
+    )
     public void test_getInstanceLjava_lang_String() throws Exception {
         // Test for method java.security.AlgorithmParameterGenerator
         // java.security.AlgorithmParameterGenerator.getInstance(java.lang.String)
@@ -104,15 +94,12 @@ public class AlgorithmParameterGenerator3Test extends junit.framework.TestCase {
      * @tests java.security.AlgorithmParameterGenerator#getInstance(java.lang.String,
      *        java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Test NoSuchAlgorithmException is missed",
-      targets = {
-        @TestTarget(
-          methodName = "getInstance",
-          methodArgs = {String.class, String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Test NoSuchAlgorithmException is missed",
+        method = "getInstance",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void test_getInstanceLjava_lang_StringLjava_lang_String() throws Exception {
         // Test for method java.security.AlgorithmParameterGenerator
         // java.security.AlgorithmParameterGenerator.getInstance(java.lang.String,
@@ -157,15 +144,12 @@ public class AlgorithmParameterGenerator3Test extends junit.framework.TestCase {
     /**
      * @tests java.security.AlgorithmParameterGenerator#getProvider()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Verifies provider with null parameter",
-      targets = {
-        @TestTarget(
-          methodName = "getProvider",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies provider with null parameter",
+        method = "getProvider",
+        args = {}
+    )
     public void test_getProvider() throws Exception {
         // Test for method java.security.Provider
         // java.security.AlgorithmParameterGenerator.getProvider()
@@ -178,59 +162,69 @@ public class AlgorithmParameterGenerator3Test extends junit.framework.TestCase {
     /**
      * @tests java.security.AlgorithmParameterGenerator#init(int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Boundary/invalid/negative parameters checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "init",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "init",
+        args = {int.class}
+    )
     public void test_initI() throws Exception {
         // Test for method void
         // java.security.AlgorithmParameterGenerator.init(int)
             // checks that no exception is thrown
+        int[] valid = {512, 576, 640, 960, 1024};
         AlgorithmParameterGenerator gen = AlgorithmParameterGenerator
                 .getInstance("DSA");
-        gen.init(1024);
+        
+        for (int i = 0; i < valid.length; i++) {
+            try {
+                gen.init(valid[i]);
+            } catch (Exception e) {
+                fail("Exception should not be thrown for valid parameter" + valid[i]);
+                
+            }
+        }
     }
 
     /**
      * @tests java.security.AlgorithmParameterGenerator#init(int,
      *        java.security.SecureRandom)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Boundary/invalid/negative parameters checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "init",
-          methodArgs = {int.class, SecureRandom.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "init",
+        args = {int.class, java.security.SecureRandom.class}
+    )
     public void test_initILjava_security_SecureRandom() throws Exception {
         // Test for method void
         // java.security.AlgorithmParameterGenerator.init(int,
         // java.security.SecureRandom)
             // checks that no exception is thrown
+        int[] valid = {512, 576, 640, 960, 1024};
         AlgorithmParameterGenerator gen = AlgorithmParameterGenerator
                 .getInstance("DSA");
-        gen.init(1024, new SecureRandom());
+
+        for (int i = 0; i < valid.length; i++) {
+            try {
+                gen.init(valid[i], new SecureRandom());
+                gen.init(valid[i], null);
+            } catch (Exception e) {
+                fail("Exception should not be thrown for valid parameter" + valid[i]);
+                
+            }
+        }
     }
 
     /**
      * @tests java.security.AlgorithmParameterGenerator#init(java.security.spec.AlgorithmParameterSpec)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies InvalidAlgorithmParameterException exception only",
-      targets = {
-        @TestTarget(
-          methodName = "init",
-          methodArgs = {java.security.spec.AlgorithmParameterSpec.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies InvalidAlgorithmParameterException exception only",
+        method = "init",
+        args = {java.security.spec.AlgorithmParameterSpec.class}
+    )
     public void test_initLjava_security_spec_AlgorithmParameterSpec() throws Exception {
         // Test for method void
         // java.security.AlgorithmParameterGenerator.init(java.security.spec.AlgorithmParameterSpec)
@@ -251,15 +245,12 @@ public class AlgorithmParameterGenerator3Test extends junit.framework.TestCase {
      * @tests java.security.AlgorithmParameterGenerator#init(java.security.spec.AlgorithmParameterSpec,
      *        java.security.SecureRandom)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies InvalidAlgorithmParameterException exception only",
-      targets = {
-        @TestTarget(
-          methodName = "init",
-          methodArgs = {java.security.spec.AlgorithmParameterSpec.class, SecureRandom.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verifies InvalidAlgorithmParameterException exception only",
+        method = "init",
+        args = {java.security.spec.AlgorithmParameterSpec.class, java.security.SecureRandom.class}
+    )
     public void test_initLjava_security_spec_AlgorithmParameterSpecLjava_security_SecureRandom() throws Exception {
         // Test for method void
         // java.security.AlgorithmParameterGenerator.init(java.security.spec.AlgorithmParameterSpec,

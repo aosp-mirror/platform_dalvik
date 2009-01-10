@@ -23,19 +23,20 @@
 package tests.security.cert;
 
 
-import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
 import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 
 import junit.framework.TestCase;
+
+import org.apache.harmony.security.tests.support.cert.MyCertificateFactorySpi;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.InputStream;
 import java.security.cert.CRL;
 import java.security.cert.CRLException;
-import java.security.cert.CertPath;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactorySpi;
@@ -43,8 +44,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-
-import org.apache.harmony.security.tests.support.cert.MyCertificateFactorySpi;
 
 /**
  * Tests for <code>CertificateFactorySpi</code> class constructors and methods
@@ -65,15 +64,12 @@ public class CertificateFactorySpiTest extends TestCase {
      * Test for <code>CertificateFactorySpi</code> constructor 
      * Assertion: constructs CertificateFactorySpi
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Verifies exceptions.",
-      targets = {
-        @TestTarget(
-          methodName = "CertificateFactorySpi",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies exceptions.",
+        method = "CertificateFactorySpi",
+        args = {}
+    )
     public void testCertificateFactorySpi01() throws CertificateException,
             CRLException {
         CertificateFactorySpi certFactorySpi = new extCertificateFactorySpi();
@@ -106,7 +102,7 @@ public class CertificateFactorySpiTest extends TestCase {
             fail("CertificateException must be thrown");
         } catch (CertificateException e) {
         }
-        Collection col = certFactorySpi.engineGenerateCertificates(bais);
+        Collection<? extends Certificate> col = certFactorySpi.engineGenerateCertificates(bais);
         assertNull("Not null Collection", col);
         try {
             certFactorySpi.engineGenerateCertificates(null);
@@ -122,7 +118,7 @@ public class CertificateFactorySpiTest extends TestCase {
         } catch (CRLException e) {
         }
 
-        Collection colCRL = certFactorySpi.engineGenerateCRLs(bais);
+        Collection<? extends CRL> colCRL = certFactorySpi.engineGenerateCRLs(bais);
         assertNull("Not null CRL", colCRL);
         try {
             certFactorySpi.engineGenerateCRLs(null);
@@ -135,13 +131,18 @@ public class CertificateFactorySpiTest extends TestCase {
      * Test for <code>CertificateFactorySpi</code> constructor 
      * Assertion: constructs CertificateFactorySpi
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "CertificateFactorySpi",
-          methodArgs = {}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "",
+            method = "CertificateFactorySpi",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "engineGetCertPathEncodings",
+            args = {}
         )
     })
     public void testCertificateFactorySpi02() throws CertificateException,
@@ -181,7 +182,7 @@ public class CertificateFactorySpiTest extends TestCase {
         Certificate cert = certFactorySpi
                 .engineGenerateCertificate(dis);
         assertNull("Result must be null", cert);
-        Collection col = certFactorySpi
+        Collection<? extends Certificate> col = certFactorySpi
                 .engineGenerateCertificates(dis);
         assertNull("Result must be null", col);
 
@@ -197,8 +198,8 @@ public class CertificateFactorySpiTest extends TestCase {
         }
         CRL crl = certFactorySpi.engineGenerateCRL(dis);
         assertNull("Result must be null", crl);
-        col = certFactorySpi.engineGenerateCRLs(dis);
-        assertNull("Result must be null", col);
+        Collection<? extends CRL> colcrl = certFactorySpi.engineGenerateCRLs(dis);
+        assertNull("Result must be null", colcrl);
 
         List<Certificate> list = null;
         try { 
@@ -206,7 +207,7 @@ public class CertificateFactorySpiTest extends TestCase {
             fail("NullPointerException must be thrown");
         } catch (NullPointerException e) {            
         }
-        Iterator enc = certFactorySpi.engineGetCertPathEncodings();
+        Iterator<String> enc = certFactorySpi.engineGetCertPathEncodings();
         assertTrue("Incorrect Iterator", enc.hasNext());
     }
     
@@ -214,15 +215,12 @@ public class CertificateFactorySpiTest extends TestCase {
      * Test for <code>CertificateFactorySpi</code> constructor 
      * Assertion: constructs CertificateFactorySpi
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "CertificateFactorySpi",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "CertificateFactorySpi",
+        args = {}
+    )
     public void testCertificateFactorySpi03() throws CertificateException,
             CRLException {
         CertificateFactorySpi certFactorySpi = new MyCertificateFactorySpi();
@@ -260,7 +258,7 @@ public class CertificateFactorySpiTest extends TestCase {
         Certificate cert = certFactorySpi
                 .engineGenerateCertificate(dis);
         assertNull("Result must be null", cert);
-        Collection col = certFactorySpi
+        Collection<? extends Certificate> col = certFactorySpi
                 .engineGenerateCertificates(dis);
         assertNull("Result must be null", col);
 
@@ -276,12 +274,12 @@ public class CertificateFactorySpiTest extends TestCase {
         }
         CRL crl = certFactorySpi.engineGenerateCRL(dis);
         assertNull("Result must be null", crl);
-        col = certFactorySpi.engineGenerateCRLs(dis);
-        assertNull("Result must be null", col);
+        Collection<? extends CRL> colcrl = certFactorySpi.engineGenerateCRLs(dis);
+        assertNull("Result must be null", colcrl);
 
         List<Certificate> list = null;
         certFactorySpi.engineGenerateCertPath(list);
-        Iterator enc = certFactorySpi.engineGetCertPathEncodings();
+        Iterator<String> enc = certFactorySpi.engineGetCertPathEncodings();
         assertFalse("Incorrect Iterator", enc.hasNext());
     }
 
@@ -290,15 +288,12 @@ public class CertificateFactorySpiTest extends TestCase {
      * Assertion: Generates a <code>CertPath</code> object and initializes it
      * with the data read from the <code>InputStream</code>
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that engineGenerateCertPath method returns null.",
-      targets = {
-        @TestTarget(
-          methodName = "engineGenerateCertPath",
-          methodArgs = {java.io.InputStream.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies that engineGenerateCertPath method returns null.",
+        method = "engineGenerateCertPath",
+        args = {java.io.InputStream.class}
+    )
     public void testEngineGenerateCertPathLjava_io_InputStream01() {
         CertificateFactorySpi certFactorySpi = new MyCertificateFactorySpi();
 
@@ -318,15 +313,12 @@ public class CertificateFactorySpiTest extends TestCase {
      * Assertion: Generates a <code>CertPath</code> object and initializes it
      * with the data read from the <code>InputStream</code>
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies UnsupportedOperationException.",
-      targets = {
-        @TestTarget(
-          methodName = "engineGenerateCertPath",
-          methodArgs = {java.io.InputStream.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies UnsupportedOperationException.",
+        method = "engineGenerateCertPath",
+        args = {java.io.InputStream.class}
+    )
     public void testEngineGenerateCertPathLjava_io_InputStream02() {
         CertificateFactorySpi certFactorySpi = new extCertificateFactorySpi();
 
@@ -348,15 +340,12 @@ public class CertificateFactorySpiTest extends TestCase {
      * method. Assertion: generates a <code>CertPath</code> object and
      * initializes it with the data read from the <code>InputStream</code>
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies CertificateException.",
-      targets = {
-        @TestTarget(
-          methodName = "engineGenerateCertPath",
-          methodArgs = {java.io.InputStream.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies CertificateException.",
+        method = "engineGenerateCertPath",
+        args = {java.io.InputStream.class, java.lang.String.class}
+    )
     public void testEngineGenerateCertPathLjava_io_InputStream_Ljava_lang_String01() {
         CertificateFactorySpi certFactorySpi = new MyCertificateFactorySpi();
         MyCertificateFactorySpi.putMode(true);
@@ -383,15 +372,12 @@ public class CertificateFactorySpiTest extends TestCase {
      * method. Assertion: generates a <code>CertPath</code> object and
      * initializes it with the data read from the <code>InputStream</code>
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies UnsupportedOperationException.",
-      targets = {
-        @TestTarget(
-          methodName = "engineGenerateCertPath",
-          methodArgs = {java.io.InputStream.class, java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies UnsupportedOperationException.",
+        method = "engineGenerateCertPath",
+        args = {java.io.InputStream.class, java.lang.String.class}
+    )
     public void testEngineGenerateCertPathLjava_io_InputStream_Ljava_lang_String02() {
         CertificateFactorySpi certFactorySpi = new extCertificateFactorySpi();
 
@@ -413,15 +399,12 @@ public class CertificateFactorySpiTest extends TestCase {
      * method Assertion: generates a <code>CertPath</code> object and
      * initializes it with a <code>List</code> of <code>Certificates</code>
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies that engineGenerateCertPath method returns null.",
-      targets = {
-        @TestTarget(
-          methodName = "engineGenerateCertPath",
-          methodArgs = {java.util.List.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies that engineGenerateCertPath method returns null.",
+        method = "engineGenerateCertPath",
+        args = {java.util.List.class}
+    )
     public void testEngineGenerateCertPathLJava_util_List01() {
         CertificateFactorySpi certFactorySpi = new MyCertificateFactorySpi();
         MyCertificateFactorySpi.putMode(true);
@@ -432,6 +415,15 @@ public class CertificateFactorySpiTest extends TestCase {
         } catch (CertificateException e) {
             fail("Unexpected CertificateException " + e.getMessage());
         }
+        
+        try {
+            certFactorySpi.engineGenerateCertPath((List<? extends Certificate>)null);
+            fail("expected NullPointerException");
+        } catch (NullPointerException e) {
+            // ok
+        } catch (CertificateException e) {
+            fail("Unexpected CertificateException " + e.getMessage());
+        }
     }
 
     /**
@@ -439,15 +431,12 @@ public class CertificateFactorySpiTest extends TestCase {
      * method Assertion: generates a <code>CertPath</code> object and
      * initializes it with a <code>List</code> of <code>Certificates</code>
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies UnsupportedOperationException.",
-      targets = {
-        @TestTarget(
-          methodName = "engineGenerateCertPath",
-          methodArgs = {java.util.List.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies UnsupportedOperationException.",
+        method = "engineGenerateCertPath",
+        args = {java.util.List.class}
+    )
     public void testEngineGenerateCertPathLJava_util_List02() {
         CertificateFactorySpi certFactorySpi = new extCertificateFactorySpi();
 
@@ -460,6 +449,47 @@ public class CertificateFactorySpiTest extends TestCase {
             // expected
         } catch (CertificateException e) {
             fail("Unexpected CertificateException " + e.getMessage());
+        }
+    }
+    
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "engineGenerateCRL",
+            args = {java.io.InputStream.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "engineGenerateCRLs",
+            args = {java.io.InputStream.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "engineGenerateCertificate",
+            args = {java.io.InputStream.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "engineGenerateCertificates",
+            args = {java.io.InputStream.class}
+        )
+    })
+    public void testAbstractMethods() {
+        CertificateFactorySpi certFactorySpi = new extCertificateFactorySpi();
+        ByteArrayInputStream bais = new ByteArrayInputStream(new byte[3]);
+        DataInputStream dis = new DataInputStream(bais);
+
+        try {
+            certFactorySpi.engineGenerateCRL(dis);
+            certFactorySpi.engineGenerateCRLs(dis);
+            certFactorySpi.engineGenerateCertificate(dis);
+            certFactorySpi.engineGenerateCertificates(dis);
+        } catch (Exception e) {
+            fail("Unexpected exception " + e.getMessage());
         }
     }
     
@@ -497,21 +527,8 @@ public class CertificateFactorySpiTest extends TestCase {
             return null;
         }
 
-        public CertPath engineGenerateCertPath(InputStream inStream)
-                throws CertificateException {
-            return super.engineGenerateCertPath(inStream);
-        }
 
-        public CertPath engineGenerateCertPath(InputStream inStream,
-                String encoding) throws CertificateException {
-            return super.engineGenerateCertPath(inStream, encoding);
-        }
 
-        public CertPath engineGenerateCertPath(
-                List<? extends Certificate> certificates)
-                throws CertificateException {
-            return super.engineGenerateCertPath(certificates);
-        }
 
     }
 }

@@ -17,9 +17,9 @@
 
 package tests.api.java.io;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass; 
 
 import java.io.ByteArrayInputStream;
@@ -281,15 +281,12 @@ public class SerializationStressTest extends junit.framework.TestCase implements
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_1_Constructor() {
         // Test for method java.io.ObjectOutputStream(java.io.OutputStream)
 
@@ -302,15 +299,12 @@ public class SerializationStressTest extends junit.framework.TestCase implements
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_2_close() {
         // Test for method void java.io.ObjectOutputStream.close()
         try {
@@ -327,15 +321,12 @@ public class SerializationStressTest extends junit.framework.TestCase implements
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_3_defaultWriteObject() {
         // Test for method void java.io.ObjectOutputStream.defaultWriteObject()
 
@@ -350,15 +341,12 @@ public class SerializationStressTest extends junit.framework.TestCase implements
                 "Failed to throw NotActiveException when invoked outside readObject");
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_4_flush() {
         // Test for method void java.io.ObjectOutputStream.flush()
         try {
@@ -378,15 +366,12 @@ public class SerializationStressTest extends junit.framework.TestCase implements
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_5_reset() {
         // Test for method void java.io.ObjectOutputStream.reset()
         try {
@@ -402,15 +387,12 @@ public class SerializationStressTest extends junit.framework.TestCase implements
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_6_write() {
         // Test for method void java.io.ObjectOutputStream.write(byte [], int,
         // int)
@@ -432,15 +414,12 @@ public class SerializationStressTest extends junit.framework.TestCase implements
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_6a_write() {
         // Test for method void java.io.ObjectOutputStream.write(byte [], int,
         // int)
@@ -462,15 +441,12 @@ public class SerializationStressTest extends junit.framework.TestCase implements
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_7_write() {
         // Test for method void java.io.ObjectOutputStream.write(int)
         try {
@@ -485,15 +461,12 @@ public class SerializationStressTest extends junit.framework.TestCase implements
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_8_write() {
         // Test for method void java.io.ObjectOutputStream.write(byte [])
         try {
@@ -510,15 +483,12 @@ public class SerializationStressTest extends junit.framework.TestCase implements
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_9_writeBoolean() {
         // Test for method void java.io.ObjectOutputStream.writeBoolean(boolean)
         try {
@@ -531,15 +501,12 @@ public class SerializationStressTest extends junit.framework.TestCase implements
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_10_writeByte() {
         // Test for method void java.io.ObjectOutputStream.writeByte(int)
         try {
@@ -552,15 +519,12 @@ public class SerializationStressTest extends junit.framework.TestCase implements
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_11_writeBytes() {
         // Test for method void
         // java.io.ObjectOutputStream.writeBytes(java.lang.String)
@@ -578,15 +542,12 @@ public class SerializationStressTest extends junit.framework.TestCase implements
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_12_writeChar() {
         // Test for method void java.io.ObjectOutputStream.writeChar(int)
         try {
@@ -599,15 +560,12 @@ public class SerializationStressTest extends junit.framework.TestCase implements
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_13_writeChars() {
         // Test for method void
         // java.io.ObjectOutputStream.writeChars(java.lang.String)
@@ -629,15 +587,12 @@ public class SerializationStressTest extends junit.framework.TestCase implements
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_14_writeDouble() {
         // Test for method void java.io.ObjectOutputStream.writeDouble(double)
         try {
@@ -651,15 +606,12 @@ public class SerializationStressTest extends junit.framework.TestCase implements
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_15_writeFloat() {
         // Test for method void java.io.ObjectOutputStream.writeFloat(float)
         try {
@@ -675,15 +627,12 @@ public class SerializationStressTest extends junit.framework.TestCase implements
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_16_writeInt() {
         // Test for method void java.io.ObjectOutputStream.writeInt(int)
         try {
@@ -698,15 +647,12 @@ public class SerializationStressTest extends junit.framework.TestCase implements
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_17_writeLong() {
         // Test for method void java.io.ObjectOutputStream.writeLong(long)
         try {
@@ -720,15 +666,12 @@ public class SerializationStressTest extends junit.framework.TestCase implements
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_19_writeShort() {
         // Test for method void java.io.ObjectOutputStream.writeShort(int)
         try {
@@ -741,15 +684,12 @@ public class SerializationStressTest extends junit.framework.TestCase implements
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_20_writeUTF() {
         // Test for method void
         // java.io.ObjectOutputStream.writeUTF(java.lang.String)
@@ -764,15 +704,12 @@ public class SerializationStressTest extends junit.framework.TestCase implements
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_25_available() {
         try {
             oos.writeObject(FOO);
@@ -805,15 +742,6 @@ public class SerializationStressTest extends junit.framework.TestCase implements
 
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
     protected void t_MixPrimitivesAndObjects() throws IOException,
             ClassNotFoundException {
         int i = 7;
@@ -846,15 +774,12 @@ public class SerializationStressTest extends junit.framework.TestCase implements
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_resolveClass() {
         try {
             oos.writeObject(new Object[] { Integer.class, new Integer(1) });
@@ -877,15 +802,12 @@ public class SerializationStressTest extends junit.framework.TestCase implements
         assertTrue("resolved class 3", resolvedClasses[2] == Number.class);
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_reset() {
         try {
             oos.reset();
@@ -914,15 +836,12 @@ public class SerializationStressTest extends junit.framework.TestCase implements
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_serialVersionUID(Class clazz, long svUID) {
         final String idWrong = "serialVersionUID is wrong for: ";
         long reflectedSvUID = 0L;
@@ -964,15 +883,12 @@ public class SerializationStressTest extends junit.framework.TestCase implements
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_1_resolveObject() {
         try {
             ResolveObjectTest obj = new ResolveObjectTest();
@@ -997,15 +913,12 @@ public class SerializationStressTest extends junit.framework.TestCase implements
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_2_resolveObject() {
         try {
             ResolveObjectTest obj = new ResolveObjectTest();
@@ -1029,15 +942,12 @@ public class SerializationStressTest extends junit.framework.TestCase implements
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_3_resolveObject() {
         try {
             ResolveObjectTest obj = new ResolveObjectTest();
@@ -1063,15 +973,12 @@ public class SerializationStressTest extends junit.framework.TestCase implements
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_4_resolveObject() {
         try {
             ResolveObjectTest obj = new ResolveObjectTest();
@@ -1096,15 +1003,12 @@ public class SerializationStressTest extends junit.framework.TestCase implements
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_5_resolveObject() {
         try {
             ResolveObjectTest obj = new ResolveObjectTest();
@@ -1219,15 +1123,12 @@ public class SerializationStressTest extends junit.framework.TestCase implements
     static class ReadResolveTestF implements Serializable {
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_1_writeReplace() {
         try {
             Vector v = new Vector();
@@ -1260,15 +1161,12 @@ public class SerializationStressTest extends junit.framework.TestCase implements
         }
     }
 
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies serialization.",
-            targets = {
-              @TestTarget(
-                methodName = "!Serialization",
-                methodArgs = {}
-              )
-          })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies serialization.",
+        method = "!Serialization",
+        args = {}
+    )
     public void test_2_writeReplace() {
         try {
             boolean exception = false;

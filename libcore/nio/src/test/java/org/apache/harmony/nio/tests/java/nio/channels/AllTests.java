@@ -26,7 +26,7 @@ public class AllTests {
     }
 
     public static Test suite() {
-        TestSuite suite = new TestSuite(AllTests.class.getName());
+        TestSuite suite = tests.TestSuiteFactory.createTestSuite(AllTests.class.getName());
         //$JUnit-BEGIN$
         suite.addTestSuite(AlreadyConnectedExceptionTest.class);
         suite.addTestSuite(AsynchronousCloseExceptionTest.class);
@@ -37,7 +37,6 @@ public class AllTests {
         suite.addTestSuite(ClosedSelectorExceptionTest.class);
         suite.addTestSuite(ConnectionPendingExceptionTest.class);
         suite.addTestSuite(DatagramChannelTest.class); 
-        suite.addTestSuite(FileChannelLockingTest.class);
         suite.addTestSuite(FileChannelTest.class);
         suite.addTestSuite(FileLockInterruptionExceptionTest.class);
         suite.addTestSuite(FileLockTest.class);

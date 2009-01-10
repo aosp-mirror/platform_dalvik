@@ -17,9 +17,9 @@
 
 package tests.api.java.lang.reflect;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import java.lang.reflect.Array;
@@ -30,15 +30,12 @@ public class ArrayTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Array#get(java.lang.Object, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies only int array.",
-      targets = {
-        @TestTarget(
-          methodName = "get",
-          methodArgs = {java.lang.Object.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "get",
+        args = {java.lang.Object.class, int.class}
+    )
     public void test_getLjava_lang_ObjectI() {
         // Test for method java.lang.Object
         // java.lang.reflect.Array.get(java.lang.Object, int)
@@ -72,20 +69,48 @@ public class ArrayTest extends junit.framework.TestCase {
         if (!thrown) {
             fail("Invalid index failed to throw exception");
         }
+        
+        //same test with non primitive component type
+        Integer[] y = new Integer[]{ 1 };
+        ret = null;
+        thrown = false;
+        try {
+            ret = Array.get(y, 0);
+        } catch (Exception e) {
+            fail("Exception during get test : " + e.getMessage());
+        }
+        assertEquals("Get returned incorrect value",
+                1, ((Integer) ret).intValue());
+        try {
+            ret = Array.get(new Object(), 0);
+        } catch (IllegalArgumentException e) {
+            // Correct behaviour
+            thrown = true;
+        }
+        if (!thrown) {
+            fail("Passing non-array failed to throw exception");
+        }
+        thrown = false;
+        try {
+            ret = Array.get(y, 4);
+        } catch (ArrayIndexOutOfBoundsException e) {
+            // Correct behaviour
+            thrown = true;
+        }
+        if (!thrown) {
+            fail("Invalid index failed to throw exception");
+        }
     }
 
     /**
      * @tests java.lang.reflect.Array#getBoolean(java.lang.Object, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify NullPointerException.",
-      targets = {
-        @TestTarget(
-          methodName = "getBoolean",
-          methodArgs = {java.lang.Object.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getBoolean",
+        args = {java.lang.Object.class, int.class}
+    )
     public void test_getBooleanLjava_lang_ObjectI() {
         // Test for method boolean
         // java.lang.reflect.Array.getBoolean(java.lang.Object, int)
@@ -117,20 +142,27 @@ public class ArrayTest extends junit.framework.TestCase {
         if (!thrown) {
             fail("Invalid index failed to throw exception");
         }
+        thrown = false;
+        try {
+            ret = Array.getBoolean(null, 0);
+        } catch (NullPointerException e) {
+            // Correct behaviour
+            thrown = true;
+        }
+        if (!thrown) {
+            fail("Null argument failed to throw NPE");
+        }
     }
 
     /**
      * @tests java.lang.reflect.Array#getByte(java.lang.Object, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify NullPointerException.",
-      targets = {
-        @TestTarget(
-          methodName = "getByte",
-          methodArgs = {java.lang.Object.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getByte",
+        args = {java.lang.Object.class, int.class}
+    )
     public void test_getByteLjava_lang_ObjectI() {
         // Test for method byte
         // java.lang.reflect.Array.getByte(java.lang.Object, int)
@@ -162,20 +194,27 @@ public class ArrayTest extends junit.framework.TestCase {
         if (!thrown) {
             fail("Invalid index failed to throw exception");
         }
+        thrown = false;
+        try {
+            ret = Array.getByte(null, 0);
+        } catch (NullPointerException e) {
+            // Correct behaviour
+            thrown = true;
+        }
+        if (!thrown) {
+            fail("Null argument failed to throw NPE");
+        }
     }
 
     /**
      * @tests java.lang.reflect.Array#getChar(java.lang.Object, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify NullPointerException.",
-      targets = {
-        @TestTarget(
-          methodName = "getChar",
-          methodArgs = {java.lang.Object.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getChar",
+        args = {java.lang.Object.class, int.class}
+    )
     public void test_getCharLjava_lang_ObjectI() {
         // Test for method char
         // java.lang.reflect.Array.getChar(java.lang.Object, int)
@@ -207,20 +246,27 @@ public class ArrayTest extends junit.framework.TestCase {
         if (!thrown) {
             fail("Invalid index failed to throw exception");
         }
+        thrown = false;
+        try {
+            ret = Array.getChar(null, 0);
+        } catch (NullPointerException e) {
+            // Correct behaviour
+            thrown = true;
+        }
+        if (!thrown) {
+            fail("Null argument failed to throw NPE");
+        }
     }
 
     /**
      * @tests java.lang.reflect.Array#getDouble(java.lang.Object, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify NullPointerException.",
-      targets = {
-        @TestTarget(
-          methodName = "getDouble",
-          methodArgs = {java.lang.Object.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getDouble",
+        args = {java.lang.Object.class, int.class}
+    )
     public void test_getDoubleLjava_lang_ObjectI() {
         // Test for method double
         // java.lang.reflect.Array.getDouble(java.lang.Object, int)
@@ -253,20 +299,27 @@ public class ArrayTest extends junit.framework.TestCase {
         if (!thrown) {
             fail("Invalid index failed to throw exception");
         }
+        thrown = false;
+        try {
+            ret = Array.getDouble(null, 0);
+        } catch (NullPointerException e) {
+            // Correct behaviour
+            thrown = true;
+        }
+        if (!thrown) {
+            fail("Null argument failed to throw NPE");
+        }
     }
 
     /**
      * @tests java.lang.reflect.Array#getFloat(java.lang.Object, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify NullPointerException.",
-      targets = {
-        @TestTarget(
-          methodName = "getFloat",
-          methodArgs = {java.lang.Object.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getFloat",
+        args = {java.lang.Object.class, int.class}
+    )
     public void test_getFloatLjava_lang_ObjectI() {
         // Test for method float
         // java.lang.reflect.Array.getFloat(java.lang.Object, int)
@@ -298,20 +351,27 @@ public class ArrayTest extends junit.framework.TestCase {
         if (!thrown) {
             fail("Invalid index failed to throw exception");
         }
+        thrown = false;
+        try {
+            ret = Array.getFloat(null, 0);
+        } catch (NullPointerException e) {
+            // Correct behaviour
+            thrown = true;
+        }
+        if (!thrown) {
+            fail("Null argument failed to throw NPE");
+        }
     }
 
     /**
      * @tests java.lang.reflect.Array#getInt(java.lang.Object, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't check any boundary value.",
-      targets = {
-        @TestTarget(
-          methodName = "getInt",
-          methodArgs = {java.lang.Object.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getInt",
+        args = {java.lang.Object.class, int.class}
+    )
     public void test_getIntLjava_lang_ObjectI() {
         // Test for method int java.lang.reflect.Array.getInt(java.lang.Object,
         // int)
@@ -343,20 +403,27 @@ public class ArrayTest extends junit.framework.TestCase {
         if (!thrown) {
             fail("Invalid index failed to throw exception");
         }
+        thrown = false;
+        try {
+            ret = Array.getInt(null, 0);
+        } catch (NullPointerException e) {
+            // Correct behaviour
+            thrown = true;
+        }
+        if (!thrown) {
+            fail("Null argument failed to throw NPE");
+        }
     }
 
     /**
      * @tests java.lang.reflect.Array#getLength(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getLength",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getLength",
+        args = {java.lang.Object.class}
+    )
     public void test_getLengthLjava_lang_Object() {
         // Test for method int
         // java.lang.reflect.Array.getLength(java.lang.Object)
@@ -377,15 +444,12 @@ public class ArrayTest extends junit.framework.TestCase {
     /**
      * @tests java.lang.reflect.Array#getLong(java.lang.Object, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "NullPointerException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "getLong",
-          methodArgs = {java.lang.Object.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getLong",
+        args = {java.lang.Object.class, int.class}
+    )
     public void test_getLongLjava_lang_ObjectI() {
         // Test for method long
         // java.lang.reflect.Array.getLong(java.lang.Object, int)
@@ -417,20 +481,27 @@ public class ArrayTest extends junit.framework.TestCase {
         if (!thrown) {
             fail("Invalid index failed to throw exception");
         }
+        thrown = false;
+        try {
+            ret = Array.getLong(null, 0);
+        } catch (NullPointerException e) {
+            // Correct behaviour
+            thrown = true;
+        }
+        if (!thrown) {
+            fail("Null argument failed to throw NPE");
+        }
     }
 
     /**
      * @tests java.lang.reflect.Array#getShort(java.lang.Object, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "NullPointerException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "getShort",
-          methodArgs = {java.lang.Object.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getShort",
+        args = {java.lang.Object.class, int.class}
+    )
     public void test_getShortLjava_lang_ObjectI() {
         // Test for method short
         // java.lang.reflect.Array.getShort(java.lang.Object, int)
@@ -462,20 +533,27 @@ public class ArrayTest extends junit.framework.TestCase {
         if (!thrown) {
             fail("Invalid index failed to throw exception");
         }
+        thrown = false;
+        try {
+            ret = Array.getShort(null, 0);
+        } catch (NullPointerException e) {
+            // Correct behaviour
+            thrown = true;
+        }
+        if (!thrown) {
+            fail("Null argument failed to throw NPE");
+        }
     }
 
     /**
      * @tests java.lang.reflect.Array#newInstance(java.lang.Class, int[])
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Exceptions are not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "newInstance",
-          methodArgs = {java.lang.Class.class, int[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "newInstance",
+        args = {java.lang.Class.class, int[].class}
+    )
     public void test_newInstanceLjava_lang_Class$I() {
         // Test for method java.lang.Object
         // java.lang.reflect.Array.newInstance(java.lang.Class, int [])
@@ -484,21 +562,50 @@ public class ArrayTest extends junit.framework.TestCase {
 
         x = (int[][]) Array.newInstance(int[].class, y);
         assertEquals("Failed to instantiate array properly", 2, x.length);
-
+        
+        boolean thrown = false;
+        try {
+            x = (int[][]) Array.newInstance(null, y);
+        } catch (NullPointerException e) {
+            // Correct behaviour
+            thrown = true;
+        }
+        if (!thrown) {
+            fail("Null argument failed to throw NPE");
+        }
+        
+        thrown = false;
+        try {
+            Array.newInstance(int[].class, new int[]{1,-1});
+        } catch (NegativeArraySizeException e) {
+            // Correct behaviour
+            thrown = true;
+        }
+        if (!thrown) {
+            fail("Negative array size failed to throw NegativeArraySizeException");
+        }
+        
+        thrown = false;
+        try {
+            Array.newInstance(int[].class, new int[]{});
+        } catch (IllegalArgumentException e) {
+            // Correct behaviour
+            thrown = true;
+        }
+        if (!thrown) {
+            fail("Zero array size failed to throw IllegalArgumentException");
+        }
     }
 
     /**
      * @tests java.lang.reflect.Array#newInstance(java.lang.Class, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Exceptions are not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "newInstance",
-          methodArgs = {java.lang.Class.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "newInstance",
+        args = {java.lang.Class.class, int.class}
+    )
     public void test_newInstanceLjava_lang_ClassI() {
         // Test for method java.lang.Object
         // java.lang.reflect.Array.newInstance(java.lang.Class, int)
@@ -506,21 +613,40 @@ public class ArrayTest extends junit.framework.TestCase {
 
         x = (int[]) Array.newInstance(int.class, 100);
         assertEquals("Failed to instantiate array properly", 100, x.length);
+        
+        boolean thrown = false;
+        try {
+            Array.newInstance(null, 100);
+        } catch (NullPointerException e) {
+            // Correct behaviour
+            thrown = true;
+        }
+        if (!thrown) {
+            fail("Null argument failed to throw NPE");
+        }
+        
+        thrown = false;
+        try {
+           Array.newInstance(int[].class, -1);
+        } catch (NegativeArraySizeException e) {
+            // Correct behaviour
+            thrown = true;
+        }
+        if (!thrown) {
+            fail("Negative array size failed to throw NegativeArraySizeException");
+        }
     }
 
     /**
      * @tests java.lang.reflect.Array#set(java.lang.Object, int,
      *        java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "NullPointerException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "set",
-          methodArgs = {java.lang.Object.class, int.class, java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "set",
+        args = {java.lang.Object.class, int.class, java.lang.Object.class}
+    )
     public void test_setLjava_lang_ObjectILjava_lang_Object() {
         // Test for method void java.lang.reflect.Array.set(java.lang.Object,
         // int, java.lang.Object)
@@ -562,20 +688,28 @@ public class ArrayTest extends junit.framework.TestCase {
             exception = true;
         }
         assertTrue("expected exception not thrown", exception);
+        
+        thrown = false;
+        try {
+           Array.set(null, 0, 2);
+        } catch (NullPointerException e) {
+            // Correct behaviour
+            thrown = true;
+        }
+        if (!thrown) {
+            fail("Null argument failed to throw NPE");
+        }
     }
 
     /**
      * @tests java.lang.reflect.Array#setBoolean(java.lang.Object, int, boolean)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "NullPointerException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "setBoolean",
-          methodArgs = {java.lang.Object.class, int.class, boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setBoolean",
+        args = {java.lang.Object.class, int.class, boolean.class}
+    )
     public void test_setBooleanLjava_lang_ObjectIZ() {
         // Test for method void
         // java.lang.reflect.Array.setBoolean(java.lang.Object, int, boolean)
@@ -606,20 +740,28 @@ public class ArrayTest extends junit.framework.TestCase {
         if (!thrown) {
             fail("Invalid index failed to throw exception");
         }
+        
+        thrown = false;
+        try {
+           Array.setBoolean(null, 0, true);
+        } catch (NullPointerException e) {
+            // Correct behaviour
+            thrown = true;
+        }
+        if (!thrown) {
+            fail("Null argument failed to throw NPE");
+        }
     }
 
     /**
      * @tests java.lang.reflect.Array#setByte(java.lang.Object, int, byte)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "NullPointerException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "setByte",
-          methodArgs = {java.lang.Object.class, int.class, byte.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setByte",
+        args = {java.lang.Object.class, int.class, byte.class}
+    )
     public void test_setByteLjava_lang_ObjectIB() {
         // Test for method void
         // java.lang.reflect.Array.setByte(java.lang.Object, int, byte)
@@ -650,20 +792,28 @@ public class ArrayTest extends junit.framework.TestCase {
         if (!thrown) {
             fail("Invalid index failed to throw exception");
         }
+        
+        thrown = false;
+        try {
+           Array.setByte(null, 0, (byte)0);
+        } catch (NullPointerException e) {
+            // Correct behaviour
+            thrown = true;
+        }
+        if (!thrown) {
+            fail("Null argument failed to throw NPE");
+        }
     }
 
     /**
      * @tests java.lang.reflect.Array#setChar(java.lang.Object, int, char)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "NullPointerException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "setChar",
-          methodArgs = {java.lang.Object.class, int.class, char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setChar",
+        args = {java.lang.Object.class, int.class, char.class}
+    )
     public void test_setCharLjava_lang_ObjectIC() {
         // Test for method void
         // java.lang.reflect.Array.setChar(java.lang.Object, int, char)
@@ -694,33 +844,41 @@ public class ArrayTest extends junit.framework.TestCase {
         if (!thrown) {
             fail("Invalid index failed to throw exception");
         }
+        
+        thrown = false;
+        try {
+           Array.setChar(null, 0, (char)0);
+        } catch (NullPointerException e) {
+            // Correct behaviour
+            thrown = true;
+        }
+        if (!thrown) {
+            fail("Null argument failed to throw NPE");
+        }
     }
 
     /**
      * @tests java.lang.reflect.Array#setDouble(java.lang.Object, int, double)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "NullPointerException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "setDouble",
-          methodArgs = {java.lang.Object.class, int.class, double.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setDouble",
+        args = {java.lang.Object.class, int.class, double.class}
+    )
     public void test_setDoubleLjava_lang_ObjectID() {
         // Test for method void
         // java.lang.reflect.Array.setDouble(java.lang.Object, int, double)
         double[] x = { 0 };
         boolean thrown = false;
         try {
-            Array.setDouble(x, 0, (double) 1);
+            Array.setDouble(x, 0, 1);
         } catch (Exception e) {
             fail("Exception during get test : " + e.getMessage());
         }
         assertEquals("Get returned incorrect value", 1, Array.getDouble(x, 0), 0.0);
         try {
-            Array.setDouble(new Object(), 0, (double) 9);
+            Array.setDouble(new Object(), 0, 9);
         } catch (IllegalArgumentException e) {
             // Correct behaviour
             thrown = true;
@@ -730,7 +888,7 @@ public class ArrayTest extends junit.framework.TestCase {
         }
         thrown = false;
         try {
-            Array.setDouble(x, 4, (double) 9);
+            Array.setDouble(x, 4, 9);
         } catch (ArrayIndexOutOfBoundsException e) {
             // Correct behaviour
             thrown = true;
@@ -738,20 +896,28 @@ public class ArrayTest extends junit.framework.TestCase {
         if (!thrown) {
             fail("Invalid index failed to throw exception");
         }
+        
+        thrown = false;
+        try {
+           Array.setDouble(null, 0, 0);
+        } catch (NullPointerException e) {
+            // Correct behaviour
+            thrown = true;
+        }
+        if (!thrown) {
+            fail("Null argument failed to throw NPE");
+        }
     }
 
     /**
      * @tests java.lang.reflect.Array#setFloat(java.lang.Object, int, float)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "NullPointerException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "setFloat",
-          methodArgs = {java.lang.Object.class, int.class, float.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setFloat",
+        args = {java.lang.Object.class, int.class, float.class}
+    )
     public void test_setFloatLjava_lang_ObjectIF() {
         // Test for method void
         // java.lang.reflect.Array.setFloat(java.lang.Object, int, float)
@@ -782,20 +948,28 @@ public class ArrayTest extends junit.framework.TestCase {
         if (!thrown) {
             fail("Invalid index failed to throw exception");
         }
+        
+        thrown = false;
+        try {
+           Array.setFloat(null, 0, 0);
+        } catch (NullPointerException e) {
+            // Correct behaviour
+            thrown = true;
+        }
+        if (!thrown) {
+            fail("Null argument failed to throw NPE");
+        }
     }
 
     /**
      * @tests java.lang.reflect.Array#setInt(java.lang.Object, int, int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "NullPointerException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "setInt",
-          methodArgs = {java.lang.Object.class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setInt",
+        args = {java.lang.Object.class, int.class, int.class}
+    )
     public void test_setIntLjava_lang_ObjectII() {
         // Test for method void java.lang.reflect.Array.setInt(java.lang.Object,
         // int, int)
@@ -826,33 +1000,41 @@ public class ArrayTest extends junit.framework.TestCase {
         if (!thrown) {
             fail("Invalid index failed to throw exception");
         }
+        
+        thrown = false;
+        try {
+           Array.setInt(null, 0, 0);
+        } catch (NullPointerException e) {
+            // Correct behaviour
+            thrown = true;
+        }
+        if (!thrown) {
+            fail("Null argument failed to throw NPE");
+        }
     }
 
     /**
      * @tests java.lang.reflect.Array#setLong(java.lang.Object, int, long)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "NullPointerException isnot verified.",
-      targets = {
-        @TestTarget(
-          methodName = "setLong",
-          methodArgs = {java.lang.Object.class, int.class, long.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setLong",
+        args = {java.lang.Object.class, int.class, long.class}
+    )
     public void test_setLongLjava_lang_ObjectIJ() {
         // Test for method void
         // java.lang.reflect.Array.setLong(java.lang.Object, int, long)
         long[] x = { 0 };
         boolean thrown = false;
         try {
-            Array.setLong(x, 0, (long) 1);
+            Array.setLong(x, 0, 1);
         } catch (Exception e) {
             fail("Exception during get test : " + e.getMessage());
         }
         assertEquals("Get returned incorrect value", 1, Array.getLong(x, 0));
         try {
-            Array.setLong(new Object(), 0, (long) 9);
+            Array.setLong(new Object(), 0, 9);
         } catch (IllegalArgumentException e) {
             // Correct behaviour
             thrown = true;
@@ -862,7 +1044,7 @@ public class ArrayTest extends junit.framework.TestCase {
         }
         thrown = false;
         try {
-            Array.setLong(x, 4, (long) 9);
+            Array.setLong(x, 4, 9);
         } catch (ArrayIndexOutOfBoundsException e) {
             // Correct behaviour
             thrown = true;
@@ -870,20 +1052,28 @@ public class ArrayTest extends junit.framework.TestCase {
         if (!thrown) {
             fail("Invalid index failed to throw exception");
         }
+        
+        thrown = false;
+        try {
+           Array.setLong(null, 0, 0);
+        } catch (NullPointerException e) {
+            // Correct behaviour
+            thrown = true;
+        }
+        if (!thrown) {
+            fail("Null argument failed to throw NPE");
+        }
     }
 
     /**
      * @tests java.lang.reflect.Array#setShort(java.lang.Object, int, short)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "NullPointerException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "setShort",
-          methodArgs = {java.lang.Object.class, int.class, short.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setShort",
+        args = {java.lang.Object.class, int.class, short.class}
+    )
     public void test_setShortLjava_lang_ObjectIS() {
         // Test for method void
         // java.lang.reflect.Array.setShort(java.lang.Object, int, short)
@@ -913,6 +1103,17 @@ public class ArrayTest extends junit.framework.TestCase {
         }
         if (!thrown) {
             fail("Invalid index failed to throw exception");
+        }
+        
+        thrown = false;
+        try {
+           Array.setShort(null, 0, (short)0);
+        } catch (NullPointerException e) {
+            // Correct behaviour
+            thrown = true;
+        }
+        if (!thrown) {
+            fail("Null argument failed to throw NPE");
         }
     }
 

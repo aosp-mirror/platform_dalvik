@@ -17,13 +17,19 @@
 
 package org.apache.harmony.sql.tests.java.sql;
 
+import SQLite.JDBCDriver;
+import dalvik.annotation.BrokenTest;
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
+import java.sql.Driver;
+import java.sql.DriverManager;
 import java.sql.DriverPropertyInfo;
+import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.Properties;
 
 import junit.framework.TestCase;
 @TestTargetClass(DriverPropertyInfo.class)
@@ -37,15 +43,13 @@ public class DriverPropertyInfoTest extends TestCase {
     /*
      * Public statics test
      */
-    @TestInfo(
-      level = TestLevel.TODO,
-      purpose = "Empty test",
-      targets = {
-        @TestTarget(
-          methodName = "",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.ADDITIONAL,
+        notes = "Empty test",
+        method = "!",
+        args = {}
+    )
+    @BrokenTest("empty")
     public void testPublicStatics() {
 
     } // end method testPublicStatics
@@ -53,24 +57,28 @@ public class DriverPropertyInfoTest extends TestCase {
     /*
      * Constructor test
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verification with invalid parameters missed",
-      targets = {
-        @TestTarget(
-          methodName = "DriverPropertyInfo",
-          methodArgs = {String.class, String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verification with invalid parameters missed: no feasible behaviour not specified (black box approach).",
+        method = "DriverPropertyInfo",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public void testDriverPropertyInfoStringString() {
 
         DriverPropertyInfo aDriverPropertyInfo = new DriverPropertyInfo(
                 validName, validValue);
 
         assertNotNull(aDriverPropertyInfo);
+     
+        assertEquals(aDriverPropertyInfo.name,validName);
+        assertEquals(aDriverPropertyInfo.value,validValue);
 
         aDriverPropertyInfo = new DriverPropertyInfo(null, null);
 
+        assertNotNull(aDriverPropertyInfo);
+        assertNull(aDriverPropertyInfo.name);
+        assertNull(aDriverPropertyInfo.value);
+        
     } // end method testDriverPropertyInfoStringString
 
     /*
@@ -89,16 +97,17 @@ public class DriverPropertyInfoTest extends TestCase {
     static String updateDescription = "update description";
 
     static String updateName = "updateName";
+    
+    String connectionURL = "jdbc:sqlite:/" + "Test.db";
+    
+    String classname = "SQLite.JDBCDriver";
 
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "Field testing",
-      targets = {
-        @TestTarget(
-          methodName = "!Constants",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Field testing",
+        method = "!Constants",
+        args = {}
+    )
     public void testPublicFields() {
 
         // Constructor here...
@@ -122,6 +131,32 @@ public class DriverPropertyInfoTest extends TestCase {
         assertEquals(updateRequired, aDriverPropertyInfo.required);
         assertEquals(updateDescription, aDriverPropertyInfo.description);
         assertEquals(updateName, aDriverPropertyInfo.name);
+        
+      //functional test
+        try {
+            Class.forName(classname).newInstance();
+            Properties props = new Properties();
+            Driver d = DriverManager.getDriver(connectionURL);
+            DriverPropertyInfo[] info = d.getPropertyInfo(connectionURL,
+                    props);
+            // get the property metadata
+            String name = info[0].name;
+            assertNotNull(name);
+            assertEquals(name, "encoding");
+            String[] choices = info[0].choices;
+            assertNull(choices);
+            boolean required = info[0].required;
+            assertFalse(required);
+            String description = info[0].description;
+            assertNull(description);
+
+        } catch (SQLException e) {
+            System.out.println("Error in test setup: " + e.getMessage());
+            e.printStackTrace();
+        } catch (Exception ex) {
+            System.err.println("Unexpected exception " + ex.toString());
+        }
+
 
     } // end method testPublicFields
 

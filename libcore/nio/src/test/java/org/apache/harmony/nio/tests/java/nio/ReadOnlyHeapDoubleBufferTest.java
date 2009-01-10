@@ -15,22 +15,13 @@
  */
 package org.apache.harmony.nio.tests.java.nio;
 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
 import dalvik.annotation.TestTargetClass;
-
-import java.nio.DoubleBuffer;
 
 @TestTargetClass(java.nio.DoubleBuffer.class)
 public class ReadOnlyHeapDoubleBufferTest extends ReadOnlyDoubleBufferTest {
     
     protected void setUp() throws Exception {
         super.setUp();
-        buf = DoubleBuffer.allocate(BUFFER_LENGTH);
-        super.loadTestData1(buf);
-        buf = buf.asReadOnlyBuffer();
-        baseBuf = buf;
     }
 
     protected void tearDown() throws Exception {

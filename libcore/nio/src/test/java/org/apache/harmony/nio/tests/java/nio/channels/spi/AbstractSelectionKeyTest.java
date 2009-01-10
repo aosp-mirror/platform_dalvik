@@ -16,9 +16,10 @@
 
 package org.apache.harmony.nio.tests.java.nio.channels.spi;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import java.nio.channels.SelectableChannel;
@@ -27,21 +28,28 @@ import java.nio.channels.Selector;
 import java.nio.channels.spi.AbstractSelectionKey;
 
 import junit.framework.TestCase;
-@TestTargetClass(AbstractSelectionKey.class)
+@TestTargetClass(
+    value = AbstractSelectionKey.class, 
+    untestedMethods = {
+        @TestTargetNew(
+            level = TestLevel.NOT_NECESSARY,
+            notes = "empty protected constructor",
+            method = "AbstractSelectionKey",
+            args = {}
+        )
+    }
+)
 public class AbstractSelectionKeyTest extends TestCase {
 
     /**
      * @tests AbstractSelectionKey#isValid() without selector
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isValid",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isValid",
+        args = {}
+    )
     public void test_isValid() throws Exception {
         MockSelectionKey testKey = new MockSelectionKey();
         assertTrue(testKey.isValid());
@@ -50,15 +58,12 @@ public class AbstractSelectionKeyTest extends TestCase {
     /**
      * @tests AbstractSelectionKey#cancel
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "cancel",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "cancel",
+        args = {}
+    )
     public void test_cancel() throws Exception {
         MockSelectionKey testKey = new MockSelectionKey();
         try {

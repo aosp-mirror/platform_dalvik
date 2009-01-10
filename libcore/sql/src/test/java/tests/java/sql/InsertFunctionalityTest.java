@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package tests.java.sql;
 
+import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -143,16 +143,13 @@ public class InsertFunctionalityTest extends TestCase {
      * @tests InsertFunctionalityTest#testInsert1(). Attempts to insert row into
      *        table with integrity checking
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Functionality test: Attempts to insert row into " + 
-                  "table with integrity checking",
-      targets = {
-        @TestTarget(
-          methodName = "execute",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Functionality test: Attempts to insert row into table with integrity checking",
+        method = "execute",
+        args = {java.lang.String.class}
+    )
+    @KnownFailure(" SQLite.Exception: error in prepare/compile")
     public void testInsert1() throws SQLException {
         DatabaseCreator.fillParentTable(conn);
         DatabaseCreator.fillFKStrictTable(conn);
@@ -168,16 +165,13 @@ public class InsertFunctionalityTest extends TestCase {
      *        table with integrity checking when row has incorrect foreign key
      *        value - expecting SQLException
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Functionality test: Attempts to insert row into table with " +
-                "integrity checking when row has incorrect foreign key value - expecting SQLException",
-      targets = {
-        @TestTarget(
-          methodName = "execute",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Functionality test: Attempts to insert row into table with integrity checking when row has incorrect foreign key value - expecting SQLException",
+        method = "execute",
+        args = {java.lang.String.class}
+    )
+    @KnownFailure(" SQLite.Exception: error in prepare/compile")
     public void testInsert2() throws SQLException {
         DatabaseCreator.fillParentTable(conn);
         DatabaseCreator.fillFKStrictTable(conn);
@@ -193,7 +187,7 @@ public class InsertFunctionalityTest extends TestCase {
         try {
             statement.execute("INSERT INTO " + DatabaseCreator.FKCASCADE_TABLE
                     + " VALUES(4, 4, 'testInsert')");
-           // TODO Foreign key functionality isn't supported
+           // TODO Foreign key functionality isn't supported 
            // fail("expecting SQLException");
         } catch (SQLException ex) {
             // expected
@@ -204,19 +198,21 @@ public class InsertFunctionalityTest extends TestCase {
      * @tests InsertFunctionalityTest#testInsert3(). Tests INSERT ... SELECT
      *        functionality
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Functionality test: Tests INSERT ... SELECT functionality",
-      targets = {
-        @TestTarget(
-          methodName = "execute",
-          methodArgs = {String.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Functionality test: Tests INSERT ... SELECT functionality",
+            method = "execute",
+            args = {java.lang.String.class}
         ),
-        @TestTarget(
-          methodName = "executeQuery",
-          methodArgs = {String.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Functionality test: Tests INSERT ... SELECT functionality",
+            method = "executeQuery",
+            args = {java.lang.String.class}
         )
     })
+    @KnownFailure(" SQLite.Exception: error in prepare/compile")
     public void testInsert3() throws SQLException {
         DatabaseCreator.fillParentTable(conn);
         DatabaseCreator.fillFKStrictTable(conn);
@@ -234,19 +230,21 @@ public class InsertFunctionalityTest extends TestCase {
      * @tests InsertFunctionalityTest#testInsert4(). Tests INSERT ... SELECT
      *        with expressions in SELECT query
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Functionality test: Tests INSERT ... SELECT with expressions in SELECT query",
-      targets = {
-        @TestTarget(
-          methodName = "execute",
-          methodArgs = {String.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Functionality test: Tests INSERT ... SELECT with expressions in SELECT query",
+            method = "execute",
+            args = {java.lang.String.class}
         ),
-        @TestTarget(
-          methodName = "executeQuery",
-          methodArgs = {String.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Functionality test: Tests INSERT ... SELECT with expressions in SELECT query",
+            method = "executeQuery",
+            args = {java.lang.String.class}
         )
     })
+    @KnownFailure(" SQLite.Exception: error in prepare/compile")
     public void testInsert4() throws SQLException {
         DatabaseCreator.fillSimpleTable1(conn);
         statement.execute("INSERT INTO " + DatabaseCreator.SIMPLE_TABLE2
@@ -265,17 +263,18 @@ public class InsertFunctionalityTest extends TestCase {
      * @tests InsertFunctionalityTest#testInsert5(). Inserts multiple rows using
      *        UNION ALL
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Functionality test: Inserts multiple rows using UNION ALL",
-      targets = {
-        @TestTarget(
-          methodName = "execute",
-          methodArgs = {String.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Functionality test: Inserts multiple rows using UNION ALL",
+            method = "execute",
+            args = {java.lang.String.class}
         ),
-        @TestTarget(
-          methodName = "executeQuery",
-          methodArgs = {String.class}
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Functionality test: Inserts multiple rows using UNION ALL",
+            method = "executeQuery",
+            args = {java.lang.String.class}
         )
     })
     public void testInsert5() throws SQLException {
@@ -294,15 +293,13 @@ public class InsertFunctionalityTest extends TestCase {
      * @tests InsertFunctionalityTest#testInsert6(). Tests INSERT with
      *        PreparedStatement
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Functionality test: Tests INSERT with PreparedStatement",
-      targets = {
-        @TestTarget(
-          methodName = "executeQuery",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Functionality test: Tests INSERT with PreparedStatement",
+        method = "executeQuery",
+        args = {java.lang.String.class}
+    )
+    @KnownFailure(" SQLite.Exception: error in prepare")
     public void testInsertPrepared() throws SQLException {
         PreparedStatement stat = conn.prepareStatement("INSERT INTO "
                 + DatabaseCreator.TEST_TABLE5 + " VALUES(?, ?)");

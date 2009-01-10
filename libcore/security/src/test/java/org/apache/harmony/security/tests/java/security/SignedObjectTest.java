@@ -22,23 +22,28 @@
 
 package org.apache.harmony.security.tests.java.security;
 
-import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestInfo;
 import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
+
+import junit.framework.TestCase;
+
+import org.apache.harmony.security.tests.support.TestKeyPair;
 
 import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.security.InvalidKeyException;
+import java.security.InvalidParameterException;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.security.SignedObject;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Properties;
-
-import org.apache.harmony.security.tests.support.TestKeyPair;
-
-import junit.framework.TestCase;
 @TestTargetClass(SignedObject.class)
 /**
  * Tests for <code>SignedObject</code> constructor and methods
@@ -46,13 +51,36 @@ import junit.framework.TestCase;
  */
 public class SignedObjectTest extends TestCase {
 
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IOException, InvalidKeyException, SignatureException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "SignedObject",
-          methodArgs = {java.io.Serializable.class, java.security.PrivateKey.class, Signature.class}
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "SignedObject",
+            args = {java.io.Serializable.class, java.security.PrivateKey.class, java.security.Signature.class}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getAlgorithm",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getObject",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "getSignature",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "",
+            method = "verify",
+            args = {java.security.PublicKey.class, java.security.Signature.class}
         )
     })
     public void testSignedObject() {
@@ -110,7 +138,97 @@ public class SignedObjectTest extends TestCase {
         
         if (so.getSignature() == null) {
             fail("signature is null");
-        }             
+        }
+        
+        try {
+            TestKeyPair tkp2 = new TestKeyPair("DH");
+            so = new SignedObject(prop, tkp2.getPrivate(), sig);
+        } catch(InvalidKeyException e) {
+            // ok
+        } catch (NoSuchAlgorithmException e) {
+            fail(e.toString()); 
+        } catch (SignatureException e) {
+            fail(e.toString()); 
+        } catch (InvalidKeySpecException e) {
+            fail(e.toString()); 
+        } catch (IOException e) {
+            fail(e.toString()); 
+        }
+        
+        try {
+            new SignedObject(new Serializable() {
+                private void writeObject(ObjectOutputStream out) throws IOException {
+                    throw new IOException();
+                }
+            }, tkp.getPrivate(), sig);
+        } catch(InvalidKeyException e) {
+            fail(e.toString()); 
+        } catch (SignatureException e) {
+            fail(e.toString()); 
+        } catch (InvalidKeySpecException e) {
+            fail(e.toString()); 
+        } catch (IOException e) {
+            // ok 
+        } 
+
+        
+        try {
+            new SignedObject(prop, tkp.getPrivate(), new Signature("TST") {
+            
+                @Override
+                protected boolean engineVerify(byte[] sigBytes) throws SignatureException {
+                    throw new SignatureException();
+                }
+            
+                @Override
+                protected void engineUpdate(byte[] b, int off, int len)
+                        throws SignatureException {
+                    throw new SignatureException();
+                }
+            
+                @Override
+                protected void engineUpdate(byte b) throws SignatureException {
+                    throw new SignatureException();
+                }
+            
+                @Override
+                protected byte[] engineSign() throws SignatureException {
+                    throw new SignatureException();
+                }
+            
+                @Override
+                protected void engineSetParameter(String param, Object value)
+                        throws InvalidParameterException {
+            
+                }
+            
+                @Override
+                protected void engineInitVerify(PublicKey publicKey)
+                        throws InvalidKeyException {
+            
+                }
+            
+                @Override
+                protected void engineInitSign(PrivateKey privateKey)
+                        throws InvalidKeyException {
+            
+                }
+            
+                @Override
+                protected Object engineGetParameter(String param)
+                        throws InvalidParameterException {
+                    return null;
+                }
+            });
+        } catch(InvalidKeyException e) {
+            fail(e.toString()); 
+        } catch (SignatureException e) {
+            // ok 
+        } catch (InvalidKeySpecException e) {
+            fail(e.toString()); 
+        } catch (IOException e) {
+            fail(e.toString()); 
+        } 
+        
     }
-    
 }

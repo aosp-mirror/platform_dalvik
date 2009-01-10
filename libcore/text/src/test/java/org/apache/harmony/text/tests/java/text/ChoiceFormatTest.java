@@ -17,9 +17,9 @@
 
 package org.apache.harmony.text.tests.java.text;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -44,15 +44,12 @@ public class ChoiceFormatTest extends TestCase {
     /**
      * @tests java.text.ChoiceFormat#ChoiceFormat(double[], java.lang.String[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "ChoiceFormat",
-          methodArgs = {double[].class, java.lang.String[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "ChoiceFormat",
+        args = {double[].class, java.lang.String[].class}
+    )
     public void test_Constructor$D$Ljava_lang_String() {
         // Test for method java.text.ChoiceFormat(double [], java.lang.String
         // [])
@@ -103,15 +100,12 @@ public class ChoiceFormatTest extends TestCase {
     /**
      * @tests java.text.ChoiceFormat#ChoiceFormat(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "ChoiceFormat",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "ChoiceFormat",
+        args = {java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_String() {
         // Test for method java.text.ChoiceFormat(java.lang.String)
         String formattedString;
@@ -160,15 +154,12 @@ public class ChoiceFormatTest extends TestCase {
     /**
      * @tests java.text.ChoiceFormat#applyPattern(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "applyPattern",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "applyPattern",
+        args = {java.lang.String.class}
+    )
     public void test_applyPatternLjava_lang_String() {
         // Test for method void
         // java.text.ChoiceFormat.applyPattern(java.lang.String)
@@ -232,15 +223,12 @@ public class ChoiceFormatTest extends TestCase {
     /**
      * @tests java.text.ChoiceFormat#clone()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "clone",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "clone",
+        args = {}
+    )
     public void test_clone() {
         // Test for method java.lang.Object java.text.ChoiceFormat.clone()
         ChoiceFormat f = (ChoiceFormat) f1.clone();
@@ -252,15 +240,12 @@ public class ChoiceFormatTest extends TestCase {
     /**
      * @tests java.text.ChoiceFormat#equals(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "equals",
-          methodArgs = {java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "equals",
+        args = {java.lang.Object.class}
+    )
     public void test_equalsLjava_lang_Object() {
         // Test for method boolean
         // java.text.ChoiceFormat.equals(java.lang.Object)
@@ -301,15 +286,12 @@ public class ChoiceFormatTest extends TestCase {
      * @tests java.text.ChoiceFormat#format(double, java.lang.StringBuffer,
      *        java.text.FieldPosition)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "format",
-          methodArgs = {double.class, java.lang.StringBuffer.class, java.text.FieldPosition.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "format",
+        args = {double.class, java.lang.StringBuffer.class, java.text.FieldPosition.class}
+    )
     public void test_formatDLjava_lang_StringBufferLjava_text_FieldPosition() {
         // Test for method java.lang.StringBuffer
         // java.text.ChoiceFormat.format(double, java.lang.StringBuffer,
@@ -344,15 +326,12 @@ public class ChoiceFormatTest extends TestCase {
      * @tests java.text.ChoiceFormat#format(long, java.lang.StringBuffer,
      *        java.text.FieldPosition)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "format",
-          methodArgs = {long.class, java.lang.StringBuffer.class, java.text.FieldPosition.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "format",
+        args = {long.class, java.lang.StringBuffer.class, java.text.FieldPosition.class}
+    )
     public void test_formatJLjava_lang_StringBufferLjava_text_FieldPosition() {
         // Test for method java.lang.StringBuffer
         // java.text.ChoiceFormat.format(long, java.lang.StringBuffer,
@@ -372,15 +351,12 @@ public class ChoiceFormatTest extends TestCase {
     /**
      * @tests java.text.ChoiceFormat#getFormats()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getFormats",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getFormats",
+        args = {}
+    )
     public void test_getFormats() {
         // Test for method java.lang.Object []
         // java.text.ChoiceFormat.getFormats()
@@ -394,15 +370,12 @@ public class ChoiceFormatTest extends TestCase {
     /**
      * @tests java.text.ChoiceFormat#getLimits()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getLimits",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getLimits",
+        args = {}
+    )
     public void test_getLimits() {
         // Test for method double [] java.text.ChoiceFormat.getLimits()
         double[] orgLimits = (double[]) limits.clone();
@@ -415,15 +388,12 @@ public class ChoiceFormatTest extends TestCase {
     /**
      * @tests java.text.ChoiceFormat#hashCode()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "hashCode",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "hashCode",
+        args = {}
+    )
     public void test_hashCode() {
         // Test for method int java.text.ChoiceFormat.hashCode()
         ChoiceFormat f2 = new ChoiceFormat(
@@ -434,15 +404,12 @@ public class ChoiceFormatTest extends TestCase {
     /**
      * @tests java.text.ChoiceFormat#nextDouble(double)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "nextDouble",
-          methodArgs = {double.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "nextDouble",
+        args = {double.class}
+    )
     public void test_nextDoubleD() {
         // Test for method double java.text.ChoiceFormat.nextDouble(double)
         assertTrue("Not greater 5", ChoiceFormat.nextDouble(5) > 5);
@@ -454,15 +421,12 @@ public class ChoiceFormatTest extends TestCase {
     /**
      * @tests java.text.ChoiceFormat#nextDouble(double, boolean)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "nextDouble",
-          methodArgs = {double.class, boolean.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "nextDouble",
+        args = {double.class, boolean.class}
+    )
     public void test_nextDoubleDZ() {
         // Test for method double java.text.ChoiceFormat.nextDouble(double,
         // boolean)
@@ -474,15 +438,12 @@ public class ChoiceFormatTest extends TestCase {
      * @tests java.text.ChoiceFormat#parse(java.lang.String,
      *        java.text.ParsePosition)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "parse",
-          methodArgs = {java.lang.String.class, java.text.ParsePosition.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "parse",
+        args = {java.lang.String.class, java.text.ParsePosition.class}
+    )
     public void test_parseLjava_lang_StringLjava_text_ParsePosition() {
         // Test for method java.lang.Number
         // java.text.ChoiceFormat.parse(java.lang.String,
@@ -511,15 +472,12 @@ public class ChoiceFormatTest extends TestCase {
     /**
      * @tests java.text.ChoiceFormat#previousDouble(double)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "previousDouble",
-          methodArgs = {double.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "previousDouble",
+        args = {double.class}
+    )
     public void test_previousDoubleD() {
         // Test for method double java.text.ChoiceFormat.previousDouble(double)
         assertTrue("Not less 5", ChoiceFormat.previousDouble(5) < 5);
@@ -532,15 +490,12 @@ public class ChoiceFormatTest extends TestCase {
     /**
      * @tests java.text.ChoiceFormat#setChoices(double[], java.lang.String[])
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "setChoices",
-          methodArgs = {double[].class, java.lang.String[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "setChoices",
+        args = {double[].class, java.lang.String[].class}
+    )
     public void test_setChoices$D$Ljava_lang_String() {
         // Test for method void java.text.ChoiceFormat.setChoices(double [],
         // java.lang.String [])
@@ -555,15 +510,12 @@ public class ChoiceFormatTest extends TestCase {
     /**
      * @tests java.text.ChoiceFormat#toPattern()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "toPattern",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toPattern",
+        args = {}
+    )
     public void test_toPattern() {
         // Regression for HARMONY-59
         ChoiceFormat cf = new ChoiceFormat("");
@@ -596,15 +548,12 @@ public class ChoiceFormatTest extends TestCase {
     /**
      * @tests java.text.ChoiceFormat#format(long)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "format",
-          methodArgs = {long.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "format",
+        args = {long.class}
+    )
     public void test_formatL() {
         ChoiceFormat fmt = new ChoiceFormat(
                 "-1#NEGATIVE_ONE|0#ZERO|1#ONE|1<GREATER_THAN_ONE");
@@ -619,15 +568,12 @@ public class ChoiceFormatTest extends TestCase {
     /**
      * @tests java.text.ChoiceFormat#format(double)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "format",
-          methodArgs = {double.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "format",
+        args = {double.class}
+    )
     public void test_formatD() {
         ChoiceFormat fmt = new ChoiceFormat(
                 "-1#NEGATIVE_ONE|0#ZERO|1#ONE|1<GREATER_THAN_ONE");

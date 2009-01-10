@@ -892,6 +892,18 @@ public class JCEBlockCipher extends WrapCipherSpi
     }
 
     /**
+     * PBEWithMD5AndRC2
+     */
+    static public class PBEWithMD5AndRC2
+        extends JCEBlockCipher
+    {
+        public PBEWithMD5AndRC2()
+        {
+            super(new CBCBlockCipher(new RC2Engine()));
+        }
+    }
+
+    /**
      * PBEWithSHA1AndDES
      */
     static public class PBEWithSHA1AndDES
@@ -936,6 +948,18 @@ public class JCEBlockCipher extends WrapCipherSpi
         public PBEWithAESCBC()
         {
             super(new CBCBlockCipher(new AESFastEngine()));
+        }
+    }
+    
+    /**
+     * PBEWITHSHAAND40BITRC2-CBC
+     */
+    static public class PBEWithSHAAnd40BitRC2
+        extends JCEBlockCipher
+    {
+        public PBEWithSHAAnd40BitRC2()
+        {
+            super(new CBCBlockCipher(new RC2Engine()));
         }
     }
 }

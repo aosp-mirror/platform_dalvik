@@ -68,7 +68,7 @@ public final class ImplForType implements ParameterizedType {
 
 
     Type getResolvedType() {
-        if (args.list.size() == 0) {
+        if (args.getResolvedTypes().length == 0) {
             return getRawType();
         } else {
             return this;

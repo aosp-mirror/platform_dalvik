@@ -16,15 +16,17 @@
 
 package tests.api.java.util;
 
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargetNew;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
 import dalvik.annotation.TestTargetClass; 
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.Vector;
 
 /**
  * @tests java.util.LinkedHashSet
@@ -45,15 +47,12 @@ public class LinkedHashSetTest extends junit.framework.TestCase {
     /**
      * @tests java.util.LinkedHashSet#LinkedHashSet()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "LinkedHashSet",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "LinkedHashSet",
+        args = {}
+    )
     public void test_Constructor() {
         // Test for method java.util.LinkedHashSet()
         LinkedHashSet hs2 = new LinkedHashSet();
@@ -63,65 +62,69 @@ public class LinkedHashSetTest extends junit.framework.TestCase {
     /**
      * @tests java.util.LinkedHashSet#LinkedHashSet(int)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify IllegalArgumentException.",
-      targets = {
-        @TestTarget(
-          methodName = "LinkedHashSet",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "LinkedHashSet",
+        args = {int.class}
+    )
     public void test_ConstructorI() {
         // Test for method java.util.LinkedHashSet(int)
         LinkedHashSet hs2 = new LinkedHashSet(5);
         assertEquals("Created incorrect LinkedHashSet", 0, hs2.size());
         try {
             new LinkedHashSet(-1);
+            fail("IllegalArgumentException expected");
         } catch (IllegalArgumentException e) {
-            return;
+            //expected
         }
-        fail(
-                "Failed to throw IllegalArgumentException for capacity < 0");
     }
 
     /**
      * @tests java.util.LinkedHashSet#LinkedHashSet(int, float)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify IllegalArgumentException.",
-      targets = {
-        @TestTarget(
-          methodName = "LinkedHashSet",
-          methodArgs = {int.class, float.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "LinkedHashSet",
+        args = {int.class, float.class}
+    )
     public void test_ConstructorIF() {
         // Test for method java.util.LinkedHashSet(int, float)
         LinkedHashSet hs2 = new LinkedHashSet(5, (float) 0.5);
         assertEquals("Created incorrect LinkedHashSet", 0, hs2.size());
+
         try {
-            new LinkedHashSet(0, 0);
+            new LinkedHashSet(-1, 0.5f);
+            fail("IllegalArgumentException expected");
         } catch (IllegalArgumentException e) {
-            return;
+            //expected
         }
-        fail(
-                "Failed to throw IllegalArgumentException for initial load factor <= 0");
+
+        try {
+            new LinkedHashSet(1, -0.5f);
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            //expected
+        }
+
+        try {
+            new LinkedHashSet(1, 0f);
+            fail("IllegalArgumentException expected");
+        } catch (IllegalArgumentException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.LinkedHashSet#LinkedHashSet(java.util.Collection)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify NullPointerException.",
-      targets = {
-        @TestTarget(
-          methodName = "LinkedHashSet",
-          methodArgs = {java.util.Collection.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "LinkedHashSet",
+        args = {java.util.Collection.class}
+    )
     public void test_ConstructorLjava_util_Collection() {
         // Test for method java.util.LinkedHashSet(java.util.Collection)
         LinkedHashSet hs2 = new LinkedHashSet(Arrays.asList(objArray));
@@ -130,20 +133,24 @@ public class LinkedHashSetTest extends junit.framework.TestCase {
                     .contains(objArray[counter]));
         assertTrue("LinkedHashSet created from collection incorrect size", hs2
                 .size() == objArray.length);
+
+        try {
+            new LinkedHashSet(null);
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
+            //expected
+        }
     }
 
     /**
      * @tests java.util.LinkedHashSet#add(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "add",
-          methodArgs = {Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "add",
+        args = {java.lang.Object.class}
+    )
     public void test_addLjava_lang_Object() {
         // Test for method boolean java.util.LinkedHashSet.add(java.lang.Object)
         int size = hs.size();
@@ -158,15 +165,12 @@ public class LinkedHashSetTest extends junit.framework.TestCase {
     /**
      * @tests java.util.LinkedHashSet#clear()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "clear",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "clear",
+        args = {}
+    )
     public void test_clear() {
         // Test for method void java.util.LinkedHashSet.clear()
         Set orgSet = (Set) hs.clone();
@@ -180,15 +184,12 @@ public class LinkedHashSetTest extends junit.framework.TestCase {
     /**
      * @tests java.util.LinkedHashSet#clone()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "clone",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "clone",
+        args = {}
+    )
     public void test_clone() {
         // Test for method java.lang.Object java.util.LinkedHashSet.clone()
         LinkedHashSet hs2 = (LinkedHashSet) hs.clone();
@@ -200,15 +201,12 @@ public class LinkedHashSetTest extends junit.framework.TestCase {
     /**
      * @tests java.util.LinkedHashSet#contains(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies null as a parameter.",
-      targets = {
-        @TestTarget(
-          methodName = "contains",
-          methodArgs = {Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verifies null as a parameter.",
+        method = "contains",
+        args = {java.lang.Object.class}
+    )
     public void test_containsLjava_lang_Object() {
         // Test for method boolean
         // java.util.LinkedHashSet.contains(java.lang.Object)
@@ -224,15 +222,12 @@ public class LinkedHashSetTest extends junit.framework.TestCase {
     /**
      * @tests java.util.LinkedHashSet#isEmpty()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "isEmpty",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "isEmpty",
+        args = {}
+    )
     public void test_isEmpty() {
         // Test for method boolean java.util.LinkedHashSet.isEmpty()
         assertTrue("Empty set returned false", new LinkedHashSet().isEmpty());
@@ -242,15 +237,12 @@ public class LinkedHashSetTest extends junit.framework.TestCase {
     /**
      * @tests java.util.LinkedHashSet#iterator()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "iterator",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "iterator",
+        args = {}
+    )
     public void test_iterator() {
         // Test for method java.util.Iterator java.util.LinkedHashSet.iterator()
         Iterator i = hs.iterator();
@@ -276,16 +268,12 @@ public class LinkedHashSetTest extends junit.framework.TestCase {
     /**
      * @tests java.util.LinkedHashSet#remove(java.lang.Object)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Doesn't verify ClassCastException, NullPointerException, " +
-            "UnsupportedOperationException.",
-      targets = {
-        @TestTarget(
-          methodName = "remove",
-          methodArgs = {Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Doesn't verify ClassCastException, NullPointerException, UnsupportedOperationException.",
+        method = "remove",
+        args = {java.lang.Object.class}
+    )
     public void test_removeLjava_lang_Object() {
         // Test for method boolean
         // java.util.LinkedHashSet.remove(java.lang.Object)
@@ -302,20 +290,140 @@ public class LinkedHashSetTest extends junit.framework.TestCase {
     /**
      * @tests java.util.LinkedHashSet#size()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "size",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "size",
+        args = {}
+    )
     public void test_size() {
         // Test for method int java.util.LinkedHashSet.size()
         assertTrue("Returned incorrect size", hs.size() == (objArray.length + 1));
         hs.clear();
         assertEquals("Cleared set returned non-zero size", 0, hs.size());
+    }
+    
+    class Mock_LinkedHashSet extends LinkedHashSet {
+        @Override
+        public boolean retainAll(Collection c) {
+            throw new UnsupportedOperationException();
+        }
+    }
+    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "retainAll",
+        args = {java.util.Collection.class}
+    )
+    public void test_retainAllLjava_util_Collection() {
+        LinkedHashSet<Integer> lhs = new LinkedHashSet<Integer>();
+        Vector v = new Vector<Float>();
+        v.add(new Float(3.14));
+        lhs.add(new Integer(1));
+        assertEquals(1, lhs.size());
+        lhs.retainAll(v);
+        assertEquals(0, lhs.size());
+        v = new Vector<Integer>();
+        v.add(new Integer(1));
+        v.add(new Integer(2));
+        v.add(new Integer(3));
+        v.add(new Integer(4));
+        v.add(new Integer(5));
+        v.add(new Integer(6));
+        lhs.add(new Integer(1));
+        lhs.add(new Integer(6));
+        lhs.add(new Integer(7));
+        lhs.add(new Integer(8));
+        lhs.add(new Integer(9));
+        lhs.add(new Integer(10));
+        lhs.add(new Integer(11));
+        lhs.add(new Integer(12));
+        lhs.add(new Integer(13));
+        assertEquals(9, lhs.size());
+        lhs.retainAll(v);
+        assertEquals(2, lhs.size());
+        
+        try {
+            lhs.retainAll(null);
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
+            //expected
+        }
+        
+        lhs = new Mock_LinkedHashSet();
+        
+        try {
+            lhs.retainAll(v);
+            fail("UnsupportedOperationException expected");
+        } catch (UnsupportedOperationException e) {
+            //expected
+        }
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toArray",
+        args = {}
+    )
+    public void test_toArray() {
+        LinkedHashSet<Integer> lhs = new LinkedHashSet<Integer>();
+        lhs.add(new Integer(1));
+        lhs.add(new Integer(6));
+        lhs.add(new Integer(7));
+        lhs.add(new Integer(8));
+        lhs.add(new Integer(9));
+        lhs.add(new Integer(10));
+        lhs.add(new Integer(11));
+        lhs.add(new Integer(12));
+        lhs.add(new Integer(13));
+        
+        Object[] o = lhs.toArray();
+        for (int i = 0; i < o.length; i++) {
+            assertTrue(lhs.contains(o[i]));
+        }
+        assertEquals(lhs.size(), o.length);
+    }
+
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "toArray",
+        args = {java.lang.Object[].class}
+    )
+    public void test_toArray$Ljava_lang_Object() {
+        LinkedHashSet<Integer> lhs = new LinkedHashSet<Integer>();
+        lhs.add(new Integer(1));
+        lhs.add(new Integer(6));
+        lhs.add(new Integer(7));
+        lhs.add(new Integer(8));
+        lhs.add(new Integer(9));
+        lhs.add(new Integer(10));
+        lhs.add(new Integer(11));
+        lhs.add(new Integer(12));
+        lhs.add(new Integer(13));
+        
+        Object[] o1 = new Object[lhs.size()];
+        Object[] o2 = new Double[lhs.size()];
+        lhs.toArray(o1);
+        for (int i = 0; i < o1.length; i++) {
+            assertTrue(lhs.contains(o1[i]));
+        }
+        
+        try {
+            lhs.toArray(null);
+            fail("NullPointerException expected");
+        } catch (NullPointerException e) {
+            //expected
+        }
+        
+        try {
+            lhs.toArray(o2);
+            fail("ArrayStoreException expected");
+        } catch (ArrayStoreException e) {
+            //expected
+        }
     }
 
     /**

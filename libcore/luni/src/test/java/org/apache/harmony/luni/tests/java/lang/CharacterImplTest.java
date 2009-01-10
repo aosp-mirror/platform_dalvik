@@ -16,9 +16,9 @@
 
 package org.apache.harmony.luni.tests.java.lang;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -26,15 +26,12 @@ import junit.framework.TestCase;
 @TestTargetClass(Character.class) 
 public class CharacterImplTest extends TestCase {
 
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "valueOf",
-          methodArgs = {char.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "valueOf",
+        args = {char.class}
+    )
     public void test_valueOfC() {
         // test the cache range
         for (char c = '\u0000'; c < 512; c++) {
@@ -43,7 +40,7 @@ public class CharacterImplTest extends TestCase {
             assertEquals(e, a);
 
             // WARN: this assertion may not be valid on other JREs
-            assertSame(Character.valueOf(c), Character.valueOf(c));
+            assertEquals(Character.valueOf(c), Character.valueOf(c));
         }
         // test the rest of the chars
         for (int c = '\u0512'; c <= Character.MAX_VALUE; c++) {

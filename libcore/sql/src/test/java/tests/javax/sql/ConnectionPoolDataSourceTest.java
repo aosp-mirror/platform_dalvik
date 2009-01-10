@@ -1,8 +1,8 @@
 package tests.javax.sql;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -18,85 +18,79 @@ public class ConnectionPoolDataSourceTest extends TestCase {
     /**
      * @tests {@link javax.sql.ConnectionPoolDataSource#getLoginTimeout()}
      */
-    @TestInfo(
-            level = TestLevel.TODO,
-            purpose = "",
-            targets = {@TestTarget(methodName = "getLoginTimeout",
-                                     methodArgs = {ConnectionPoolDataSource.class})
-            }
+    @TestTargetNew(
+        level = TestLevel.NOT_FEASIBLE,
+        notes = "",
+        method = "getLoginTimeout",
+        args = {}
     )
     public void testGetLoginTimeout() {
-        fail("Not yet implemented"); // TODO
+        fail("Not yet implemented"); // NOT_FEASIBLE
     }
 
     /**
      * @tests {@link javax.sql.ConnectionPoolDataSource#getLogWriter()}
      */
-    @TestInfo(
-            level = TestLevel.TODO,
-            purpose = "",
-            targets = {@TestTarget(methodName = "getLogWriter",
-                                     methodArgs = {ConnectionPoolDataSource.class})
-            }
+    @TestTargetNew(
+        level = TestLevel.NOT_FEASIBLE,
+        notes = "",
+        method = "getLogWriter",
+        args = {}
     )
     public void testGetLogWriter() {
-        fail("Not yet implemented"); // TODO
+        fail("Not yet implemented"); // NOT_FEASIBLE
     }
 
     /**
      * @tests {@link javax.sql.ConnectionPoolDataSource#getPooledConnection()}
      */
-    @TestInfo(
-            level = TestLevel.TODO,
-            purpose = "",
-            targets = {@TestTarget(methodName = "getPooledConnection",
-                                     methodArgs = {ConnectionPoolDataSource.class})
-            }
+    @TestTargetNew(
+        level = TestLevel.NOT_FEASIBLE,
+        notes = "",
+        method = "getPooledConnection",
+        args = {}
     )
     public void testGetPooledConnection() {
-        fail("Not yet implemented"); // TODO
+        fail("Not yet implemented"); // NOT_FEASIBLE
     }
 
     /**
      * @tests {@link javax.sql.ConnectionPoolDataSource#getPooledConnection(String, String)}
      */
-    @TestInfo(
-            level = TestLevel.TODO,
-            purpose = "",
-            targets = {@TestTarget(methodName = "getPooledConnection",
-                                     methodArgs = {ConnectionPoolDataSource.class})
-            }
+    @TestTargetNew(
+        level = TestLevel.NOT_FEASIBLE,
+        notes = "",
+        method = "getPooledConnection",
+        args = {String.class, String.class}
     )
     public void testGetPooledConnectionStringString() {
-        fail("Not yet implemented"); // TODO
+        fail("Not yet implemented"); // NOT_FEASIBLE
     }
 
     /**
      * @tests {@link javax.sql.ConnectionPoolDataSource#setLoginTimeout(int)}
      */
-    @TestInfo(
-            level = TestLevel.TODO,
-            purpose = "",
-            targets = {@TestTarget(methodName = "setLoginTimeout",
-                                     methodArgs = {int.class})
-            }
+    @TestTargetNew(
+        level = TestLevel.NOT_FEASIBLE,
+        notes = "",
+        method = "setLoginTimeout",
+        args = {int.class}
     )
     public void testSetLoginTimeout() {
-        fail("Not yet implemented"); // TODO
+        fail("Not yet implemented"); // NOT_FEASIBLE
     }
 
     /**
      * @tests {@link javax.sql.ConnectionPoolDataSource#setLogWriter(java.io.PrintWriter)}
      */
-    @TestInfo(
-            level = TestLevel.TODO,
-            purpose = "",
-            targets = {@TestTarget(methodName = "setLogWriter",
-                                     methodArgs = {PrintWriter.class})
-            }
+    @TestTargetNew(
+        level = TestLevel.NOT_FEASIBLE,
+        notes = "",
+        method = "setLogWriter",
+        args = {java.io.PrintWriter.class}
     )
     public void testSetLogWriter() {
-        fail("Not yet implemented"); // TODO
+        fail("Not yet implemented"); // NOT_FEASIBLE
     }
 
 }

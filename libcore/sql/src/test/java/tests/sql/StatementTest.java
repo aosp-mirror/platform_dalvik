@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,17 +16,22 @@
 
 package tests.sql;     
 
+import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.sql.BatchUpdateException;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Vector;
+import java.util.logging.Logger;
 
 @TestTargetClass(Statement.class)
 public class StatementTest extends SQLTest {
@@ -34,15 +39,12 @@ public class StatementTest extends SQLTest {
     /**
      * @test java.sql.Statement#addBatch(String)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "addBatch",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "addBatch",
+        args = {java.lang.String.class}
+    )
     public void testAddBatch() throws SQLException {
         
         Statement st = null;
@@ -96,15 +98,12 @@ public class StatementTest extends SQLTest {
     /**
      * @test java.sql.Statement#clearWarnings()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "SQLException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "clearWarnings",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "clearWarnings",
+        args = {}
+    )
     public void testClearWarnings() {
         Statement st = null;
         try {
@@ -137,9 +136,35 @@ public class StatementTest extends SQLTest {
      * @test java.sql.Statement#getWarnings()
      * 
      * TODO getWarnings is not supported
-     */ 
-/*    public void testGetWarnings() {
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "not supported. always returns null. ",
+        method = "getWarnings",
+        args = {}
+    )
+    public void testGetWarnings() {
+        
+        Statement st = null;
+        int errorCode1 = -1;
+        int errorCode2 = -1;
 
+        try {
+            st = conn.createStatement();
+            st.execute("select animals from zoooo");
+            fail("SQLException was not thrown");
+        } catch (SQLException e) {
+            // expected
+            errorCode1 = e.getErrorCode();
+        }
+        
+        try {
+            SQLWarning wrs = st.getWarnings();
+            assertNull(wrs);
+        } catch (Exception e) {
+            fail("Change test implementation: get warnings is supported now");
+        }
+        /*
         Statement st = null;
         int errorCode1 = -1;
         int errorCode2 = -1;
@@ -177,21 +202,19 @@ public class StatementTest extends SQLTest {
             st.close();
         } catch (SQLException ee) {
         }
+        */
 
     }
-*/
+
     /**
-     * @test java.sql.Statement#clearBatch(String)
+     * @test {@link java.sql.Statement#clearBatch()}
      */
-    @TestInfo(
-      level = TestLevel.TODO,
-      purpose = "addBatch tested instead of clearBatch method",
-      targets = {
-        @TestTarget(
-          methodName = "clearBatch",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "clearBatch",
+        args = {}
+    )
     public void testClearBatch() throws SQLException {
         
         Statement st = null;
@@ -200,11 +223,14 @@ public class StatementTest extends SQLTest {
             st = conn.createStatement();
             st.addBatch("INSERT INTO zoo VALUES (3,'Tuzik','dog'); ");
             st.addBatch("INSERT INTO zoo VALUES (4,'Mashka','cat')");
-
+            
+            st.clearBatch();
+            
             int[] updateCounts = st.executeBatch();
-            assertEquals(2, updateCounts.length);
-            assertEquals(1, updateCounts[0]);
-            assertEquals(1, updateCounts[1]);
+            
+            for (int i = 0; i < updateCounts.length; i++) {
+                assertEquals(0, updateCounts[i]);
+            }
 
         } catch (SQLException e) {
             fail("SQLException is thrown");
@@ -249,15 +275,12 @@ public class StatementTest extends SQLTest {
      * TODO not pass on SQLite and RI.
      * 
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL_OK,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "execute",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "execute",
+        args = {java.lang.String.class}
+    )
     public void testExecute() throws SQLException {
 
         String[] queries = {
@@ -316,7 +339,13 @@ public class StatementTest extends SQLTest {
      * @test java.sql.Statement#execute(String sql, int autoGeneratedKeys)
      * TODO not supported 
      */
- /*   public void testExecute_String_int() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Missing implementation for Statement.RETURN_GENERATED_KEYS: keys not yet supported",
+        method = "execute",
+        args = {java.lang.String.class, int.class}
+    )
+   public void testExecute_String_int() {
         String[] queries = {
                 "update zoo set name='Masha', family='cat' where id=2;",
                 "drop table if exists hutch",
@@ -333,9 +362,28 @@ public class StatementTest extends SQLTest {
                 st = conn.createStatement();
                 st.execute(queries[i], Statement.NO_GENERATED_KEYS);
                 ResultSet rs = st.getGeneratedKeys();
+                fail("Revise test implemenation for feature impl. has changed");
                 assertFalse(rs.next());
             } catch (SQLException e) {
-                fail("SQLException is thrown: " + e.getMessage());
+                assertEquals("not supported", e.getMessage());
+            } finally {
+                try {
+                    st.close();
+                } catch (SQLException ee) {
+                }
+            } 
+        }
+        
+        for (int i = 0; i < queries.length; i++) {
+            Statement st = null;
+            try {
+                st = conn.createStatement();
+                st.execute(queries[i], Statement.RETURN_GENERATED_KEYS);
+                ResultSet rs = st.getGeneratedKeys();
+                fail("Revise test implemenation for feature impl. has changed");
+                assertFalse(rs.next());
+            } catch (SQLException e) {
+                assertEquals("not supported", e.getMessage());
             } finally {
                 try {
                     st.close();
@@ -344,19 +392,17 @@ public class StatementTest extends SQLTest {
             } 
         }
     }
-*/
+
     /**
      * @test java.sql.Statement#getConnection()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "SQLException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "getConnection",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "SQLException test fails",
+        method = "getConnection",
+        args = {}
+    )
+    @KnownFailure("statment.close() does not wrap up")
     public void testGetConnection() {
         Statement st = null;
         try {
@@ -370,20 +416,28 @@ public class StatementTest extends SQLTest {
             } catch (SQLException ee) {
             }
         }
+        
+        try {
+            conn.close();
+            st.getConnection();
+            fail("Exception expected");
+        } catch (SQLException e) {
+            //ok
+        }
+        
+        
     }
 
     /**
      * @test java.sql.Statement#getFetchDirection()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "SQLException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "getFetchDirection",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "SQLException test fails",
+        method = "getFetchDirection",
+        args = {}
+    )
+    @KnownFailure("statment.close() does not wrap up")
     public void testGetFetchDirection() {
         Statement st = null;
         try {
@@ -397,26 +451,43 @@ public class StatementTest extends SQLTest {
             } catch (SQLException ee) {
             }
         }
+        
+        try {
+            st.getFetchDirection();
+            fail("Exception expected");
+        } catch (SQLException e) {
+            //ok
+        }
     }
 
     /**
-     * @test java.sql.Statement#setFetchDirection()
+     * @test java.sql.Statement#setFetchDirection(int)
      * TODO not supported
      */
-/*    public void testSetFetchDirection() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "not supported. ",
+        method = "setFetchDirection",
+        args = {int.class}
+    )
+    public void testSetFetchDirection() {
         Statement st = null;
         try {
             st = conn.createStatement();
             st.setFetchDirection(ResultSet.FETCH_FORWARD);
-            assertEquals(ResultSet.FETCH_FORWARD, st.getFetchDirection());
+            fail("Revise test implemenation for feature impl. has changed");
+//            assertEquals(ResultSet.FETCH_FORWARD, st.getFetchDirection());
         } catch (SQLException e) {
-            fail("SQLException is thrown: " + e.getMessage());
+//            fail("SQLException is thrown: " + e.getMessage());
+            assertEquals("not supported", e.getMessage());
         } finally {
             try {
                 st.close();
             } catch (SQLException ee) {
             }
         }
+        
+        /*
         try {
             st = conn.createStatement();
             st.setFetchDirection(-1);
@@ -442,20 +513,20 @@ public class StatementTest extends SQLTest {
             } catch (SQLException ee) {
             }
         }
+        
+        */
     }
-*/
+
     /**
      * @test java.sql.Statement#getFetchSize()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "SQLException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "getFetchSize",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "SQLException test fails",
+        method = "getFetchSize",
+        args = {}
+    )
+    @KnownFailure("statment.close() does not wrap up")
     public void testGetFetchSize() {
         Statement st = null;
         try {
@@ -469,13 +540,26 @@ public class StatementTest extends SQLTest {
             } catch (SQLException ee) {
             }
         }
+        
+        try {
+            st.getFetchSize();
+            fail("Exception expected");
+        } catch (SQLException e) {
+            //ok
+        }
     }
 
     /**
-     * @test java.sql.Statement#setFetchSize()
+     * @test {@link java.sql.Statement#setFetchSize(int)}
      * TODO not supported
      */
-/*    public void testSetFetchSize() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "not supported.",
+        method = "setFetchSize",
+        args = {int.class}
+    )
+    public void testSetFetchSize() {
         Statement st = null;
         try {
             st = conn.createStatement();
@@ -484,16 +568,20 @@ public class StatementTest extends SQLTest {
                 try {
                     st.setFetchSize(i);
                     assertEquals(i, st.getFetchSize());
+                    fail("Revise test implemenation for feature impl. has changed");
                 } catch (SQLException sqle) {
-                    fail("SQLException is thrown: " + sqle.toString());
+    //                fail("SQLException is thrown: " + sqle.toString());
+                    assertEquals("not supported", sqle.getMessage());
                 }
             }
+            /*
             try {
                 st.setFetchSize(-1);
                 fail("SQLException is not thrown");
             } catch (SQLException sqle) {
                 // expected
             }
+            */
 
         } catch (SQLException e) {
             fail("SQLException is thrown");
@@ -504,12 +592,18 @@ public class StatementTest extends SQLTest {
             }
         }
     }
-*/
+
     /**
      * @test java.sql.Statement#setMaxFieldSize(int max)
      * TODO not supported
      */
-/*    public void testSetMaxFieldSize() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "not supported",
+        method = "setMaxFieldSize",
+        args = {int.class}
+    )
+    public void testSetMaxFieldSize() {
         Statement st = null;
         try {
             st = conn.createStatement();
@@ -517,16 +611,20 @@ public class StatementTest extends SQLTest {
                 try {
                     st.setMaxFieldSize(i);
                     assertEquals(i, st.getMaxFieldSize());
+                    fail("Revise test implemenation for feature impl. has changed");
                 } catch (SQLException sqle) {
-                    fail("SQLException is thrown: " + sqle.getMessage());
+                    assertEquals("not supported", sqle.getMessage());
+//                    fail("SQLException is thrown: " + sqle.getMessage());
                 }
             }
+            /*
             try {
                 st.setMaxFieldSize(-1);
                 fail("SQLException isn't thrown");
             } catch (SQLException sqle) {
                 // expecteds
             }
+            */
         } catch (SQLException e) {
             fail("Can't create statement, SQLException is thrown: "
                     + e.getMessage());
@@ -537,12 +635,18 @@ public class StatementTest extends SQLTest {
             }
         }
     }
-*/
+
     /**
      * @test java.sql.Statement#getMaxFieldSize()
      * TODO not supported
      */
-/*    public void testGetMaxFieldSize() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "not supported",
+        method = "getMaxFieldSize",
+        args = {}
+    )
+    public void testGetMaxFieldSize() {
         Statement st = null;
         try {
             st = conn.createStatement();
@@ -550,8 +654,10 @@ public class StatementTest extends SQLTest {
                 try {
                     st.setMaxFieldSize(i);
                     assertEquals(i, st.getMaxFieldSize());
+                    fail("Revise test implemenation for feature impl. has changed");
                 } catch (SQLException sqle) {
-                    fail("SQLException is thrown: " + sqle.getMessage());
+                    assertEquals("not supported", sqle.getMessage());
+ //                   fail("SQLException is thrown: " + sqle.getMessage());
                 }
             }
         } catch (SQLException e) {
@@ -564,12 +670,18 @@ public class StatementTest extends SQLTest {
             }
         }
     }
-*/
+
     /**
      * @test java.sql.Statement#setMaxRows(int max)
      * TODO not supported
      */
- /*   public void testSetMaxRows() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "not supported",
+        method = "setMaxRows",
+        args = {int.class}
+    )
+    public void testSetMaxRows() {
         Statement st = null;
         try {
             st = conn.createStatement();
@@ -577,8 +689,10 @@ public class StatementTest extends SQLTest {
                 try {
                     st.setMaxRows(i);
                     assertEquals(i, st.getMaxRows());
+                    fail("Revise test implemenation for feature impl. has changed");
                 } catch (SQLException sqle) {
-                    fail("SQLException is thrown: " + sqle.getMessage());
+                    assertEquals("not supported", sqle.getMessage());
+//                   fail("SQLException is thrown: " + sqle.getMessage());
                 }
             }
             try {
@@ -597,12 +711,18 @@ public class StatementTest extends SQLTest {
             }
         }
     }
-*/
+
     /**
      * @test java.sql.Statement#getMaxRows()
      * TODO not supported
      */
-/*    public void testGetMaxRows() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "not supported",
+        method = "getMaxRows",
+        args = {}
+    )
+    public void testGetMaxRows() {
         Statement st = null;
         try {
             st = conn.createStatement();
@@ -610,8 +730,10 @@ public class StatementTest extends SQLTest {
                 try {
                     st.setMaxRows(i);
                     assertEquals(i, st.getMaxRows());
+                    fail("Revise test implemenation for feature impl. has changed");
                 } catch (SQLException sqle) {
-                    fail("SQLException is thrown: " + sqle.getMessage());
+                    assertEquals("not supported", sqle.getMessage());
+//                    fail("SQLException is thrown: " + sqle.getMessage());
                 }
             }
         } catch (SQLException e) {
@@ -624,35 +746,36 @@ public class StatementTest extends SQLTest {
             }
         }
     }
-*/
+
     /**
      * @test java.sql.Statement#close()
-     * TODO not passed but according to Java Docs
+     * not passed according to Java Docs: should release all resources 
+     * IMMEDIATELY
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "close",
-          methodArgs = {}
-        )
-    })
-    public void _testClose() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "close",
+        args = {}
+    )
+    @KnownFailure("statment.close() does not wrap up")
+    public void testClose() {
         Statement st = null;
+        ResultSet res = null;
         try {
             String[] queries = {
                     "update zoo set name='Masha', family='cat' where id=2;",
                     "insert into zoo (id, name, family) values (3, 'Vorobey', 'sparrow');",
                     "insert into zoo (id, name, family) values (4, 'Slon', 'elephant');",
-                    "select * from zoo" };
+                    "select * from zoo"};
             st = conn.createStatement();
             for (int i = 0; i < queries.length; i++) {
                 st.execute(queries[i]);
             }
-            assertNotNull(st.getResultSet());
+            res = st.getResultSet();
+            assertNotNull(res);
+            assertTrue(res.next());
             st.close();
-            assertNull(st.getResultSet());
         } catch (SQLException e) {
             fail("SQLException is thrown: " + e.getMessage());
         } finally {
@@ -661,13 +784,31 @@ public class StatementTest extends SQLTest {
             } catch (SQLException ee) {
             }
         }
+
+        // test release of resources:
+        // this code should throw an exception as the db is not available
+        // anymore in fact every resource which is used afterwards should throw
+        // an SQLException.
+        try {
+            res.next();
+            fail("Exception expected");
+        } catch (SQLException e) {
+            // ok
+        }
+
     }
 
     /**
      * @test java.sql.Statement#execute(String sql, int[] columnIndexes)
      * TODO not supported
      */
-/*    public void testExecute_String_intArray() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "not supported",
+        method = "execute",
+        args = {java.lang.String.class, int[].class}
+    )
+    public void testExecute_String_intArray() {
         Statement st = null;
         try {
             String[] queries = {
@@ -685,11 +826,13 @@ public class StatementTest extends SQLTest {
             for (int i = 0; i < queries.length; i++) {
                 st.execute(queries[i], (int[]) array.elementAt(i));
             }
+            fail("Revise test implemenation for feature impl. has changed");
             assertNotNull(st.getResultSet());
             st.close();
             assertNull(st.getResultSet());
         } catch (SQLException e) {
-            fail("SQLException is thrown: " + e.getMessage());
+            assertEquals("not supported",e.getMessage());
+//            fail("SQLException is thrown: " + e.getMessage());
         } finally {
             try {
                 st.close();
@@ -697,11 +840,17 @@ public class StatementTest extends SQLTest {
             }
         }
     }
-*/
+
     /**
      * @test java.sql.Statement#execute(String sql, String[] columnNames)
      */
-/*    public void testExecute_String_StringArray() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "not supported",
+        method = "execute",
+        args = {java.lang.String.class, java.lang.String[].class}
+    )
+    public void testExecute_String_StringArray() {
         Statement st = null;
         try {
             String[] queries = {
@@ -719,11 +868,13 @@ public class StatementTest extends SQLTest {
             for (int i = 0; i < queries.length; i++) {
                 st.execute(queries[i], (String[]) array.elementAt(i));
             }
+            fail("Revise test implemenation for feature impl. has changed");
             assertNotNull(st.getResultSet());
             st.close();
             assertNull(st.getResultSet());
         } catch (SQLException e) {
-            fail("SQLException is thrown: " + e.getMessage());
+            assertEquals("not supported",e.getMessage());
+//            fail("SQLException is thrown: " + e.getMessage());
         } finally {
             try {
                 st.close();
@@ -731,19 +882,17 @@ public class StatementTest extends SQLTest {
             }
         } 
     }
-*/
+
     /**
      * @test java.sql.Statement#executeBatch()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "SQLException, BatchUpdateException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "executeBatch",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Test fails: dropping table hutch affects at least 2 rows.executeBatch() always returns same result: 1.",
+        method = "executeBatch",
+        args = {}
+    )
+    @KnownFailure("always returns 1 for no. of updates")
     public void testExecuteBatch() {
 
         String[] queries = {
@@ -754,9 +903,36 @@ public class StatementTest extends SQLTest {
                 "insert into hutch (id, animal_id, address) values (2, 1, 'Horse-house, 5');",
                 "create view address as select address from hutch where animal_id=2",
                 "drop view address;", "drop table hutch;" };
+        
+        String[] wrongQueries = {
+                "update zoo set name='Masha', family='cat' where;",
+                "drop table if exists hutch;",
+                "create view address as select address from hutch where animal_id=2;",
+                "drop view address;", "drop table hutch;" };
 
-        int[] result = { 1, 1, 1, 1, 1, 1, 1, 1 };
+        int[] result = { 1, 1, 1, 1, 1, 1, 1, 2 };
         Statement st = null;
+        
+        //Exception test
+        try {
+            st = conn.createStatement();
+            assertEquals(0, st.executeBatch().length);
+            for (int i = 0; i < wrongQueries.length; i++) {
+                st.addBatch(wrongQueries[i]);
+            }
+            st.executeBatch();
+            fail("BatchupdateException expected");
+        } catch (BatchUpdateException e) {
+            //ok
+        } catch (SQLException e) {
+            fail("BatchupdateException expected");
+        } finally {
+            try {
+                st.close();
+            } catch (SQLException ee) {
+            }
+        } 
+        
         try {
             st = conn.createStatement();
             assertEquals(0, st.executeBatch().length);
@@ -772,7 +948,7 @@ public class StatementTest extends SQLTest {
                 st.close();
             } catch (SQLException ee) {
             }
-        } 
+        }
 
         try {
             st = conn.createStatement();
@@ -787,22 +963,27 @@ public class StatementTest extends SQLTest {
                 st.close();
             } catch (SQLException ee) {
             }
-        } 
+        }
+        //Exception test
+        try {
+            st.executeBatch();
+            fail("SQLException not thrown");
+        } catch (SQLException e) {
+            //ok
+        }
     }
 
     /**
      * @test java.sql.Statement#executeQuery(String sql)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Null/empty parameter checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "executeQuery",
-          methodArgs = {String.class}
-        )
-    })
-    public void _testExecuteQuery_String() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Not according to spec.",
+        method = "executeQuery",
+        args = {java.lang.String.class}
+    )
+    @KnownFailure("Does throw an exception on non select statment.")
+    public void testExecuteQuery_String() {
 
         String[] queries1 = { "select * from zoo",
                 "select name, family from zoo where id = 1" };
@@ -835,13 +1016,16 @@ public class StatementTest extends SQLTest {
                 st.close();
             } catch (Exception ee) {
             }
-        } 
-
+        }
+        
+        // queries which do not produce a ResultSet -> exception testing 
+        
         try {
             st = conn.createStatement();
             for (int i = 0; i < queries2.length; i++) {
                 try {
-                    st.executeQuery(queries2[i]);
+                    ResultSet rs = st.executeQuery(queries2[i]);
+                    assertNotNull(rs);
                     fail("SQLException is not thrown for query: " + queries2[i]);
                 } catch (SQLException sqle) {
                     // expected
@@ -861,16 +1045,14 @@ public class StatementTest extends SQLTest {
     /**
      * @test java.sql.Statement#executeUpdate(String sql)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Null/empty parameter checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "executeUpdate",
-          methodArgs = {String.class}
-        )
-    })
-    public void _testExecuteUpdate_String() {
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "impl not according to spec.",
+        method = "executeUpdate",
+        args = {java.lang.String.class}
+    )
+    @KnownFailure("Returns wrong value for updates")
+    public void testExecuteUpdate_String() {
 
         String[] queries1 = {
                 "update zoo set name='Masha', family='cat' where id=2;",
@@ -889,7 +1071,8 @@ public class StatementTest extends SQLTest {
             st = conn.createStatement();
             for (int i = 0; i < queries1.length; i++) {
                 try {
-                    st.executeUpdate(queries1[i]);
+                    int count = st.executeUpdate(queries1[i]);
+                    assertTrue(count > 0);
                 } catch (SQLException e) {
                     fail("SQLException is thrown: " + e.getMessage());
                 }
@@ -897,10 +1080,12 @@ public class StatementTest extends SQLTest {
 
             for (int i = 0; i < queries2.length; i++) {
                 try {
-                    st.executeUpdate(queries2[i]);
-                    fail("SQLException is not thrown for query: " + queries2[i]);
+                    int count  = st.executeUpdate(queries2[i]);
+                    assertEquals(0, count); 
+                    // according to spec should return 0 for 0 manipulated rows
                 } catch (SQLException e) {
                     // expected
+                    fail("SQLException is thrown: " + e.getMessage());
                 }
             }
         } catch (SQLException e) {
@@ -918,7 +1103,13 @@ public class StatementTest extends SQLTest {
      * 
      * TODO executeUpdate(String sql, int[] columnIndexes) is not supported
      */
-/*    public void testExecuteUpdate_String_intArray() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "not supported",
+        method = "executeUpdate",
+        args = {java.lang.String.class, int[].class}
+    )
+    public void testExecuteUpdate_String_intArray() {
         Statement st = null;
         try {
             String[] queries1 = {
@@ -944,8 +1135,10 @@ public class StatementTest extends SQLTest {
             for (int i = 0; i < queries1.length; i++) {
                 st.executeUpdate(queries1[i], (int[]) array.elementAt(i));
             }
+            fail("Revise test implemenation for feature impl. has changed");
         } catch (SQLException e) {
-            fail("SQLException is thrown: " + e.getMessage());
+            assertEquals("not supported",e.getMessage());
+//            fail("SQLException is thrown: " + e.getMessage());
         } finally {
             try {
                 st.close();
@@ -953,13 +1146,19 @@ public class StatementTest extends SQLTest {
             }
         } 
     }
-*/
+
     /**
      * @test java.sql.Statement#executeUpdate(String sql, int autoGeneratedKeys)
      * 
      * TODO  executeUpdate(String sql, int autoGeneratedKeys) is not supported
      */
-/*    public void testExecuteUpdate_String_int() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "not supported",
+        method = "executeUpdate",
+        args = {java.lang.String.class, int.class}
+    )
+    public void testExecuteUpdate_String_int() {
         String[] queries = {
                 "update zoo set name='Masha', family='cat' where id=2;",
                 "drop table if exists hutch",
@@ -977,9 +1176,11 @@ public class StatementTest extends SQLTest {
                 st = conn.createStatement();
                 st.executeUpdate(queries[i], Statement.NO_GENERATED_KEYS);
                 rs = st.getGeneratedKeys();
+                fail("Revise test implemenation for feature impl. has changed");
                 assertFalse(rs.next());
             } catch (SQLException e) {
-                fail("SQLException is thrown: " + e.getMessage());
+                assertEquals("not supported", e.getMessage());
+//                fail("SQLException is thrown: " + e.getMessage());
             } finally {
                 try {
                     rs.close();
@@ -989,13 +1190,19 @@ public class StatementTest extends SQLTest {
             } 
         }
     }
-*/
+
     /**
      * @test java.sql.Statement#executeUpdate(String sql, String[] columnNames)
      * 
      * TODO executeUpdate(String sql, String[] columnNames) is not supported
      */
-/*    public void testExecuteUpdate_String_StringArray() {
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "not supported",
+        method = "executeUpdate",
+        args = {java.lang.String.class, java.lang.String[].class}
+    )
+    public void testExecuteUpdate_String_StringArray() {
         Statement st = null;
         try {
             String[] queries = {
@@ -1024,8 +1231,10 @@ public class StatementTest extends SQLTest {
             for (int i = 0; i < queries.length; i++) {
                 st.executeUpdate(queries[i], (String[]) array.elementAt(i));
             }
+            fail("Revise test implemenation for feature impl. has changed");
         } catch (SQLException e) {
-            fail("SQLException is thrown: " + e.getMessage());
+            assertEquals("not supported", e.getMessage());
+//            fail("SQLException is thrown: " + e.getMessage());
         } finally {
             try {
                 st.close();
@@ -1033,19 +1242,17 @@ public class StatementTest extends SQLTest {
             }
         } 
     }
-*/
+
     /**
      * @test java.sql.Statement#getUpdateCount()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "SQLException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "getUpdateCount",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "SQLException test fails",
+        method = "getUpdateCount",
+        args = {}
+    )
+    @KnownFailure("statment.close() does not wrap up")
     public void testGetUpdateCount() {
         Statement st = null;
         try {
@@ -1065,5 +1272,657 @@ public class StatementTest extends SQLTest {
             } catch (SQLException ee) {
             }
         } 
+        // statment closed : Exception test
+        try {
+            st.getUpdateCount();
+            fail("Exception expected");
+        } catch (SQLException e) {
+            //ok
+        }
     }
+    
+    /**
+     * @test {@link java.sql.Statement#getGeneratedKeys()}
+     * 
+     * TODO getGeneratedKeys() is not supported
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "not supported",
+        method = "getGeneratedKeys",
+        args = {}
+    )
+    public void testGeneratedKeys() {
+        Statement st = null;
+        try {
+            String insert = "insert into zoo (id, name, family) values (8, 'Tuzik', 'dog');";
+            st = conn.createStatement();
+            assertNull(st.getGeneratedKeys());
+            fail("Fail: statement does not fail");
+        } catch (SQLException e) {
+          assertEquals("not supported", e.getMessage());
+        }
+    }
+    
+    /**
+     * @test {@link java.sql.Statement#setCursorName(String)}
+     * 
+     * TODO setCursorName() is not supported
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "not supported",
+        method = "setCursorName",
+        args = {java.lang.String.class}
+    )
+    public void testSetCursorName() {
+        Statement st = null;
+        try {
+            String select = "select * from zoo";
+            st = conn.createStatement();
+            st.setCursorName("test");
+            fail("Fail: statement does not fail");
+        } catch (SQLException e) {
+          assertEquals("not supported", e.getMessage());
+        }
+    }
+    
+    /**
+     * @test {@link java.sql.Statement#setEscapeProcessing}
+     * 
+     * TODO setExcapeProcessing() is not supported
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "not supported",
+        method = "setEscapeProcessing",
+        args = {boolean.class}
+    )
+    public void testSetEscapeProcessing() {
+        Statement st = null;
+        try {
+            String select = "select * from zoo";
+            st = conn.createStatement();
+            st.setEscapeProcessing(true);
+            fail("Fail: statement does not fail");
+        } catch (SQLException e) {
+          assertEquals("not supported", e.getMessage());
+        }
+        
+    }
+    
+    /**
+     * @test {@link java.sql.Statement#setQueryTimeout}
+     * 
+     */
+    @TestTargets({
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Error in impl. default query timeout for sqlite dbs is 0.",
+        method = "setQueryTimeout",
+        args = {int.class}
+    ),
+    @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Error in impl. default query timeout for sqlite dbs is 0.",
+            method = "getQueryTimeout",
+            args = {}
+        )
+    })
+    @KnownFailure("Error in implementation either setter or getter fails. "+
+            "Getter spec is not explicit about unit.")
+    public void testSetQueryTimeout() {
+        Statement st = null;
+        try {
+            st = conn.createStatement();
+            st.setQueryTimeout(2000);
+            assertEquals(2000, st.getQueryTimeout());
+        } catch (SQLException e) {
+            fail("SQLException is thrown: " + e.getMessage());
+        }
+        
+        st = null;
+        try {
+            st = conn.createStatement();
+            st.setQueryTimeout(-1);
+           fail("SQLException is not thrown");
+        } catch (SQLException e) {
+            // expected 
+        }
+        
+    }
+    
+    /**
+     * @test {@link java.sql.Statement#getResultSetType()}
+     * 
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Tests fail. not fully supported: returns only ResultSet.TYPE_SCROLL_INSENSITIVE. Either should throw an unsupported exception or behave according to spec.",
+        method = "getResultSetType",
+        args = {}
+    )
+    @KnownFailure("not fully supported")
+    public void testGetResultSetType() {
+        Statement st = null;
+        // test default value 
+        try {
+            st = conn.createStatement();
+            st.getResultSetType();
+            assertEquals(ResultSet.TYPE_SCROLL_INSENSITIVE, st
+                    .getResultSetType());
+        } catch (SQLException e) {
+            assertEquals("not supported", e.getMessage());
+        }
+
+        // failing tests
+        try {
+            st = conn.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE,
+                    ResultSet.CONCUR_UPDATABLE);
+            st.getResultSetType();
+            assertEquals(ResultSet.TYPE_SCROLL_SENSITIVE, st.getResultSetType());
+        } catch (SQLException e) {
+            assertEquals("not supported", e.getMessage());
+        }
+
+        try {
+            st = conn.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE,
+                    ResultSet.CONCUR_UPDATABLE);
+            st.getResultSetType();
+            assertEquals(ResultSet.TYPE_SCROLL_SENSITIVE, st.getResultSetType());
+        } catch (SQLException e) {
+            assertEquals("not supported", e.getMessage());
+        }
+
+        try {
+            st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY,
+                    ResultSet.CONCUR_UPDATABLE);
+            st.getResultSetType();
+            assertEquals(ResultSet.TYPE_FORWARD_ONLY, st.getResultSetType());
+        } catch (SQLException e) {
+            assertEquals("not supported", e.getMessage());
+        }
+    }
+    
+    /**
+     * @test {@link java.sql.Statement#getResultSetHoldability()}
+     * 
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "not supported",
+        method = "getResultSetHoldability",
+        args = {}
+    )
+    public void testGetResultSetHoldability() {
+        
+        // test default value 
+        Statement st = null;
+        try {
+            st = conn.createStatement();
+            st.getResultSetHoldability();
+            assertEquals(ResultSet.HOLD_CURSORS_OVER_COMMIT, st
+                    .getResultSetHoldability());
+        } catch (SQLException e) {
+            assertEquals("not supported", e.getMessage());
+        }
+
+        // failing tests
+        try {
+            st = conn.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE,
+                    ResultSet.CONCUR_READ_ONLY,
+                    ResultSet.HOLD_CURSORS_OVER_COMMIT);
+            st.getResultSetHoldability();
+            assertEquals(ResultSet.HOLD_CURSORS_OVER_COMMIT, st
+                    .getResultSetHoldability());
+        } catch (SQLException e) {
+            assertEquals("not supported", e.getMessage());
+        }
+
+        try {
+            st = conn.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE,
+                    ResultSet.CONCUR_READ_ONLY,
+                    ResultSet.CLOSE_CURSORS_AT_COMMIT);
+            st.getResultSetHoldability();
+            assertEquals(ResultSet.CLOSE_CURSORS_AT_COMMIT, st
+                    .getResultSetHoldability());
+        } catch (SQLException e) {
+            assertEquals("not supported", e.getMessage());
+        }
+    }
+    
+    /**
+     * @test {@link java.sql.Statement#getResultSetConcurrency()}
+     * 
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Tests fail. returns only ResultSet.TYPE_SCROLL_INSENSITIVE. Either should throw an unsupported exception or behave according to spec.",
+        method = "getResultSetConcurrency",
+        args = {}
+    )
+    @KnownFailure("Not fully supported")
+    public void testGetResultSetConcurrency() {
+        Statement st = null;
+        
+        // test default value 
+        try {
+            st = conn.createStatement();
+            st.getResultSetConcurrency();
+            assertEquals(ResultSet.CONCUR_READ_ONLY, st
+                    .getResultSetConcurrency());
+        } catch (SQLException e) {
+            assertEquals("not supported", e.getMessage());
+        }
+
+        
+        try {
+            st = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,
+                    ResultSet.CONCUR_READ_ONLY);
+            st.getResultSetConcurrency();
+            assertEquals(ResultSet.CONCUR_READ_ONLY, st.getResultSetConcurrency());
+        } catch (SQLException e) {
+            assertEquals("not supported", e.getMessage());
+        }
+     // failing tests
+
+        try {
+            st = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,
+                    ResultSet.CONCUR_UPDATABLE);
+            st.getResultSetConcurrency();
+            assertEquals(ResultSet.CONCUR_UPDATABLE, st.getResultSetConcurrency());
+        } catch (SQLException e) {
+            assertEquals("not supported", e.getMessage());
+       
+        }
+    }
+    
+    /**
+     * @test {@link java.sql.Statement#getResultSet()}
+     * 
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Error in implementation. Is not according to spec:if updateCount > 0 resultset must be null.",
+        method = "getResultSet",
+        args = {}
+    )
+    @KnownFailure("Does not return null on update count > 0")
+    public void testGetResultSet() {
+        Statement st = null;
+        ResultSet res = null;
+        
+        try {
+            st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY,
+                    ResultSet.CONCUR_READ_ONLY,
+                    ResultSet.HOLD_CURSORS_OVER_COMMIT);
+            res = st.getResultSet();
+            assertNull(res);
+        } catch (SQLException e) {
+            fail("SQLException is thrown");
+        }
+        
+        try {
+            assertNull(st.getResultSet());
+        } catch (SQLException e) {
+            fail("SQLException is thrown");
+        }
+        
+        try {
+            String select = "select * from zoo where id == 4;";
+            String insert =  "insert into zoo (id, name, family) values (4, 'Vorobuy', 'bear');";
+            st.execute(insert);
+            st.execute(select);
+            res = st.getResultSet();
+            assertNotNull(res);
+            res.next();
+            assertEquals(4,res.getInt(1));
+            assertEquals("Vorobuy",res.getString(2));
+            assertEquals("bear",res.getString(3));
+//            assertEquals(0, st.getUpdateCount());
+            
+            assertFalse(res.next());
+        } catch (SQLException e) {
+            fail("SQLException is thrown:"+e.getMessage());
+        }
+        
+        try {
+            assertEquals(0, st.getUpdateCount());
+            String insert = "insert into zoo (id, name, family) values (3, 'Vorobey', 'sparrow');";
+            st
+            .execute(insert);
+            res = st.getResultSet();
+            // statement is an update and should return null according to spec. 
+            if (st.getUpdateCount() > 0)  {
+                assertNull(res);
+            }
+           
+        } catch (SQLException e) {
+            fail("SQLException is thrown:"+e.getMessage());
+        }
+        
+        try {
+            st.close();
+            st.getResultSet();
+            fail("Exception expected");
+        } catch (SQLException e) {
+            //ok
+        }
+    }
+    
+    /**
+     * @test {@link java.sql.Statement#setQueryTimeout}
+     * 
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Errors in impl.An other value is returned than was set (X * 1000)Default query timeout for sqlite dbs is 0.",
+        method = "getQueryTimeout",
+        args = {}
+    )
+    @KnownFailure("An other value is returned than was set (X * 1000)")
+    public void testGetQueryTimeout() {
+        Statement st = null;
+        try {
+            st = conn.createStatement();
+            st.setQueryTimeout(2000);
+            assertEquals(2000, st.getQueryTimeout());
+        } catch (SQLException e) {
+            fail("SQLException is thrown: " + e.getMessage());
+        }
+        
+        try {
+            st = conn.createStatement();
+            assertEquals(0,st.getQueryTimeout());
+        } catch (SQLException e) {
+            fail("SQLException is thrown: " + e.getMessage());
+        }
+        
+        try {
+            st.close();
+            st.getQueryTimeout();
+            fail("Exception expected");
+        } catch (SQLException e) {
+            //ok
+        }
+    }
+    
+    /**
+     * @test {@link java.sql.Statement#getMoreResults()}
+     * 
+     */
+    @TestTargets({
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Test fails. It can never be that getMoreResults == true and updateCounts > 0, according to spec (see spec of getResultSet).Error seems to be related with malfunction of SQLite.Database.changes",
+        method = "getMoreResults",
+        args = {}
+    ),
+    @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Test fails. It can never be that getMoreResults == true and updateCounts > 0, according to spec (see spec of getResultSet).Error seems to be related with malfunction of SQLite.Database.changes",
+            method = "getUpdateCount",
+            args = {}
+        )
+    })
+    @KnownFailure("Precondition fails. dependendancy with getUpdateCount")
+    public void testGetMoreResults() {
+        Statement st = null;
+        ResultSet res1 = null;
+        ResultSet res2 = null;
+        String[] queries = {
+                "insert into zoo values (3,'John','bird');",
+                "update zoo set name='Masha', family='cat' where id=3;",
+                "update zoo set name='Masha', family='bear' where id=3;",
+                "select * from zoo;"};
+
+        int[] updates = {1, 1, 1, 0};
+        try {
+            st = conn.createStatement();
+            for (int i = 0; i < queries.length; i++) {
+                st.addBatch(queries[i]);
+            }
+            int[] updateCounts = st.executeBatch();
+            //Precondition
+            assertTrue(java.util.Arrays.equals(updateCounts, updates));
+            
+            assertTrue((st.getMoreResults() == false)
+                    && (st.getUpdateCount() == 1));
+            res1 = st.getResultSet();
+            assertNull(res1);
+            
+            assertTrue((st.getMoreResults() == false)
+                    && (st.getUpdateCount() == 1));
+            res2 = st.getResultSet();
+            assertNull(res2);
+            
+            assertTrue((st.getMoreResults() == false)
+                    && (st.getUpdateCount() == 1));
+            res1 = st.getResultSet();
+            assertNull(res1);
+            
+            assertTrue((st.getMoreResults() == true)
+                    && (st.getUpdateCount() == 0));
+            res1 = st.getResultSet();
+            assertNotNull(res1);
+            
+            assertTrue((st.getMoreResults() == false)
+                    && (st.getUpdateCount() == -1));
+            try {
+                st.getResultSet();
+            } catch (SQLException e) {
+                //error expected
+                assertEquals("statement already closed", e.getMessage());
+            }
+        } catch (SQLException e) {
+            fail("SQLException is thrown: " + e.getMessage());
+        } finally {
+            try {
+                st.close();
+            } catch (SQLException ee) {
+            }
+        }
+        
+        try {
+            st.getMoreResults();
+            fail("Exception expected");
+        } catch (SQLException e) {
+            //ok
+        }
+    }
+    
+    /**
+     * @test {@link java.sql.Statement#getMoreResults(int)}
+     * 
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "not supported",
+        method = "getMoreResults",
+        args = {int.class}
+    )
+    public void testGetMoreResultsInt() {
+        Statement st = null;
+        ResultSet res1 = null;
+        ResultSet res2 = null;
+        ResultSet notClosedResult = null;
+        ResultSet notClosedResult2 = null;
+        String[] queries = {
+                "insert into zoo values (3,'John','bird');",
+                "update zoo set name='Masha', family='cat' where id=3;",
+                "select * from zoo;",
+                "insert into zoo values (6,'Tweety','bird');",
+                "select * from zoo;"};
+
+        try {
+            st = conn.createStatement();
+            for (int i = 0; i < queries.length; i++) {
+                st.addBatch(queries[i]);
+            }
+            int[] updateCounts = st.executeBatch();
+            
+            //insert
+            assertTrue((st.getMoreResults(Statement.CLOSE_CURRENT_RESULT) == false)
+                    && (st.getUpdateCount() == 1));
+            res1 = st.getResultSet();
+            assertNull(res1);
+            
+            
+            //update
+            assertTrue((st.getMoreResults(Statement.CLOSE_CURRENT_RESULT) == false)
+                    && (st.getUpdateCount() == 1));
+            res2 = st.getResultSet();
+            assertNull(res2);
+            
+            //select
+            assertTrue((st.getMoreResults(Statement.KEEP_CURRENT_RESULT) == true)
+//                    && (st.getUpdateCount() == 0)
+                    );
+            notClosedResult = st.getResultSet();
+            assertNotNull(notClosedResult);
+            
+            //insert
+            assertTrue((st.getMoreResults(Statement.CLOSE_CURRENT_RESULT) == false)
+                    && (st.getUpdateCount() == 1));
+            res1 = st.getResultSet();
+            assertNotNull(res1);
+            
+            //select
+            assertTrue((st.getMoreResults(Statement.KEEP_CURRENT_RESULT) == true)
+//                    && (st.getUpdateCount() == 0)
+                    );
+            notClosedResult2 = st.getResultSet();
+            assertNotNull(notClosedResult2);
+            assertFalse(notClosedResult.equals(notClosedResult2));
+            
+            // end
+            assertTrue((st.getMoreResults() == false)
+                    && (st.getUpdateCount() == -1));
+            try {
+                st.getResultSet();
+            } catch (SQLException e) {
+                //error expected
+                assertEquals("statement already closed", e.getMessage());
+            }
+            
+        } catch (SQLException e) {
+            assertEquals("not supported",e.getMessage());
+        } finally {
+            try {
+                st.close();
+            } catch (SQLException ee) {
+            }
+        }
+        
+        try {
+            st.getMoreResults(Statement.CLOSE_CURRENT_RESULT);
+            fail("Exception expected");
+        } catch (SQLException e) {
+            //ok
+        }
+    }
+    
+    /**
+     * @test {@link java.sql.Statement#cancel()}
+     * 
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Test fails. See also SQLite.DatabaseTest test of interrupt().",
+        method = "cancel",
+        args = {}
+    )
+    @KnownFailure("Bug in implementation of cancel: Does not fulfill spec.")
+    public void testCancel() {
+        Statement st = null;
+        try {
+            st = conn.prepareStatement("insert into zoo values (7,'Speedy Gonzales','Mouse');");
+            
+            CancelThread c = new CancelThread(st);
+            InsertThread ins = new InsertThread((PreparedStatement)st);
+            
+            try {
+                ins.t.join();
+                c.t.join();
+            } catch (InterruptedException e) {
+                fail("Error in test setup: ");
+            } catch (Exception e){
+                // Insert thread may throw an exception 
+                // that it could not complete statement
+            }
+            
+            // both threads have terminated and cancel should have cancelled the insert statement.
+            ResultSet res = st.executeQuery("select * from zoo where id=7");
+            assertFalse(res.next());
+            
+        } catch (SQLException e) {
+            fail("SQLException is thrown: " + e.getMessage());
+        }
+        
+        try {
+            st.close();
+            st.cancel();
+            fail("Exception expected");
+        } catch (SQLException e) {
+            //ok
+        }
+    }
+    
+    class CancelThread implements Runnable{
+        Thread t;
+        Statement stmt;
+        CancelThread (Statement aSt) {
+           this.stmt = aSt;
+           t = new Thread(this,"Cancel thread");
+           t.start();
+        }
+        public void run() {
+           Logger.global.info("*Cancel* thread started");
+           try {
+             Thread.sleep(1500);
+         } catch (InterruptedException e1) {
+             fail("Error in test setup");
+             e1.printStackTrace();
+         }             
+           try {
+               Logger.global.info("*Cancel* thread, about to do stmt.cancel()");  
+               stmt.cancel();
+               Logger.global.info("*Cancel* thread, stmt.cancel() done");  
+           } catch (SQLException e) {
+               fail("Error in test setup");
+               e.printStackTrace();
+           }
+           Logger.global.info("*Cancel* thread terminated");
+        }
+     }
+    
+    class InsertThread implements Runnable{
+        Thread t;
+        PreparedStatement stmt;
+        InsertThread (PreparedStatement aSt) {
+           this.stmt = aSt;
+           t = new Thread(this,"Insert thread");
+           t.start();
+        }
+        public void run() {
+          Logger.global.info("*Insert* thread started");
+           try {
+             Thread.sleep(1500);
+         } catch (InterruptedException e1) {
+             fail("Error in test setup");
+             e1.printStackTrace();
+         }             
+           try {
+               Logger.global.info("*Insert* thread, about to do insertion");  
+               stmt.execute();
+               stmt.execute();
+               Logger.global.info("*Insert* thread inserted");  
+           } catch (SQLException e) {
+               fail("Error in test setup");
+               e.printStackTrace();
+           }
+          Logger.global.info("*Insert* thread terminated");
+        }
+     }
+
 }

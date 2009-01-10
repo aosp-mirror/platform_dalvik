@@ -22,9 +22,9 @@
 
 package tests.security.spec;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import junit.framework.TestCase;
@@ -51,15 +51,12 @@ public class DSAParameterSpecTest extends TestCase {
     /**
      * Ctor test 
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "DSAParameterSpec",
-          methodArgs = {java.math.BigInteger.class, java.math.BigInteger.class, java.math.BigInteger.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "DSAParameterSpec",
+        args = {java.math.BigInteger.class, java.math.BigInteger.class, java.math.BigInteger.class}
+    )
     public final void testDSAParameterSpec() {
         AlgorithmParameterSpec aps = new DSAParameterSpec(
                 new BigInteger("1"),
@@ -72,15 +69,12 @@ public class DSAParameterSpecTest extends TestCase {
     /**
      * getG() test
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getG",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getG",
+        args = {}
+    )
     public final void testGetG() {
         DSAParameterSpec dps = new DSAParameterSpec(
                 new BigInteger("1"),
@@ -93,15 +87,12 @@ public class DSAParameterSpecTest extends TestCase {
     /**
      * getP() test
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getP",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getP",
+        args = {}
+    )
     public final void testGetP() {
         DSAParameterSpec dps = new DSAParameterSpec(
                 new BigInteger("1"),
@@ -114,15 +105,12 @@ public class DSAParameterSpecTest extends TestCase {
     /**
      * getQ() test 
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getQ",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getQ",
+        args = {}
+    )
     public final void testGetQ() {
         DSAParameterSpec dps = new DSAParameterSpec(
                 new BigInteger("1"),

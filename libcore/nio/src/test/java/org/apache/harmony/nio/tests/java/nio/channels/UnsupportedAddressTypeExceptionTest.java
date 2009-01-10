@@ -15,9 +15,9 @@
  */
 package org.apache.harmony.nio.tests.java.nio.channels;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import java.nio.channels.UnsupportedAddressTypeException;
@@ -35,15 +35,20 @@ public class UnsupportedAddressTypeExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility.
      */
-    @TestInfo(
-              level = TestLevel.COMPLETE,
-              purpose = "Verifies serialization/deserialization compatibility.",
-              targets = {
-                @TestTarget(
-                  methodName = "!SerializationSelf",
-                  methodArgs = {}
-                )
-            })    
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "Verifies serialization/deserialization compatibility.",
+            method = "!SerializationSelf",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies serialization/deserialization compatibility.",
+            method = "UnsupportedAddressTypeException",
+            args = {}
+        )
+    })    
     public void testSerializationSelf() throws Exception {
 
         SerializationTest.verifySelf(new UnsupportedAddressTypeException());
@@ -52,15 +57,20 @@ public class UnsupportedAddressTypeExceptionTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
-    @TestInfo(
-              level = TestLevel.COMPLETE,
-              purpose = "Verifies serialization/deserialization compatibility.",
-              targets = {
-                @TestTarget(
-                  methodName = "!SerializationGolden",
-                  methodArgs = {}
-                )
-            })        
+    @TestTargets({
+        @TestTargetNew(
+            level = TestLevel.COMPLETE,
+            notes = "Verifies serialization/deserialization compatibility.",
+            method = "!SerializationGolden",
+            args = {}
+        ),
+        @TestTargetNew(
+            level = TestLevel.PARTIAL_COMPLETE,
+            notes = "Verifies serialization/deserialization compatibility.",
+            method = "UnsupportedAddressTypeException",
+            args = {}
+        )
+    })        
     public void testSerializationCompatibility() throws Exception {
 
         SerializationTest.verifyGolden(this,

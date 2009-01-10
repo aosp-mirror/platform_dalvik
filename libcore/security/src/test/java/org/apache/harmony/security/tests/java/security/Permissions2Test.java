@@ -18,12 +18,14 @@
 package org.apache.harmony.security.tests.java.security;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.io.File;
 import java.io.FilePermission;
+import java.security.AllPermission;
+import java.security.Permission;
 import java.security.Permissions;
 import java.util.Enumeration;
 
@@ -44,15 +46,12 @@ public class Permissions2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.Permissions#Permissions()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "Permissions",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "Permissions",
+        args = {}
+    )
     public void test_Constructor() {
         // Test for method java.security.Permissions()
         new Permissions();
@@ -61,16 +60,12 @@ public class Permissions2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.Permissions#add(java.security.Permission)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verification of method with null parameter is missed." +
-                  "SecurityException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "add",
-          methodArgs = {java.security.Permission.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "add",
+        args = {java.security.Permission.class}
+    )
     public void test_addLjava_security_Permission() {
         // Test for method void
         // java.security.Permissions.add(java.security.Permission)
@@ -99,20 +94,27 @@ public class Permissions2Test extends junit.framework.TestCase {
         }
         assertEquals("Permissions.elements did not return the correct number "
                 + "of permission - called in add() test ", i, perm.length);
+        
+        
+        perms.setReadOnly();
+        
+        try {
+            perms.add(new AllPermission());
+            fail("expected SecurityException");
+        } catch (SecurityException ex) {
+            // ok
+        }
     }
 
     /**
      * @tests java.security.Permissions#elements()
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Case when no added elements is missed",
-      targets = {
-        @TestTarget(
-          methodName = "elements",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "elements",
+        args = {}
+    )
     public void test_elements() {
         // Test for method java.util.Enumeration
         // java.security.Permissions.elements()
@@ -146,15 +148,12 @@ public class Permissions2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.Permissions#implies(java.security.Permission)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verification of method with null parameter is missed.",
-      targets = {
-        @TestTarget(
-          methodName = "implies",
-          methodArgs = {java.security.Permission.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "implies",
+        args = {java.security.Permission.class}
+    )
     public void test_impliesLjava_security_Permission() {
         // Test for method boolean
         // java.security.Permissions.implies(java.security.Permission)
@@ -186,5 +185,11 @@ public class Permissions2Test extends junit.framework.TestCase {
         assertTrue("Returned false for subset of files and actions", perms
                 .implies(new FilePermission(s + "tmp" + s + "test" + s
                         + "test2.file", "write")));
+    }
+    
+    class TestSecurityManager extends SecurityManager {
+        @Override
+        public void checkPermission(Permission permission) {
+        }
     }
 }

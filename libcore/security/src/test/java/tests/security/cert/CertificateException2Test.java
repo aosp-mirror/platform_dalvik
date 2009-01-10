@@ -17,9 +17,9 @@
 
 package tests.security.cert;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 import dalvik.annotation.TestTargetClass;
 
 import java.security.cert.CertificateException;
@@ -30,15 +30,12 @@ public class CertificateException2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.cert.CertificateException#CertificateException()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "CertificateException",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "CertificateException",
+        args = {}
+    )
     public void test_Constructor() {
         // Test for method java.security.cert.CertificateException()
         try {
@@ -57,15 +54,12 @@ public class CertificateException2Test extends junit.framework.TestCase {
     /**
      * @tests java.security.cert.CertificateException#CertificateException(java.lang.String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Null/empty/invalid parameters checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "CertificateException",
-          methodArgs = {java.lang.String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Null/empty/invalid parameters checking missed",
+        method = "CertificateException",
+        args = {java.lang.String.class}
+    )
     public void test_ConstructorLjava_lang_String() {
         // Test for method
         // java.security.cert.CertificateException(java.lang.String)

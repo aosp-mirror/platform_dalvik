@@ -23,11 +23,12 @@
 package tests.java.security;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.Provider;
 import java.security.SecureRandom;
 import java.security.Security;
@@ -64,15 +65,12 @@ public class SecureRandomTest extends TestCase {
         Security.removeProvider(p.getName());
     }
 
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verification of negative and boundary parameters missed",
-      targets = {
-        @TestTarget(
-          methodName = "next",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Verification of negative and boundary parameters missed",
+        method = "next",
+        args = {int.class}
+    )
     public final void testNext() {
         MySecureRandom sr = new MySecureRandom();
         if (sr.nextElement(1) != 1 || sr.nextElement(2) != 3 || sr.nextElement(3) != 7) {
@@ -83,15 +81,12 @@ public class SecureRandomTest extends TestCase {
     /*
      * Class under test for void setSeed(long)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verification of boundary parameter missed",
-      targets = {
-        @TestTarget(
-          methodName = "setSeed",
-          methodArgs = {long.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "setSeed",
+        args = {long.class}
+    )
     public final void testSetSeedlong() {
         SecureRandom sr = new SecureRandom();
         sr.setSeed(12345);
@@ -100,15 +95,12 @@ public class SecureRandomTest extends TestCase {
         }    
     }
 
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Null parameter verification missed",
-      targets = {
-        @TestTarget(
-          methodName = "nextBytes",
-          methodArgs = {byte[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "",
+        method = "nextBytes",
+        args = {byte[].class}
+    )
     public final void testNextBytes() {
         byte[] b = new byte[5];
         SecureRandom sr = new SecureRandom();
@@ -118,20 +110,24 @@ public class SecureRandomTest extends TestCase {
                 fail("nextBytes failed");
             }
         }
+        
+        try {
+            sr.nextBytes(null);
+            fail("expected exception");
+        } catch (Exception e) {
+            // ok
+        }
     }
 
     /*
      * Class under test for void SecureRandom()
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "SecureRandom",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "SecureRandom",
+        args = {}
+    )
     public final void testSecureRandom() {
         SecureRandom sr = new SecureRandom();
         if (!sr.getAlgorithm().equals("someRandom")  ||
@@ -143,15 +139,12 @@ public class SecureRandomTest extends TestCase {
     /*
      * Class under test for void SecureRandom(byte[])
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Null parameter checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "SecureRandom",
-          methodArgs = {byte[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Null parameter checking missed",
+        method = "SecureRandom",
+        args = {byte[].class}
+    )
     public final void testSecureRandombyteArray() {
         byte[] b = {1,2,3};
         new SecureRandom(b);
@@ -159,20 +152,19 @@ public class SecureRandomTest extends TestCase {
         if (!RandomImpl.runEngineSetSeed) {
             fail("No setSeed");
         }
+        
+        
     }
 
     /*
      * Class under test for SecureRandom getInstance(String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "NoSuchAlgorithmException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "getInstance",
-          methodArgs = {String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "NoSuchAlgorithmException checking missed",
+        method = "getInstance",
+        args = {java.lang.String.class}
+    )
     public final void testGetInstanceString() {
         SecureRandom sr = null;
         try {
@@ -188,54 +180,133 @@ public class SecureRandomTest extends TestCase {
     /*
      * Class under test for SecureRandom getInstance(String, String)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "NoSuchAlgorithmException, NoSuchProviderException, IllegalArgumentException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "getInstance",
-          methodArgs = {String.class, String.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getInstance",
+        args = {java.lang.String.class, java.lang.String.class}
+    )
     public final void testGetInstanceStringString() throws Exception {
         SecureRandom sr = SecureRandom.getInstance("someRandom", "SRProvider");    
         if (sr.getProvider() != p || !"someRandom".equals(sr.getAlgorithm())) {
             fail("getInstance failed");
-        }    
+        }
+        
+        try {
+            SecureRandom r = SecureRandom.getInstance("anotherRandom", "SRProvider");
+            fail("expected NoSuchAlgorithmException");
+        } catch (NoSuchAlgorithmException e) {
+            // ok
+        } catch (NoSuchProviderException e) {
+            fail("unexpected: " + e);
+        } catch (IllegalArgumentException e) {
+            fail("unexpected: " + e);
+        } catch (NullPointerException e) {
+            fail("unexpected: " + e);
+        }
+        
+        try {
+            SecureRandom r = SecureRandom.getInstance("someRandom", "UnknownProvider");
+            fail("expected NoSuchProviderException");
+        } catch (NoSuchProviderException e) {
+            // ok
+        } catch (NoSuchAlgorithmException e) {
+            fail("unexpected: " + e);
+        } catch (IllegalArgumentException e) {
+            fail("unexpected: " + e);
+        } catch (NullPointerException e) {
+            fail("unexpected: " + e);
+        }
+        
+        try {
+            SecureRandom r = SecureRandom.getInstance("someRandom", (String)null);
+            fail("expected IllegalArgumentException");
+        } catch (NoSuchProviderException e) {
+            fail("unexpected: " + e);
+        } catch (NoSuchAlgorithmException e) {
+            fail("unexpected: " + e);
+        } catch (IllegalArgumentException e) {
+            // ok
+        } catch (NullPointerException e) {
+            fail("unexpected: " + e);
+        }
+        
+        try {
+            SecureRandom r = SecureRandom.getInstance(null, "SRProvider");
+            fail("expected NullPointerException");
+        } catch (NoSuchProviderException e) {
+            fail("unexpected: " + e);
+        } catch (NoSuchAlgorithmException e) {
+            fail("unexpected: " + e);
+        } catch (IllegalArgumentException e) {
+            fail("unexpected: " + e);
+        } catch (NullPointerException e) {
+            // ok
+        }
     }
 
     /*
      * Class under test for SecureRandom getInstance(String, Provider)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "NoSuchAlgorithmException, IllegalArgumentException checking missed",
-      targets = {
-        @TestTarget(
-          methodName = "getInstance",
-          methodArgs = {String.class, Provider.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getInstance",
+        args = {java.lang.String.class, java.security.Provider.class}
+    )
     public final void testGetInstanceStringProvider() throws Exception {
         Provider p = new SRProvider();
         SecureRandom sr = SecureRandom.getInstance("someRandom", p);
         if (sr.getProvider() != p || !"someRandom".equals(sr.getAlgorithm())) {
             fail("getInstance failed");
-        }    
+        }
+        
+        try {
+            SecureRandom r = SecureRandom.getInstance("unknownRandom", p);
+            fail("expected NoSuchAlgorithmException");
+        } catch (NoSuchAlgorithmException e) {
+            // ok
+        } catch (IllegalArgumentException e) {
+            fail("unexpected: " + e);
+        } catch (NullPointerException e) {
+            fail("unexpected: " + e);
+        }
+
+        
+        try {
+            SecureRandom r = SecureRandom.getInstance(null, p);
+            fail("expected NullPointerException");
+        } catch (NoSuchAlgorithmException e) {
+            fail("unexpected: " + e);
+        } catch (IllegalArgumentException e) {
+            fail("unexpected: " + e);
+        } catch (NullPointerException e) {
+            // ok
+        }
+
+        try {
+            SecureRandom r = SecureRandom.getInstance("anyRandom", (Provider)null);
+            fail("expected IllegalArgumentException");
+        } catch (NoSuchAlgorithmException e) {
+            fail("unexpected: " + e);
+        } catch (IllegalArgumentException e) {
+            // ok
+        } catch (NullPointerException e) {
+            fail("unexpected: " + e);
+        }
+        
+
     }
 
     /*
      * Class under test for void setSeed(byte[])
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verification with null parameter missed",
-      targets = {
-        @TestTarget(
-          methodName = "setSeed",
-          methodArgs = {byte[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verification with null parameter missed",
+        method = "setSeed",
+        args = {byte[].class}
+    )
     public final void testSetSeedbyteArray() {
         byte[] b = {1,2,3};
         SecureRandom sr = new SecureRandom();
@@ -243,17 +314,15 @@ public class SecureRandomTest extends TestCase {
         if (!RandomImpl.runEngineSetSeed) {
             fail("setSeed failed");
         }
+        
     }
 
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verification with invalid parameter missed",
-      targets = {
-        @TestTarget(
-          methodName = "getSeed",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verification with invalid parameter missed",
+        method = "getSeed",
+        args = {int.class}
+    )
     public final void testGetSeed() {
         byte[] b = SecureRandom.getSeed(4);
         if( b.length != 4) {
@@ -261,15 +330,12 @@ public class SecureRandomTest extends TestCase {
         }
     }
 
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verification with invalid parameter missed",
-      targets = {
-        @TestTarget(
-          methodName = "generateSeed",
-          methodArgs = {int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Verification with invalid parameter missed",
+        method = "generateSeed",
+        args = {int.class}
+    )
     public final void testGenerateSeed() {
         SecureRandom sr = new SecureRandom();
         byte[] b = sr.generateSeed(4);

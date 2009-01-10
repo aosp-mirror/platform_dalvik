@@ -17,14 +17,13 @@
 
 package tests.api.java.io;
 
-import dalvik.annotation.TestInfo;
-import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
-import dalvik.annotation.TestTargetClass; 
-
 import java.io.File;
 import java.io.FilePermission;
 import java.security.PermissionCollection;
+
+import dalvik.annotation.TestLevel;
+import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
 @TestTargetClass(FilePermission.class) 
 public class FilePermissionTest extends junit.framework.TestCase {
@@ -45,14 +44,12 @@ public class FilePermissionTest extends junit.framework.TestCase {
      * @tests java.io.FilePermission#FilePermission(java.lang.String,
      *        java.lang.String)
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies FilePermission(java.lang.String, java.lang.String) constructor.",
-            targets = { @TestTarget(methodName = "FilePermission", 
-                                    methodArgs = {java.lang.String.class, 
-                                                  java.lang.String.class})                         
-            }
-        )     
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies FilePermission(java.lang.String, java.lang.String) constructor.",
+        method = "FilePermission",
+        args = {java.lang.String.class, java.lang.String.class}
+    )     
     public void test_ConstructorLjava_lang_StringLjava_lang_String() {
         // Test for method java.io.FilePermission(java.lang.String,
         // java.lang.String)
@@ -91,13 +88,12 @@ public class FilePermissionTest extends junit.framework.TestCase {
     /**
      * @tests java.io.FilePermission#getActions()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies getActions() method.",
-            targets = { @TestTarget(methodName = "getActions", 
-                                    methodArgs = {})                         
-            }
-        )     
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies getActions() method.",
+        method = "getActions",
+        args = {}
+    )     
     public void test_getActions() {
         // Test for method java.lang.String java.io.FilePermission.getActions()
         assertEquals("getActions should have returned only read", "read", readAllFiles
@@ -109,13 +105,12 @@ public class FilePermissionTest extends junit.framework.TestCase {
     /**
      * @tests java.io.FilePermission#equals(java.lang.Object)
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies equals(java.lang.Object) method.",
-            targets = { @TestTarget(methodName = "equals", 
-                                    methodArgs = {java.lang.Object.class})                         
-            }
-        )     
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies equals(java.lang.Object) method.",
+        method = "equals",
+        args = {java.lang.Object.class}
+    )     
     public void test_equalsLjava_lang_Object() {
         // test for method java.io.FilePermission.equals()
         assertTrue(
@@ -129,13 +124,12 @@ public class FilePermissionTest extends junit.framework.TestCase {
     /**
      * @tests java.io.FilePermission#implies(java.security.Permission)
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies implies(java.security.Permission) method.",
-            targets = { @TestTarget(methodName = "implies", 
-                                    methodArgs = {java.security.Permission.class})                         
-            }
-        )    
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies implies(java.security.Permission) method.",
+        method = "implies",
+        args = {java.security.Permission.class}
+    )    
     public void test_impliesLjava_security_Permission() {
         // Test for method boolean
         // java.io.FilePermission.implies(java.security.Permission)
@@ -192,13 +186,12 @@ public class FilePermissionTest extends junit.framework.TestCase {
     /**
      * @tests java.io.FilePermission#newPermissionCollection()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies newPermissionCollection() method.",
-            targets = { @TestTarget(methodName = "newPermissionCollection", 
-                                    methodArgs = {})                         
-            }
-        )      
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies newPermissionCollection() method.",
+        method = "newPermissionCollection",
+        args = {}
+    )      
     public void test_newPermissionCollection() {
         // test for method java.io.FilePermission.newPermissionCollection
         char s = File.separatorChar;
@@ -235,13 +228,12 @@ public class FilePermissionTest extends junit.framework.TestCase {
     /**
      * @tests java.io.FilePermission#hashCode()
      */
-    @TestInfo(
-            level = TestLevel.COMPLETE,
-            purpose = "Verifies hashCode() method.",
-            targets = { @TestTarget(methodName = "hashCode", 
-                                    methodArgs = {})                         
-            }
-        )         
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "Verifies hashCode() method.",
+        method = "hashCode",
+        args = {}
+    )         
     public void test_hashCode() {
         // test method java.io.FilePermission.hasCode()
         assertTrue(

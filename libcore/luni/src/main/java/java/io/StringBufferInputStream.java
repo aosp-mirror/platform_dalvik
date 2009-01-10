@@ -108,7 +108,7 @@ public class StringBufferInputStream extends InputStream {
      *            the maximum number of bytes to store in {@code b}.
      * @return the number of bytes actually read or -1 if the end of the source
      *         string has been reached.
-     * @throws ArrayIndexOutOfBoundsException
+     * @throws IndexOutOfBoundsException
      *             if {@code offset < 0} or {@code length < 0}, or if
      *             {@code offset + length} is greater than the length of
      *             {@code b}.

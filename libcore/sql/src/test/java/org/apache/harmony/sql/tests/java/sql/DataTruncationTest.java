@@ -18,9 +18,9 @@
 package org.apache.harmony.sql.tests.java.sql;
 
 import dalvik.annotation.TestTargetClass;
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.TestTargets;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
+import dalvik.annotation.TestTargetNew;
 
 import java.io.Serializable;
 import java.sql.DataTruncation;
@@ -35,15 +35,12 @@ public class DataTruncationTest extends TestCase {
     /*
      * ConstructorTest
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "DataTruncation",
-          methodArgs = {int.class, boolean.class, boolean.class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "DataTruncation",
+        args = {int.class, boolean.class, boolean.class, int.class, int.class}
+    )
     public void testDataTruncationintbooleanbooleanintint() {
 
         int[] init1 = { -2147483648, 2147483647, 0, 329751502, 318587557,
@@ -111,15 +108,12 @@ public class DataTruncationTest extends TestCase {
     /*
      * Method test for getIndex
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getIndex",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getIndex",
+        args = {}
+    )
     public void testGetIndex() {
 
         DataTruncation aDataTruncation;
@@ -192,15 +186,12 @@ public class DataTruncationTest extends TestCase {
     /*
      * Method test for getParameter
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getParameter",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getParameter",
+        args = {}
+    )
     public void testGetParameter() {
 
         DataTruncation aDataTruncation;
@@ -273,15 +264,12 @@ public class DataTruncationTest extends TestCase {
     /*
      * Method test for getRead
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getRead",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getRead",
+        args = {}
+    )
     public void testGetRead() {
 
         DataTruncation aDataTruncation;
@@ -354,15 +342,12 @@ public class DataTruncationTest extends TestCase {
     /*
      * Method test for getDataSize
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getDataSize",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getDataSize",
+        args = {}
+    )
     public void testGetDataSize() {
 
         DataTruncation aDataTruncation;
@@ -435,15 +420,12 @@ public class DataTruncationTest extends TestCase {
     /*
      * Method test for getTransferSize
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getTransferSize",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getTransferSize",
+        args = {}
+    )
     public void testGetTransferSize() {
 
         DataTruncation aDataTruncation;
@@ -516,15 +498,12 @@ public class DataTruncationTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Serialization test",
-      targets = {
-        @TestTarget(
-          methodName = "!SerializationSelf",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Serialization test",
+        method = "!SerializationSelf",
+        args = {}
+    )
     public void testSerializationSelf() throws Exception {
         DataTruncation object = new DataTruncation(10, true, true, 10, 10);
         SerializationTest.verifySelf(object, DATATRUNCATION_COMPARATOR);
@@ -533,15 +512,12 @@ public class DataTruncationTest extends TestCase {
     /**
      * @tests serialization/deserialization compatibility with RI.
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Serialization test",
-      targets = {
-        @TestTarget(
-          methodName = "!SerializationGolden",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL,
+        notes = "Serialization test",
+        method = "!SerializationGolden",
+        args = {}
+    )
     public void testSerializationCompatibility() throws Exception {
         DataTruncation object = new DataTruncation(10, true, true, 10, 10);
         SerializationTest.verifyGolden(this, object, DATATRUNCATION_COMPARATOR);

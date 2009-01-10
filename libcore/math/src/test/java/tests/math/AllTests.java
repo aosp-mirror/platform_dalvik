@@ -29,10 +29,10 @@ public class AllTests {
     }
 
     public static Test suite() {
-        TestSuite suite = new TestSuite("All Math test suites");
+        TestSuite suite = tests.TestSuiteFactory.createTestSuite("All Math test suites");
 
         suite.addTest(tests.api.java.math.AllTests.suite());
-        suite.addTest(org.apache.harmony.tests.java.math.AllTests.suite());
+        suite.addTest(org.apache.harmony.math.tests.java.math.AllTests.suite());
 
         return suite;
     }

@@ -16,10 +16,10 @@
  */
 package org.apache.harmony.text.tests.java.text;
 
-import dalvik.annotation.TestInfo;
+import dalvik.annotation.KnownFailure;
 import dalvik.annotation.TestLevel;
-import dalvik.annotation.TestTarget;
 import dalvik.annotation.TestTargetClass;
+import dalvik.annotation.TestTargetNew;
 
 import java.text.AttributedCharacterIterator;
 import java.text.AttributedString;
@@ -33,46 +33,72 @@ import java.util.WeakHashMap;
 @TestTargetClass(AttributedString.class) 
 public class AttributedStringTest extends junit.framework.TestCase {
 
-    /**
-     * @tests java.text.AttributedString#AttributedString(java.lang.String)
-     */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "AttributedString",
-          methodArgs = {java.lang.String.class}
-        )
-    })
-    public void test_ConstructorLjava_lang_String() {
-        String test = "Test string";
-        AttributedString attrString = new AttributedString(test);
+    static void assertEqualString (String msg, String expected, AttributedString attrString) {
         AttributedCharacterIterator it = attrString.getIterator();
         StringBuffer buf = new StringBuffer();
         buf.append(it.first());
         char ch;
         while ((ch = it.next()) != CharacterIterator.DONE)
             buf.append(ch);
-        assertTrue("Wrong string: " + buf, buf.toString().equals(test));
+        assertEquals(msg, expected, buf.toString());
+    }
+
+    /**
+     * @tests java.text.AttributedString#AttributedString(java.lang.String)
+     */
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "AttributedString",
+        args = {java.lang.String.class}
+    )
+    public void test_ConstructorLjava_lang_String() {
+        String test = "Test string";
+        AttributedString attrString = new AttributedString(test);
+        assertEqualString("String must match!", test, attrString);
+    }
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Functional Test",
+        method = "AttributedString",
+        args = {java.text.AttributedCharacterIterator.class}
+    )
+    public void test_ConstructorLAttributedCharacterIterator_1() {
+        String testString = "Test string";
+        AttributedString attrString = new AttributedString(testString);
+        AttributedCharacterIterator iter = attrString.getIterator();
+        AttributedString attrString2 = new AttributedString(iter);
+        assertEqualString("String must match!", testString, attrString2);
     }
 
     /**
      * @tests java.text.AttributedString#AttributedString(AttributedCharacterIterator)
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "AttributedString",
-          methodArgs = {java.text.AttributedCharacterIterator.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Regression for HARMONY-1354 (no functional test)",
+        method = "AttributedString",
+        args = {java.text.AttributedCharacterIterator.class}
+    )
     public void test_ConstructorLAttributedCharacterIterator() {
         // Regression for HARMONY-1354
         assertNotNull(new AttributedString(
                 new testAttributedCharacterIterator()));
+    }
+
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Functional Test",
+        method = "AttributedString",
+        args = {java.text.AttributedCharacterIterator.class, int.class, int.class}
+    )
+    public void test_ConstructorLAttributedCharacterIterator_2() {
+        String testString = "Test string";
+        AttributedString attrString = new AttributedString(testString);
+        AttributedCharacterIterator iter = attrString.getIterator();
+        AttributedString attrString2 = new AttributedString(iter, 2, 7);
+        assertEqualString("String must match!", "st st", attrString2);
     }
 
     /**
@@ -83,15 +109,12 @@ public class AttributedStringTest extends junit.framework.TestCase {
      *        to consruct AttributedString using incorrect beginIndex. Case 3:
      *        Try to consruct AttributedString using incorrect endIndex.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "AttributedString",
-          methodArgs = {java.text.AttributedCharacterIterator.class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "No functional test.",
+        method = "AttributedString",
+        args = {java.text.AttributedCharacterIterator.class, int.class, int.class}
+    )
     public void test_ConstructorLAttributedCharacterIteratorII() {
         // Regression for HARMONY-1355
 
@@ -119,6 +142,26 @@ public class AttributedStringTest extends junit.framework.TestCase {
         }
     }
 
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "Functional Test",
+        method = "AttributedString",
+        args = {java.text.AttributedCharacterIterator.class, int.class, int.class, java.text.AttributedCharacterIterator.Attribute[].class}
+    )
+    @KnownFailure("ToT FIXED Wrong behaviour if null Attribute Array is passed to AttributedString constructor.")
+    public void test_ConstructorLAttributedCharacterIterator_3() {
+        String testString = "Test string";
+        AttributedString attrString = new AttributedString(testString);
+        AttributedCharacterIterator iter = attrString.getIterator();
+        AttributedString attrString2;
+
+        attrString2 = new AttributedString(iter, 2, 7, new AttributedCharacterIterator.Attribute[] {});
+        assertEqualString("String must match!", "st st", attrString2);
+
+        attrString2 = new AttributedString(iter, 2, 7, null);
+        assertEqualString("String must match!", "st st", attrString2);
+    }
+
     /**
      * @tests java.text.AttributedString#AttributedString(AttributedCharacterIterator,
      *        int, int, AttributedCharacterIterator.Attribute[]) Test of method
@@ -129,15 +172,12 @@ public class AttributedStringTest extends junit.framework.TestCase {
      *        consruct AttributedString using incorrect endIndex. Case 4: Try to
      *        consruct AttributedString using specified attributes.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "AttributedString",
-          methodArgs = {java.text.AttributedCharacterIterator.class, int.class, int.class, java.text.AttributedCharacterIterator.Attribute[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.PARTIAL_COMPLETE,
+        notes = "No functional test.",
+        method = "AttributedString",
+        args = {java.text.AttributedCharacterIterator.class, int.class, int.class, java.text.AttributedCharacterIterator.Attribute[].class}
+    )
     public void test_ConstructorLAttributedCharacterIteratorII$Ljava_text_AttributedCharacterIterator$Attribute() {
         // case 1: Try to consruct AttributedString.
         try {
@@ -187,15 +227,12 @@ public class AttributedStringTest extends junit.framework.TestCase {
      *        AttributedString using 0-length text and not an empty Map
      *        attributes.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "AttributedString",
-          methodArgs = {java.lang.String.class, java.util.Map.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "AttributedString",
+        args = {java.lang.String.class, java.util.Map.class}
+    )
     public void test_ConstructorLjava_lang_StringLjava_util_Map() {
         String test = "Test string";
 
@@ -315,25 +352,12 @@ public class AttributedStringTest extends junit.framework.TestCase {
             return 'a';
         }
     }
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "AttributedString",
-          methodArgs = {java.lang.String.class}
-        ),
-        @TestTarget(
-          methodName = "AttributedString",
-          methodArgs = {java.lang.String.class, java.util.Map.class}
-        ),
-        @TestTarget(
-          methodName = "AttributedString",
-          methodArgs = {java.text.AttributedCharacterIterator.class, int.class, int.class, java.text.AttributedCharacterIterator.Attribute[].class}
-        )
-
-
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "addAttribute",
+        args = {java.text.AttributedCharacterIterator.Attribute.class, java.lang.Object.class, int.class, int.class}
+    )
     public void test_addAttributeLjava_text_AttributedCharacterIterator$AttributeLjava_lang_ObjectII() {
         AttributedString as = new AttributedString("test");
         as.addAttribute(AttributedCharacterIterator.Attribute.LANGUAGE, "a", 2,
@@ -379,18 +403,21 @@ public class AttributedStringTest extends junit.framework.TestCase {
      * @tests java.text.AttributedString.addAttribute(AttributedCharacterIterator,
      *        Object)
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "Verifies NullPointerException.",
-      targets = {
-        @TestTarget(
-          methodName = "addAttribute",
-          methodArgs = {java.text.AttributedCharacterIterator.Attribute.class, java.lang.Object.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "addAttribute",
+        args = {java.text.AttributedCharacterIterator.Attribute.class, java.lang.Object.class}
+    )
     public void test_addAttributeLjava_text_AttributedCharacterIterator$AttributeLjava_lang_Object() {
         // regression for Harmony-1244
         AttributedString as = new AttributedString("123", new WeakHashMap());
+        
+        as.addAttribute(AttributedCharacterIterator.Attribute.LANGUAGE, "english");
+        as.addAttribute(AttributedCharacterIterator.Attribute.INPUT_METHOD_SEGMENT, 
+                                                                "input method");
+        as.addAttribute(AttributedCharacterIterator.Attribute.READING, "reading");
+       
         try {
             as.addAttribute(null, new TreeSet());
             fail("should throw NullPointerException");
@@ -414,15 +441,12 @@ public class AttributedStringTest extends junit.framework.TestCase {
      *        null-attributes to AttributesString. Case 3: Try to add attributes
      *        to AttributesString using incorrect index.
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "addAttributes",
-          methodArgs = {java.util.Map.class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "addAttributes",
+        args = {java.util.Map.class, int.class, int.class}
+    )
     public void test_addAttributesLjava_util_MapII() {
         AttributedString as = new AttributedString("test");
         Map<AttributedCharacterIterator.Attribute, String> whm = new WeakHashMap<AttributedCharacterIterator.Attribute, String>();
@@ -462,15 +486,12 @@ public class AttributedStringTest extends junit.framework.TestCase {
      * @tests java.text.AttributedString#getIterator() Test of method
      *        java.text.AttributedString#getIterator().
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getIterator",
-          methodArgs = {}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getIterator",
+        args = {}
+    )
     public void test_getIterator() {
         String test = "Test string";
         try {
@@ -488,15 +509,12 @@ public class AttributedStringTest extends junit.framework.TestCase {
      *        Test of method
      *        java.text.AttributedString#getIterator(AttributedCharacterIterator.Attribute[]).
      */
-    @TestInfo(
-      level = TestLevel.COMPLETE,
-      purpose = "",
-      targets = {
-        @TestTarget(
-          methodName = "getIterator",
-          methodArgs = {java.text.AttributedCharacterIterator.Attribute[].class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getIterator",
+        args = {java.text.AttributedCharacterIterator.Attribute[].class}
+    )
     public void test_getIterator$Ljava_text_AttributedCharacterIterator$Attribute() {
         String test = "Test string";
         try {
@@ -528,15 +546,12 @@ public class AttributedStringTest extends junit.framework.TestCase {
      *        java.text.AttributedString#getIterator(AttributedCharacterIterator.Attribute[],
      *        int, int).
      */
-    @TestInfo(
-      level = TestLevel.PARTIAL,
-      purpose = "IllegalArgumentException is not verified.",
-      targets = {
-        @TestTarget(
-          methodName = "getIterator",
-          methodArgs = {java.text.AttributedCharacterIterator.Attribute[].class, int.class, int.class}
-        )
-    })
+    @TestTargetNew(
+        level = TestLevel.COMPLETE,
+        notes = "",
+        method = "getIterator",
+        args = {java.text.AttributedCharacterIterator.Attribute[].class, int.class, int.class}
+    )
     public void test_getIterator$Ljava_text_AttributedCharacterIterator$AttributeII() {
         String test = "Test string";
         try {
@@ -567,8 +582,30 @@ public class AttributedStringTest extends junit.framework.TestCase {
                     .getAttribute(aci[1]).equals("value2"));
             assertTrue("Incorrect iteration on AttributedString", it
                     .getAttribute(aci[2]) == null);
+            
+            try {
+                attrString.getIterator(aci, -1, 5);
+                fail("IllegalArgumentException is not thrown.");
+            } catch(IllegalArgumentException iae) {
+                //expected
+            }
+            
+            try {
+                attrString.getIterator(aci, 6, 5);
+                fail("IllegalArgumentException is not thrown.");
+            } catch(IllegalArgumentException iae) {
+                //expected
+            }
+            
+            try {
+                attrString.getIterator(aci, 3, 2);
+                fail("IllegalArgumentException is not thrown.");
+            } catch(IllegalArgumentException iae) {
+                //expected
+            }            
         } catch (Exception e) {
             fail("Unexpected exceptiption " + e.toString());
         }
+       
     }
 }
